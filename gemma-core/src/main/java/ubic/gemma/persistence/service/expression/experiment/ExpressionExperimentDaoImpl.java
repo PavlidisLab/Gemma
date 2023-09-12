@@ -20,21 +20,20 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
-import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.ClassType;
-import org.hibernate.type.LongType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.util.StopWatchUtils;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -44,11 +43,10 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -64,7 +62,6 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -88,7 +85,14 @@ public class ExpressionExperimentDaoImpl
             ALL_CHARACTERISTIC_ALIAS = "ac",
             BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
-            ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS;
+            ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS,
+            EXTERNAL_DATABASE_ALIAS = "ED";
+
+    /**
+     * Aliases applicable for one-to-many relations.
+     */
+    private static final String[] ONE_TO_MANY_ALIASES = { CHARACTERISTIC_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS,
+            FACTOR_VALUE_CHARACTERISTIC_ALIAS, ALL_CHARACTERISTIC_ALIAS, BIO_ASSAY_ALIAS, ARRAY_DESIGN_ALIAS };
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -111,15 +115,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public long countNotTroubled() {
-        return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count( distinct ee ) from ExpressionExperiment as ee left join "
-                                + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
-                                + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
-                .uniqueResult() );
-    }
-
-    @Override
     public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )
@@ -133,6 +128,16 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
                 .setParameterList( "ids", ids ).list();
+    }
+
+    @Override
+    public ExpressionExperiment findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByName( String name ) {
+        return findByProperty( "name", name );
     }
 
     @Override
@@ -291,14 +296,11 @@ public class ExpressionExperimentDaoImpl
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
         queryObject.setDouble( "rank", rank );
-        queryObject.addScalar( "eeID", new LongType() );
+        queryObject.addScalar( "eeID", StandardBasicTypes.LONG );
         //noinspection unchecked
         List<Long> results = queryObject.list();
 
         eeIds = new HashSet<>( results );
-
-        session.flush();
-        session.clear();
 
         return this.load( eeIds );
     }
@@ -404,7 +406,7 @@ public class ExpressionExperimentDaoImpl
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
-        queryObject.addScalar( "eeID", new LongType() );
+        queryObject.addScalar( "eeID", StandardBasicTypes.LONG );
         //noinspection unchecked
         List<Long> results = queryObject.list();
 
@@ -489,19 +491,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getAnnotationCounts( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
         if ( ids.size() == 0 ) {
             return results;
         }
         String queryString = "select e.id,count(c.id) from ExpressionExperiment e inner join e.characteristics c where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
+
         return results;
     }
 
@@ -577,9 +584,9 @@ public class ExpressionExperimentDaoImpl
 
             if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
                 // DE_include/exclude
-                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00013" ) )
+                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
                     continue;
-                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00014" ) )
+                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
                     continue;
             }
 
@@ -597,7 +604,7 @@ public class ExpressionExperimentDaoImpl
                         "select {T.*}, {T}.LEVEL as LEVEL from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
                                 + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
                 .addEntity( "T", Characteristic.class )
-                .addScalar( "LEVEL", new ClassType() )
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .setParameter( "eeId", expressionExperiment.getId() )
                 .list() );
         //noinspection unchecked
@@ -627,31 +634,95 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
+    @Override
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+        if ( eeIds != null && eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Query q = getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                                + "where T.ID is not null "
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
+                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
+                                + "order by EE_COUNT desc" )
+                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        if ( eeIds != null ) {
+            q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
+        }
+        if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
+            q.setParameterList( "excludedTermUris", excludedTermUris );
+        }
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        //noinspection unchecked
+        List<Object[]> result = q.list();
+        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryComparator() );
+        for ( Object[] row : result ) {
+            Characteristic c = Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null );
+            byC.put( c, ( Long ) row[2] );
+        }
+        return byC;
+    }
+
     /**
      * We're making two assumptions: a dataset cannot have a characteristic more than once and a dataset cannot have
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*}, count(distinct {T}.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + AclQueryUtils.formNativeAclJoinClause( "{T}.EXPRESSION_EXPERIMENT_FK" ) + " "
-                                + "where {T}.ID is not null " // this is necessary for the clause building since there might be no clause
-                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds " : "" )
-                                + ( level != null ? " and T.LEVEL = :level " : "" )
-                                + AclQueryUtils.formNativeAclRestrictionClause() + " "
-                                + "group by COALESCE({T}.CATEGORY_URI, {T}.CATEGORY), COALESCE({T}.VALUE_URI, {T}.VALUE_URI) "
+                        "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                                + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
+                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
+                                + ( level != null ? " and T.LEVEL = :level" : "" )
+                                + ( category != null ? category.equals( UNCATEGORIZED ) ? " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL" : " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category" : "" )
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
+                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                                 + "having EE_COUNT >= :minFrequency "
+                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in :retainedTermUris " : "" )
                                 + "order by EE_COUNT desc" )
-                .addEntity( "T", Characteristic.class )
-                .addScalar( "EE_COUNT", new LongType() )
+                .addScalar( "T.VALUE", StandardBasicTypes.STRING )
+                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
                 .setCacheable( true )
                 .setMaxResults( maxResults );
         if ( eeIds != null ) {
             q.setParameterList( "eeIds", new HashSet<>( eeIds ) );
+        }
+        if ( category != null && !category.equals( UNCATEGORIZED ) ) {
+            q.setParameter( "category", category );
+        }
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            q.setParameterList( "excludedCategoryUris", excludedCategoryUris );
+        }
+        if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
+            q.setParameterList( "excludedTermUris", excludedTermUris );
+        }
+        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+            q.setParameterList( "retainedTermUris", retainedTermUris );
         }
         if ( level != null ) {
             q.setParameter( "level", level );
@@ -660,9 +731,18 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
-        return result.stream()
-                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
-                .collect( Collectors.toMap( row -> ( Characteristic ) row[0], row -> ( Long ) row[1] ) );
+        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
+        for ( Object[] row : result ) {
+            GOEvidenceCode evidenceCode;
+            try {
+                evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
+            } catch ( IllegalArgumentException e ) {
+                evidenceCode = null;
+            }
+            Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
+            byC.put( c, ( Long ) row[5] );
+        }
+        return byC;
     }
 
     @Override
@@ -671,6 +751,15 @@ public class ExpressionExperimentDaoImpl
         return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'" ).list();
     }
 
+    @Override
+    public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        if ( mvr.getId() == null ) {
+            getSessionFactory().getCurrentSession().persist( mvr );
+        }
+        ee.setMeanVarianceRelation( mvr );
+        update( ee );
+        return mvr;
+    }
 
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
@@ -693,47 +782,145 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency() {
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency() {
+        Query query = getSessionFactory().getCurrentSession().createQuery(
+                "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "left join ba.originalPlatform oa "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a.technologyType, oa.technologyType" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a group by a" )
+        List<Object[]> result = query
                 .setCacheable( true )
                 .list();
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+        return aggregateTechnologyTypeCounts( result );
     }
 
     @Override
-    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds ) {
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds ) {
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.arrayDesignUsed a where ee.id in (:ids) group by a" )
+                .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "left join ba.originalPlatform oa "
+                        + "where ee.id in :ids "
+                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a.technologyType, oa.technologyType" )
                 .setParameterList( "ids", eeIds )
-                .list();
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
-    }
-
-    @Override
-    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency() {
-        //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a group by a" )
                 .setCacheable( true )
                 .list();
+        return aggregateTechnologyTypeCounts( result );
+    }
+
+    private Map<TechnologyType, Long> aggregateTechnologyTypeCounts( List<Object[]> result ) {
+        Map<TechnologyType, Long> counts = new HashMap<>();
+        for ( Object[] row : result ) {
+            TechnologyType tt = ( TechnologyType ) row[0];
+            TechnologyType originalTt = ( TechnologyType ) row[1];
+            Long count = ( Long ) row[2];
+            counts.compute( tt, ( k, v ) -> v == null ? count : v + count );
+            if ( originalTt != null ) {
+                counts.compute( originalTt, ( k, v ) -> v == null ? count : v + count );
+            }
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" )
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        List<Object[]> result = query
+                .setCacheable( true )
+                .setMaxResults( maxResults )
+                .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
-    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds ) {
+    public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee join ee.bioAssays ba join ba.originalPlatform a where ee.id in (:ids) group by a" )
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed a "
+                        + "where ee.id in :ids "
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) )
                 .setParameterList( "ids", eeIds )
+                .setMaxResults( maxResults );
+        //noinspection unchecked
+        List<Object[]> result = query.setCacheable( true ).list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.originalPlatform a "
+                        + "left join ba.arrayDesignUsed au "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and a <> au "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        List<Object[]> result = query
+                .setCacheable( true )
+                .setMaxResults( maxResults )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
+    public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.originalPlatform a "
+                        + "left join ba.arrayDesignUsed au "
+                        + "where ee.id in :ids "
+                        + "and a <> au "   // ignore noop switch
+                        + formNonTroubledClause( "ee" )
+                        + formNonTroubledClause( "a" ) + " "
+                        + "group by a"
+                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
+        //noinspection unchecked
+        List<Object[]> result = query
+                .setMaxResults( maxResults )
+                .setParameterList( "ids", eeIds )
+                .setCacheable( true )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
@@ -769,23 +956,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer getBioAssayCountById( long Id ) {
-        //language=HQL
-        final String queryString =
-                "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays ba where ee.id = :ee";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
-                .list();
-
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
-            return 0;
-        }
-
-        return ( ( Long ) list.iterator().next() ).intValue();
-    }
-
-    @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         String queryString = "select distinct b from BioAssayDimension b, ExpressionExperiment e "
                 + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee ";
@@ -795,37 +965,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
+    public long getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
         //language=HQL
         final String queryString =
-                "select count(distinct sample) from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where ee.id = :eeId ";
+                "select count(distinct sample) from ExpressionExperiment as ee "
+                        + "inner join ee.bioAssays as ba "
+                        + "inner join ba.sampleUsed as sample "
+                        + "where ee = :ee";
 
-        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "eeId", expressionExperiment.getId() ).list();
-
-        return ( ( Long ) result.iterator().next() ).intValue();
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", expressionExperiment )
+                .uniqueResult();
     }
 
     /**
-     * @param Id if of the expression experiment
+     * @param ee the expression experiment
      * @return count of RAW vectors.
      */
     @Override
-    public Integer getDesignElementDataVectorCountById( long Id ) {
-
+    public long getDesignElementDataVectorCount( ExpressionExperiment ee ) {
         //language=HQL
-        final String queryString = "select count(dedv) from ExpressionExperiment ee "
-                + "inner join ee.rawExpressionDataVectors dedv where ee.id = :ee";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
-                .list();
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
-            return 0;
-        }
-        return ( ( Long ) list.iterator().next() ).intValue();
-
+        final String queryString = "select count(distinct dedv) from ExpressionExperiment ee "
+                + "inner join ee.rawExpressionDataVectors dedv where ee = :ee";
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Override
@@ -874,15 +1040,18 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-        String queryString = "select t, count(distinct ee) from ExpressionExperiment ee "
-                + "join ee.bioAssays as ba "
-                + "join ba.sampleUsed su "
-                + "join su.sourceTaxon t "
-                + "group by t";
+        String queryString = "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                + formNonTroubledClause( "ee" ) + " "
+                + "group by ee.taxon";
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
         // it is important to cache this, as it gets called on the home page. Though it's actually fast.
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Object[]> list = query
                 .setCacheable( true )
                 .list();
 
@@ -897,82 +1066,93 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select t, count(distinct ee) from ExpressionExperiment ee "
-                                + "join ee.bioAssays as ba "
-                                + "join ba.sampleUsed su "
-                                + "join su.sourceTaxon t "
+                        "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
                                 + "where ee.id in :eeIds "
-                                + "group by t" )
+                                + "group by ee.taxon" )
                 .setParameterList( "eeIds", ids )
                 .list();
         return list.stream()
                 .collect( Collectors.toMap( row -> ( Taxon ) row[0], row -> ( Long ) row[1] ) );
     }
 
-    @Override
-    public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
 
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor "
                 + "ef where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        //noinspection unchecked
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
         return results;
     }
 
     @Override
-    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<>();
+    public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) {
+        Map<Long, Long> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
 
         for ( Long id : ids ) {
-            results.put( id, 0 );
+            results.put( id, 0L );
         }
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef "
                 + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
 
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        //noinspection unchecked
+        List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ) // Set ids
                 .setParameter( "category", ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME ) // Set batch category
                 .setParameter( "name", ExperimentalFactorService.BATCH_FACTOR_NAME ) // set batch name
                 .list();
 
-        this.addIdsToResults( results, res );
+        for ( Object[] ro : res ) {
+            Long id = ( Long ) ro[0];
+            Long count = ( Long ) ro[1];
+            results.put( id, count );
+        }
+
         return results;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id ) {
+    public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
 
         //language=HQL
-        final String queryString = "select quantType,count(*) as count "
+        final String queryString = "select quantType, count(distinct vectors) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                + "inner join ee.rawExpressionDataVectors as vectors "
-                + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
+                + "join ee.rawExpressionDataVectors as vectors "
+                + "join vectors.quantitationType as quantType "
+                + "where ee = :ee "
+                + "group by quantType";
 
         //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
+        List<Object[]> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
                 .list();
 
-        Map<QuantitationType, Integer> qtCounts = new HashMap<>();
+        Map<QuantitationType, Long> qtCounts = new HashMap<>();
 
         for ( Object[] tuple : list ) {
-            qtCounts.put( ( QuantitationType ) tuple[0], ( ( Long ) tuple[1] ).intValue() );
+            qtCounts.put( ( QuantitationType ) tuple[0], ( Long ) tuple[1] );
         }
 
         return qtCounts;
@@ -1010,16 +1190,27 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        QuantitationType quantitationType = ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createCriteria( vectorType )
-                .createAlias( "quantitationType", "qt" )
-                .add( Restrictions.and(
-                        Restrictions.eq( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ? "qt.isMaskedPreferred" : "qt.isPreferred", true ),
-                        Restrictions.eq( "expressionExperiment", ee ) ) )
-                .setProjection( Projections.distinct( Projections.property( "quantitationType" ) ) )
+    public QuantitationType getPreferredQuantitationType( ExpressionExperiment ee ) {
+        return ( QuantitationType ) getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from ExpressionExperiment ee "
+                        + "join ee.rawExpressionDataVectors rv "
+                        + "join rv.quantitationType qt "
+                        + "where qt.isPreferred = true and ee = :ee "
+                        + "group by qt" )
+                .setParameter( "ee", ee )
                 .uniqueResult();
-        return quantitationType;
+    }
+
+    @Override
+    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
+        return ( QuantitationType ) getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from ExpressionExperiment ee "
+                        + "join ee.processedExpressionDataVectors pv "
+                        + "join pv.quantitationType qt "
+                        + "where qt.isMaskedPreferred = true and ee = :ee "
+                        + "group by qt" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Override
@@ -1135,7 +1326,7 @@ public class ExpressionExperimentDaoImpl
     /**
      * Gather various EE details and group them by ID.
      */
-    private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds ) {
+    private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds, boolean cacheable ) {
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
@@ -1146,17 +1337,122 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in :eeIds "
                         + "group by ee, ad, op" )
                 .setParameterList( "eeIds", expressionExperimentIds )
+                .setCacheable( cacheable )
                 .list();
         return results.stream().collect(
                 groupingBy( row -> ( Long ) row[0],
                         Collectors.mapping( ExpressionExperimentDetail::fromRow, Collectors.toList() ) ) );
     }
 
-    private TypedResultTransformer<ExpressionExperimentDetailsValueObject> getDetailedValueObjectTransformer( StopWatch postProcessingTimer, StopWatch detailsTimer, StopWatch analysisInformationTimer ) {
+
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects
+            ( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        if ( ids != null && ids.isEmpty() ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, taxon ), sort, offset, limit, false );
+    }
+
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        if ( ids != null && ids.isEmpty() ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, taxon ), sort, offset, limit, true );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, null ), null, 0, 0, false );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return this.doLoadDetailsValueObjects( getFiltersForIdsAndTaxon( ids, null ), null, 0, 0, true );
+    }
+
+    private Filters getFiltersForIdsAndTaxon( @Nullable Collection<Long> ids, @Nullable Taxon taxon ) {
+        Filters filters = Filters.empty();
+
+        if ( ids != null ) {
+            List<Long> idList = new ArrayList<>( ids );
+            Collections.sort( idList );
+            filters.and( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, idList );
+        }
+
+        if ( taxon != null ) {
+            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, taxon.getId() );
+        }
+
+        return filters;
+    }
+
+    private Slice<ExpressionExperimentDetailsValueObject> doLoadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit, boolean cacheable ) {
+        // Compose query
+        Query query = this.getFilteringQuery( filters, sort );
+
+        if ( offset > 0 ) {
+            query.setFirstResult( offset );
+        }
+        if ( limit > 0 ) {
+            query.setMaxResults( limit );
+        }
+
+        // overall timer
+        StopWatch timer = StopWatch.createStarted();
+
+        // timers for sub-steps
+        StopWatch countingTimer = StopWatch.create();
+        StopWatch postProcessingTimer = StopWatch.create();
+        StopWatch detailsTimer = StopWatch.create();
+        StopWatch analysisInformationTimer = StopWatch.create();
+
+        query.setResultTransformer( getDetailedValueObjectTransformer( cacheable, postProcessingTimer, detailsTimer, analysisInformationTimer ) );
+
+        //noinspection unchecked
+        List<ExpressionExperimentDetailsValueObject> vos = query
+                .setCacheable( cacheable )
+                .list();
+
+        countingTimer.start();
+        Long totalElements;
+        if ( limit > 0 && ( vos.isEmpty() || vos.size() == limit ) ) {
+            totalElements = ( Long ) this.getFilteringCountQuery( filters )
+                    .setCacheable( cacheable )
+                    .uniqueResult();
+        } else {
+            totalElements = offset + ( long ) vos.size();
+        }
+        countingTimer.stop();
+
+        timer.stop();
+
+        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
+                    timer.getTime(),
+                    timer.getTime() - postProcessingTimer.getTime(),
+                    countingTimer.getTime(),
+                    postProcessingTimer.getTime(),
+                    detailsTimer.getTime(),
+                    analysisInformationTimer.getTime() ) );
+        }
+
+        return new Slice<>( vos, sort, offset, limit, totalElements );
+    }
+
+    private TypedResultTransformer<ExpressionExperimentDetailsValueObject> getDetailedValueObjectTransformer( boolean cacheable, StopWatch postProcessingTimer, StopWatch detailsTimer, StopWatch analysisInformationTimer ) {
         return new TypedResultTransformer<ExpressionExperimentDetailsValueObject>() {
             @Override
             public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+                initializeCachedFilteringResult( ee );
                 AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
                 AclSid sid = ( AclSid ) row[2];
                 return new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
@@ -1177,7 +1473,7 @@ public class ExpressionExperimentDaoImpl
                 // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
                 // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
                 detailsTimer.start();
-                Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds );
+                Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds, cacheable );
                 detailsTimer.stop();
 
                 for ( ExpressionExperimentDetailsValueObject vo : vos ) {
@@ -1219,7 +1515,7 @@ public class ExpressionExperimentDaoImpl
                 }
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
-                    populateAnalysisInformation( vos );
+                    populateAnalysisInformation( vos, cacheable );
                 }
 
                 postProcessingTimer.stop();
@@ -1227,84 +1523,6 @@ public class ExpressionExperimentDaoImpl
                 return vos;
             }
         };
-    }
-
-    @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        // Compose query
-        Query query = this.getFilteringQuery( filters, sort );
-
-        if ( offset > 0 ) {
-            query.setFirstResult( offset );
-        }
-        if ( limit > 0 ) {
-            query.setMaxResults( limit );
-        }
-
-        // overall timer
-        StopWatch timer = StopWatch.createStarted();
-
-        // timers for sub-steps
-        StopWatch countingTimer = StopWatch.create();
-        StopWatch postProcessingTimer = StopWatch.create();
-        StopWatch detailsTimer = StopWatch.create();
-        StopWatch analysisInformationTimer = StopWatch.create();
-
-        query.setResultTransformer( getDetailedValueObjectTransformer( postProcessingTimer, detailsTimer, analysisInformationTimer ) );
-
-        //noinspection unchecked
-        List<ExpressionExperimentDetailsValueObject> vos = query.list();
-
-        countingTimer.start();
-        Long totalElements = ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
-        countingTimer.stop();
-
-        timer.stop();
-
-        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "EE details VO query + postprocessing: %d ms (query: %d ms, counting: %d ms, initializing VOs: %d ms, loading details (bioAssays + bioAssays.arrayDesignUsed + originalPlatforms + otherParts): %d ms, retrieving analysis information: %s ms)",
-                    timer.getTime(),
-                    timer.getTime() - postProcessingTimer.getTime(),
-                    countingTimer.getTime(),
-                    postProcessingTimer.getTime(),
-                    detailsTimer.getTime(),
-                    analysisInformationTimer.getTime() ) );
-        }
-
-        return new Slice<>( vos, sort, offset, limit, totalElements );
-    }
-
-    @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
-            ( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        Filters filters = Filters.empty();
-
-        if ( ids != null ) {
-            if ( ids.isEmpty() ) {
-                return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
-            }
-            List<Long> idList = new ArrayList<>( ids );
-            Collections.sort( idList );
-            filters.and( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, idList );
-        }
-
-        if ( taxon != null ) {
-            filters.and( TaxonDao.OBJECT_ALIAS, "id", Long.class, Filter.Operator.eq, taxon.getId() );
-        }
-
-        return this.loadDetailsValueObjects( filters, sort, offset, limit );
-    }
-
-    @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds
-            ( @NonNull Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return Collections.emptyList();
-        }
-
-        Filters filters = Filters.by( OBJECT_ALIAS, "id", Long.class, Filter.Operator.in, ids );
-
-        return this.loadDetailsValueObjects( filters, null, 0, 0 );
     }
 
     @Override
@@ -1400,13 +1618,6 @@ public class ExpressionExperimentDaoImpl
     public void remove( ExpressionExperiment ee ) {
         log.info( "Deleting " + ee + "..." );
 
-        // reload EE as deletion will not work if it came from a different session
-        ee = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().merge( ee );
-
-        if ( ee == null ) {
-            return;
-        }
-
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
         // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
@@ -1449,58 +1660,116 @@ public class ExpressionExperimentDaoImpl
             getSessionFactory().getCurrentSession().delete( bm );
         }
 
-        // FIXME: factors and vectors are not removed before the design if the entity is out-of-sync
-        getSessionFactory().getCurrentSession().refresh( ee );
-
-        AbstractDao.log.debug( ".. Last bits ..." );
-
-        log.info( ".... final deletion ..." );
         super.remove( ee );
     }
 
     @Override
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.thaw( expressionExperiment, true );
-    }
-
-    @Override
-    public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment ) {
-        String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
-
-        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeId", expressionExperiment.getId() ).list();
-
-        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-
-        Hibernate.initialize( result.getBioAssays() );
-
-        for ( BioAssay ba : result.getBioAssays() ) {
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getSampleUsed() );
-            Hibernate.initialize( ba.getOriginalPlatform() );
-        }
-
-        return result;
-    }
-
-    @Override
-    public ExpressionExperiment thawForFrontEnd( final ExpressionExperiment expressionExperiment ) {
-        return this.thawLiter( expressionExperiment );
+    public void thaw( final ExpressionExperiment expressionExperiment ) {
+        thawWithoutVectors( expressionExperiment );
+        /*
+         * Optional because this could be slow.
+         */
+        Hibernate.initialize( expressionExperiment.getRawExpressionDataVectors() );
+        Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
     }
 
     // "thawLite"
     @Override
-    public ExpressionExperiment thawWithoutVectors( final ExpressionExperiment expressionExperiment ) {
-        return this.thaw( expressionExperiment, false );
+    public void thawWithoutVectors( final ExpressionExperiment ee ) {
+        thawForFrontEnd( ee );
+
+        Hibernate.initialize( ee.getQuantitationTypes() );
+        Hibernate.initialize( ee.getCharacteristics() );
+
+        if ( ee.getAuditTrail() != null ) {
+            Hibernate.initialize( ee.getAuditTrail().getEvents() );
+        }
+
+        Hibernate.initialize( ee.getBioAssays() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getArrayDesignUsed() != null ) {
+                Hibernate.initialize( ba.getArrayDesignUsed() );
+                Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+            }
+            Hibernate.initialize( ba.getOriginalPlatform() );
+            Hibernate.initialize( ba.getSampleUsed() );
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null ) {
+                Hibernate.initialize( bm.getFactorValues() );
+                Hibernate.initialize( bm.getTreatments() );
+            }
+        }
+
+        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
+        if ( experimentalDesign != null ) {
+            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
+            Hibernate.initialize( experimentalDesign.getTypes() );
+            for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
+                Hibernate.initialize( factor.getAnnotations() );
+                for ( FactorValue f : factor.getFactorValues() ) {
+                    Hibernate.initialize( f.getCharacteristics() );
+                    if ( f.getMeasurement() != null ) {
+                        Hibernate.initialize( f.getMeasurement() );
+                        if ( f.getMeasurement().getUnit() != null ) {
+                            Hibernate.initialize( f.getMeasurement().getUnit() );
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private void addIdsToResults( Map<Long, Integer> results, List res ) {
-        for ( Object r : res ) {
-            Object[] ro = ( Object[] ) r;
-            Long id = ( Long ) ro[0];
-            Integer count = ( ( Long ) ro[1] ).intValue();
-            results.put( id, count );
+    @Override
+    public void thawBioAssays( ExpressionExperiment expressionExperiment ) {
+        thawForFrontEnd( expressionExperiment );
+
+        Hibernate.initialize( expressionExperiment.getBioAssays() );
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getSampleUsed() );
+            Hibernate.initialize( ba.getOriginalPlatform() );
+        }
+    }
+
+    @Override
+    public void thawForFrontEnd( final ExpressionExperiment expressionExperiment ) {
+        if ( expressionExperiment.getAccession() != null ) {
+            Hibernate.initialize( expressionExperiment.getAccession() );
+            Hibernate.initialize( expressionExperiment.getAccession().getExternalDatabase() );
+        }
+
+        if ( expressionExperiment.getMeanVarianceRelation() != null ) {
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
+        }
+
+        if ( expressionExperiment.getPrimaryPublication() != null ) {
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
+            if ( expressionExperiment.getPrimaryPublication().getPublication() != null ) {
+                Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
+                Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
+            }
+        }
+
+        Hibernate.initialize( expressionExperiment.getAuditTrail() );
+        Hibernate.initialize( expressionExperiment.getGeeq() );
+        Hibernate.initialize( expressionExperiment.getCurationDetails() );
+
+        Hibernate.initialize( expressionExperiment.getOtherParts() );
+
+        if ( expressionExperiment.getExperimentalDesign() != null ) {
+            Hibernate.initialize( expressionExperiment.getExperimentalDesign() );
+            Hibernate.initialize( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        }
+
+        if ( expressionExperiment.getOtherRelevantPublications() != null ) {
+            Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
+            for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
+                Hibernate.initialize( bf.getPubAccession() );
+                Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
+            }
         }
     }
 
@@ -1508,51 +1777,57 @@ public class ExpressionExperimentDaoImpl
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         // the constants for aliases are messing with the inspector
         //language=HQL
-        return finishFilteringQuery( "select distinct ee, aoi, sid "
+        return finishFilteringQuery( "select ee, " + AclQueryUtils.AOI_ALIAS + ", " + AclQueryUtils.SID_ALIAS + " "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
-                + "left join fetch acc.externalDatabase as ED "
                 + "left join fetch ee.experimentalDesign as EDES "
                 + "left join fetch ee.curationDetails as s " /* needed for trouble status */
                 + "left join fetch s.lastNeedsAttentionEvent as eAttn "
+                + "left join fetch eAttn.eventType "
                 + "left join fetch s.lastNoteUpdateEvent as eNote "
+                + "left join fetch eNote.eventType "
                 + "left join fetch s.lastTroubledEvent as eTrbl "
-                + "left join fetch ee.geeq as geeq "
-                + "left join fetch ee.taxon as taxon", filters, sort );
+                + "left join fetch eTrbl.eventType "
+                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
-    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+    protected void initializeCachedFilteringResult( ExpressionExperiment ee ) {
+        Hibernate.initialize( ee.getAccession() );
+        Hibernate.initialize( ee.getExperimentalDesign() );
+        Hibernate.initialize( ee.getCurationDetails() );
+        Hibernate.initialize( ee.getGeeq() );
+    }
+
+    @Override
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
-        return finishFilteringQuery( "select distinct ee.id "
+        return finishFilteringQuery( "select ee.id "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
-                + "left join acc.externalDatabase as ED "
                 + "left join ee.experimentalDesign as EDES "
                 + "left join ee.curationDetails as s " /* needed for trouble status */
                 + "left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.geeq as geeq "
-                + "left join ee.taxon as taxon", filters, null );
+                + "left join ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(distinct ee) from ExpressionExperiment as ee "
+        return finishFilteringQuery( "select count(" + distinctIfNecessary() + "ee) "
+                + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
-                + "left join acc.externalDatabase as ED "
                 + "left join ee.experimentalDesign as EDES "
                 + "left join ee.curationDetails as s " /* needed for trouble status */
                 + "left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join ee.geeq as geeq "
                 + "left join s.lastNoteUpdateEvent as eNote "
                 + "left join s.lastTroubledEvent as eTrbl "
-                + "left join ee.taxon as taxon", filters, null );
+                + "left join ee.geeq as geeq", filters, null, null );
     }
 
-    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort ) {
+    private Query finishFilteringQuery( String queryString, @Nullable Filters filters, @Nullable Sort sort, @Nullable String groupBy ) {
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -1561,48 +1836,61 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, OBJECT_ALIAS );
-        if ( FiltersUtils.containsAnyAlias( filters, null, ArrayDesignDao.OBJECT_ALIAS ) ) {
-            addNonTroubledFilter( filters, ArrayDesignDao.OBJECT_ALIAS );
+        // Filtering by AD is costly because we need two jointures, so the results might in some rare cases return EEs
+        // from troubled platforms that have not been mark themselves as troubled. Thus, we do it only if it is present
+        // in the query
+        if ( FiltersUtils.containsAnyAlias( filters, sort, ARRAY_DESIGN_ALIAS ) ) {
+            addNonTroubledFilter( filters, ARRAY_DESIGN_ALIAS );
+        }
+
+        // The following two associations are retrieved eagerly via select, which is far more efficient since they are
+        // commonly shared across EEs and may benefit from the second-level cache
+        if ( FiltersUtils.containsAnyAlias( filters, sort, EXTERNAL_DATABASE_ALIAS ) ) {
+            queryString += " left join acc.externalDatabase as " + EXTERNAL_DATABASE_ALIAS;  // this one will be fetched in a subsequent select clause since it's eagerly fetched from DatabaseEntry
+        }
+        if ( FiltersUtils.containsAnyAlias( filters, sort, TAXON_ALIAS ) ) {
+            queryString += " left join ee.taxon as " + TAXON_ALIAS;
         }
 
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
         // is mentioned in the filters
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ee.characteristics as " + CharacteristicDao.OBJECT_ALIAS;
+        if ( FiltersUtils.containsAnyAlias( null, sort, CHARACTERISTIC_ALIAS ) ) {
+            queryString += " left join ee.characteristics as " + CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.experimentalDesign.experimentalFactors as ef";
-        }
-
-        if ( FiltersUtils.containsAnyAlias( filters, sort, FACTOR_VALUE_CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ef.factorValues as fv ";
+            queryString += " left join ef.factorValues as fv";
             queryString += " left join fv.characteristics as " + FACTOR_VALUE_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, BIO_ASSAY_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS, ARRAY_DESIGN_ALIAS ) ) {
             queryString += " left join ee.bioAssays as " + BIO_ASSAY_ALIAS;
         }
 
         // this is a shorthand for all characteristics (direct + biomaterial + experimental design)
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ALL_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, ALL_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.allCharacteristics as " + ALL_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, BIO_MATERIAL_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join " + BIO_ASSAY_ALIAS + ".sampleUsed.characteristics as " + BIO_MATERIAL_CHARACTERISTIC_ALIAS;
         }
 
-        if ( FiltersUtils.containsAnyAlias( filters, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, ArrayDesignDao.OBJECT_ALIAS ) ) {
             queryString += " left join " + BIO_ASSAY_ALIAS + ".arrayDesignUsed as " + ARRAY_DESIGN_ALIAS;
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( OBJECT_ALIAS + ".id" );
+        queryString += AclQueryUtils.formAclRestrictionClause( OBJECT_ALIAS + ".id" );
 
-        queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += FilterQueryUtils.formRestrictionClause( filters );
+
+        if ( groupBy != null ) {
+            queryString += " group by " + groupBy;
+        }
+
         queryString += FilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -1642,16 +1930,16 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
 
         // attached terms
-        configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
-        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
-        configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
-        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1 );
+        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
 
-        configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2 );
+        configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );
 
         // this is not useful, unless we add an alias to the alternate names
@@ -1688,14 +1976,14 @@ public class ExpressionExperimentDaoImpl
     /**
      * Filling 'hasDifferentialExpressionAnalysis' and 'hasCoexpressionAnalysis'
      */
-    private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
+    private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos, boolean cacheable ) {
         if ( vos.isEmpty() ) {
             return;
         }
 
         // these are cached queries (thus super-fast)
-        Set<Long> withCoexpression = new HashSet<>( getExpressionExperimentIdsWithCoexpression() );
-        Set<Long> withDiffEx = new HashSet<>( getExpressionExperimentIdsWithDifferentialExpressionAnalysis() );
+        Set<Long> withCoexpression = new HashSet<>( getExpressionExperimentIdsWithCoexpression( cacheable ) );
+        Set<Long> withDiffEx = new HashSet<>( getExpressionExperimentIdsWithDifferentialExpressionAnalysis( cacheable ) );
 
         for ( ExpressionExperimentDetailsValueObject vo : vos ) {
             vo.setHasCoexpressionAnalysis( withCoexpression.contains( vo.getId() ) );
@@ -1703,119 +1991,20 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    private List<Long> getExpressionExperimentIdsWithCoexpression() {
+    private List<Long> getExpressionExperimentIdsWithCoexpression( boolean cacheable ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from CoexpressionAnalysis" )
-                .setCacheable( true )
+                .setCacheable( cacheable )
                 .list();
     }
 
-    private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis() {
+    private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis( boolean cacheable ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from DifferentialExpressionAnalysis" )
-                .setCacheable( true )
+                .setCacheable( cacheable )
                 .list();
-    }
-
-    private ExpressionExperiment thaw( ExpressionExperiment ee, boolean vectorsAlso ) {
-        ExpressionExperiment result = thawLiter( ee );
-
-        Hibernate.initialize( result.getQuantitationTypes() );
-        Hibernate.initialize( result.getCharacteristics() );
-
-        if ( result.getAuditTrail() != null ) {
-            Hibernate.initialize( result.getAuditTrail().getEvents() );
-        }
-
-        Hibernate.initialize( result.getBioAssays() );
-        for ( BioAssay ba : result.getBioAssays() ) {
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-            Hibernate.initialize( ba.getOriginalPlatform() );
-            Hibernate.initialize( ba.getSampleUsed() );
-            BioMaterial bm = ba.getSampleUsed();
-            if ( bm != null ) {
-                Hibernate.initialize( bm.getFactorValues() );
-                Hibernate.initialize( bm.getTreatments() );
-            }
-        }
-
-        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
-        if ( experimentalDesign != null ) {
-            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
-            Hibernate.initialize( experimentalDesign.getTypes() );
-            for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
-                Hibernate.initialize( factor.getAnnotations() );
-                for ( FactorValue f : factor.getFactorValues() ) {
-                    Hibernate.initialize( f.getCharacteristics() );
-                    if ( f.getMeasurement() != null ) {
-                        Hibernate.initialize( f.getMeasurement() );
-                        if ( f.getMeasurement().getUnit() != null ) {
-                            Hibernate.initialize( f.getMeasurement().getUnit() );
-                        }
-                    }
-                }
-            }
-        }
-
-        if ( vectorsAlso ) {
-            /*
-             * Optional because this could be slow.
-             */
-            Hibernate.initialize( result.getRawExpressionDataVectors() );
-            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
-        }
-
-        return result;
-    }
-
-    private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
-        if ( ee.getId() == null ) {
-            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
-        }
-
-        ExpressionExperiment result = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e from ExpressionExperiment e "
-                        + "left join fetch e.accession acc "
-                        + "left join fetch acc.externalDatabase "
-                        + "left join fetch e.meanVarianceRelation "
-                        + "left join fetch e.primaryPublication p "
-                        + "left join fetch p.pubAccession pa "
-                        + "left join fetch pa.externalDatabase "
-                        + "left join fetch e.auditTrail "
-                        + "left join fetch e.geeq "
-                        + "left join fetch e.curationDetails "
-                        + "left join fetch e.experimentalDesign "
-                        + "where e = :ee" )
-                .setParameter( "ee", ee )
-                .uniqueResult();
-
-        if ( result == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
-        }
-
-        Hibernate.initialize( result.getOtherParts() );
-
-        if ( result.getExperimentalDesign() != null ) {
-            Hibernate.initialize( result.getExperimentalDesign().getExperimentalFactors() );
-        }
-
-        if ( result.getOtherRelevantPublications() != null ) {
-            Hibernate.initialize( result.getOtherRelevantPublications() );
-            for ( BibliographicReference bf : result.getOtherRelevantPublications() ) {
-                Hibernate.initialize( bf.getPubAccession() );
-                Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-            }
-        }
-
-        if ( result.getMeanVarianceRelation() != null ) {
-            Hibernate.initialize( result.getMeanVarianceRelation().getMeans() );
-            Hibernate.initialize( result.getMeanVarianceRelation().getVariances() );
-        }
-
-        return result;
     }
 
     private void populateArrayDesignCount( Collection<ExpressionExperimentValueObject> eevos ) {

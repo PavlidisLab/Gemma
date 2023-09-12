@@ -64,24 +64,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
-    }
-
-    @Override
     @Transactional
     public void deleteAlignmentData( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteAlignmentData( arrayDesign );
@@ -171,6 +153,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.getExpressionExperimentsCount( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
@@ -224,8 +212,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getSwitchedExperimentIds( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getSwitchedExpressionExperimentIds( arrayDesign );
+    public Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperiments( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSwitchedExpressionExperimentCount( ArrayDesign id ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperimentsCount( id );
     }
 
     @Override
@@ -292,12 +286,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
         return this.arrayDesignDao.isSubsumer( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.arrayDesignDao.loadValueObjectsByIds( ids );
     }
 
     @Override
@@ -400,25 +388,38 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
-
     }
 
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thaw( arrayDesign );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas ) {
+        aas = ensureInSession( aas );
+        aas.forEach( arrayDesignDao::thaw );
+        return aas;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thawLite( arrayDesign );
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.arrayDesignDao.thawLite( arrayDesigns );
+        arrayDesigns = ensureInSession( arrayDesigns );
+        arrayDesigns.forEach( arrayDesignDao::thawLite );
+        return arrayDesigns;
     }
 
     @Override

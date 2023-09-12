@@ -22,7 +22,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 @Repository
@@ -31,7 +30,7 @@ public class DifferentialExpressionEvidenceDaoImpl extends AbstractDao<Different
 
     @Autowired
     public DifferentialExpressionEvidenceDaoImpl( SessionFactory sessionFactory ) {
-        super( DifferentialExpressionEvidenceImpl.class, sessionFactory );
+        super( DifferentialExpressionEvidence.class, sessionFactory );
     }
 
 }

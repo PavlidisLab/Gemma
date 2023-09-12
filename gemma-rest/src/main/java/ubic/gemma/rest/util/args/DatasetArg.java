@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
-    protected DatasetArg( T value ) {
-        super( ExpressionExperiment.class, value );
+    protected DatasetArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     /**
@@ -53,61 +53,5 @@ public abstract class DatasetArg<T>
         } catch ( NumberFormatException e ) {
             return new DatasetStringArg( s );
         }
-    }
-
-    /**
-     * Retrieve a dataset with quantitation type initialized.
-     */
-    public Set<QuantitationTypeValueObject> getQuantitationTypes( ExpressionExperimentService service ) {
-        return new HashSet<>( service.getQuantitationTypeValueObjects( getEntity( service ) ) );
-    }
-
-    /**
-     * Retrieves the Platforms of the Dataset that this argument represents.
-     *
-     * @param service   service that will be used to retrieve the persistent EE object.
-     * @param adService service to use to retrieve the ADs.
-     * @return a collection of Platforms that the dataset represented by this argument is in.
-     */
-    public List<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
-            ArrayDesignService adService ) {
-        ExpressionExperiment ee = this.getEntity( service );
-        return adService.loadValueObjectsForEE( ee.getId() );
-    }
-
-    /**
-     * @param service                 service that will be used to retrieve the persistent EE object.
-     * @param baService               service that will be used to convert the samples (BioAssays) to VOs.
-     * @param outlierDetectionService service that will be used to detect which samples are outliers and fill their
-     *                                corresponding predictedOutlier attribute.
-     * @return a collection of BioAssays that represent the experiments samples.
-     */
-    public List<BioAssayValueObject> getSamples( ExpressionExperimentService service,
-            BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
-        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
-        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        try {
-            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
-                    .map( OutlierDetails::getBioAssay )
-                    .map( BioAssay::getId )
-                    .collect( Collectors.toSet() );
-            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
-                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
-            }
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            // there are no rows left in the data matrix, thus no outliers ;o
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
-        }
-        return bioAssayValueObjects;
-    }
-
-    /**
-     * @param service service that will be used to retrieve the persistent EE object.
-     * @return a collection of Annotations value objects that represent the experiments annotations.
-     */
-    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
-        ExpressionExperiment ee = this.getEntity( service );
-        return service.getAnnotations( ee.getId() );
     }
 }

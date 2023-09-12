@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
-import io.micrometer.core.annotation.Timed;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
@@ -57,7 +56,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -72,15 +71,14 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static ubic.gemma.persistence.service.SubqueryUtils.guessAliases;
 
 /**
  * @author pavlidis
@@ -134,13 +132,6 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
         super( expressionExperimentDao );
         this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    @Override
-    @Timed
-    @Transactional(readOnly = true)
-    public ExpressionExperiment load( Long id ) {
-        return super.load( id );
     }
 
     @Override
@@ -280,12 +271,6 @@ public class ExpressionExperimentServiceImpl
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
-    }
-
     /**
      * returns ids of search results
      *
@@ -300,7 +285,7 @@ public class ExpressionExperimentServiceImpl
 
         assert searchResultsMap != null;
 
-        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.getByResultObjectType( ExpressionExperiment.class );
 
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
@@ -315,6 +300,26 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
         return this.expressionExperimentDao.filterByTaxon( ids, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getPrimaryPublication() );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getMeanVarianceRelation() );
+        }
+        return ee;
     }
 
     /**
@@ -469,13 +474,13 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Set<AnnotationValueObject> getAnnotations( Long eeId ) {
+    public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = Objects.requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
 
@@ -515,15 +520,13 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
+     * <p>
+     * Note: we do not apply inference to category URIs as they are (a) too broad and (b) their sub-terms are never used.
      */
     private static final String[] PROPERTIES_USED_FOR_ANNOTATIONS = {
-            "allCharacteristics.categoryUri",
             "allCharacteristics.valueUri",
-            "characteristics.categoryUri",
             "characteristics.valueUri",
-            "bioAssays.sampleUsed.characteristics.categoryUri",
             "bioAssays.sampleUsed.characteristics.valueUri",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.categoryUri",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
     };
 
@@ -544,41 +547,61 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f ) {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms ) {
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
-        final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
+        final Map<SubClauseKey, Set<String>> termUrisBySubClause = new HashMap<>();
         for ( List<Filter> clause : f ) {
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
-                    Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
+                    // handle nested subqueries
+                    subClause = FiltersUtils.unnestSubquery( subClause );
+                    Set<String> it = termUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
                     // rewrite the clause to contain all the inferred terms
                     if ( subClause.getRequiredValue() instanceof Collection ) {
                         //noinspection unchecked
                         it.addAll( ( Collection<String> ) subClause.getRequiredValue() );
-                        //noinspection unchecked
-                        it.addAll( ( ( Collection<String> ) subClause.getRequiredValue() ).stream()
-                                .map( this::inferTermUris )
-                                .flatMap( List::stream )
-                                .collect( Collectors.toList() ) );
                     } else if ( subClause.getRequiredValue() instanceof String ) {
                         it.add( ( String ) subClause.getRequiredValue() );
-                        it.addAll( inferTermUris( ( String ) subClause.getRequiredValue() ) );
+                    } else {
+                        clauseBuilder = clauseBuilder.or( subClause );
                     }
                 } else {
                     // clause is irrelevant, so we add it as it is
                     clauseBuilder = clauseBuilder.or( subClause );
                 }
             }
-            for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
-                if ( !e.getValue().isEmpty() ) {
-                    clauseBuilder = clauseBuilder.or( Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() ) );
+            // recreate a clause with inferred terms
+            for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
+                Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
+                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
+                        .map( OntologyTerm::getUri )
+                        .collect( Collectors.toList() ) );
+                if ( mentionedTerms != null ) {
+                    mentionedTerms.addAll( terms );
                 }
+                Filter g;
+                if ( termAndChildrenUris.size() == 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUris.iterator().next(), e.getKey().getOriginalProperty() );
+                } else if ( termAndChildrenUris.size() > 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUris, e.getKey().getOriginalProperty() );
+                } else {
+                    continue; // empty clause, is that even possible?
+                }
+                // this is the case for all the properties declared in PROPERTY_USED_FOR_ANNOTATIONS
+                assert g.getOriginalProperty() != null;
+                assert g.getObjectAlias() != null;
+                // nest the filter in a subquery, all the applicable properties are one-to-many
+                String prefix = g.getOriginalProperty().substring( 0, g.getOriginalProperty().lastIndexOf( '.' ) + 1 );
+                String objectAlias = g.getObjectAlias();
+                clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
+                        Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
             }
             f2 = clauseBuilder.build();
-            impliedTermsUrisBySubClause.clear();
+            termUrisBySubClause.clear();
         }
         return f2;
     }
@@ -593,13 +616,22 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
-    private List<String> inferTermUris( String uri ) {
-        OntologyTerm term = ontologyService.getTerm( uri );
-        if ( term != null ) {
-            return term.getChildren( false ).stream().map( OntologyTerm::getUri ).collect( Collectors.toList() );
-        } else {
-            return Collections.emptyList();
-        }
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return expressionExperimentDao.loadIdsWithCache( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countWithCache( @Nullable Filters filters ) {
+        return expressionExperimentDao.countWithCache( filters );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return expressionExperimentDao.loadValueObjectsWithCache( filters, sort, offset, limit );
     }
 
     /**
@@ -607,11 +639,31 @@ public class ExpressionExperimentServiceImpl
      */
     @Value(staticConstructor = "from")
     private static class SubClauseKey {
-        @Nullable
         String objectAlias;
         String propertyName;
-        @Nullable
         String originalProperty;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+        List<Long> eeIds;
+        if ( filters == null || filters.isEmpty() ) {
+            eeIds = null;
+        } else {
+            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+        }
+        if ( excludedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            // expand exclusions with implied terms via subclass relation
+            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+            // exclude terms using the subClass relation
+            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+            for ( OntologyTerm t : impliedTerms ) {
+                excludedTermUris.add( t.getUri() );
+            }
+        }
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris );
     }
 
     /**
@@ -620,54 +672,89 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+        if ( excludedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            // never exclude terms that are explicitly retained
+            if ( retainedTermUris != null ) {
+                excludedTermUris.removeAll( retainedTermUris );
+            }
+            // expand exclusions with implied terms via subclass relation
+            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+            // exclude terms using the subClass relation
+            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+            for ( OntologyTerm t : impliedTerms ) {
+                excludedTermUris.add( t.getUri() );
+            }
+        }
+
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         } else {
-            List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency );
+            List<Long> eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
 
+        // gather all the values and categories
+        Set<String> uris = result.keySet().stream()
+                .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        // TODO: handle more than one term per URI
+        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+                .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
+
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
-            OntologyTerm term = null;
-
-            if ( entry.getKey().getValueUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getValueUri() );
+            Characteristic c = entry.getKey();
+            OntologyTerm term;
+            if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
+                term = termByUri.get( c.getValueUri() ).iterator().next();
+            } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
+            } else {
+                // create an uncategorized term
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), null );
             }
-
-            // create a fake term with its category as parent
-            if ( term == null && entry.getKey().getCategoryUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getCategoryUri() );
-                if ( term != null ) {
-                    // create a fake term with its category as parent
-                    final Set<OntologyTerm> parentTerms = Collections.singleton( term );
-                    term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
-                        @Override
-                        public Collection<OntologyTerm> getParents( boolean direct ) {
-                            if ( direct ) {
-                                return parentTerms;
-                            } else {
-                                // combine the direct parents + all the parents from the parents
-                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false ).stream() ) )
-                                        .collect( Collectors.toSet() );
-                            }
-                        }
-
-                        @Override
-                        public boolean isRoot() {
-                            return false;
-                        }
-                    };
-                }
-            }
-
             resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
         }
 
         return resultWithParents;
+    }
+
+    /**
+     * Extension of {@link OntologyTermSimple} that adds a category term as unique parent.
+     */
+    private static class OntologyTermSimpleWithCategory extends OntologyTermSimple {
+
+        @Nullable
+        private final OntologyTerm categoryTerm;
+
+        public OntologyTermSimpleWithCategory( String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+            super( uri, term );
+            this.categoryTerm = categoryTerm;
+        }
+
+        @Override
+        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
+            if ( categoryTerm == null ) {
+                return Collections.emptySet();
+            }
+            if ( direct ) {
+                return Collections.singleton( categoryTerm );
+            } else {
+                // combine the direct parents + all the parents from the parents
+                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
+                        .collect( Collectors.toSet() );
+            }
+        }
+
+        @Override
+        public boolean isRoot() {
+            return categoryTerm == null;
+        }
     }
 
     @Override
@@ -678,23 +765,39 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters ) {
+        if ( filters == null || filters.isEmpty() ) {
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency();
+        } else {
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults ) {
         Map<ArrayDesign, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency() );
-            if ( includeOriginalPlatforms ) {
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency().entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
+            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( maxResults ) );
+            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
+                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
             }
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
-            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids ) );
-            if ( includeOriginalPlatforms ) {
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids ).entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids, maxResults ) );
+            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
+                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
             }
+        }
+        // retain top results
+        // this happens when original platforms are mixed in
+        if ( maxResults > 0 && result.size() > maxResults ) {
+            return result.entrySet()
+                    .stream()
+                    .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                    .limit( maxResults )
+                    .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
         }
         return result;
     }
@@ -705,7 +808,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             return expressionExperimentDao.getPerTaxonCount();
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             return expressionExperimentDao.getPerTaxonCount( ids );
         }
     }
@@ -867,14 +970,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+    public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Integer getDesignElementDataVectorCountById( final Long id ) {
-        return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
+    public long getDesignElementDataVectorCount( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getDesignElementDataVectorCount( ee );
     }
 
     @Override
@@ -921,41 +1024,32 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+    public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<>();
-
-        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
-
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsPreferred() ) {
-                preferredQuantitationTypes.add( qt );
-            }
-        }
-        return preferredQuantitationTypes;
+    public QuantitationType getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getPreferredQuantitationType( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        return expressionExperimentDao.getPreferredQuantitationTypeForDataVectorType( ee, vectorType );
+    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getMaskedPreferredQuantitationType( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long id ) {
-        return this.expressionExperimentDao.getQuantitationTypeCountById( id );
+    public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }
 
     @Override
@@ -966,16 +1060,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> qts = this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
+        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
-            final ArrayDesign arrayDesign ) {
-        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
+    public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
+        expressionExperiment = ensureInSession( expressionExperiment );
+        return quantitationTypeService.loadValueObjectsWithExpressionExperiment( expressionExperiment.getQuantitationTypes(), expressionExperiment );
     }
 
     @Override
@@ -1047,16 +1140,28 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
+        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids, taxon, sort, offset, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }
@@ -1088,12 +1193,6 @@ public class ExpressionExperimentServiceImpl
         }
 
         return results;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadValueObjectsByIds( ids );
     }
 
     @Override
@@ -1171,25 +1270,33 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thaw( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawBioAssays( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawWithoutVectors( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        this.expressionExperimentDao.thawForFrontEnd( result );
+        return result;
     }
 
     @Override
@@ -1203,6 +1310,11 @@ public class ExpressionExperimentServiceImpl
         remove( ee );
     }
 
+    /**
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically).
+     */
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
@@ -1211,6 +1323,9 @@ public class ExpressionExperimentServiceImpl
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
         }
+
+        // thaw everything
+        ee = thaw( ee );
 
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
@@ -1261,7 +1376,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void removeAll() {
+    public void removeAllInBatch() {
         throw new UnsupportedOperationException( "That would be nut." );
     }
 
@@ -1275,7 +1390,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
             if ( qt.getIsBatchCorrected() ) {
                 return true;
             }
@@ -1326,7 +1441,16 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.getExperimentsLackingPublications();
     }
 
-    @Nullable
+    @Override
+    @Transactional
+    public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
+    }
+
+    /**
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
+     * {@inheritDoc}
+     */
     @Override
     public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property ) {
         if ( property.equals( "geeq.publicSuitabilityScore" ) ) {

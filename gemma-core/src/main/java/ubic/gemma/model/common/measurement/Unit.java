@@ -23,7 +23,7 @@ import ubic.gemma.model.common.Identifiable;
 import java.io.Serializable;
 
 @SuppressWarnings("WeakerAccess") // Possible frontend use
-public abstract class Unit implements Identifiable, Serializable {
+public class Unit implements Identifiable, Serializable {
 
     private static final long serialVersionUID = 6348133346610787608L;
     private String unitNameCV;
@@ -31,22 +31,36 @@ public abstract class Unit implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
+        result = prime * result + ( ( this.getUnitNameCV() == null ) ? 0 : this.getUnitNameCV().hashCode() );
+        return result;
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
+    public boolean equals( Object obj ) {
+        if ( this == obj )
             return true;
-        }
-        if ( !( object instanceof Unit ) ) {
+        if ( obj == null )
             return false;
-        }
-        final Unit that = ( Unit ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        Unit other = ( Unit ) obj;
+        if ( this.getId() == null ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !this.getId().equals( other.getId() ) )
+            return false;
+        if ( this.getUnitNameCV() == null ) {
+            return other.getUnitNameCV() == null;
+        } else
+            return this.getUnitNameCV().equals( other.getUnitNameCV() );
+    }
+
+    @Override
+    public String toString() {
+        return this.getUnitNameCV();
     }
 
     @Override
@@ -71,7 +85,7 @@ public abstract class Unit implements Identifiable, Serializable {
     public static final class Factory {
 
         public static Unit newInstance( String unitNameCV ) {
-            final Unit entity = new UnitImpl();
+            final Unit entity = new Unit();
             entity.setUnitNameCV( unitNameCV );
             return entity;
         }

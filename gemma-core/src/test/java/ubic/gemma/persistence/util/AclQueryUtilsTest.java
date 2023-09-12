@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +13,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static ubic.gemma.persistence.util.AclQueryUtils.*;
 
 public class AclQueryUtilsTest extends BaseSpringContextTest {
@@ -45,7 +47,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormAclJoinClauseAsAdmin() {
         super.runAsAdmin();
-        String clause = formAclJoinClause( "ee.id" );
+        String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
                 .startsWith( "," )
                 .contains( "AclObjectIdentity as aoi" )
@@ -57,7 +59,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testFormAclJoinClauseAsNonAdminIncludesAoiEntriesInnerJointure() {
         super.runAsAnonymous();
-        String clause = formAclJoinClause( "ee.id" );
+        String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
                 .startsWith( "," )
                 .contains( "AclObjectIdentity as aoi" )
@@ -96,15 +98,15 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
 
     @Test
     public void testFormNativeRestrictionClause() {
-        assertThat( formNativeAclRestrictionClause() ).isEmpty();
+        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) ).isEmpty();
     }
 
     @Test
     public void testFormNativeRestrictionClauseAsAnonymous() {
         this.runAsAnonymous();
-        assertThat( formNativeAclRestrictionClause() )
+        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
                 .startsWith( " " )
-                .contains( "ace.MASK" )
+                .contains( "(ace.MASK & 1) <> 0" )
                 .contains( "ace.SID_FK" )
                 .contains( "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
     }
@@ -113,8 +115,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     public void testAsAdmin() {
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -125,8 +126,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         runAsUser( "bob", true );
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -137,8 +137,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         runAsAnonymous();
         Query q = session.createQuery(
                 "select ee from ExpressionExperiment ee"
-                        + formAclJoinClause( "ee.id" )
-                        + formAclRestrictionClause() );
+                        + formAclRestrictionClause( "ee.id" ) );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
         q.list();
@@ -150,7 +149,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause() )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
@@ -164,7 +163,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause() )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
@@ -178,7 +177,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause() )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );

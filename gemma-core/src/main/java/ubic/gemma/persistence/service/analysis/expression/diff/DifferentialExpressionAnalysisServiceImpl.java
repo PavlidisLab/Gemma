@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -46,18 +48,24 @@ import java.util.*;
  * @see DifferentialExpressionAnalysisService
  */
 @Service
-public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
+public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
-    @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
     @Autowired
     private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
+
+    @Autowired
+    public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao ) {
+        super( mainDao );
+        this.differentialExpressionAnalysisDao = mainDao;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -77,12 +85,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
         return this.differentialExpressionAnalysisDao.countUpregulated( par, threshold );
 
-    }
-
-    @Override
-    @Transactional
-    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis ) {
-        return this.differentialExpressionAnalysisDao.create( analysis );
     }
 
     @Override
@@ -132,34 +134,60 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        this.differentialExpressionAnalysisDao.thaw( expressionAnalyses );
+    public Collection<DifferentialExpressionAnalysis> thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        HashSet<DifferentialExpressionAnalysis> results = new HashSet<>();
+        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
+            results.add( this.thaw( ea ) );
+        }
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
+    public DifferentialExpressionAnalysis thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        differentialExpressionAnalysis = ensureInSession( differentialExpressionAnalysis );
+
+        Hibernate.initialize( differentialExpressionAnalysis );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
+
+        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
+
+        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
+            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
+        }
+
+        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
+        Hibernate.initialize( ears );
+        for ( ExpressionAnalysisResultSet ear : ears ) {
+            Hibernate.initialize( ear );
+            Hibernate.initialize( ear.getExperimentalFactors() );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw: " + timer.getTime() + "ms" );
+        }
+
+        return differentialExpressionAnalysis;
     }
 
     @Override
     @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
-        return this.expressionAnalysisResultSetDao.thawFully( differentialExpressionAnalysis );
-    }
-
-    @Override
-    @Transactional
-    public void update( DifferentialExpressionAnalysis o ) {
-        this.differentialExpressionAnalysisDao.update( o );
+        differentialExpressionAnalysis = thaw( differentialExpressionAnalysis );
+        // just loading the entities in the session is sufficient for thawing them
+        for ( ExpressionAnalysisResultSet dears : differentialExpressionAnalysis.getResultSets() ) {
+            expressionAnalysisResultSetDao.loadWithResultsAndContrasts( dears.getId() );
+        }
+        return differentialExpressionAnalysis;
     }
 
     @Override
     @Transactional
     public void update( ExpressionAnalysisResultSet a ) {
         this.expressionAnalysisResultSetDao.update( a );
-
     }
 
     @Override
@@ -205,10 +233,10 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         geneDiffExMetaAnalysisDao.remove( metas );
 
         // Remove result sets
-        this.removeResultSets( this.load( toDelete.getId() ) );
+        this.removeResultSets( ensureInSession( toDelete ) );
 
         // Remove the DEA
-        this.differentialExpressionAnalysisDao.remove( toDelete );
+        super.remove( toDelete );
     }
 
     @Override
@@ -231,7 +259,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
-            Collection<? extends BioAssaySet> experiments ) {
+            Collection<BioAssaySet> experiments ) {
         return this.differentialExpressionAnalysisDao
                 .findByExperiments( experiments );
     }
@@ -255,21 +283,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis load( java.lang.Long id ) {
-        return this.differentialExpressionAnalysisDao.load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> loadAll() {
-        return this.differentialExpressionAnalysisDao.loadAll();
-    }
-
     private void removeResultSets( DifferentialExpressionAnalysis toDelete ) {
-        this.differentialExpressionAnalysisDao.thawResultSets( toDelete );
+        Hibernate.initialize( toDelete.getResultSets() );
         Collection<ExpressionAnalysisResultSet> rss = toDelete.getResultSets();
         log.info( "Removing result sets..." );
 

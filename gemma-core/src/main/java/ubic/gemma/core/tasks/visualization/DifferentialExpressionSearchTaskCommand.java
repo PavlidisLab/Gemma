@@ -1,10 +1,8 @@
 package ubic.gemma.core.tasks.visualization;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 import java.util.Collection;
@@ -36,7 +34,7 @@ public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return DifferentialExpressionSearchTask.class;
     }
 

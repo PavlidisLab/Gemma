@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -20,6 +21,7 @@ import ubic.gemma.persistence.util.TestComponent;
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +36,7 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
         @Bean
         public FactoryBean<SessionFactory> sessionFactory() {
             LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
-            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", org.hibernate.dialect.MySQL5InnoDBDialect.class.getName() );
+            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", MySQL57InnoDBDialect.class.getName() );
             factoryBean.setAnnotatedClasses(
                     FakeModel.class, FakeEnum.class, FakeRelatedModel.class
             );
@@ -138,13 +140,13 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
         assertThat( fakeDao.getFilterablePropertyMeta( "id" ) )
                 .hasFieldOrPropertyWithValue( "propertyType", Long.class );
         assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ) )
-                .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
-        assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ).getDescription() )
-                .isEqualTo( "available values: 0, 1, 2, 3" );
+                .hasFieldOrPropertyWithValue( "propertyType", FakeEnum.class );
+        assertThat( fakeDao.getFilterablePropertyMeta( "enumByOrdinal" ).getAllowedValues() )
+                .containsExactlyInAnyOrderElementsOf( EnumSet.allOf( FakeEnum.class ) );
         assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ) )
-                .hasFieldOrPropertyWithValue( "propertyType", String.class );
-        assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ).getDescription() )
-                .isEqualTo( "available values: FOO, BAR, JOHN, DOE" );
+                .hasFieldOrPropertyWithValue( "propertyType", FakeEnum.class );
+        assertThat( fakeDao.getFilterablePropertyMeta( "enumByName" ).getAllowedValues() )
+                .containsExactlyInAnyOrderElementsOf( EnumSet.allOf( FakeEnum.class ) );
         assertThat( fakeDao.getFilterablePropertyMeta( "collectionOfStrings.size" ) )
                 .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
     }

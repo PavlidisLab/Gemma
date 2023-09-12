@@ -6,29 +6,22 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
-@Schema(type = "string", description = "A quantitation type name.")
+@Schema(type = "integer", format = "int64", description = "A quantitation type ID.")
 public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {
     QuantitationTypeByIdArg( long id ) {
-        super( id );
+        super( "id", Long.class, id );
     }
 
     @Override
-    protected String getPropertyName( QuantitationTypeService service ) {
-        return service.getIdentifierPropertyName();
-    }
-
-    @Nonnull
-    @Override
-    public QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
-        return checkEntity( service, service.load( getValue() ) );
+    QuantitationType getEntity( QuantitationTypeService service ) throws NotFoundException, BadRequestException {
+        return service.load( getValue() );
     }
 
     @Override
     public QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service ) {
-        return checkEntity( service, service.findByIdAndDataVectorType( ee, getValue(), dataVectorType ) );
+        return service.findByIdAndDataVectorType( ee, getValue(), dataVectorType );
     }
 }

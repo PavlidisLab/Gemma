@@ -266,7 +266,7 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<? extends BioAssaySet> ees = expressionExperimentService.load( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
         Collection<Gene> genes = geneService.load( geneIds );
@@ -353,10 +353,8 @@ public class DEDVController {
 
         Collection<Long> genes = new ArrayList<>();
         genes.add( geneId );
-        Collection<BioAssaySet> ees = new ArrayList<>();
-        ees.add( ee );
 
-        dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
+        dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ee, genes );
 
         Long time = watch.getTime();
         watch.reset();
@@ -387,7 +385,7 @@ public class DEDVController {
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<>();
         validatedProbes.put( ee.getId(),
-                geneDifferentialExpressionService.getDifferentialExpression( g, ees, threshold, -1 ) );
+                geneDifferentialExpressionService.getDifferentialExpression( g, ee, threshold, -1 ) );
 
         watch.stop();
         time = watch.getTime();

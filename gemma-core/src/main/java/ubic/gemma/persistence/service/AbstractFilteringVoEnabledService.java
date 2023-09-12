@@ -5,7 +5,6 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -17,7 +16,6 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,6 +34,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     protected AbstractFilteringVoEnabledService( FilteringVoEnabledDao<O, VO> voDao ) {
         super( voDao );
         this.voDao = voDao;
+    }
+
+    @Override
+    public String getIdentifierPropertyName() {
+        return voDao.getIdentifierPropertyName();
     }
 
     @Override
@@ -125,16 +128,44 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Nullable
     @Override
-    public List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) {
-        Class<?> elementClass = voDao.getElementClass();
+    public List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String p ) {
         List<Object> filterable = getFilterablePropertyAllowedValues( p );
         if ( filterable != null ) {
             return filterable.stream()
-                    .map( f -> new DefaultMessageSourceResolvable( new String[] { elementClass.getSimpleName() + "." + p + "." + f.toString() + ".label" }, null, f.toString() ) )
+                    .map( f -> this.getCodesForAllowedValue( p, f ) )
                     .collect( Collectors.toList() );
         } else {
             return null;
         }
+    }
+
+    @Override
+    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
+        return voDao.getFilterablePropertyIsUsingSubquery( property );
+    }
+
+    /**
+     * Create a {@link MessageSourceResolvable} for an allowed value of a filter.
+     * <p>
+     * If the value is an enumeration, a code for the enum class +
+     */
+    private MessageSourceResolvable getCodesForAllowedValue( String propertyName, Object allowedValue ) {
+        String[] codes;
+        String key = allowedValue.toString();
+        if ( allowedValue instanceof Enum ) {
+            codes = new String[] {
+                    voDao.getElementClass().getName() + "." + propertyName + "." + key + ".label",
+                    voDao.getElementClass().getSimpleName() + "." + "." + propertyName + "." + key + ".label",
+                    allowedValue.getClass().getName() + "." + key + ".label",
+                    allowedValue.getClass().getSimpleName() + "." + key + ".label"
+            };
+        } else {
+            codes = new String[] {
+                    voDao.getElementClass().getName() + "." + propertyName + "." + key + ".label",
+                    voDao.getElementClass().getSimpleName() + "." + propertyName + "." + key + ".label"
+            };
+        }
+        return new DefaultMessageSourceResolvable( codes, key );
     }
 
     @Nullable
@@ -151,6 +182,18 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, values );
+    }
+
+    @Override
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, propertyType, operator, value );
+    }
+
+    @Override
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, propertyType, operator, values );
     }
 
     public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {

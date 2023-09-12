@@ -25,7 +25,6 @@ import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -84,7 +83,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                     return;
                 }
 
-                arrayDesign = this.thaw( arrayDesign );
+                arrayDesign = getArrayDesignService().thaw( arrayDesign );
 
                 this.processArrayDesign( arrayDesign );
             }
@@ -134,7 +133,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     private void processArrayDesign( ArrayDesign design ) {
-        ArrayDesign thawed = this.thaw( design );
+        ArrayDesign thawed = getArrayDesignService().thaw( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( thawed );

@@ -57,6 +57,7 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
@@ -66,7 +67,7 @@ import static org.junit.Assume.assumeNoException;
  *
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
@@ -155,7 +156,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
-        dataVectorService.thaw( vecs );
+        vecs = dataVectorService.thaw( vecs );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
 
@@ -231,12 +232,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
-                .computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
 
+        ee = eeService.thaw( ee );
+        Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
         assertEquals( 10, dataVectors.size() );
 
-        processedExpressionDataVectorService.thaw( dataVectors );
         for ( ProcessedExpressionDataVector v : dataVectors ) {
             assertNotNull( v.getRankByMax() );
             assertNotNull( v.getRankByMean() );
@@ -268,8 +269,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         QuantitationType qt = qts.iterator().next();
         assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
 
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
-                .computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        ee = eeService.thaw( ee );
+        Set<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+        assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         assertEquals( 100, dataVectors.size() );
 
         ee = eeService.findByShortName( "GSE18707" );
@@ -292,14 +295,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertNotNull( geeq.getId() );
         ee = this.eeService.thawLite( ee );
         assertEquals( geeq, ee.getGeeq() );
-        assertEquals( 3, ee.getAuditTrail().getEvents().size() );
-        // creation, followed by a GeeqEvent and followed by an update
+        assertEquals( 2, ee.getAuditTrail().getEvents().size() );
+        // creation, followed by a GeeqEvent
         assertEquals( AuditAction.CREATE, ee.getAuditTrail().getEvents().get( 0 ).getAction() );
         assertNull( ee.getAuditTrail().getEvents().get( 0 ).getEventType() );
         assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 1 ).getAction() );
         assertEquals( GeeqEvent.class, ee.getAuditTrail().getEvents().get( 1 ).getEventType().getClass() );
-        assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 2 ).getAction() );
-        assertNull( ee.getAuditTrail().getEvents().get( 2 ).getEventType() );
     }
 
     @Test
@@ -323,7 +324,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
 
-        rawExpressionDataVectorService.thaw( vectors );
+        vectors = rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
@@ -404,6 +405,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         CompositeSequence soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
         Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
+        vectors = rawExpressionDataVectorService.thaw( vectors );
         for ( DesignElementDataVector vector : vectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {

@@ -25,8 +25,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +37,7 @@ import java.util.List;
  * @author paul
  */
 public interface ExpressionExperimentSetService
-        extends BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
+        extends BaseService<ExpressionExperimentSet>, BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
 
@@ -82,7 +84,8 @@ public interface ExpressionExperimentSetService
      * @param name name
      * @return collection of ee sets
      */
-    Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSet> findByName( String name );
 
     /**
      * security at DAO level
@@ -120,6 +123,7 @@ public interface ExpressionExperimentSetService
      *
      * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
@@ -195,5 +199,7 @@ public interface ExpressionExperimentSetService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 
-    void thaw( ExpressionExperimentSet set );
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentSet thaw( ExpressionExperimentSet set );
 }

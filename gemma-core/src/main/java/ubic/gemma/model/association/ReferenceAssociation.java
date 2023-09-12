@@ -23,7 +23,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 /**
  * An association between a BioSequence and a GeneProduct based on external database identifiers.
  */
-public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
+public class ReferenceAssociation extends BioSequence2GeneProduct {
 
     private static final long serialVersionUID = -6338026603382275762L;
     private DatabaseEntry referencedDatabaseEntry;
@@ -41,7 +41,7 @@ public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
     public static final class Factory {
 
         public static ReferenceAssociation newInstance() {
-            return new ReferenceAssociationImpl();
+            return new ReferenceAssociation();
         }
 
     }

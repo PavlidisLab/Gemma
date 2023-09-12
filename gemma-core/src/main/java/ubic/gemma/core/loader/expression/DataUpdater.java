@@ -17,9 +17,7 @@ public interface DataUpdater {
 
     void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt );
 
-    @SuppressWarnings("UnusedReturnValue")
-        // Possible external use
-    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
+    void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data );
 
     void reprocessAffyDataFromCel( ExpressionExperiment ee );

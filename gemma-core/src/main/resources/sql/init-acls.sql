@@ -2,32 +2,32 @@
 
 -- Base SIDs we'll need these (not all used by this script; the others would be inserted automagically when needed, but this
 -- gives them predictable ids). Principal names must match init-entities script
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (1, "GrantedAuthoritySid", "GROUP_ADMIN");
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (2, "GrantedAuthoritySid", "GROUP_USER");
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (3, "GrantedAuthoritySid", "GROUP_AGENT");
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (4, "GrantedAuthoritySid", "IS_AUTHENTICATED_ANONYMOUSLY");
-INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (5, "PrincipalSid", "administrator");
-INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (6, "PrincipalSid", "gemmaAgent");
+INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (1, 'GrantedAuthoritySid', 'GROUP_ADMIN');
+INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (2, 'GrantedAuthoritySid', 'GROUP_USER');
+INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (3, 'GrantedAuthoritySid', 'GROUP_AGENT');
+INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (4, 'GrantedAuthoritySid', 'IS_AUTHENTICATED_ANONYMOUSLY');
+INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (5, 'PrincipalSid', 'administrator');
+INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (6, 'PrincipalSid', 'gemmaAgent');
 
 -- Add object identity (OI) for the admin user. There is no parent object, the owner = the administrator; non-inheriting.
 INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (1, "ubic.gemma.model.common.auditAndSecurity.User", 1, 1, 0);
+VALUES (1, 'ubic.gemma.model.common.auditAndSecurity.User', 1, 1, 0);
 
 -- OI for the Admin group (assumes id of this group=1, see init-entities.sql)
 INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (2, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 1, 1, 0);
+VALUES (2, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 1, 1, 0);
 
 -- OI for the Agent group (assumes id of this group=2, see init-entities.sql)
 INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (3, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 2, 1, 0);
+VALUES (3, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 2, 1, 0);
 
 -- OI for the User group (assumes id of group=3, see init-entities.sql)
 INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (4, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 3, 1, 0);
+VALUES (4, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 3, 1, 0);
 
 -- Add object identity (OI) for the agent user. There is no parent object, the owner = the administrator; non-inheriting.
 INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (5, "ubic.gemma.model.common.auditAndSecurity.User", 2, 1, 0);
+VALUES (5, 'ubic.gemma.model.common.auditAndSecurity.User', 2, 1, 0);
 
 --
 -- give GROUP_ADMIN admin priv on everything - we don't need to give it to a specific user.

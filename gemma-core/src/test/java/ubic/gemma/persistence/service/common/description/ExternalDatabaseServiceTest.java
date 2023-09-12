@@ -40,18 +40,6 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testCreateEnsureThatAuditTrailIsCreatedByAdvice() {
-        ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
-        assertThat( externalDatabase.getAuditTrail() ).isNull();
-        ed = externalDatabaseService.create( externalDatabase );
-        assertThat( ed.getAuditTrail() ).isNotNull();
-        assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
-        ed.setLastUpdated( new Date() );
-        externalDatabaseService.update( ed );
-        assertThat( ed.getAuditTrail().getEvents() ).hasSize( 2 );
-    }
-
-    @Test
     public void testUpdateReleaseDetails() throws MalformedURLException {
         ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER ) );
         User currentUser = userManager.getCurrentUser();

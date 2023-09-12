@@ -17,14 +17,13 @@ public class Filters implements Iterable<List<Filter>> {
     /**
      * Builder for a disjunctive sub-clause.
      */
-    public static class FiltersClauseBuilder {
+    public class FiltersClauseBuilder {
 
-        private final Filters filters;
+        private final List<Filter> subClauses;
+        private boolean built = false;
 
-        private final List<Filter> subClauses = new ArrayList<>();
-
-        private FiltersClauseBuilder( Filters filters ) {
-            this.filters = filters;
+        private FiltersClauseBuilder() {
+            subClauses = new ArrayList<>();
         }
 
         /**
@@ -32,6 +31,9 @@ public class Filters implements Iterable<List<Filter>> {
          */
         @CheckReturnValue
         public FiltersClauseBuilder or( Filter filter ) {
+            if ( built ) {
+                throw new IllegalStateException( "This builder has already been built." );
+            }
             subClauses.add( filter );
             return this;
         }
@@ -63,7 +65,9 @@ public class Filters implements Iterable<List<Filter>> {
         }
 
         public Filters build() {
-            return this.filters.and( subClauses.toArray( new Filter[0] ) );
+            Filters.this.clauses.add( Collections.unmodifiableList( subClauses ) );
+            built = true;
+            return Filters.this;
         }
 
         /**
@@ -110,6 +114,14 @@ public class Filters implements Iterable<List<Filter>> {
         return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValue ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue );
+    }
+
+    public static <T> Filters by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValue, String originalProperty ) {
+        return empty().and( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
+    }
+
     /**
      * Copy constructor.
      */
@@ -117,7 +129,7 @@ public class Filters implements Iterable<List<Filter>> {
         return empty().and( filters );
     }
 
-    private final ArrayList<List<Filter>> clauses;
+    private final List<List<Filter>> clauses;
 
     private Filters() {
         this.clauses = new ArrayList<>();
@@ -127,7 +139,7 @@ public class Filters implements Iterable<List<Filter>> {
      * Start a new clause.
      */
     public FiltersClauseBuilder and() {
-        return new FiltersClauseBuilder( this );
+        return new FiltersClauseBuilder();
     }
 
     /**
@@ -160,11 +172,21 @@ public class Filters implements Iterable<List<Filter>> {
         return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
     }
 
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValues ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues ) );
+    }
+
+    public <T> Filters and( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Filter.Operator operator, Subquery requiredValues, String originalProperty ) {
+        return and( Filter.by( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty ) );
+    }
+
     /**
      * Add all the clauses of another filter to this.
      */
     public Filters and( Filters filters ) {
-        clauses.addAll( filters.clauses );
+        for ( List<Filter> clause : filters.clauses ) {
+            clauses.add( Collections.unmodifiableList( new ArrayList<>( clause ) ) );
+        }
         return this;
     }
 

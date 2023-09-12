@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
@@ -64,6 +65,7 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
     }
 
     @Test
+    @WithMockUser
     public void test() {
         ArrayDesign a = ArrayDesign.Factory.newInstance();
         ArrayDesign b = ArrayDesign.Factory.newInstance();
@@ -71,7 +73,8 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         when( arrayDesignService.findByShortName( "1" ) ).thenReturn( a );
         when( arrayDesignService.findByShortName( "2" ) ).thenReturn( b );
         when( arrayDesignService.findByShortName( "3" ) ).thenReturn( c );
-        when( arrayDesignService.thaw( any() ) ).thenAnswer( args -> args.getArgument( 0 ) );
+        when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
+        when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
         assertThat( arrayDesignMergeCli.executeCommand( new String[] { "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" } ) )
                 .isEqualTo( AbstractCLI.SUCCESS );

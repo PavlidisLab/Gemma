@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,12 +40,9 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     protected void doWork() throws Exception {
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
-        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
-
-            ArrayDesign thawed = this.thaw( arrayDesign );
-
+        Collection<ArrayDesign> ads = getArrayDesignService().thaw( getArrayDesignsToProcess() );
+        for ( ArrayDesign thawed : ads ) {
             Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
-
             System.out.println( CompositeSequenceMapSummary.HEADER );
             for ( CompositeSequenceMapSummary summary : results ) {
                 System.out.println( summary );

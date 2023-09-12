@@ -5,13 +5,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -19,6 +20,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("web")
+@WebAppConfiguration
 public class TaxaWebServiceTest extends BaseSpringContextTest {
 
     @Autowired
@@ -71,7 +74,7 @@ public class TaxaWebServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testTaxonDatasetsByNcbiId() {
-        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = taxaWebService.getTaxonDatasets(
+        FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = taxaWebService.getTaxonDatasets(
                 TaxonArg.valueOf( taxon.getNcbiId().toString() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),

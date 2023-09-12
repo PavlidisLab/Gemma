@@ -50,7 +50,6 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @CommonsLog
@@ -74,7 +73,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      */
     private static final int MAX_EFS_REPLICATE_CHECK = 3;
 
-    private static final String LOG_PREFIX = "|G|E|E|Q| ";
+    private static final String LOG_PREFIX = "|G|E|E|Q|";
     private static final String ERR_MSG_MISSING_VALS = "Can not calculate missing values: ";
     private static final String ERR_MSG_CORMAT = "Can not create cormat: ";
     private static final String ERR_MSG_CORMAT_MISSING_VALS = "Cormat retrieval failed because of missing missing values for ee id ";
@@ -151,12 +150,12 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                     this.scoreOnlyPublication( ee );
                     break;
                 default:
-                    log.warn( GeeqServiceImpl.LOG_PREFIX + " Did not recognize the given mode " + mode + " for " + ee );
+                    throw new IllegalArgumentException( "Unsupported mode: " + mode + " for " + ee );
             }
-            log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for " + ee
+            log.debug( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for " + ee
                     + ", saving results..." );
         } catch ( Exception e ) {
-            log.error( GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for " + ee + ".", e );
+            log.error( GeeqServiceImpl.LOG_PREFIX + " Scoring did not finish for " + ee + ".", e );
             gq.addOtherIssues( e.getMessage() );
         }
 
@@ -170,83 +169,16 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         }
 
         stopwatch.stop();
-        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
-                "Took " + stopwatch.getTime() + " ms.\nUnexpected problems encountered: \n" + gq
+        this.createGeeqEvent( ee, "Geeq scoring (mode: " + mode + ")",
+                "Issues noted: \n" + gq
                         .getOtherIssues() );
 
-        log.info( GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
-                + " minutes to process " + ee );
+        if ( stopwatch.getTime() > 1000 )
+            log.info( GeeqServiceImpl.LOG_PREFIX + " finished for " + ee.getShortName() + " (" + stopwatch.getTime() + " ms)" );
 
         return gq;
     }
 
-    @Override
-    @Transactional
-    public void setManualOverrides( ExpressionExperiment ee, GeeqAdminValueObject gqVo ) {
-        ee = expressionExperimentService.loadOrFail( ee.getId() );
-        Geeq gq = ee.getGeeq();
-
-//        // Update manual quality score value
-//        if ( gq.getManualQualityScore() != gqVo.getManualQualityScore() ) {
-//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score value changed",
-//                    this.fromTo( gq.getManualQualityScore(), gqVo.getManualQualityScore() ) ) );
-//            gq.setManualQualityScore( gqVo.getManualQualityScore() );
-//        }
-//        // Update manual quality score override
-//        if ( gq.isManualQualityOverride() != gqVo.isManualQualityOverride() ) {
-//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score override changed",
-//                    this.fromTo( gq.isManualQualityOverride(), gqVo.isManualQualityOverride() ) ) );
-//            gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
-//        }
-//
-//        // Update manual suitability score value
-//        if ( gq.getManualSuitabilityScore() != gqVo.getManualSuitabilityScore() ) {
-//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score value changed",
-//                    this.fromTo( gq.getManualSuitabilityScore(), gqVo.getManualSuitabilityScore() ) ) );
-//            gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
-//        }
-//        // Update manual suitability score override
-//        if ( gq.isManualSuitabilityOverride() != gqVo.isManualSuitabilityOverride() ) {
-//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score override changed",
-//                    this.fromTo( gq.isManualSuitabilityOverride(), gqVo.isManualSuitabilityOverride() ) ) );
-//            gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
-//        }
-//
-//        // Update manual batch confound value
-//        if ( gq.isManualHasBatchConfound() != gqVo.isManualHasBatchConfound() ) {
-//            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound value changed",
-//                    this.fromTo( gq.isManualHasBatchConfound(), gqVo.isManualHasBatchConfound() ) ) );
-//            gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
-//        }
-//        // Update manual batch confound override
-//        if ( gq.isManualBatchConfoundActive() != gqVo.isManualBatchConfoundActive() ) {
-//            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound override changed",
-//                    this.fromTo( gq.isManualBatchConfoundActive(), gqVo.isManualBatchConfoundActive() ) ) );
-//            gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
-//        }
-
-//        // Update manual batch effect strong value
-//        if ( gq.isManualHasStrongBatchEffect() != gqVo.isManualHasStrongBatchEffect() ) {
-//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual strong batch effect value changed",
-//                    this.fromTo( gq.isManualHasStrongBatchEffect(), gqVo.isManualHasStrongBatchEffect() ) ) );
-//            gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
-//        }
-//        // Update manual batch effect no value
-//        if ( gq.isManualHasNoBatchEffect() != gqVo.isManualHasNoBatchEffect() ) {
-//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual no batch effect value changed",
-//                    this.fromTo( gq.isManualHasNoBatchEffect(), gqVo.isManualHasNoBatchEffect() ) ) );
-//            gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
-//        }
-//        // Update manual batch effect override
-//        if ( gq.isManualBatchEffectActive() != gqVo.isManualBatchEffectActive() ) {
-//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual batch effect override changed",
-//                    this.fromTo( gq.isManualBatchEffectActive(), gqVo.isManualBatchEffectActive() ) ) );
-//            gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
-//        }
-
-        this.update( gq );
-        log.info( GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for " + ee );
-    }
 
     private void updateSuitabilityScore( Geeq gq ) {
         double[] suitability = gq.getSuitabilityScoreArray();
@@ -649,7 +581,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         List<ExperimentalFactor> keepEfs = new ArrayList<>( GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK );
 
         for ( BioAssay ba : bas ) {
-            Collection<FactorValue> fvs = ba.getSampleUsed().getFactorValues();
+            // we need a copy here, otherwise the model will be mutated
+            Collection<FactorValue> fvs = new HashSet<>( ba.getSampleUsed().getFactorValues() );
 
             //only keep up to MAX_EFS_REPLICATE_CHECK categorical factors, ignoring batch factor and DE_EXCLUDE
             Collection<FactorValue> removeFvs = new LinkedList<>();
@@ -696,7 +629,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
+            cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         } catch ( IllegalStateException e ) {
             log.warn(
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );

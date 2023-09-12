@@ -24,12 +24,15 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.hibernate.*;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.Pointcuts;
@@ -38,6 +41,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -68,6 +73,9 @@ public class AuditAdvice {
     private UserManager userManager;
 
     @Autowired
+    private GenericCuratableDao curatableDao;
+
+    @Autowired
     private SessionFactory sessionFactory;
 
     /**
@@ -79,6 +87,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#create(Object)
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.CREATE );
@@ -93,6 +102,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#update(Object)
      * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.UPDATE );
@@ -108,6 +118,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#save(Object)
      * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.saver()")
     public void doSaveAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.SAVE );
@@ -122,13 +133,18 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#remove(Object)
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
+    @Order(4)
     @Before("ubic.gemma.core.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.DELETE );
     }
 
     private void doAuditAdvice( JoinPoint pjp, OperationType operationType ) {
-        Signature signature = pjp.getSignature();
+        MethodSignature signature = ( MethodSignature ) pjp.getSignature();
+        if ( signature.getMethod().getAnnotation( IgnoreAudit.class ) != null ) {
+            AuditAdvice.log.trace( String.format( "Not auditing %s annotated with %s.", signature, IgnoreAudit.class.getName() ) );
+            return;
+        }
         Object[] args = pjp.getArgs();
         // only audit the first argument
         if ( args.length < 1 )
@@ -255,6 +271,10 @@ public class AuditAdvice {
                 Object propertyValue = propertyValues[j];
                 Type propertyType = propertyTypes[j];
 
+                if ( propertyValue == null ) {
+                    continue;
+                }
+
                 // ensure that the operation performed on the original object cascades as per JPA definition
                 // events don't cascade through uninitialized properties
                 if ( !cs.doCascade( cascadingAction ) || !Hibernate.isInitialized( propertyValue ) ) {
@@ -282,10 +302,7 @@ public class AuditAdvice {
     private void addAuditEvent( Signature method, Auditable auditable, AuditAction auditAction, String
             cascadedNote, User user, Date date ) {
         String note = String.format( "%s event on entity %s:%d [%s] by %s via %s on %s%s", auditAction, auditable.getClass().getName(), auditable.getId(), auditable, user.getUserName(), method, date, cascadedNote );
-        if ( auditable.getAuditTrail() == null ) {
-            // transient
-            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-        } else if ( auditable.getAuditTrail().getId() != null ) {
+        if ( auditable.getAuditTrail().getId() != null ) {
             // persistent, but let's make sure it is part of this session
             auditable.setAuditTrail( ( AuditTrail ) sessionFactory.getCurrentSession().merge( auditable.getAuditTrail() ) );
         }
@@ -294,7 +311,11 @@ public class AuditAdvice {
                     AuditAction.CREATE, auditable ) );
             return;
         }
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null ) );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
+        auditable.getAuditTrail().getEvents().add( auditEvent );
+        if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        }
         if ( AuditAdvice.log.isTraceEnabled() ) {
             AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",
                     note.length() > 0 ? note : "[no note]", auditable.getClass().getSimpleName(), auditable.getId(), user.getUserName() ) );

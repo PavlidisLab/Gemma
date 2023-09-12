@@ -29,7 +29,7 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.core.util.AnchorTagUtil;
+import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -541,7 +541,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
-        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );
+        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, request.getServletContext() ) );
 
         return mnv;
     }

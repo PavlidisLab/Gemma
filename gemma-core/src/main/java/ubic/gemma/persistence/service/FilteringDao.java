@@ -49,7 +49,15 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * of {@link String} or {@link Integer} to denote possible values for an enumerated type.
      */
     @Nullable
-    List<Object> getFilterablePropertyAllowedValues( String property );
+    List<Object> getFilterablePropertyAllowedValues( String property ) throws IllegalArgumentException;
+
+    /**
+     * Indicate if the given property is using a subquery for filtering.
+     * <p>
+     * When this is the case, the filter will only check if at least one related entity is matching.
+     * @throws IllegalArgumentException if the property does not exist
+     */
+    boolean getFilterablePropertyIsUsingSubquery( String property ) throws IllegalArgumentException;
 
     /**
      * Obtain an {@link Filter} for the entity this DAO is providing.
@@ -77,6 +85,18 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * Similar to {@link #getFilter(String, Filter.Operator, String)}, but with a collection of values.
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+
+    /**
+     * Obtain a {@link Filter} with an already parsed value.
+     * @see #getFilter(String, Filter.Operator, String)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) throws IllegalArgumentException;
+
+    /**
+     * Obtain a {@link Filter} with an already parsed collection of values.
+     * @see #getFilter(String, Filter.Operator, Collection)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) throws IllegalArgumentException;
 
     /**
      * Obtain a {@link Sort} object for a property of the {@link O}.

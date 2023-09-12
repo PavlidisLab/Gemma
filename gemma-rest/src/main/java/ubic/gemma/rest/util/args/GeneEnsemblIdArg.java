@@ -4,8 +4,9 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Long argument type for Gene API, referencing the Gene Ensembl ID.
@@ -20,18 +21,17 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
      * @param s intentionally primitive type, so the value property can never be null.
      */
     GeneEnsemblIdArg( String s ) {
-        super( s );
-    }
-
-    @Nonnull
-    @Override
-    public Gene getEntity( GeneService service ) {
-        return checkEntity( service, service.findByEnsemblId( this.getValue() ) );
+        super( "ensemblId", String.class, s );
     }
 
     @Override
-    public String getPropertyName( GeneService service ) {
-        return "ensemblId";
+    Gene getEntity( GeneService service ) {
+        return service.findByEnsemblId( this.getValue() );
     }
 
+    @Nullable
+    @Override
+    protected Gene getEntityWithTaxon( GeneService service, Taxon taxon ) {
+        return getEntity( service );
+    }
 }

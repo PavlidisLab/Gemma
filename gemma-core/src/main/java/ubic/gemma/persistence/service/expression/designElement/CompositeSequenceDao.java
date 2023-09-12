@@ -82,6 +82,6 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 
-    CompositeSequence thaw( CompositeSequence compositeSequence );
+    void thaw( CompositeSequence compositeSequence );
 
 }

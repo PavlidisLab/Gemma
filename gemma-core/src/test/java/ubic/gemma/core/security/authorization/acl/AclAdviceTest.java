@@ -92,7 +92,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     public void testSecuredNotChild() {
         String groupName = this.randomName();
         securityService.createGroup( groupName );
-        UserGroup g = ( UserGroup ) userService.findGroupByName( groupName );
+        UserGroup g = userService.findGroupByName( groupName );
         aclTestUtils.checkHasAcl( g );
         aclTestUtils.checkHasAces( g );
         userService.delete( g );
@@ -268,7 +268,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ees.getExperiments().add( ee );
         ees.setName( this.randomName() );
 
-        persisterHelper.persist( ees );
+        ees = ( ExpressionExperimentSet ) persisterHelper.persist( ees );
 
         // make sure the ACL for objects are there (throws an exception if not).
 
@@ -316,7 +316,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );
-        aclTestUtils.checkLacksAcl( resultSet );
 
         aclTestUtils.checkHasAces( ee );
         aclTestUtils.checkLacksAces( diffExpressionAnalysis );

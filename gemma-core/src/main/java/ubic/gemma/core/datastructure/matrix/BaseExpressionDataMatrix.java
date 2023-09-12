@@ -258,7 +258,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * For example, in the following diagram "-" indicates a biomaterial, while "*" indicates a bioassay. Each row of
      * "*" indicates samples run on a different microarray design (a different bio assay material). In the examples we
      * assume there is just a single biomaterial dimension.
-     * 
+     *
      * <pre>
      * ---------------
      * *****              -- only a few samples run on this platform
@@ -268,7 +268,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A simpler case:
      * </p>
-     * 
+     *
      * <pre>
      * ---------------
      * ***************
@@ -278,7 +278,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A more typical and easy case (one microarray design used):
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -286,7 +286,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * If every sample was run on two different array designs:
      * </p>
-     * 
+     *
      * <pre>
      * ----------------
      * ****************
@@ -294,7 +294,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * </pre>
      * <p>
      * Every sample was run on a different array design:
-     * 
+     *
      * <pre>
      * -----------------------
      * ******
@@ -384,7 +384,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 this.getQuantitationTypes().add( vectorQuantitationType );
             } else {
                 if ( quantitationType != vectorQuantitationType ) {
-                    throw new IllegalArgumentException( "Cannot pass vectors from more than one quantitation type" );
+                    throw new IllegalArgumentException( "Cannot pass vectors from more than one quantitation type: " +
+                            vectorQuantitationType + " vs "
+                            + quantitationType );
                 }
 
             }

@@ -22,10 +22,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -49,6 +51,7 @@ import static org.junit.Assert.*;
 /**
  * @author Paul
  */
+@Category(SlowTest.class)
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     private final String adName = RandomStringUtils.randomAlphabetic( 10 );

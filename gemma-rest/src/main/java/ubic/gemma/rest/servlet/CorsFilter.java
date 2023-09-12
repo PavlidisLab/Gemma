@@ -14,10 +14,18 @@
  */
 package ubic.gemma.rest.servlet;
 
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.Assert;
+import org.springframework.web.context.ConfigurableWebApplicationContext;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.annotation.Nullable;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,16 +37,61 @@ import java.io.IOException;
  * <p>
  * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
+@CommonsLog
 public class CorsFilter extends OncePerRequestFilter {
+
+    private static final String WILDCARD = "*";
+
+    private String allowedOrigins = WILDCARD;
+    @Nullable
+    private String allowedMethods;
+    @Nullable
+    private String allowedHeaders;
+    private boolean allowCredentials = false;
+
+    @Override
+    protected void initFilterBean() {
+        log.info( String.format( "CORS is configured to allow requests from %s",
+                String.join( ", ", allowedOrigins.split( "," ) ) ) );
+    }
 
     @Override
     public void doFilterInternal( HttpServletRequest req, HttpServletResponse res, FilterChain chain )
             throws IOException, ServletException {
-        if ( req.getHeader( "Origin" ) != null ) {
-            res.addHeader( "Access-Control-Allow-Origin", "*" );
+        Assert.isTrue( !allowCredentials || !WILDCARD.equals( allowedOrigins ), "If credentials are allowed, a wildcard cannot be used for allowed origins." );
+        Assert.isTrue( !allowCredentials || !WILDCARD.equals( allowedMethods ), "If credentials are allowed, a wildcard cannot be used for allowed methods." );
+        Assert.isTrue( !allowCredentials || !WILDCARD.equals( allowedHeaders ), "If credentials are allowed, a wildcard cannot be used for allowed headers." );
+        String origin = req.getHeader( "Origin" );
+        if ( origin != null ) {
+            if ( "*".equals( allowedOrigins ) ) {
+                res.addHeader( "Access-Control-Allow-Origin", WILDCARD );
+            } else {
+                boolean matched = false;
+                for ( String allowedOrigin : allowedOrigins.split( "," ) ) {
+                    allowedOrigin = allowedOrigin.trim();
+                    if ( allowedOrigin.equalsIgnoreCase( origin ) ) {
+                        res.addHeader( "Access-Control-Allow-Origin", allowedOrigin );
+                        res.addHeader( "Vary", "Origin" );
+                        matched = true;
+                        break;
+                    }
+                }
+                if ( !matched ) {
+                    res.sendError( HttpServletResponse.SC_FORBIDDEN, "Invalid CORS request" );
+                    return;
+                }
+            }
+            if ( allowCredentials ) {
+                res.addHeader( "Access-Control-Allow-Credentials", "true" );
+            }
         }
         if ( isPreflight( req ) ) {
-            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type" );
+            if ( StringUtils.isNotBlank( allowedMethods ) ) {
+                res.addHeader( "Access-Control-Allow-Methods", allowedMethods );
+            }
+            if ( StringUtils.isNotBlank( allowedHeaders ) ) {
+                res.addHeader( "Access-Control-Allow-Headers", allowedHeaders );
+            }
             res.setStatus( HttpStatus.NO_CONTENT.value() );
             return;
         }
@@ -47,5 +100,50 @@ public class CorsFilter extends OncePerRequestFilter {
 
     private static boolean isPreflight( HttpServletRequest req ) {
         return req.getHeader( "Origin" ) != null && HttpMethod.valueOf( req.getMethod() ).equals( HttpMethod.OPTIONS );
+    }
+
+    /**
+     * Set the allowed origins of a CORS request.
+     * <p>
+     * Use a wildcard "*" to allow all.
+     */
+    public void setAllowedOrigins( String allowedOrigins ) {
+        // FIXME: for some reason, Spring does not substitute placeholders in filters and we need that to make the allowed origins configurable.
+        WebApplicationContext context = WebApplicationContextUtils.getRequiredWebApplicationContext( getServletContext() );
+        if ( context instanceof ConfigurableApplicationContext ) {
+            this.allowedOrigins = ( ( ConfigurableWebApplicationContext ) context ).getBeanFactory()
+                    .resolveEmbeddedValue( allowedOrigins );
+        } else {
+            this.allowedOrigins = allowedOrigins;
+            log.warn( "The context does not implement the ConfigurableApplicationContext interface, no placeholder substitution will be performed." );
+        }
+    }
+
+    /**
+     * Set the allowed methods by a CORS request.
+     * <p>
+     * Use a wildcard "*" to allow all.
+     */
+    public void setAllowedMethods( @Nullable String allowedMethods ) {
+        this.allowedMethods = allowedMethods;
+    }
+
+    /**
+     * Set the allowed headers by a CORS request.
+     * <p>
+     * Use a wildcard "*" to allow all.
+     */
+    public void setAllowedHeaders( @Nullable String allowedHeaders ) {
+        this.allowedHeaders = allowedHeaders;
+    }
+
+    /**
+     * Indicate if the credentials (i.e. cookies, HTTP authentication) can be used by a CORS request.
+     * <p>
+     * If this is set to true, a wildcard cannot be used for {@link #setAllowedOrigins(String)}, {@link #setAllowedMethods(String)}
+     * nor {@link #setAllowedHeaders(String)}.
+     */
+    public void setAllowCredentials( boolean allowCredentials ) {
+        this.allowCredentials = allowCredentials;
     }
 }

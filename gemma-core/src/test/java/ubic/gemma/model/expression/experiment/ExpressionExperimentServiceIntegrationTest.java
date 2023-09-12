@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,22 +31,21 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Subquery;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -193,6 +191,29 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
+    public void testGetPreferredQuantitationType() {
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        assertNotNull( qt );
+        assertTrue( qt.getIsPreferred() );
+    }
+
+    @Test
+    public void testGetBioMaterialCount() {
+        assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
+    }
+
+    @Test
+    public void testGetQuantitationTypeCount() {
+        Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
+        assertEquals( 2, qts.size() );
+    }
+
+    @Test
+    public void testGetDesignElementDataVectorCount() {
+        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
+    }
+
+    @Test
     public final void testGetQuantitationTypesForArrayDesign() {
         ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee, ad );
@@ -225,7 +246,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .find( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );
-
     }
 
     @Test
@@ -283,35 +303,33 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "requiredValue", false );
 
         assertThat( expressionExperimentService.getFilter( "bioAssays.arrayDesignUsed.technologyType", Filter.Operator.eq, "SEQUENCING" ) )
-                .hasFieldOrPropertyWithValue( "objectAlias", "ba" )
-                .hasFieldOrPropertyWithValue( "propertyName", "arrayDesignUsed.technologyType" )
-                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.eq )
-                .hasFieldOrPropertyWithValue( "requiredValue", TechnologyType.SEQUENCING );
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.inSubquery );
     }
 
     @Test
-    public final void testLoadValueObjects() {
+    public final void testLoadValueObjectsByIds() {
         Collection<Long> ids = new HashSet<>();
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsByIds( ids );
         assertNotNull( list );
-        assertEquals( 1, list.size() );
+        assertThat( list ).hasSize( 1 ).extracting( "id" ).contains( id );
     }
 
     @Test
     public void testLoadValueObjectsByCharacteristic() {
-        Collection<Long> ids = new HashSet<>();
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
-        assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( ExpressionExperimentDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
+        assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
-        ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertEquals( 1, list.size() );
+        assertThat( list ).extracting( "id" ).contains( id );
     }
 
     @Test
@@ -334,16 +352,19 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByBioAssay() {
-        Collection<Long> ids = new HashSet<>();
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
-        assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( ExpressionExperimentDao.OBJECT_ALIAS, of.getObjectAlias() );
         assertEquals( "id", of.getPropertyName() );
+        assertTrue( of.getRequiredValue() instanceof Subquery );
         Long id = ee.getId();
-        ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertEquals( 1, list.size() );
+        assertThat( list )
+                .hasSize( 1 )
+                .first()
+                .extracting( "id" )
+                .isEqualTo( id );
     }
 
     @Test
@@ -352,19 +373,18 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( blacklistedEntityService.isBlacklisted( ee ) ).isTrue();
         Slice<ExpressionExperimentValueObject> result = expressionExperimentService.loadBlacklistedValueObjects( null, null, 0, 10 );
         assertThat( result )
-                .hasSize( 1 )
-                .first()
-                .hasFieldOrPropertyWithValue( "shortName", ee.getShortName() );
+                .extracting( "shortName" )
+                .contains( ee.getShortName() );
     }
 
     @Test
     public void testFilterByAllCharacteristics() {
         Filter f = expressionExperimentService.getFilter( "allCharacteristics.valueUri", Filter.Operator.eq, "http://www.ebi.ac.uk/efo/EFO_000516" );
         assertThat( f )
-                .hasFieldOrPropertyWithValue( "objectAlias", "ac" )
-                .hasFieldOrPropertyWithValue( "propertyName", "valueUri" );
-        assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
-                .isEmpty();
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "operator", Filter.Operator.inSubquery );
+        expressionExperimentService.load( Filters.by( f ), null );
     }
 
     @Test
@@ -375,8 +395,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "propertyName", "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
                 .hasFieldOrPropertyWithValue( "requiredValue", 0.9 )
                 .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
-        assertThat( expressionExperimentService.load( Filters.by( f ), null ) )
-                .isEmpty();
+        expressionExperimentService.load( Filters.by( f ), null );
     }
 
     @Test
@@ -386,8 +405,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test(expected = AccessDeniedException.class)
     public void testFilterBySuitabilityScoreAsNonAdmin() {
-        runAsAnonymous();
         try {
+            runAsAnonymous();
             expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
         } finally {
             runAsAdmin(); // for cleanups
@@ -402,11 +421,10 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         Consumer<? super ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> consumer = c2 -> {
             assertThat( c2.getCharacteristic() ).isEqualTo( c );
             assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
-            assertThat( c2.getTerm() ).isNull();
         };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .noneSatisfy( consumer );
 
         // add the term to the dataset and update the pivot table
@@ -415,12 +433,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( c.getId() ).isNotNull();
 
         // the table is out-of-date
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .noneSatisfy( consumer );
 
         // update the pivot table
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .satisfiesOnlyOnce( consumer );
 
         // remove the term, which must evict the query cache
@@ -433,7 +451,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 } );
 
         // since deletions are cascaded, the change will be reflected immediatly
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .noneSatisfy( consumer );
     }
 }

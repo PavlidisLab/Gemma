@@ -23,6 +23,7 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.Nullable;
@@ -32,7 +33,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociation> {
+public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOAssociation> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
@@ -53,7 +54,7 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
     Collection<Gene> findByGOTerm( String goID, Taxon taxon );
 
     @Secured({ "GROUP_ADMIN" })
-    void removeAll();
+    void removeAllInBatch();
 
     /**
      * @param  termsToFetch terms

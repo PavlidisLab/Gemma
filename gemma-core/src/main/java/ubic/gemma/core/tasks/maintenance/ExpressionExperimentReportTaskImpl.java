@@ -11,7 +11,7 @@ import ubic.gemma.core.tasks.AbstractTask;
 
 @Component
 @Scope("prototype")
-public class ExpressionExperimentReportTaskImpl extends AbstractTask<TaskResult, ExpressionExperimentReportTaskCommand>
+public class ExpressionExperimentReportTaskImpl extends AbstractTask<ExpressionExperimentReportTaskCommand>
         implements ExpressionExperimentReportTask {
 
     private final Log log = LogFactory.getLog( ExpressionExperimentReportTask.class.getName() );

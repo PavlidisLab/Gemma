@@ -28,43 +28,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
-
-    /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have any bioSequence
-     * associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
-
-    /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
-
-    /**
-     * @param arrayDesign AD
-     * @return all compositeSequences for the given arrayDesign that do not have gene associations.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     /**
      * remove sequence alignment results associated with the bioSequences for this array design. This can indirectly
@@ -83,44 +61,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    @Override
-    ArrayDesign find( ArrayDesign arrayDesign );
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
-    @Override
-    ArrayDesign findOrCreate( ArrayDesign arrayDesign );
-
-    @Secured({ "GROUP_USER" })
-    @Override
-    ArrayDesign create( ArrayDesign arrayDesign );
-
-    /**
-     * Given a collection of ID (longs) will return a collection of ArrayDesigns
-     *
-     * @param ids ids
-     * @return ADs
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    @Override
-    Collection<ArrayDesign> load( Collection<Long> ids );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    @Override
-    ArrayDesign load( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    @Override
-    Collection<ArrayDesign> loadAll();
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    @Override
-    void remove( ArrayDesign arrayDesign );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByAlternateName( String queryString );
@@ -178,6 +118,9 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+
     /**
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
      * -&gt;
@@ -215,7 +158,11 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @param id id of the platform
      * @return collection of EE ids
      */
-    Collection<Long> getSwitchedExperimentIds( ArrayDesign id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getSwitchedExpressionExperimentCount( ArrayDesign id );
 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
@@ -340,6 +287,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @param arrayDesign AD
      * @return how many experiments use this platform (not including experiment subsets) security filtered
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numExperiments( ArrayDesign arrayDesign );
 
     /**
@@ -363,8 +311,19 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#thaw(ArrayDesign)
+     */
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thaw( ArrayDesign arrayDesign );
+
+    /**
+     * @see ArrayDesignDao#thaw(Collection)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
@@ -372,9 +331,11 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @param arrayDesign AD
      * @return AD
      */
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
@@ -400,5 +361,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }

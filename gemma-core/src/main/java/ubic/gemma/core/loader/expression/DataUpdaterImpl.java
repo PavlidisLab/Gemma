@@ -56,6 +56,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -74,7 +75,7 @@ import java.util.*;
 @Service
 public class DataUpdaterImpl implements DataUpdater {
 
-    private static final Log log = LogFactory.getLog( DataUpdater.class );
+    private static final Log log = LogFactory.getLog( DataUpdaterImpl.class );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -118,6 +119,9 @@ public class DataUpdaterImpl implements DataUpdater {
     @Autowired
     private VectorMergingService vectorMergingService;
 
+    @Autowired
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
+
     /**
      * Affymetrix: Use to bypass the automated running of apt-probeset-summarize. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves, or if some GEO files were corrupted (in which case the file
@@ -131,6 +135,7 @@ public class DataUpdaterImpl implements DataUpdater {
      *                             exon-level)
      * @throws IOException         when IO problems occur.
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
@@ -188,6 +193,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param isPairedReads       is paired reads
      * @param readLength          read length
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
@@ -285,6 +291,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param ee ee
      * @param qt qt
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
         ee = experimentService.thawLite( ee );
@@ -342,9 +349,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           data
      * @return ee
      */
+    @Override
     @SuppressWarnings("UnusedReturnValue") // Possible external use
     @Transactional(propagation = Propagation.NEVER)
-    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
+    public void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
         ee = this.experimentService.thawLite( ee );
@@ -353,7 +361,7 @@ public class DataUpdaterImpl implements DataUpdater {
         this.matchBioMaterialsToColNames( ee, data, rdata );
         ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
 
-        return this.replaceData( ee, targetPlatform, eematrix );
+        this.replaceData( ee, targetPlatform, eematrix );
     }
 
     /**
@@ -369,6 +377,7 @@ public class DataUpdaterImpl implements DataUpdater {
      *
      * @param ee the experiment (already lightly thawed)
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdaterImpl.log.info( "------  Begin processing: " + ee + " -----" );
@@ -543,6 +552,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           to slot in
      * @return ee
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
@@ -566,7 +576,7 @@ public class DataUpdaterImpl implements DataUpdater {
             for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
                 if ( existingQt.getIsPreferred() ) {
                     // this is okay if there is not actually any data associated with the QT.
-                    if ( this.rawExpressionDataVectorService.findRawAndProcessed( existingQt ).size() > 0 ) {
+                    if ( this.rawAndProcessedExpressionDataVectorService.find( existingQt ).size() > 0 ) {
                         throw new IllegalArgumentException(
                                 "You cannot add 'preferred' data to an experiment that already has it. "
                                         + "You should first delete the existing data or make it non-preferred." );
@@ -608,6 +618,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  data           the data to be used
      * @return ee
      */
+    @Override
     @Transactional(propagation = Propagation.NEVER)
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {

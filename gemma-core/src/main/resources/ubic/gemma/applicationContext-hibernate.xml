@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
-	   xmlns:tx="http://www.springframework.org/schema/tx" xmlns:p="http://www.springframework.org/schema/p"
-	   xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns="http://www.springframework.org/schema/beans" xmlns:cache="http://www.springframework.org/schema/cache"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
-   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 	<!-- Enable AspectJ autoproxy -->
 	<aop:aspectj-autoproxy/>
@@ -58,25 +58,34 @@
 		<property name="configLocation" value="classpath:hibernate.cfg.xml"/>
 		<property name="hibernateProperties">
 			<props>
-				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
-				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
-				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
+				<prop key="hibernate.dialect">ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect</prop>
+				<!-- caching options -->
+				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
+				<!-- defaults for fetching/inserting -->
+				<prop key="hibernate.max_fetch_depth">3</prop>
+				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_batch_fetch_size}</prop>
 				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
-				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
 				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
 				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
-				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
-				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
-				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}</prop>
-				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
-				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
-				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+				<prop key="hibernate.order_inserts">true</prop>
+				<prop key="hibernate.order_updates">true</prop>
+				<!-- used for micrometer -->
+				<!-- FIXME: this is unnecessary in the test profile -->
+				<prop key="hibernate.generate_statistics">true</prop>
+				<!-- debugging options -->
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+				<prop key="hibernate.search.lucene_version">LUCENE_36</prop>
+				<prop key="hibernate.search.default.indexBase">${gemma.search.dir}</prop>
 			</props>
 		</property>
 	</bean>
+
+	<!-- enable usage of @Cacheable annotations -->
+	<cache:annotation-driven order="2"/>
 
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
 		<constructor-arg ref="ehcache"/>
@@ -84,8 +93,9 @@
 
 	<!-- the Ehcache cache manager is shared so that it can be reused by Hibernate -->
 	<!-- gsec expect this bean to be defined, otherwise it would be inlined in cacheManager -->
-	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-		  p:shared="true"/>
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="shared" value="true"/>
+	</bean>
 
 	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
 

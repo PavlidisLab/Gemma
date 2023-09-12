@@ -18,8 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -39,18 +42,19 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
-import javax.annotation.PostConstruct;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 
 /**
  * @author pavlidis
  */
 @Component
-public class GeoBrowserServiceImpl implements GeoBrowserService {
+public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBean, DisposableBean {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
@@ -67,16 +71,14 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
-    private Map<String, GeoRecord> localInfo;
+    private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
     private XPathExpression xgse;
     private XPathExpression xtitle;
     private XPathExpression xgpls;
     private XPathExpression xsummary;
 
-    @PostConstruct
-    public void afterPropertiesSet() throws Exception {
-        this.initializeLocalInfo();
-
+    @Override
+    public void afterPropertiesSet() throws XPathExpressionException {
         XPathFactory xf = XPathFactory.newInstance();
         XPath xpath = xf.newXPath();
         // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
@@ -84,10 +86,16 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
         xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
         xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
+        Executors.newSingleThreadExecutor().submit( this::initializeLocalInfo );
     }
 
     @Override
-    public String getDetails( String accession ) throws IOException {
+    public void destroy() throws Exception {
+        saveLocalInfo();
+    }
+
+    @Override
+    public String getDetails( String accession, String contextPath ) throws IOException {
         /*
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
@@ -105,9 +113,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          */
         localInfo.get( accession ).setPreviousClicks( localInfo.get( accession ).getPreviousClicks() + 1 );
 
-        this.saveLocalInfo();
-
-        return this.formatDetails( details );
+        return this.formatDetails( details, contextPath );
 
     }
 
@@ -137,8 +143,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
         localInfo.get( accession ).setUsable( !localInfo.get( accession ).isUsable() );
 
-        this.saveLocalInfo();
-
         return localInfo.get( accession ).isUsable();
     }
 
@@ -146,9 +150,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
      *
      * @param  details XML from eSummary
-     * @return         HTML-formatted
+     * @return HTML-formatted
      */
-    String formatDetails( String details ) throws IOException {
+    String formatDetails( String details, String contextPath ) throws IOException {
 
         /*
          * Bug 2690. There must be a better way.
@@ -169,7 +173,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( Settings.getRootContext() )
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( contextPath )
                         .append( "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
                         .append( "\">" ).append( gse ).append( "</a></strong>" );
             } else {
@@ -179,7 +183,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             buf.append( "<p>" ).append( title ).append( "</p>\n" );
             buf.append( "<p>" ).append( summary ).append( "</p>\n" );
 
-            this.formatArrayDetails( gpls, buf );
+            this.formatArrayDetails( gpls, buf, contextPath );
 
             buf.append( "</div>" );
             details = buf.toString();
@@ -196,7 +200,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec: for ( GeoRecord record : records ) {
+        rec:
+        for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
                 toRemove.add( record );
@@ -244,7 +249,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     }
 
-    private void formatArrayDetails( NodeList gpls, StringBuilder buf ) {
+    private void formatArrayDetails( NodeList gpls, StringBuilder buf, String contextPath ) {
         Set<String> seenGpl = new HashSet<>();
         for ( int i = 0; i < gpls.getLength(); i++ ) {
             String gpl = "GPL" + gpls.item( i ).getNodeValue();
@@ -261,13 +266,13 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble = "&nbsp;<img src='" + Settings.getRootContext()
+                        trouble = "&nbsp;<img src='" + contextPath
                                 + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
                                 + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
-                        .append( Settings.getRootContext() ).append( "/arrays/showArrayDesign.html?id=" )
+                        .append( contextPath ).append( "/arrays/showArrayDesign.html?id=" )
                         .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
                         .append( trouble );
             } else {
@@ -281,29 +286,28 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Initialize local info from disk. Only fill in entries that are not already present.
+     */
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
-
+            GeoBrowserServiceImpl.log.info( String.format( "Loading GEO browser info from %s...", f.getAbsolutePath() ) );
+            StopWatch timer = StopWatch.createStarted();
+            try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
                 //noinspection unchecked
-                this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
-
+                Map<String, GeoRecord> records = ( ( Map<String, GeoRecord> ) ois.readObject() );
+                for ( Map.Entry<String, GeoRecord> e : records.entrySet() ) {
+                    this.localInfo.putIfAbsent( e.getKey(), e.getValue() );
+                }
+                GeoBrowserServiceImpl.log.info( String.format( "Done GEO browser info. Loaded %d on-disk GEO records in %d ms.", records.size(), timer.getTime() ) );
             } catch ( Exception e ) {
-                GeoBrowserServiceImpl.log
-                        .error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
-                this.localInfo = new HashMap<>();
-                this.saveLocalInfo(); // ensure this gets initialized even if unused
+                GeoBrowserServiceImpl.log.error( "Failed to load local GEO info from " + f.getAbsolutePath(), e );
             }
-        } else {
-            this.localInfo = new HashMap<>();
         }
-        assert this.localInfo != null;
     }
 
     private void initLocalRecord( String accession ) {
-        assert localInfo != null;
         if ( !localInfo.containsKey( accession ) ) {
             localInfo.put( accession, new GeoRecord() );
             localInfo.get( accession ).setGeoAccession( accession );
@@ -313,17 +317,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     /**
      * Save the cached GEO information for next time
      */
-    private void saveLocalInfo() {
-        if ( this.localInfo == null )
-            return;
-        try (FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
-
+    private void saveLocalInfo() throws IOException {
+        try ( FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
             oos.writeObject( this.localInfo );
-            oos.flush();
-        } catch ( Exception e ) {
-            GeoBrowserServiceImpl.log.error( "Failed to save local GEO info", e );
         }
     }
-
 }

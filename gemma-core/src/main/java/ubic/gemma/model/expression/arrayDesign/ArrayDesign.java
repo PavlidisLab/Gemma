@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,8 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractAuditable;
-
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -28,14 +28,15 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents an assembly of design elements that are assayed all at once.
  *
  * @author Paul
  */
+@Indexed
 public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.SecuredNotChild, Curatable {
 
     public static final class Factory {
@@ -44,6 +45,12 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
             return new ArrayDesign();
         }
 
+        public static ArrayDesign newInstance( String shortName, Taxon taxon ) {
+            ArrayDesign ad = new ArrayDesign();
+            ad.setShortName( shortName );
+            ad.setPrimaryTaxon( taxon );
+            return ad;
+        }
     }
 
     /**
@@ -54,7 +61,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     private Set<AlternateName> alternateNames = new HashSet<>();
     private ArrayDesign alternativeTo; // for affymetrix
     private Set<CompositeSequence> compositeSequences = new HashSet<>();
-    private CurationDetails curationDetails;
+    private CurationDetails curationDetails = new CurationDetails();
     private Contact designProvider;
     private Set<DatabaseEntry> externalReferences = new HashSet<>();
     private ArrayDesign mergedInto;
@@ -84,6 +91,24 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     /**
      * @return The number of design elements, according to the manufactuerer or determined at the time the array design
      *         was
@@ -95,12 +120,13 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         return this.advertisedNumberOfDesignElements;
     }
 
+    @IndexedEmbedded
     public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
 
     /**
-     * 
+     *
      * @return true if this is an Affymetrix platform that has a related "canonical" platform we use instead.
      */
     public ArrayDesign getAlternativeTo() {
@@ -123,6 +149,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
+    @IndexedEmbedded
     public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
     }
@@ -150,6 +177,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
      *         we often
      *         used names like "HG-U95A".
      */
+    @Field(analyze = Analyze.NO)
     public String getShortName() {
         return this.shortName;
     }
@@ -246,7 +274,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     @Override
     public String toString() {
-        return super.toString() + ( this.getShortName() == null ? "" : " (" + this.getShortName() + ")" );
+        return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );
     }
 
 }

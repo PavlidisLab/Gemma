@@ -163,7 +163,7 @@ public class DifferentialExpressionSearchController {
             Collection<DifferentialExpressionAnalysis> analyses = diffAnalyses.get( id );
 
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thaw( analysis );
 
                 Collection<ExperimentalFactor> factors = new HashSet<>();
                 for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
@@ -305,7 +305,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
-                .loadDetailsValueObjects( ids );
+                .loadDetailsValueObjectsByIdsWithCache( ids );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

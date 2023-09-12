@@ -18,20 +18,11 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.AbstractDao;
-
-import java.lang.reflect.Field;
 
 /**
  * @author pavlidis
@@ -42,6 +33,6 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
 
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
-        super( AuditTrailImpl.class, sessionFactory );
+        super( AuditTrail.class, sessionFactory );
     }
 }

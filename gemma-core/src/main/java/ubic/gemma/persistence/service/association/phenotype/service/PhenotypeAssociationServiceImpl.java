@@ -35,22 +35,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
+ * Service responsible for low level operations, used by PhenotypeAssociationManagerServiceImpl
  */
 @Service
 public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAssociation> implements PhenotypeAssociationService {
 
     @Autowired
-    private ExperimentalEvidenceDao experimentalEvidenceDao;
-
-    @Autowired
-    private GenericEvidenceDao genericEvidenceDao;
-
-    @Autowired
     private GenericExperimentDao genericExperimentDao;
-
-    @Autowired
-    private LiteratureEvidenceDao literatureEvidenceDao;
 
     @Autowired
     private PhenotypeAssociationDao phenotypeAssociationDao;
@@ -106,32 +97,6 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
     @Transactional(readOnly = true)
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
         return this.genericExperimentDao.findByPubmedID( pubmed );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExperimentalEvidence loadExperimentalEvidence( Long id ) {
-        return this.experimentalEvidenceDao.load( id );
-    }
-
-    /**
-     * @param id id
-     * @return load an GenericEvidence given an ID
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public GenericEvidence loadGenericEvidence( Long id ) {
-        return this.genericEvidenceDao.load( id );
-    }
-
-    /**
-     * @param id id
-     * @return load an LiteratureEvidence given an ID
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public LiteratureEvidence loadLiteratureEvidence( Long id ) {
-        return this.literatureEvidenceDao.load( id );
     }
 
     /**
@@ -386,8 +351,4 @@ public class PhenotypeAssociationServiceImpl extends AbstractService<PhenotypeAs
         this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublication );
     }
 
-    @Override
-    public Collection<String> loadAllDescription() {
-        return this.phenotypeAssociationDao.loadAllDescription();
-    }
 }

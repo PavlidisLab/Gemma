@@ -24,6 +24,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
@@ -38,7 +39,7 @@ import java.util.Set;
 /**
  * @author paul
  */
-public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject>, ubic.gemma.persistence.service.BaseService<Characteristic> {
+public interface CharacteristicService extends BaseService<Characteristic>, BaseVoEnabledService<Characteristic, CharacteristicValueObject> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -61,9 +62,9 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     /**
-     * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int)
+     * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int, boolean)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system
@@ -83,6 +84,12 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     Collection<Characteristic> findByUri( String searchString );
 
     /**
+     * Find the best possible characteristic for a given URI.
+     */
+    @Nullable
+    Characteristic findBestByUri( String uri );
+
+    /**
      * Returns a collection of characteristics that have a Value that match the given search string. The value is
      * usually a human readable form of the termURI
      *
@@ -91,26 +98,19 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      */
     Collection<Characteristic> findByValue( String search );
 
-    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByValueUriOrValue( String search );
+    /**
+     * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String)
+     */
+    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLike( String search );
 
-    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByValueUriOrValue( Collection<String> search );
+    Map<String, Long> countCharacteristicsByValueUri( Collection<String> uris );
 
     /**
-     * @param  characteristics characteristics
+     * @param characteristics characteristics
      * @return a map of the specified characteristics to their annotated objects.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
-
-    /**
-     * @param  characteristics characteristics
-     * @param  classes         classes
-     * @return a map of the specified characteristics to their parent objects, constrained to be among
-     *                         the classes
-     *                         given.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Object> getParents( Collection<Class<?>> classes, @Nullable Collection<Characteristic> characteristics );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
 
     //    /**
     //     * @param classes constraint
@@ -126,24 +126,12 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     Characteristic create( Characteristic c );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Characteristic c );
-
-    /**
-     * Optimized version that only retrieves the IDs of the owning object. The caller has to keep track of the
-     * parentClass
-     *
-     * @param  parentClass     the type of object sought associated with the characteristic
-     */
-    Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
 
     /**
      * @see FilteringVoEnabledDao#getFilterableProperties()

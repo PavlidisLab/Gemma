@@ -26,7 +26,7 @@ import java.io.Serializable;
  * @author keshav
  *
  */
-public class TaskResult implements Serializable {
+public final class TaskResult implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -42,7 +42,7 @@ public class TaskResult implements Serializable {
     /**
      * The task id
      */
-    private String taskID;
+    private final String taskID;
 
     public TaskResult( String taskId ) {
         assert taskId != null;

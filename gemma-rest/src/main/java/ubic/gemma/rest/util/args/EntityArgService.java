@@ -46,24 +46,28 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      */
     List<Object> getFilterablePropertyAllowedValues( String p );
 
+    boolean getFilterablePropertyIsUsingSubquery( String p );
+
     /**
      * @see FilteringVoEnabledService#getFilterablePropertyConfigAttributes(String)
      */
     Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String roles );
 
     /**
-     * @see FilteringVoEnabledService#getFilterablePropertyResolvableAvailableValuesLabels(String)
+     * @see FilteringVoEnabledService#getFilterablePropertyResolvableAllowedValuesLabels(String)
      */
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String p ) throws BadRequestException;
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String p ) throws BadRequestException;
 
     @Nonnull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
-    List<T> getEntities( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws NotFoundException, BadRequestException;
+    List<T> getEntities( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
-    Filters getFilters( AbstractEntityArg<?, T, S> entityArg ) throws BadRequestException;
+    List<T> getEntities( AbstractEntityArrayArg<T, S> entitiesArg ) throws NotFoundException, BadRequestException;
 
-    Filters getFilters( AbstractEntityArrayArg<?, T, S> entitiesArg ) throws BadRequestException;
+    <A> Filters getFilters( AbstractEntityArg<A, T, S> entityArg ) throws BadRequestException;
+
+    Filters getFilters( AbstractEntityArrayArg<T, S> entitiesArg ) throws BadRequestException;
 
     Filters getFilters( FilterArg<T> filterArg ) throws BadRequestException;
 

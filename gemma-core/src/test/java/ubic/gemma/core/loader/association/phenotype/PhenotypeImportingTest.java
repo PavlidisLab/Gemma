@@ -32,6 +32,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
  * 
  * @author paul
  */
+@Deprecated
 public class PhenotypeImportingTest extends BaseSpringContextTest {
     @Autowired
     GeneService geneService;

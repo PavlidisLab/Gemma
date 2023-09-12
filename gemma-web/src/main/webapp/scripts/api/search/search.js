@@ -11,13 +11,14 @@ Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
    "ArrayDesign" : {title : "Platform", sortBy : "shortName"},
    "BibliographicReference" : {title : "Annotated Paper", sortBy : "citation"},
    "BioSequence" : {title : "Sequence", sortBy : "name"},
-   "BlacklistedValueObject" : {title : "Blacklisted accession"},
+   "BlacklistedEntity" : {title : "Blacklisted accession"},
    "CompositeSequence" : {title : "Probe", sortBy : "name"},
    "ExpressionExperiment" : {title : "Expression dataset"},
    "ExpressionExperimentSet" : {title : "Experiment group", sortBy : "name"},
    "Gene" : {title : "Gene", sortBy : "name"},
    "GeneSet" : {title : "Gene group", sortBy : "name"},
-   "PhenotypeAssociation" : {title : "Phenotype"}
+   "PhenotypeAssociation" : {title : "Phenotype"},
+   "BlacklistedEntity" : {title : "Blacklisted entity"}
 };
 
 Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
@@ -806,7 +807,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
    },
 
    sortInfo : function( record ) {
-      var clazz = record.get( "resultsClass" );
+      var clazz = record.get( "resultClass" );
       if ( clazz in Gemma.Search.SEARCH_RESULT_CLASS_METAS ) {
          return record[Gemma.Search.SEARCH_RESULT_CLASS_METAS[clazz].sortBy] || clazz;
       } else {
@@ -847,7 +848,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
       } else if ( clazz === "PhenotypeAssociation" ) {
          return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
             + "</a><span style='color:grey'> " + data.valueUri + '</span>';
-      } else if ( clazz === 'BlacklistedValueObject' ) {
+      } else if ( clazz === 'BlacklistedEntity' ) {
          return data.shortName + '&nbsp;Blacklisted:&nbsp;' + data.name + '<br/>Reason: ' + data.reason;
       } else {
          return data[0];

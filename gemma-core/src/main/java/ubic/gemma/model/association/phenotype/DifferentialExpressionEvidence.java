@@ -23,7 +23,8 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 /**
  * Evidence documented by a differential expression result stored in the system
  */
-public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidence {
+@Deprecated
+public class DifferentialExpressionEvidence extends DataAnalysisEvidence {
 
     private static final long serialVersionUID = 1056186800210320618L;
     private Double selectionThreshold;
@@ -51,7 +52,7 @@ public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidenc
 
     public static final class Factory {
         public static DifferentialExpressionEvidence newInstance() {
-            return new DifferentialExpressionEvidenceImpl();
+            return new DifferentialExpressionEvidence();
         }
     }
 

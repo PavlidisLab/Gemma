@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseCliTest;
@@ -37,6 +38,11 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         public ExternalDatabaseService externalDatabaseService() {
             return mock( ExternalDatabaseService.class );
         }
+
+        @Bean
+        public UserManager userManager() {
+            return mock( UserManager.class );
+        }
     }
 
     @Autowired
@@ -62,6 +68,7 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
     }
 
     @Test
+    @WithMockUser
     public void test() throws MalformedURLException {
         User user = User.Factory.newInstance();
         when( userManager.getCurrentUser() ).thenReturn( user );

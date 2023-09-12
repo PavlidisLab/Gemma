@@ -14,6 +14,9 @@ import java.util.Collection;
 public interface UserService extends gemma.gsec.authentication.UserService {
 
     @Override
+    User load( Long id );
+
+    @Override
     User findByUserName( String s );
 
     @Override

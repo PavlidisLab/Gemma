@@ -24,7 +24,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import java.io.Serializable;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class Measurement implements Identifiable, Serializable {
+public class Measurement implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -39,24 +39,84 @@ public abstract class Measurement implements Identifiable, Serializable {
     private Unit unit;
 
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
 
-        return hashCode;
+        Measurement other = ( Measurement ) obj;
+        if ( this.getId() == null ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !this.getId().equals( other.getId() ) )
+            return false;
+
+        if ( this.getValue() == null ) {
+            if ( other.getValue() != null )
+                return false;
+        } else if ( !this.getValue().equals( other.getValue() ) )
+            return false;
+
+        if ( this.getUnit() == null ) {
+            if ( other.getUnit() != null )
+                return false;
+        } else if ( !this.getUnit().equals( other.getUnit() ) )
+            return false;
+
+        if ( this.getType() == null ) {
+            if ( other.getType() != null )
+                return false;
+        } else if ( !this.getType().equals( other.getType() ) )
+            return false;
+
+        if ( this.getKindCV() == null ) {
+            if ( other.getKindCV() != null )
+                return false;
+        } else if ( !this.getKindCV().equals( other.getKindCV() ) )
+            return false;
+
+        if ( this.getOtherKind() == null ) {
+            if ( other.getOtherKind() != null )
+                return false;
+        } else if ( !this.getOtherKind().equals( other.getOtherKind() ) )
+            return false;
+        if ( this.getRepresentation() == null ) {
+            return other.getRepresentation() == null;
+        } else
+            return this.getRepresentation().equals( other.getRepresentation() );
+
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
+
+        if ( this.getId() == null ) {
+            result = prime * result + ( ( this.getValue() == null ) ? 0 : this.getValue().hashCode() );
+
+            result =
+                    prime * result + ( ( this.getRepresentation() == null ) ? 0 : this.getRepresentation().hashCode() );
+            result = prime * result + ( ( this.getUnit() == null ) ? 0 : this.getUnit().hashCode() );
+
+            result = prime * result + ( ( this.getType() == null ) ? 0 : this.getType().hashCode() );
+
+            result = prime * result + ( ( this.getKindCV() == null ) ? 0 : this.getKindCV().hashCode() );
+            result = prime * result + ( ( this.getOtherKind() == null ) ? 0 : this.getOtherKind().hashCode() );
+
         }
-        if ( !( object instanceof Measurement ) ) {
-            return false;
-        }
-        final Measurement that = ( Measurement ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+        return result;
     }
+
+    @Override
+    public String toString() {
+        return this.getValue();
+    }
+
 
     @Override
     public Long getId() {
@@ -119,12 +179,12 @@ public abstract class Measurement implements Identifiable, Serializable {
     public static final class Factory {
 
         public static Measurement newInstance() {
-            return new MeasurementImpl();
+            return new Measurement();
         }
 
         public static Measurement newInstance( MeasurementType type, String value, MeasurementKind kindCV,
                 String otherKind, PrimitiveType representation, Unit unit ) {
-            final Measurement entity = new MeasurementImpl();
+            final Measurement entity = new Measurement();
             entity.setType( type );
             entity.setValue( value );
             entity.setKindCV( kindCV );
@@ -135,7 +195,7 @@ public abstract class Measurement implements Identifiable, Serializable {
         }
 
         public static Measurement newInstance( MeasurementType type, String value, PrimitiveType representation ) {
-            final Measurement entity = new MeasurementImpl();
+            final Measurement entity = new Measurement();
             entity.setType( type );
             entity.setValue( value );
             entity.setRepresentation( representation );

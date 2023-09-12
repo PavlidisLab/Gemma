@@ -49,7 +49,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      */
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
-    Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+    Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEventsByType(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**

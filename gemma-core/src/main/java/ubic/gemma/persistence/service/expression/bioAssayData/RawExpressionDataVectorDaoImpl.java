@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -30,7 +28,7 @@ import java.util.HashSet;
  * @author paul
  */
 @Repository
-public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector>
+public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<RawExpressionDataVector>
         implements RawExpressionDataVectorDao {
 
     @Autowired
@@ -39,33 +37,18 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     }
 
     @Override
-    public Collection<RawExpressionDataVector> find( BioAssayDimension bioAssayDimension ) {
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select d from RawExpressionDataVector d where d.bioAssayDimension = :bad" )
-                .setParameter( "bad", bioAssayDimension ).list() );
-    }
-
-    @Override
-    public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
-        //language=HQL
-        final String queryString = "select dev from RawExpressionDataVector dev where  "
-                + "  dev.quantitationType in ( :quantitationTypes) ";
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "quantitationTypes", quantitationTypes ).list() );
-    }
-
-    @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
-                                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                                + "and dev.quantitationType = :quantitationType " )
-                .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
+                        "select dev from RawExpressionDataVector dev "
+                                + "join fetch dev.bioAssayDimension bd "
+                                + "join fetch dev.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
+                .setParameter( "quantitationType", quantitationType )
+                .setParameter( "ad", arrayDesign )
                 .list();
-
     }
 
     @Override
@@ -76,39 +59,27 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
-                                + " where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
+                        "select dev from RawExpressionDataVector as dev "
+                                + "inner join dev.designElement as de "
+                                // no need for the fetch jointures since the design elements and biological characteristics are already in the session
+                                + "where de in (:des) and dev.quantitationType = :qt" )
+                .setParameterList( "des", designElements )
+                .setParameter( "qt", quantitationType )
+                .list();
     }
 
     @Override
     public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from RawExpressionDataVector as v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                        "select v from RawExpressionDataVector as v "
+                                + "join fetch v.designElement de "
+                                + "left join fetch de.biologicalCharacteristic bc "
+                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .list();
-    }
-
-    @Override
-    public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
-        final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = :cs";
-        int deleted = this.getSessionFactory().getCurrentSession()
-                .createQuery( dedvRemovalQuery )
-                .setParameter( "cs", compositeSequence )
-                .executeUpdate();
-        AbstractDao.log.info( "Deleted: " + deleted );
-    }
-
-    @Override
-    public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
-        final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = :quantitationType";
-        int deleted = this.getSessionFactory().getCurrentSession()
-                .createQuery( dedvRemovalQuery )
-                .setParameter( "quantitationType", quantitationType )
-                .executeUpdate();
-        AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
 
     @Override
@@ -121,7 +92,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         crit.createCriteria( "designElement" )
                 .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
                 .createCriteria( "arrayDesign" ).add( Restrictions
-                .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
+                        .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
 
         crit.createCriteria( "quantitationType" )
                 .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );

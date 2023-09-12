@@ -46,7 +46,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -74,9 +73,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
-
-    @Autowired
-    private CurationDetailsService curationDetailsService;
 
     @Autowired
     private Persister persister;
@@ -131,7 +127,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
 
                 Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( qt );
-                rawExpressionDataVectorService.thaw( vectors );
+                vectors = rawExpressionDataVectorService.thaw( vectors );
                 if ( vectors.isEmpty() ) {
                     // this is okay if the data is processed, or if we have stray orphaned QTs
                     log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
@@ -175,8 +171,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
-            split.setCurationDetails( new CurationDetails( new Date(), null, true, null, false, null, null ) ); // not sure anything we want to copy
-            split.setMetadata( toSplit.getMetadata() ); // 
+            split.setMetadata( toSplit.getMetadata() ); //
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
             split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique, so have to clone

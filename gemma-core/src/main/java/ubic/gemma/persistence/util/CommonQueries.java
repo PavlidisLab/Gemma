@@ -23,10 +23,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.type.LongType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -318,18 +316,6 @@ public class CommonQueries {
             }
         } finally {
             results.close();
-        }
-    }
-
-    public static void addSubclasses( List<String> classes, SingleTableEntityPersister classMetadata ) {
-        if ( classMetadata.hasSubclasses() ) {
-            String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
-            // names.
-            classes.clear();
-            for ( String string : subclasses ) {
-                string = string.replaceFirst( ".+\\.", "" );
-                classes.add( string );
-            }
         }
     }
 

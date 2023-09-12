@@ -18,6 +18,7 @@ package ubic.gemma.model.genome.gene;
  *
  */
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.ChromosomeFeature;
 import ubic.gemma.model.genome.Gene;
@@ -26,6 +27,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import javax.persistence.Transient;
 import java.util.Set;
 
+@Indexed
 public class GeneProduct extends ChromosomeFeature {
 
     /**
@@ -78,23 +80,34 @@ public class GeneProduct extends ChromosomeFeature {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( this.getClass().getSimpleName() );
-
-        if ( this.getId() != null ) {
-            buf.append( " Id=" ).append( this.getId() ).append( " " );
-        } else {
-            buf.append( " " );
+        StringBuilder buf = new StringBuilder( super.toString() );
+        if ( ncbiGi != null ) {
+            buf.append( " NCBI GI=" ).append( ncbiGi );
         }
-
-        buf.append( this.getName() ).append( this.getName() == null ? "" : " GI:" + this.getNcbiGi() );
-        buf.append( " [Gene = " ).append( this.getGene() ).append( "]" );
-
+        if ( gene != null ) {
+            buf.append( " Gene=" ).append( gene );
+        }
         return buf.toString();
-
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -134,12 +147,19 @@ public class GeneProduct extends ChromosomeFeature {
     /**
      * @return GI for the gene product (if available)
      */
+    @Field(analyze = Analyze.NO)
     public String getNcbiGi() {
         return this.ncbiGi;
     }
 
     public void setNcbiGi( String ncbiGi ) {
         this.ncbiGi = ncbiGi;
+    }
+
+    @Override
+    @Field
+    public String getPreviousNcbiId() {
+        return super.getPreviousNcbiId();
     }
 
     private int computeHashCode() {

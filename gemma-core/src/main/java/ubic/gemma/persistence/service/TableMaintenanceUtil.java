@@ -34,7 +34,7 @@ public interface TableMaintenanceUtil {
     void updateGene2CsEntries();
 
     @Secured({ "GROUP_AGENT" })
-    void updateExpressionExperiment2CharacteristicEntries();
+    int updateExpressionExperiment2CharacteristicEntries();
 
     @Secured({ "GROUP_ADMIN" })
     void setGene2CsInfoPath( Path gene2CsInfoPath );

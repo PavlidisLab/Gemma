@@ -43,17 +43,8 @@ import java.util.Map;
  */
 public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
-
-    /**
-     * Thaw a result set's analysis, experiment analyzed and experimental factors.
-     *
-     * If you need to load the probe, contrasts, etc. use {@link #loadWithResultsAndContrasts(Long)} instead which is
-     * optimized for that purpose.
-     */
-    void thaw( ExpressionAnalysisResultSet resultSet );
-
-    DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
@@ -72,7 +63,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
      */
-    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
+    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
@@ -84,4 +75,6 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param sort field and direction by which the collection is ordered
      */
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
+
+    void thaw( ExpressionAnalysisResultSet ears );
 }

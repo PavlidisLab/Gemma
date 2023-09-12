@@ -45,6 +45,8 @@ public class DatabaseEntryTag extends TagSupport {
 
         DatabaseEntryTag.log.debug( "start tag" );
 
+        String contextPath = pageContext.getServletContext().getContextPath();
+
         StringBuilder buf = new StringBuilder();
         if ( this.databaseEntry == null ) {
             buf.append( "No accession" );
@@ -58,12 +60,12 @@ public class DatabaseEntryTag extends TagSupport {
                     accession = accession.replaceAll( "\\.[1-9]$", "" );
                     buf.append( accession ).append( "&nbsp;<a title='NCBI page for this entry'" )
                             .append( " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" )
-                            .append( accession ).append( "'><img src='" ).append( Settings.getRootContext() )
+                            .append( accession ).append( "'><img src='" ).append( contextPath )
                             .append( "/images/logo/geoTiny.png' /></a>" );
                 } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
                     buf.append( accession ).append( "&nbsp;<a title='ArrayExpress page for this entry'" ).append(
                             " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
-                            .append( accession ).append( "'><img src='" ).append( Settings.getRootContext() )
+                            .append( accession ).append( "'><img src='" ).append( contextPath )
                             .append( "/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
                     buf.append( accession ).append( "(" ).append( databaseEntry.getExternalDatabase().getName() )

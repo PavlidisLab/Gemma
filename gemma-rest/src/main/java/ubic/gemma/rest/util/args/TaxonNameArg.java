@@ -17,11 +17,6 @@ package ubic.gemma.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.util.MalformedArgException;
-
-import javax.annotation.Nonnull;
 
 /**
  * String argument type for taxon API, referencing the Taxon scientific name or common name. Can also be
@@ -33,27 +28,12 @@ import javax.annotation.Nonnull;
 public class TaxonNameArg extends TaxonArg<String> {
 
     TaxonNameArg( String s ) {
-        super( s );
-    }
-
-    @Nonnull
-    @Override
-    public Taxon getEntity( TaxonService service ) {
-        return checkEntity( service, this.getValue() == null ? null : this.tryAllNameProperties( service ) );
+        super( "commonName", String.class, s );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
-        // FIXME: this should also return scientificName
-        return "commonName";
-    }
-
-    @Override
-    public Filters getFilters( TaxonService taxonService ) throws MalformedArgException {
-        Filter commonNameFilter = taxonService.getFilter( "commonName", Filter.Operator.eq, getValue() );
-        Filter scientificNameFilter = taxonService.getFilter( "scientificName", Filter.Operator.eq, getValue() );
-        // this creates a disjunction clause in the HQL query
-        return Filters.by( commonNameFilter, scientificNameFilter );
+    Taxon getEntity( TaxonService service ) {
+        return this.tryAllNameProperties( service );
     }
 
     /**

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -26,14 +28,14 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
-import java.util.Collection;
+import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * A group of results for an ExpressionExperiment.
  */
-public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> {
+public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> implements SecuredChild {
 
     private static final long serialVersionUID = 7226901182513177574L;
     private Integer numberOfProbesTested;
@@ -140,13 +142,18 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
         this.pvalueDistribution = pvalueDistribution;
     }
 
-    @Override
     public Set<DifferentialExpressionAnalysisResult> getResults() {
         return this.results;
     }
 
     public void setResults( Set<DifferentialExpressionAnalysisResult> results ) {
         this.results = results;
+    }
+
+    @Override
+    @Transient
+    public Securable getSecurityOwner() {
+        return analysis;
     }
 
     public static final class Factory {

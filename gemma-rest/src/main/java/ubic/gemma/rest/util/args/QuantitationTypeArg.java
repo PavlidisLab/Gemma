@@ -6,14 +6,11 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-
 @Schema(oneOf = { QuantitationTypeByIdArg.class, QuantitationTypeByNameArg.class })
 public abstract class QuantitationTypeArg<T> extends AbstractEntityArg<T, QuantitationType, QuantitationTypeService> {
 
-    protected QuantitationTypeArg( T value ) {
-        super( QuantitationType.class, value );
+    protected QuantitationTypeArg( String propertyName, Class<T> propertyType, T value ) {
+        super( propertyName, propertyType, value );
     }
 
     public abstract QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service );

@@ -17,16 +17,16 @@ package ubic.gemma.core.association.phenotype;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -36,40 +36,24 @@ import java.util.*;
  * @author nicolas
  */
 @Component
+@Deprecated
 public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHelper {
 
     private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
     private final OntologyService ontologyService;
-    private final DiseaseOntologyService diseaseOntologyService;
-    private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    private final HumanPhenotypeOntologyService humanPhenotypeOntologyService;
 
     private final List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Autowired
-    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, DiseaseOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
+    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService, MondoOntologyService diseaseOntologyService, MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService, HumanPhenotypeOntologyService humanPhenotypeOntologyService ) {
         this.ontologyService = ontologyService;
-        this.diseaseOntologyService = diseaseOntologyService;
-        this.mammalianPhenotypeOntologyService = mammalianPhenotypeOntologyService;
-        this.humanPhenotypeOntologyService = humanPhenotypeOntologyService;
-        //  We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
-        this.ontologies = Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService );
-        if ( !diseaseOntologyService.isEnabled() ) {
-            log.debug( "DO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
-        }
-        if ( !humanPhenotypeOntologyService.isEnabled() ) {
-            log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
-        }
+        this.ontologies = Collections.unmodifiableList( Arrays.asList( diseaseOntologyService, mammalianPhenotypeOntologyService, humanPhenotypeOntologyService ) );
     }
 
     @Override
-    public boolean areOntologiesAllLoaded() {
-        // if these ontologies are not configured, we will never be ready. Check for valid configuration.
-        return ontologies.stream().allMatch( ubic.basecode.ontology.providers.OntologyService::isOntologyLoaded );
+    public Collection<ubic.basecode.ontology.providers.OntologyService> getOntologyServices() {
+        return ontologies;
     }
 
     @Override
@@ -88,7 +72,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             // format the query for lucene to look for ontology terms with an exact match for the value
             String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
-            Collection<OntologyTerm> ontologyTerms = null;
+            Collection<OntologyTerm> ontologyTerms;
             try {
                 ontologyTerms = this.ontologyService.findTerms( value );
                 for ( OntologyTerm ontologyTerm : ontologyTerms ) {
@@ -97,7 +81,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
                         break;
                     }
                 }
-            } catch ( OntologySearchException e ) {
+            } catch ( SearchException e ) {
                 log.error( "Failed to retrieve ontology terms for " + value + " when converting to VO. The value URI will not be set.", e );
             }
 
@@ -106,7 +90,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
+    public OntologyTerm findOntologyTermByUri( String valueUri ) {
 
         if ( valueUri == null || valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
@@ -119,15 +103,20 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
                 return ontologyTerm;
         }
 
-        throw new EntityNotFoundException( valueUri + " - term not found" );
+        return null;
     }
 
     @Override
-    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException {
+    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws SearchException {
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
+            Collection<OntologyTerm> hits;
+            try {
+                hits = ontology.findTerm( searchQuery );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
 
             for ( OntologyTerm ontologyTerm : hits ) {
                 if ( ontologyTerm.getLabel() != null && uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
@@ -140,12 +129,17 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException {
+    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws SearchException {
 
         Collection<OntologyTerm> results = new TreeSet<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             if ( ontology.isOntologyLoaded() ) {
-                Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
+                Collection<OntologyTerm> found;
+                try {
+                    found = ontology.findTerm( searchQuery );
+                } catch ( OntologySearchException e ) {
+                    throw new BaseCodeOntologySearchException( e );
+                }
                 if ( found != null && !found.isEmpty() )
                     results.addAll( found );
             }
@@ -156,22 +150,15 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
     @Override
     public Characteristic valueUri2Characteristic( String valueUri ) {
-
-        try {
-            OntologyTerm o = findOntologyTermByUri( valueUri );
-            if ( o == null )
-                return null;
-            Characteristic myPhenotype = Characteristic.Factory.newInstance();
-            myPhenotype.setValueUri( o.getUri() );
-            myPhenotype.setValue( o.getLabel() );
-            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
-            return myPhenotype;
-        } catch ( EntityNotFoundException e ) {
-            e.printStackTrace();
+        OntologyTerm o = findOntologyTermByUri( valueUri );
+        if ( o == null )
             return null;
-        }
-
+        Characteristic myPhenotype = Characteristic.Factory.newInstance();
+        myPhenotype.setValueUri( o.getUri() );
+        myPhenotype.setValue( o.getLabel() );
+        myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+        myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
+        return myPhenotype;
     }
 
     /**

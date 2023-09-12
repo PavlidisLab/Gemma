@@ -22,21 +22,20 @@ public interface PropertyMapping {
     String getPropertyName();
 
     /**
-     * Obtain the full property in the HQL space.
-     */
-    default String getProperty() {
-        if ( getObjectAlias() != null ) {
-            return getObjectAlias() + "." + getPropertyName();
-        } else {
-            return getPropertyName();
-        }
-    }
-
-    /**
      * Obtain the original property, if available.
      */
     @Nullable
     String getOriginalProperty();
 
+    /**
+     * Render this with its original property.
+     * <p>
+     * If no original property are attached to this mapping, this method should return the same as {@link #toString()}.
+     */
     String toOriginalString();
+
+    /**
+     * Render this with its {@link #getObjectAlias()} and {@link #getPropertyName()}.
+     */
+    String toString();
 }

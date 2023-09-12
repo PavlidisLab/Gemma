@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+
 /**
  * Utilities for integrating {@link Filter} with Hibernate {@link Criteria} API.
  * @author poirigui
@@ -37,7 +39,7 @@ public class FilterCriteriaUtils {
     }
 
     private static Criterion formRestrictionClause( Filter filter ) {
-        String property = filter.getProperty();
+        String property = formProperty( filter );
         if ( property.endsWith( ".size" ) ) {
             if ( !( filter.getRequiredValue() instanceof Integer ) ) {
                 throw new IllegalArgumentException( "Right hand size for a size-check must be a non-null integer." );

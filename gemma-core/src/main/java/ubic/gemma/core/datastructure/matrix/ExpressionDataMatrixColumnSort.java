@@ -98,6 +98,10 @@ public class ExpressionDataMatrixColumnSort {
 
                 }
 
+                if ( sortedVals.isEmpty() ) {
+                    log.warn( "No values for continuous factor " + factor );
+                    continue;
+                }
                 result.put( factor, sortedVals.firstEntry().getValue() );
 
             } else {
@@ -164,7 +168,7 @@ public class ExpressionDataMatrixColumnSort {
 
                     // There's no need to log this for batch factors, they are inherently arbitrary and only used
                     // during batch correction.
-                    if (!ExperimentalDesignUtils.isBatch( factor )) {
+                    if ( !ExperimentalDesignUtils.isBatch( factor ) ) {
                         ExpressionDataMatrixColumnSort.log
                                 .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     }
@@ -202,11 +206,9 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = ExpressionDataMatrixColumnSort.getBms( mat );
-        assert start != null;
 
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null );
 
-        assert ordered != null;
         assert ordered.size() == start.size() : "Expected " + start.size() + ", got " + ordered.size();
 
         return ordered;
@@ -241,7 +243,7 @@ public class ExpressionDataMatrixColumnSort {
             return start;
         }
 
-        // sort factors
+        // sort factors: which one do we want to sort by first
         List<ExperimentalFactor> sortedFactors = ExpressionDataMatrixColumnSort
                 .orderFactorsByExperimentalDesign( start, unsortedFactors );
         // sort biomaterials using sorted factors
@@ -561,8 +563,17 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * Sort biomaterials according to a list of ordered factors
-     *
+     * <p>
+     * Sort biomaterials according to a list of ordered factors.
+     * </p>
+     * <p>
+     * If any factor is continuous, we sort by it and don't do any further sorting.
+     * </p><p>
+     * Otherwise, for categorical factors, we sort recursively (by levels of the first factor, then
+     * within that by levels of the second factor etc.)
+     * </p><p>
+     * Any batch factor is used last (we sort by batch only within the most granular factor's levels)
+     * </p>
      * @param start   biomaterials to sort
      * @param factors sorted list of factors to define sort order for biomaterials, cannot be null
      */
@@ -746,11 +757,6 @@ public class ExpressionDataMatrixColumnSort {
             }
         } );
 
-    }
-
-    @SuppressWarnings("unused") // FIXME temporary. See issue 4435
-    private static void sortByTimepoint( List<FactorValue> factorValues ) {
-        ExpressionDataMatrixColumnSort.sortByControl( factorValues );
     }
 
     /**

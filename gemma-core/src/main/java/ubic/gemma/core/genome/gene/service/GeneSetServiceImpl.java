@@ -25,10 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -128,25 +129,19 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
-        return this.geneSetDao.loadMyGeneSets();
+        return this.geneSetDao.loadAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadMyGeneSets( tax );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return this.geneSetDao.loadMySharedGeneSets();
+        return this.geneSetDao.loadAll( tax );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadMySharedGeneSets( tax );
+        return this.geneSetDao.loadAll( tax );
     }
 
 //    @Override
@@ -419,7 +414,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws OntologySearchException {
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, @Nullable Long taxonId ) throws SearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -519,14 +514,9 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
-    @Transactional(readOnly = true)
-    public void thaw( GeneSet geneSet ) {
-        this.geneSetDao.thaw( geneSet );
+    @Transactional
+    public void removeAll() {
+        this.geneSetDao.removeAllInBatch();
     }
 }

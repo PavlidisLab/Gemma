@@ -18,13 +18,17 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.Collection;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
+
 import java.util.HashSet;
 import java.util.Set;
 
-public class MedicalSubjectHeading extends BibRefAnnotationImpl {
+@Indexed
+public class MedicalSubjectHeading extends BibRefAnnotation {
 
     private static final long serialVersionUID = 7820807342851172028L;
+
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();
 
     public Set<MedicalSubjectHeading> getQualifiers() {

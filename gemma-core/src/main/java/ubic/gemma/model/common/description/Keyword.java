@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
-public class Keyword extends BibRefAnnotationImpl {
+import org.hibernate.search.annotations.Indexed;
+
+@Indexed
+public class Keyword extends BibRefAnnotation {
 
     private static final long serialVersionUID = 2663428244994277220L;
 

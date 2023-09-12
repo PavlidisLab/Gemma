@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletConfig;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.rest.util.OpenApiUtils;
@@ -13,6 +15,8 @@ import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("web")
+@WebAppConfiguration
 public class RootWebServiceTest extends BaseSpringContextTest {
 
     @Autowired

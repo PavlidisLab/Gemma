@@ -5,7 +5,7 @@
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.genome.Chromosome" table="CHROMOSOME" mutable="false">
-        <cache usage="read-write"/>
+        <cache usage="read-only"/>
         <id access="field" name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">

@@ -1,20 +1,15 @@
 package ubic.gemma.core.util;
 
-import java.text.Collator;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Utilities and algorithms for {@link List}.
  * @author poirigui
  */
 public class ListUtils {
-
-    private static final Collator CASE_INSENSITIVE_COLLATOR;
-
-    static {
-        CASE_INSENSITIVE_COLLATOR = Collator.getInstance();
-        CASE_INSENSITIVE_COLLATOR.setStrength( Collator.PRIMARY );
-    }
 
     /**
      * Get a mapping of element to their first occurrence in a {@link List}.
@@ -35,13 +30,14 @@ public class ListUtils {
      * @see #indexOfElements(List)
      */
     public static Map<String, Integer> indexOfCaseInsensitiveStringElements( List<String> list ) {
-        TreeMap<String, Integer> element2position = new TreeMap<>( CASE_INSENSITIVE_COLLATOR );
+        TreeMap<String, Integer> element2position = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         fillMap( element2position, list );
         return element2position;
     }
 
     private static <T> void fillMap( Map<T, Integer> element2position, List<T> list ) {
-        for ( int i = 0; i < list.size(); i++ ) {
+        int size = list.size();
+        for ( int i = 0; i < size; i++ ) {
             T element = list.get( i );
             if ( !element2position.containsKey( element ) ) {
                 element2position.put( element, i );

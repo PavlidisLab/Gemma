@@ -24,7 +24,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.AnalysisService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import java.util.Collection;
@@ -34,14 +34,19 @@ import java.util.Collection;
  *
  * @author kelsey
  */
-public interface CoexpressionAnalysisService extends SingleExperimentAnalysisService<CoexpressionAnalysis> {
+public interface CoexpressionAnalysisService extends BaseService<CoexpressionAnalysis>, SingleExperimentAnalysisService<CoexpressionAnalysis> {
 
-    @SuppressWarnings("unused") // Possible external use
+    @Override
     @Secured({ "GROUP_USER" })
     CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( CoexpressionAnalysis o );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Collection<CoexpressionAnalysis> o );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );

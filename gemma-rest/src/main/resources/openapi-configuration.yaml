@@ -8,7 +8,7 @@ openAPI:
       url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.6.1
+    version: 2.7.0
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -19,19 +19,22 @@ openAPI:
 
       ## Updates
 
+      ### Update 2.7.0
+
       New endpoints for counting the number of results: `getNumberOfDatasets`, `getNumberOfPlatforms`,
       `getNumberOfResultSets`. These endpoints are faster than looking up `totalElements` as no data is retrieved or
       converted.
 
-      Datasets can now be filtered by annotations at the sample- and factor value-level using the two newly exposed
-      `experimentalDesign.experimentalFactors.factorValues.characteristics` and `bioAssays.sampleUsed.characteristics`
-      collections. The two useful available properties for filtering are `value` and `valueUri`.
+      Datasets can now be filtered by annotations at the sample, factor value and all levels using the three newly
+      exposed `experimentalDesign.experimentalFactors.factorValues.characteristics`, `bioAssays.sampleUsed.characteristics`
+      and `allCharacteristics` collections. The two useful available properties for filtering are `value` and `valueUri`.
 
-      New `getDatasetsAnnotationsUsageStatistics` endpoints for retrieving annotations used by the matched datasets. The
-      endpoint accepts the same `filter` argument of `getDatasets`, allowing one to easily navigate terms for filtering
-      further down results.
+      New `getDatasetsAnnotationsUsageStatistics`, `getDatasetsPlatformsUsageStatistics` and `getDatasetsTaxaUsageStatistics`
+      endpoints for retrieving annotations, platforms and taxa used by the matched datasets. The endpoint accepts the
+      same `filter` argument of `getDatasets`, allowing one to easily navigate terms, platforms and taxa available for
+      filtering furthermore.
 
-      Enumerate all properties available for filtering and sorting in the description of the corresponding parameter.
+      Properties available for filtering and sorting are enumerated in the description of the corresponding parameter.
       There's been a number of fixes and additional tests performed to ensure that all advertised properties are working
       as expected.
 
@@ -47,10 +50,18 @@ openAPI:
           label: One Color
         - value: SEQUENCING
           label: Sequencing
+        security:
+          basicAuth: [GROUP_ADMIN]
+          cookieAuth: [GROUP_ADMIN]
       ```
 
-      New endpoints for browsing blacklisted platforms and datasets.
- 
+      Some of the exposed properties such as `geeq.publicSuitabilityScore` require specific authorities to use. This is
+      documented in `x-filterable-properties` by specifying a [Security Requirement Object](https://spec.openapis.org/oas/latest.html#security-requirement-object).
+
+      Types that use the `[]` suffix are using sub-queries under the hood. It implies that the entity will be matched if
+      at least one related entity matches the supplied filter. For example, the `characteristics.valueUri = http://purl.obolibrary.org/obo/UBERON_0002107`
+      filter will match datasets with at least one `UBERON:0002107` tag attached.
+
       Filtered endpoints (including paginated and limited ones) now expose a `groupBy` array that enumerates all the
       properties used to group results. This helps clear confusion about what constitute a business key in the returned
       response.

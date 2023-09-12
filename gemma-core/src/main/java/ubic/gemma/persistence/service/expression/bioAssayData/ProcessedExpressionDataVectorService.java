@@ -20,9 +20,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.datastructure.matrix.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -31,10 +30,12 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -44,19 +45,25 @@ public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     /**
+     * Replace the processed vectors of a EE with the given vectors.
+     * <p>
+     * Ranks are recomputed.
+     *
      * @param ee      ee
      * @param vectors non-persistent, all of the same quantitationtype
-     * @return ee
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors );
+    void replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    @Transactional
+    @Secured({ "GROUP_USER" })
+    void updateRanks( ExpressionExperiment ee );
 
     @Secured({ "GROUP_ADMIN" })
     void clearCache();
 
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
@@ -66,16 +73,19 @@ public interface ProcessedExpressionDataVectorService
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
+    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
     /**
-     * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
-     * @param genes        genes
+     * @param expressionExperiments - expressionExperiments or expressionExperimentSubSets
+     * @param genes                 genes
      * @return vectors, which will be subsetted if the bioassayset is a subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<ExpressionExperiment> expressionExperiments,
             Collection<Long> genes );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, Collection<Long> genes );
 
     /**
      * @param ees                 expressionExperiments
@@ -141,7 +151,7 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
@@ -176,26 +186,20 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    /**
-     * @deprecated never use this method, you can use {@link #removeProcessedDataVectors(ExpressionExperiment)}
-     * instead, or clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()} directly. The relationship is
-     * actually managed by Hibernate.
-     */
-    @Override
-    @Deprecated
-    void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
-
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
 
+    /**
+     * Compute processed expression data, ignoring mismatched with the inferred scale.
+     */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+    void computeProcessedExpressionData( ExpressionExperiment ee );
 
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
      * refreshing.
      */
     @Secured({ "GROUP_ADMIN" })
-    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
+    void computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
 
     /**
@@ -204,6 +208,19 @@ public interface ProcessedExpressionDataVectorService
      * @param eeId the experiment id
      */
     @Secured({ "GROUP_ADMIN" })
-    void reorderByDesign( Long eeId );
+    void reorderByDesign( ExpressionExperiment ee );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    void update( Collection<ProcessedExpressionDataVector> updatedVectors );
+
+    /**
+     * Thaws the given vectors.
+     *
+     * @param designElementDataVectors the vectors to thaw.
+     */
+    @CheckReturnValue
+    Collection<ProcessedExpressionDataVector> thaw( Collection<ProcessedExpressionDataVector> designElementDataVectors );
 }

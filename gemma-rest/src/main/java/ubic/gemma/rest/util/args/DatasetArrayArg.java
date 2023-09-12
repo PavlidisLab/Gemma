@@ -1,8 +1,8 @@
 package ubic.gemma.rest.util.args;
 
-import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = DatasetArg.class))
 public class DatasetArrayArg
-        extends AbstractEntityArrayArg<String, ExpressionExperiment, ExpressionExperimentService> {
+        extends AbstractEntityArrayArg<ExpressionExperiment, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Dataset identifiers";
 
@@ -29,7 +29,7 @@ public class DatasetArrayArg
      */
     @SuppressWarnings("unused")
     public static DatasetArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( Strings.isNullOrEmpty( s ) ) {
+        if ( StringUtils.isBlank( s ) ) {
             throw new MalformedArgException( String.format( DatasetArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }

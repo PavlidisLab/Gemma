@@ -23,8 +23,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.Map;
 
@@ -32,7 +35,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
+public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**
      * Copies a bioMaterial.
@@ -80,9 +83,11 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( Long id );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    void thaw( BioMaterial bioMaterial );
+    BioMaterial thaw( BioMaterial bioMaterial );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 

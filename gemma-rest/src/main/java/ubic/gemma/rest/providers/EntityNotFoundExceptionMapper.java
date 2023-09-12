@@ -11,6 +11,7 @@ import javax.ws.rs.ext.Provider;
  * Map {@link EntityNotFoundException} to a response containing a JSON error object.
  */
 @Provider
+@Deprecated
 public class EntityNotFoundExceptionMapper extends AbstractExceptionMapper<EntityNotFoundException> {
 
     @Context

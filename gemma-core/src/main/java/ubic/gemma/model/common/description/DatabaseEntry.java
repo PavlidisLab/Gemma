@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
@@ -28,6 +32,7 @@ import java.util.Comparator;
  * A reference to a record in a database.
  * </p>
  */
+@Indexed
 public class DatabaseEntry implements Identifiable, Serializable {
 
     /**
@@ -100,6 +105,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
                 this.getExternalDatabase().getName() ) + ( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
     }
 
+    @Field(analyze = Analyze.NO)
     public String getAccession() {
         return this.accession;
     }
@@ -133,6 +139,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return this.id;
     }

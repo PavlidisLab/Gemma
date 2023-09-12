@@ -32,6 +32,7 @@ import java.util.Collection;
  */
 public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
 
@@ -53,9 +54,4 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
     GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( GeneDifferentialExpressionMetaAnalysis analysis );
-
 }

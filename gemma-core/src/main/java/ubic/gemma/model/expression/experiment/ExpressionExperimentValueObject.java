@@ -99,7 +99,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.metadata = ee.getMetadata();
         this.processedExpressionVectorCount = ee.getNumberOfDataVectors();
 
-        if ( ee.getTaxon() != null && Hibernate.isInitialized( ee.getTaxon() ) ) {
+        if ( ee.getTaxon() != null ) {
             this.taxonObject = new TaxonValueObject( ee.getTaxon() );
         }
 

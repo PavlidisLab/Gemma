@@ -147,11 +147,11 @@ create table GENE2CS
     primary key (AD, CS, GENE)
 );
 alter table GENE2CS
-    add foreign key GENE2CS_ARRAY_DESIGN_FKC (AD) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_ARRAY_DESIGN_FKC foreign key (AD) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
 alter table GENE2CS
-    add foreign key GENE2CS_CS_FKC (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_CS_FKC foreign key (CS) references COMPOSITE_SEQUENCE (ID) on update cascade on delete cascade;
 alter table GENE2CS
-    add foreign key GENE2CS_GENE_FKC (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
+    add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
 
 drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC

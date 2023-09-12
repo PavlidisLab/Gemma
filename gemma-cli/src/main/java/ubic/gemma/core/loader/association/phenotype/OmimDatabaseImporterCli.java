@@ -32,6 +32,7 @@ import java.util.*;
  *
  * @author nicolas
  */
+@Deprecated
 public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database

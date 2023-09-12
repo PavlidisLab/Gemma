@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@ import java.io.Serializable;
  *
  * @author Paul
  */
-public class Contact extends AbstractDescribable implements gemma.gsec.model.Contact, Serializable {
+public class Contact extends AbstractDescribable implements Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -44,11 +44,19 @@ public class Contact extends AbstractDescribable implements gemma.gsec.model.Con
     }
 
     @Override
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    public String getName() {
+        return super.getName();
+    }
+
     public String getEmail() {
         return this.email;
     }
 
-    @Override
     public void setEmail( String email ) {
         this.email = email;
     }

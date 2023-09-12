@@ -51,6 +51,7 @@ import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 
+import javax.servlet.ServletContext;
 import java.util.*;
 
 /**
@@ -58,8 +59,6 @@ import java.util.*;
  */
 @Component
 public class SecurityControllerImpl implements SecurityController {
-
-    private static final String GROUP_MANAGER_URL = Settings.getBaseUrl() + "manageGroups.html";
 
     private static final Log log = LogFactory.getLog( SecurityControllerImpl.class );
 
@@ -80,6 +79,8 @@ public class SecurityControllerImpl implements SecurityController {
     private SecurityService securityService;
     @Autowired
     private UserManager userManager;
+    @Autowired
+    private ServletContext servletContext;
 
     @Override
     public boolean addUserToGroup( String userName, String groupName ) {
@@ -121,8 +122,9 @@ public class SecurityControllerImpl implements SecurityController {
             msg.setFrom( Settings.getAdminEmailAddress() );
             msg.setSubject( "You have been added to a group on Gemma" );
 
+            String manageGroupsUrl = Settings.getHostUrl() + servletContext.getContextPath() + "/manageGroups.html";
             msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
-                    + "'.\nTo view groups you belong to, visit " + SecurityControllerImpl.GROUP_MANAGER_URL
+                    + "'.\nTo view groups you belong to, visit " + manageGroupsUrl
                     + "\n\nIf you believe you received this email in error, contact " + Settings.getAdminEmailAddress()
                     + "." );
 

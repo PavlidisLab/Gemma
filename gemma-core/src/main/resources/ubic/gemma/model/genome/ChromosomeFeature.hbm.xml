@@ -6,7 +6,7 @@
 <hibernate-mapping>
     <class name="ubic.gemma.model.genome.ChromosomeFeature" table="CHROMOSOME_FEATURE"
     >
-        <cache usage="read-write"/>
+        <cache usage="nonstrict-read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
@@ -78,7 +78,7 @@
                 </key>
                 <one-to-many class="ubic.gemma.model.genome.gene.GeneAlias"/>
             </set>
-            <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
+            <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
                 <column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
             </many-to-one>
             <set name="accessions" lazy="true" fetch="select" cascade="all">

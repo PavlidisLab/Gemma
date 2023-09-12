@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +34,16 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     @Override
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value ) {
-        return voDao.loadWithResultsAndContrasts( value );
+        ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value );
+        return result != null ? thaw( result ) : null;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( ExpressionAnalysisResultSet e ) {
-        voDao.thaw( e );
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet ears ) {
+        ears = ensureInSession( ears );
+        voDao.thaw( ears );
+        return ears;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     public ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id ) {
         ExpressionAnalysisResultSet ears = voDao.load( id );
         if ( ears != null ) {
-            voDao.thaw( ears );
+            return thaw( ears );
         }
         return ears;
     }
@@ -60,7 +64,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         return voDao.loadResultToGenesMap( resultSet );
     }
 

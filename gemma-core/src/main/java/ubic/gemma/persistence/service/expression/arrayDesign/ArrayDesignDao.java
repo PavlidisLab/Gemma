@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,22 +26,20 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
-public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignValueObject>,
+public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
         FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     String OBJECT_ALIAS = "ad";
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
-    Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
-
-    Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
-
     void deleteAlignmentData( ArrayDesign arrayDesign );
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
+
+    ArrayDesign findByShortName( String shortName );
+
+    Collection<ArrayDesign> findByName( String name );
 
     Collection<ArrayDesign> findByAlternateName( String queryString );
 
@@ -58,6 +55,13 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
+    /**
+     * Obtain the number of associated expression experiments.
+     * <p>
+     * This is much faster than looking up the size of {@link #getExpressionExperiments(ArrayDesign)}.
+     */
+    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
@@ -66,7 +70,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
      * If you only need to count them, consider using the more performant {@link #getSwitchedExpressionExperimentsCount(ArrayDesign)}
      * instead.
      */
-    Collection<Long> getSwitchedExpressionExperimentIds( ArrayDesign arrayDesign );
+    Collection<ExpressionExperiment> getSwitchedExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * Count the number of switched {@link ExpressionExperiment} from a given platform.
@@ -125,11 +129,15 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign, ArrayDesignVal
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
-    ArrayDesign thaw( ArrayDesign arrayDesign );
+    /**
+     * Lightly thaw the given platform.
+     */
+    void thawLite( ArrayDesign arrayDesign );
 
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
-
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
+    /**
+     * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
+     */
+    void thaw( ArrayDesign arrayDesign );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 

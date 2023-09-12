@@ -1,8 +1,8 @@
 package ubic.gemma.rest.util.args;
 
-import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -10,7 +10,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = PlatformArg.class))
-public class PlatformArrayArg extends AbstractEntityArrayArg<String, ArrayDesign, ArrayDesignService> {
+public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayDesignService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Platform identifiers";
 
@@ -28,7 +28,7 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<String, ArrayDesign
      */
     @SuppressWarnings("unused")
     public static PlatformArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( Strings.isNullOrEmpty( s ) ) {
+        if ( StringUtils.isBlank( s ) ) {
             throw new MalformedArgException( String.format( PlatformArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }

@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
+@Deprecated
 public class SFARILineInfo {
 
     // Column names as they appear in the file

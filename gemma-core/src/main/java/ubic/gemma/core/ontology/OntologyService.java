@@ -14,12 +14,7 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.*;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -69,18 +64,7 @@ public interface OntologyService {
      * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology ) throws OntologySearchException;
-
-    Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException;
-
-    /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
-     * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
-     *
-     * @param  search search
-     * @return a collection of Characteristics that are backed by the corresponding found OntologyTerm
-     */
-    Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException;
+            boolean useNeuroCartaOntology ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -90,13 +74,12 @@ public interface OntologyService {
      * @param  search search
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException;
+    Collection<OntologyTerm> findTerms( String search ) throws SearchException;
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
-     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
-     * match the search term exactly
+     * returned list also.
      *
      * @param  taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
      *                          restriction is
@@ -104,7 +87,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException;
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic
@@ -124,56 +107,10 @@ public interface OntologyService {
     Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
 
     /**
-     * @return the cellLineOntologyService
-     */
-    CellLineOntologyService getCellLineOntologyService();
-
-    CellTypeOntologyService getCellTypeOntologyService();
-
-    /**
-     * @return the chebiOntologyService
-     */
-    ChebiOntologyService getChebiOntologyService();
-
-    /**
-     * @return the diseaseOntologyService
-     */
-    DiseaseOntologyService getDiseaseOntologyService();
-
-    /**
-     * @return the experimentalFactorOntologyService
-     */
-    ExperimentalFactorOntologyService getExperimentalFactorOntologyService();
-
-    GemmaOntologyService getGemmaOntologyService();
-
-    HumanDevelopmentOntologyService getHumanDevelopmentOntologyService();
-
-    /**
-     * @return the HumanPhenotypeOntologyService
-     */
-    HumanPhenotypeOntologyService getHumanPhenotypeOntologyService();
-
-    /**
-     * @return the MammalianPhenotypeOntologyService
-     */
-    MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
-
-    MouseDevelopmentOntologyService getMouseDevelopmentOntologyService();
-
-    /**
-     * @return the ObiService
-     */
-    ObiService getObiService();
-
-    /**
      * @param  uri uri
-     * @return the OntologyResource
+     * @return the definition of the associated OntologyTerm. This requires that the ontology be loaded.
      */
-    @Nullable
-    OntologyResource getResource( String uri );
-
-    SequenceOntologyService getSequenceOntologyService();
+    String getDefinition( String uri );
 
     /**
      * @param  uri uri
@@ -183,9 +120,9 @@ public interface OntologyService {
     OntologyTerm getTerm( String uri );
 
     /**
-     * @return UberonService
+     * Return all the terms matching the given URIs.
      */
-    UberonOntologyService getUberonService();
+    Set<OntologyTerm> getTerms( Collection<String> uris );
 
     boolean isObsolete( String uri );
 
@@ -210,7 +147,5 @@ public interface OntologyService {
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
-    Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
-
-
+    Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
 }

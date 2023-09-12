@@ -42,10 +42,12 @@ public class ExpressionDataDoubleMatrixUtilTest {
     @Before
     public void setUp() {
         RawExpressionDataVector ev = new RawExpressionDataVector();
-        CompositeSequence cs = new CompositeSequence();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
+        CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         ev.setDesignElement( cs );
         ev.setData( byteArrayConverter.doubleArrayToBytes( new Double[] { 4.0 } ) );
-        qt = new QuantitationTypeImpl();
+        qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -224,7 +226,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomLinearMatrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLinearMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -237,7 +239,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLog2Matrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -251,7 +253,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomRatiometricLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
         matrix = randomLog2RatiometricMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -264,7 +266,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomCountMatrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.SEQUENCING );
         matrix = randomCountMatrix( ee );
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
@@ -277,8 +279,8 @@ public class ExpressionDataDoubleMatrixUtilTest {
 
     @Test
     public void testRandomSuspiciousLog2Matrix() {
-        ExpressionExperiment ee = getTestExpressionExperiment();
-        QuantitationType qt = new QuantitationTypeImpl();
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
+        QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -286,17 +288,18 @@ public class ExpressionDataDoubleMatrixUtilTest {
         matrix = randomExpressionMatrix( ee, qt, new NormalDistribution( 25, 2 ) );
         assertThatThrownBy( () -> detectSuspiciousValues( matrix, qt ) )
                 .isInstanceOf( SuspiciousValuesForQuantitationException.class ).satisfies( e -> {
-                    assertThat( ( ( SuspiciousValuesForQuantitationException ) e ).getLintResults() ).isNotEmpty();
+                    assertThat( ( ( SuspiciousValuesForQuantitationException ) e ).getSuspiciousValues() ).isNotEmpty();
                 } );
     }
 
-    private ExpressionExperiment getTestExpressionExperiment() {
+    private ExpressionExperiment getTestExpressionExperiment( TechnologyType technologyType ) {
         ExpressionExperiment ee = new ExpressionExperiment();
         Set<BioAssay> bioAssays = new HashSet<>();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( technologyType );
         Set<CompositeSequence> seqs = new HashSet<>();
         for ( int j = 0; j < 10000; j++ ) {
-            seqs.add( CompositeSequence.Factory.newInstance( String.valueOf( j ) ) );
+            seqs.add( CompositeSequence.Factory.newInstance( String.valueOf( j ), ad ) );
         }
         ad.setCompositeSequences( seqs );
         for ( int i = 0; i < 2; i++ ) {
@@ -320,7 +323,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             Set<BioAssay> bas = new HashSet<>();
             DoubleMatrix<String, String> rawMatrix = new DoubleMatrixReader().read( is );
             DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( rawMatrix.getRawMatrix() );
-            matrix.setRowNames( rawMatrix.getRowNames().stream().map( CompositeSequence.Factory::newInstance ).collect( Collectors.toList() ) );
+            matrix.setRowNames( rawMatrix.getRowNames().stream().map( n -> CompositeSequence.Factory.newInstance( n, ad ) ).collect( Collectors.toList() ) );
             matrix.setColumnNames( rawMatrix.getColNames().stream().map( name -> {
                 BioMaterial bm = BioMaterial.Factory.newInstance( name );
 
@@ -335,7 +338,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             ExpressionExperiment ee = new ExpressionExperiment();
             ee.setShortName( shortName );
             ee.setBioAssays( bas );
-            QuantitationType qt = new QuantitationTypeImpl();
+            QuantitationType qt = new QuantitationType();
             return new ExpressionDataDoubleMatrix( ee, qt, matrix );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

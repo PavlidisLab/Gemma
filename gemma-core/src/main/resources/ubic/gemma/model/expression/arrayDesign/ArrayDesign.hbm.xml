@@ -11,13 +11,13 @@
          <generator class="native">
          </generator>
       </id>
-      <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
+      <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrail"  cascade="all" lazy="proxy" fetch="select">
          <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- This is assumed readily available in AbstractCuratableValueObject -->
       <!-- The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal -->
       <many-to-one name="curationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="join">
-         <column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+         <column name="CURATION_DETAILS_FK" not-null="true" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
@@ -38,9 +38,9 @@
                <param name="useNamed">true</param>
            </type>
        </property>
-       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
       <!-- this is assumed available in ArrayDesignValueObject -->
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
+      <!-- fetched with select because taxon are very redundant -->
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences" lazy="true" fetch="select" cascade="all">
@@ -90,7 +90,7 @@
          <key foreign-key="ALTERNATE_NAME_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.arrayDesign.AlternateNameImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.arrayDesign.AlternateName"/>
       </set>
    </class>
 </hibernate-mapping>

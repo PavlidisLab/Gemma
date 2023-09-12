@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 
 import javax.servlet.jsp.JspException;
@@ -61,6 +60,8 @@ public class ExperimentQCTag extends TagSupport {
     public String getQChtml() {
         StringBuilder buf = new StringBuilder();
 
+        String contextPath = pageContext.getServletContext().getContextPath();
+
         /*
          * check if the files are available...if not, show something intelligent.
          */
@@ -92,18 +93,18 @@ public class ExperimentQCTag extends TagSupport {
                             + "onClick=\"popupImage('" ).append( bigImageUrl ).append( "'," ).append( width )
                     .append( "," ).append( height ).append( ")" ).append( ";return 1\"; " )
                     .append( "title=\"Assay correlations (bright=higher); click for larger version\" >" )
-                    .append( "<img src=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeCorrMat.html?id=" ).append( this.eeid )
+                    .append( "<img src=\"" + contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" ).append( this.eeid )
                     .append( "&size=1\" alt='Image unavailable' width='" )
                     .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' height='" )
                     .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' /></a>" );
 
             buf.append(
-                    "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeCorrMat.html?id=" )
+                    "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" )
                     .append( this.eeid ).append( "&text=1\">Get data</a></li>" );
 
             if ( this.numOutliersRemoved > 0 ) {
                 buf.append(
-                        "<li><a title=\"Download a file containing the list of outlier samples that were removed\" class=\"newpage\"  target=\"_blank\"  href=\"" + Settings.getRootContext() + "/expressionExperiment/outliersRemoved.html?id=" )
+                        "<li><a title=\"Download a file containing the list of outlier samples that were removed\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/outliersRemoved.html?id=" )
                         .append( this.eeid ).append( "&text=1\">" ).append( this.numOutliersRemoved )
                         .append( " outliers removed</a></li>" );
             } else {
@@ -112,7 +113,7 @@ public class ExperimentQCTag extends TagSupport {
 
             if ( this.numPossibleOutliers > 0 ) {
                 buf.append(
-                        "<li><a title=\"Download a file containing the list of possible outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"" + Settings.getRootContext() + "/expressionExperiment/possibleOutliers.html?id=" )
+                        "<li><a title=\"Download a file containing the list of possible outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/possibleOutliers.html?id=" )
                         .append( this.eeid ).append( "&text=1\">" ).append( this.numPossibleOutliers )
                         .append( " possible outliers</a></li>" );
             } else {
@@ -126,7 +127,7 @@ public class ExperimentQCTag extends TagSupport {
 
         if ( hasPCA ) {
             buf.append(
-                    "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"" + Settings.getRootContext() + "/expressionExperiment/pcaScree.html?id=" )
+                    "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"" + contextPath + "/expressionExperiment/pcaScree.html?id=" )
                     .append( this.eeid ).append( "\" />" );
             buf.append( "<br/>" );
             for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
@@ -135,12 +136,12 @@ public class ExperimentQCTag extends TagSupport {
                         "<span style='cursor:pointer' onClick=\"Ext.getCmp('" + eeManagerId + "').visualizePcaHandler("
                                 + this.eeid + "," + ( i + 1 ) + "," + 100
                                 + ")\" title=\"Click to visualize top loaded probes for component " + ( i + 1 )
-                                + "\"><img src=\"" + Settings.getRootContext() + "/images/icons/chart_curve.png\"></span>";
+                                + "\"><img src=\"" + contextPath + "/images/icons/chart_curve.png\"></span>";
                 buf.append( linkText ).append( "&nbsp;" );
             }
 
             buf.append(
-                    "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"" + Settings.getRootContext() + "/expressionExperiment/eigenGenes.html?eeid=" )
+                    "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/eigenGenes.html?eeid=" )
                     .append( this.eeid ).append( "\">Get data</a></span>" );
 
             buf.append( "</td>" );
@@ -155,7 +156,7 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
                     + "<a style='cursor:pointer' onClick=\"popupImage('" ).append( detailsUrl ).append( "'," )
                     .append( width ).append( "," ).append( height ).append( ");return 1\" >" ).append(
-                    "<img title='Correlations of PCs with experimental factors, click for details' src=\"" + Settings.getRootContext() + "/expressionExperiment/pcaFactors.html?id=" )
+                    "<img title='Correlations of PCs with experimental factors, click for details' src=\"" + contextPath + "/expressionExperiment/pcaFactors.html?id=" )
                     .append( this.eeid ).append( "\" /></a></td>" );
 
         } else {
@@ -168,7 +169,7 @@ public class ExperimentQCTag extends TagSupport {
 
       /*  if ( hasCorrDist ) {
             buf.append(
-                    " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
+                    " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + contextPath + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
                     .append( this.eeid ).append( "\" /></td>" );
         } else {
             buf.append( placeHolder );
@@ -186,8 +187,8 @@ public class ExperimentQCTag extends TagSupport {
                     "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
                             + "onClick=\"popupImage('" ).append( bigImageUrl ).append( "'," ).append( width )
                     .append( "," ).append( height ).append( ")" ).append( ";return 1\"; " )
-                    .append( "title=\"Mean-variance relationhip; click for larger version\" >" )
-                    .append( "<img src=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeMeanVariance.html?id=" )
+                    .append( "title=\"Mean-variance relationship; click for larger version\" >" )
+                    .append( "<img src=\"" + contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" )
                     .append( this.eeid ).append( "&size=1\" alt='Image unavailable' width='" )
                     .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' height='" )
                     .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' /></a>" );

@@ -10,7 +10,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = DatabaseEntryArg.class))
-public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<String, DatabaseEntry, DatabaseEntryService> {
+public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry, DatabaseEntryService> {
 
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Database entry identifiers";

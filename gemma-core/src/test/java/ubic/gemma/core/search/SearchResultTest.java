@@ -32,7 +32,7 @@ public class SearchResultTest {
     public void testResultObject() {
         SearchResult<Identifiable> sr = SearchResult.from( FooBar.class, new FooBar( 1L ), 1.0, "test object" );
         assertThat( sr.getScore() ).isEqualTo( 1.0 );
-        assertThat( sr.getHighlightedText() ).isNull();
+        assertThat( sr.getHighlights() ).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)

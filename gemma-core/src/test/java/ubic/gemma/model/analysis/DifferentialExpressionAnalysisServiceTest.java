@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,6 +117,13 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     }
 
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( e1 );
+        expressionExperimentService.remove( e2 );
+        expressionExperimentService.remove( e3 );
+    }
+
     @Test
     public void testFindByInvestigation() {
 
@@ -135,7 +143,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     @Test
     public void testFindByInvestigations() {
-        Collection<ExpressionExperiment> investigations = new ArrayList<>();
+        Collection<BioAssaySet> investigations = new ArrayList<>();
         investigations.add( e1 );
         investigations.add( e3 );
 

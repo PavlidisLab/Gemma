@@ -15,11 +15,11 @@
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import javax.annotation.Nullable;
 
 /**
  * @author Paul
@@ -33,7 +33,16 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to load the raw coexpression matrix for.
      * @return the full, non-regressed matrix. If the matrix is not available event after attempted computation, returns null.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException;
+    @Nullable
+    DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee );
+
+    /**
+     * Load the regressed coexpression matrix for the given experiment.
+     * @return the regressed matrix if available, null might indicate that the is either no analysis or no regressed
+     * matrix, use {@link #hasAnalysis(ExpressionExperiment)} to tell these apart.
+     */
+    @Nullable
+    DoubleMatrix<BioAssay, BioAssay> loadRegressedMatrix( ExpressionExperiment ee );
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment and converts the regressed coexpression matrix
@@ -45,32 +54,34 @@ public interface SampleCoexpressionAnalysisService {
      * @return sample correlation matrix with major factors regressed out, if such matrix exists for the given experiment.
      * If not, the full non-regressed matrix is returned. If no matrix is available event after attempted computation, returns null.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException;
-
-    /**
-     * Loads the analysis containing the coexpression matrices for the given experiment. If the analysis does not
-     * exist, or the full matrix is not available, or the regressed matrix is not available but all conditions
-     * for its computation are met, it re-runs the analysis.
-     *
-     * @param ee the experiment to load the analysis for.
-     * @return the sample correlation analysis containing both full and regressed sample correlation matrices.
-     */
-    SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException;
-
-    /**
-     * @param ee the experiment.
-     * @return true if the ee has the coexpression matrices computed.
-     */
-    boolean hasAnalysis( ExpressionExperiment ee );
+    @Nullable
+    DoubleMatrix<BioAssay, BioAssay> loadBestMatrix( ExpressionExperiment ee );
 
     /**
      * Computes sample correlation matrices for the given experiment. If the experiment already has any, they are
      * removed. See {@link SampleCoexpressionAnalysis} for the description of the matrices that are computed.
      *
      * @param ee the experiment to create a sample correlation matrix for.
-     * @return the analysis object containing several types of sample correlation matrices.
+     * @return the regressed coexpression matrix if available, otherwise the full
      */
-    SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException;
+    DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee );
+
+    /**
+     * Computes sample correlation matrices for the given experiment if necessary.
+     * <p>
+     * The computation happens if at least one of the following condition is met:
+     * <ul>
+     * <li>there is no {@link SampleCoexpressionAnalysis} for the given experiment</li>
+     * <li>the full coexpression matrix is null</li>
+     * <li>the regressed coexpression matrix is null and there is an important factor</li>
+     * </ul>
+     *
+     * @see #compute(ExpressionExperiment)
+     * @return the regressed coexpression matrix if available, otherwise the full
+     */
+    DoubleMatrix<BioAssay, BioAssay> computeIfNecessary( ExpressionExperiment ee );
+
+    boolean hasAnalysis( ExpressionExperiment ee );
 
     /**
      * Removes all coexpression matrices for the given experiment.
@@ -78,5 +89,4 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to remove the analysis for.
      */
     void removeForExperiment( ExpressionExperiment ee );
-
 }

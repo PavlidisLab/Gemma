@@ -29,11 +29,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -56,7 +55,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
     @TestComponent
     static class GeneOntologyServiceTestContextConfiguration {
         @Bean
-        public GeneOntologyService geneOntologyService() throws IOException {
+        public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
             GeneOntologyService goService = new GeneOntologyServiceImpl( false );
             /*
              * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
@@ -64,7 +63,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
             InputStream is = new GZIPInputStream(
                     new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
             // we must force indexing to get consistent test results
-            goService.loadTermsInNameSpace( is, true );
+            OntologyTestUtils.initialize( goService, is );
             return goService;
         }
 
@@ -102,18 +101,6 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
     @Test(expected = IllegalArgumentException.class)
     public void testFindTermWithEmptyQuery() throws OntologySearchException {
         gos.findTerm( " " );
-    }
-
-    @Test
-    public void testFindIndividuals() throws OntologySearchException {
-        Collection<OntologyIndividual> matches = gos.findIndividuals( "protein tag" );
-        assertEquals( 1, matches.size() );
-    }
-
-    @Test
-    public void testFindResources() throws OntologySearchException {
-        Collection<OntologyResource> matches = gos.findResources( "electron carrier" );
-        assertEquals( 4, matches.size() );
     }
 
     @Test

@@ -27,7 +27,7 @@ import java.util.Date;
 /**
  * Shared code between SubmittedTaskLocal and SubmittedTaskProxy. author: anton date: 08/02/13
  */
-public abstract class SubmittedTaskAbstract<T extends TaskResult> implements SubmittedTask<T> {
+public abstract class SubmittedTaskAbstract implements SubmittedTask {
 
     final String taskId;
     final TaskCommand taskCommand;

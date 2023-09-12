@@ -55,7 +55,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" + e.getId()
+            String link = Settings.getHostUrl() + getServletContext().getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + e.getId()
                     .toString();
 
             int maxLength = 500;
@@ -69,10 +69,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             item.setContent( content );
             item.setTitle( title );
             item.setLink( link );
-
-            if ( e.getCurationDetails() != null ) {
-                item.setPubDate( e.getCurationDetails().getLastUpdated() );
-            }
+            item.setPubDate( e.getCurationDetails().getLastUpdated() );
             items.add( item );
         }
         return items;
@@ -89,7 +86,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
         int newCount = ( Integer ) model.get( "newCount" );
         feed.setTitle( "RSS | Gemma" );
         feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
-        feed.setLink( Settings.getBaseUrl() );
+        feed.setLink( Settings.getHostUrl() + getServletContext().getContextPath() + "/" );
 
         super.buildFeedMetadata( model, feed, request );
     }

@@ -21,7 +21,6 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -30,6 +29,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.FiltersUtils.unnestSubquery;
+import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
 
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
@@ -111,8 +113,8 @@ import java.util.stream.Collectors;
  * @see FilteringService
  */
 @CommonsLog
-@Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
-        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/web/services/rest/util/args/FilterArg.html"))
+@Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation. The filter value may be compressed with gzip and encoded with base64.",
+        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
     /**
@@ -163,9 +165,12 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                         operator = collectionOperatorToOperator( subClause.collectionOperator() );
                         List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
                         ubic.gemma.persistence.util.Filter f = service.getFilter( property, operator, requiredValue );
-                        if ( f.getRequiredValue() == null || ( ( Collection<?> ) f.getRequiredValue() ).isEmpty() ) {
+                        // the rhs might be a subquery, unnest it
+                        ubic.gemma.persistence.util.Filter filterToValidate = unnestSubquery( f );
+                        if ( filterToValidate.getRequiredValue() == null || ( ( Collection<?> ) filterToValidate.getRequiredValue() ).isEmpty() ) {
                             // collections must be non-empty
-                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.", f ) );
+                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.",
+                                    filterToValidate ) );
                         }
                         disjunction = disjunction.or( f );
                     }
@@ -231,15 +236,17 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
 
     /**
      * Used by RS to parse value of request parameters.
+     * <p>
+     * The filter string may be compressed and base64-encoded.
      *
      * @param s the request filter string.
      * @return an instance of DatasetFilterArg representing the filtering options in the given string.
      */
     @SuppressWarnings("unused")
-    public static <O extends Identifiable> FilterArg<O> valueOf( final String s ) {
+    public static <O extends Identifiable> FilterArg<O> valueOf( String s ) {
         LoggingErrorListener lel = new LoggingErrorListener();
 
-        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( s ) ) {
+        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( decodeCompressedArg( s ) ) ) {
             @Override
             public void recover( RecognitionException re ) {
                 throw new ParseCancellationException( re );

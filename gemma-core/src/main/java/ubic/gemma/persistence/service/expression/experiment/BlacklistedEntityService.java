@@ -1,14 +1,16 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-public interface BlacklistedEntityService extends BaseVoEnabledService<BlacklistedEntity, BlacklistedValueObject> {
+public interface BlacklistedEntityService extends BaseImmutableService<BlacklistedEntity>, BaseVoEnabledService<BlacklistedEntity, BlacklistedValueObject> {
 
     /**
      * @see BlacklistedEntityDao#isBlacklisted(String)
@@ -35,6 +37,7 @@ public interface BlacklistedEntityService extends BaseVoEnabledService<Blacklist
      * @param dataset the dataset to blacklist
      * @param reason a reason, which must be non-empty
      */
+    @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     BlacklistedExperiment blacklistExpressionExperiment( ExpressionExperiment dataset, String reason );
 
     /**
@@ -45,5 +48,6 @@ public interface BlacklistedEntityService extends BaseVoEnabledService<Blacklist
      * @param platform the platform to blacklist
      * @param reason a reason, which must be non-empty
      */
+    @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     BlacklistedPlatform blacklistPlatform( ArrayDesign platform, String reason );
 }

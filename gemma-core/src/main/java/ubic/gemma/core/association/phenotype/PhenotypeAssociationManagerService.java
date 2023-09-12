@@ -16,7 +16,6 @@ package ubic.gemma.core.association.phenotype;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -35,6 +34,7 @@ import java.util.*;
  *
  * @author paul
  */
+@Deprecated
 public interface PhenotypeAssociationManagerService {
 
     /**
@@ -131,7 +131,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  givenQueryString the search query
      * @return                  the terms found
      */
-    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws OntologySearchException;
+    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws SearchException;
 
     /**
      * Gets all External Databases that are used with evidence
@@ -271,7 +271,7 @@ public interface PhenotypeAssociationManagerService {
      * @param maxResults
      * @return the terms found in the database with taxon and gene occurrence
      */
-    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws OntologySearchException;
+    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws SearchException;
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
@@ -280,7 +280,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  geneId      the id of the chosen gene
      * @return             list of choices returned
      */
-    Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws OntologySearchException;
+    Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws SearchException;
 
     /**
      * Modify an existing evidence

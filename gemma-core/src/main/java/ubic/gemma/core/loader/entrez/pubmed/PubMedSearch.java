@@ -58,13 +58,13 @@ public class PubMedSearch {
      * Search based on terms
      *
      * @param  searchTerms                  search terms
-     * @return                              BibliographicReference representing the publication
+     * @return BibliographicReference representing the publication
      * @throws IOException                  IO problems
      * @throws SAXException                 sax exception
      * @throws ParserConfigurationException parser config exception
      */
     public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms )
-            throws IOException, SAXException, ParserConfigurationException {
+            throws IOException, SAXException, ParserConfigurationException, ESearchException {
         StringBuilder builder = new StringBuilder();
         builder.append( uri );
         builder.append( "&term=" );
@@ -116,13 +116,13 @@ public class PubMedSearch {
      * Gets all the pubmed ID's that would be returned given a list of input terms, using two eUtil calls.
      *
      * @param  searchTerms                  search terms
-     * @return                              The PubMed ids (as strings) for the search results.
+     * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      * @throws SAXException                 SAX exception
      * @throws ParserConfigurationException config problems
      */
     public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms )
-            throws IOException, SAXException, ParserConfigurationException {
+            throws IOException, SAXException, ParserConfigurationException, ESearchException {
         StringBuilder builder = new StringBuilder();
         for ( String word : searchTerms ) {
             // space them out, then let the overloaded method urlencode them
@@ -137,13 +137,13 @@ public class PubMedSearch {
      *
      * @param  searchQuery                  - what would normally be typed into pubmed search box for example "Neural
      *                                      Pathways"[MeSH]
-     * @return                              The PubMed ids (as strings) for the search results.
+     * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      * @throws SAXException                 SAX exception
      * @throws ParserConfigurationException config problems
      */
     public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery )
-            throws IOException, SAXException, ParserConfigurationException {
+            throws IOException, SAXException, ParserConfigurationException, ESearchException {
         ESearchXMLParser parser = new ESearchXMLParser();
         // encode it
         searchQuery = URLEncoder.encode( searchQuery, "UTF-8" );

@@ -18,9 +18,13 @@
  */
 package ubic.gemma.model.common.search;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.With;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.search.SearchResult;
+import org.springframework.context.MessageSourceResolvable;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -32,6 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Configuration options for searching.
@@ -41,7 +46,6 @@ import java.util.Set;
 @Data
 @Builder
 @With
-@ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
     public static final char
@@ -50,9 +54,13 @@ public class SearchSettings implements Serializable {
 
     public enum SearchMode {
         /**
+         * Prefer correctness over speed.
+         */
+        ACCURATE,
+        /**
          * Normal search mode with trade-offs to make it usable.
          */
-        NORMAL,
+        BALANCED,
         /**
          * Fast search mode, designed for autocompletion.
          */
@@ -172,13 +180,6 @@ public class SearchSettings implements Serializable {
     private boolean useIndices = true;
 
     /**
-     * Highlight part of the search result as per {@link SearchResult#getHighlightedText()}.
-     * <p>
-     * Overhead can be reduced by disabling highlighting if not needed.
-     */
-    private boolean doHighlighting;
-
-    /**
      * Limit for the number of results per result type in {@link ubic.gemma.core.search.SearchService.SearchResultMap}.
      * <p>
      * The default is relatively large and given by {@link #DEFAULT_MAX_RESULTS_PER_RESULT_TYPE}. Any value less than
@@ -197,15 +198,13 @@ public class SearchSettings implements Serializable {
      * Fast mode, return quickly.
      */
     @Builder.Default
-    private SearchMode mode = SearchMode.NORMAL;
+    private SearchMode mode = SearchMode.BALANCED;
 
     /**
-     * A context path for highlighted text containing URLs.
-     * @deprecated Never use this, always generate URLs in Gemma Web or Gemma REST
+     * A custom highlighter.
      */
     @Nullable
-    @Deprecated
-    private String contextPath;
+    private transient Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -271,5 +270,31 @@ public class SearchSettings implements Serializable {
      */
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
+    }
+
+    /**
+     * Highlight a given ontology term.
+     * <p>
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, MessageSourceResolvable)}
+     * that deals with a potentially null highlighter.
+     * @see #setHighlighter(Highlighter)
+     * @return a highlight, or null if no provider is set or the provider returns null
+     */
+    @Nullable
+    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder( "'" + query + "'" );
+        s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( platformConstraint != null ) {
+            s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
+        }
+        if ( taxon != null ) {
+            s.append( " " ).append( "[" ).append( taxon ).append( "]" );
+        }
+        return s.toString();
     }
 }

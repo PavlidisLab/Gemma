@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.model.OntologyResource;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -175,7 +175,7 @@ public class BioMaterialController {
             return null;
 
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
-        bioMaterialService.thaw( bioM );
+        bioM = bioMaterialService.thaw( bioM );
         Collection<FactorValueValueObject> results = new HashSet<>();
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
@@ -221,7 +221,7 @@ public class BioMaterialController {
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-        bioMaterialService.thaw( bioMaterial );
+        bioMaterial = bioMaterialService.thaw( bioMaterial );
 
         request.setAttribute( "id", id ); // / ??
 
@@ -231,7 +231,7 @@ public class BioMaterialController {
 
     private String getLabelFromUri( String uri ) {
         if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyResource resource = ontologyService.getResource( uri );
+        OntologyTerm resource = ontologyService.getTerm( uri );
         if ( resource != null )
             return resource.getLabel();
 

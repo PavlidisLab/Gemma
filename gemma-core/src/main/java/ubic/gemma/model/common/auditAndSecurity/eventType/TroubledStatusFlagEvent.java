@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * Sets the trouble flag of curation details of any Curatable object.
@@ -34,9 +34,12 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
     private static final long serialVersionUID = 7335601529423635731L;
 
     @Override
-    public final void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
-        curatable.getCurationDetails().setTroubled( true );
-        curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
+    public final void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
+        if ( curatable.getTroubled() ) {
+            throw new IllegalArgumentException( "Cannot mark an already troubled curatable as troubled." );
+        }
+        curatable.setTroubled( true );
+        curatable.setLastTroubledEvent( auditEvent );
     }
 
 }

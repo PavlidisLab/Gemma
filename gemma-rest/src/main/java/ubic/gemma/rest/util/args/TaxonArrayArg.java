@@ -5,14 +5,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = TaxonArg.class))
-public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonService> {
+public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
@@ -20,17 +18,6 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
 
     private TaxonArrayArg( List<String> values ) {
         super( TaxonArg.class, values );
-    }
-
-    @Override
-    public Filters getFilters( TaxonService service ) throws MalformedArgException {
-        if ( getPropertyName( service ).equals( "commonName" ) ) {
-            return Filters.by(
-                    service.getFilter( "commonName", Filter.Operator.in, this.getValue() ),
-                    service.getFilter( "scientificName", Filter.Operator.in, this.getValue() ) );
-        } else {
-            return super.getFilters( service );
-        }
     }
 
     /**

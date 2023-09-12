@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.search;
 
 import org.junit.Test;
+import ubic.gemma.core.search.Highlighter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +29,7 @@ public class SearchSettingsTest {
         searchSettings.setQuery( "http://example.ca/" );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
         assertThat( searchSettings.getRawQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( searchSettings.isTermQuery() );
+        assertThat( searchSettings.isTermQuery() ).isTrue();
         assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
     }
 
@@ -38,7 +39,7 @@ public class SearchSettingsTest {
         searchSettings.setQuery( " http://example.ca/ " );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
         assertThat( searchSettings.getRawQuery() ).isEqualTo( " http://example.ca/ " );
-        assertThat( searchSettings.isTermQuery() );
+        assertThat( searchSettings.isTermQuery() ).isTrue();
         assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
     }
 
@@ -55,5 +56,17 @@ public class SearchSettingsTest {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setTermUri( null );
         assertThat( searchSettings.isTermQuery() ).isFalse();
+    }
+
+    @Test
+    public void testSettingsWithDifferentHighlighterAreEqual() {
+        assertThat( SearchSettings.builder().query( "test" ).highlighter( new Highlighter1() ).build() )
+                .isEqualTo( SearchSettings.builder().query( "test" ).highlighter( new Highlighter2() ).build() );
+    }
+
+    private static class Highlighter1 implements Highlighter {
+    }
+
+    private static class Highlighter2 implements Highlighter {
     }
 }

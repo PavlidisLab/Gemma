@@ -19,12 +19,11 @@
 package ubic.gemma.core.tasks;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 
 /**
  * @author anton
  */
-public abstract class AbstractTask<T extends TaskResult, C extends TaskCommand> implements Task<T, C> {
+public abstract class AbstractTask<C extends TaskCommand> implements Task<C> {
     protected C taskCommand;
 
     @SuppressWarnings("WeakerAccess") // Spring requirement

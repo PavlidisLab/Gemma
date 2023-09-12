@@ -21,14 +21,13 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.type.DoubleType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
 import ubic.basecode.util.SQLUtils;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -41,6 +40,7 @@ import ubic.gemma.persistence.util.TaskCancelledException;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -296,8 +296,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = EntityUtils
-                .getPropertyMap( resultSets, "resultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = resultSets.stream()
+                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getResultSetId, rs -> rs, ( a, b ) -> b ) );
 
         Map<Long, Collection<Long>> foundInCache = this.fillFromCache( results, resultSetIdsMap.keySet(), geneIds );
 
@@ -486,7 +486,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         queryObject.setMaxResults( limit );
 
-        queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
+        queryObject.addScalar( "CORRECTED_PVALUE", StandardBasicTypes.DOUBLE );
         //noinspection unchecked
         results = queryObject.list();
 
@@ -736,22 +736,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
-            reattach( result );
             Hibernate.initialize( result );
             CompositeSequence cs = result.getProbe();
             Hibernate.initialize( cs );
             Hibernate.initialize( result.getContrasts() );
         }
-
     }
 
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        reattach( result );
         Hibernate.initialize( result );
 
         CompositeSequence cs = result.getProbe();
@@ -764,7 +758,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             //noinspection ResultOfMethodCallIgnored
             f.getIsBaseline();
         }
-
     }
 
     @Override

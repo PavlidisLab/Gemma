@@ -4,6 +4,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -14,12 +17,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@ActiveProfiles("web")
+@WebAppConfiguration
 public class PlatformsWebServiceTest extends BaseSpringContextTest {
 
     @Autowired
@@ -48,11 +54,12 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
     public void tearDown() {
         eeService.remove( expressionExperiment );
         arrayDesignService.remove( arrayDesign );
+        blacklistedEntityService.removeAllInBatch();
     }
 
     @Test
     public void testAll() {
-        FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
@@ -92,10 +99,24 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
         BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
-        FilteringAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
         assertThat( payload.getData() )
                 .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "shortName", arrayDesign.getShortName() );
+    }
+
+    @Test
+    public void testGetBlacklistedPlatformsAsNonAdmin() {
+        BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
+        assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
+        assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
+        try {
+            runAsUser( "bob" );
+            assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
+                    .isInstanceOf( AccessDeniedException.class );
+        } finally {
+            runAsAdmin();
+        }
     }
 }

@@ -3,6 +3,8 @@ package ubic.gemma.core.analysis.report;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -31,7 +33,17 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
         ee = getTestPersistentBasicExpressionExperiment();
         assertNull( ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
-        expressionExperimentReportService.recalculateBatchInfo();
+        assertNull( ee.getCurationDetails().getLastUpdated() );
+        expressionExperimentService.update( ee );
+        ee = expressionExperimentService.thawLite( ee );
+        assertNotNull( ee.getCurationDetails().getLastUpdated() );
+        SecurityContext previousContext = SecurityContextHolder.getContext();
+        try {
+            runAsAgent();
+            expressionExperimentReportService.recalculateBatchInfo();
+        } finally {
+            SecurityContextHolder.setContext( previousContext );
+        }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
@@ -41,7 +53,13 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     public void testRecalculateExperimentBatchInfo() {
         ee = getTestPersistentBasicExpressionExperiment();
         assertNotNull( ee.getExperimentalDesign() );
-        expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+        SecurityContext previousContext = SecurityContextHolder.getContext();
+        try {
+            runAsAgent();
+            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+        } finally {
+            SecurityContextHolder.setContext( previousContext );
+        }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
@@ -51,7 +69,13 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     public void testRecalculateBatchInfoWithMissingDesign() {
         ee = getTestPersistentExpressionExperiment();
         assertNull( ee.getExperimentalDesign() );
-        expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+        SecurityContext previousContext = SecurityContextHolder.getContext();
+        try {
+            runAsAgent();
+            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+        } finally {
+            SecurityContextHolder.setContext( previousContext );
+        }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );

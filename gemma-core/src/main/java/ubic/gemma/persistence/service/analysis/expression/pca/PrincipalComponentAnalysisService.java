@@ -22,6 +22,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
 /**
  * @author paul
  */
-public interface PrincipalComponentAnalysisService extends BaseService<PrincipalComponentAnalysis> {
+public interface PrincipalComponentAnalysisService extends BaseImmutableService<PrincipalComponentAnalysis> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,

@@ -25,6 +25,8 @@ import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -37,6 +39,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * For display and editing of users. Note: do not use parametrized collections as parameters for ajax methods in this
@@ -54,6 +58,9 @@ public class UserListControllerImpl implements UserListController {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -96,21 +103,18 @@ public class UserListControllerImpl implements UserListController {
 
     @Override
     public void saveUser( UserValueObject user ) {
-
         String userName = user.getUserName();
         User u = userManager.findByUserName( userName );
 
+        if ( u == null ) {
+            throw new IllegalArgumentException( String.format( "No user with username %s.", userName ) );
+        }
+
         UserDetailsImpl userDetails;
 
-        boolean newUser = false;
-        if ( u == null ) {
-            userDetails = new UserDetailsImpl( passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ), user.getUserName(), false,
-                    null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
-        } else {
-            u.setEmail( user.getEmail() );
-            u.setEnabled( user.isEnabled() );
-            userDetails = new UserDetailsImpl( u );
-        }
+        u.setEmail( user.getEmail() );
+        u.setEnabled( user.isEnabled() );
+        userDetails = new UserDetailsImpl( u );
 
         /*
          * When changing the roles (from user to say, admin), we must first create a new or update an existing user,
@@ -119,12 +123,8 @@ public class UserListControllerImpl implements UserListController {
          * change the permissions.
          */
 
-        if ( newUser ) {
-            userManager.createUser( userDetails );
-        } else {
-            userManager.updateUser( userDetails );
-        }
-
+        userManager.updateUser( userDetails );
+        userManager.updateUserGroups( userDetails, user.getGroups() );
     }
 
 }

@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -30,7 +31,7 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
-public interface GeneProductService extends BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
+public interface GeneProductService extends BaseService<GeneProduct>, BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
 
     @Override
     @Secured({ "GROUP_USER" })

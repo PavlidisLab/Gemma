@@ -22,18 +22,18 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,7 +41,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface CompositeSequenceService
-        extends FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
+        extends BaseService<CompositeSequence>, FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
@@ -91,7 +91,7 @@ public interface CompositeSequenceService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_READ" })
     CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
@@ -124,8 +124,10 @@ public interface CompositeSequenceService
     Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
             @Nullable CompositeSequenceValueObject cs );
 
-    void thaw( Collection<CompositeSequence> compositeSequences );
+    @CheckReturnValue
+    Collection<CompositeSequence> thaw( Collection<CompositeSequence> compositeSequences );
 
+    @CheckReturnValue
     CompositeSequence thaw( CompositeSequence compositeSequence );
 
 }

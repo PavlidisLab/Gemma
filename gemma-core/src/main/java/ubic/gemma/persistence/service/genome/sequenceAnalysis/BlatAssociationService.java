@@ -22,15 +22,17 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface BlatAssociationService extends BaseService<BlatAssociation> {
+public interface BlatAssociationService extends BaseImmutableService<BlatAssociation> {
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -40,16 +42,10 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
     @Secured({ "GROUP_ADMIN" })
     void remove( BlatAssociation blatAssociation );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( BlatAssociation blatAssociation );
-
     Collection<BlatAssociation> find( BioSequence bioSequence );
 
     Collection<BlatAssociation> find( Gene gene );
 
-    void thaw( Collection<BlatAssociation> blatAssociations );
-
-    void thaw( BlatAssociation blatAssociation );
-
+    @CheckReturnValue
+    Collection<BlatAssociation> thaw( Collection<BlatAssociation> blatAssociations );
 }

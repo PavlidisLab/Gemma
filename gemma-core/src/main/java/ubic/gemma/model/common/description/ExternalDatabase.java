@@ -49,7 +49,7 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
      * Related external databases.
      */
     private Set<ExternalDatabase> externalDatabases = new HashSet<>();
-    private AuditTrail auditTrail;
+    private AuditTrail auditTrail = new AuditTrail();
     @Nullable
     private String releaseVersion;
     @Nullable

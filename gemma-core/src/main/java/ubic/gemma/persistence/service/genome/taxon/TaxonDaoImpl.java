@@ -26,14 +26,13 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.EnumSet;
 
 /**
  * @author pavlidis
@@ -124,6 +123,11 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    protected void initializeCachedFilteringResult( Taxon cachedEntity ) {
+
     }
 
     @Override

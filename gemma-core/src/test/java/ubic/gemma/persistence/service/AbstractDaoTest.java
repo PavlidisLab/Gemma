@@ -6,6 +6,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.verification.VerificationModeFactory;
@@ -45,7 +47,7 @@ public class AbstractDaoTest {
         }
 
         public MyDao( SessionFactory sessionFactory, int batchSize ) {
-            super( MyEntity.class, sessionFactory, batchSize );
+            super( MyEntity.class, sessionFactory, sessionFactory.getClassMetadata( MyEntity.class ), batchSize );
         }
     }
 
@@ -53,14 +55,13 @@ public class AbstractDaoTest {
     private Session session;
     private MyDao myDao;
 
-    private long i = 0;
-
     @Before
     public void setUp() {
         session = mock( Session.class );
         sessionFactory = mock( SessionFactory.class );
         ClassMetadata myEntityClassMetadata = mock( ClassMetadata.class );
         when( myEntityClassMetadata.getIdentifierPropertyName() ).thenReturn( "id" );
+        when( myEntityClassMetadata.getMappedClass() ).thenReturn( MyEntity.class );
         when( sessionFactory.getClassMetadata( MyEntity.class ) ).thenReturn( myEntityClassMetadata );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
         when( session.getFlushMode() ).thenReturn( FlushMode.AUTO );
@@ -69,8 +70,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeFlushRightAway() {
         myDao = new MyDao( sessionFactory, 1 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, times( 10 ) ).flush();
         verify( session, times( 10 ) ).clear();
@@ -79,8 +79,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeUnlimited() {
         myDao = new MyDao( sessionFactory, Integer.MAX_VALUE );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 0 ) ).flush();
         verify( session, times( 0 ) ).clear();
@@ -89,8 +88,7 @@ public class AbstractDaoTest {
     @Test
     public void testBatchSizeSmall() {
         myDao = new MyDao( sessionFactory, 10 );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 10 ) );
-        assertThat( entities ).hasSize( 10 );
+        myDao.createInBatch( generateEntities( 10 ) );
         verify( session, times( 10 ) ).persist( any( MyEntity.class ) );
         verify( session, VerificationModeFactory.times( 1 ) ).flush();
         verify( session, times( 1 ) ).clear();
@@ -100,11 +98,14 @@ public class AbstractDaoTest {
     public void testBatchingNotAdvisableWhenFlushModeIsManual() {
         myDao = new MyDao( sessionFactory, 10 );
         when( session.getFlushMode() ).thenReturn( FlushMode.MANUAL );
-        Collection<MyEntity> entities = myDao.create( generateEntities( 20 ) );
-        assertThat( entities ).hasSize( 20 );
+        myDao.createInBatch( generateEntities( 20 ) );
         verify( session, times( 20 ) ).persist( any( MyEntity.class ) );
         verify( session, times( 0 ) ).flush();
         verify( session, times( 0 ) ).clear();
+    }
+
+    private static abstract class MyEntityProxy extends MyEntity implements HibernateProxy {
+
     }
 
     @Test
@@ -113,9 +114,23 @@ public class AbstractDaoTest {
         Criteria mockCriteria = mock( Criteria.class );
         when( mockCriteria.add( any() ) ).thenReturn( mockCriteria );
         when( session.createCriteria( MyEntity.class ) ).thenReturn( mockCriteria );
+        when( session.load( any( Class.class ), any() ) ).thenAnswer( a -> {
+            MyEntityProxy entity = mock( MyEntityProxy.class );
+            LazyInitializer lazyInitializer = mock( LazyInitializer.class );
+            when( lazyInitializer.isUninitialized() ).thenReturn( true );
+            when( entity.getId() ).thenReturn( a.getArgument( 1 ) );
+            when( entity.getHibernateLazyInitializer() ).thenReturn( lazyInitializer );
+            return entity;
+        } );
         List<Long> ids = Arrays.asList( 1L, 2L, 3L, 4L, 5L );
         myDao.load( ids );
+        verify( session ).load( MyEntity.class, 1L );
+        verify( session ).load( MyEntity.class, 2L );
+        verify( session ).load( MyEntity.class, 3L );
+        verify( session ).load( MyEntity.class, 4L );
+        verify( session ).load( MyEntity.class, 5L );
         verify( session ).createCriteria( MyEntity.class );
+        verifyNoMoreInteractions( session );
         verify( mockCriteria ).add( argThat( criterion -> criterion.toString().equals( Restrictions.in( "id", ids ).toString() ) ) );
         verify( mockCriteria ).list();
     }

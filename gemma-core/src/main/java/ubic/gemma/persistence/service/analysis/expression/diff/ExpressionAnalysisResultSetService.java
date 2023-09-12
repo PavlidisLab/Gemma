@@ -12,6 +12,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
@@ -21,13 +22,14 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
-    void thaw( ExpressionAnalysisResultSet e );
+    @CheckReturnValue
+    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
 
-    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet ears );
+    Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 }

@@ -42,8 +42,10 @@ import java.util.*;
  *
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
+ * @deprecated use {@link org.springframework.beans.factory.annotation.Value} to inject configurations
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Deprecated
 public class Settings {
 
     /**
@@ -55,8 +57,6 @@ public class Settings {
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
-    private static final String ANALYTICS_TRACKER_DOMAIN_PROPERTY = "ga.domain";
-
     /**
      * Name of the resource that is used to configure Gemma internally.
      */
@@ -65,7 +65,6 @@ public class Settings {
      * Name of the resource containing defaults that the user can override (classpath)
      */
     private static final String DEFAULT_CONFIGURATION = "default.properties";
-    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
     /**
      * The name of the file users can use to configure Gemma.
      */
@@ -165,10 +164,6 @@ public class Settings {
         if ( val.endsWith( File.separator ) )
             return val;
         return val + File.separator;
-    }
-
-    public static String getAnalyticsDomain() {
-        return Settings.getString( Settings.ANALYTICS_TRACKER_DOMAIN_PROPERTY );
     }
 
     public static String getAnalyticsKey() {
@@ -289,39 +284,11 @@ public class Settings {
      * @return host url e.g. http://gemma.msl.ubc.ca
      */
     public static String getHostUrl() {
-        String host = Settings.getString( "gemma.hosturl", "http://gemma.msl.ubc.ca" );
+        String host = Settings.getString( "gemma.hosturl", "https://gemma.msl.ubc.ca" );
         if ( host.length() > 1 && host.endsWith( "/" ) ) {
             return host.substring( 0, host.length() - 1 );
         }
         return host;
-    }
-
-    /**
-     * @return root context e.g. /Gemma
-     */
-    public static String getRootContext() {
-        String ctx = Settings.getString( "gemma.rootcontext", "" );
-        if ( ctx.isEmpty() || ctx.equals( "/" ) ) {
-            return "";
-        }
-        if ( !ctx.startsWith( "/" ) ) {
-            ctx = "/" + ctx;
-        }
-        if ( ctx.length() > 1 && ctx.endsWith( "/" ) ) {
-            return ctx.substring( 0, ctx.length() - 1 );
-        }
-        return ctx;
-    }
-
-    /**
-     * @return the configured base url (e.g., http://gemma.msl.ubc.ca/Gemma/). It will always end in a slash.
-     */
-    public static String getBaseUrl() {
-        String url = Settings.getString( "gemma.baseurl", Settings.getHostUrl() + Settings.getRootContext() + "/" );
-        if ( !url.endsWith( "/" ) ) {
-            return url + "/";
-        }
-        return url;
     }
 
     public static Configuration getInMemoryConfiguration() {
@@ -439,13 +406,6 @@ public class Settings {
             Settings.log.info( key + " is not configured, returning default value of null" );
             return null;
         }
-    }
-
-    /**
-     * @return true if the scheduler (e.g. Quartz for cron-style tasks) is enabled by the user's configuration
-     */
-    public static boolean isSchedulerEnabled() {
-        return Settings.getBoolean( Settings.QUARTZ_ENABLED_PROPERTY, false );
     }
 
     /**

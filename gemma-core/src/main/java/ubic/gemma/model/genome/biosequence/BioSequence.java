@@ -18,11 +18,13 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -37,6 +39,7 @@ import java.util.Set;
  * </p>
  */
 @SuppressWarnings("unused")
+@Indexed
 public class BioSequence extends AbstractDescribable implements Serializable {
 
     /**
@@ -47,7 +50,9 @@ public class BioSequence extends AbstractDescribable implements Serializable {
     private String sequence;
     private Boolean isApproximateLength;
     private Boolean isCircular;
+    @Nullable
     private PolymerType polymerType;
+    @Nullable
     private SequenceType type;
     private Double fractionRepeats;
     private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
@@ -60,6 +65,23 @@ public class BioSequence extends AbstractDescribable implements Serializable {
      * @author Paul
      */
     public BioSequence() {
+    }
+
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    public String getDescription() {
+        return super.getDescription();
     }
 
     public Set<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
@@ -105,11 +127,12 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.length = length;
     }
 
+    @Nullable
     public PolymerType getPolymerType() {
         return this.polymerType;
     }
 
-    public void setPolymerType( PolymerType polymerType ) {
+    public void setPolymerType( @Nullable PolymerType polymerType ) {
         this.polymerType = polymerType;
     }
 
@@ -124,6 +147,7 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.sequence = sequence;
     }
 
+    @IndexedEmbedded
     public DatabaseEntry getSequenceDatabaseEntry() {
         return this.sequenceDatabaseEntry;
     }
@@ -140,11 +164,12 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.taxon = taxon;
     }
 
+    @Nullable
     public SequenceType getType() {
         return this.type;
     }
 
-    public void setType( SequenceType type ) {
+    public void setType( @Nullable SequenceType type ) {
         this.type = type;
     }
 
@@ -203,6 +228,13 @@ public class BioSequence extends AbstractDescribable implements Serializable {
 
         public static BioSequence newInstance( Taxon taxon ) {
             final BioSequence entity = new BioSequence();
+            entity.setTaxon( taxon );
+            return entity;
+        }
+
+        public static BioSequence newInstance( String name, Taxon taxon ) {
+            final BioSequence entity = new BioSequence();
+            entity.setName( name );
             entity.setTaxon( taxon );
             return entity;
         }

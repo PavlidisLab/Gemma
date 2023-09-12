@@ -32,7 +32,6 @@ import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -93,46 +92,39 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException {
-        return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
-    }
-
-    @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException {
-        SampleCoexpressionAnalysis analysis = this.load( ee );
-        SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
-        if ( matrix == null ) {
-            SampleCoexpressionAnalysisServiceImpl.log.warn( String
-                    .format( SampleCoexpressionAnalysisServiceImpl.MSG_WARN_NO_REGRESSED_MATRIX, ee.getId() ) );
-            matrix = analysis.getFullCoexpressionMatrix();
-        }
-        return this.toDoubleMatrix( matrix );
-    }
-
-    @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException {
-
-        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
-
-        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
-
-        if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this
-                .shouldComputeRegressed( thawedee, analysis ) ) {
-            SampleCoexpressionAnalysisServiceImpl.log
-                    .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, thawedee.getId() ) );
-            return this.compute( thawedee );
-        }
-        this.logCormatStatus( analysis, false );
-        return analysis;
+    @Transactional(readOnly = true)
+    public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null ? toDoubleMatrix( analysis.getFullCoexpressionMatrix() ) : null;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return sampleCoexpressionAnalysisDao.load( ee ) != null;
+    public DoubleMatrix<BioAssay, BioAssay> loadRegressedMatrix( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null && analysis.getRegressedCoexpressionMatrix() != null ? toDoubleMatrix( analysis.getRegressedCoexpressionMatrix() ) : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DoubleMatrix<BioAssay, BioAssay> loadBestMatrix( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
+        return analysis != null ? toDoubleMatrix( analysis.getBestCoexpressionMatrix() ) : null;
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public DoubleMatrix<BioAssay, BioAssay> computeIfNecessary( ExpressionExperiment ee ) {
+        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
+        if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this.shouldComputeRegressed( thawedee, analysis ) ) {
+            SampleCoexpressionAnalysisServiceImpl.log
+                    .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, thawedee.getId() ) );
+            return this.compute( thawedee );
+        } else {
+            this.logCormatStatus( analysis, false );
+            return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
+        }
     }
 
     /**
@@ -143,7 +135,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException {
+    public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
@@ -153,13 +145,33 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( thawedee );
+        SampleCoexpressionMatrix matrix = this.getMatrix( thawedee, false, vectors );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( thawedee, true, vectors );
+
+        if ( matrix == null ) {
+            throw new RuntimeException( "Full coexpression matrix could not be computed." );
+        }
+
+        // this one is optional
+        if ( regressedMatrix == null ) {
+            log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
+        }
+
         SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( thawedee, // Analyzed experiment
-                this.getMatrix( thawedee, false, vectors ), // Full
-                this.getMatrix( thawedee, true, vectors ) );// Regressed
+                matrix, // Full
+                regressedMatrix );// Regressed
 
         // Persist
         this.logCormatStatus( analysis, true );
-        return sampleCoexpressionAnalysisDao.create( analysis );
+        sampleCoexpressionAnalysisDao.create( analysis );
+
+        return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasAnalysis( ExpressionExperiment ee ) {
+        return sampleCoexpressionAnalysisDao.existsByExperiment( ee );
     }
 
     @Override
@@ -192,9 +204,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
-        if ( matrix == null )
-            return null;
-
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = matrix.getBioAssayDimension().getBioAssays();
@@ -223,12 +232,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors ) {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
         ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors );
         if ( mat == null ) {
+            log.warn( "Could not get data matrix for " + ee );
             return null;
         }
 
@@ -236,9 +246,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // Check consistency
         BioAssayDimension bestBioAssayDimension = mat.getBestBioAssayDimension();
         if ( cormat.rows() != bestBioAssayDimension.getBioAssays().size() ) {
-            throw new IllegalStateException(
-                    String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_BIOASSAY_MISMATCH,
-                            bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
+            throw new RuntimeException( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_BIOASSAY_MISMATCH,
+                    bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
         return new SampleCoexpressionMatrix( bestBioAssayDimension,
@@ -260,8 +269,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
-        if ( vectors == null || vectors.isEmpty() ) {
+            Collection<ProcessedExpressionDataVector> vectors ) {
+        if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
         }
@@ -283,7 +292,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) {
         FilterConfig fConfig = new FilterConfig();
         fConfig.setIgnoreMinimumRowsThreshold( true );
         fConfig.setIgnoreMinimumSampleThreshold( true );
@@ -317,7 +326,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         /* Remove 'batch' from important factors */
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor factor : importantFactors ) {
-            if ( factor.getName().toLowerCase().equals( "batch" ) )
+            if ( factor.getName().equalsIgnoreCase( "batch" ) )
                 batch = factor;
         }
         if ( batch != null ) {
@@ -360,8 +369,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // set up design matrix
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
                 .getBaselineConditions( samplesUsed, factors );
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
-                .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+
+        ObjectMatrix<String, String, Object> designMatrix;
+        try {
+            /*
+             * A failure here can mean that the design matrix could not be built because of missing values; see #664
+             */
+            designMatrix = ExperimentalDesignUtils
+                    .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+        } catch ( Exception e ) {
+            return null;
+        }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );

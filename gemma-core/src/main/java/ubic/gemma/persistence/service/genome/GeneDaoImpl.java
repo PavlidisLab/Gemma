@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -423,14 +424,18 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public void remove( Gene gene ) {
         // remove associations
-        List<?> associations = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g" )
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene = :g)" )
                 .setParameter( "g", gene )
-                .list();
-        for ( Object association : associations ) {
-            getSessionFactory().getCurrentSession().delete( association );
-        }
-
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneSetMember gm where gm.gene = :g" )
+                .setParameter( "g", gene )
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene = :g" )
+                .setParameter( "g", gene )
+                .executeUpdate();
         super.remove( gene );
     }
 
@@ -526,11 +531,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select distinct gene "
+        String queryString = "select gene "
                 + "from Gene as gene " // gene
                 + "left join fetch gene.multifunctionality " // multifunctionality, if available
                 + "left join fetch gene.taxon as taxon "// taxon
-                + "left join gene.aliases " // aliases
                 + "where gene.id is not null"; // needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
@@ -544,12 +548,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    protected void initializeCachedFilteringResult( Gene entity ) {
+        Hibernate.initialize( entity.getMultifunctionality() );
+    }
+
+    @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(distinct gene) from Gene as gene " // gene
+        String queryString = "select count(gene) from Gene as gene " // gene
                 + "left join gene.multifunctionality " // multifunctionality, if available
                 + "left join gene.taxon as taxon "// taxon
-                + "left join gene.aliases " // aliases
                 + "where gene.id is not null"; // needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );

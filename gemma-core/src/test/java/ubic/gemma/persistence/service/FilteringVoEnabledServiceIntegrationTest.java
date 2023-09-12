@@ -3,6 +3,8 @@ package ubic.gemma.persistence.service;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -14,9 +16,11 @@ import ubic.gemma.persistence.util.Sort;
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 /**
  * Test all possible filterable properties for filtering and sorting results.
@@ -27,6 +31,8 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     @Autowired
     private Map<String, FilteringVoEnabledService<?, ?>> filteringServices;
 
+    @Autowired
+    private MessageSource messageSource;
 
     @Test
     @Category(SlowTest.class)
@@ -34,6 +40,17 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
         for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
             FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
             for ( String property : filteringService.getFilterableProperties() ) {
+                List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( property );
+                if ( allowedValues != null ) {
+                    List<MessageSourceResolvable> allowedValuesLabels = filteringService.getFilterablePropertyResolvableAllowedValuesLabels( property );
+                    assertThat( allowedValuesLabels )
+                            .isNotNull()
+                            .hasSameSizeAs( allowedValues )
+                            .allSatisfy( label -> {
+                                assertThatNoException()
+                                        .isThrownBy( () -> messageSource.getMessage( label, Locale.getDefault() ) );
+                            } );
+                }
                 Filter filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ) );
                 log.info( String.format( "%s.loadValueObjects(%s, null, 0, 1)", entry.getKey(), filter ) );
                 Slice<?> slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
@@ -61,9 +78,9 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     }
 
     private static String getStubForPropType( FilteringService<?> filteringService, String prop ) {
-        List<Object> availableValues = filteringService.getFilterablePropertyAllowedValues( prop );
-        if ( availableValues != null ) {
-            return availableValues.stream().findAny().map( String::valueOf ).orElse( null );
+        List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( prop );
+        if ( allowedValues != null ) {
+            return allowedValues.stream().findAny().map( String::valueOf ).orElse( null );
         }
         Class<?> clazz = filteringService.getFilterablePropertyType( prop );
         if ( Byte.class.isAssignableFrom( clazz ) ) {

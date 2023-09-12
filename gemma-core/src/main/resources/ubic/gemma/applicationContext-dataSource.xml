@@ -6,30 +6,33 @@
     <!-- we use the same database for production and development -->
     <beans profile="production,dev">
         <!-- Database connection information -->
-        <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
             <property name="driverClassName" value="${gemma.db.driver}"/>
             <property name="username" value="${gemma.db.user}"/>
             <property name="password" value="${gemma.db.password}"/>
-            <property name="url" value="${gemma.db.url}"/>
-            <property name="initialSize" value="${gemma.db.initpoolsize}"/>
-            <property name="maxIdle" value="${gemma.db.maxpoolidle}"/>
-            <property name="maxTotal" value="${gemma.db.maxtotal}"/>
-            <property name="maxWaitMillis" value="100000"/>
-            <property name="testOnBorrow" value="true"/>
-            <property name="validationQuery" value="SELECT 1"/>
-            <property name="connectionProperties"
-                      value="connectionTimeZone=${gemma.db.timezone};sessionVariables=sql_mode='${gemma.db.sqlMode}'"/>
+            <property name="jdbcUrl" value="${gemma.db.url}"/>
+            <property name="dataSourceProperties">
+                <props>
+                    <prop key="connectionTimeZone">${gemma.db.timezone}</prop>
+                    <prop key="sessionVariables">sql_mode='${gemma.db.sqlMode}'</prop>
+                </props>
+            </property>
+            <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
         </bean>
     </beans>
 
     <beans profile="test">
-        <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
-            <property name="driverClassName" value="${gemma.testdb.driver}"/>
+        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+            <property name="driverClassName" value="${gemma.db.driver}"/>
             <property name="username" value="${gemma.testdb.user}"/>
             <property name="password" value="${gemma.testdb.password}"/>
-            <property name="url" value="${gemma.testdb.url}"/>
-            <property name="connectionProperties"
-                      value="connectionTimeZone=${gemma.db.timezone};sessionVariables=sql_mode='${gemma.db.sqlMode}'"/>
+            <property name="jdbcUrl" value="${gemma.testdb.url}"/>
+            <property name="dataSourceProperties">
+                <props>
+                    <prop key="connectionTimeZone">${gemma.db.timezone}</prop>
+                    <prop key="sessionVariables">sql_mode='${gemma.db.sqlMode}'</prop>
+                </props>
+            </property>
         </bean>
     </beans>
 

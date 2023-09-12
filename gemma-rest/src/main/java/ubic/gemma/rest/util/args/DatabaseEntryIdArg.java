@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
-import javax.annotation.Nonnull;
-
 /**
  * Long argument type for DatabaseEntry API, referencing the Taxon ID.
  *
@@ -15,17 +13,11 @@ import javax.annotation.Nonnull;
 public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {
-        super( l );
+        super( "id", Long.class, l );
     }
 
     @Override
-    protected String getPropertyName( DatabaseEntryService service ) {
-        return service.getIdentifierPropertyName();
-    }
-
-    @Nonnull
-    @Override
-    public DatabaseEntry getEntity( DatabaseEntryService service ) {
-        return checkEntity( service, service.load( getValue() ) );
+    DatabaseEntry getEntity( DatabaseEntryService service ) {
+        return service.load( getValue() );
     }
 }

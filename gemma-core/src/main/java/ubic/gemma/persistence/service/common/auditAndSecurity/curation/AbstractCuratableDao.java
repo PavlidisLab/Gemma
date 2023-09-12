@@ -2,15 +2,16 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.FiltersUtils;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -26,48 +27,43 @@ import java.util.regex.Pattern;
  * @author tesarst
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+        extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C> {
 
     /**
      * HQL alias for {@link Curatable#getCurationDetails()}.
      */
     protected static final String CURATION_DETAILS_ALIAS = "s";
 
-    @Autowired
-    private CurationDetailsDao curationDetailsDao;
+    private final String objectAlias;
 
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
+        this.objectAlias = objectAlias;
     }
-
+   
     @Override
-    public C create( C entity ) {
-        if ( entity.getCurationDetails() == null ) {
-            entity.setCurationDetails( curationDetailsDao.create() );
+    public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
+        if ( curatable.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot update curation details for a transient entity." );
         }
-        return super.create( entity );
-    }
 
-    /**
-     * Finds an entity by given name.
-     *
-     * @param name name of the entity to be found.
-     * @return entity with given name, or null if such entity does not exist.
-     */
-    @Override
-    public Collection<C> findByName( String name ) {
-        return this.findByProperty( "name", name );
-    }
+        if ( curatable.getCurationDetails() == null ) {
+            curatable.setCurationDetails( new CurationDetails() );
+        }
 
-    /**
-     * Finds an entity by given short name.
-     *
-     * @param name short name of the entity to be found.
-     * @return entity with given short name, or null if such entity does not exist.
-     */
-    @Override
-    public C findByShortName( String name ) {
-        return this.findOneByProperty( "shortName", name );
+        CurationDetails curationDetails = curatable.getCurationDetails();
+
+        // Update the lastUpdated property to match the event date
+        curationDetails.setLastUpdated( auditEvent.getDate() );
+
+        // Update other curationDetails properties, if the event updates them.
+        if ( auditEvent.getEventType() != null
+                && CurationDetailsEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
+            CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
+            eventType.updateCurationDetails( curationDetails, auditEvent );
+        }
+
+        curatable.setCurationDetails( ( CurationDetails ) getSessionFactory().getCurrentSession().merge( curationDetails ) );
     }
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {
@@ -85,10 +81,51 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Restrict results to non-troubled curatable entities for non-administrators
      */
-    protected void addNonTroubledFilter( Filters filters, @Nullable String objectAlias ) {
+    protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
+    }
+
+    /**
+     * If the filters or sort refer to one of the one-to-many relations, multiple rows will be returned per datasets, so
+     * the query has to use a "distinct" clause make pagination work properly.
+     * <p>
+     * Using "distinct" otherwise has a steep performance penalty when combined with "order by".
+     * <p>
+     * Note that non-admin users always need a group by because of the jointure on ACL entries.
+     */
+    protected String distinctIfNecessary() {
+        if ( !SecurityUtil.isUserAdmin() ) {
+            return "distinct ";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Similar logic to {@link #distinctIfNecessary()}, but using a group by since it's more efficient. It does
+     * not work for the counting queries, however.
+     */
+    @Nullable
+    protected String groupByIfNecessary( @Nullable Sort sort, String... oneToManyAliases ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+            return objectAlias;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Format a non-troubled filter for an HQL query.
+     * <p>
+     * For filtering queries, use {@link #addNonTroubledFilter(Filters, String)} instead.
+     *
+     * @param objectAlias an alias for a {@link Curatable} entity
+     */
+    protected String formNonTroubledClause( String objectAlias ) {
+        //language=HQL
+        return SecurityUtil.isUserAdmin() ? "" : " and " + objectAlias + ".curationDetails.troubled = false";
     }
 
     @Override

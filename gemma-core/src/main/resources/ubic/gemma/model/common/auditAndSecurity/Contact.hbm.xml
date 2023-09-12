@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.auditAndSecurity.Contact" table="CONTACT" discriminator-value="Contact">
@@ -50,6 +50,14 @@
                         <column name="USER_FK" sql-type="BIGINT"/>
                     </key>
                     <one-to-many class="ubic.gemma.model.common.auditAndSecurity.JobInfo"/>
+                </set>
+                <set name="groups" table="GROUP_MEMBERS" lazy="true" fetch="select">
+                    <key foreign-key="USER_GROUP_MEMBERS_FKC">
+                        <column name="GROUP_MEMBERS_FK" sql-type="BIGINT"/>
+                    </key>
+                    <many-to-many class="ubic.gemma.model.common.auditAndSecurity.UserGroup">
+                        <column name="USER_GROUPS_FK" sql-type="BIGINT"/>
+                    </many-to-many>
                 </set>
             </subclass>
         </subclass>

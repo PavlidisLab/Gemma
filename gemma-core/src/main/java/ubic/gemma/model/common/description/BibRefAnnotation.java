@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+
 public abstract class BibRefAnnotation implements java.io.Serializable {
 
     private static final long serialVersionUID = -2925637697790915030L;
@@ -26,6 +29,7 @@ public abstract class BibRefAnnotation implements java.io.Serializable {
 
     private String term;
 
+    @DocumentId
     public Long getId() {
         return this.id;
     }
@@ -43,6 +47,7 @@ public abstract class BibRefAnnotation implements java.io.Serializable {
         this.isMajorTopic = isMajorTopic;
     }
 
+    @Field
     public String getTerm() {
         return this.term;
     }

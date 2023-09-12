@@ -31,6 +31,7 @@ import java.util.Set;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Deprecated
 public class GeneEvidenceValueObject extends GeneValueObject {
 
     private static final long serialVersionUID = -3484291071757959936L;

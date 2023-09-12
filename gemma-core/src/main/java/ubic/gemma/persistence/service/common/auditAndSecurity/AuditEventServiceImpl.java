@@ -59,7 +59,7 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Transactional(readOnly = true)
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
-        return this.auditEventDao.getLastEvents( auditables, types );
+        return this.auditEventDao.getLastEventsByType( auditables, types );
     }
 
     @Override

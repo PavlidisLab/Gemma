@@ -13,10 +13,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
+import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.ws.rs.core.Application;
 
@@ -25,6 +27,7 @@ import javax.ws.rs.core.Application;
  * Spring components.
  * @author poirigui
  */
+@ActiveProfiles({ "web", SpringProfiles.TEST })
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 public abstract class BaseJerseyTest extends JerseyTest implements InitializingBean {

@@ -25,12 +25,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +41,7 @@ import java.util.Set;
  * @author kelsey
  */
 @Service
-public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssayValueObject>, ubic.gemma.persistence.service.BaseService<BioAssay> {
+public interface BioAssayService extends BaseService<BioAssay>, BaseVoEnabledService<BioAssay, BioAssayValueObject> {
 
     /**
      * Associates a bioMaterial with a specified bioAssay.
@@ -103,9 +105,11 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thaw( BioAssay bioAssay );
+    BioAssay thaw( BioAssay bioAssay );
 
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 

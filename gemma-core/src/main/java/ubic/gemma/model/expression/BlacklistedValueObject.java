@@ -33,8 +33,10 @@ public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedE
 
     public static BlacklistedValueObject fromEntity( BlacklistedEntity e ) {
         BlacklistedValueObject result = new BlacklistedValueObject( e.getId() );
-        result.setAccession( e.getExternalAccession().getAccession() );
-        result.setExternalDatabase( new ExternalDatabaseValueObject( e.getExternalAccession().getExternalDatabase() ) );
+        if ( e.getExternalAccession() != null ) {
+            result.setAccession( e.getExternalAccession().getAccession() );
+            result.setExternalDatabase( new ExternalDatabaseValueObject( e.getExternalAccession().getExternalDatabase() ) );
+        }
         result.setReason( e.getReason() );
         result.setShortName( e.getShortName() );
         result.setName( e.getName() );

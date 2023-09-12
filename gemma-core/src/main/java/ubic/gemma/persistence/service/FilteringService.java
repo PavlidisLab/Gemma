@@ -17,7 +17,12 @@ import java.util.Set;
  * Interface for filtering-capable services.
  * @see FilteringDao
  */
-public interface FilteringService<O extends Identifiable> extends BaseService<O> {
+public interface FilteringService<O extends Identifiable> extends BaseReadOnlyService<O> {
+
+    /**
+     * @see BaseDao#getIdentifierPropertyName()
+     */
+    String getIdentifierPropertyName();
 
     /**
      * @see FilteringDao#getFilterableProperties()
@@ -47,10 +52,15 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
      * Nullity and the number of elements is guaranteed to match {@link #getFilterablePropertyAllowedValues(String)} (String)},
      * so the two methods can be used jointly.
      *
-     * @see #getFilterablePropertyResolvableAvailableValuesLabels(String)
+     * @see #getFilterablePropertyResolvableAllowedValuesLabels(String)
      */
     @Nullable
-    List<MessageSourceResolvable> getFilterablePropertyResolvableAvailableValuesLabels( String property );
+    List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String property );
+
+    /**
+     * @see FilteringDao#getFilterablePropertyIsUsingSubquery(String)
+     */
+    boolean getFilterablePropertyIsUsingSubquery( String property );
 
     /**
      * Obtain the Spring Security config attributes for a given property.
@@ -68,6 +78,16 @@ public interface FilteringService<O extends Identifiable> extends BaseService<O>
      * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+
+    /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+
+    /**
+     * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)
+     */
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> parsedValues );
 
     /**
      * @see FilteringDao#getSort(String, Sort.Direction)

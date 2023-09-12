@@ -82,7 +82,6 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
                 for ( FactorValue factorValue : bm.getFactorValues() ) {
                     if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
                         factorValuesToRemoveFromBioMaterial.add( factorValue );
-                        this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
                     }
                 }
 

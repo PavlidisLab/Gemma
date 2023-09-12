@@ -5,16 +5,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.search.highlight.Formatter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -37,7 +42,12 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,6 +84,43 @@ public class SearchWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private PlatformArgService platformArgService;
+    @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
+    private ServletContext servletContext;
+    @Autowired
+    private HttpServletRequest request;
+
+    /**
+     * Highlights search result.
+     */
+    @EqualsAndHashCode
+    private class Highlighter implements ubic.gemma.core.search.Highlighter {
+
+        private final Locale locale;
+
+        private Highlighter( Locale locale ) {
+            this.locale = locale;
+        }
+
+        @Override
+        public String highlightTerm( String uri, String label, MessageSourceResolvable className ) {
+            try {
+                return String.format( "**[%s](%s)** via *%s*", label,
+                        servletContext.getContextPath() + "/rest/v2/search?query=" + URLEncoder.encode( uri, StandardCharsets.UTF_8.name() ),
+                        messageSource.getMessage( className, locale ) );
+            } catch ( UnsupportedEncodingException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        @Nullable
+        @Override
+        public Formatter getLuceneFormatter() {
+            return new SimpleHTMLFormatter();
+        }
+    }
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -83,13 +130,13 @@ public class SearchWebService {
     @GET
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Search everything in Gemma.")
+    @Operation(summary = "Search everything in Gemma")
     public SearchResultsResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
-            @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless 'resultObject' is excluded.") @QueryParam("limit") LimitArg limit,
-            @QueryParam("exclude") StringArrayArg excludeArg ) {
+            @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.") @QueryParam("limit") LimitArg limit,
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -124,34 +171,29 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
+                .highlighter( new Highlighter( request.getLocale() ) )
                 .build();
 
         List<SearchResult<?>> searchResults;
         try {
-            searchResults = searchService.search( searchSettings ).values().stream()
-                    .flatMap( List::stream )
-                    .collect( Collectors.toList() );
+            searchResults = searchService.search( searchSettings ).toList();
         } catch ( SearchException e ) {
             throw new BadRequestException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCauseMessage( e ) ), e );
         }
 
-        List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> searchResultVos = searchResults.stream()
-                .map( searchService::loadValueObject )
-                .collect( Collectors.toList() );
+        List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;
 
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
         if ( fillResults ) {
-            List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
-                    .map( SearchResult::toString )
+            searchResultVos = searchService.loadValueObjects( searchResults );
+        } else {
+            searchResultVos = searchResults.stream()
+                    .map( sr -> SearchResult.from( sr, ( IdentifiableValueObject<?> ) null ) )
                     .collect( Collectors.toList() );
-            if ( !searchResultVosWithNullResultObject.isEmpty() ) {
-                log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
-            }
         }
 
         // convert the response to search results of VOs
         return new SearchResultsResponseDataObject( searchResultVos.stream()
-                .filter( sr -> !fillResults || sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
                 .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
@@ -160,7 +202,7 @@ public class SearchWebService {
 
     private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
 
-    private static Set<String> getExcludedFields( @Nullable StringArrayArg arg ) {
+    private static Set<String> getExcludedFields( @Nullable ExcludeArg<SearchResult<?>> arg ) {
         if ( arg == null ) {
             return Collections.emptySet();
         }
@@ -225,6 +267,8 @@ public class SearchWebService {
 
         double score;
 
+        Map<String, String> highlights;
+
         @Schema(hidden = true)
         String source;
 
@@ -247,6 +291,7 @@ public class SearchWebService {
             this.resultType = searchResult.getResultType().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
+            this.highlights = searchResult.getHighlights();
             this.source = searchResult.getSource().toString();
         }
     }

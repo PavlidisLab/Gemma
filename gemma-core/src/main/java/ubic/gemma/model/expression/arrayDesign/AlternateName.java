@@ -18,7 +18,12 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-public abstract class AlternateName implements java.io.Serializable {
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
+
+@Indexed
+public class AlternateName implements java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -36,6 +41,7 @@ public abstract class AlternateName implements java.io.Serializable {
     public AlternateName() {
     }
 
+    @DocumentId
     public Long getId() {
         return this.id;
     }
@@ -45,6 +51,7 @@ public abstract class AlternateName implements java.io.Serializable {
         this.id = id;
     }
 
+    @Field
     public String getName() {
         return this.name;
     }
@@ -78,11 +85,11 @@ public abstract class AlternateName implements java.io.Serializable {
 
         @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance() {
-            return new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
+            return new ubic.gemma.model.expression.arrayDesign.AlternateName();
         }
 
         public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance( String name ) {
-            final ubic.gemma.model.expression.arrayDesign.AlternateName entity = new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
+            final ubic.gemma.model.expression.arrayDesign.AlternateName entity = new ubic.gemma.model.expression.arrayDesign.AlternateName();
             entity.setName( name );
             return entity;
         }

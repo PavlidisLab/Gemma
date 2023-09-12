@@ -28,11 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
+import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -42,9 +40,9 @@ import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +57,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
     }
 
-    private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
+    private final static String GO_URL = Settings.getString( "url.geneOntology" );
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
     /**
@@ -93,7 +91,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     protected String getOntologyUrl() {
-        return GO_URL;
+        return Settings.getString( "url.geneOntology" );
     }
 
     /**

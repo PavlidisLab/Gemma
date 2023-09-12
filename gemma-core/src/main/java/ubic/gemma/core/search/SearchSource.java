@@ -1,7 +1,6 @@
 package ubic.gemma.core.search;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -13,6 +12,8 @@ import ubic.gemma.model.genome.gene.GeneSet;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Search source that provides {@link SearchResult} from a search engine.
@@ -20,13 +21,21 @@ import java.util.Collection;
  */
 public interface SearchSource {
 
-    Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
     /**
      * Search for biosequence and, unfortunately genes.
@@ -37,11 +46,14 @@ public interface SearchSource {
      * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings,
-            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
+    default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
+            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    @SuppressWarnings("unused")
-    Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
     /**
      * Search for composite sequences and, unfortunately, genes.
@@ -52,11 +64,22 @@ public interface SearchSource {
      * @deprecated use {@link #searchCompositeSequence(SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+        Collection<SearchResult<?>> results = new HashSet<>();
+        results.addAll( this.searchBioSequence( settings ) );
+        results.addAll( this.searchGene( settings ) );
+        return results;
+    }
 
-    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 
-    Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException;
+    default Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
 }

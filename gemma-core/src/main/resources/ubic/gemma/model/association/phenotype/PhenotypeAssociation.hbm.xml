@@ -12,7 +12,7 @@
             </generator>
         </id>
         <discriminator column="class"/>
-        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrail" cascade="all"
                      lazy="proxy" fetch="select">
             <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
         </many-to-one>
@@ -57,7 +57,7 @@
         <property name="lastUpdated" type="java.util.Date">
             <column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME(3)"/>
         </property>
-        <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="join">
+        <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="select">
             <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <!-- eagerly fetch, and cached, thus a select -->
@@ -74,7 +74,7 @@
             <key foreign-key="PHENOTYPE_ASSOCIATION_PUBLICATION_FKC">
                 <column name="PHENOTYPE_ASSOCIATION_FK" sql-type="BIGINT"/>
             </key>
-            <one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublicationImpl"/>
+            <one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication"/>
         </set>
         <many-to-one name="associationType" class="ubic.gemma.model.common.description.Characteristic"
                      cascade="all" lazy="false" fetch="join">
@@ -84,7 +84,7 @@
                      fetch="select">
             <column name="EVIDENCE_SOURCE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="scoreType" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" lazy="proxy"
+        <many-to-one name="scoreType" class="ubic.gemma.model.common.quantitationtype.QuantitationType" lazy="proxy"
                      fetch="select">
             <column name="SCORE_TYPE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
@@ -104,7 +104,7 @@
         </subclass>
         <subclass name="ubic.gemma.model.association.phenotype.DataAnalysisEvidence"
                   abstract="true">
-            <subclass name="ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl"
+            <subclass name="ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence"
                       discriminator-value="DifferentialExpressionEvidenceImpl"
                       abstract="false">
                 <property name="selectionThreshold" type="java.lang.Double">

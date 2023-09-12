@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author nicolas
  */
+@Deprecated
 public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     /**

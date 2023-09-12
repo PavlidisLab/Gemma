@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -7,15 +8,16 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -34,14 +36,16 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
-        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
+        extends CuratableDao<ExpressionExperiment>,
+        CachedFilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
 
-    long countNotTroubled();
-
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
+
+    ExpressionExperiment findByShortName( String shortName );
+
+    Collection<ExpressionExperiment> findByName( String name );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
@@ -77,29 +81,71 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
-    Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+    Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
-    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency();
+    /**
+     * Obtain the dataset usage frequency by technology type.
+     * <p>
+     * If a dataset was switched to a platform of a different technology type, it is counted toward both.
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency();
 
-    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds );
+    /**
+     * Obtain the dataset usage frequency by technology type for the given dataset IDs.
+     * <p>
+     * Note: No ACL filtering is performed.
+     * @see #getTechnologyTypeUsageFrequency()
+     */
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds );
 
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency();
+    /**
+     * Obtain dataset usage frequency by platform currently used.
+     * <p>
+     * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}.
+     * <p>
+     * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
+     * entitled to see. Only administrator can see troubled platforms.
+     */
+    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults );
 
-    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds );
+    /**
+     * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * <p>
+     * Note: no ACL filtering is performed. Only administrator can see troubled platforms.
+     * @see #getArrayDesignsUsageFrequency(int)
+     */
+    Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults );
+
+    /**
+     * Obtain dataset usage frequency by original platforms.
+     * <p>
+     * Note that a dataset counts toward all the platforms mentioned through its {@link BioAssay}. Datasets whose
+     * platform hasn't been switched (i.e. the original is the same as the current one) are ignored.
+     * <p>
+     * This method uses ACLs and the troubled status to only displays the counts of datasets the current user is
+     * entitled to see. Only administrators can see troubled platforms.
+     */
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults );
+
+    /**
+     * Obtain dataset usage frequency by platform currently for the given dataset IDs.
+     * <p>
+     * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
+     * @see #getOriginalPlatformsUsageFrequency(int)
+     */
+    Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
-    Integer getBioAssayCountById( long Id );
-
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
-    Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    Integer getDesignElementDataVectorCountById( long Id );
+    long getDesignElementDataVectorCount( ExpressionExperiment ee );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
@@ -107,33 +153,41 @@ public interface ExpressionExperimentDao
 
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
+    /**
+     * Obtain the count of distinct experiments per taxon.
+     * <p>
+     * Experiments are filtered by ACLs and troubled experiments are only visible to administrators.
+     */
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Obtain the count of distinct experiments per taxon for experiments with the given IDs.
+     * <p>
+     * Experiments <b>are not</b> filtered by ACLs and toubled experiments are only visible to administrators.
      */
     Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
 
-    Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
-    Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
+    Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ArrayDesign arrayDesign );
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
 
     /**
-     * Obtain the preferred quantitation type for a given data vector type.
-     * <p>
-     * If more than one preferred QT exists, a warning is emitted and the latest one according to their {@link DesignElementDataVector#getId()}
-     * is returned.
-     *
-     * @return the data vector, or null if no preferred vector type can be found
+     * Obtain the preferred quantitation type, if available.
      */
-    QuantitationType getPreferredQuantitationTypeForDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType );
+    @Nullable
+    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
+
+    /**
+     * Obtain the masked preferred quantitation type, if available.
+     */
+    @Nullable
+    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
@@ -143,11 +197,6 @@ public interface ExpressionExperimentDao
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     Taxon getTaxon( BioAssaySet ee );
-
-    /**
-     * This is a specialized flavour of {@link #loadDetailsValueObjects(Filters, Sort, int, int)} for detailed EE VOs.
-     */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
 
     /**
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
@@ -160,12 +209,22 @@ public interface ExpressionExperimentDao
      * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     /**
-     * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Like {@link #loadDetailsValueObjects(Collection, Taxon, Sort, int, int)}, but returning a list.
      */
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
+
+    /**
+     * Flavour of {@link #loadDetailsValueObjectsByIds(Collection)}, but using the query cache.
+     */
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
 
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
@@ -175,13 +234,13 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thaw( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
+    void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
@@ -202,20 +261,32 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+
+    /**
+     * Special indicator for an uncategorized term.
+     */
+    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
-     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int)}
+     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int, boolean, boolean)}
      * to answer the reverse question: which annotations can be used to filter a given set of datasets?
      *
      * @param expressionExperimentIds IDs of {@link ExpressionExperiment} to use for restricting annotations, or null to
      *                                consider everything
      * @param level                   applicable annotation level, one of {@link ExpressionExperiment}, {@link ExperimentalDesign}
      *                                or {@link BioMaterial}
-     * @param maxResults              maximum number of annotations to return
+     * @param maxResults              maximum number of annotations to return, or -1 to return everything
      * @param minFrequency            minimum usage frequency to be reported (0 effectively allows everything)
+     * @param category                a category URI or free text category to restrict the results to, or null to
+     *                                consider everything, empty string to consider uncategorized terms
+     * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
+
+    MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

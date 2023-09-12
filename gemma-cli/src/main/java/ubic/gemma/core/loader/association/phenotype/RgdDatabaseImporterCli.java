@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+@Deprecated
 public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     private static final String RGD_FILE_HUMAN = "homo_genes_rdo";

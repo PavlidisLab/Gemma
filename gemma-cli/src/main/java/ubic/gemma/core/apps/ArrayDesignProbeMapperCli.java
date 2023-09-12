@@ -3,8 +3,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -429,7 +427,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     continue;
                 }
 
-                arrayDesign = this.thaw( arrayDesign );
+                arrayDesign = getArrayDesignService().thaw( arrayDesign );
                 if ( directAnnotationInputFileName != null ) {
                     if ( this.getArrayDesignsToProcess().size() > 1 )
                         throw new IllegalArgumentException( "Can only use direct annotation from a file when processing a single platform" );
@@ -657,7 +655,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            compositeSequenceService.thaw( Collections.singleton( probe ) );
+            probe = compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

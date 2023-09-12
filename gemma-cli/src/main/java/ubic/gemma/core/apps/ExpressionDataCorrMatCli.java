@@ -18,10 +18,7 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -71,7 +68,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         addSuccessObject( ee );
     }
 
-    private void processExperiment( ExpressionExperiment ee ) throws FilteringException {
+    private void processExperiment( ExpressionExperiment ee ) {
         if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
         }
@@ -80,10 +77,10 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 .getBean( SampleCoexpressionAnalysisService.class );
 
         ee = eeService.thawLiter( ee );
-        if ( !force ) {
-            sampleCoexpressionAnalysisService.load( ee );
-        } else {
+        if ( force ) {
             sampleCoexpressionAnalysisService.compute( ee );
+        } else {
+            sampleCoexpressionAnalysisService.computeIfNecessary( ee );
         }
 
         this.audit( ee );

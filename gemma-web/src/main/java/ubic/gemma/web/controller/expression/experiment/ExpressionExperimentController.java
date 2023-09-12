@@ -33,8 +33,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -73,7 +71,6 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -81,10 +78,12 @@ import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.taglib.SimplePageContext;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -152,6 +151,8 @@ public class ExpressionExperimentController {
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private GeeqService geeqService;
+    @Autowired
+    private ServletContext servletContext;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -309,8 +310,9 @@ public class ExpressionExperimentController {
      * AJAX
      */
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        return expressionExperimentService.getAnnotations( e.getId() );
+        if ( e == null || e.getId() == null )
+            return null;
+        return expressionExperimentService.getAnnotationsById( e.getId() );
     }
 
     /**
@@ -343,7 +345,8 @@ public class ExpressionExperimentController {
         // Is there any factor info to add?
         if ( efs.size() < 1 ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
-        String efUri = "&nbsp;<a target='_blank' href='" + Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
+        String efUri = "&nbsp;<a target='_blank' href='" + servletContext.getContextPath()
+                + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
         int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
         if ( tags.size() > 0 ) {
@@ -435,20 +438,22 @@ public class ExpressionExperimentController {
      */
     public String getQCTagHTML( ExpressionExperiment ee ) {
         ExperimentQCTag qc = new ExperimentQCTag();
+        // FIXME: replace this by some utility class reused by the tag
+        qc.setPageContext( new SimplePageContext( servletContext ) );
         qc.setEe( ee.getId() );
         qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
+        qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
         try {
             qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
         } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
             ExpressionExperimentController.log.error( e );
-        } catch (IllegalStateException e) {
+        } catch ( IllegalStateException e ) {
             ExpressionExperimentController.log.error( e );
         }
         return qc.getQChtml();
@@ -564,7 +569,7 @@ public class ExpressionExperimentController {
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
         ExpressionExperiment ee = this.getEESafely( id );
-        Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService.loadDetailsValueObjects( Collections.singleton( id ) );
+        Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService.loadDetailsValueObjectsByIdsWithCache( Collections.singleton( id ) );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -614,11 +619,6 @@ public class ExpressionExperimentController {
         geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
     }
 
-    public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
-        geeqService.setManualOverrides( ee, vo );
-    }
-
     /**
      * AJAX - for display in tables. Don't retrieve too much detail.
      *
@@ -640,16 +640,22 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
         ArrayDesign ad = arrayDesignService.loadOrFail( id );
-        Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null, arrayDesignService.getSwitchedExperimentIds( ad ), 0, true );
+
+        Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
+                EntityUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
-        Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ), 0, true );
+        Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
+                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
+                0, true );
 
-        experiments.addAll( switchedExperiments );
-        return experiments;
+        // combine original and switched EES
+        Collection<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( experiments );
+        vos.addAll( switchedExperiments );
 
+        return vos;
     }
 
     /**
@@ -984,7 +990,7 @@ public class ExpressionExperimentController {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            this.bioMaterialService.thaw( bm );
+            bm = this.bioMaterialService.thaw( bm );
             Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             if ( bioAssaysUsedIn.size() > 1 ) {
                 needToProcess.add( bm );
@@ -997,7 +1003,7 @@ public class ExpressionExperimentController {
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
                 if ( i > 0 ) {
                     BioMaterial newMaterial = bioMaterialService.copy( bm );
-                    this.bioMaterialService.thaw( newMaterial );
+                    newMaterial = this.bioMaterialService.thaw( newMaterial );
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );
@@ -1140,14 +1146,13 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = null;
-        try {
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            outliers = Collections.emptySet();
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
+
+        if ( outliers == null ) {
+            log.warn( String.format( "%s does not have analysis performed, will return zero.", ee ) );
+            return 0;
         }
+
         count = outliers.size();
 
         if ( count > 0 ) ExpressionExperimentController.log.info( count + " possible outliers detected." );
@@ -1299,7 +1304,7 @@ public class ExpressionExperimentController {
         mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
+        mav.addObject( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
 
         // FIXME don't store in a file.
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
@@ -1532,10 +1537,11 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon, Collection<Long> eeIds, int limit, boolean showPublic ) {
 
         Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjects( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ), 0, Math.abs( limit ) );
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
+            vos = new ArrayList<>( vos );
             vos.removeAll( publicEEs );
         }
 
@@ -1565,7 +1571,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjects( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
+        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
     }
 
     /**
@@ -1614,7 +1620,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
+    private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment ee;
         ee = expressionExperimentService.loadOrFail( id );
         ee = expressionExperimentService.thawLiter( ee );
@@ -1638,7 +1644,7 @@ public class ExpressionExperimentController {
      *
      * @author pavlidis
      */
-    private class RemoveExpressionExperimentTask extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<TaskCommand> {
 
         public RemoveExpressionExperimentTask( TaskCommand command ) {
             super( command );
@@ -1653,7 +1659,7 @@ public class ExpressionExperimentController {
         }
     }
 
-    private class RemovePubMed extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemovePubMed extends AbstractTask<TaskCommand> {
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
@@ -1679,7 +1685,7 @@ public class ExpressionExperimentController {
 
     }
 
-    private class UpdatePubMed extends AbstractTask<TaskResult, UpdatePubMedCommand> {
+    private class UpdatePubMed extends AbstractTask<UpdatePubMedCommand> {
 
         public UpdatePubMed( UpdatePubMedCommand command ) {
             super( command );
@@ -1688,7 +1694,7 @@ public class ExpressionExperimentController {
         @Override
         public TaskResult call() {
             Long eeId = taskCommand.getEntityId();
-            ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
+            ExpressionExperiment expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( eeId );
             if ( expressionExperiment == null )
                 throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
 
@@ -1696,10 +1702,15 @@ public class ExpressionExperimentController {
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
-
-                ExpressionExperimentController.log.info( "Reference exists in system, associating..." );
-                expressionExperiment.setPrimaryPublication( publication );
-                expressionExperimentService.update( expressionExperiment );
+                // check if the publication is actually being modified
+                if ( expressionExperiment.getPrimaryPublication() == null ||
+                        !expressionExperiment.getPrimaryPublication().equals( publication ) ) {
+                    ExpressionExperimentController.log.info( "Reference exists in system, copying over the metadata and associating..." );
+                    publication.setId( null );
+                    publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    expressionExperiment.setPrimaryPublication( publication );
+                    expressionExperimentService.update( expressionExperiment );
+                }
             } else {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 

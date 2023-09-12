@@ -5,7 +5,7 @@
 
 <hibernate-mapping>
    <class name="ubic.gemma.model.expression.designElement.CompositeSequence" table="COMPOSITE_SEQUENCE">
-      <cache usage="read-write"/>
+      <cache usage="nonstrict-read-write"/>
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
          <generator class="native">
@@ -18,7 +18,7 @@
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequence"
-                   lazy="proxy" fetch="select">
+                   lazy="false" fetch="join">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"

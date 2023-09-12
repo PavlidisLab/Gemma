@@ -28,6 +28,7 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.stream.Collectors;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -64,7 +65,13 @@ public interface GeneralSearchController {
         public SearchResultValueObject( SearchResult<T> result ) {
             this.resultClass = result.getResultType();
             this.score = result.getScore();
-            this.highlightedText = result.getHighlightedText();
+            if ( result.getHighlights() != null ) {
+                this.highlightedText = result.getHighlights().entrySet().stream()
+                        .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
+                        .collect( Collectors.joining( "<br/>" ) );
+            } else {
+                this.highlightedText = null;
+            }
             this.resultObject = result.getResultObject();
         }
     }

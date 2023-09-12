@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.context.support.WithMockUser;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.util.Settings;
 
@@ -35,8 +36,8 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_AGENT")
     public void testWhenUserIsAgent() {
-        this.runAsAgent();
         tableMaintenanceUtil.updateGene2CsEntries();
         assertThat( GENE2CS_PATH ).exists();
     }
@@ -48,8 +49,14 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2CharacteristicEntries() {
-        this.runAsAgent();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+    }
+
+    @Test(expected = AccessDeniedException.class)
+    public void testUpdateEE2CAsUser() {
+        this.runAsAnonymous();
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
     }
 }

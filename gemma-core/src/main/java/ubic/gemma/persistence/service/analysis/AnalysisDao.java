@@ -24,7 +24,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * @see ubic.gemma.model.analysis.Analysis
@@ -38,4 +37,9 @@ public interface AnalysisDao<T extends SingleExperimentAnalysis> extends BaseDao
     Collection<T> findByName( String name );
 
     Collection<T> findByTaxon( Taxon taxon );
+
+    /**
+     * Indicate if there is an analysis (or at least one) for the given experiment.
+     */
+    boolean existsByExperiment( BioAssaySet ee );
 }

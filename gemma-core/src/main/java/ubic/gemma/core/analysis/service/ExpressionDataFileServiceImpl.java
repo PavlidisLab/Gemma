@@ -36,6 +36,7 @@ import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -51,13 +52,14 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 
-import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -100,9 +102,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private CoexpressionService gene2geneCoexpressionService = null;
-
     @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -299,6 +300,57 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    public File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) {
+        File file = Paths.get( Settings.getString( "gemma.appdata.home" ), "metadata", this.getEEFolderName( ee ), type.getFileName( ee ) )
+                .toFile();
+
+        // If this is a directory, check if we can read the most recent file.
+        if ( type.isDirectory() ) {
+            File fNew = this.getNewestFile( file );
+            if ( fNew != null ) {
+                file = fNew;
+            }
+        }
+
+        return file;
+    }
+
+    /**
+     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
+     *
+     * @param ee the experiment to get the folder name for.
+     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
+     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
+     * any reason, the experiments ID will be used.
+     */
+    private String getEEFolderName( ExpressionExperiment ee ) {
+        String sName = ee.getShortName();
+        if ( StringUtils.isBlank( sName ) ) {
+            return ee.getId().toString();
+        }
+        return sName.replaceAll( "\\.\\d+$", "" );
+    }
+
+    /**
+     * @param file a directory to scan
+     * @return the file in the directory that was last modified, or null, if such file doesn't exist or is not readable.
+     */
+    private File getNewestFile( File file ) {
+        File[] files = file.listFiles();
+        if ( files != null && files.length > 0 ) {
+            List<File> fList = Arrays.asList( files );
+
+            // Sort by last modified, we only want the newest file
+            fList.sort( Comparator.comparingLong( File::lastModified ) );
+
+            if ( fList.get( 0 ).canRead() ) {
+                return fList.get( 0 );
+            }
+        }
+        return null;
+    }
+
+    @Override
     public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         File f = new File( fileName );
@@ -325,7 +377,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             zipOut.closeEntry();
 
             if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thawFully( analysis );
 
             // Add a file for each result set with contrasts information.
             int i = 0;
@@ -429,7 +481,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -452,7 +504,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             File f = this.getOutputFile( this.getDesignFileName( ee ) );
             Date check = ee.getCurationDetails().getLastUpdated();
 
-            if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
+            if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
                 return f;
             }
 
@@ -512,7 +564,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -836,8 +888,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
             annotations.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
         return annotations;
@@ -845,9 +897,8 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
         Map<CompositeSequence, String[]> annotations = new HashMap<>();
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
-
             Map<Long, CompositeSequence> csIdMap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
             Map<Long, String[]> geneAnnotations = ArrayDesignAnnotationServiceImpl
@@ -908,7 +959,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( analysis.getId() != null ) // It might not be a persistent analysis: using -nodb
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
 
         StringBuilder buf = new StringBuilder();
 
@@ -1123,7 +1174,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
-        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
+        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
@@ -1163,7 +1214,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
+        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
 

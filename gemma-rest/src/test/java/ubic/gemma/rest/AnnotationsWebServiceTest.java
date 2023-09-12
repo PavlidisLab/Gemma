@@ -6,9 +6,15 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -18,12 +24,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.rest.util.FilteringAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.args.DatasetArgService;
-import ubic.gemma.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -35,8 +42,10 @@ import static org.mockito.Mockito.*;
 /**
  * @author poirigui
  */
+@ActiveProfiles("web")
 @WebAppConfiguration
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
@@ -69,13 +78,13 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         }
 
         @Bean
-        public DatasetArgService datasetRestService( ExpressionExperimentService service ) {
-            return new DatasetArgService( service );
+        public DatasetArgService datasetRestService( ExpressionExperimentService service, SearchService searchService ) {
+            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
         }
 
         @Bean
         public TaxonArgService taxonArgService( TaxonService taxonService ) {
-            return new TaxonArgService( taxonService );
+            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), mock( GeneService.class ) );
         }
 
         @Bean
@@ -111,20 +120,26 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
     }
 
     @Test
+    @WithMockUser
     public void testSearchTaxonDatasets() throws SearchException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );
-        when( searchService.search( any( SearchSettings.class ), eq( ExpressionExperiment.class ) ) )
+        SearchService.SearchResultMap mockedSrMap = mock( SearchService.SearchResultMap.class );
+        when( mockedSrMap.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
-        when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
-        when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
+        when( searchService.search( any( SearchSettings.class ) ) )
+                .thenReturn( mockedSrMap );
+        when( taxonService.getFilter( eq( "commonName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )
+                .thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
+        when( taxonService.getFilter( eq( "scientificName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )
+                .thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
-        when( expressionExperimentService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
+        when( expressionExperimentService.getFilter( "id", Filter.Operator.eq, "1" ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
-        FilteringAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),
                 FilterArg.valueOf( "" ),
@@ -137,10 +152,10 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 10000L );
-        verify( searchService ).search( any( SearchSettings.class ), eq( ExpressionExperiment.class ) );
-        verify( taxonService ).getFilter( "commonName", Filter.Operator.eq, "human" );
-        verify( taxonService ).getFilter( "scientificName", Filter.Operator.eq, "human" );
-        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) );
+        verify( searchService ).search( any( SearchSettings.class ) );
+        verify( taxonService ).getFilter( "commonName", String.class, Filter.Operator.eq, "human" );
+        verify( taxonService ).getFilter( "scientificName", String.class, Filter.Operator.eq, "human" );
+        verify( expressionExperimentService ).getFilter( "id", Filter.Operator.eq, "1" );
         verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC );
         verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
     }

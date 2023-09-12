@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.util.Collection;
 import java.util.HashSet;
 
 /**
@@ -46,7 +47,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private ArrayDesignMergeService arrayDesignMergeService;
     private String newName;
     private String newShortName;
-    private HashSet<ArrayDesign> otherArrayDesigns;
+    private Collection<ArrayDesign> otherArrayDesigns;
     private boolean add;
 
     @Override
@@ -87,8 +88,8 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         options.addOption( newAdShortName );
 
         Option addOption = Option.builder( "add" ).desc(
-                "If the given platform is already a merged design, add the -o designs to it. "
-                        + "Recommended unless there is a specific reason to create a new design." )
+                        "If the given platform is already a merged design, add the -o designs to it. "
+                                + "Recommended unless there is a specific reason to create a new design." )
                 .build();
         options.addOption( addOption );
     }
@@ -105,9 +106,9 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 if ( o == null ) {
                     throw new IllegalArgumentException( "Array design " + string + " not found" );
                 }
-                o = this.thaw( o );
                 this.otherArrayDesigns.add( o );
             }
+            this.otherArrayDesigns = getArrayDesignService().thaw( this.otherArrayDesigns );
         }
 
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
@@ -117,7 +118,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         arrayDesign = this.getArrayDesignsToProcess().iterator().next();
 
-        arrayDesign = this.thaw( arrayDesign );
+        arrayDesign = getArrayDesignService().thaw( arrayDesign );
 
         if ( commandLine.hasOption( "add" ) ) {
             if ( arrayDesign.getMergees().isEmpty() ) {

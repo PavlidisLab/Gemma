@@ -353,7 +353,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             SearchService.SearchResultMap r;
             try {
                 r = searchService.search( s );
-                List<SearchResult<ExpressionExperiment>> hits = r.get( ExpressionExperiment.class );
+                List<SearchResult<ExpressionExperiment>> hits = r.getByResultObjectType( ExpressionExperiment.class );
                 gvo.setAssociatedExperimentCount( hits.size() );
             } catch ( SearchException e ) {
                 log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
@@ -495,7 +495,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings ).getByResultObjectType( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ import java.util.HashSet;
 
 /**
  * Used for determining the number of samples (biomaterials) associated with a given expression experiment
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -57,7 +57,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -83,11 +83,11 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Integer bmCount = expressionExperimentService.getBioMaterialCount( ee );
+        long bmCount = expressionExperimentService.getBioMaterialCount( ee );
 
         // build collection to pass to wrapper
         Collection<String> values = new HashSet<String>();
-        values.add( bmCount.toString() );
+        values.add( String.valueOf( bmCount ) );
 
         Element wrapper = buildWrapper( document, values, "eeNumSample_id" );
 

@@ -12,7 +12,7 @@ import java.util.List;
  * Interface for services that provide value object functionality.
  */
 public interface BaseVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseService<O> {
+        extends BaseReadOnlyService<O> {
 
     /**
      * @see BaseVoEnabledDao#loadValueObject(Identifiable)

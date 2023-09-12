@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import lombok.Data;
 import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -29,6 +28,7 @@ import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -67,56 +67,73 @@ public interface CharacteristicDao
     Collection<? extends Characteristic> findByCategory( String query );
 
     /**
-     * @param  classes            constraint of who the 'owner' of the Characteristic has to be.
-     * @param  characteristicUris uris
-     * @return characteristics
-     */
-    Collection<Characteristic> findByUri( Collection<Class<?>> classes, @Nullable Collection<String> characteristicUris );
-
-    /**
-     * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are avoided
-     * (and will thus be associated via the first uri that resulted in a hit).
+     * This search looks at direct annotations, factor values and biomaterials in that order.
      * <p>
      * Resulting EEs are filtered by ACLs.
+     * <p>
+     * The returned collection of EEs is effectively a {@link Set}, but since we cannot use since this should be
+     * interchangable with {@link #findExperimentReferencesByUris(Collection, Taxon, int, boolean)}.
+     * <p>
+     * Ranking results by level guarantees correctness if a limit is used as datasets matched by direct annotation will
+     * be considered before those matched by factor values or biomaterials. It is however expensive.
      *
-     * @param  uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
-     * @param  taxon      taxon to restrict EEs to, or null to ignore
-     * @param  limit      approximate limit to how many results to return (just used to avoid extra queries; the limit
-     *                    may be exceeded). Set to 0 for no limit.
+     * @param uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
+     * @param taxon      taxon to restrict EEs to, or null to ignore
+     * @param limit      limit how many results to return. Set to -1 for no limit.
+     * @param rankByLevel rank results by level before limiting, has no effect if limit is -1
      * @return map of classes ({@link ExpressionExperiment}, {@link ubic.gemma.model.expression.experiment.FactorValue},
-     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to IDs of experiments which have
-     * an associated characteristic using the given uriString. The class lets us track where the annotation was.
+     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to EEs which have an associated
+     * characteristic using the given URI. The class lets us track where the annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+
+    /**
+     * Similar to {@link #findExperimentsByUris(Collection, Taxon, int, boolean)}, but returns proxies with instead of
+     * initializing all the EEs in bulk.
+     *
+     * @see org.hibernate.Session#load(Object, Serializable)
+     */
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 
     Collection<Characteristic> findByUri( String searchString );
 
     /**
+     * Return the characteristic with the most frequently used non-null value by URI.
+     */
+    Characteristic findBestByUri( String uri );
+
+    /**
      * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
      */
     @Value
-    class CharacteristicByValueUriOrValueCount {
+    class CharacteristicUsageFrequency {
         String valueUri;
         String value;
         Long count;
     }
 
     /**
-     * Count characteristics by value matching the provided LIKE pattern.
+     * Find characteristics by value matching the provided LIKE pattern.
      * <p>
-     * The key in the mapping is either the group's shared value URI or value of the former is null or empty, in
-     * lowercase.
+     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value );
+    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( String value );
 
     /**
-     * Count characteristics by value URI in a given collection.
-     *
-     * @see #countCharacteristicValueUriInByNormalizedValue(Collection)
+     * Count characteristics matching the provided value URIs.
+     * <p>
+     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris );
+    Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris );
+
+    /**
+     * Normalize a characteristic by value.
+     * <p>
+     * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
+     */
+    String normalizeByValue( Characteristic characteristic );
 
     /**
      * Finds all Characteristics whose value match the given search term
@@ -127,15 +144,9 @@ public interface CharacteristicDao
     Collection<Characteristic> findByValue( String search );
 
     /**
-     * @param  characteristics characteristics
-     * @param  parentClass     parent class
-     * @return a map of the specified characteristics to their parent objects.
+     * Obtain the parents (i.e. owners) of the given characteristics.
+     * <p>
+     * If a characteristic lacks a parent, its entry will be missing from the returned map.
      */
-    Map<Characteristic, Object> getParents( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
-
-    /**
-     * Optimized version that only retrieves the IDs of the owning objects. The parentClass has to be kept track of by
-     * the caller.
-     */
-    Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
 }

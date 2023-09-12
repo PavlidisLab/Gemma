@@ -21,14 +21,16 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.text.Collator;
 import java.util.Comparator;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -41,21 +43,30 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@Indexed
 public class Characteristic extends AbstractDescribable implements Serializable {
 
     private static final long serialVersionUID = -7242166109264718620L;
+
+
+    /**
+     * Obtain a comparator to compare terms by category URI (or category if null) in a case-insensitive manner.
+     */
+    public static Comparator<Characteristic> getByCategoryComparator() {
+        return Comparator
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+    }
 
     /**
      * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
      */
     public static Comparator<Characteristic> getByCategoryAndValueComparator() {
-        Collator collator = Collator.getInstance( Locale.ENGLISH );
-        collator.setStrength( Collator.PRIMARY );
         return Comparator
-                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( collator ) )
-                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( collator ) )
-                .thenComparing( Characteristic::getValueUri, Comparator.nullsLast( collator ) )
-                .thenComparing( Characteristic::getValue, Comparator.nullsLast( collator ) ); // there should be no null, but we better be safe than sorry
+                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getValueUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                .thenComparing( Characteristic::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ); // there should be no null, but we better be safe than sorry
     }
 
     private String category;
@@ -76,9 +87,16 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     public Characteristic() {
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
     /**
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
+    @Field
     public String getCategory() {
         return this.category;
     }
@@ -101,6 +119,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * associations with this.
      */
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getCategoryUri() {
         return this.categoryUri;
     }
@@ -131,6 +150,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
+    @Field
     public String getValue() {
         return this.value;
     }
@@ -147,6 +167,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
      * abstract class.
      */
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getValueUri() {
         return this.valueUri;
     }
@@ -191,10 +212,26 @@ public class Characteristic extends AbstractDescribable implements Serializable 
 
     @Override
     public String toString() {
-        if ( StringUtils.isBlank( this.getCategory() ) ) {
-            return "[No category] Value = " + this.getValue();
+        StringBuilder b = new StringBuilder( super.toString() );
+        if ( category != null ) {
+            b.append( " Category=" ).append( category );
+            if ( categoryUri != null ) {
+                b.append( " [" ).append( categoryUri ).append( "]" );
+            }
+        } else if ( categoryUri != null ) {
+            b.append( " Value URI=" ).append( categoryUri );
+        } else {
+            b.append( " [No Category]" );
         }
-        return "Category = " + this.getCategory() + " Value = " + this.getValue();
+        if ( value != null ) {
+            b.append( " Value=" ).append( value );
+            if ( valueUri != null ) {
+                b.append( " [" ).append( valueUri ).append( "]" );
+            }
+        } else if ( valueUri != null ) {
+            b.append( " Value URI=" ).append( valueUri );
+        }
+        return b.toString();
     }
 
     public static final class Factory {

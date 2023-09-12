@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.model.common.Identifiable;
+
 import javax.annotation.*;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -45,7 +48,13 @@ public interface BaseDao<T> {
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
+    @CheckReturnValue
     Collection<T> create( Collection<T> entities );
+
+    /**
+     * Create all the given entities in batch.
+     */
+    void createInBatch( Collection<T> entities );
 
     /**
      * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
@@ -54,6 +63,7 @@ public interface BaseDao<T> {
      * @param entity the entity to create
      * @return the persistent version of the entity
      */
+    @CheckReturnValue
     T create( T entity );
 
     /**
@@ -67,6 +77,8 @@ public interface BaseDao<T> {
      */
     @CheckReturnValue
     Collection<T> save( Collection<T> entities );
+
+    void saveInBatch( Collection<T> entities );
 
     /**
      * Create or update an entity whether it is transient.
@@ -93,6 +105,8 @@ public interface BaseDao<T> {
      *
      * @param id the id of entity to load.
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
+     *
+     * @see org.hibernate.Session#get(Class, Serializable)
      */
     @Nullable
     T load( Long id );
@@ -105,6 +119,26 @@ public interface BaseDao<T> {
     Collection<T> loadAll();
 
     /**
+     * Load references for all the given IDs.
+     * <p>
+     * Entities already in the session will be returned directly.
+     */
+    Collection<T> loadReference( Collection<Long> ids );
+
+    /**
+     * Load reference for an entity.
+     * <p>
+     * If the entity is already in the session, it will be returned instead. Note that unlike {@link #load(Long)}, this
+     * method will not return null if the entity does not exist.
+     * <p>
+     * You may freely access the {@link Identifiable#getId()} field without triggering proxy initialization.
+     *
+     * @see org.hibernate.Session#load(Object, Serializable)
+     */
+    @Nonnull
+    T loadReference( Long id );
+
+    /**
      * Counts all instances of specific class in the persitent storage.
      *
      * @return number that is the amount of instances currently accessible.
@@ -112,6 +146,11 @@ public interface BaseDao<T> {
     long countAll();
 
     void remove( Collection<T> entities );
+
+    /**
+     * Remove all given instances in batch.
+     */
+    void removeInBatch( Collection<T> entities );
 
     /**
      * Remove a persistent instance based on its ID.
@@ -135,12 +174,14 @@ public interface BaseDao<T> {
     /**
      * Remove all entities from persistent storage.
      */
-    void removeAll();
+    void removeAllInBatch();
 
     /**
      * @param entities Update the entities. Not supported if the entities are immutable.
      */
     void update( Collection<T> entities );
+
+    void updateInBatch( Collection<T> entities );
 
     /**
      * @param entity Update the entity. Not supported if the entity is immutable.

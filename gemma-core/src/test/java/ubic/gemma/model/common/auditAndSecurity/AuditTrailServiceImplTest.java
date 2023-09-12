@@ -19,9 +19,15 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -37,14 +43,13 @@ import static org.junit.Assert.*;
  */
 public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
-    private ArrayDesign auditable;
-
     @Autowired
     private AuditTrailService auditTrailService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    private ArrayDesign auditable;
     private int size;
 
     @Before
@@ -57,12 +62,19 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
 
         assertNotNull( auditable.getAuditTrail() );
+        assertNotNull( auditable.getCurationDetails() );
 
         size = auditable.getAuditTrail().getEvents().size();
     }
 
+    @After
+    public void tearDown() {
+        arrayDesignService.remove( auditable );
+    }
+
     @Test
     public final void testAddOKEvent() {
+        auditable.getCurationDetails().setTroubled( true );
         auditTrailService.addUpdateEvent( auditable, NotTroubledStatusFlagEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
@@ -76,8 +88,10 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
-        assertEquals( size + 2, auditTrail.getEvents().size() );
+        System.out.println( auditable.getAuditTrail().getEvents() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
     }
 
     @Test
@@ -96,7 +110,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( size + 2, auditTrail.getEvents().size() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
 
         assertTrue( auditable.getCurationDetails().getTroubled() );
     }
@@ -104,6 +119,9 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddUpdateEventAuditableAuditEventTypeString() {
         auditTrailService.addUpdateEvent( auditable, AlignmentBasedGeneMappingEvent.class, "nothing special, just testing" );
+        auditable = arrayDesignService.load( auditable.getId() );
+        assertNotNull( auditable );
+        auditable = arrayDesignService.thawLite( auditable );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         AuditEvent ev = auditable.getAuditTrail().getLast();
@@ -111,13 +129,18 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( size + 2, auditTrail.getEvents().size() );
+        // FIXME: one of the two date makes a round-trip in the database and is of type Timestamp (which is a subclass of Date)
+        assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( AlignmentBasedGeneMappingEvent.class, ev.getEventType().getClass() );
     }
 
     @Test
     public final void testAddUpdateEventAuditableString() {
         auditTrailService.addUpdateEvent( auditable, "nothing special, just testing" );
+        auditable = arrayDesignService.load( auditable.getId() );
+        assertNotNull( auditable );
+        auditable = arrayDesignService.thawLite( auditable );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
@@ -139,8 +162,9 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
-        assertEquals( size + 2, auditTrail.getEvents().size() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertTrue( auditable.getCurationDetails().getNeedsAttention() );
 
@@ -164,8 +188,9 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
-        assertEquals( size + 2, auditTrail.getEvents().size() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertFalse( auditable.getCurationDetails().getNeedsAttention() );
 
@@ -188,5 +213,57 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
         events = auditTrailService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
+    }
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    @Autowired
+    private PlatformTransactionManager pta;
+
+    @Test
+    public void testAddEventWhenTransactionIsRolledBack() {
+        Session session = sessionFactory.openSession();
+        try {
+            TransactionStatus t = pta.getTransaction( new DefaultTransactionDefinition() );
+            auditTrailService.addUpdateEvent( auditable, SampleRemovalEvent.class, "test" );
+            pta.rollback( t );
+        } finally {
+            session.close();
+        }
+        auditable = arrayDesignService.thaw( auditable );
+        // ensure that no even has been created
+        assertEquals( size, auditable.getAuditTrail().getEvents().size() );
+    }
+
+    @Test
+    public void testAddEventWhenTransactionIsRolledBack2() {
+        Session session = sessionFactory.openSession();
+        try {
+            TransactionStatus t = pta.getTransaction( new DefaultTransactionDefinition() );
+            auditTrailService.addUpdateEvent( auditable, SampleRemovalEvent.class, "test", new RuntimeException() );
+            pta.rollback( t );
+        } finally {
+            session.close();
+        }
+        auditable = arrayDesignService.thaw( auditable );
+        AuditEvent e = auditable.getAuditTrail().getLast();
+        assertEquals( AuditAction.UPDATE, e.getAction() );
+        assertEquals( "test", e.getNote() );
+        assertTrue( e.getDetail().contains( "RuntimeException" ) );
+        // ensure that the exception is logged
+        assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
+    }
+
+    @Test
+    public void testAddUpdateEventOnTransientEntity() {
+        ArrayDesign ad = new ArrayDesign();
+        assertThrows( IllegalArgumentException.class, () -> auditTrailService.addUpdateEvent( ad, SampleRemovalEvent.class, "test" ) );
+    }
+
+    @Test
+    public void testAddExceptionEventOnTransientEntity() {
+        ArrayDesign ad = new ArrayDesign();
+        assertThrows( IllegalArgumentException.class, () -> auditTrailService.addUpdateEvent( ad, SampleRemovalEvent.class, "test", new RuntimeException() ) );
     }
 }
