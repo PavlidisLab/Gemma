@@ -1348,6 +1348,9 @@ public class ExpressionExperimentDaoImpl
      * Gather various EE details and group them by ID.
      */
     private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds, boolean cacheable ) {
+        if ( expressionExperimentIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
