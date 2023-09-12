@@ -6,7 +6,7 @@
 
     <!-- executor used for loading ontologies in background -->
     <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-        <property name="corePoolSize" value="4"/>
+        <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
     </bean>
 
     <beans profile="!test">
