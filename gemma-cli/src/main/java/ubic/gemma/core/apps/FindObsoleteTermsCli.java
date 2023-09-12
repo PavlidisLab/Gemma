@@ -9,7 +9,6 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 
 @Component
-public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
+public class FindObsoleteTermsCli extends AbstractCLI {
 
     @Autowired
     private OntologyService ontologyService;
@@ -53,7 +52,6 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
         return "findObsoleteTerms";
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     @Override
     protected void buildOptions( Options options ) {
     }
