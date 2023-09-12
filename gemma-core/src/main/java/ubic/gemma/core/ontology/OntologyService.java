@@ -42,7 +42,18 @@ public interface OntologyService {
      */
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
-    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
+    /**
+     * <p>
+     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
+     * </p>
+     * <p>
+     *     Will also find terms that are no longer in an ontology we use.
+     * </p>
+     *
+     * @return map of value URI to a representative characteristic using the term. The latter will contain a count
+     * of how many ocurrences there were.
+     */
+    Map<String, CharacteristicValueObject> findObsoleteTermUsage();
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -121,10 +132,10 @@ public interface OntologyService {
     void reindexAllOntologies();
 
     /**
-     * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
+     * Reinitialize (and reindex) all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
      */
-    void reinitializeAllOntologies();
+    void reinitializeAndReindexAllOntologies();
 
     void removeBioMaterialStatement( Long characterId, BioMaterial bm );
 

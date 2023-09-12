@@ -101,12 +101,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
-    @Deprecated
-    @Autowired
-    private FMAOntologyService fmaOntologyService;
-    @Deprecated
-    @Autowired
-    private NIFSTDOntologyService nifstdOntologyService;
     @Autowired
     private ObiService obiService;
 
@@ -494,7 +488,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public void reinitializeAllOntologies() {
+    public void reinitializeAndReindexAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
             ontologyTaskExecutor.execute( () -> {
                 serv.initialize( true, true );
@@ -595,58 +589,60 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step ) {
+    public Map<String, CharacteristicValueObject> findObsoleteTermUsage() {
         Map<String, CharacteristicValueObject> vos = new HashMap<>();
 
-        int minId = start;
-        int maxId = step;
+        int start = 0;
+        int step = 5000;
 
-        int nullCnt = 0;
-        int obsoleteCnt = 0;
+        int prevObsoleteCnt = 0;
+        int checked = 0;
+        CharacteristicValueObject lastObsolete = null;
 
-        // Loading all characteristics in steps
-        while ( maxId < stop ) {
+        while ( true ) {
 
-            OntologyServiceImpl.log.info( "Checking characteristics with IDs between " + minId + " and " + maxId );
-
-            List<Long> ids = new ArrayList<>( step );
-            for ( int i = minId; i < maxId + 1; i++ ) {
-                ids.add( ( long ) i );
-            }
-
-            minId = maxId + 1;
-            maxId += step;
-
-            Collection<Characteristic> chars = characteristicService.load( ids );
+            Collection<Characteristic> chars = characteristicService.browse( start, step );
+            start += step;
 
             if ( chars == null || chars.isEmpty() ) {
-                OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
-                continue;
+                break;
             }
-            OntologyServiceImpl.log.info( "Found " + chars.size()
-                    + " characteristics in the current ID range, checking for obsoletes." );
 
-            // Detect obsoletes
             for ( Characteristic ch : chars ) {
-                if ( StringUtils.isBlank( ch.getValueUri() ) ) {
-                    nullCnt++;
-                } else if ( this.isObsolete( ch.getValueUri() ) ) {
-                    String key = this.foundValueKey( ch );
-                    if ( !vos.containsKey( key ) ) {
-                        vos.put( key, new CharacteristicValueObject( ch ) );
+                String valueUri = ch.getValueUri();
+                if ( StringUtils.isBlank( valueUri ) ) {
+                    continue;
+                }
+
+                checked++;
+
+                if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
+
+                    if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
+                        // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
+                        continue;
                     }
-                    vos.get( key ).incrementOccurrenceCount();
-                    obsoleteCnt++;
-                    OntologyServiceImpl.log.info( "Found obsolete term: " + ch.getValue() + " / " + ch.getValueUri() );
+
+
+                    if ( !vos.containsKey( valueUri ) ) {
+                        vos.put( valueUri, new CharacteristicValueObject( ch ) );
+                    }
+                    vos.get( valueUri ).incrementOccurrenceCount();
+                    if ( log.isDebugEnabled() )
+                        OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
+                    lastObsolete = vos.get( valueUri );
                 }
             }
 
-            ids.clear();
-            chars.clear();
+            if ( vos.size() > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete or missing terms so far, tested " + checked + " characteristics" );
+                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
+            }
+
+            prevObsoleteCnt = vos.size();
         }
 
-        OntologyServiceImpl.log.info( "Terms with empty uri: " + nullCnt );
-        OntologyServiceImpl.log.info( "Obsolete terms found: " + obsoleteCnt );
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + vos.size() );
 
         return vos;
     }
@@ -719,8 +715,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
         if ( useNeuroCartaOntology ) {
             ontologyServicesToUse = Arrays.asList(
-                    nifstdOntologyService,
-                    fmaOntologyService,
+//                    nifstdOntologyService,
+//                    fmaOntologyService,
                     obiService );
         } else {
             ontologyServicesToUse = this.ontologyServices;
