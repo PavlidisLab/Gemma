@@ -81,7 +81,8 @@ public class FindObsoleteTermsCli extends AbstractCLI {
         for ( int i = 0; i < ontologies.size(); i++ ) {
             ubic.basecode.ontology.providers.OntologyService os = completionService.take().get();
             log.info( String.format( " === Ontology (%d/%d) warmed up: %s", i + 1, ontologies.size(), os ) );
-            if ( ontologies.size() - i < 4 ) {
+            int remainingToLoad = ontologies.size() - ( i + 1 );
+            if ( remainingToLoad > 0 && remainingToLoad <= 5 ) {
                 log.info( "Still loading:\n\t" + futures.entrySet().stream().filter( e -> !e.getValue().isDone() )
                         .map( Map.Entry::getKey )
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
