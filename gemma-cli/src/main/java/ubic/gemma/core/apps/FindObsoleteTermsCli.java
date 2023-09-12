@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.ontology.OntologyService;
@@ -25,6 +26,9 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
     @Autowired
     @Qualifier("ontologyTaskExecutor")
     private AsyncTaskExecutor ontologyTaskExecutor;
+
+    @Value("${load.ontologies}")
+    private boolean autoLoadOntologies;
 
     @Autowired
     private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
@@ -56,6 +60,9 @@ public class FindObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
+        if ( autoLoadOntologies ) {
+            throw new IllegalArgumentException( "Auto-loading of ontologies is enabled, disable it by setting load.ontologies=false in Gemma.properties." );
+        }
 
         log.info( "Warming up ontologies ..." );
         CompletionService<ubic.basecode.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
