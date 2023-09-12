@@ -7,10 +7,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 @ContextConfiguration
 public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
@@ -38,6 +43,51 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         experimentalFactorDao.remove( ef );
     }
 
+    @Test
+    public void testDeleteExperimentalFactorUsedByASample() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExperimentalDesign ed = new ExperimentalDesign();
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setExperimentalDesign( ed );
+        FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( ef );
+        ef.getFactorValues().add( fv );
+        ed.getExperimentalFactors().add( ef );
+        ee.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ee );
+
+        // create a sample using the factor
+        ArrayDesign ad = createArrayDesign();
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( ad.getPrimaryTaxon() );
+        bm.getFactorValues().add( fv );
+        bm.getBioAssaysUsedIn().add( ba );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( bm );
+
+        // reload and remove the factor
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
+        experimentalFactorDao.remove( ef );
+
+        assertFalse( ed.getExperimentalFactors().contains( ef ) );
+
+        // reload and verify cascading behaviour
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( ee );
+        ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertFalse( ee.getExperimentalDesign().getExperimentalFactors().contains( ef ) );
+        assertFalse( ee.getBioAssays().iterator().next().getSampleUsed().getFactorValues().contains( fv ) );
+        assertNull( sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() ) );
+        assertNull( sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() ) );
+    }
+
     private ExperimentalFactor createExperimentalFactor() {
         ExperimentalDesign ed = new ExperimentalDesign();
         sessionFactory.getCurrentSession().persist( ed );
@@ -45,5 +95,14 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         ef.setExperimentalDesign( ed );
         ef.setType( FactorType.CATEGORICAL );
         return ef;
+    }
+
+    private ArrayDesign createArrayDesign() {
+        Taxon taxon = new Taxon();
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        return ad;
     }
 }
