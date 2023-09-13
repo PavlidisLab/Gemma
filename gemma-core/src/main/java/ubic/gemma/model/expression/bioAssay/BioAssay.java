@@ -42,7 +42,8 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
 
     private Boolean isOutlier = false;
     private Date processingDate;
-    private Integer sequenceReadCount;
+    @Nullable
+    private Long sequenceReadCount;
     @Nullable
     private Integer sequenceReadLength;
     @Nullable
@@ -192,11 +193,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         total of the
      *         values for the elements assayed.
      */
-    public Integer getSequenceReadCount() {
+    @Nullable
+    public Long getSequenceReadCount() {
         return this.sequenceReadCount;
     }
 
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
+    public void setSequenceReadCount( @Nullable Long sequenceReadCount ) {
         this.sequenceReadCount = sequenceReadCount;
     }
 

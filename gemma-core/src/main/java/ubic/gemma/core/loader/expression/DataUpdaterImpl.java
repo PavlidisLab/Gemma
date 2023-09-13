@@ -686,7 +686,7 @@ public class DataUpdaterImpl implements DataUpdater {
             @Nullable Integer readLength, @Nullable Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             Double[] col = countEEMatrix.getColumn( ba );
-            int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
+            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
 
             if ( librarySize <= 0 ) {
                 // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.
