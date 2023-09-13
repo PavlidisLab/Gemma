@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
@@ -39,11 +40,13 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
 
     private static final long serialVersionUID = -7868768731812964045L;
 
-    private Boolean sequencePairedReads = false;
     private Boolean isOutlier = false;
     private Date processingDate;
     private Integer sequenceReadCount;
+    @Nullable
     private Integer sequenceReadLength;
+    @Nullable
+    private Boolean sequencePairedReads;
 
     private ArrayDesign arrayDesignUsed;
 
@@ -175,11 +178,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         otherwise.
      *         It should be left as null if it isn't known.
      */
+    @Nullable
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
     }
 
-    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+    public void setSequencePairedReads( @Nullable Boolean sequencePairedReads ) {
         this.sequencePairedReads = sequencePairedReads;
     }
 
@@ -202,11 +206,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
      *         representing the mean read length.
      */
+    @Nullable
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;
     }
 
-    public void setSequenceReadLength( Integer sequenceReadLength ) {
+    public void setSequenceReadLength( @Nullable Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
     }
 

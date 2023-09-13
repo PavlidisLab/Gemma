@@ -1,0 +1,120 @@
+package ubic.gemma.core.apps;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.loader.expression.DataUpdater;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.BaseCliTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.TestComponent;
+
+import static java.util.Objects.requireNonNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ContextConfiguration
+public class RNASeqDataAddCliTest extends BaseCliTest {
+
+    @Configuration
+    @TestComponent
+    static class RNASeqDataAddCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+
+        @Bean
+        public RNASeqDataAddCli rnaSeqDataAddCli() {
+            return new RNASeqDataAddCli();
+        }
+
+        @Bean
+        public DataUpdater dataUpdater() {
+            return mock();
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock();
+        }
+
+        @Bean
+        public TaxonService taxonService() {
+            return mock();
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionDataFileService expressionDataFileService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private RNASeqDataAddCli cli;
+
+    @Autowired
+    private DataUpdater dataUpdater;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    private ArrayDesign ad;
+    private ExpressionExperiment ee;
+    private String rpkmFile;
+
+    @Before
+    public void setUp() {
+        ad = new ArrayDesign();
+        ee = new ExpressionExperiment();
+        rpkmFile = requireNonNull( getClass().getClassLoader().getResource( "test.rpkm.txt" ) ).getFile();
+        when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
+        when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );
+    }
+
+    @After
+    public void tearDown() {
+        reset( expressionExperimentService, arrayDesignService );
+    }
+
+    @Test
+    @WithMockUser
+    public void testPaired() {
+        cli.executeCommand( new String[] { "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:paired" } );
+        verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), eq( 36 ), eq( true ), eq( false ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUnpaired() {
+        cli.executeCommand( new String[] { "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:unpaired" } );
+        verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), eq( 36 ), eq( false ), eq( false ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testWhenPairednessIsUnknown() {
+        cli.executeCommand( new String[] { "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36" } );
+        verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), eq( 36 ), isNull(), eq( false ) );
+    }
+}
