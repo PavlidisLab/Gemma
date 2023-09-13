@@ -71,6 +71,9 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
                 }
             }
         }
+        differentialExpressionAnalysisDao.remove( analysis );
+        analysis = reload( analysis );
+        assertNull( analysis );
     }
 
     @Test(expected = IllegalArgumentException.class)

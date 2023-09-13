@@ -21,7 +21,10 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.SQLQuery;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionImpl;
@@ -61,7 +64,9 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
     private static final String
             INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
-            INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)";
+            INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)",
+            DELETE_RESULT_SQL = "delete from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT where ID = ?",
+            DELETE_CONTRAST_SQL = "delete from CONTRAST_RESULT where ID = ?";
 
     private final EntityPersister resultPersister, contrastPersister;
 
@@ -591,15 +596,29 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
     @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "analysis cannot be null" );
-        }
-
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        super.remove( ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
-
-        flush();
+        this.getSessionFactory().getCurrentSession().doWork( work -> {
+            PreparedStatement deleteContrast = work.prepareStatement( DELETE_CONTRAST_SQL );
+            PreparedStatement deleteResult = work.prepareStatement( DELETE_RESULT_SQL );
+            int numResults = 0;
+            int numContrasts = 0;
+            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                    deleteResult.setLong( 1, result.getId() );
+                    deleteResult.addBatch();
+                    numResults++;
+                    for ( ContrastResult cr : result.getContrasts() ) {
+                        deleteContrast.setLong( 1, cr.getId() );
+                        deleteContrast.addBatch();
+                        numContrasts++;
+                    }
+                }
+            }
+            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_CONTRAST_SQL, numContrasts ) );
+            ensureExpectedRowsAreInserted( deleteContrast, deleteContrast.executeBatch() );
+            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_RESULT_SQL, numResults ) );
+            ensureExpectedRowsAreInserted( deleteResult, deleteResult.executeBatch() );
+        } );
+        super.remove( analysis );
     }
 
     @Override
