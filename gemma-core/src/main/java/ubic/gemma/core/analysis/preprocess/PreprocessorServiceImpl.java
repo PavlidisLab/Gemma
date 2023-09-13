@@ -31,6 +31,9 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -206,6 +209,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             meanVarianceService.create( ee, true );
         } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedMeanVarianceUpdateEvent.class, null, e );
             throw new PreprocessingException( ee, e );
         }
     }
@@ -234,6 +238,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             svdService.svd( ee );
         } catch ( SVDException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedPCAAnalysisEvent.class, null, e );
             throw new SVDRelatedPreprocessingException( ee, e );
         }
     }
@@ -245,6 +250,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             sampleCoexpressionAnalysisService.compute( ee );
         } catch ( RuntimeException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw new SampleCoexpressionRelatedPreprocessingException( ee, e );
         }
     }

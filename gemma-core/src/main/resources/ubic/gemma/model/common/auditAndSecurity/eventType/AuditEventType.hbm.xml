@@ -101,6 +101,10 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent"/>
             <subclass abstract="false" discriminator-value="SampleRemovalReversionEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent"/>
+            <subclass abstract="false" discriminator-value="MeanVarianceUpdateEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent"/>
+            <subclass abstract="false" discriminator-value="SampleCorrelationAnalysisEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent"/>
         </subclass>
         <subclass abstract="false" discriminator-value="CommentedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent"/>
@@ -126,6 +130,10 @@
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent"/>
                 <subclass abstract="false" discriminator-value="FailedMissingValueAnalysisEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent"/>
+                <subclass abstract="false" discriminator-value="FailedMeanVarianceUpdateEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent"/>
+                <subclass abstract="false" discriminator-value="FailedSampleCorrelationAnalysisEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent"/>
             </subclass>
             <subclass abstract="false" discriminator-value="CurationNoteUpdateEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent"/>

@@ -19,6 +19,7 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -63,11 +64,6 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         super.addForceOption( options );
     }
 
-    private void audit( ExpressionExperiment ee ) {
-        auditTrailService.addUpdateEvent( ee, "Generated sample correlation matrix" );
-        addSuccessObject( ee );
-    }
-
     private void processExperiment( ExpressionExperiment ee ) {
         if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
@@ -77,13 +73,17 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 .getBean( SampleCoexpressionAnalysisService.class );
 
         ee = eeService.thawLiter( ee );
-        if ( force ) {
-            sampleCoexpressionAnalysisService.compute( ee );
-        } else {
-            sampleCoexpressionAnalysisService.computeIfNecessary( ee );
+        try {
+            if ( force ) {
+                sampleCoexpressionAnalysisService.compute( ee );
+            } else {
+                sampleCoexpressionAnalysisService.computeIfNecessary( ee );
+            }
+            addSuccessObject( ee );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            addErrorObject( ee, e );
         }
-
-        this.audit( ee );
     }
 
 }
