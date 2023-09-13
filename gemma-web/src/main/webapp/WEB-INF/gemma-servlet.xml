@@ -105,9 +105,9 @@
         <property name="statusCodes">
             <props>
                 <prop key="error/400">400</prop>
-                <prop key="error/403">404</prop>
+                <prop key="error/403">403</prop>
                 <prop key="error/404">404</prop>
-                <prop key="error/500">404</prop>
+                <prop key="error/500">500</prop>
                 <prop key="accessDeniedFailure">403</prop>
                 <prop key="dataAccessFailure">500</prop>
             </props>
