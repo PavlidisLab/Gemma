@@ -26,6 +26,7 @@
         <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="processImports" value="false"/>
         </bean>
         <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
