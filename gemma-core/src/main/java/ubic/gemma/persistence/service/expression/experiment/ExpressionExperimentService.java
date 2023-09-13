@@ -120,13 +120,6 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
     /**
-     * This is used by the scheduled jobs, so it requires lower privilege.
-     */
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    void update( ExpressionExperiment expressionExperiment );
-
-    /**
      * @param accession accession
      * @return Experiments which have the given accession. There can be more than one, because one GEO
      * accession can result

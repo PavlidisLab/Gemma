@@ -408,25 +408,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         ee = expressionExperimentService.thaw( ee );
         String confound = expressionExperimentService.getBatchConfound( ee );
         String effect = expressionExperimentService.getBatchEffect( ee );
-        boolean update = false;
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
-            update = true;
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound != null ? confound : "<no confound>" );
+            log.info( "New batch confound for " + ee + ": " + ( confound != null ? confound : "<no confound>" ) );
         }
 
         if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
             ee.setBatchEffect( effect );
-            update = true;
-        }
-
-        if ( update ) {
-            log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
-            expressionExperimentService.update( ee );
+            log.info( "New batch effect for " + ee + ": " + effect );
         }
     }
 
