@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
+import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchServiceImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -210,7 +211,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
             if ( bs == null ) {
                 // this is common. We could try to match them up based on the probe name, because there is nothing else
                 // to go on.
-                bs = ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE;
+                bs = ExpressionExperimentPlatformSwitchServiceImpl.NULL_BIOSEQUENCE;
             }
 
             if ( !globalBsMap.containsKey( bs ) ) {
@@ -265,7 +266,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
                 CompositeSequence newCs = CompositeSequence.Factory.newInstance();
 
-                if ( !bs.equals( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE ) ) {
+                if ( !bs.equals( ExpressionExperimentPlatformSwitchServiceImpl.NULL_BIOSEQUENCE ) ) {
                     newCs.setBiologicalCharacteristic( bs );
                 }
 

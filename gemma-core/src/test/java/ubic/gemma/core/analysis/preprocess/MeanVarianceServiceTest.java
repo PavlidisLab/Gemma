@@ -33,7 +33,6 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -235,12 +234,12 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             try {
-                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false, false );
                 fail( "Should have gotten an exception" );
             } catch ( IllegalArgumentException e ) {
                 // Expected
             }
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true, false );
         }
 
         ee = eeService.thaw( this.ee );

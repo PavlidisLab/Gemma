@@ -241,7 +241,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
 
         // Main step.
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false, false );
         ee = experimentService.loadOrFail( ee.getId() );
         ee = experimentService.thaw( ee );
 
@@ -285,7 +285,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertFalse( dataVectorService.getProcessedDataVectors( ee2 ).isEmpty() );
 
         // Call it again to test that we don't leak QTs
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false, false );
         ee = experimentService.load( ee.getId() );
         assertNotNull( ee );
         ee = this.experimentService.thawLite( ee );
@@ -328,12 +328,12 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
             try {
-                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false, false );
                 fail( "Should have gotten an exception" );
             } catch ( IllegalArgumentException e ) {
                 // Expected
             }
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true, false );
         }
 
         /*

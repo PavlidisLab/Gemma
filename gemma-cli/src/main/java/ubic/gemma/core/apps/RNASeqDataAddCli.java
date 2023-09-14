@@ -34,7 +34,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -53,12 +52,13 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private static final String MULTIQC_METADATA_FILE_OPT = "multiqc";
     private boolean allowMissingSamples = false;
     private String countFile = null;
-    private boolean isPairedReads = false;
+    private Boolean isPairedReads = null;
     private String platformName = null;
     private Integer readLength = null;
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
     private File qualityControlReportFile = null;
+    private boolean justbackfillCountsAndRPKM = false;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -75,12 +75,14 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
         options.addOption( Option.builder( "a" ).longOpt( null ).desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
 
-        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " ).argName( "length" ).hasArg().build() );
+        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36' (no pairedness assumed), or '36:unpaired' " ).argName( "length" ).hasArg().build() );
 
         options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
         // RNA-Seq pipeline QC report
         options.addOption( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT, true, "File containing a MultiQC report" );
+
+        options.addOption( Option.builder( "noLog2cpm" ).longOpt( null ).desc( "Skip log2cpm computation and postprocessing, only backfill counts and rpkm" ).build() );
     }
 
     @Override
@@ -124,6 +126,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                 } else {
                     throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or left blank" );
                 }
+            } else {
+                this.isPairedReads = null;
             }
 
         }
@@ -133,11 +137,19 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         if ( rpkmFile == null && countFile == null )
             throw new IllegalArgumentException( "Must provide either RPKM or count data (or both)" );
 
+
         if ( !commandLine.hasOption( "a" ) ) {
             throw new IllegalArgumentException( "Must provide target platform" );
         }
 
         this.platformName = commandLine.getOptionValue( "a" );
+
+        if ( commandLine.hasOption( "noLog2cpm" ) ) {
+            this.justbackfillCountsAndRPKM = true;
+            if ( this.justbackfillLog2cpm ) {
+                throw new IllegalArgumentException( "Can't use both noLog2cpm and log2cpm options" );
+            }
+        }
 
         if ( commandLine.hasOption( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) ) {
             qualityControlReportFile = new File( commandLine.getOptionValue( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) );
@@ -208,7 +220,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
             }
 
             serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, readLength, isPairedReads,
-                    allowMissingSamples );
+                    allowMissingSamples, justbackfillCountsAndRPKM );
 
         } catch ( IOException e ) {
             throw new Exception( "Failed while processing " + ee, e );
