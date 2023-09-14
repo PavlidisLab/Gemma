@@ -187,8 +187,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String value, String field ) {
-            UriComponentsBuilder builder = ServletUriComponentsBuilder.fromRequest( request )
+            // some of the incoming requests are from AJAX, so we cannot use fromRequest
+            UriComponentsBuilder builder = ServletUriComponentsBuilder.fromContextPath( request )
                     .scheme( null ).host( null ).port( -1 )
+                    .path( "/searcher.html" )
                     .queryParam( "query", uri != null ? uri : value );
             if ( scope != null ) {
                 builder.queryParam( "scope", scope );
