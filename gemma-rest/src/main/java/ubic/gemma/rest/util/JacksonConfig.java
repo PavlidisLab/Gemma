@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.core.util.Json;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 
 /**
@@ -21,6 +22,7 @@ public class JacksonConfig {
      * @see ubic.gemma.rest.providers.ObjectMapperResolver
      */
     @Bean
+    @Primary
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
                 // parse and render date as ISO 9601
