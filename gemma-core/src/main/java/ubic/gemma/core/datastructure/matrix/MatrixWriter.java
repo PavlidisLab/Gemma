@@ -20,12 +20,15 @@ package ubic.gemma.core.datastructure.matrix;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.analysis.service.AbstractFileService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -37,7 +40,8 @@ import java.util.Map;
  * @author pavlidis
  */
 @CommonsLog
-public class MatrixWriter {
+@ParametersAreNonnullByDefault
+public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
 
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
@@ -77,7 +81,7 @@ public class MatrixWriter {
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
+            @Nullable Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int rows = matrix.rows();
 
@@ -90,7 +94,7 @@ public class MatrixWriter {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( probeForRow.getName() ).append( "\t" );
+            buf.append( escapeTsv( probeForRow.getName() ) ).append( "\t" );
             this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
@@ -105,9 +109,9 @@ public class MatrixWriter {
 
                 // Don't want line to contain a trailing unnecessary tab
                 if ( orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex ) {
-                    buf.append( val );
+                    buf.append( format( val ) );
                 } else {
-                    buf.append( val ).append( "\t" );
+                    buf.append( format( val ) ).append( "\t" );
                 }
             }
 
@@ -134,7 +138,7 @@ public class MatrixWriter {
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
+            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int rows = matrix.rows();
 
@@ -147,7 +151,7 @@ public class MatrixWriter {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( probeForRow.getName() ).append( "\t" );
+            buf.append( escapeTsv( probeForRow.getName() ) ).append( "\t" );
             this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
@@ -159,15 +163,7 @@ public class MatrixWriter {
                 buf.append( "\t" );
 
                 int i = matrix.getColumnIndex( bioMaterial );
-                Object val = matrix.get( j, i );
-                if ( val == null || ( val instanceof Double && Double.isNaN( ( Double ) val ) ) ) {
-                    //noinspection RedundantStringOperation // being explicit
-                    buf.append( "" );
-                } else if ( val instanceof Double ) {
-                    buf.append( String.format( "%.3g", ( Double ) val ) );
-                } else {
-                    buf.append( val );
-                }
+                buf.append( format( matrix.get( j, i ) ) );
             }
 
             buf.append( "\n" );
@@ -230,7 +226,7 @@ public class MatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
+            @Nullable Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
             StringBuffer buf ) {
 
         ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
@@ -250,7 +246,7 @@ public class MatrixWriter {
             int i = matrix.getColumnIndex( bioMaterial );
             buf.append( "\t" );
             String colName = ExpressionDataWriterUtils.constructBioAssayName( matrix, i );
-            buf.append( colName );
+            buf.append( escapeTsv( colName ) );
         }
         buf.append( "\n" );
     }
@@ -264,7 +260,7 @@ public class MatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
-            Map<CompositeSequence, String[]> geneAnnotations ) {
+            @Nullable Map<CompositeSequence, String[]> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() )
             return;
         if ( geneAnnotations.containsKey( probe ) ) {
@@ -302,8 +298,10 @@ public class MatrixWriter {
             names = names.replaceAll( "#", "_" );
 
             // initial tab has already been added before
-            buf.append( symbols ).append( "\t" ).append( names ).append( "\t" ).append( gemmaID ).append( "\t" )
-                    .append( ncbiID ).append( "\t" );
+            buf.append( escapeTsv( symbols ) ).append( "\t" )
+                    .append( escapeTsv( names ) ).append( "\t" )
+                    .append( escapeTsv( gemmaID ) ).append( "\t" )
+                    .append( escapeTsv( ncbiID ) ).append( "\t" );
         } else {
             buf.append( "\t\t\t\t" );
         }
@@ -315,7 +313,7 @@ public class MatrixWriter {
      *                        there are no genes for the probe, then blanks will be added.
      */
     private void addGeneInfo( StringBuffer buf, CompositeSequence probe,
-            Map<CompositeSequence, Collection<Gene>> geneAnnotations ) {
+            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() )
             return;
         Collection<Gene> genes = geneAnnotations.get( probe );
@@ -324,7 +322,8 @@ public class MatrixWriter {
             if ( genes.size() == 1 ) {
                 // simple case, avoid some overhead.
                 Gene g = genes.iterator().next();
-                buf.append( g.getOfficialSymbol() ).append( "\t" ).append( g.getOfficialName() ).append( "\t" )
+                buf.append( escapeTsv( g.getOfficialSymbol() ) ).append( "\t" )
+                        .append( escapeTsv( g.getOfficialName() ) ).append( "\t" )
                         .append( g.getId() ).append( "\t" )
                         .append( g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString() );
             } else {
@@ -339,9 +338,9 @@ public class MatrixWriter {
                     ncbiIds.add( gene.getNcbiGeneId() == null ? "" : gene.getNcbiGeneId().toString() );
                 }
 
-                buf.append( StringUtils.join( gs.toArray(), '|' ) );
+                buf.append( escapeTsv( StringUtils.join( gs.toArray(), '|' ) ) );
                 buf.append( "\t" );
-                buf.append( StringUtils.join( gn.toArray(), '|' ) );
+                buf.append( escapeTsv( StringUtils.join( gn.toArray(), '|' ) ) );
                 buf.append( "\t" );
                 buf.append( StringUtils.join( ids.toArray(), '|' ) );
                 buf.append( "\t" );
@@ -356,10 +355,31 @@ public class MatrixWriter {
         if ( writeSequence ) {
             BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null )
-                buf.append( biologicalCharacteristic.getName() );
+                buf.append( escapeTsv( biologicalCharacteristic.getName() ) );
 
             buf.append( "\t" );
         }
     }
 
+    @Override
+    public void writeTsv( ExpressionDataMatrix<?> entity, Writer writer ) throws IOException {
+        write( writer, entity, null, true, true, true, true );
+    }
+
+    private String format( @Nullable Object object ) {
+        if ( object instanceof Double ) {
+            return format( ( Double ) object );
+        } else if ( object != null ) {
+            return escapeTsv( object.toString() );
+        } else {
+            return "";
+        }
+    }
+
+    static String escapeTsv( String s ) {
+        return s.replace( "\\", "\\\\" )
+                .replace( "\n", "\\n" )
+                .replace( "\t", "\\t" )
+                .replace( "\r", "\\r" );
+    }
 }
