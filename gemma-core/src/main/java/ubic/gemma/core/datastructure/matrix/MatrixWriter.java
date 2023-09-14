@@ -106,12 +106,10 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 Object val = matrix.get( j, i );
-
+                buf.append( format( val ) );
                 // Don't want line to contain a trailing unnecessary tab
-                if ( orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex ) {
-                    buf.append( format( val ) );
-                } else {
-                    buf.append( format( val ) ).append( "\t" );
+                if ( orderedBioMaterials.indexOf( bioMaterial ) != orderedBioMLastIndex ) {
+                    buf.append( "\t" );
                 }
             }
 
@@ -374,12 +372,5 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
         } else {
             return "";
         }
-    }
-
-    static String escapeTsv( String s ) {
-        return s.replace( "\\", "\\\\" )
-                .replace( "\n", "\\n" )
-                .replace( "\t", "\\t" )
-                .replace( "\r", "\\r" );
     }
 }

@@ -78,6 +78,13 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
         }
     }
 
+    protected String escapeTsv( String s ) {
+        return s.replace( "\\", "\\\\" )
+                .replace( "\n", "\\n" )
+                .replace( "\t", "\\t" )
+                .replace( "\r", "\\r" );
+    }
+
     @Override
     public void writeTsv( T entity, File file ) throws IOException {
         try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {

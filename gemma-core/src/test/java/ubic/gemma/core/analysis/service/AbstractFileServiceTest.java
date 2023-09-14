@@ -60,4 +60,9 @@ public class AbstractFileServiceTest {
             assertTrue( f.delete() );
         }
     }
+
+    @Test
+    public void testEscapeTsv() {
+        assertEquals( "\\t\\n\\r\\\\", tsvFileService.escapeTsv( "\t\n\r\\" ) );
+    }
 }
