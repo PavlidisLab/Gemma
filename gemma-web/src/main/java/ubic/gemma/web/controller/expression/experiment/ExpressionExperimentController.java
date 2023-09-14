@@ -1627,7 +1627,12 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionAnalysisService.compute( ee );
+        try {
+            sampleCoexpressionAnalysisService.compute( ee );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            throw e;
+        }
     }
 
     private void updateMV( Long id ) {
@@ -1636,7 +1641,12 @@ public class ExpressionExperimentController {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        meanVarianceService.create( expressionExperiment, true );
+        try {
+            meanVarianceService.create( expressionExperiment, true );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedMeanVarianceUpdateEvent.class, null, e );
+            throw e;
+        }
     }
 
     /**
@@ -1644,7 +1654,7 @@ public class ExpressionExperimentController {
      *
      * @author pavlidis
      */
-    private class RemoveExpressionExperimentTask extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<TaskCommand> {
 
         public RemoveExpressionExperimentTask( TaskCommand command ) {
             super( command );
@@ -1659,7 +1669,7 @@ public class ExpressionExperimentController {
         }
     }
 
-    private class RemovePubMed extends AbstractTask<TaskResult, TaskCommand> {
+    private class RemovePubMed extends AbstractTask<TaskCommand> {
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
@@ -1685,7 +1695,7 @@ public class ExpressionExperimentController {
 
     }
 
-    private class UpdatePubMed extends AbstractTask<TaskResult, UpdatePubMedCommand> {
+    private class UpdatePubMed extends AbstractTask<UpdatePubMedCommand> {
 
         public UpdatePubMed( UpdatePubMedCommand command ) {
             super( command );
@@ -1708,6 +1718,8 @@ public class ExpressionExperimentController {
                     ExpressionExperimentController.log.info( "Reference exists in system, copying over the metadata and associating..." );
                     publication.setId( null );
                     publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    // we need to thaw mesh terms, keywords, etc. for Hibernate Search
+                    publication = bibliographicReferenceService.thaw( publication );
                     expressionExperiment.setPrimaryPublication( publication );
                     expressionExperimentService.update( expressionExperiment );
                 }

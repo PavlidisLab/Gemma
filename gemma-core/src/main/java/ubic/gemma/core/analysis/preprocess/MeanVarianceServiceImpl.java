@@ -19,7 +19,6 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
@@ -27,12 +26,13 @@ import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-
-import java.util.Collection;
 
 /**
  * Manage the mean-variance relationship.
@@ -49,6 +49,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
@@ -82,6 +84,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         }
 
         mvr = expressionExperimentService.updateMeanVarianceRelation( ee, calculateMeanVariance( intensities ) );
+
+        auditTrailService.addUpdateEvent( ee, MeanVarianceUpdateEvent.class, "Mean-variance has been updated." );
 
         log.info( "Mean-variance computation is complete" );
 

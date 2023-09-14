@@ -48,8 +48,8 @@ public class Responder {
         }
     }
 
-    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit ) {
-        return new LimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
+    public static <T> LimitedResponseDataObject<T> limit( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit ) {
+        return new LimitedResponseDataObject<>( payload, query, filters, groupBy, sort, limit );
     }
 
     /**
@@ -64,6 +64,10 @@ public class Responder {
      */
     public static <T> FilteredResponseDataObject<T> filter( List<T> payload, @Nullable Filters filters ) {
         return new FilteredResponseDataObject<>( payload, filters );
+    }
+
+    public static <T> QueriedAndFilteredResponseDataObject<T> queryAndFilter( List<T> payload, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
+        return new QueriedAndFilteredResponseDataObject<>( payload, query, filters, groupBy, sort );
     }
 
     /**

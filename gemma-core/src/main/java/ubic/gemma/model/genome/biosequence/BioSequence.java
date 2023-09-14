@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -38,6 +39,7 @@ import java.util.Set;
  * </p>
  */
 @SuppressWarnings("unused")
+@Indexed
 public class BioSequence extends AbstractDescribable implements Serializable {
 
     /**
@@ -63,6 +65,18 @@ public class BioSequence extends AbstractDescribable implements Serializable {
      * @author Paul
      */
     public BioSequence() {
+    }
+
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
     }
 
     public Set<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
@@ -128,6 +142,7 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         this.sequence = sequence;
     }
 
+    @IndexedEmbedded
     public DatabaseEntry getSequenceDatabaseEntry() {
         return this.sequenceDatabaseEntry;
     }

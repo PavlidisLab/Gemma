@@ -20,6 +20,9 @@ package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -31,6 +34,7 @@ import java.util.Set;
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
+@Indexed
 public class FactorValue implements Identifiable, Serializable, gemma.gsec.model.SecuredChild {
 
     /**
@@ -125,6 +129,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return this.id;
     }
@@ -143,6 +148,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.securityOwner = ee;
     }
 
+    @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }

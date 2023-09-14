@@ -35,7 +35,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         @Override
-        public SearchSource ontologySearchSource() {
+        public OntologySearchSource ontologySearchSource() {
             return new OntologySearchSource();
         }
 

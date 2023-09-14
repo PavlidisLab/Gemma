@@ -18,6 +18,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -34,7 +36,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import java.util.Collection;
  *
  * @author Paul
  */
+@Component
 public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String ALLOW_MISSING = "allowMissing";
@@ -53,12 +55,19 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private static final String MULTIQC_METADATA_FILE_OPT = "multiqc";
     private boolean allowMissingSamples = false;
     private String countFile = null;
-    private boolean isPairedReads = false;
+    private Boolean isPairedReads = null;
     private String platformName = null;
     private Integer readLength = null;
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
     private File qualityControlReportFile = null;
+
+    @Autowired
+    private DataUpdater serv;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -73,9 +82,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
         options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
-        options.addOption( Option.builder( "a" ).longOpt( null ).desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
+        options.addOption( Option.builder( "a" ).longOpt( null ).required().desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
 
-        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " ).argName( "length" ).hasArg().build() );
+        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36:unpaired' or simply '36' if pairedness is unknown" ).argName( "length" ).hasArg().build() );
 
         options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
@@ -107,14 +116,14 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         if ( commandLine.hasOption( RNASeqDataAddCli.METADATAOPT ) ) {
             String metaString = commandLine.getOptionValue( RNASeqDataAddCli.METADATAOPT );
-            String[] msf = metaString.split( ":" );
+            String[] msf = metaString.split( ":", 2 );
 
-            if ( msf.length > 2 ) {
+            try {
+                this.readLength = Integer.parseInt( msf[0] );
+            } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException(
-                        RNASeqDataAddCli.METADATAOPT + " must be supplied with string in format N:{unpaired|paired}" );
+                        RNASeqDataAddCli.METADATAOPT + " must be supplied with string in format 'N:{unpaired|paired}' or simply 'N' if pairedness is unknown." );
             }
-
-            this.readLength = Integer.parseInt( msf[0] );
 
             if ( msf.length == 2 ) {
                 if ( msf[1].equalsIgnoreCase( "paired" ) ) {
@@ -122,7 +131,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                 } else if ( msf[1].equalsIgnoreCase( "unpaired" ) ) {
                     this.isPairedReads = false;
                 } else {
-                    throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or left blank" );
+                    throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or omitted if unknown" );
                 }
             }
 
@@ -131,10 +140,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         this.allowMissingSamples = commandLine.hasOption( RNASeqDataAddCli.ALLOW_MISSING );
 
         if ( rpkmFile == null && countFile == null )
-            throw new IllegalArgumentException( "Must provide either RPKM or count data (or both)" );
+            throw new IllegalArgumentException( "Must provide either RPKM (-rpkm) or count (-count) data (or both)" );
 
         if ( !commandLine.hasOption( "a" ) ) {
-            throw new IllegalArgumentException( "Must provide target platform" );
+            throw new IllegalArgumentException( "Must provide target platform (-a)" );
         }
 
         this.platformName = commandLine.getOptionValue( "a" );
@@ -154,9 +163,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void doWork() throws Exception {
-        DataUpdater serv = this.getBean( DataUpdater.class );
-        ExpressionDataFileService expressionDataFileService = this.getBean( ExpressionDataFileService.class );
-
         if ( this.expressionExperiments.isEmpty() ) {
             throw new Exception( "No experiment to be processed. Check in the logs above for troubled experiments." );
         }
@@ -237,7 +243,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private ArrayDesign locateArrayDesign( String name ) throws Exception {
 
         ArrayDesign arrayDesign = null;
-        ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
         Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
         if ( byname.size() > 1 ) {
             throw new IllegalArgumentException( "Ambiguous name: " + name );

@@ -4,7 +4,6 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +17,6 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -36,6 +34,7 @@ import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
+import ubic.gemma.rest.util.args.QuantitationTypeArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -105,6 +104,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public QuantitationTypeArgService quantitationTypeArgService( QuantitationTypeService quantitationTypeService ) {
+            return new QuantitationTypeArgService( quantitationTypeService );
+        }
+
+        @Bean
         public GeneArgService geneArgService() {
             return mock( GeneArgService.class );
         }
@@ -151,7 +155,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
     }
 
     @Test
@@ -196,13 +200,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
-        verify( searchService ).search( captor.capture() );
-        assertThat( captor.getValue() )
-                .hasFieldOrPropertyWithValue( "query", "cerebellum" )
-                .hasFieldOrPropertyWithValue( "fillResults", false );
+        verify( searchService, times( 2 ) ).search( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .hasSize( 2 )
+                .satisfiesExactly( s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNull();
+                }, s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNotNull();
+                } );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
-        verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
+        verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
     }
 
     @Test
@@ -241,7 +253,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), true, 50 );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), 50 );
     }
 
     @Test
@@ -320,7 +332,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null );
     }
 
     @Test
@@ -362,13 +374,31 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+    public void testGetDatasetRawExpressionByQuantitationTypeWhenQtIsNotFromTheDataset() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class ) ).thenReturn( qt );
+        qt.setId( 12L );
+        when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( false );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
-        verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).load( 12L );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
+        verifyNoInteractions( expressionDataFileService );
+        assertThat( res )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setId( 12L );
+        when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( true );
+        Response res = target( "/datasets/1/data/raw" )
+                .queryParam( "quantitationType", "12" ).request().get();
+        verify( quantitationTypeService ).load( 12L );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )

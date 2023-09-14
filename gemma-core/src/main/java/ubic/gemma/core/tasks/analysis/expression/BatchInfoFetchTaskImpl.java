@@ -18,7 +18,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  */
 @Component
 @Scope("prototype")
-public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFetchTaskCommand>
+public class BatchInfoFetchTaskImpl extends AbstractTask<BatchInfoFetchTaskCommand>
         implements BatchInfoFetchTask {
 
     private final Log log = LogFactory.getLog( BatchInfoFetchTask.class.getName() );

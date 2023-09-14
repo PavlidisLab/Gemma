@@ -763,7 +763,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     private void delete( Collection<ExperimentalFactor> toDelete ) {
         for ( ExperimentalFactor factorRemove : toDelete ) {
-            experimentalFactorService.delete( factorRemove );
+            experimentalFactorService.remove( factorRemove );
         }
 
         for ( ExperimentalFactor ef : toDelete ) {

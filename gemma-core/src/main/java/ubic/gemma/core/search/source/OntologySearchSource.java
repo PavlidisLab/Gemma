@@ -3,7 +3,6 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ubic.basecode.ontology.model.*;
@@ -98,7 +97,7 @@ public class OntologySearchSource implements SearchSource {
 
         timer.reset();
         timer.start();
-        findExperimentsByTerms( terms, results, settings );
+        findExperimentsByTerms( terms, settings, results );
         timer.stop();
 
         if ( timer.getTime() > 100 ) {
@@ -117,7 +116,7 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    private void findExperimentsByTerms( Collection<OntologyTerm> terms, Set<SearchResult<ExpressionExperiment>> results, SearchSettings settings ) {
+    private void findExperimentsByTerms( Collection<OntologyTerm> terms, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -139,10 +138,10 @@ public class OntologySearchSource implements SearchSource {
             }
         }
 
-        findExpressionExperimentsByUris( uris, results, 0.9, uri2value, uri2score, settings );
+        findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, results );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Set<SearchResult<ExpressionExperiment>> results, double score, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings ) {
+    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
         if ( isFilled( results, settings ) )
             return;
 
@@ -152,25 +151,28 @@ public class OntologySearchSource implements SearchSource {
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         // collect all direct tags
-        addExperimentsByUrisHits( hits, results, ExpressionExperiment.class, score, uri2value, uri2score, settings );
+        if ( hits.containsKey( ExpressionExperiment.class ) ) {
+            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
+        }
 
         // collect experimental design-related terms
-        addExperimentsByUrisHits( hits, results, ExperimentalDesign.class, 0.9 * score, uri2value, uri2score, settings );
+        if ( hits.containsKey( ExperimentalDesign.class ) ) {
+            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9 * 0.9, uri2value, uri2score, settings, results );
+        }
 
         // collect samples-related terms
-        addExperimentsByUrisHits( hits, results, BioMaterial.class, 0.9 * score, uri2value, uri2score, settings );
+        if ( hits.containsKey( BioMaterial.class ) ) {
+            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9 * 0.9, uri2value, uri2score, settings, results );
+        }
     }
 
-    private void addExperimentsByUrisHits( Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits, Set<SearchResult<ExpressionExperiment>> results, Class<? extends Identifiable> clazz, double score, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings ) {
-        Map<String, Set<ExpressionExperiment>> specificHits = hits.get( clazz );
-        if ( specificHits == null )
-            return;
-        for ( Map.Entry<String, Set<ExpressionExperiment>> entry : specificHits.entrySet() ) {
+    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
+        for ( Map.Entry<String, Set<ExpressionExperiment>> entry : hits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, score * uri2score.getOrDefault( uri, 0.0 ),
-                        Collections.singletonMap( "term", settings.highlightTerm( uri, value, new DefaultMessageSourceResolvable( new String[] { clazz.getName(), clazz.getSimpleName() }, clazz.getSimpleName() ) ) ),
+                results.add( SearchResult.from( ExpressionExperiment.class, ee, scoreMultiplier * uri2score.getOrDefault( uri, 0.0 ),
+                        settings.highlightTerm( uri, value, field ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }

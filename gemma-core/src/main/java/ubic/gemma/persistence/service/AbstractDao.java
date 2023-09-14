@@ -202,7 +202,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             //noinspection unchecked
             results.addAll( sessionFactory.getCurrentSession()
                     .createCriteria( elementClass )
-                    .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
+                    .add( Restrictions.in( idPropertyName, new HashSet<>( unloadedIds ) ) )
                     .list() );
         }
 

@@ -1,125 +1,62 @@
-/*
- /*
- * The Gemma project
- * 
- * Copyright (c) 2006 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
-import ubic.gemma.persistence.util.CompassUtils;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneSet;
 
-/**
- * Simple command line to index the gemma db. Can index gene's, Expression experiments or array Designs
- *
- * @author klc
- */
-public class IndexGemmaCLI extends AbstractCLIContextCLI {
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-    private boolean indexAD = false;
-    private boolean indexB = false;
-    private boolean indexEE = false;
-    private boolean indexG = false;
-    private boolean indexP = false;
-    private boolean indexQ = false;
-    private boolean indexX = false;
-    private boolean indexY = false;
+@Component
+public class IndexGemmaCLI extends AbstractCLI {
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.SYSTEM;
+    /**
+     * A list of all searchable entities this CLI supports.
+     */
+    private static final IndexableEntity[] indexableEntities = {
+            new IndexableEntity( "g", "genes", Gene.class ),
+            new IndexableEntity( "e", "datasets", ExpressionExperiment.class ),
+            new IndexableEntity( "a", "platforms", ArrayDesign.class ),
+            new IndexableEntity( "b", "bibliographic references", BibliographicReference.class ),
+            new IndexableEntity( "s", "probes", CompositeSequence.class ),
+            new IndexableEntity( "q", "sequences", BioSequence.class ),
+            new IndexableEntity( "x", "datasets groups", ExpressionExperimentSet.class ),
+            new IndexableEntity( "y", "gene sets", GeneSet.class )
+    };
+
+    @lombok.Value
+    private static class IndexableEntity {
+        String option;
+        String description;
+        Class<? extends Identifiable> clazz;
     }
+
+    @Autowired
+    private IndexerService indexerService;
+
+    @Value("${gemma.search.dir}")
+    private File searchDir;
+
+    private final Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
 
     @Override
     public String getCommandName() {
         return "searchIndex";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions( Options options ) {
-        Option geneOption = Option.builder( "g" ).desc( "Index genes" ).longOpt( "genes" ).build();
-        options.addOption( geneOption );
-
-        Option eeOption = Option.builder( "g" ).desc( "Index Expression Experiments" )
-                .longOpt( "ExpressionExperiments" ).build();
-        options.addOption( eeOption );
-
-        Option adOption = Option.builder( "a" ).desc( "Index Array Designs" ).longOpt( "ArrayDesigns" )
-                .build();
-        options.addOption( adOption );
-
-        Option bibliographicOption = Option.builder( "b" ).desc( "Index Bibliographic References" )
-                .longOpt( "Bibliographic" ).build();
-        options.addOption( bibliographicOption );
-
-        Option probeOption = Option.builder( "s" ).desc( "Index probes" ).longOpt( "probes" ).build();
-        options.addOption( probeOption );
-
-        Option sequenceOption = Option.builder( "q" ).desc( "Index sequences" ).longOpt( "sequences" )
-                .build();
-        options.addOption( sequenceOption );
-
-        options.addOption( Option.builder( "x" ).desc( "Index EE sets" ).longOpt( "eesets" ).build() );
-
-        options.addOption( Option.builder( "y" ).desc( "Index gene sets" ).longOpt( "genesets" ).build() );
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        /*
-         * These beans are defined in Spring XML.
-         */
-        if ( this.indexG ) {
-            this.rebuildIndex( this.getBean( "geneGps", CompassGpsInterfaceDevice.class ), "Gene index" );
-        }
-        if ( this.indexEE ) {
-            this.rebuildIndex( this.getBean( "expressionGps", CompassGpsInterfaceDevice.class ),
-                    "Expression Experiment index" );
-        }
-        if ( this.indexAD ) {
-            this.rebuildIndex( this.getBean( "arrayGps", CompassGpsInterfaceDevice.class ), "Array Design index" );
-        }
-        if ( this.indexB ) {
-            this.rebuildIndex( this.getBean( "bibliographicGps", CompassGpsInterfaceDevice.class ),
-                    "Bibliographic Reference Index" );
-        }
-        if ( this.indexP ) {
-            this.rebuildIndex( this.getBean( "probeGps", CompassGpsInterfaceDevice.class ),
-                    "Probe Reference Index" );
-        }
-        if ( this.indexQ ) {
-            this.rebuildIndex( this.getBean( "biosequenceGps", CompassGpsInterfaceDevice.class ),
-                    "BioSequence Index" );
-        }
-
-        if ( this.indexY ) {
-            this.rebuildIndex( this.getBean( "experimentSetGps", CompassGpsInterfaceDevice.class ),
-                    "Experiment set Index" );
-        }
-
-        if ( this.indexX ) {
-            this.rebuildIndex( this.getBean( "geneSetGps", CompassGpsInterfaceDevice.class ), "Gene set Index" );
-        }
     }
 
     @Override
@@ -128,41 +65,37 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'e' ) )
-            indexEE = true;
-
-        if ( commandLine.hasOption( 'a' ) )
-            indexAD = true;
-
-        if ( commandLine.hasOption( 'g' ) )
-            indexG = true;
-
-        if ( commandLine.hasOption( 'b' ) )
-            indexB = true;
-
-        if ( commandLine.hasOption( 's' ) )
-            indexP = true;
-
-        if ( commandLine.hasOption( 'q' ) )
-            indexQ = true;
-        if ( commandLine.hasOption( 'x' ) )
-            indexX = true;
-        if ( commandLine.hasOption( 'y' ) )
-            indexY = true;
-
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.SYSTEM;
     }
 
-    private void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
+    @Override
+    protected void buildOptions( Options options ) {
+        for ( IndexableEntity ie : indexableEntities ) {
+            options.addOption( ie.option, null, false, "Index " + ie.description );
+        }
+        addThreadsOption( options );
+    }
 
-        long time = System.currentTimeMillis();
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws Exception {
+        for ( IndexableEntity ie : indexableEntities ) {
+            if ( commandLine.hasOption( ie.option ) ) {
+                classesToIndex.add( ie.clazz );
+            }
+        }
+    }
 
-        AbstractCLI.log.info( "Rebuilding " + whatIndexingMsg );
-        CompassUtils.rebuildCompassIndex( device );
-        time = System.currentTimeMillis() - time;
-
-        AbstractCLI.log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
-        AbstractCLI.log.info( " \n " );
-
+    @Override
+    protected void doWork() throws Exception {
+        if ( classesToIndex.isEmpty() ) {
+            log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
+            indexerService.index( numThreads );
+        } else {
+            log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
+                    searchDir.getAbsolutePath(),
+                    classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
+            indexerService.index( classesToIndex, numThreads );
+        }
     }
 }

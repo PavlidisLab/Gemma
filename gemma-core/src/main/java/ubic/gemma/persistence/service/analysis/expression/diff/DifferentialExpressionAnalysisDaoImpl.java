@@ -20,10 +20,18 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.SQLQuery;
+import org.hibernate.SessionFactory;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.SessionImpl;
+import org.hibernate.jdbc.Expectations;
+import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -35,6 +43,9 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,9 +57,151 @@ import java.util.stream.Collectors;
 class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
+    /**
+     * Logger for manual SQL statements so they appear alongside Hibernate's.
+     */
+    private static final SqlStatementLogger statementLogger = new SqlStatementLogger();
+
+    private static final String
+            INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
+            INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)",
+            DELETE_RESULT_SQL = "delete from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT where ID = ?",
+            DELETE_CONTRAST_SQL = "delete from CONTRAST_RESULT where ID = ?";
+
+    private final EntityPersister resultPersister, contrastPersister;
+
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( DifferentialExpressionAnalysis.class, sessionFactory );
+        resultPersister = ( ( SessionFactoryImpl ) sessionFactory )
+                .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
+        contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
+                .getEntityPersister( ContrastResult.class.getName() );
+    }
+
+    /**
+     * Creating a full analysis with a single persist() is not efficient because Hibernate does not order inserts with
+     * MySQL 5.7 dialect. However, inserting in order and using 'rewriteBatchedStatements=true' will cause batch inserts
+     * to be performed.
+     * <p>
+     * FIXME: remove this method when <a href="https://github.com/PavlidisLab/Gemma/issues/825">#825</a> is resolve and
+     *        persist by cascade
+     * <p>
+     * To avoid updates of the DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in the CONTRAST_RESULT table, we manually
+     * insert results and contrasts with the generated IDs.
+     */
+    @Override
+    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis entity ) {
+        for ( ExpressionAnalysisResultSet rs : entity.getResultSets() ) {
+            Set<CompositeSequence> expectedProbes = rs.getResults().stream()
+                    .map( DifferentialExpressionAnalysisResult::getProbe )
+                    .collect( Collectors.toSet() );
+            // collect all the pairs of FVs that are used in the contrasts of the result set
+            // Gemma might not retain insignificant contrasts, so we hope that all the contrasts defined in the design
+            // appear at least once
+            Set<Pair<FactorValue, FactorValue>> expectedContrasts = rs.getResults().stream()
+                    .flatMap( r -> r.getContrasts().stream() )
+                    .map( cr2 -> Pair.of( cr2.getFactorValue(), cr2.getSecondFactorValue() ) )
+                    .collect( Collectors.toSet() );
+            if ( rs.getAnalysis() != entity ) {
+                throw new IllegalArgumentException( "The result set is not associated to its analysis." );
+            }
+            if ( rs.getPvalueDistribution() == null ) {
+                throw new IllegalArgumentException( "The result set must have a P-value distribution." );
+            }
+            if ( rs.getResults().size() != expectedProbes.size() ) {
+                throw new IllegalArgumentException();
+            }
+            for ( CompositeSequence cs : expectedProbes ) {
+                boolean found = false;
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                    if ( result.getProbe() == cs ) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( !found ) {
+                    throw new IllegalArgumentException( String.format( "The expected probe %s was not found in %s.", cs, rs ) );
+                }
+            }
+            for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                if ( result.getResultSet() != rs ) {
+                    throw new IllegalArgumentException( String.format( "%s is not associated to its result set.", result ) );
+                }
+                for ( ContrastResult cr : result.getContrasts() ) {
+                    boolean found = false;
+                    for ( Pair<FactorValue, FactorValue> ef : expectedContrasts ) {
+                        if ( cr.getFactorValue() == ef.getLeft() && cr.getSecondFactorValue() == ef.getRight() ) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if ( !found ) {
+                        throw new IllegalArgumentException( String.format( "%s has unexpected contrast %s: it does not share its FVs with other contrasts of the result set.", result, cr ) );
+                    }
+                }
+            }
+        }
+
+        // create the analysis, result sets, pvalue distributions, etc.
+        DifferentialExpressionAnalysis finalEntity = super.create( entity );
+
+        getSessionFactory().getCurrentSession().doWork( work -> {
+            PreparedStatement insertResultStmt = work.prepareStatement( INSERT_RESULT_SQL );
+            PreparedStatement insertContrastStmt = work.prepareStatement( INSERT_CONTRAST_SQL );
+            int numResults = 0;
+            int numContrasts = 0;
+            for ( ExpressionAnalysisResultSet rs : finalEntity.getResultSets() ) {
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                    result.setId( ( Long ) resultPersister.getIdentifierGenerator().generate( ( SessionImpl ) getSessionFactory().getCurrentSession(), result ) );
+                    insertResultStmt.setLong( 1, result.getId() );
+                    insertResultStmt.setObject( 2, result.getPvalue(), Types.DOUBLE );
+                    insertResultStmt.setObject( 3, result.getCorrectedPvalue(), Types.DOUBLE );
+                    insertResultStmt.setObject( 4, result.getRank(), Types.DOUBLE );
+                    insertResultStmt.setObject( 5, result.getCorrectedPValueBin(), Types.INTEGER );
+                    insertResultStmt.setLong( 6, result.getProbe().getId() );
+                    insertResultStmt.setLong( 7, rs.getId() );
+                    insertResultStmt.addBatch();
+                    numResults++;
+                    for ( ContrastResult cr : result.getContrasts() ) {
+                        cr.setId( ( Long ) contrastPersister.getIdentifierGenerator().generate( ( SessionImpl ) getSessionFactory().getCurrentSession(), cr ) );
+                        insertContrastStmt.setLong( 1, cr.getId() );
+                        insertContrastStmt.setObject( 2, cr.getPvalue(), Types.DOUBLE );
+                        insertContrastStmt.setObject( 3, cr.getTstat(), Types.DOUBLE );
+                        if ( cr.getFactorValue() != null ) {
+                            insertContrastStmt.setLong( 4, cr.getFactorValue().getId() );
+                        } else {
+                            insertContrastStmt.setNull( 4, Types.BIGINT );
+                        }
+                        insertContrastStmt.setLong( 5, result.getId() );
+                        insertContrastStmt.setObject( 6, cr.getCoefficient(), Types.DOUBLE );
+                        insertContrastStmt.setObject( 7, cr.getLogFoldChange(), Types.DOUBLE );
+                        if ( cr.getSecondFactorValue() != null ) {
+                            insertContrastStmt.setLong( 8, cr.getSecondFactorValue().getId() );
+                        } else {
+                            insertContrastStmt.setNull( 8, Types.BIGINT );
+                        }
+                        insertContrastStmt.addBatch();
+                        numContrasts++;
+                    }
+                }
+            }
+
+            statementLogger.logStatement( INSERT_RESULT_SQL + String.format( " [repeated %d times]", numResults ) );
+            ensureExpectedRowsAreInserted( insertResultStmt, insertResultStmt.executeBatch() );
+            statementLogger.logStatement( INSERT_CONTRAST_SQL + String.format( " [repeated %d times]", numContrasts ) );
+            ensureExpectedRowsAreInserted( insertContrastStmt, insertContrastStmt.executeBatch() );
+        } );
+
+        return finalEntity;
+    }
+
+    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
+            HibernateException, SQLException {
+        int i = 0;
+        for ( int bs : batchStatus ) {
+            Expectations.BASIC.verifyOutcome( bs, statement, i++ );
+        }
     }
 
     @Override
@@ -443,15 +596,29 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
     @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "analysis cannot be null" );
-        }
-
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        super.remove( ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
-
-        flush();
+        this.getSessionFactory().getCurrentSession().doWork( work -> {
+            PreparedStatement deleteContrast = work.prepareStatement( DELETE_CONTRAST_SQL );
+            PreparedStatement deleteResult = work.prepareStatement( DELETE_RESULT_SQL );
+            int numResults = 0;
+            int numContrasts = 0;
+            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
+                    deleteResult.setLong( 1, result.getId() );
+                    deleteResult.addBatch();
+                    numResults++;
+                    for ( ContrastResult cr : result.getContrasts() ) {
+                        deleteContrast.setLong( 1, cr.getId() );
+                        deleteContrast.addBatch();
+                        numContrasts++;
+                    }
+                }
+            }
+            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_CONTRAST_SQL, numContrasts ) );
+            ensureExpectedRowsAreInserted( deleteContrast, deleteContrast.executeBatch() );
+            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_RESULT_SQL, numResults ) );
+            ensureExpectedRowsAreInserted( deleteResult, deleteResult.executeBatch() );
+        } );
+        super.remove( analysis );
     }
 
     @Override
@@ -478,7 +645,8 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     }
 
     @Override
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends BioAssaySet> experiments ) {
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends
+            BioAssaySet> experiments ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
         //noinspection unchecked

@@ -266,6 +266,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return arrayDesignDao.loadValueObjectsWithCache( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
         return this.arrayDesignDao.isMerged( ids );
     }

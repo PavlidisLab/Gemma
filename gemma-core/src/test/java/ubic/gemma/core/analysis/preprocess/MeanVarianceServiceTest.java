@@ -33,7 +33,6 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -76,16 +75,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     private AclTestUtils aclTestUtils;
 
     private ExpressionExperiment ee;
-    private QuantitationType qt;
 
     @After
     public void after() {
         if ( ee != null ) {
-            try {
-                eeService.remove( ee );
-            } catch ( ObjectNotFoundException e ) {
-                Assume.assumeNoException( e );
-            }
+            eeService.remove( ee );
         }
     }
 
@@ -94,7 +88,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     final public void testServiceCreateTwoColor() throws Exception {
         prepareGSE2892();
 
-        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+        QuantitationType qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -145,7 +139,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     final public void testServiceCreateOneColor() throws Exception {
         prepareGSE2892();
 
-        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+        QuantitationType qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -214,7 +208,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             Assume.assumeNoException( e );
         }
 
-        qt = this.createOrUpdateQt( ScaleType.COUNT );
+        this.createOrUpdateQt( ScaleType.COUNT );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -323,13 +317,13 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             qt.setIsBackgroundSubtracted( false );
             qt.setIsBatchCorrected( false );
             qt.setIsRecomputedFromRawData( false );
-            quantitationTypeService.create( qt );
+            qt = quantitationTypeService.create( qt );
             ee.getQuantitationTypes().add( qt );
         } else {
             qt.setScale( scale );
             quantitationTypeService.update( qt );
         }
-        return this.qt;
+        return qt;
     }
 
     private void prepareGSE2892() throws Exception {
@@ -346,7 +340,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // scale is not correctly recorded.
         ee = ( ExpressionExperiment ) results.iterator().next();
-        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+        QuantitationType qt = this.createOrUpdateQt( ScaleType.LOG2 );
+        assertNotNull( qt );
 
         // not parsed properly
         ArrayDesign ad = eeService.getArrayDesignsUsed( ee ).iterator().next();

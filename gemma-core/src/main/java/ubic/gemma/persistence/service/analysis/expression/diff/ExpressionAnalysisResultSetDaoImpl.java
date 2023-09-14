@@ -20,7 +20,10 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -39,12 +42,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,6 +61,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
+    }
+
+    @Override
+    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet entity ) {
+        throw new UnsupportedOperationException( "Individual result sets cannot be created directly, use DifferentialExpressionAnalysisDao.create() instead." );
+    }
+
+    @Override
+    public void remove( ExpressionAnalysisResultSet entity ) {
+        throw new UnsupportedOperationException( "Individual result sets cannot be removed directly, use DifferentialExpressionAnalysisDao.remove() instead." );
     }
 
     @Override
@@ -88,47 +99,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         "select a from GeneDifferentialExpressionMetaAnalysis a"
                                 + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
                 .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
-    }
-
-    @Override
-    public void remove( ExpressionAnalysisResultSet resultSet ) {
-        // flush any pending changes before running a bulk query
-        Session session = this.getSessionFactory().getCurrentSession();
-        session.flush();
-
-        // Remove results - Not using DifferentialExpressionResultDaoImpl.remove() for speed
-        {
-            int contrastsDone = 0;
-            int resultsDone = 0;
-
-            AbstractDao.log.info( "Bulk removing dea results..." );
-
-            // Delete contrasts
-            //language=MySQL
-            final String nativeDeleteContrastsQuery =
-                    "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                            + " WHERE d.RESULT_SET_FK = :rsid AND d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
-            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
-            q.setParameter( "rsid", resultSet.getId() );
-            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
-
-            // Delete AnalysisResults
-            //language=MySQL
-            String nativeDeleteARQuery = "DELETE d FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d WHERE d.RESULT_SET_FK = :rsid  ";
-            q = session.createSQLQuery( nativeDeleteARQuery );
-            q.setParameter( "rsid", resultSet.getId() );
-            resultsDone += q.executeUpdate();
-
-            AbstractDao.log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results. Flushing..." );
-        }
-
-        // clear manually removed result sets
-        resultSet.setResults( new HashSet<>() );
-
-        // Remove result set
-        AbstractDao.log.info( "Removing result set " + resultSet.getId() );
-        super.remove( resultSet );
-        flush();
     }
 
     @Override

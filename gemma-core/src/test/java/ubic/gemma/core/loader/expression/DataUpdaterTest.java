@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -205,6 +206,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testLoadRNASeqData() throws Exception {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );

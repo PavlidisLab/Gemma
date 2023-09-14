@@ -23,7 +23,10 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.With;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.springframework.context.MessageSourceResolvable;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -34,6 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,6 +54,7 @@ public class SearchSettings implements Serializable {
     public static final char
             WILDCARD_CHAR = '*',
             SINGLE_WILDCARD_CHAR = '?';
+
 
     public enum SearchMode {
         /**
@@ -203,7 +208,7 @@ public class SearchSettings implements Serializable {
      * A custom highlighter.
      */
     @Nullable
-    private Highlighter highlighter;
+    private transient Highlighter highlighter;
 
     /**
      * Get this query, trimmed.
@@ -274,14 +279,19 @@ public class SearchSettings implements Serializable {
     /**
      * Highlight a given ontology term.
      * <p>
-     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, Class)}
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, String)}
      * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
-    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
-        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    public Map<String, String> highlightTerm( String termUri, String termLabel, String field ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, field ) : null;
+    }
+
+    @Nullable
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, Set<String> fields ) {
+        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
     }
 
     @Override

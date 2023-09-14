@@ -18,10 +18,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
 
+@Indexed
 public class GeneAlias implements Identifiable, Serializable {
 
     /**
@@ -59,6 +64,7 @@ public class GeneAlias implements Identifiable, Serializable {
         return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
+    @Field(analyze = Analyze.NO)
     public String getAlias() {
         return this.alias;
     }
@@ -68,6 +74,7 @@ public class GeneAlias implements Identifiable, Serializable {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return this.id;
     }

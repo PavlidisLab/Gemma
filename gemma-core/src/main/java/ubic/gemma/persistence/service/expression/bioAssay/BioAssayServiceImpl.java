@@ -90,10 +90,6 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
         this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
     }
 
-    /**
-     * @return
-     * @see BioAssayService#thaw(BioAssay)
-     */
     @Override
     @Transactional(readOnly = true)
     public BioAssay thaw( BioAssay bioAssay ) {

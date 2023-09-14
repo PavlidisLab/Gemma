@@ -281,6 +281,10 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
+        if ( characteristics.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+
         Set<Long> characteristicIds = characteristics.stream().map( Characteristic::getId ).collect( Collectors.toSet() );
         Class<?>[] classes = { BioMaterial.class, BibliographicReference.class, ExpressionExperiment.class, ExperimentalDesign.class, ExperimentalFactor.class, PhenotypeAssociation.class, FactorValue.class, GeneSet.class };
         String[] foreignKeys = { "BIO_MATERIAL_FK", "BIBLIOGRAPHIC_REFERENCE_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "EXPERIMENTAL_FACTOR_FK", "PHENOTYPE_ASSOCIATION_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };

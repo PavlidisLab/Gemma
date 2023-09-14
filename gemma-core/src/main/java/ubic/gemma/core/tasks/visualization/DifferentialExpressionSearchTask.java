@@ -1,6 +1,5 @@
 package ubic.gemma.core.tasks.visualization;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
@@ -10,4 +9,4 @@ import ubic.gemma.core.tasks.Task;
  * Time: 10:08 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface DifferentialExpressionSearchTask extends Task<TaskResult, DifferentialExpressionSearchTaskCommand> {}
+public interface DifferentialExpressionSearchTask extends Task<DifferentialExpressionSearchTaskCommand> {}

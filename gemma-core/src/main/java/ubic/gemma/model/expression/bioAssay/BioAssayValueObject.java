@@ -63,7 +63,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean sequencePairedReads;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Integer sequenceReadCount;
+    private Long sequenceReadCount;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer sequenceReadLength;
 
@@ -200,7 +200,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         return sequencePairedReads;
     }
 
-    public Integer getSequenceReadCount() {
+    public Long getSequenceReadCount() {
         return sequenceReadCount;
     }
 
@@ -271,7 +271,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         this.sequencePairedReads = sequencePairedReads;
     }
 
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
+    public void setSequenceReadCount( Long sequenceReadCount ) {
         this.sequenceReadCount = sequenceReadCount;
     }
 

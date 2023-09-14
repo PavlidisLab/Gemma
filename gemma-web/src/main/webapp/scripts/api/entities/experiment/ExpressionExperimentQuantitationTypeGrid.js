@@ -81,7 +81,7 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
             var downloadQuantitationUrl;
             if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector' ) {
-               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed?quantitationType=' + record.data.id;
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed';
             } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector' ) {
                downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id;
             }

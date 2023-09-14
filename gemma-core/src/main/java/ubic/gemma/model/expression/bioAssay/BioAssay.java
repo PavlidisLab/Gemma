@@ -19,11 +19,13 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
@@ -33,15 +35,19 @@ import java.util.Date;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
+@Indexed
 public class BioAssay extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
 
     private static final long serialVersionUID = -7868768731812964045L;
 
-    private Boolean sequencePairedReads = false;
     private Boolean isOutlier = false;
     private Date processingDate;
-    private Integer sequenceReadCount;
+    @Nullable
+    private Long sequenceReadCount;
+    @Nullable
     private Integer sequenceReadLength;
+    @Nullable
+    private Boolean sequencePairedReads;
 
     private ArrayDesign arrayDesignUsed;
 
@@ -93,6 +99,25 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
                 .equals( that.getDescription() );
     }
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    @Field(store = Store.YES)
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
@@ -101,7 +126,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.accession = accession;
     }
 
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign getArrayDesignUsed() {
+    public ArrayDesign getArrayDesignUsed() {
         return this.arrayDesignUsed;
     }
 
@@ -134,6 +159,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.processingDate = processingDate;
     }
 
+    @IndexedEmbedded
     public BioMaterial getSampleUsed() {
         return this.sampleUsed;
     }
@@ -153,11 +179,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         otherwise.
      *         It should be left as null if it isn't known.
      */
+    @Nullable
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
     }
 
-    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+    public void setSequencePairedReads( @Nullable Boolean sequencePairedReads ) {
         this.sequencePairedReads = sequencePairedReads;
     }
 
@@ -166,11 +193,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         total of the
      *         values for the elements assayed.
      */
-    public Integer getSequenceReadCount() {
+    @Nullable
+    public Long getSequenceReadCount() {
         return this.sequenceReadCount;
     }
 
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
+    public void setSequenceReadCount( @Nullable Long sequenceReadCount ) {
         this.sequenceReadCount = sequenceReadCount;
     }
 
@@ -180,11 +208,12 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
      *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
      *         representing the mean read length.
      */
+    @Nullable
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;
     }
 
-    public void setSequenceReadLength( Integer sequenceReadLength ) {
+    public void setSequenceReadLength( @Nullable Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
     }
 

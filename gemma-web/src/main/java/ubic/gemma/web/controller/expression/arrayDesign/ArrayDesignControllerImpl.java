@@ -55,6 +55,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -304,12 +306,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds == null || arrayDesignIds.length == 0 ) {
-            result.addAll( arrayDesignService.loadAllValueObjects() );
+            result.addAll( arrayDesignService.loadValueObjectsWithCache( null, null ) );
 
         } else {// if ids are specified, then display only those arrayDesigns
 
             Collection<Long> adCol = new LinkedList<>( Arrays.asList( arrayDesignIds ) );
-            result.addAll( arrayDesignService.loadValueObjectsByIds( adCol ) );
+            result.addAll( arrayDesignService.loadValueObjectsWithCache( Filters.by( arrayDesignService.getFilter( "id", Long.class, Filter.Operator.in, adCol ) ), null ) );
         }
 
         // Filter...
@@ -450,28 +452,20 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     public String getSummaryForArrayDesign( Long id ) {
-
-        Collection<Long> ids = new ArrayList<>();
-        ids.add( id );
-        Collection<ArrayDesignValueObject> adVos = arrayDesignService.loadValueObjectsByIds( ids );
-        arrayDesignReportService.fillInValueObjects( adVos );
-
-        if ( !adVos.isEmpty() && adVos.toArray()[0] != null ) {
-            ArrayDesignValueObject advo = ( ArrayDesignValueObject ) adVos.toArray()[0];
-            StringBuilder buf = new StringBuilder();
-
-            buf.append( "<div style=\"float:left\" >" );
-
-            if ( advo.getNumProbeAlignments() != null ) {
-                buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
-            } else {
-                buf.append( "[Not avail.]" );
-            }
-
-            buf.append( "</div>" );
-            return buf.toString();
+        ArrayDesignValueObject advo = arrayDesignService.loadValueObjectById( id );
+        if ( advo == null ) {
+            return "[Not avail.]";
         }
-        return "[Not avail.]";
+        arrayDesignReportService.fillInValueObjects( Collections.singleton( advo ) );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "<div style=\"float:left\" >" );
+        if ( advo.getNumProbeAlignments() != null ) {
+            buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
+        } else {
+            buf.append( "[Not avail.]" );
+        }
+        buf.append( "</div>" );
+        return buf.toString();
     }
 
     @Override
@@ -672,7 +666,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for building array design summary
      */
-    class GenerateArraySummaryLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+    class GenerateArraySummaryLocalTask extends AbstractTask<TaskCommand> {
 
         public GenerateArraySummaryLocalTask( TaskCommand command ) {
             super( command );
@@ -697,7 +691,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+    class RemoveArrayLocalTask extends AbstractTask<TaskCommand> {
 
         public RemoveArrayLocalTask( TaskCommand command ) {
             super( command );

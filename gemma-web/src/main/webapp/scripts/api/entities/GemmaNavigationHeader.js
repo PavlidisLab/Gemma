@@ -173,6 +173,11 @@ Gemma.GemmaNavigationHeader = Ext
                    */
                   {
                      text : 'Browse Datasets',
+                     href : ctxBasePath + "/browse",
+                     tooltip : "View the list of Gemma's expression data sets"
+                  },
+                  {
+                     text : 'Browse Datasets (legacy)',
                      href : ctxBasePath + "/expressionExperiment/showAllExpressionExperiments.html",
                      tooltip : "View the list of Gemma's expression data sets"
                   },

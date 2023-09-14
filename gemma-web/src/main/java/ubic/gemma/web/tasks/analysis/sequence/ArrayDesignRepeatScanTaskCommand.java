@@ -19,7 +19,6 @@
 package ubic.gemma.web.tasks.analysis.sequence;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -62,7 +61,7 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return ArrayDesignRepeatScanTask.class;
     }
 }

@@ -15,7 +15,6 @@
 package ubic.gemma.core.tasks.analysis.expression;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -51,7 +50,7 @@ public class SvdTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return SvdTask.class;
     }
 

@@ -20,19 +20,16 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,38 +56,17 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     public void remove( ExperimentalFactor experimentalFactor ) {
         ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
 
-        //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
+        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
+        ed.getExperimentalFactors().remove( experimentalFactor );
+
+        // remove associations with the experimental factor values in related expression experiments
         //noinspection unchecked
-        List<ExpressionExperiment> results = getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameter( "ed", ed )
+        List<BioMaterial> bioMaterials = getSessionFactory().getCurrentSession()
+                .createQuery( "select bm from BioMaterial as bm join bm.factorValues fv where fv.experimentalFactor = :ef group by bm" )
+                .setParameter( "ef", experimentalFactor )
                 .list();
-
-        if ( results.isEmpty() ) {
-            log.warn( "No expression experiment for experimental design " + ed );
-        }
-
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        // remove associations with the experimental factor in related expression experiments
-        for ( ExpressionExperiment ee : results ) {
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                BioMaterial bm = ba.getSampleUsed();
-
-                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
-                for ( FactorValue factorValue : bm.getFactorValues() ) {
-                    if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
-                        factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    }
-                }
-
-                // if there are factor values to remove
-                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                    session.update( bm );
-                }
-            }
+        for ( BioMaterial bm : bioMaterials ) {
+            bm.getFactorValues().removeAll( experimentalFactor.getFactorValues() );
         }
 
         // remove the experimental factor this cascades to values.

@@ -6,12 +6,12 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.search.Highlighter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,10 +26,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,14 +56,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * Obtain a {@link Filter} for the result of a {@link ExpressionExperiment} search.
-     * <p>
-     * The filter is a restriction over the EE IDs.
-     *
-     * @param query    query
-     * @param _results destination for the search results
+     * Obtain the search results for a given query and highlighter.
+     * @param highlighter a highlighter to use for the query or null to ignore
+     * @throws BadRequestException if the query is empty
      */
-    public Filter getFilterForSearchQuery( String query, @Nullable Highlighter highlighter, @Nullable List<SearchResult<ExpressionExperiment>> _results ) {
+    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( String query, @Nullable Highlighter highlighter ) throws BadRequestException {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -77,31 +71,34 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                     .highlighter( highlighter )
                     .fillResults( false )
                     .build();
-            List<SearchResult<ExpressionExperiment>> results = searchService.search( settings )
-                    .getByResultObjectType( ExpressionExperiment.class )
-                    .stream()
-                    .collect( Collectors.toList() );
-            if ( _results != null ) {
-                _results.addAll( results );
-            }
-            Set<Long> ids = results.stream()
-                    .map( SearchResult::getResultId )
-                    .collect( Collectors.toSet() );
-            if ( ids.isEmpty() ) {
-                return service.getFilter( "id", Long.class, Filter.Operator.eq, -1L );
-            } else {
-                return service.getFilter( "id", Long.class, Filter.Operator.in, ids );
-            }
+            return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
         } catch ( SearchException e ) {
             throw new MalformedArgException( "Invalid search query.", e );
         }
     }
 
     /**
-     * @see #getFilterForSearchQuery(String, Highlighter, List)
+     * Obtain a {@link Filter} for the result of a {@link ExpressionExperiment} search.
+     * <p>
+     * The filter is a restriction over the EE IDs.
+     *
+     * @param query     query
+     * @param scoreById if non-null, a destination for storing the scores by result ID
+     * @throws BadRequestException if the query is empty
      */
-    public Filter getFilterForSearchQuery( String query ) {
-        return getFilterForSearchQuery( query, null, null );
+    public Filter getFilterForSearchQuery( String query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
+        List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
+        if ( scoreById != null ) {
+            for ( SearchResult<ExpressionExperiment> result : _results ) {
+                scoreById.put( result.getResultId(), result.getScore() );
+            }
+        }
+        Set<Long> ids = _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
+        if ( ids.isEmpty() ) {
+            return service.getFilter( "id", Long.class, Filter.Operator.eq, -1L );
+        } else {
+            return service.getFilter( "id", Long.class, Filter.Operator.in, ids );
+        }
     }
 
     /**

@@ -43,7 +43,8 @@ public class OntologyControllerTest extends BaseSpringWebTest {
     @Test
     public void testGetMissingTerm() throws Exception {
         mvc.perform( get( "/ont/TGEMO_02312312" ) )
-                .andExpect( view().name( "error" ) )
+                .andExpect( status().isNotFound() )
+                .andExpect( view().name( "error/404" ) )
                 .andExpect( model().attribute( "exception", instanceOf( EntityNotFoundException.class ) ) );
     }
 }

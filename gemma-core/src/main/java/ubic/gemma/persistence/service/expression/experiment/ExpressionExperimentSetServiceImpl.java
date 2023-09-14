@@ -404,6 +404,12 @@ public class ExpressionExperimentSetServiceImpl
         super.update( expressionExperimentSet );
     }
 
+    @Override
+    @Transactional
+    public void update( Collection<ExpressionExperimentSet> entities ) {
+        entities.forEach( this::update );
+    }
+
     private String getMasterSetName( Taxon taxon ) {
         return "Master set for " + taxon.getCommonName();
     }

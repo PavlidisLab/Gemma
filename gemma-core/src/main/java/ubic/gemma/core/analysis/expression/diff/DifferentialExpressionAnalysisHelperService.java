@@ -26,10 +26,6 @@ import java.util.Collection;
  */
 public interface DifferentialExpressionAnalysisHelperService {
 
-    void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
-
-    ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
-
     DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
 
 }

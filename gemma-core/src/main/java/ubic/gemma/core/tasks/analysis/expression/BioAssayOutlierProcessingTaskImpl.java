@@ -20,7 +20,7 @@ import java.util.HashSet;
  */
 @Component
 @Scope("prototype")
-public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, BioAssayOutlierProcessingTaskCommand>
+public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<BioAssayOutlierProcessingTaskCommand>
         implements BioAssayOutlierProcessingTask {
 
     @Autowired

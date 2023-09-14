@@ -229,7 +229,7 @@ public class AnnotationsWebService {
     @Path("/{taxon}/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search",
-            description = "Use getDatasets() with a `filter` query parameter with `taxon.id = {taxon}` or `taxon.commonName = {taxon} or taxon.scientificName = {taxon}` instead.",
+            description = "Use getDatasets() with a `query` parameter and a `filter` parameter with `taxon.id = {taxon} or taxon.commonName = {taxon} or taxon.scientificName = {taxon}` to restrict the taxon instead.",
             deprecated = true,
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "FilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject"))),

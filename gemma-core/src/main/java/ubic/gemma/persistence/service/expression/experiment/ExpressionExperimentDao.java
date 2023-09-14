@@ -199,6 +199,11 @@ public interface ExpressionExperimentDao
     Taxon getTaxon( BioAssaySet ee );
 
     /**
+     * Load datasets by IDs with the same relation as {@link #loadWithCache(Filters, Sort)}.
+     */
+    List<ExpressionExperiment> loadWithRelationsAndCache( List<Long> ids );
+
+    /**
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
@@ -232,8 +237,6 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> loadLackingTags();
 
-    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     void thaw( ExpressionExperiment expressionExperiment );
 
     void thawWithoutVectors( ExpressionExperiment expressionExperiment );
@@ -261,7 +264,7 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
      * Special indicator for an uncategorized term.
