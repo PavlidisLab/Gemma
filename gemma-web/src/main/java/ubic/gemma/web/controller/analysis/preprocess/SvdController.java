@@ -26,6 +26,7 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * Run SVD on a data set.
@@ -50,7 +51,7 @@ public class SvdController {
             throw new IllegalArgumentException( "ID cannot be null" );
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null )
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
         experimentReportService.evictFromCache( id );

@@ -43,7 +43,6 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -72,7 +71,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         String pubMedId = request.getParameter( "accession" ); // FIXME: allow use of the primary key as well.
 
         if ( StringUtils.isBlank( pubMedId ) ) {
-            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+            throw new IllegalArgumentException( "Must provide a PubMed Id" );
         }
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
@@ -135,7 +134,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         if ( pubMedId == null ) {
             // should be a validation error.
-            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+            throw new IllegalArgumentException( "Must provide a PubMed Id" );
         }
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
@@ -159,7 +158,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         if ( returnVal.getRecords() != null && !returnVal.getRecords().isEmpty() ) {
             return returnVal.getRecords().iterator().next();
         }
-        throw new InvalidParameterException( "Error retrieving bibliographic reference for id = " + id );
+        throw new EntityNotFoundException( "Error retrieving bibliographic reference for id = " + id );
 
     }
 
@@ -210,7 +209,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         // FIXME: allow use of the primary key as well.
 
         if ( StringUtils.isBlank( pubMedId ) && StringUtils.isBlank( gemmaId ) ) {
-            throw new EntityNotFoundException( "Must provide a gamma database id or a PubMed id" );
+            throw new IllegalArgumentException( "Must provide a gamma database id or a PubMed id" );
         }
 
         if ( !StringUtils.isBlank( gemmaId ) ) {

@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -174,10 +175,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         BaseFormController.log.debug( id );
         ExpressionExperimentEditValueObject obj;
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException.class );
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -234,11 +232,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             BindException errors ) {
 
         ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
-
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Could not load experiment" );
-        }
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadOrFail( eeCommand.getId(), EntityNotFoundException.class );
 
         expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 

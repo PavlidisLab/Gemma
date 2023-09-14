@@ -250,9 +250,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     public void removeForExperiment( BioAssaySet ee ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByExperiment( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            this.remove( de );
-        }
+        this.remove( diffAnalyses );
     }
 
     @Override

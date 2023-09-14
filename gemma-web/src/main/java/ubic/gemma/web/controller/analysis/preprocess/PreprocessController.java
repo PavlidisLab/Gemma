@@ -25,6 +25,7 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * A controller to pre-process expression data (including updating diagnostics)
@@ -47,7 +48,7 @@ public class PreprocessController {
      * Update the processed data vectors as well as diagnostics
      *
      * @param  id of the experiment
-     * @return    status
+     * @return status
      */
     public String run( Long id ) {
         if ( id == null )
@@ -55,7 +56,7 @@ public class PreprocessController {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null )
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -68,7 +69,7 @@ public class PreprocessController {
      * Only update the daignostics
      *
      * @param  id of experiment
-     * @return    status
+     * @return status
      */
     public String diagnostics( Long id ) {
         if ( id == null )
@@ -76,7 +77,7 @@ public class PreprocessController {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null )
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
 

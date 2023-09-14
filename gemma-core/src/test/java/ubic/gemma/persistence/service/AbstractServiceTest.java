@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 @ContextConfiguration
 public class AbstractServiceTest extends BaseDatabaseTest {
@@ -42,6 +43,37 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     private MyService myService;
 
     private int i = 0;
+
+    public static class ExceptionWithoutMessage extends Exception {
+
+        public ExceptionWithoutMessage() {
+        }
+    }
+
+    public static class ExceptionWithMessage extends Exception {
+
+        public ExceptionWithMessage( String message ) {
+            super( message );
+        }
+    }
+
+    @Test
+    public void testLoadOrFail() {
+        try {
+            myService.loadOrFail( 12L, ExceptionWithoutMessage.class );
+            failBecauseExceptionWasNotThrown( ExceptionWithoutMessage.class );
+        } catch ( ExceptionWithoutMessage e ) {
+            assertThat( e ).hasMessage( null );
+        }
+        try {
+            myService.loadOrFail( 12L, ExceptionWithMessage.class );
+            failBecauseExceptionWasNotThrown( ExceptionWithMessage.class );
+        } catch ( ExceptionWithMessage e ) {
+            assertThat( e )
+                    .hasMessageContaining( "ExternalDatabase" )
+                    .hasMessageContaining( "12" );
+        }
+    }
 
     @Test
     public void testEnsureInSession() {

@@ -9,6 +9,7 @@ import ubic.gemma.model.common.Identifiable;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
@@ -98,6 +99,26 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     public O loadOrFail( Long id ) {
         return requireNonNull( mainDao.load( id ),
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+    }
+
+    @Nonnull
+    @Override
+    public <T extends Exception> O loadOrFail( Long id, Class<T> exceptionClass ) throws T {
+        O entity = mainDao.load( id );
+        if ( entity == null ) {
+            try {
+                try {
+                    throw exceptionClass.getConstructor( String.class )
+                            .newInstance( String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+                } catch ( NoSuchMethodException e ) {
+                    log.warn( "%s does not accept a ..." );
+                    throw exceptionClass.newInstance();
+                }
+            } catch ( InstantiationException | IllegalAccessException | InvocationTargetException e ) {
+                throw new RuntimeException( String.format( "Failed to initialize exception class %s.", exceptionClass.getName() ), e );
+            }
+        }
+        return entity;
     }
 
     @Override

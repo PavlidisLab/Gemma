@@ -294,7 +294,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Invalid ID: " + sId );
+            throw new IllegalArgumentException( "Invalid ID: " + sId );
         }
 
     }
@@ -566,7 +566,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( arrayDesignIdStr == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a platform name or Id" );
+            throw new IllegalArgumentException( "Must provide a platform name or Id" );
         }
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
@@ -575,7 +575,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( !AJAX ) {
             Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getDesignSummaries( arrayDesign );
             if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-                throw new RuntimeException( "No probes found for " + arrayDesign );
+                throw new EntityNotFoundException( "No probes found for " + arrayDesign );
             }
             mav.addObject( "sequenceData", compositeSequenceSummary );
             mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
@@ -701,7 +701,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         public TaskResult call() {
             ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
             if ( ad == null ) {
-                throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
+                throw new EntityNotFoundException( "Could not load platform with id=" + taskCommand.getEntityId() );
             }
             arrayDesignService.remove( ad );
             return new TaskResult( taskCommand,

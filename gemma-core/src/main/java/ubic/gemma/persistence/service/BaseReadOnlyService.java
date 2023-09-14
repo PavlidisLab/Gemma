@@ -6,6 +6,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Interface for read-only services.
@@ -25,9 +26,15 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     @CheckReturnValue
     O find( O entity );
 
+    /**
+     * Does a search for the entity in the persistent storage, raising a {@link NullPointerException} if not found.
+     * @param entity the entity to be searched for
+     * @return the version of entity retrieved from persistent storage
+     * @throws NullPointerException if the entity is not found
+     */
     @Nonnull
     @CheckReturnValue
-    O findOrFail( O entity );
+    O findOrFail( O entity ) throws NullPointerException;
 
     /**
      * Loads objects with given ids.
@@ -54,6 +61,9 @@ public interface BaseReadOnlyService<O extends Identifiable> {
      */
     @Nonnull
     O loadOrFail( Long id ) throws NullPointerException;
+
+    @Nonnull
+    <T extends Exception> O loadOrFail( Long id, Class<T> exceptionClass ) throws T;
 
     /**
      * Loads all the entities of specific type.
