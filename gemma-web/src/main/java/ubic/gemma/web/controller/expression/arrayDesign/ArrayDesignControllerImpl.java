@@ -63,7 +63,6 @@ import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
@@ -107,10 +106,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
-        ArrayDesign ad = arrayDesignService.load( arrayDesignId );
-        if ( ad == null ) {
-            throw new IllegalArgumentException( "No such platform with id=" + arrayDesignId );
-        }
+        ArrayDesign ad = arrayDesignService.loadOrFail( arrayDesignId, EntityNotFoundException::new, "No such platform with id=" + arrayDesignId );
 
         if ( StringUtils.isBlank( alternateName ) ) {
             return formatAlternateNames( ad );
@@ -143,30 +139,14 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     @RequestMapping("/deleteArrayDesign.html")
-    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String stringId = request.getParameter( "id" );
-
-        if ( stringId == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( "Must provide an id" );
-        }
-
-        Long id;
-        try {
-            id = Long.parseLong( stringId );
-        } catch ( NumberFormatException e ) {
-            throw new EntityNotFoundException( "Identifier was invalid" );
-        }
-
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-        if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( "Platform with id=" + id + " not found" );
-        }
+    public ModelAndView delete( @RequestParam("id") Long id ) {
+        ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id,
+                EntityNotFoundException::new, "Platform with id=" + id + " not found" );
 
         // check that no EE depend on the arraydesign we want to remove
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
-        if ( assays.size() != 0 ) {
+        if ( !assays.isEmpty() ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
                             + " can't be deleted. Dataset has a dependency on this Array." );
@@ -221,12 +201,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     @RequestMapping("/filterArrayDesigns.html")
-    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-
+    public ModelAndView filter( @RequestParam("filter") String filter ) {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
-
-        String filter = request.getParameter( "filter" );
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
@@ -234,7 +211,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult<ArrayDesign>> searchResults = null;
+        Collection<SearchResult<ArrayDesign>> searchResults;
         try {
             searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
                     .getByResultObjectType( ArrayDesign.class );
@@ -243,7 +220,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "Invalid search settings: " + e.getMessage() );
         }
 
-        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+        if ( ( searchResults == null ) || ( searchResults.isEmpty() ) ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "No search criteria provided" );
 
@@ -264,7 +241,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         overallWatch.stop();
-        Long overallElapsed = overallWatch.getTime();
+        long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
         return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list, true ) )
@@ -274,29 +251,20 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     @RequestMapping("/generateArrayDesignSummary.html")
-    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-
+    public ModelAndView generateSummary( @RequestParam(value = "id", required = false) Long id ) {
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         GenerateArraySummaryLocalTask job;
-        if ( StringUtils.isBlank( sId ) ) {
+        if ( id == null ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitTask( job );
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "taskId", taskId );
         }
 
-        try {
-            Long id = Long.parseLong( sId );
-            job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
-            String taskId = taskRunningService.submitTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
-                    .addObject( "taskId", taskId );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Invalid ID: " + sId );
-        }
-
+        job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
+        String taskId = taskRunningService.submitTask( job );
+        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
+                .addObject( "taskId", taskId );
     }
 
     @Override
@@ -355,7 +323,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
-            throw new IllegalArgumentException(
+            throw new EntityNotFoundException(
                     "You do not have appropriate rights to see this platform. This is likely due "
                             + "to the platform being marked as unusable." );
         }
@@ -385,14 +353,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( id == null ) {
             throw new IllegalArgumentException( "ID cannot be null" );
         }
-
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-
+        ArrayDesign arrayDesign = arrayDesignService.loadAndThawLite( id );
         if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
+            throw new EntityNotFoundException( "No platform with id=" + id + " could be loaded" );
         }
-
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
         return arrayDesign;
     }
 
@@ -498,7 +462,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new EntityNotFoundException( ed.getId() + " not found" );
         }
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
-        if ( assays.size() != 0 ) {
+        if ( !assays.isEmpty() ) {
             throw new IllegalArgumentException(
                     "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );
         }
@@ -511,71 +475,47 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     @RequestMapping("/showAllArrayDesigns.html")
-    public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showAllArrayDesigns() {
         return new ModelAndView( "arrayDesigns" );
     }
 
     @Override
-    @RequestMapping({ "/showArrayDesign.html", "/" })
-    public ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response ) {
-        String name = request.getParameter( "name" );
-        String idStr = request.getParameter( "id" );
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "id" })
+    public ModelAndView showArrayDesign( @RequestParam("id") Long id ) {
+        return showArrayDesignInternal( arrayDesignService.loadOrFail( id, EntityNotFoundException::new, "No platform was found for ID " + id + "." ) );
+    }
 
-        if ( ( name == null ) && ( idStr == null ) ) {
-            throw new IllegalArgumentException( "Must provide a platform identifier or name" );
-        }
-
-        ArrayDesign arrayDesign;
-        if ( idStr != null ) {
-            arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
-            request.setAttribute( "id", idStr );
-        } else {
-            arrayDesign = arrayDesignService.findByShortName( name );
-            request.setAttribute( "name", name );
-
-            if ( arrayDesign == null ) {
-                Collection<ArrayDesign> byName = arrayDesignService.findByName( name );
-                if ( byName.isEmpty() ) {
-                    throw new IllegalArgumentException( "Must provide a valid platform identifier or name" );
-
-                }
-                arrayDesign = byName.iterator().next();
-            }
-        }
-
+    @Override
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "name" })
+    public ModelAndView showArrayDesignByName( @RequestParam("name") String name ) {
+        ArrayDesign arrayDesign = arrayDesignService.findByShortName( name );
         if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "Must provide a valid platform identifier or name" );
+            arrayDesign = arrayDesignService.findByName( name ).iterator().next();
         }
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( "No platform was found for the provided name." );
+        }
+        return showArrayDesignInternal( arrayDesign );
+    }
 
-        long id = arrayDesign.getId();
-
-        ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
-
-        mav.addObject( "arrayDesignId", id );
-        mav.addObject( "arrayDesignShortName", arrayDesign.getShortName() );
-        mav.addObject( "arrayDesignName", arrayDesign.getName() );
-
-        return mav;
+    private ModelAndView showArrayDesignInternal( ArrayDesign arrayDesign ) {
+        return new ModelAndView( "arrayDesign.detail" )
+                .addObject( "arrayDesignId", arrayDesign.getId() )
+                .addObject( "arrayDesignShortName", arrayDesign.getShortName() )
+                .addObject( "arrayDesignName", arrayDesign.getName() );
     }
 
     @Override
     @RequestMapping("/showCompositeSequenceSummary.html")
-    public ModelAndView showCompositeSequences( HttpServletRequest request ) {
-
-        String arrayDesignIdStr = request.getParameter( "id" );
-
-        if ( arrayDesignIdStr == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a platform name or Id" );
-        }
-
-        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
+    public ModelAndView showCompositeSequences( @RequestParam("id") Long id ) {
+        ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id,
+                EntityNotFoundException::new, "No platform was found for ID " + id + "." );
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
         if ( !AJAX ) {
             Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getDesignSummaries( arrayDesign );
-            if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-                throw new RuntimeException( "No probes found for " + arrayDesign );
+            if ( compositeSequenceSummary == null || compositeSequenceSummary.isEmpty() ) {
+                throw new EntityNotFoundException( "No probes found for " + arrayDesign );
             }
             mav.addObject( "sequenceData", compositeSequenceSummary );
             mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
@@ -588,11 +528,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     @RequestMapping("/showExpressionExperiments.html")
-    public ModelAndView showExpressionExperiments( HttpServletRequest request ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-
+    public ModelAndView showExpressionExperiments( @RequestParam("id") Long id ) {
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
+            // FIXME: treat this as a 404 instead
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Platform with id=" + id + " not found" );
         }
@@ -699,10 +638,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         @Override
         public TaskResult call() {
-            ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
-            }
+            ArrayDesign ad = arrayDesignService.loadOrFail( taskCommand.getEntityId(),
+                    EntityNotFoundException::new, "Could not load platform with id=" + taskCommand.getEntityId() );
             arrayDesignService.remove( ad );
             return new TaskResult( taskCommand,
                     new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )

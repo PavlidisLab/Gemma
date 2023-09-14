@@ -41,6 +41,12 @@ import java.util.Map;
 @SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayDesignValueObject> {
 
+    /**
+     * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ArrayDesign loadAndThawLite( Long id );
+
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 

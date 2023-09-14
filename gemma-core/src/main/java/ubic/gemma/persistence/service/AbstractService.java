@@ -10,6 +10,8 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -96,8 +98,30 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Override
     @Transactional(readOnly = true)
     public O loadOrFail( Long id ) {
-        return requireNonNull( mainDao.load( id ),
+        return loadOrFail( id, NullPointerException::new,
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
+        O entity = mainDao.load( id );
+        if ( entity == null ) {
+            throw exceptionSupplier.get();
+        }
+        return entity;
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        O entity = mainDao.load( id );
+        if ( entity == null ) {
+            throw exceptionSupplier.apply( message );
+        }
+        return entity;
     }
 
     @Override

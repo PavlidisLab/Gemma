@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -174,12 +175,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         BaseFormController.log.debug( id );
         ExpressionExperimentEditValueObject obj;
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, String.format( "No experiment with ID %d", id ) );
 
         List<QuantitationTypeValueObject> qts = new ArrayList<>(
                 quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
@@ -234,13 +231,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
             BindException errors ) {
 
         ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
-
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Could not load experiment" );
-        }
-
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadAndThawLiteOrFail( eeCommand.getId(),
+                EntityNotFoundException::new, String.format( "No experiment with ID %d", eeCommand.getId() ) );
 
         /*
          * Much more complicated

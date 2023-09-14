@@ -75,6 +75,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -618,6 +619,20 @@ public class ExpressionExperimentServiceImpl
         if ( ee != null ) {
             Hibernate.initialize( ee.getCharacteristics() );
         }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssaySet loadBioAssaySet( Long id ) {
+        return expressionExperimentDao.loadBioAssaySet( id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thawWithoutVectors( ee );
         return ee;
     }
 

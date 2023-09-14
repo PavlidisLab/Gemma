@@ -26,6 +26,7 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * For populating "batch" information about experiments.
@@ -48,7 +49,7 @@ public class BatchInfoFetchController {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null )
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
         ee = expressionExperimentService.thawLite( ee );
 
         /*

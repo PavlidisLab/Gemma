@@ -88,7 +88,7 @@ public class SecurityControllerImpl implements SecurityController {
         User userTakingAction = userManager.getCurrentUser();
 
         if ( userTakingAction == null ) {
-            throw new IllegalStateException( "Cannot add user to group when user is not logged in" );
+            throw new AccessDeniedException( "Cannot add user to group when user is not logged in" );
         }
 
         User u;

@@ -20,12 +20,9 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
@@ -36,16 +33,12 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
-    private MockHttpServletRequest request;
-
     @Autowired
     private ArrayDesignController arrayDesignController;
 
     @Test
-    public void testShowAllArrayDesigns() throws Exception {
-        request = this.newPost( "/arrayDesign/showAllArrayDesigns.html" );
-
-        ModelAndView mav = arrayDesignController.showAllArrayDesigns( request, ( HttpServletResponse ) null );
+    public void testShowAllArrayDesigns() {
+        ModelAndView mav = arrayDesignController.showAllArrayDesigns();
         Collection<Object> c = mav.getModel().values();
         assertNotNull( c );
         assertEquals( "arrayDesigns", mav.getViewName() );

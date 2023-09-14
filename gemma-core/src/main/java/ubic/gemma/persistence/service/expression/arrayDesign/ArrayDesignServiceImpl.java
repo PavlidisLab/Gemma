@@ -58,6 +58,16 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign loadAndThawLite( Long id ) {
+        ArrayDesign ad = load( id );
+        if ( ad != null ) {
+            arrayDesignDao.thawLite( ad );
+        }
+        return ad;
+    }
+
+    @Override
     @Transactional
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
         this.arrayDesignDao.addProbes( arrayDesign, newProbes );
@@ -422,7 +432,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         arrayDesign = ensureInSession( arrayDesign );
-        arrayDesignDao.thaw( arrayDesign );
+        arrayDesignDao.thawLite( arrayDesign );
         return arrayDesign;
     }
 
