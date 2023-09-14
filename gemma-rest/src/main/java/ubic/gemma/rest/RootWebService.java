@@ -80,6 +80,7 @@ public class RootWebService {
             versioned = Collections.emptyList();
         }
         URI apiDocsUrl = ServletUriComponentsBuilder.fromContextPath( request )
+                .scheme( null ).host( null ).port( -1 )
                 .path( "/resources/restapidocs/" )
                 .build()
                 .toUri();
