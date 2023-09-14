@@ -94,6 +94,8 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * Using "distinct" otherwise has a steep performance penalty when combined with "order by".
      * <p>
      * Note that non-admin users always need a group by because of the jointure on ACL entries.
+     * <p>
+     * FIXME: remove the need for a distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     protected String distinctIfNecessary() {
         if ( !SecurityUtil.isUserAdmin() ) {
@@ -106,6 +108,8 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Similar logic to {@link #distinctIfNecessary()}, but using a group by since it's more efficient. It does
      * not work for the counting queries, however.
+     * <p>
+     * FIXME: remove the need for a group by altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     @Nullable
     protected String groupByIfNecessary( @Nullable Sort sort, String... oneToManyAliases ) {

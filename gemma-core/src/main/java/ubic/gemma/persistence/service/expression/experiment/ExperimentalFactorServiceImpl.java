@@ -47,7 +47,7 @@ public class ExperimentalFactorServiceImpl
 
     @Override
     @Transactional
-    public void delete( ExperimentalFactor experimentalFactor ) {
+    public void remove( ExperimentalFactor experimentalFactor ) {
         experimentalFactor = ensureInSession( experimentalFactor );
         /*
          * First, check to see if there are any diff results that use this factor.
@@ -57,7 +57,23 @@ public class ExperimentalFactorServiceImpl
         for ( DifferentialExpressionAnalysis a : analyses ) {
             differentialExpressionAnalysisService.remove( a );
         }
-        this.experimentalFactorDao.remove( experimentalFactor );
+        super.remove( experimentalFactor );
+    }
+
+    @Override
+    @Transactional
+    public void remove( Collection<ExperimentalFactor> experimentalFactors ) {
+        experimentalFactors.forEach( this::remove );
+    }
+
+    @Override
+    public void remove( Long id ) {
+        throw new UnsupportedOperationException( "Removing an experimental factor by ID is not supported" );
+    }
+
+    @Override
+    public void removeAllInBatch() {
+        throw new UnsupportedOperationException( "Removing all experimental factors in batch is not supported." );
     }
 
     @Override

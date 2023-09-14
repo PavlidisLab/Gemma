@@ -123,24 +123,40 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         };
     }
 
-    private TypedResultTransformer<VO> getValueObjectTransformer( StopWatch postProcessingStopWatch ) {
-        TypedResultTransformer<VO> transformer = getValueObjectTransformer();
-        return new TypedResultTransformer<VO>() {
-            @Override
-            public VO transformTuple( Object[] tuple, String[] aliases ) {
-                return transformer.transformTuple( tuple, aliases );
-            }
+    /**
+     * Simple {@link TypedResultTransformer} wrapper that monitors the time spent post-processing.
+     */
+    private class ValueObjectTransformerTimer implements TypedResultTransformer<VO> {
 
-            @Override
-            public List<VO> transformListTyped( List<VO> collection ) {
-                try {
-                    postProcessingStopWatch.start();
-                    return transformer.transformListTyped( collection );
-                } finally {
-                    postProcessingStopWatch.stop();
-                }
+        private final TypedResultTransformer<VO> transformer;
+        private final StopWatch postProcessingStopWatch;
+
+        private ValueObjectTransformerTimer( TypedResultTransformer<VO> transformer, StopWatch postProcessingStopWatch ) {
+            this.transformer = transformer;
+            this.postProcessingStopWatch = postProcessingStopWatch;
+            postProcessingStopWatch.start();
+            postProcessingStopWatch.suspend();
+        }
+
+        @Override
+        public VO transformTuple( Object[] tuple, String[] aliases ) {
+            try {
+                postProcessingStopWatch.resume();
+                return transformer.transformTuple( tuple, aliases );
+            } finally {
+                postProcessingStopWatch.suspend();
             }
-        };
+        }
+
+        @Override
+        public List<VO> transformListTyped( List<VO> collection ) {
+            try {
+                postProcessingStopWatch.resume();
+                return transformer.transformListTyped( collection );
+            } finally {
+                postProcessingStopWatch.suspend();
+            }
+        }
     }
 
     @Override
@@ -265,7 +281,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch postProcessingStopWatch = StopWatch.create();
         //noinspection unchecked
         List<VO> results = this.getFilteringQuery( filters, sort )
-                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .setResultTransformer( new ValueObjectTransformerTimer( getValueObjectTransformer(), postProcessingStopWatch ) )
                 .setCacheable( cacheable )
                 .list();
         stopWatch.stop();
@@ -294,7 +310,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         //noinspection unchecked
         List<VO> list = query
-                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .setResultTransformer( new ValueObjectTransformerTimer( getValueObjectTransformer(), postProcessingStopWatch ) )
                 .setCacheable( cacheable )
                 .list();
 

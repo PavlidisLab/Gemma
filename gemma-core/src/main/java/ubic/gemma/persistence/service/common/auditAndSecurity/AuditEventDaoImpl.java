@@ -173,7 +173,10 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
                 + "join trail.events ae "
                 + "join fetch ae.eventType et " // fetching here prevents a separate select query
                 + "where trail.id in :trails and type(et) in :classes "
-                + "group by trail "
+                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
+                // them all
+                + "group by trail, ae "
+                // latest by date or ID to break ties
                 + "order by ae.date desc, ae.id desc";
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
@@ -186,7 +189,8 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             Object[] ar = ( Object[] ) o;
             Long t = ( Long ) ar[0];
             AuditEvent e = ( AuditEvent ) ar[1];
-            result.put( atMap.get( t ), e );
+            // only retain the first one which is the latest (by date or ID)
+            result.putIfAbsent( atMap.get( t ), e );
         }
 
         timer.stop();

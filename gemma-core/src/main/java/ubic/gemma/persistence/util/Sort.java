@@ -20,7 +20,7 @@ public class Sort implements PropertyMapping {
      *                         could result in an ambiguous query)
      * @param propertyName     a property of objectAlias to order by
      * @param direction        a direction, or null for default
-     * @param originalProperty
+     * @param originalProperty an original property name for rendering via {@link #toOriginalString()}
      */
     public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction, String originalProperty ) {
         return new Sort( alias, propertyName, direction, originalProperty );

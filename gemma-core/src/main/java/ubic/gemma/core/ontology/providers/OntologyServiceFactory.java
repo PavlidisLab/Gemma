@@ -33,6 +33,7 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private TaskExecutor ontologyTaskExecutor = null;
     private boolean enableInference = true;
     private boolean enableSearch = true;
+    private boolean processImports = true;
 
 
     /**
@@ -87,6 +88,10 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         this.enableSearch = enableSearch;
     }
 
+    public void setProcessImports( boolean processImports ) {
+        this.processImports = processImports;
+    }
+
     /**
      * Check if the ontology returned by this factory will be loaded.
      * <p>
@@ -112,6 +117,7 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         T service = BeanUtils.instantiate( ontologyServiceClass );
         service.setInferenceMode( enableInference ? OntologyService.InferenceMode.TRANSITIVE : OntologyService.InferenceMode.NONE );
         service.setSearchEnabled( enableSearch );
+        service.setProcessImports( processImports );
         if ( isAutoLoad || forceLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {

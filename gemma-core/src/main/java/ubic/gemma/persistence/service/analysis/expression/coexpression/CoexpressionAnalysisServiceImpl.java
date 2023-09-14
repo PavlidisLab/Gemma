@@ -27,7 +27,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 
 import java.util.Collection;
@@ -106,6 +105,26 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
     public void remove( CoexpressionAnalysis toDelete ) {
         this.geneCoexpressionService.deleteLinks( toDelete.getExperimentAnalyzed() );
         super.remove( toDelete );
+    }
+
+    @Override
+    @Transactional
+    public void remove( Collection<CoexpressionAnalysis> entities ) {
+        entities.stream()
+                .map( CoexpressionAnalysis::getExperimentAnalyzed )
+                .distinct()
+                .forEach( this.geneCoexpressionService::deleteLinks );
+        super.remove( entities );
+    }
+
+    @Override
+    public void remove( Long id ) {
+        throw new UnsupportedOperationException( "Removing a coexpression analysis by ID is not supported." );
+    }
+
+    @Override
+    public void removeAllInBatch() {
+        throw new UnsupportedOperationException( "Removing all coexpression analyses in batch is not supported." );
     }
 
     @Override

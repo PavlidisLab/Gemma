@@ -268,7 +268,7 @@ public interface PhenotypeAssociationManagerService {
      * including ontology children terms
      *
      * @param searchQuery the query search that was type by the user
-     * @param maxResults
+     * @param maxResults maximum number of results to return or -1 to return all
      * @return the terms found in the database with taxon and gene occurrence
      */
     Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws SearchException;

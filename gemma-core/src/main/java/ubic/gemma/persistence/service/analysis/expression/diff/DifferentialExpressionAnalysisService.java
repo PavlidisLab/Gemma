@@ -110,9 +110,6 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( DifferentialExpressionAnalysis o );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExpressionAnalysisResultSet a );
-
     /**
      * @param differentialExpressionAnalysis analysis
      * @return Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.

@@ -547,7 +547,7 @@ public class GeoConverterImpl implements GeoConverter {
     private void checkForDataToSkip( GeoSeries series, Collection<String> dataSetsToSkip,
             Collection<GeoSample> samplesToSkip ) {
 
-        for ( GeoDataset dataset : series.getDatasets() ) {
+        for ( GeoDataset dataset : series.getDataSets() ) {
             // This doesn't cover every possibility...
             if ( dataset.getExperimentType().equals( ExperimentType.arrayCGH ) || dataset.getExperimentType()
                     .equals( ExperimentType.ChIPChip )
@@ -558,7 +558,7 @@ public class GeoConverterImpl implements GeoConverter {
                 GeoConverterImpl.log
                         .warn( "Gemma does not know how to handle experiment type=" + dataset.getExperimentType() );
 
-                if ( series.getDatasets().size() == 1 ) {
+                if ( series.getDataSets().size() == 1 ) {
                     GeoConverterImpl.log.warn( "Because the experiment type cannot be handled, "
                             + "and there is only one data set in this series, nothing will be returned!" );
                 }
@@ -1869,7 +1869,7 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         GeoConverterImpl.log.info( "Converting series: " + series.getGeoAccession() );
 
-        Collection<GeoDataset> dataSets = series.getDatasets();
+        Collection<GeoDataset> dataSets = series.getDataSets();
         Collection<String> dataSetsToSkip = new HashSet<>();
         Collection<GeoSample> samplesToSkip = new HashSet<>();
         this.checkForDataToSkip( series, dataSetsToSkip, samplesToSkip );
@@ -2767,7 +2767,7 @@ public class GeoConverterImpl implements GeoConverter {
     private Map<String, Collection<GeoData>> getOrganismDatasetMap( GeoSeries series ) {
         Map<String, Collection<GeoData>> organisms = new HashMap<>();
 
-        if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
+        if ( series.getDataSets() == null || series.getDataSets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
 
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
@@ -2781,7 +2781,7 @@ public class GeoConverterImpl implements GeoConverter {
                 organisms.get( organism ).add( sample.getPlatforms().iterator().next() );
             }
         } else {
-            for ( GeoDataset dataset : series.getDatasets() ) {
+            for ( GeoDataset dataset : series.getDataSets() ) {
                 String organism = dataset.getOrganism();
                 if ( organisms.get( organism ) == null ) {
                     organisms.put( organism, new HashSet<GeoData>() );
@@ -2811,7 +2811,7 @@ public class GeoConverterImpl implements GeoConverter {
     private Map<GeoPlatform, Collection<GeoData>> getPlatformDatasetMap( GeoSeries series ) {
         Map<GeoPlatform, Collection<GeoData>> platforms = new HashMap<>();
 
-        if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
+        if ( series.getDataSets() == null || series.getDataSets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
                 assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
@@ -2825,7 +2825,7 @@ public class GeoConverterImpl implements GeoConverter {
                 platforms.get( platform ).add( sample.getPlatforms().iterator().next() );
             }
         } else {
-            for ( GeoDataset dataset : series.getDatasets() ) {
+            for ( GeoDataset dataset : series.getDataSets() ) {
                 GeoPlatform platform = dataset.getPlatform();
                 if ( platforms.get( platform ) == null ) {
                     platforms.put( platform, new HashSet<GeoData>() );

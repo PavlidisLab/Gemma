@@ -17,7 +17,6 @@ import java.util.Set;
 
 /**
  * Bridges {@link Arg} operating on entities with their corresponding {@link FilteringService}.
- * @param <T>
  */
 public interface EntityArgService<T extends Identifiable, S extends FilteringService<T>> {
 

@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseDao;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -10,7 +9,6 @@ import java.util.Collection;
 
 /**
  * Interface for read-only services.
- * @param <O>
  * @author poirigui
  */
 public interface BaseReadOnlyService<O extends Identifiable> {

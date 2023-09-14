@@ -2,8 +2,6 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
 import javax.ws.rs.BadRequestException;
@@ -20,8 +18,4 @@ public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {
         return service.load( getValue() );
     }
 
-    @Override
-    public QuantitationType getEntityForExpressionExperimentAndDataVectorType( ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType, QuantitationTypeService service ) {
-        return service.findByIdAndDataVectorType( ee, getValue(), dataVectorType );
-    }
 }

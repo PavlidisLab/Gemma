@@ -39,6 +39,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -47,6 +48,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -87,9 +89,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
     @Autowired
     private SVDServiceHelper svdService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -163,7 +166,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // Persist
         this.logCormatStatus( analysis, true );
-        sampleCoexpressionAnalysisDao.create( analysis );
+        analysis = sampleCoexpressionAnalysisDao.create( analysis );
+
+        auditTrailService.addUpdateEvent( ee, SampleCorrelationAnalysisEvent.class, "Sample correlation has been computed." );
 
         return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
     }
@@ -225,8 +230,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             result = result.subsetRows( result.getColNames() ); // enforce same order on rows.
             return result;
         } catch ( IllegalArgumentException e ) {
-            SampleCoexpressionAnalysisServiceImpl.log.error( e.getMessage() );
-            e.printStackTrace();
+            SampleCoexpressionAnalysisServiceImpl.log.error( e.getMessage(), e );
             return null;
         }
     }

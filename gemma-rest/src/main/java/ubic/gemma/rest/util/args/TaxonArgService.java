@@ -60,7 +60,7 @@ public class TaxonArgService extends AbstractEntityArgService<Taxon, TaxonServic
      * Lists Genes overlapping a location on a specific chromosome on a taxon that this TaxonArg represents.
      *
      * @param chromosomeName name of the chromosome to look on
-     * @param strand
+     * @param strand         the strand that the gene has to have which is either '+' or '-', or null to ignore
      * @param start          the start nucleotide denoting the location to look for genes at.
      * @param size           the size (in nucleotides) of the location from the 'start' nucleotide.
      * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size' parameters.

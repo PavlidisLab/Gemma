@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -97,7 +98,7 @@ public class ExpressionExperimentBibRefFinderTest {
         } else {
             throw e;
         }
-        if ( k instanceof UnknownHostException ) {
+        if ( k instanceof UnknownHostException || k instanceof SSLException ) {
             assumeNoException( e );
         } else if ( k.getMessage().contains( "503" ) ) {
             assumeNoException( "Test skipped due to a 503 error from NCBI", e );

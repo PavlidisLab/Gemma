@@ -6,8 +6,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.QueryScorer;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
@@ -164,13 +164,11 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .matching( settings.getQuery() )
                     .createQuery();
             Analyzer analyzer = analyzers.get( clazz );
-            Highlighter highlighter;
+            Highlighter highlighter = settings.getHighlighter() != null ? settings.getHighlighter().createLuceneHighlighter( new QueryScorer( query ) ) : null;
             String[] projection;
-            if ( settings.getHighlighter() != null && settings.getHighlighter().createLuceneHighlighter( query ) != null ) {
-                highlighter = settings.getHighlighter().createLuceneHighlighter( query );
+            if ( highlighter != null ) {
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
-                highlighter = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
             //noinspection unchecked
@@ -182,8 +180,10 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .list();
             StopWatch timer = StopWatch.createStarted();
             try {
+                Set<String> fieldsSet = new HashSet<>( Arrays.asList( fields ) );
                 return results.stream()
-                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fields, clazz ) )
+                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fieldsSet, clazz ) )
+                        .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
                 if ( timer.getTime() > 100 ) {
@@ -195,10 +195,16 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         }
     }
 
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, String[] fields, Class<T> clazz ) {
+    @Nullable
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Set<String> fields, Class<T> clazz ) {
         if ( settings.isFillResults() ) {
             //noinspection unchecked
-            return SearchResult.from( clazz, ( T ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            T entity = ( T ) row[0];
+            if ( row[0] == null ) {
+                // this happens if an entity is still in the cache, but was removed from the database
+                return null;
+            }
+            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         } else {
             return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
         }

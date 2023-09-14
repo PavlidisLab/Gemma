@@ -651,7 +651,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         List<Long> eeIds;
         if ( filters == null || filters.isEmpty() ) {
             eeIds = null;
@@ -659,16 +659,9 @@ public class ExpressionExperimentServiceImpl
             eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
         }
         if ( excludedTermUris != null ) {
-            excludedTermUris = new HashSet<>( excludedTermUris );
-            // expand exclusions with implied terms via subclass relation
-            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
-            // exclude terms using the subClass relation
-            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
-            for ( OntologyTerm t : impliedTerms ) {
-                excludedTermUris.add( t.getUri() );
-            }
+            excludedTermUris = inferTermsUris( excludedTermUris );
         }
-        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris );
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris );
     }
 
     /**
@@ -679,18 +672,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( excludedTermUris != null ) {
-            excludedTermUris = new HashSet<>( excludedTermUris );
-            // never exclude terms that are explicitly retained
-            if ( retainedTermUris != null ) {
-                excludedTermUris.removeAll( retainedTermUris );
-            }
-            // expand exclusions with implied terms via subclass relation
-            Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
-            // exclude terms using the subClass relation
-            Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
-            for ( OntologyTerm t : impliedTerms ) {
-                excludedTermUris.add( t.getUri() );
-            }
+            excludedTermUris = inferTermsUris( excludedTermUris );
         }
 
         Map<Characteristic, Long> result;
@@ -727,6 +709,21 @@ public class ExpressionExperimentServiceImpl
         }
 
         return resultWithParents;
+    }
+
+    /**
+     * Infer all the implied terms from the given collection of term URIs.
+     */
+    private Set<String> inferTermsUris( Collection<String> termUris ) {
+        Set<String> excludedTermUris = new HashSet<>( termUris );
+        // expand exclusions with implied terms via subclass relation
+        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+        // exclude terms using the subClass relation
+        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+        for ( OntologyTerm t : impliedTerms ) {
+            excludedTermUris.add( t.getUri() );
+        }
+        return excludedTermUris;
     }
 
     /**
@@ -1185,6 +1182,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids ) {
+        List<ExpressionExperiment> results = expressionExperimentDao.loadWithRelationsAndCache( ids );
+        Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
+        return expressionExperimentDao.loadValueObjects( results ).stream()
+                .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
         List<ExpressionExperimentValueObject> results = this.expressionExperimentDao.loadValueObjectsByIds( ids );
@@ -1374,9 +1381,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
-        for ( ExpressionExperiment ee : entities ) {
-            remove( ee );
-        }
+        entities.forEach( this::remove );
     }
 
     @Override

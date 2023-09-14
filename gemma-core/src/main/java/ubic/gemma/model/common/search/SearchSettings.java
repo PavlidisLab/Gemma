@@ -25,7 +25,6 @@ import lombok.With;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -279,18 +278,18 @@ public class SearchSettings implements Serializable {
     /**
      * Highlight a given ontology term.
      * <p>
-     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, MessageSourceResolvable)}
+     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, String)}
      * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
-    public String highlightTerm( String termUri, String termLabel, MessageSourceResolvable className ) {
-        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, className ) : null;
+    public Map<String, String> highlightTerm( String termUri, String termLabel, String field ) {
+        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, field ) : null;
     }
 
     @Nullable
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, String[] fields ) {
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, Set<String> fields ) {
         return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
     }
 

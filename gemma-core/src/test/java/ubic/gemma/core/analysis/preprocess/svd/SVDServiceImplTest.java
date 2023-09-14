@@ -52,7 +52,6 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
-    @Category(SlowTest.class)
     public void testsvd() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -88,7 +87,6 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
      * See bug 2139; two different sets of bioassays in the data.
      */
     @Test
-    @Category(SlowTest.class)
     public void testsvdGapped() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(

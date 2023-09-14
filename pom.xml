@@ -553,7 +553,6 @@
 				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
-					<source>8</source>
 					<!-- with lombok, some references are invalid in the original source code -->
 					<doclint>all,-reference,-missing</doclint>
 					<links>
@@ -627,7 +626,6 @@
 				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
-					<source>8</source>
 					<doclint>all,-reference,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>

@@ -10,6 +10,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 @Repository
 public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
-        FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
+        CachedFilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     String OBJECT_ALIAS = "ad";
 
@@ -90,8 +91,6 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
 
     Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
-
-    List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 

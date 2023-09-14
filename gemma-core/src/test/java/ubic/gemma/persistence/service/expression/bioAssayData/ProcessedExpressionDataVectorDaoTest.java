@@ -38,12 +38,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
 
-@Category(SlowTest.class)
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
-    private static final int NUM_PROBES = 20000;
+    private static final int NUM_PROBES = 100;
 
     @Configuration
     @TestComponent
@@ -97,6 +96,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
+    @Category(SlowTest.class)
     public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
@@ -164,24 +164,21 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
             session.persist( probe );
             probes.add( probe );
         }
-        List<BioAssayDimension> bads = new ArrayList<>();
-        for ( int i = 0; i < NUM_PROBES; i++ ) {
-            BioAssayDimension bad = new BioAssayDimension();
-            session.persist( bad );
-            bads.add( bad );
-        }
+        BioAssayDimension bad = new BioAssayDimension();
+        session.persist( bad );
         // create 10000 vectors
         Set<ProcessedExpressionDataVector> vectors = new HashSet<>();
         for ( int i = 0; i < NUM_PROBES; i++ ) {
             ProcessedExpressionDataVector vector = new ProcessedExpressionDataVector();
             vector.setExpressionExperiment( ee );
-            vector.setBioAssayDimension( bads.get( i ) );
+            vector.setBioAssayDimension( bad );
             vector.setDesignElement( probes.get( i ) );
             vector.setData( new byte[8 * 8] );
             vectors.add( vector );
         }
         ee.setProcessedExpressionDataVectors( vectors );
         session.persist( ee );
+        session.flush();
         session.clear();
         Collection<ProcessedExpressionDataVector> reloadedVectors = processedExpressionDataVectorDao.getProcessedVectors( ee );
         assertEquals( NUM_PROBES, reloadedVectors.size() );

@@ -122,8 +122,8 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) ";
+                "select ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon and ee.id in (:ids) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -183,8 +183,8 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID ) {
         //language=HQL
         final String queryString =
-                "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
-                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
+                "select ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
+                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) group by ee";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bibID", bibRefID )
@@ -196,7 +196,7 @@ public class ExpressionExperimentDaoImpl
 
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
+                "select ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba group by ee";
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
                 .list();
 
@@ -219,8 +219,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByBioMaterial( BioMaterial bm ) {
 
         //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm";
+        final String queryString = "select ee from ExpressionExperiment as ee "
+                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm group by ee";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bm", bm )
                 .list();
@@ -245,8 +245,8 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
         }
         //language=HQL
-        final String queryString = "select distinct ee, sample from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms) group by ee";
+        final String queryString = "select ee, sample from ExpressionExperiment as ee "
+                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms) group by ee, sample";
 
         Map<ExpressionExperiment, BioMaterial> results = new HashMap<>();
         Collection<BioMaterial> batch = new HashSet<>();
@@ -309,8 +309,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef where ef = :ef ";
+                "select ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                        + "inner join ed.experimentalFactors ef where ef = :ef group by ee";
 
         List results = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ef", ef )
                 .list();
@@ -331,8 +331,8 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactorValue( Long factorValueId ) {
         //language=HQL
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
+                "select ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId group by ee";
 
         //noinspection unchecked
         List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -352,9 +352,9 @@ public class ExpressionExperimentDaoImpl
             return new HashMap<>();
 
         //language=HQL
-        final String queryString = "select distinct ee, f from ExpressionExperiment ee "
+        final String queryString = "select ee, f from ExpressionExperiment ee "
                 + " join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f"
-                + " where f in (:fvs) group by ee";
+                + " where f in (:fvs) group by ee, f";
         Map<ExpressionExperiment, FactorValue> results = new HashMap<>();
         Collection<FactorValue> batch = new HashSet<>();
         for ( FactorValue o : fvs ) {
@@ -635,16 +635,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris ) {
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
+        }
+        // never exclude terms that are explicitly retained
+        if ( excludedTermUris != null && retainedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            excludedTermUris.removeAll( retainedTermUris );
         }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                                 + "where T.ID is not null "
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
+                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
+                                //        parentheses
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
@@ -663,6 +671,9 @@ public class ExpressionExperimentDaoImpl
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", excludedTermUris );
+        }
+        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+            q.setParameterList( "retainedTermUris", retainedTermUris );
         }
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
@@ -684,6 +695,11 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        // never exclude terms that are explicitly retained
+        if ( excludedTermUris != null && retainedTermUris != null ) {
+            excludedTermUris = new HashSet<>( excludedTermUris );
+            excludedTermUris.removeAll( retainedTermUris );
+        }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
@@ -691,12 +707,15 @@ public class ExpressionExperimentDaoImpl
                                 + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
                                 + ( level != null ? " and T.LEVEL = :level" : "" )
                                 + ( category != null ? category.equals( UNCATEGORIZED ) ? " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL" : " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category" : "" )
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and T.CATEGORY_URI not in :excludedCategoryUris" : "" )
+                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
+                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
+                                //        parentheses
+                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
                                 + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
                                 + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                                 + "having EE_COUNT >= :minFrequency "
-                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in :retainedTermUris " : "" )
+                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in (:retainedTermUris) " : "" )
                                 + "order by EE_COUNT desc" )
                 .addScalar( "T.VALUE", StandardBasicTypes.STRING )
                 .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
@@ -1040,10 +1059,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-        String queryString = "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+        String queryString = "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                 + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                 + formNonTroubledClause( "ee" ) + " "
-                + "group by ee.taxon";
+                + "group by ee.taxon "
+                + "order by EE_COUNT desc";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1066,9 +1086,10 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select ee.taxon, count(distinct ee) from ExpressionExperiment ee "
+                        "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                                 + "where ee.id in :eeIds "
-                                + "group by ee.taxon" )
+                                + "group by ee.taxon "
+                                + "order by EE_COUNT desc" )
                 .setParameterList( "eeIds", ids )
                 .list();
         return list.stream()
@@ -1327,6 +1348,9 @@ public class ExpressionExperimentDaoImpl
      * Gather various EE details and group them by ID.
      */
     private Map<Long, List<ExpressionExperimentDetail>> getExpressionExperimentDetailsById( List<Long> expressionExperimentIds, boolean cacheable ) {
+        if ( expressionExperimentIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
@@ -1344,6 +1368,28 @@ public class ExpressionExperimentDaoImpl
                         Collectors.mapping( ExpressionExperimentDetail::fromRow, Collectors.toList() ) ) );
     }
 
+    @Override
+    public List<ExpressionExperiment> loadWithRelationsAndCache( List<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return ( List<ExpressionExperiment> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "left join ee.accession acc "
+                        + "left join ee.experimentalDesign as EDES "
+                        + "left join ee.curationDetails as s " /* needed for trouble status */
+                        + "left join s.lastNeedsAttentionEvent as eAttn "
+                        + "left join s.lastNoteUpdateEvent as eNote "
+                        + "left join s.lastTroubledEvent as eTrbl "
+                        + "left join ee.geeq as geeq "
+                        + "where ee.id in :ids" )
+                .setParameterList( "ids", ids )
+                .setCacheable( true )
+                // this transformer performs initialization of cached results
+                .setResultTransformer( getEntityTransformer() )
+                .list();
+    }
 
     @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects
@@ -1604,6 +1650,7 @@ public class ExpressionExperimentDaoImpl
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
                 AclSid sid = ( AclSid ) row[2];
+                initializeCachedFilteringResult( ee );
                 return new ExpressionExperimentValueObject( ee, aoi, sid );
             }
 

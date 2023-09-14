@@ -537,7 +537,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 assert bas.size() == 1;
                 BioAssay ba = bas.iterator().next();
 
-                Integer sequenceReadCount = ba.getSequenceReadCount();
+                Long sequenceReadCount = ba.getSequenceReadCount();
                 if ( !ba.getIsOutlier() && ( sequenceReadCount == null || sequenceReadCount == 0 ) ) {
                     // double check.
                     Double[] col = dmatrix.getColumn( i );
@@ -549,7 +549,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     }
                 }
 
-                if ( sequenceReadCount == null ) sequenceReadCount = 0;
+                if ( sequenceReadCount == null ) sequenceReadCount = 0L;
 
                 librarySize.set( i, sequenceReadCount );
             }
@@ -1057,12 +1057,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             assert pvalArray.length == ranks.length;
 
             double[] qvalues = super.benjaminiHochberg( pvalArray );
-
-            assert qvalues.length == resultLists.get( fName ).size();
+            assert qvalues == null || qvalues.length == resultLists.get( fName ).size();
 
             int i = 0;
             for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
-                pr.setCorrectedPvalue( this.nan2Null( qvalues[i] ) );
+                pr.setCorrectedPvalue( this.nan2Null( qvalues != null ? qvalues[i] : null ) );
                 pr.setRank( this.nan2Null( ranks[i] ) );
                 i++;
             }

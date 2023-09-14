@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
 
@@ -56,5 +55,10 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional
     public void remove( FactorValue entity ) {
         super.remove( ensureInSession( entity ) );
+    }
+
+    @Override
+    public void remove( Collection<FactorValue> entities ) {
+        super.remove( ensureInSession( entities ) );
     }
 }

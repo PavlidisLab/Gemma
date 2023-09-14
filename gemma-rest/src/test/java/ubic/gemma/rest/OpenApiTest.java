@@ -160,4 +160,14 @@ public class OpenApiTest extends BaseJerseyTest {
                 .isEqualTo( "string" );
         assertThat( schema.getDescription() ).contains( "Available properties:" );
     }
+
+    @Test
+    public void testLimitArgIs5000ForGetDatasetsAnnotations() {
+        assertThat( spec.getPaths().get( "/datasets/annotations" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getSchema().getType() ).isEqualTo( "integer" );
+                    assertThat( p.getSchema().getMinimum() ).isEqualTo( "1" );
+                    assertThat( p.getSchema().getMaximum() ).isEqualTo( "5000" );
+                } );
+    }
 }

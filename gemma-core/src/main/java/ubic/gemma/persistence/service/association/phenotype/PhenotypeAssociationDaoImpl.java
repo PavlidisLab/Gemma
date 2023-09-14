@@ -924,4 +924,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return genesWithPhenotypes.values();
     }
 
+    @Override
+    public void remove( PhenotypeAssociation entity ) {
+        // detach the PA from the gene to prevent re-save by cascade
+        entity.getGene().getPhenotypeAssociations().remove( entity );
+        super.remove( entity );
+    }
 }

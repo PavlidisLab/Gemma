@@ -120,13 +120,6 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
     /**
-     * This is used by the scheduled jobs, so it requires lower privilege.
-     */
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    void update( ExpressionExperiment expressionExperiment );
-
-    /**
      * @param accession accession
      * @return Experiments which have the given accession. There can be more than one, because one GEO
      * accession can result
@@ -231,7 +224,7 @@ public interface ExpressionExperimentService
      */
     Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -514,6 +507,14 @@ public interface ExpressionExperimentService
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
+
+    /**
+     * Load VOs for the given dataset IDs and initialize their relations like {@link #load(Filters, Sort)}.
+     * <p>
+     * The order of VOs is preserved.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids );
 
     /**
      * Variant of {@link #loadValueObjectsByIds(Collection)} that preserve its input order.

@@ -61,6 +61,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -196,8 +197,8 @@ public class DataUpdaterImpl implements DataUpdater {
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
-            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
-            Boolean isPairedReads, boolean allowMissingSamples ) {
+            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, @Nullable Integer readLength,
+            @Nullable Boolean isPairedReads, boolean allowMissingSamples ) {
 
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
@@ -682,10 +683,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param isPairedReads is paired reads
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
-            Integer readLength, Boolean isPairedReads ) {
+            @Nullable Integer readLength, @Nullable Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             Double[] col = countEEMatrix.getColumn( ba );
-            int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
+            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
 
             if ( librarySize <= 0 ) {
                 // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.

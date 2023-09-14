@@ -38,9 +38,6 @@ public interface SVDServiceHelper {
     SVDValueObject retrieveSvd( ExpressionExperiment ee );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void svd( Collection<ExpressionExperiment> ees ) throws SVDException;
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     SVDValueObject svd( ExpressionExperiment ee ) throws SVDException;
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

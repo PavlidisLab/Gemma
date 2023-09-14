@@ -35,6 +35,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociat
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 /**
@@ -85,6 +86,12 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
 
     @Override
     @Transactional
+    public void remove( GeneProduct entity ) {
+        remove( Collections.singleton( entity ) );
+    }
+
+    @Override
+    @Transactional
     public void remove( Collection<GeneProduct> toRemove ) {
         Collection<BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
         if ( !associations.isEmpty() ) {
@@ -121,4 +128,13 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
 
     }
 
+    @Override
+    public void remove( Long id ) {
+        throw new UnsupportedOperationException( "Removing a gene product by ID is not supported." );
+    }
+
+    @Override
+    public void removeAllInBatch() {
+        throw new UnsupportedOperationException( "Removing all gene products in batch is not supported." );
+    }
 }
