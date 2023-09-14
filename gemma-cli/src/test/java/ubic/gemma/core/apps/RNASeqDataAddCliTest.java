@@ -8,6 +8,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -22,7 +23,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
-import static java.util.Objects.requireNonNull;
+import java.io.IOException;
+
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -87,10 +89,10 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     private String rpkmFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
-        rpkmFile = requireNonNull( getClass().getClassLoader().getResource( "test.rpkm.txt" ) ).getFile();
+        rpkmFile = new ClassPathResource( "test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
         when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );
     }
