@@ -24,11 +24,16 @@ public class AbstractFileServiceTest {
     @Test
     public void testParse() {
         assertEquals( "1E-14", tsvFileService.format( 1e-14 ) );
-        assertEquals( "1.111E-1", tsvFileService.format( 0.1111 ) );
+        assertEquals( "0.1111", tsvFileService.format( 0.1111 ) );
+        assertEquals( "0.0001", tsvFileService.format( 0.0001 ) );
         assertEquals( "1E-5", tsvFileService.format( 1e-5 ) );
-        assertEquals( "1E3", tsvFileService.format( 1000.0 ) );
-        assertEquals( "1.235E3", tsvFileService.format( 1234.5 ) );
-        assertEquals( "1E5", tsvFileService.format( 1e5 ) );
+        assertEquals( "1000.0", tsvFileService.format( 1000.0 ) );
+        assertEquals( "1234.5", tsvFileService.format( 1234.5 ) );
+        assertEquals( "100000.0", tsvFileService.format( 1e5 ) );
+        assertEquals( "100.1234", tsvFileService.format( 100.1234 ) );
+        assertEquals( "1000.1", tsvFileService.format( 1000.1234 ) );
+        assertEquals( "100000.1", tsvFileService.format( 100000.1234 ) );
+        assertEquals( "", tsvFileService.format( null ) );
         assertEquals( "", tsvFileService.format( Double.NaN ) );
         assertEquals( "inf", tsvFileService.format( Double.POSITIVE_INFINITY ) );
         assertEquals( "-inf", tsvFileService.format( Double.NEGATIVE_INFINITY ) );

@@ -9,7 +9,6 @@ import java.io.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
@@ -19,16 +18,27 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Get a number formatter suitable for reading from and writing into a tabular format.
-     * @return a locale-independent {@link NumberFormat} object
-     */
-    protected NumberFormat getNumberFormat() {
+    private static final DecimalFormat smallNumberFormat, midNumberFormat, largeNumberFormat;
+
+    static {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
+        symbols.setNaN( "" );
+        symbols.setInfinity( "inf" );
+
         // show 4 significant digits
-        DecimalFormat numberFormat = new DecimalFormat( "0.###E0" );
-        numberFormat.setDecimalFormatSymbols( DecimalFormatSymbols.getInstance( Locale.ENGLISH ) );
-        numberFormat.setRoundingMode( RoundingMode.HALF_UP );
-        return numberFormat;
+        smallNumberFormat = new DecimalFormat( "0.###E0" );
+        smallNumberFormat.setDecimalFormatSymbols( symbols );
+        smallNumberFormat.setRoundingMode( RoundingMode.HALF_UP );
+
+        // show from one up to 4 decimal places
+        midNumberFormat = new DecimalFormat( "0.0###" );
+        midNumberFormat.setDecimalFormatSymbols( symbols );
+        midNumberFormat.setRoundingMode( RoundingMode.HALF_UP );
+
+        // only show leading digits and at least one decimal place
+        largeNumberFormat = new DecimalFormat( "0.0" );
+        largeNumberFormat.setDecimalFormatSymbols( symbols );
+        largeNumberFormat.setRoundingMode( RoundingMode.HALF_UP );
     }
 
     /**
@@ -54,16 +64,17 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
     /**
      * Format a {@link Double} for TSV.
      * @param d a double to format
-     * @return a formatted double according to {@link AbstractFileService#getNumberFormat()}, an empty string if
-     * d is null or NaN or inf/-inf if infinite
+     * @return a formatted double, an empty string if d is null or NaN or inf/-inf if infinite
      */
     protected String format( @Nullable Double d ) {
-        if ( d == null || d.isNaN() ) {
+        if ( d == null ) {
             return "";
-        } else if ( d.isInfinite() ) {
-            return d > 0 ? "inf" : "-inf";
+        } else if ( d < 1e-4 ) {
+            return smallNumberFormat.format( d );
+        } else if ( d <= 1e3 ) {
+            return midNumberFormat.format( d );
         } else {
-            return getNumberFormat().format( d );
+            return largeNumberFormat.format( d );
         }
     }
 
