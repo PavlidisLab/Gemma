@@ -145,12 +145,12 @@ public class GemmaCLI {
 
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
+
+        // check for the -testing/--testing flag to load the appropriate application context
         if ( commandLine.hasOption( TESTING_OPTION ) ) {
             profiles.add( SpringProfiles.TEST );
         }
 
-        // check for the -testing flag to load the appropriate application context
-        /* webapp */
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*

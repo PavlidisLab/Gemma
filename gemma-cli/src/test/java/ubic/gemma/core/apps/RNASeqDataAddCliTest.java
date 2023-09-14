@@ -4,8 +4,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -32,6 +34,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     static class RNASeqDataAddCliTestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean
+        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
         public RNASeqDataAddCli rnaSeqDataAddCli() {
             return new RNASeqDataAddCli();
         }
