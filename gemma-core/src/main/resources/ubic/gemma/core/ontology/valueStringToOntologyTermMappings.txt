@@ -4,12 +4,7 @@
 # it won't be mapped.
 # String value	value	valueUri	category	categoryUri
 126S6/SvEvTac	129S6/SvEvTac	http://gemma.msl.ubc.ca/ont/TGEMO_00048	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-<<<<<<< HEAD
 129	129	http://www.ebi.ac.uk/efo/EFO_0000597	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-=======
-129	129	http://gemma.msl.ubc.ca/ont/TGEMO_00034	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-129/Sv	129S/SvEv	http://gemma.msl.ubc.ca/ont/TGEMO_00036	strain	http://www.ebi.ac.uk/efo/EFO_0005135
->>>>>>> hotfix-1.30.1
 129SV	129/Sv	http://www.ebi.ac.uk/efo/EFO_0000599	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 17beta-estradiol	17beta-estradiol	http://purl.obolibrary.org/obo/CHEBI_16469	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 A/J	A/J	http://www.ebi.ac.uk/efo/EFO_0001327	strain	http://www.ebi.ac.uk/efo/EFO_0005135
@@ -53,11 +48,7 @@ B6	C57BL/6	http://gemma.msl.ubc.ca/ont/TGEMO_00016	strain	http://www.ebi.ac.uk/e
 B6C3F1	B6C3F1	http://www.ebi.ac.uk/efo/EFO_0001340	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 BALB	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 BALB/c	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005138
-<<<<<<< HEAD
 BALB/cJ	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-=======
-BALB/cJ	BALB/cJ	http://gemma.msl.ubc.ca/ont/TGEMO_00028	strain	http://www.ebi.ac.uk/efo/EFO_0005135
->>>>>>> hotfix-1.30.1
 BEAS-2B	BEAS-2B cell	http://purl.obolibrary.org/obo/CLO_0001925	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 Biceps	biceps brachii	http://purl.obolibrary.org/obo/UBERON_0001507	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 bipolar	bipolar disorder	http://purl.obolibrary.org/obo/MONDO_0004985	disease	http://www.ebi.ac.uk/efo/EFO_0000408
