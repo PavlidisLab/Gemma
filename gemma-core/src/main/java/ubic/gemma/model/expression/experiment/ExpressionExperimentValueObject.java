@@ -8,7 +8,8 @@ import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -25,7 +26,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         implements SecureValueObject {
 
     private static final long serialVersionUID = -6861385216096602508L;
-    protected Integer numberOfBioAssays;
+    protected int numberOfBioAssays;
     protected String description;
     protected String name;
 
@@ -46,9 +47,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String externalUri;
     private GeeqValueObject geeq;
     @JsonIgnore
-    private Boolean isPublic = false;
+    private boolean isPublic = false;
     @JsonIgnore
-    private Boolean isShared = false;
+    private boolean isShared = false;
     private String metadata;
     @JsonProperty("numberOfProcessedExpressionVectors")
     private Integer processedExpressionVectorCount;

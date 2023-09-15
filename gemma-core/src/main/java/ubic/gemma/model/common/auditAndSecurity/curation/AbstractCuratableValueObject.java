@@ -4,6 +4,7 @@ import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.SecuredField;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
@@ -19,12 +20,19 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
 
     private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
+    @SecuredField("GROUP_ADMIN")
     private Date lastUpdated;
+    @SecuredField("GROUP_ADMIN")
     private Boolean troubled = false;
+    @SecuredField("GROUP_ADMIN")
     private AuditEventValueObject lastTroubledEvent;
+    @SecuredField("GROUP_ADMIN")
     private Boolean needsAttention = false;
+    @SecuredField("GROUP_ADMIN")
     private AuditEventValueObject lastNeedsAttentionEvent;
+    @SecuredField("GROUP_ADMIN")
     private String curationNote;
+    @SecuredField("GROUP_ADMIN")
     private AuditEventValueObject lastNoteUpdateEvent;
 
     /**
