@@ -43,7 +43,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
@@ -52,7 +51,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
@@ -88,10 +86,13 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         Class<? extends Identifiable> resultType;
     }
 
+    /**
+     * List of supported scopes (or result types) for searching.
+     */
     private static final Scope[] scopes = {
             new Scope( 'G', Gene.class ),
             new Scope( 'E', ExpressionExperiment.class ),
-            new Scope( 'S', BioSequence.class ),
+            new Scope( 'H', PhenotypeAssociation.class ),
             new Scope( 'P', CompositeSequence.class ),
             new Scope( 'A', ArrayDesign.class ),
             new Scope( 'M', GeneSet.class ),
@@ -269,22 +270,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         csc.highlighter( new Highlighter( scope, request.getLocale() ) );
         if ( StringUtils.isNotBlank( scope ) ) {
             char[] scopes = scope.toCharArray();
-            for ( char scope1 : scopes ) {
-                // FIXME: these are passed by the frontend, but obviously not supported
-                switch ( scope1 ) {
-                    case 'H':
-                    case 'B':
-                    case ',':
-                        break;
-                }
-                for ( Scope s : GeneralSearchControllerImpl.scopes ) {
-                    if ( s.scope == scope1 ) {
-                        csc.resultType( s.resultType );
+            for ( char s : scopes ) {
+                boolean found = false;
+                for ( Scope s2 : GeneralSearchControllerImpl.scopes ) {
+                    if ( s2.scope == s ) {
+                        csc.resultType( s2.resultType );
+                        found = true;
                         break;
                     }
                 }
-                // TODO: 400 Bad Request error?
-                log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
+                if ( !found ) {
+                    throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
+                }
             }
         }
         return csc.build();
@@ -394,12 +391,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
         if ( valueObject.getSearchGeneSets() ) {
             ret.add( GeneSet.class );
-        }
-        if ( valueObject.getSearchBioSequences() ) {
-            ret.add( BioSequence.class );
-        }
-        if ( valueObject.getSearchBibrefs() ) {
-            ret.add( BibliographicReference.class );
         }
         return ret;
     }
