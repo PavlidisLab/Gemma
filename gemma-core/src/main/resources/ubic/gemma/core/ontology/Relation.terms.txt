@@ -14,8 +14,10 @@ http://purl.obolibrary.org/obo/GENO_0000413	has_allele
 http://purl.obolibrary.org/obo/GENO_0000447	is_gene_target_of
 http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
-http://purl.obolibrary.org/obo/BCGO_0000182	has duration # perhaps not ideal
 http://purl.obolibrary.org/obo/RO_0002220	adjacent to
+http://www.ebi.ac.uk/efo/EFO_0000784	has_disease_location
+http://gemma.msl.ubc.ca/ont/TGEMO:00167	delivered for duration
+http://gemma.msl.ubc.ca/ont/TGEMO:00166	delivered at dose
 # missing:
 # has_delivered or delivered_by
 # has_timepoint
