@@ -16,7 +16,8 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -50,8 +51,15 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<Long> arrayDesignsUsed;
+    /**
+     * The ID of the experiment being analyzed. Either an experiment or a subset.
+     */
     private Long bioAssaySetId;
-    private Long sourceExperiment;
+    /**
+     * If this is an analysis of a subset, the ID of the source experiment.
+     */
+    @Nullable
+    private Long sourceExperimentId;
     private ExperimentalFactorValueObject subsetFactor;
     private FactorValueValueObject subsetFactorValue;
 
@@ -70,7 +78,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
         // experimentAnalyzed is eagerly fetched
         if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
             // sourceExperiment is eagerly fetched too
-            this.sourceExperiment = ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment().getId();
+            this.sourceExperimentId = ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment().getId();
         }
         if ( analysis.getSubsetFactorValue() != null && Hibernate.isInitialized( ( analysis.getSubsetFactorValue() ) ) ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
@@ -78,6 +86,14 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
                     analysis.getSubsetFactorValue().getExperimentalFactor() );
             // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
+    }
+
+    /**
+     * @deprecated this was renamed to {@link #getSourceExperimentId()} for consistency
+     */
+    @Deprecated
+    public Long getSourceExperiment() {
+        return sourceExperimentId;
     }
 
     /**

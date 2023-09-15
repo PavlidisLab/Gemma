@@ -192,17 +192,24 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids ) {
-        return this.getAnalysesByExperiment( ids, 0, -1 );
+    public List<DifferentialExpressionAnalysisValueObject> getAnalysesByExperiment( BioAssaySet experiment, boolean includeAnalysesOfSubsets ) {
+        return differentialExpressionAnalysisDao
+                .getAnalysesByExperimentIds( Collections.singleton( experiment.getId() ), includeAnalysesOfSubsets )
+                .getOrDefault( experiment.getId(), Collections.emptyList() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, int offset, int limit ) {
+    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiments(
+            Collection<? extends BioAssaySet> experiments, boolean includeAnalysesOfSubsets ) {
+        return getAnalysesByExperimentIds( EntityUtils.getIds( experiments ), includeAnalysesOfSubsets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds( Collection<Long> experimentIds, boolean includeAnalysesOfSubsets ) {
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( ids, offset, limit );
+                .getAnalysesByExperimentIds( experimentIds, includeAnalysesOfSubsets );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
