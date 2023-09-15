@@ -17,4 +17,12 @@
             </fmt:param>
         </fmt:message>
     </p>
+
+    <p>
+        <c:out value="${exception.message}"/>
+        <security:authorize access="hasAuthority('GROUP_ADMIN')">
+            <Gemma:exception exception="${exception}"/>
+        </security:authorize>
+    </p>
+
 </page:applyDecorator>
