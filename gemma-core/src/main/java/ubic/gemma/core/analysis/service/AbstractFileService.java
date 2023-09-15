@@ -71,7 +71,7 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
             return "";
         } else if ( d < 1e-4 ) {
             return smallNumberFormat.format( d );
-        } else if ( d <= 1e3 ) {
+        } else if ( d < 1e3 ) {
             return midNumberFormat.format( d );
         } else {
             return largeNumberFormat.format( d );

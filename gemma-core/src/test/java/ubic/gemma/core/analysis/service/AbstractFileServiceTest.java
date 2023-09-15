@@ -17,16 +17,17 @@ public class AbstractFileServiceTest {
     private final AbstractFileService<Object> tsvFileService = new AbstractFileService<Object>() {
         @Override
         public void writeTsv( Object entity, Writer writer ) throws IOException {
-            writer.write( String.valueOf( entity ).replace( '\t', ' ' ) );
+            writer.write( escapeTsv( String.valueOf( entity ) ) );
         }
     };
 
     @Test
-    public void testParse() {
+    public void testFormatNumber() {
         assertEquals( "1E-14", tsvFileService.format( 1e-14 ) );
         assertEquals( "0.1111", tsvFileService.format( 0.1111 ) );
         assertEquals( "0.0001", tsvFileService.format( 0.0001 ) );
         assertEquals( "1E-5", tsvFileService.format( 1e-5 ) );
+        assertEquals( "1000.0", tsvFileService.format( 1e3 ) );
         assertEquals( "1000.0", tsvFileService.format( 1000.0 ) );
         assertEquals( "1234.5", tsvFileService.format( 1234.5 ) );
         assertEquals( "100000.0", tsvFileService.format( 1e5 ) );
