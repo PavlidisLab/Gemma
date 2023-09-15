@@ -18,13 +18,6 @@ http://purl.obolibrary.org/obo/RO_0002220	adjacent to
 http://www.ebi.ac.uk/efo/EFO_0000784	has_disease_location
 http://gemma.msl.ubc.ca/ont/TGEMO:00167	delivered for duration
 http://gemma.msl.ubc.ca/ont/TGEMO:00166	delivered at dose
+http://gemma.msl.ubc.ca/ont/TGEMO:00168	has developmental stage
 # missing:
 # has_delivered or delivered_by
-# has_timepoint
-# has_dose ;there are terms for 'dose' but not for 'has dose'?
-# has_stage (developmental stage)
-# fusion_gene - not an object property
-# see https://ontobee.org/ontology/catalog/GENO?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=200
-# https://ontobee.org/ontology/catalog/CLO?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=500
-# https://ontobee.org/ontology/catalog/CL?iri=http://www.w3.org/2002/07/owl%23ObjectProperty&max=500 (mostly RO terms)
-# warning: CLO has its own "has disease" http://purl.obolibrary.org/obo/CLO_0000167
