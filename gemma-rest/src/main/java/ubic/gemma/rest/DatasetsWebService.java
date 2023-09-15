@@ -55,7 +55,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -604,14 +603,9 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond(
-                this.getDiffExVos( datasetArgService.getEntity( datasetArg ).getId(),
-                        offset.getValue(), limit.getValue() )
-        );
+        return datasetArgService.getAnalysesByExperiment( datasetArg );
     }
 
     /**
@@ -1008,14 +1002,6 @@ public class DatasetsWebService {
                 .build();
     }
 
-    private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
-        if ( map == null || map.size() < 1 ) {
-            return Collections.emptyList();
-        }
-        return map.get( map.keySet().iterator().next() );
-    }
 
     @Value
     private static class SimpleSVDValueObject {
