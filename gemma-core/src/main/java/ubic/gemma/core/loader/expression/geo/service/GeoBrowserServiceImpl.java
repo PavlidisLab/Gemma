@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -53,6 +54,7 @@ import java.util.concurrent.Executors;
 /**
  * @author pavlidis
  */
+@Lazy
 @Component
 public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBean, DisposableBean {
     private static final int MIN_SAMPLES = 5;

@@ -18,6 +18,7 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
     </context:component-scan>
 
+    <!-- resolves ${...} placeholders in the servlet configuration (i.e. web.xml) -->
     <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
         <property name="environment">
             <bean class="org.springframework.web.context.support.StandardServletEnvironment"/>

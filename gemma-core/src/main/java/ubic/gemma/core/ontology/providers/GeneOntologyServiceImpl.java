@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,6 @@ import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.CacheUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,7 +56,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
     }
 
-    private final static String GO_URL = Settings.getString( "url.geneOntology" );
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
     /**
@@ -91,7 +89,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     protected String getOntologyUrl() {
-        return Settings.getString( "url.geneOntology" );
+        return ontologyUrl;
     }
 
     /**
@@ -110,7 +108,11 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Autowired
     private CacheManager cacheManager;
 
-    private final boolean autoLoad;
+    @Value("${url.geneOntology}")
+    private String ontologyUrl;
+
+    @Value("${load.ontologies}")
+    private boolean isAutoLoad;
 
     /**
      * Cache of gene -> go terms.
@@ -122,37 +124,22 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
      */
     private Cache term2Aspect;
 
-    /**
-     * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
-     */
-    private static boolean isAutoLoad() {
-        String doLoad = Configuration.getString( "load.ontologies" );
-        return StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" );
-    }
-
     public GeneOntologyServiceImpl() {
-        this( isAutoLoad() );
-    }
 
-    public GeneOntologyServiceImpl( boolean autoLoad ) {
-        this.autoLoad = autoLoad;
     }
-
 
     @Override
     public void afterPropertiesSet() throws InterruptedException {
         goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
         term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
-        if ( autoLoad ) {
+        if ( isAutoLoad ) {
             startInitializationThread( false, false );
-        } else {
-            log.info( "Auto-loading of ontologies is disabled, GO terms will not be available." );
         }
     }
 
     @Override
     public void destroy() throws Exception {
-        if ( isAutoLoad() ) {
+        if ( isInitializationThreadAlive() ) {
             cancelInitializationThread();
         }
     }

@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -40,6 +41,7 @@ import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
@@ -85,6 +87,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private static final String
             PARENTS_CACHE_NAME = "OntologyService.parents",
             CHILDREN_CACHE_NAME = "OntologyService.children";
+
+    /**
+     * Determine if ontologies are to be loaded on startup.
+     */
+    @Value("${load.ontologies}")
+    private boolean isAutoLoad;
 
     @Autowired
     private BioMaterialService bioMaterialService;
@@ -141,12 +149,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     } )
                     .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
                     .collect( Collectors.toList() );
-            if ( enabledOntologyServices.isEmpty() ) {
-                log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
-            } else {
+            if ( !enabledOntologyServices.isEmpty() ) {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
+            } else if ( isAutoLoad ) {
+                log.warn( "Auto-loading of ontologies is enabled, but no ontologies are configured to be loaded, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
             }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used

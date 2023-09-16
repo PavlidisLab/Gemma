@@ -30,7 +30,7 @@ public class BeanInitializationTimeMonitor implements BeanPostProcessor, Ordered
     /**
      * Total amount of time that has to elapse while initializing the context for emitting a warning.
      */
-    private static final int TOTAL_TIME_WARN_THRESHOLD = 5000;
+    private static final int TOTAL_TIME_WARN_THRESHOLD = 0;
 
     private final Map<String, StopWatch> stopWatches = new HashMap<>();
 

@@ -21,7 +21,6 @@ package ubic.gemma.core.search;
 
 import com.google.common.collect.Sets;
 import gemma.gsec.util.SecurityUtil;
-import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -29,8 +28,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.Cache;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -74,6 +71,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -231,7 +229,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, hibernateSearchSource, ontologySearchSource ) );
         initializeSupportedResultTypes();
-        this.initializeNameToTaxonMap();
+        Executors.newSingleThreadExecutor().submit( this::initializeNameToTaxonMap );
     }
 
     private void initializeSupportedResultTypes() {

@@ -24,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.logging.LoggingConfigurer;
+import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
-import ubic.gemma.core.logging.log4j.Log4jConfigurer;
-import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
@@ -149,6 +149,19 @@ public class GemmaCLI {
         // check for the -testing/--testing flag to load the appropriate application context
         if ( commandLine.hasOption( TESTING_OPTION ) ) {
             profiles.add( SpringProfiles.TEST );
+        }
+
+        // check some common settings that might affect initialization time
+        if ( Settings.getBoolean( "load.ontologies" ) ) {
+            log.warn( "Auto-loading of ontologies is enabled, this is not recommended for the CLI. Disable it by setting load.ontologies=false in Gemma.properties." );
+        }
+
+        if ( Settings.getBoolean( "load.homologene" ) ) {
+            log.warn( "Homologene is enabled, this is not recommended for the CLI. Disable it by setting load.homologene=false in Gemma.properties." );
+        }
+
+        if ( Settings.getString( "gemma.hibernate.hbm2ddl.auto" ).equals( "validate" ) ) {
+            log.warn( "Hibernate is configured to validate the database schema, this is not recommended for the CLI. Disable it by setting gemma.hibernate.hbm2ddl.auto= in Gemma.properties." );
         }
 
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );

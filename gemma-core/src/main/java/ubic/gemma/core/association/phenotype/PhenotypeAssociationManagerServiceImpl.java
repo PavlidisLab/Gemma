@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -101,6 +102,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             "http://purl.obolibrary.org/obo/MP_0000001"
     };
 
+    /**
+     * Determine if ontologies are to be loaded on startup.
+     */
+    @Value("${load.ontologies}")
+    private boolean isAutoLoad;
+
     @Autowired
     private PhenotypeAssociationService phenoAssocService;
 
@@ -151,7 +158,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<ubic.basecode.ontology.providers.OntologyService> disabledOntologies = ontologyHelper.getOntologyServices().stream()
                 .filter( os -> !os.isEnabled() )
                 .collect( Collectors.toSet() );
-        if ( !disabledOntologies.isEmpty() ) {
+        if ( isAutoLoad && !disabledOntologies.isEmpty() ) {
             log.warn( String.format( "The following ontologies are required by Phenocarta are not enabled:\n\t%s.",
                     disabledOntologies.stream().map( Object::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         }

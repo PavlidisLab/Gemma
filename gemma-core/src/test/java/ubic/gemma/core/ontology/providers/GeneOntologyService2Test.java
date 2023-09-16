@@ -55,7 +55,7 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
     public static class GeneOntologyService2TestContextConfiguration {
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            GeneOntologyServiceImpl gos = new GeneOntologyServiceImpl( false );
+            GeneOntologyServiceImpl gos = new GeneOntologyServiceImpl();
             InputStream is = new GZIPInputStream(
                     new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
             OntologyTestUtils.initialize( gos, is );
