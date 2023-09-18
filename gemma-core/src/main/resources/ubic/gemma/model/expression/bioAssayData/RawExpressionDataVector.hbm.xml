@@ -8,7 +8,8 @@
            table="RAW_EXPRESSION_DATA_VECTOR">
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
-            <generator class="org.hibernate.id.MultipleHiLoPerTableGenerator"/>
+            <generator class="native">
+            </generator>
         </id>
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
                      lazy="proxy" fetch="select">
