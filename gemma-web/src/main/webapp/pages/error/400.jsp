@@ -1,14 +1,15 @@
 <%@ include file="/common/taglibs.jsp" %>
 
-<page:applyDecorator name="default">
+<%@ page isErrorPage="true" %>
 
-    <title>
-        <fmt:message key="400.title"/>
-    </title>
-    <content tag="heading">
-        <fmt:message key="400.title"/>
-        <input type="hidden" id="reloadOnLogin" value="true"/>
-    </content>
+<title><fmt:message key="400.title"/></title>
+
+<content tag="heading">
+    <input type="hidden" id="reloadOnLogin" value="true"/>
+</content>
+
+<div class="padded">
+    <h2><fmt:message key="400.title"/></h2>
 
     <p>
         <fmt:message key="400.message">
@@ -18,11 +19,12 @@
         </fmt:message>
     </p>
 
-    <p>
-        <c:out value="${exception.message}"/>
-        <security:authorize access="hasAuthority('GROUP_ADMIN')">
-            <Gemma:exception exception="${exception}"/>
-        </security:authorize>
-    </p>
+    <hr class="normal">
 
-</page:applyDecorator>
+    <p><c:out value="${exception.message}"/></p>
+
+    <security:authorize access="hasAuthority('GROUP_ADMIN')">
+        <Gemma:exception exception="${exception}"/>
+    </security:authorize>
+
+</div>
