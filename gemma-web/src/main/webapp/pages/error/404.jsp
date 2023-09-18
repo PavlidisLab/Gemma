@@ -1,7 +1,5 @@
 <%@ include file="/common/taglibs.jsp" %>
 
-<%@ page isErrorPage="true" %>
-
 <title><fmt:message key="404.title"/></title>
 
 <content tag="heading">
