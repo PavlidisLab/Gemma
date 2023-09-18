@@ -8,6 +8,8 @@ import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.util.Configuration;
 
+import java.util.Set;
+
 /**
  * Factory bean for baseCode's {@link OntologyService}.
  * @param <T> the type of ontology service this factory produces
@@ -31,9 +33,11 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private boolean forceIndexing = false;
     private boolean loadInBackground = true;
     private TaskExecutor ontologyTaskExecutor = null;
-    private boolean enableInference = true;
+    private OntologyService.LanguageLevel languageLevel = OntologyService.LanguageLevel.FULL;
+    private OntologyService.InferenceMode inferenceMode = OntologyService.InferenceMode.TRANSITIVE;
     private boolean enableSearch = true;
     private boolean processImports = true;
+    private Set<String> additionalPropertyUris;
 
 
     /**
@@ -75,10 +79,17 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     /**
-     * Enable inference for the ontology.
+     * Set the supported OWL language level for the ontology.
      */
-    public void setEnableInference( boolean enableInference ) {
-        this.enableInference = enableInference;
+    public void setLanguageLevel( OntologyService.LanguageLevel languageLevel ) {
+        this.languageLevel = languageLevel;
+    }
+
+    /**
+     * Set the inference mode for the ontology.
+     */
+    public void setInferenceMode( OntologyService.InferenceMode inferenceMode ) {
+        this.inferenceMode = inferenceMode;
     }
 
     /**
@@ -90,6 +101,10 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
 
     public void setProcessImports( boolean processImports ) {
         this.processImports = processImports;
+    }
+
+    public void setAdditionalPropertyUris( Set<String> additionalPropertyUris ) {
+        this.additionalPropertyUris = additionalPropertyUris;
     }
 
     /**
@@ -115,9 +130,11 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     @Override
     protected T createInstance() throws Exception {
         T service = BeanUtils.instantiate( ontologyServiceClass );
-        service.setInferenceMode( enableInference ? OntologyService.InferenceMode.TRANSITIVE : OntologyService.InferenceMode.NONE );
+        service.setLanguageLevel( languageLevel );
+        service.setInferenceMode( inferenceMode );
         service.setSearchEnabled( enableSearch );
         service.setProcessImports( processImports );
+        service.setAdditionalPropertyUris( additionalPropertyUris );
         if ( isAutoLoad || forceLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {
