@@ -277,8 +277,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
                 .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
         assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
         CSVRecord record = reader.iterator().next();
-        assertEquals( record.get( "pvalue" ), "1E0" );
-        assertEquals( record.get( "corrected_pvalue" ), "1E-4" );
+        assertEquals( record.get( "pvalue" ), "1.0" );
+        assertEquals( record.get( "corrected_pvalue" ), "0.0001" );
         // rank is null, it should appear as an empty string
         assertEquals( record.get( "rank" ), "" );
     }

@@ -1,18 +1,18 @@
-<%@ include file="/common/taglibs.jsp"%>
+<%@ include file="/common/taglibs.jsp" %>
 
-<page:applyDecorator name="default">
-	<title><fmt:message key="404.title" />
-	</title>
-	<content tag="heading">
-	<fmt:message key="404.title" />
-	<input type="hidden" id="reloadOnLogin" value="true"/>
-	</content>
-	<p>
-		<fmt:message key="404.message">
-			<fmt:param>
-				<c:url value="/home.html" />
-			</fmt:param>
-		</fmt:message>
-	</p>
-	
-</page:applyDecorator>
+<title><fmt:message key="404.title"/></title>
+
+<content tag="heading">
+    <input type="hidden" id="reloadOnLogin" value="true"/>
+</content>
+
+<div class="padded">
+    <h2><fmt:message key="404.title"/></h2>
+    <p>
+        <fmt:message key="404.message">
+            <fmt:param>
+                <c:url value="/home.html"/>
+            </fmt:param>
+        </fmt:message>
+    </p>
+</div>

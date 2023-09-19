@@ -8,6 +8,9 @@ import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.util.Configuration;
 
+import javax.annotation.Nullable;
+import java.util.Set;
+
 /**
  * Factory bean for baseCode's {@link OntologyService}.
  * @param <T> the type of ontology service this factory produces
@@ -30,10 +33,14 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
     private boolean loadInBackground = true;
+    @Nullable
     private TaskExecutor ontologyTaskExecutor = null;
-    private boolean enableInference = true;
+    private OntologyService.LanguageLevel languageLevel = OntologyService.LanguageLevel.FULL;
+    private OntologyService.InferenceMode inferenceMode = OntologyService.InferenceMode.TRANSITIVE;
     private boolean enableSearch = true;
     private boolean processImports = true;
+    @Nullable
+    private Set<String> additionalPropertyUris = null;
 
 
     /**
@@ -59,7 +66,12 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
 
     /**
      * Initialize the service using a background thread.
-     *
+     * <p>
+     * If an executor is supplied via {@link #setTaskExecutor(TaskExecutor)}, it will be used for initializing the
+     * ontology, otherwise one thread per ontology will be created via {@link OntologyService#startInitializationThread(boolean, boolean)}.
+     * <p>
+     * If false, the ontology will be initialized in the foreground. This will dramatically impact the startup time of
+     * Gemma.
      * @see OntologyService#startInitializationThread(boolean, boolean)
      * @see OntologyService#initialize(boolean, boolean)
      */
@@ -75,21 +87,45 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     /**
-     * Enable inference for the ontology.
+     * Set the supported OWL language level for the ontology.
+     * @see OntologyService#setLanguageLevel(OntologyService.LanguageLevel)
      */
-    public void setEnableInference( boolean enableInference ) {
-        this.enableInference = enableInference;
+    public void setLanguageLevel( OntologyService.LanguageLevel languageLevel ) {
+        this.languageLevel = languageLevel;
+    }
+
+    /**
+     * Set the inference mode for the ontology.
+     * @see OntologyService#setInferenceMode(OntologyService.InferenceMode)
+     */
+    public void setInferenceMode( OntologyService.InferenceMode inferenceMode ) {
+        this.inferenceMode = inferenceMode;
     }
 
     /**
      * Enable full-text search for the ontology.
+     * @see OntologyService#setSearchEnabled(boolean)
      */
     public void setEnableSearch( boolean enableSearch ) {
         this.enableSearch = enableSearch;
     }
 
+    /**
+     * Enable import processing for the ontology.
+     * @see OntologyService#setProcessImports(boolean)
+     */
     public void setProcessImports( boolean processImports ) {
         this.processImports = processImports;
+    }
+
+    /**
+     * Set the URIs used for inferring additional properties.
+     * <p>
+     * If null, baseCode's defaults will be used. You may use an empty set to disable additional properties inference.
+     * @see OntologyService#setAdditionalPropertyUris(Set)
+     */
+    public void setAdditionalPropertyUris( @Nullable Set<String> additionalPropertyUris ) {
+        this.additionalPropertyUris = additionalPropertyUris;
     }
 
     /**
@@ -115,9 +151,13 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     @Override
     protected T createInstance() throws Exception {
         T service = BeanUtils.instantiate( ontologyServiceClass );
-        service.setInferenceMode( enableInference ? OntologyService.InferenceMode.TRANSITIVE : OntologyService.InferenceMode.NONE );
+        service.setLanguageLevel( languageLevel );
+        service.setInferenceMode( inferenceMode );
         service.setSearchEnabled( enableSearch );
         service.setProcessImports( processImports );
+        if ( additionalPropertyUris != null ) {
+            service.setAdditionalPropertyUris( additionalPropertyUris );
+        }
         if ( isAutoLoad || forceLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {

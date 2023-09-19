@@ -304,13 +304,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
+                .getProcessedDataVectorsAndThaw( ee );
         if ( vecs.isEmpty() ) {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
             this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            return this.processedExpressionDataVectorService.getProcessedDataVectors( ee );
+            vecs = this.processedExpressionDataVectorService.getProcessedDataVectorsAndThaw( ee );
         }
-        return processedExpressionDataVectorService.thaw( vecs );
+        return vecs;
     }
 
     @SuppressWarnings("unused")

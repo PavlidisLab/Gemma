@@ -5,20 +5,20 @@
 
 	<jwr:script src='/scripts/api/util/FileUploadForm.js' useRandomParam="false" />
 
-	<security:authorize access="hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+	<security:authorize access="hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
 		<jwr:script src='/scripts/app/UserExpressionDataUpload.js' useRandomParam="false" />
 	</security:authorize>
 </head>
 
 <body>
 
-	<security:authorize access="hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+	<security:authorize access="hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
 		<div id="messages"></div>
 		<div id="form"></div>
 		<div id="progress-area" style="margin: 20px; padding: 5px;"></div>
 	</security:authorize>
 
-	<security:authorize access="!hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+	<security:authorize access="!hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
 		<script type="text/javascript">
 			Gemma.AjaxLogin.showLoginWindowFn(true);
 		</script>

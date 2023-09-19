@@ -1,10 +1,10 @@
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
@@ -27,5 +27,5 @@ public interface ExpressionAnalysisResultSetFileService extends TsvFileService<E
      *  - rank
      *
      */
-    void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes, Appendable appendable ) throws IOException;
+    void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes, Writer writer ) throws IOException;
 }

@@ -27,7 +27,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.util.ResourceUtils;
 import ubic.basecode.util.ConfigUtils;
 
 import java.io.File;
@@ -42,7 +41,8 @@ import java.util.*;
  *
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
- * @deprecated use {@link org.springframework.beans.factory.annotation.Value} to inject configurations
+ * @deprecated Use {@link org.springframework.beans.factory.annotation.Value} to inject configurations. You can either
+ *             use {@code @Value("#{environment['property']}")} or the shorthand {@code @Value("${property}")}.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Deprecated

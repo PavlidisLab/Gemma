@@ -29,5 +29,7 @@
     <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
     </bean>
-
+    <bean id="uberonOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+        <constructor-arg value="ubic.basecode.ontology.providers.UberonOntologyService"/>
+    </bean>
 </beans>

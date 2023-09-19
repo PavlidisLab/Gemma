@@ -104,12 +104,11 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
+                .getProcessedDataVectorsAndThaw( ee );
         if ( dataVectors.isEmpty() ) {
             log.warn( "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
             return null;
         }
-        dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 
