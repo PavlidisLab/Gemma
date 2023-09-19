@@ -8,21 +8,16 @@ Ext.namespace('Gemma');
  */
 Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
     {
-        title: 'Summary & updates in the past week',
-        collapsible: true,
-        titleCollapse: true,
+        title: "Summary and updates this week",
+        collapsible: false,
+        titleCollapse: false,
         animCollapse: false,
 
         listeners: {
             render: function () {
-                if (!this.collapsed) {
+
                     this.loadCounts();
-                }
-            },
-            expand: function () {
-                if (!this.countsLoaded) {
-                    this.loadCounts();
-                }
+
             }
         },
 
@@ -80,20 +75,6 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
             '<div id="dataSummaryTable">'
             + '<div class="roundedcornr_box_777249" style="margin-bottom: 15px; padding: 10px; -moz-border-radius: 15px; border-radius: 15px;">'
             + '<div class="roundedcornr_content_777249">'
-          //  + '<td align="right" style="padding-right: 10px">'
-            // + '<div style="font-size: small; padding-bottom: 5px;">'
-            // + '<b>Data Summary</b>'
-            // + '<tpl if="drawNewColumn == true && drawUpdatedColumn == true ">'
-            // + '<b> and Changes in the Last Week:</b>'
-            // + '</tpl>'
-            // + '<tpl if="drawNewColumn == true && drawUpdatedColumn == false ">'
-            // + '<b> and Additions in the Last Week:</b>'
-            // + '</tpl>'
-            // + '<tpl if="drawNewColumn == false && drawUpdatedColumn == true ">'
-            // + '<b> and Updates in the Last Week:</b>'
-            // + '</tpl>'
-            // + '</div>'
-          //  + '</td>'
             + '<div id="dataSummary" style="margin-left: 15px; margin-right: 15px">'
             + '<table style="white-space: nowrap">'
             + '<tr>'
@@ -101,16 +82,16 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
             + '<span style="white-space: nowrap">'
             + '&nbsp; </span>'
             + '</td>'
-            + '<td style="padding-right: 10px" align="right">'
+            + '<td style="padding-right: 10px" text-align="right">'
             + 'Total'
             + '</td>'
             + '<tpl if="drawUpdatedColumn == true">'
-            + '<td align="right" style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">'
             + 'Updated'
             + '</td>'
             + '</tpl>'
             + '<tpl if="drawNewColumn == true">'
-            + '<td align="right" style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">'
             + 'New'
             + '</td>'
             + '</tpl>'
@@ -119,42 +100,45 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
             + '<span style="white-space: nowrap"> <!-- for IE --> '
             + '<b>Expression Experiments:</b></span>'
             + '</td>'
-            + '<td align="right" style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">'
             + '<b><a href="' + ctxBasePath + '/expressionExperiment/showAllExpressionExperiments.html">{expressionExperimentCount}</b>'
             + '</td>'
-            + '<td align="right" style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">'
             + '<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{updatedExpressionExperimentIds}],\'{cmpId}\');">'
             + '{updatedExpressionExperimentCount}</a></b>&nbsp;&nbsp;'
             + '</td>'
-            + '<td align="right">'
+            + '<td text-align="right">'
             + '<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{newExpressionExperimentIds}],\'{cmpId}\');">'
             + '{newExpressionExperimentCount}</a></b>&nbsp;'
             + '</td>'
             + '</tr>'
             + '<tpl for="sortedCountsPerTaxon">'
             + '<tr>'
-            + '<td style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">'
             + '<span style="white-space: nowrap"> <!-- for IE --> &emsp;'
             + '{taxonName}'
-            + '</td><td align="right" style="padding-right: 10px">'
+            + '</td><td style="text-align:right;padding-right: 10px">'
             + '<a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleTaxonLink({taxonId},\'{parent.cmpId}\');">'
             + '{totalCount}</a>'
-            + '</td><td align="right" style="padding-right: 10px">'
+            + '</td><td style="text-align:right;padding-right: 10px">'
             + '<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{updatedIds}],\'{parent.cmpId}\');">'
             + '{updatedCount}</a></b>&nbsp;&nbsp;'
             + '</a>'
-            + '</td><td align="right">'
+            + '</td><td style="text-align:right">'
             + '<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{newIds}],\'{parent.cmpId}\');">'
             + '{newCount}</a></b>&nbsp;' + '</a>' + '</td>' + '</tr>' + '</tpl>' + '<tr>'
-            + '<td style="padding-right: 10px">' + '<span style="white-space: nowrap"> <!-- for IE -->'
-            + '<b>Platforms:</b>  </span>' + '</td>' + '<td align="right" style="padding-right: 10px">'
+            + '<td style="text-align:right;padding-right: 10px">' + '<span style="white-space: nowrap"> <!-- for IE -->'
+
+            + '<b>Platforms:</b>  </span>' + '</td>'
+            + '<td style="text-align:right;padding-right: 10px">'
             + '<a href="' + ctxBasePath + '/arrays/showAllArrayDesigns.html">' + '<b>{arrayDesignCount}</b></a>' + '</td>'
-            + '<td align="right" style="padding-right: 10px">' + '<b>{updatedArrayDesignCount}</b>&nbsp;&nbsp;'
-            + '</td>' + '<td align="right">' + '<b>{newArrayDesignCount}</b>&nbsp;' + '</td>' + '</tr>' + '<tr>'
-            + '<td style="padding-right: 10px">'
-            + '<span style="white-space: nowrap"> <!-- for IE --> <b>Samples:</b>' + '</span>' + '</td>'
-            + '<td align="right" style="padding-right: 10px">' + '{bioMaterialCount}' + '</td>'
-            + '<td align="right" style="padding-right: 10px">' + '&nbsp;&nbsp;' + '</td>' + '<td align="right">'
+            + '<td style="text-align:right;padding-right: 10px">' + '<b>{updatedArrayDesignCount}</b>&nbsp;&nbsp;'
+            + '</td>' + '<td style="text-align:right">' + '<b>{newArrayDesignCount}</b>&nbsp;' + '</td>' + '</tr>' + '<tr>'
+            + '<td style="text-align:right;padding-right: 10px">'
+
+           + '<span style="white-space: nowrap"> <!-- for IE --> <b>Samples:</b>' + '</span>' + '</td>'
+            + '<td style="text-align:right;padding-right: 10px">' + '{bioMaterialCount}' + '</td>'
+            + '<td style="text-align:right;padding-right: 10px">' + '&nbsp;&nbsp;' + '</td>' + '<td text-align="right">'
             + '<b>{newBioMaterialCount}</b>&nbsp;' + '</td>' + '</tr>' + '</table>' + '</div>' + '</div>' + '</div>'
             + '</div>')
     });
