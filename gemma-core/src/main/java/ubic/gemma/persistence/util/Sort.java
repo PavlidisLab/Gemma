@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.util;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,6 +12,7 @@ import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
  * Represents a directed sort by a property.
  */
 @Value
+@EqualsAndHashCode(of = { "objectAlias", "propertyName", "direction", "andThen" })
 public class Sort implements PropertyMapping {
 
     /**
@@ -98,6 +100,7 @@ public class Sort implements PropertyMapping {
     private String toString( boolean withOriginalProperties ) {
         return String.format( "%s%s",
                 direction != null ? direction.toString() : "",
-                withOriginalProperties ? originalProperty : formProperty( this ) );
+                withOriginalProperties ? originalProperty : formProperty( this ) )
+                + ( andThen != null ? ", " + andThen.toString( withOriginalProperties ) : "" );
     }
 }
