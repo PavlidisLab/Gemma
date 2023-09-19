@@ -24,17 +24,38 @@
         <property name="fallbackToSystemLocale" value="false"/>
     </bean>
 
+    <bean id="propertySourcesConfigurer" class="ubic.gemma.persistence.util.PropertySourcesConfigurer">
+        <constructor-arg>
+            <list>
+                <bean class="org.springframework.core.io.support.ResourcePropertySource">
+                    <constructor-arg value="file:${user.home}/Gemma.properties"/>
+                </bean>
+                <bean class="org.springframework.core.io.support.ResourcePropertySource">
+                    <constructor-arg value="classpath:default.properties"/>
+                </bean>
+                <bean class="org.springframework.core.io.support.ResourcePropertySource">
+                    <constructor-arg value="classpath:project.properties"/>
+                </bean>
+                <bean class="org.springframework.core.io.support.ResourcePropertySource">
+                    <constructor-arg value="classpath:ubic/gemma/version.properties"/>
+                </bean>
+            </list>
+        </constructor-arg>
+    </bean>
+
     <context:property-placeholder location="file:${user.home}/Gemma.properties" ignore-unresolvable="true"/>
     <context:property-placeholder location="classpath:default.properties" ignore-unresolvable="true"/>
     <context:property-placeholder location="classpath:project.properties" ignore-unresolvable="true"/>
-    <context:property-placeholder location="classpath:ubic/gemma/version.properties" ignore-resource-not-found="true"/>
+    <context:property-placeholder location="classpath:ubic/gemma/version.properties"/>
 
     <!-- Configure Velocity for sending e-mail -->
     <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
         <constructor-arg>
             <props>
                 <prop key="resource.loaders">class</prop>
-                <prop key="resource.loader.class.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
+                <prop
+                    key="resource.loader.class.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+                </prop>
             </props>
         </constructor-arg>
     </bean>

@@ -18,7 +18,7 @@
                 <executions>
                     <execution>
                         <id>version-file</id>
-                        <phase>process-classes</phase>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
