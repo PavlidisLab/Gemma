@@ -249,6 +249,14 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectorsAndThaw( ExpressionExperiment expressionExperiment ) {
+        Collection<ProcessedExpressionDataVector> vectors = this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment );
+        processedExpressionDataVectorDao.thaw( vectors );
+        return vectors;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
         return processedExpressionDataVectorDao.getRanks( expressionExperiments, genes, method );
@@ -403,13 +411,5 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
         vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
                 consolidateMode ) );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ProcessedExpressionDataVector> thaw( Collection<ProcessedExpressionDataVector> vectors ) {
-        vectors = ensureInSession( vectors );
-        this.processedExpressionDataVectorDao.thaw( vectors );
-        return vectors;
     }
 }

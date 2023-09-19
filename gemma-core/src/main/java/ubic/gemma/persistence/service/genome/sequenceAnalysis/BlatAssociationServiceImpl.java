@@ -53,15 +53,15 @@ public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation>
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BlatAssociation> find( Gene gene ) {
-        return this.blatAssociationDao.find( gene );
+    public Collection<BlatAssociation> findAndThaw( BioSequence bioSequence ) {
+        Collection<BlatAssociation> results = blatAssociationDao.find( bioSequence );
+        blatAssociationDao.thaw( results );
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BlatAssociation> thaw( Collection<BlatAssociation> blatAssociations ) {
-        blatAssociations = ensureInSession( blatAssociations );
-        this.blatAssociationDao.thaw( blatAssociations );
-        return blatAssociations;
+    public Collection<BlatAssociation> find( Gene gene ) {
+        return this.blatAssociationDao.find( gene );
     }
 }

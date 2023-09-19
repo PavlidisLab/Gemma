@@ -19,9 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,7 +40,4 @@ public interface RawExpressionDataVectorService extends DesignElementDataVectorS
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
-
-    @Transactional(readOnly = true)
-    Collection<RawExpressionDataVector> thaw( Collection<RawExpressionDataVector> vectors );
 }
