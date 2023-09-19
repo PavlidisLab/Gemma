@@ -3,6 +3,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -36,6 +38,23 @@ public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesi
     }
 
     @Override
+    public Collection<DesignElementDataVector> findAndThaw( BioAssayDimension bioAssayDimension ) {
+        Collection<DesignElementDataVector> thawedVectors = new HashSet<>();
+        thawedVectors.addAll( rawExpressionDataVectorService.findAndThaw( bioAssayDimension ) );
+        thawedVectors.addAll( processedExpressionDataVectorService.findAndThaw( bioAssayDimension ) );
+        return thawedVectors;
+    }
+
+    @Override
+    public Collection<DesignElementDataVector> findAndThaw( Collection<QuantitationType> quantitationTypes ) {
+        Collection<DesignElementDataVector> thawedVectors = new HashSet<>();
+        thawedVectors.addAll( rawExpressionDataVectorService.findAndThaw( quantitationTypes ) );
+        thawedVectors.addAll( processedExpressionDataVectorService.findAndThaw( quantitationTypes ) );
+        return thawedVectors;
+    }
+
+    @Override
+    @Deprecated
     @Transactional(readOnly = true)
     public Collection<DesignElementDataVector> thaw( Collection<DesignElementDataVector> vectors ) {
         Collection<DesignElementDataVector> thawedVectors = new HashSet<>( vectors.size() );

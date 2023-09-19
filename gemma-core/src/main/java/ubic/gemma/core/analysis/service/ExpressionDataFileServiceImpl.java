@@ -74,7 +74,7 @@ import java.util.zip.ZipOutputStream;
  * @author paul
  */
 @Component
-public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<ExpressionExperiment> implements ExpressionDataFileService {
+public class ExpressionDataFileServiceImpl extends AbstractFileService<ExpressionExperiment> implements ExpressionDataFileService {
 
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
@@ -481,7 +481,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -564,7 +564,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.find( type );
+            Collection<DesignElementDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -1174,7 +1174,6 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
-        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
@@ -1214,15 +1213,17 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        vectors = this.rawAndProcessedExpressionDataVectorService.thaw( vectors );
-
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
-
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 
     @Override
-    public void writeTsvToAppendable( ExpressionExperiment entity, Appendable appendable ) throws IOException {
-        // FIXME: implement this
+    @Transactional(readOnly = true)
+    public void writeTsv( ExpressionExperiment entity, Writer writer ) throws IOException {
+        QuantitationType qt = expressionExperimentService.getMaskedPreferredQuantitationType( entity );
+        if ( qt == null ) {
+            throw new IllegalArgumentException( String.format( "%s lacks a preferred masked quantitation type.", entity ) );
+        }
+        writeProcessedExpressionData( entity, qt, writer );
     }
 }

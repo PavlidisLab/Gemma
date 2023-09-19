@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -29,9 +30,10 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Collection;
+import java.util.Collections;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author paul
@@ -45,14 +47,19 @@ public class OntologyServiceIntegrationTest extends BaseSpringContextTest {
     @Autowired
     private MondoOntologyService diseaseOntologyService;
 
+    @Autowired
+    private UberonOntologyService uberonOntologyService;
+
     @Test
     public void test() throws SearchException, OntologySearchException, InterruptedException {
+        assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, diseaseOntologyService.getLanguageLevel() );
+        assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, diseaseOntologyService.getInferenceMode() );
         OntologyTestUtils.initialize( diseaseOntologyService,
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
 
-        assertTrue( name.size() > 0 );
+        assertFalse( name.isEmpty() );
 
         OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
         assertNotNull( t1 );
@@ -62,7 +69,23 @@ public class OntologyServiceIntegrationTest extends BaseSpringContextTest {
 
         // inflammatory diarrhea, not obsolete as of May 2012.
         assertNotNull( os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
-        assertTrue( !os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
+        assertFalse( os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
+    }
 
+    @Test
+    public void testSubstantiaNigraInUberon() throws InterruptedException {
+        assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
+        assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );
+        OntologyUtils.ensureInitialized( uberonOntologyService );
+        OntologyTerm brain = os.getTerm( "http://purl.obolibrary.org/obo/UBERON_0000955" );
+        assertNotNull( brain );
+        OntologyTerm substantiaNigra = os.getTerm( "http://purl.obolibrary.org/obo/UBERON_0002038" );
+        assertNotNull( substantiaNigra );
+        OntologyTerm substantiaNigraParsCompacta = os.getTerm( "http://purl.obolibrary.org/obo/UBERON_0001965" );
+        assertNotNull( substantiaNigraParsCompacta );
+        assertThat( os.getChildren( Collections.singleton( brain ), false, true ) )
+                .contains( substantiaNigra, substantiaNigraParsCompacta );
+        assertThat( os.getChildren( Collections.singleton( substantiaNigra ), false, true ) )
+                .contains( substantiaNigraParsCompacta );
     }
 }

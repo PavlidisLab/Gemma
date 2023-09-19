@@ -150,6 +150,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
     }
 
     @After
@@ -167,7 +168,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
                 .entity()
-                .hasFieldOrPropertyWithValue( "sort", null )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "id" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 0 );
@@ -240,6 +242,29 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", null )
                 .hasFieldOrPropertyWithValue( "limit", null )
                 .hasFieldOrPropertyWithValue( "totalElements", null );
+    }
+
+    @Test
+    public void testGetDatasetsOrderedByGeeqScore() {
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
+                .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), null ) );
+        assertThat( target( "/datasets" ).queryParam( "sort", "+geeq.publicQualityScore" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "geeq.publicQualityScore" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .hasFieldOrPropertyWithValue( "offset", 0 )
+                .hasFieldOrPropertyWithValue( "limit", 20 )
+                .hasFieldOrPropertyWithValue( "totalElements", null );
+        verify( expressionExperimentService ).getSort( "geeq.publicQualityScore", Sort.Direction.ASC );
+        verify( expressionExperimentService )
+                .loadValueObjectsWithCache(
+                        any(),
+                        eq( Sort.by( null, "(case when geeq.publicQualityScore is not null then 0 else 1 end)", Sort.Direction.ASC )
+                                .andThen( Sort.by( null, "geeq.publicQualityScore", Sort.Direction.ASC, "geeq.publicQualityScore" ) ) ),
+                        eq( 0 ),
+                        eq( 20 ) );
     }
 
     @Test

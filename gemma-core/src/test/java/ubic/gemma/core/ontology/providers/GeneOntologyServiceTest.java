@@ -207,7 +207,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
             GeneOntologyServiceTest.log.info( term );
         }
         // is a subclass and partof.
-        assertEquals( 7, terms.size() );
+        assertEquals( 13, terms.size() );
     }
 
     @Test

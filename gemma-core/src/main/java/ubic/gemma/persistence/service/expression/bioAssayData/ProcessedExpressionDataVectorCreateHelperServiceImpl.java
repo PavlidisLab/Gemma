@@ -33,7 +33,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -44,7 +43,6 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -286,9 +284,9 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.thaw( rawExpressionDataVectorService.find( usefulQuantitationTypes ) );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             if ( vectors.isEmpty() ) {
-                vectors = processedExpressionDataVectorService.thaw( processedExpressionDataVectorService.find( usefulQuantitationTypes ) );
+                vectors = processedExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             }
 
             if ( vectors.isEmpty() ) {

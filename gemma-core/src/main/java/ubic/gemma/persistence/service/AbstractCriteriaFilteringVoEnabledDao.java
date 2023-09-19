@@ -299,12 +299,14 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     private static void addOrder( Criteria query, Sort sort ) {
-        String property = formProperty( sort );
-        // handle .size ordering
-        if ( property.endsWith( ".size" ) ) {
-            // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
-            throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
+        for ( ; sort != null; sort = sort.getAndThen() ) {
+            String property = formProperty( sort );
+            // handle .size ordering
+            if ( property.endsWith( ".size" ) ) {
+                // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
+                throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
+            }
+            query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property ) );
         }
-        query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property ) );
     }
 }

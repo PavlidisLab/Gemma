@@ -1,15 +1,12 @@
 package ubic.gemma.web.controller;
 
 import org.junit.Test;
-import org.springframework.dao.CannotAcquireLockException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ubic.gemma.web.util.BaseSpringWebTest;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,11 +35,6 @@ public class ErrorPagesTest extends BaseSpringWebTest {
         public String error500FromException() {
             throw new RuntimeException();
         }
-
-        @RequestMapping("/test/error/500/from_data_access_failure")
-        public String error500FromDataAccessFailure() {
-            throw new CannotAcquireLockException( "" );
-        }
     }
 
     @Test
@@ -53,7 +45,7 @@ public class ErrorPagesTest extends BaseSpringWebTest {
                 .andExpect( model().attribute( "exception", instanceOf( IllegalArgumentException.class ) ) );
         mvc.perform( get( "/test/error/403/from_access_denied" ) )
                 .andExpect( status().isForbidden() )
-                .andExpect( view().name( "accessDeniedFailure" ) )
+                .andExpect( view().name( "error/403" ) )
                 .andExpect( model().attribute( "exception", instanceOf( AccessDeniedException.class ) ) );
         mvc.perform( get( "/test/error/404" ) )
                 .andExpect( status().isNotFound() )
@@ -63,9 +55,5 @@ public class ErrorPagesTest extends BaseSpringWebTest {
                 .andExpect( status().isInternalServerError() )
                 .andExpect( view().name( "error/500" ) )
                 .andExpect( model().attribute( "exception", instanceOf( RuntimeException.class ) ) );
-        mvc.perform( get( "/test/error/500/from_data_access_failure" ) )
-                .andExpect( status().isInternalServerError() )
-                .andExpect( view().name( "dataAccessFailure" ) )
-                .andExpect( model().attribute( "exception", instanceOf( DataAccessException.class ) ) );
     }
 }

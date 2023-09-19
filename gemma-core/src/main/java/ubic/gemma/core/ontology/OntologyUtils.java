@@ -26,6 +26,7 @@ public class OntologyUtils {
             log.info( String.format( "Waiting for %s to load...", service ) );
             service.waitForInitializationThread();
         } else {
+            log.info( String.format( "Force-loading %s...", service ) );
             service.initialize( true, false );
         }
     }

@@ -46,6 +46,5 @@ public interface BlatAssociationService extends BaseImmutableService<BlatAssocia
 
     Collection<BlatAssociation> find( Gene gene );
 
-    @CheckReturnValue
-    Collection<BlatAssociation> thaw( Collection<BlatAssociation> blatAssociations );
+    Collection<BlatAssociation> findAndThaw( BioSequence bioSequence );
 }

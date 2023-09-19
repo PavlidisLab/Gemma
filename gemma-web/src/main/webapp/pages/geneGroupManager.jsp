@@ -16,7 +16,7 @@
         Manage Gene Groups
     </h2>
 
-    <security:authorize access="!hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+    <security:authorize access="!hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
         <script type="text/javascript">
             Gemma.AjaxLogin.showLoginWindowFn(true);
         </script>
@@ -26,7 +26,7 @@
     </security:authorize>
 
 
-    <security:authorize access="hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+    <security:authorize access="hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
         <script type="text/javascript">
             Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 

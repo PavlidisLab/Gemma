@@ -137,9 +137,7 @@ public class DatasetsWebService {
         @Override
         public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
             String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
-                    .scheme( null )
-                    .host( null )
-                    .port( -1 )
+                    .scheme( null ).host( null ).port( -1 )
                     // replace the query with the term URI and only retain the filter
                     .replaceQueryParam( "query", termUri != null ? termUri : termLabel )
                     .replaceQueryParam( "offset" )
@@ -628,8 +626,8 @@ public class DatasetsWebService {
         UriComponentsBuilder uriComponents;
         // this is only for testing because Jersey in-memory container lacks a servlet context
         if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request )
-                    .scheme( null ).host( null );
+            uriComponents = ServletUriComponentsBuilder.fromContextPath( request )
+                    .scheme( null ).host( null ).port( -1 );
         } else {
             uriComponents = UriComponentsBuilder.newInstance();
         }
