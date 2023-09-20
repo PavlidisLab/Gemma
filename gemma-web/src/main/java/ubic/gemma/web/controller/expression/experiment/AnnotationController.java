@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
@@ -77,7 +78,7 @@ public class AnnotationController {
         return ontologyService.getCategoryTerms();
     }
 
-    public Collection<OntologyTerm> getRelationTerms() {
+    public Collection<OntologyProperty> getRelationTerms() {
         return ontologyService.getRelationTerms();
     }
 

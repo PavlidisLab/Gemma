@@ -32,11 +32,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -120,7 +119,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
-    private Set<OntologyTermSimple> relationTerms = null;
+    private Set<OntologyPropertySimple> relationTerms = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -437,7 +436,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
     @Override
-    public Collection<OntologyTerm> getRelationTerms() {
+    public Collection<OntologyProperty> getRelationTerms() {
         // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
         return relationTerms.stream()
                 .map( term -> {
@@ -798,7 +797,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
     private void initializeRelationTerms() throws IOException {
-        Set<OntologyTermSimple> relationTerms= new HashSet<>();
+        Set<OntologyPropertySimple> relationTerms = new HashSet<>();
         Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
         try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
             String line;
@@ -809,7 +808,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 if ( f.length < 2 ) {
                     continue;
                 }
-                relationTerms.add( new OntologyTermSimple( f[0], f[1] ) );
+                relationTerms.add( new OntologyPropertySimple( f[0], f[1] ) );
             }
             this.relationTerms = Collections.unmodifiableSet( relationTerms );
         }

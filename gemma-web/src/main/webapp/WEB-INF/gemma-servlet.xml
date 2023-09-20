@@ -1008,8 +1008,14 @@
         <dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode"/>
         <dwr:convert type="classConverter" class="java.lang.Class"/>
 
-        <!-- OntologyTerm might not be needed; we use Characteristics -->
+        <!-- the following two are exposed in the AnnotationController -->
         <dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyTerm">
+            <dwr:include method="term"/>
+            <dwr:include method="uri"/>
+            <dwr:include method="label"/>
+            <dwr:include method="comment"/>
+        </dwr:convert>
+        <dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyProperty">
             <dwr:include method="term"/>
             <dwr:include method="uri"/>
             <dwr:include method="label"/>

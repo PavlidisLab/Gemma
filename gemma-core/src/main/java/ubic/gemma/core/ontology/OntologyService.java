@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.ontology;
 
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
@@ -98,7 +99,7 @@ public interface OntologyService {
      *
      * @return terms allowed for the predicate (relationship) in a Characteristic
      */
-    Collection<OntologyTerm> getRelationTerms();
+    Collection<OntologyProperty> getRelationTerms();
 
     /**
      * Obtain the parents of a collection of terms.
