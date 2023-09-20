@@ -24,7 +24,6 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
@@ -72,11 +71,6 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
 
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
-    /**
-     * Obtain analyses per experiment IDs which can be either IDs of {@link ExpressionExperiment} or {@link ExpressionExperimentSubSet}.
-     * @param includeAnalysesOfSubsets whether to include the analysis of subsets if th experiment ID is that of an {@link ExpressionExperiment}
-     * @return a mapping of IDs of {@link BioAssaySet} to lists of {@link DifferentialExpressionAnalysisValueObject}
-     */
     Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> experimentIds, boolean includeAnalysesOfSubsets );
+            Collection<Long> expressionExperimentIds, int offset, int limit );
 }

@@ -22,7 +22,10 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
@@ -115,37 +118,19 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
-     * Retrieve all the analysis VOs for a given {@link BioAssaySet}.
-     * <p>
-     * If the given experiment has subsets, the returned list will contain experiments for its {@link ExpressionExperimentSubSet}
-     * as per {@link #getAnalysesByExperiments(Collection, boolean)}.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    List<DifferentialExpressionAnalysisValueObject> getAnalysesByExperiment( BioAssaySet experiment, boolean includeAnalysesOfSubsets );
-
-    /**
-     * Retrieve differential expression analyses by their associated experiment.
-     * <p>
-     * If the experiment is a {@link ExpressionExperiment} that has subsets, the returned values will contain analyses
-     * of its {@link ExpressionExperimentSubSet}.
-     * <p>
-     * Subsets are handled two ways: if the given experiment is a subset, or if the experiment has subsets. In the
+     * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are
+     * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
      * latter case, the return value will contain experiments that were not explicitly queried for.
      *
-     * @param experiments a collection of {@link ExpressionExperiment} or {@link ExpressionExperimentSubSet}
-     * @return a mapping of {@link BioAssaySet} VOs to analysies VOs
+     * @param ids of experiments or experimentsubsets.
+     * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiments( Collection<? extends BioAssaySet> experiments, boolean includeAnalysesOfSubsets );
+    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids );
 
-    /**
-     * Retrieve differential expression analyses by IDs of their associated experiment.
-     * <p>
-     * If the ID represent a {@link ExpressionExperiment} that has subsets, the returned values will contain analyses of
-     * its {@link ExpressionExperimentSubSet}.
-     *
-     * @see DifferentialExpressionAnalysisDao#getAnalysesByExperimentIds(Collection, boolean)
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds( Collection<Long> experimentIds, boolean includeAnalysesOfSubsets );
+    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids, int offset, int limit );
+
 }

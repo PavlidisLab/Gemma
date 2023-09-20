@@ -10,7 +10,6 @@ import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -18,7 +17,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -26,8 +24,6 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.Responder;
-import ubic.gemma.rest.util.ResponseDataObject;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
@@ -41,16 +37,14 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     private final ArrayDesignService adService;
     private final BioAssayService baService;
     private final OutlierDetectionService outlierDetectionService;
-    private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService, DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         super( service );
         this.searchService = searchService;
         this.adService = adService;
         this.baService = baService;
         this.outlierDetectionService = outlierDetectionService;
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     @Override
@@ -165,9 +159,5 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotationsById( ee.getId() );
-    }
-
-    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment( DatasetArg<?> datasetArg ) {
-        return Responder.respond( differentialExpressionAnalysisService.getAnalysesByExperiment( getEntity( datasetArg ), true ) );
     }
 }

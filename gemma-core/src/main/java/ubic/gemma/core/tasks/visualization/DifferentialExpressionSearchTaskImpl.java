@@ -131,7 +131,7 @@ public class DifferentialExpressionSearchTaskImpl
 
         // database hit: important that this be fast.
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
-                .getAnalysesByExperimentIds( EntityUtils.getIds( experimentGroup ), true );
+                .getAnalysesByExperiment( EntityUtils.getIds( experimentGroup ) );
 
         experiment:
         for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {

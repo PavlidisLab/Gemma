@@ -41,7 +41,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author paul
@@ -193,27 +192,17 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisValueObject> getAnalysesByExperiment( BioAssaySet experiment, boolean includeAnalysesOfSubsets ) {
-        return differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( Collections.singleton( experiment.getId() ), includeAnalysesOfSubsets )
-                .values()
-                .stream()
-                .flatMap( Collection::stream )
-                .collect( Collectors.toList() );
+    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids ) {
+        return this.getAnalysesByExperiment( ids, 0, -1 );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiments(
-            Collection<? extends BioAssaySet> experiments, boolean includeAnalysesOfSubsets ) {
-        return getAnalysesByExperimentIds( EntityUtils.getIds( experiments ), includeAnalysesOfSubsets );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds( Collection<Long> experimentIds, boolean includeAnalysesOfSubsets ) {
+    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids, int offset, int limit ) {
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( experimentIds, includeAnalysesOfSubsets );
+                .getAnalysesByExperimentIds( ids, offset, limit );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );

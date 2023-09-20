@@ -79,7 +79,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
 
         @Bean
         public DatasetArgService datasetRestService( ExpressionExperimentService service, SearchService searchService ) {
-            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ), mock() );
+            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
         }
 
         @Bean
