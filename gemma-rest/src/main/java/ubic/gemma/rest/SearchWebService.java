@@ -102,9 +102,7 @@ public class SearchWebService {
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
             String searchUrl = ServletUriComponentsBuilder.fromRequest( request )
-                    .scheme( null )
-                    .host( null )
-                    .port( -1 )
+                    .scheme( null ).host( null ).port( -1 )
                     .replaceQueryParam( "query", uri != null ? uri : label )
                     .build()
                     .toUriString();

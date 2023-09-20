@@ -29,20 +29,26 @@ public class FilterQueryUtils {
 
         ret.append( " order by " );
 
-        if ( sort.getPropertyName().endsWith( ".size" ) ) {
-            // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( "size(" ).append( formProperty( sort ).replaceFirst( "\\.size$", "" ) ).append( ')' );
-        } else {
-            ret.append( formProperty( sort ) );
-        }
+        for ( ; sort != null; sort = sort.getAndThen() ) {
+            if ( sort.getPropertyName().endsWith( ".size" ) ) {
+                // This will crate an order by count clause, stripping the object alias and size suffix
+                ret.append( "size(" ).append( formProperty( sort ).replaceFirst( "\\.size$", "" ) ).append( ')' );
+            } else {
+                ret.append( formProperty( sort ) );
+            }
 
-        //noinspection StatementWithEmptyBody
-        if ( sort.getDirection() == null ) {
-            // use default direction
-        } else if ( sort.getDirection().equals( Sort.Direction.ASC ) ) {
-            ret.append( " asc" );
-        } else if ( sort.getDirection().equals( Sort.Direction.DESC ) ) {
-            ret.append( " desc" );
+            //noinspection StatementWithEmptyBody
+            if ( sort.getDirection() == null ) {
+                // use default direction
+            } else if ( sort.getDirection().equals( Sort.Direction.ASC ) ) {
+                ret.append( " asc" );
+            } else if ( sort.getDirection().equals( Sort.Direction.DESC ) ) {
+                ret.append( " desc" );
+            }
+
+            if ( sort.getAndThen() != null ) {
+                ret.append( ", " );
+            }
         }
 
         return ret.toString();

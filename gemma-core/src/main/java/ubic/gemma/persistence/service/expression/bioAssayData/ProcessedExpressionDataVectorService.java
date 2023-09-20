@@ -159,6 +159,8 @@ public interface ProcessedExpressionDataVectorService
 
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
+    Collection<ProcessedExpressionDataVector> getProcessedDataVectorsAndThaw( ExpressionExperiment expressionExperiment );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
     Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes,
@@ -215,12 +217,4 @@ public interface ProcessedExpressionDataVectorService
 
     @Secured({ "GROUP_USER" })
     void update( Collection<ProcessedExpressionDataVector> updatedVectors );
-
-    /**
-     * Thaws the given vectors.
-     *
-     * @param designElementDataVectors the vectors to thaw.
-     */
-    @CheckReturnValue
-    Collection<ProcessedExpressionDataVector> thaw( Collection<ProcessedExpressionDataVector> designElementDataVectors );
 }

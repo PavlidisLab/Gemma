@@ -414,14 +414,13 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         Collection<RawExpressionDataVector> oldVectors = new HashSet<>();
 
         for ( BioAssayDimension dim : allOldBioAssayDims ) {
-            oldVectors.addAll( rawExpressionDataVectorService.find( dim ) );
+            oldVectors.addAll( rawExpressionDataVectorService.findAndThaw( dim ) );
         }
 
         if ( oldVectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors" );
         }
 
-        oldVectors = rawExpressionDataVectorService.thaw( oldVectors );
         Map<QuantitationType, Collection<RawExpressionDataVector>> qt2Vec = new HashMap<>();
         Collection<QuantitationType> qtsToAdd = new HashSet<>();
         for ( RawExpressionDataVector v : oldVectors ) {

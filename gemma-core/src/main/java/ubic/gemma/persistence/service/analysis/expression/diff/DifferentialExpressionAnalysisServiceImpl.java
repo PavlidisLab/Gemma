@@ -220,6 +220,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Override
     @Transactional
     public void remove( DifferentialExpressionAnalysis toDelete ) {
+        toDelete = ensureInSession( toDelete );
+       
         // Remove meta analyses that use the analyzed experiment
         log.info( "Removing meta analyses with this experiment..." );
         Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao

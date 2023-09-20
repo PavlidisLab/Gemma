@@ -14,6 +14,9 @@ public class SortValueObject {
     private final String direction;
 
     public SortValueObject( Sort sort ) {
+        // get the innermost sort
+        // TODO: serialize sort as an array of sort objects
+        while ( sort.getAndThen() != null ) sort = sort.getAndThen();
         if ( sort.getOriginalProperty() != null ) {
             this.orderBy = sort.getOriginalProperty();
         } else if ( sort.getObjectAlias() != null ) {

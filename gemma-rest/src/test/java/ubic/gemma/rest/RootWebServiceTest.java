@@ -28,7 +28,7 @@ public class RootWebServiceTest extends BaseSpringContextTest {
         String expectedVersion = OpenApiUtils.getOpenApi( null ).getInfo().getVersion();
         assertThat( expectedVersion ).isNotBlank();
         assertThat( response.getData().getVersion() ).isEqualTo( expectedVersion );
-        assertThat( response.getData().getDocs() ).isEqualTo( URI.create( "http://localhost/resources/restapidocs/" ) );
+        assertThat( response.getData().getDocs() ).isEqualTo( URI.create( "/resources/restapidocs/" ) );
         assertThat( response.getData().getExternalDatabases() )
                 .extracting( "name" ).containsExactly( Settings.getStringArray( "gemma.externalDatabases.featured" ) );
     }
