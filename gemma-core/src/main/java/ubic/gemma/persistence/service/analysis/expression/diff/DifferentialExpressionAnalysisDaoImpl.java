@@ -21,15 +21,14 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.SQLQuery;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -42,8 +41,10 @@ import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
@@ -146,15 +147,16 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         // create the analysis, result sets, pvalue distributions, etc.
         DifferentialExpressionAnalysis finalEntity = super.create( entity );
 
-        getSessionFactory().getCurrentSession().doWork( work -> {
-            PreparedStatement insertResultStmt = work.prepareStatement( INSERT_RESULT_SQL );
-            PreparedStatement insertContrastStmt = work.prepareStatement( INSERT_CONTRAST_SQL );
-            int numResults = 0;
-            int numContrasts = 0;
+        Session session = getSessionFactory().getCurrentSession();
+
+        session.doWork( work -> {
+            PreparedStatement insertResultStmt = work.prepareStatement( INSERT_RESULT_SQL, PreparedStatement.RETURN_GENERATED_KEYS );
+            PreparedStatement insertContrastStmt = work.prepareStatement( INSERT_CONTRAST_SQL, PreparedStatement.RETURN_GENERATED_KEYS );
+            List<DifferentialExpressionAnalysisResult> results = new ArrayList<>();
+            List<ContrastResult> contrasts = new ArrayList<>();
             for ( ExpressionAnalysisResultSet rs : finalEntity.getResultSets() ) {
                 for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
-                    result.setId( ( Long ) resultPersister.getIdentifierGenerator().generate( ( SessionImpl ) getSessionFactory().getCurrentSession(), result ) );
-                    insertResultStmt.setLong( 1, result.getId() );
+                    insertResultStmt.setNull( 1, Types.BIGINT );
                     insertResultStmt.setObject( 2, result.getPvalue(), Types.DOUBLE );
                     insertResultStmt.setObject( 3, result.getCorrectedPvalue(), Types.DOUBLE );
                     insertResultStmt.setObject( 4, result.getRank(), Types.DOUBLE );
@@ -162,10 +164,16 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                     insertResultStmt.setLong( 6, result.getProbe().getId() );
                     insertResultStmt.setLong( 7, rs.getId() );
                     insertResultStmt.addBatch();
-                    numResults++;
+                    results.add( result );
+                }
+            }
+
+            insertRowsAndAssignGeneratedKeys( INSERT_RESULT_SQL, insertResultStmt, results, resultPersister, ( SessionImplementor ) session );
+
+            for ( ExpressionAnalysisResultSet rs : finalEntity.getResultSets() ) {
+                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
                     for ( ContrastResult cr : result.getContrasts() ) {
-                        cr.setId( ( Long ) contrastPersister.getIdentifierGenerator().generate( ( SessionImpl ) getSessionFactory().getCurrentSession(), cr ) );
-                        insertContrastStmt.setLong( 1, cr.getId() );
+                        insertContrastStmt.setNull( 1, Types.BIGINT );
                         insertContrastStmt.setObject( 2, cr.getPvalue(), Types.DOUBLE );
                         insertContrastStmt.setObject( 3, cr.getTstat(), Types.DOUBLE );
                         if ( cr.getFactorValue() != null ) {
@@ -182,18 +190,27 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                             insertContrastStmt.setNull( 8, Types.BIGINT );
                         }
                         insertContrastStmt.addBatch();
-                        numContrasts++;
+                        contrasts.add( cr );
                     }
                 }
             }
 
-            statementLogger.logStatement( INSERT_RESULT_SQL + String.format( " [repeated %d times]", numResults ) );
-            ensureExpectedRowsAreInserted( insertResultStmt, insertResultStmt.executeBatch() );
-            statementLogger.logStatement( INSERT_CONTRAST_SQL + String.format( " [repeated %d times]", numContrasts ) );
-            ensureExpectedRowsAreInserted( insertContrastStmt, insertContrastStmt.executeBatch() );
+            insertRowsAndAssignGeneratedKeys( INSERT_CONTRAST_SQL, insertContrastStmt, contrasts, contrastPersister, ( SessionImplementor ) session );
         } );
 
         return finalEntity;
+    }
+
+    private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
+        statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
+        ensureExpectedRowsAreInserted( insertStmt, insertStmt.executeBatch() );
+        ResultSet rs = insertStmt.getGeneratedKeys();
+        String idProp = persister.getIdentifierPropertyName();
+        Type idType = persister.getIdentifierType();
+        for ( Object object : objects ) {
+            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType );
+            persister.setIdentifier( object, id, session );
+        }
     }
 
     private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
