@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -50,6 +51,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -203,22 +205,75 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
         }
 
-        if ( StringUtils.isBlank( c.getCategory() ) ) {
-            throw new IllegalArgumentException( "The category cannot be blank for " + c );
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No such experiment with " + fv );
         }
 
-        if ( fv.getCharacteristics() == null ) {
-            fv.setCharacteristics( new HashSet<>() );
+        Statement c = statementFromVo( cvo );
+
+        if ( fv.getCharacteristics().contains( c ) ) {
+            throw new IllegalArgumentException( "The factor value already has this characteristic." );
         }
 
         fv.getCharacteristics().add( c );
 
         factorValueService.update( fv );
 
-        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
         // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
         // "FactorValue characteristic added to: " + fv, c.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
+    }
+
+    private Statement statementFromVo( CharacteristicBasicValueObject vo ) {
+        if ( StringUtils.isBlank( vo.getCategory() ) ) {
+            throw new IllegalArgumentException( "The category cannot be blank for " + vo );
+        }
+        if ( StringUtils.isBlank( vo.getValue() ) ) {
+            throw new IllegalArgumentException( "The value cannot be blank for " + vo );
+        }
+        Characteristic object = statementObjectFromVo( vo.getObject() );
+        Characteristic secondObject = statementObjectFromVo( vo.getSecondObject() );
+        if ( StringUtils.isBlank( vo.getPredicate() ) ^ object == null ) {
+            throw new IllegalArgumentException( "The predicate and object must be either both present or absent." );
+        }
+        if ( StringUtils.isBlank( vo.getSecondPredicate() ) ^ secondObject == null ) {
+            throw new IllegalArgumentException( "The second predicate and second object must be either both present or absent." );
+        }
+        Statement c = new Statement();
+        c.setCategory( vo.getCategory() );
+        c.setCategoryUri( StringUtils.stripToNull( vo.getCategoryUri() ) );
+        c.setValue( vo.getValue() );
+        c.setValueUri( StringUtils.stripToNull( vo.getValueUri() ) );
+        if ( object != null ) {
+            c.setPredicate( vo.getPredicate() );
+            c.setPredicateUri( StringUtils.stripToNull( vo.getPredicateUri() ) );
+            c.setObject( object );
+        }
+        if ( secondObject != null ) {
+            c.setSecondPredicate( vo.getSecondPredicate() );
+            c.setSecondPredicateUri( StringUtils.stripToNull( vo.getSecondPredicateUri() ) );
+            c.setSecondObject( secondObject );
+        }
+        return c;
+    }
+
+    /**
+     * Serialize the object of a statement, if any.
+     */
+    @Nullable
+    private Characteristic statementObjectFromVo( @Nullable CharacteristicBasicValueObject vo ) {
+        if ( vo == null || ( StringUtils.isBlank( vo.getValue() ) && StringUtils.isBlank( vo.getValueUri() ) ) ) {
+            return null; // blank field in the frontend
+        }
+        if ( StringUtils.isBlank( vo.getValue() ) ) {
+            throw new IllegalArgumentException( "The value cannot be blank for " + vo );
+        }
+        Characteristic characteristic = new Characteristic();
+        characteristic.setValue( vo.getValue() );
+        characteristic.setValueUri( StringUtils.stripToNull( vo.getValueUri() ) );
+        return characteristic;
     }
 
     @Override
