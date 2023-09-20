@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -49,7 +50,7 @@ import java.util.Map;
  */
 @Component
 @Scope("prototype")
-public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand>
+public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpdateCommand>
         implements CharacteristicUpdateTask {
 
     private static final Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
@@ -186,7 +187,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             return new TaskResult( taskCommand, false );
         }
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
         for ( Characteristic cFromClient : asChars ) {
             Characteristic cFromDatabase = characteristicService.loadOrFail( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
@@ -229,7 +230,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         if ( asChars.size() == 0 )
             return new TaskResult( taskCommand, true );
 
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
 
         for ( Characteristic cFromClient : asChars ) {
             Long characteristicId = cFromClient.getId();

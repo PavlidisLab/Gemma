@@ -15,18 +15,17 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author paul
@@ -39,22 +38,36 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Test
-    public void test() throws FilteringException {
+    @Category(SlowTest.class)
+    public void test() {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
+        assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) );
+        assertNull( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) );
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         sampleCoexpressionAnalysisService.compute( ee );
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        assertNotNull( matrix );
+        assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
 
-                this.check( matrix );
+        this.check( matrix );
 
         // recompute ...
         sampleCoexpressionAnalysisService.compute( ee );
         matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        assertNotNull( matrix );
+        assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
+        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+        assertNotNull( matrix );
+        this.check( matrix );
+
+        matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        assertNotNull( matrix );
 
         this.check( matrix );
     }

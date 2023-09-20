@@ -50,7 +50,6 @@ import static org.junit.Assert.*;
  *
  * @author paul
  */
-@Category(SlowTest.class)
 public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Autowired
@@ -105,6 +104,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      *
      */
     @Test
+    @Category(SlowTest.class)
     public void testGetBatches() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -145,6 +145,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      * lane
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE14285OneBatch() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );

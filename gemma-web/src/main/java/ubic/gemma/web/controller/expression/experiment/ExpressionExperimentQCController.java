@@ -95,8 +95,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.DecimalFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 //
 
@@ -304,7 +304,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee )
+        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );
@@ -430,16 +430,13 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
      * @param size of the image.
      * @param os stream to write the image to.
-     * @return null
      */
-    @SuppressWarnings("SameReturnValue")
-    @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
-    public ModelAndView visualizePvalueDist( Long id, Long analysisId, Long rsid, String factorName, Integer size,
+    @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", produces = "image/png")
+    public void visualizePvalueDist( Long id, Long analysisId, Long rsid, String factorName, Integer size,
             OutputStream os ) throws Exception {
         ExpressionExperiment ee = this.expressionExperimentService.load( id );
         if ( ee == null ) {
-            this.log.warn( "Could not load experiment with id " + id );
-            return null;
+            throw new IllegalArgumentException( "Could not load experiment with id " + id );
         }
 
         if ( size == null ) {
@@ -451,8 +448,6 @@ public class ExpressionExperimentQCController extends BaseController {
                 this.writePlaceholderThumbnailImage( os, size );
             }
         }
-
-        return null; // nothing to return;
     }
 
     @RequestMapping("/expressionExperiment/eigenGenes.html")

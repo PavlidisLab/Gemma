@@ -112,10 +112,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Override
     @Transactional
     public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
-
-
-        TreeMap<BioMaterial, Date> sortedB2Dates = new TreeMap<>( dates );
-
+        TreeMap<BioMaterial, Date> sortedB2Dates = new TreeMap<>( Comparator.comparing( dates::get ) );
+        sortedB2Dates.putAll( dates );
 
         List<Boolean> isUsable = new ArrayList<>();
         for ( BioMaterial bm : sortedB2Dates.keySet() ) {

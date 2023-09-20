@@ -39,7 +39,8 @@
             </type>
         </property>
         <!-- absolutely necessary for this entity, so always fetched -->
-        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="join">
+        <!-- there's only a handful of units, so select and cache -->
+        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="select">
             <column name="UNIT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
     </class>

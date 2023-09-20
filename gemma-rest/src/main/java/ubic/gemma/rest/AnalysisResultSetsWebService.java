@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -87,7 +86,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public FilteringAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
+    public FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
             @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
@@ -116,7 +115,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count platforms matching a given set of filters")
+    @Operation(summary = "Count result sets matching the provided filter")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return Responder.respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
@@ -154,9 +153,6 @@ public class AnalysisResultSetsWebService {
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
             ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
-            if ( ears == null ) {
-                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
-            }
             return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
         } else {
             ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
@@ -189,10 +185,10 @@ public class AnalysisResultSetsWebService {
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
-        final Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes = expressionAnalysisResultSetService.loadResultToGenesMap( ears );
+        final Map<Long, List<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
         return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, result2Genes, writer );
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, resultId2Genes, writer );
             }
         };
     }

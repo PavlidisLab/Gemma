@@ -18,9 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.sequence;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
-interface ArrayDesignProbeMapperTask extends Task<TaskResult, ArrayDesignProbeMapTaskCommand> {}
+interface ArrayDesignProbeMapperTask extends Task<ArrayDesignProbeMapTaskCommand> {}
 
 

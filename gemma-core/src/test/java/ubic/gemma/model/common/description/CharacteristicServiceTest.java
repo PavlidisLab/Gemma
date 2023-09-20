@@ -96,17 +96,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public final void testGetParents() {
-        Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ) );
-        assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertNull( charToParent.get( eeChar2 ) );
-    }
-
-    @Test
-    public final void testGetParentsWithClazzConstraint() {
-        Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents( Arrays.asList( new Class<?>[] { ExpressionExperiment.class } ),
-                Collections.singletonList( eeChar1 ) );
+        Map<Characteristic, Identifiable> charToParent;
+        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ), null, -1 );
         assertEquals( ee, charToParent.get( eeChar1 ) );
         assertNull( charToParent.get( eeChar2 ) );
     }

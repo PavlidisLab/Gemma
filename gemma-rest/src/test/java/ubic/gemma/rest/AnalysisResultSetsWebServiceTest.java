@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,9 +54,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
-
-    @Autowired
     private DatabaseEntryService databaseEntryService;
 
     @Autowired
@@ -68,12 +61,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
     /* fixtures */
     private ArrayDesign arrayDesign;
-    private CompositeSequence probe;
     private ExpressionExperiment ee;
     private DifferentialExpressionAnalysis dea;
     private ExpressionAnalysisResultSet dears;
-    private DifferentialExpressionAnalysisResult dear;
-    private DatabaseEntry databaseEntry;
     private DatabaseEntry databaseEntry2;
 
     @Before
@@ -81,34 +71,39 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
         ee = getTestPersistentBasicExpressionExperiment();
 
+        arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
+        CompositeSequence probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
+        assertNotNull( probe );
+        assertNotNull( probe.getId() );
+
         dea = new DifferentialExpressionAnalysis();
         dea.setExperimentAnalyzed( ee );
-        dea = differentialExpressionAnalysisService.create( dea );
-
         dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
-        dears = expressionAnalysisResultSetService.create( dears );
+        PvalueDistribution pvalueDist = new PvalueDistribution();
+        pvalueDist.setBinCounts( new byte[0] );
+        pvalueDist.setNumBins( 0 );
+        dears.setPvalueDistribution( pvalueDist );
+        dea.getResultSets().add( dears );
 
-        arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
-        probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
-        assertNotNull( probe );
-
-        dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
+        DifferentialExpressionAnalysisResult dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
         dear.setPvalue( 1.0 );
         dear.setCorrectedPvalue( 0.0001 );
         dear.setResultSet( dears );
         dear.setProbe( probe );
-        dears.setResults( Collections.singleton( dear ) );
-        differentialExpressionAnalysisService.update( dears );
+        dears.getResults().add( dear );
+
+        dea = differentialExpressionAnalysisService.create( dea );
 
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assertNotNull( geo );
         assertEquals( "GEO", geo.getName() );
 
-        databaseEntry = DatabaseEntry.Factory.newInstance();
+        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance();
         databaseEntry.setAccession( "GEO123123" );
         databaseEntry.setExternalDatabase( geo );
-        databaseEntry = databaseEntryService.create( databaseEntry );
+        //noinspection ResultOfMethodCallIgnored
+        databaseEntryService.create( databaseEntry );
 
         databaseEntry2 = DatabaseEntry.Factory.newInstance();
         databaseEntry2.setAccession( "GEO1213121" );
@@ -118,7 +113,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        expressionAnalysisResultSetService.remove( dears );
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
         databaseEntryService.remove( databaseEntry2 );
@@ -283,8 +277,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
                 .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
         assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
         CSVRecord record = reader.iterator().next();
-        assertEquals( record.get( "pvalue" ), "1E0" );
-        assertEquals( record.get( "corrected_pvalue" ), "1E-4" );
+        assertEquals( record.get( "pvalue" ), "1.0" );
+        assertEquals( record.get( "corrected_pvalue" ), "0.0001" );
         // rank is null, it should appear as an empty string
         assertEquals( record.get( "rank" ), "" );
     }

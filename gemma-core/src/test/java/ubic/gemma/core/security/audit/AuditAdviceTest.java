@@ -18,20 +18,13 @@
  */
 package ubic.gemma.core.security.audit;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.Auditable;
@@ -42,6 +35,15 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
@@ -58,9 +60,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -168,88 +167,50 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
     @Category(SlowTest.class)
-    public void testAuditFindOrCreateConcurrentTorture() throws Exception {
+    public void testAuditFindOrCreateConcurrentTorture() {
         int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
         final int numExperimentsPerThread = 5;
         final int numUpdates = 10;
         final Random random = new Random();
         final AtomicInteger c = new AtomicInteger( 0 );
-        final AtomicBoolean failed = new AtomicBoolean( false );
-        Collection<Thread> threads = new HashSet<>();
+        Collection<Future<?>> futures = new HashSet<>();
+        ExecutorService es = Executors.newFixedThreadPool( numThreads );
         for ( int i = 0; i < numThreads; i++ ) {
+            for ( int j = 0; j < numExperimentsPerThread; j++ ) {
+                log.debug( "Starting experiment " + j );
+                futures.add( es.submit( () -> {
+                    ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                    ee.setDescription( "From test" );
+                    ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+                    ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+                    ee.setTaxon( taxonService.load( 1L ) );
+                    ee = expressionExperimentService.findOrCreate( ee );
 
-            Thread.sleep( random.nextInt( 100 ) );
+                    assertNotNull( ee.getAuditTrail() );
+                    assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+                    assertNotNull( ee.getCurationDetails() );
+                    assertNotNull( ee.getCurationDetails().getId() );
+                    assertNull( ee.getCurationDetails().getLastUpdated() );
+                    assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
 
-            Thread k = new Thread( new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        for ( int j = 0; j < numExperimentsPerThread; j++ ) {
-                            log.debug( "Starting experiment " + j );
-                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-                            ee.setDescription( "From test" );
-                            ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
-                            ee.setTaxon( taxonService.load( 1L ) );
-                            ee = expressionExperimentService.findOrCreate( ee );
-
-                            assertNotNull( ee.getAuditTrail() );
-                            assertEquals( 1, ee.getAuditTrail().getEvents().size() );
-                            assertNotNull( ee.getCurationDetails() );
-                            assertNotNull( ee.getCurationDetails().getId() );
-                            assertNull( ee.getCurationDetails().getLastUpdated() );
-                            assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
-
-                            for ( int q = 0; q < numUpdates; q++ ) {
-                                Thread.sleep( random.nextInt( 5 ) );
-                                log.debug( "Update: experiment " + j );
-                                expressionExperimentService.update( ee );
-                                c.incrementAndGet();
-                            }
-                            log.debug( "Done with experiment " + j );
-                        }
-                    } catch ( Exception e ) {
-                        failed.set( true );
-                        log.error( "!!!!!!!!!!!!!!!!!!!!!! FAILED: " + e.getMessage() );
-                        log.debug( e, e );
-                        throw new RuntimeException( e );
+                    for ( int q = 0; q < numUpdates; q++ ) {
+                        expressionExperimentService.update( ee );
+                        assertEquals( 2 + q, ee.getAuditTrail().getEvents().size() );
+                        assertEquals( ee.getAuditTrail().getLast().getDate(), ee.getCurationDetails().getLastUpdated() );
+                        c.incrementAndGet();
                     }
-                    log.debug( "Thread done." );
-                }
-            } );
-            threads.add( k );
-
-            k.start();
-        }
-
-        int waits = 0;
-        int maxWaits = 20;
-        int expectedEventCount = numThreads * numExperimentsPerThread * numUpdates;
-        while ( c.get() < expectedEventCount && !failed.get() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting ..." );
-            if ( ++waits > maxWaits ) {
-                for ( Thread t : threads ) {
-                    if ( t.isAlive() )
-                        t.interrupt();
-                }
-                fail( "Multithreaded failure: timed out." );
+                } ) );
             }
         }
 
-        log.debug( " &&&&& DONE &&&&&" );
-
-        for ( Thread thread : threads ) {
-            if ( thread.isAlive() )
-                thread.interrupt();
+        long maxWaits = 20_000_000_000L; // 20 s in ns
+        long startTime = System.nanoTime();
+        for ( Future<?> f : futures ) {
+            long elapsed = System.nanoTime() - startTime;
+            Assertions.assertThat( f ).succeedsWithin( Math.max( maxWaits - elapsed, 0 ), TimeUnit.NANOSECONDS );
         }
 
-        if ( failed.get() || c.get() != expectedEventCount ) {
-            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock?" );
-        } else {
-            log.info( "TORTURE TEST PASSED!" );
-        }
-
+        Assertions.assertThat( c ).hasValue( numThreads * numExperimentsPerThread * numUpdates );
     }
 
     private void checkAuditTrail( Auditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
@@ -289,7 +250,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
-    private void checkEEAuditTrails( ExpressionExperiment ee, Collection<Long> trailIds, Collection<Long> eventIds ) {
+    private void checkEEAuditTrails( ExpressionExperiment
+            ee, Collection<Long> trailIds, Collection<Long> eventIds ) {
         this.checkAuditTrail( ee, trailIds, eventIds );
 
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

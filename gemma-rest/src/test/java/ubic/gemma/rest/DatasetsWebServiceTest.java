@@ -4,21 +4,19 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -36,6 +34,7 @@ import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
+import ubic.gemma.rest.util.args.QuantitationTypeArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -70,18 +69,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public BioAssayService bioAssayService() {
-            return mock( BioAssayService.class );
-        }
-
-        @Bean
         public ProcessedExpressionDataVectorService processedExpressionDataVectorService() {
             return mock( ProcessedExpressionDataVectorService.class );
-        }
-
-        @Bean
-        public GeneService geneService() {
-            return mock( GeneService.class );
         }
 
         @Bean
@@ -100,23 +89,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public OutlierDetectionService outlierDetectionService() {
-            return mock( OutlierDetectionService.class );
-        }
-
-        @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock( QuantitationTypeService.class );
-        }
-
-        @Bean
-        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService ) {
-            return new DatasetArgService( expressionExperimentService );
-        }
-
-        @Bean
-        public GeneArgService geneArgService( GeneService geneService ) {
-            return new GeneArgService( geneService );
         }
 
         @Bean
@@ -125,8 +99,28 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService ) {
+            return new DatasetArgService( expressionExperimentService, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
+        }
+
+        @Bean
+        public QuantitationTypeArgService quantitationTypeArgService( QuantitationTypeService quantitationTypeService ) {
+            return new QuantitationTypeArgService( quantitationTypeService );
+        }
+
+        @Bean
+        public GeneArgService geneArgService() {
+            return mock( GeneArgService.class );
+        }
+
+        @Bean
         public AnalyticsProvider analyticsProvider() {
             return mock( AnalyticsProvider.class );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
         }
     }
 
@@ -142,6 +136,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private AnalyticsProvider analyticsProvider;
 
+    @Autowired
+    private SearchService searchService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -153,24 +150,26 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
     }
 
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
     }
 
     @Test
     public void testGetDatasets() {
-        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
         assertThat( target( "/datasets" ).request().acceptLanguage( Locale.CANADA_FRENCH ).get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
                 .entity()
-                .hasFieldOrPropertyWithValue( "sort", null )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "id" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 0 );
@@ -184,9 +183,6 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .containsEntry( "language", "fr-ca" );
     }
 
-    @Autowired
-    private SearchService searchService;
-
     @Test
     public void testGetDatasetsWithQuery() throws SearchException {
         List<Long> ids = Arrays.asList( 1L, 3L, 5L );
@@ -197,7 +193,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( map.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( results );
         when( searchService.search( any() ) ).thenReturn( map );
-        when( expressionExperimentService.loadIds( any(), any() ) ).thenReturn( ids );
+        when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
         when( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) )
                 .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) )
@@ -206,13 +202,28 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
-        verify( searchService ).search( captor.capture() );
-        assertThat( captor.getValue() )
-                .hasFieldOrPropertyWithValue( "query", "cerebellum" )
-                .hasFieldOrPropertyWithValue( "fillResults", false );
+        verify( searchService, times( 2 ) ).search( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .hasSize( 2 )
+                .satisfiesExactly( s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNull();
+                }, s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNotNull();
+                } );
         verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
-        verify( expressionExperimentService ).loadIds( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), null );
-        verify( expressionExperimentService ).loadValueObjectsByIds( ids, true );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
+    }
+
+    @Test
+    public void testGetDatasetsWithEmptyQuery() {
+        assertThat( target( "/datasets" ).queryParam( "query", "" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
     private SearchResult<ExpressionExperiment> createMockSearchResult( Long id ) {
@@ -221,7 +232,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasetsWhenSliceHasNoLimit() {
-        when( expressionExperimentService.loadValueObjects( any(), any(), anyInt(), anyInt() ) )
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -231,6 +242,29 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", null )
                 .hasFieldOrPropertyWithValue( "limit", null )
                 .hasFieldOrPropertyWithValue( "totalElements", null );
+    }
+
+    @Test
+    public void testGetDatasetsOrderedByGeeqScore() {
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
+                .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), null ) );
+        assertThat( target( "/datasets" ).queryParam( "sort", "+geeq.publicQualityScore" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "geeq.publicQualityScore" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .hasFieldOrPropertyWithValue( "offset", 0 )
+                .hasFieldOrPropertyWithValue( "limit", 20 )
+                .hasFieldOrPropertyWithValue( "totalElements", null );
+        verify( expressionExperimentService ).getSort( "geeq.publicQualityScore", Sort.Direction.ASC );
+        verify( expressionExperimentService )
+                .loadValueObjectsWithCache(
+                        any(),
+                        eq( Sort.by( null, "(case when geeq.publicQualityScore is not null then 0 else 1 end)", Sort.Direction.ASC )
+                                .andThen( Sort.by( null, "geeq.publicQualityScore", Sort.Direction.ASC, "geeq.publicQualityScore" ) ) ),
+                        eq( 0 ),
+                        eq( 20 ) );
     }
 
     @Test
@@ -244,7 +278,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), true, 50 );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), 50 );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "retainMentionedTerms", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "limit", 100 )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "-" )
+                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .containsExactly( "classUri", "className", "termUri", "termName" );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, Collections.emptySet() );
     }
 
     @Test
@@ -259,13 +309,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, Collections.emptySet() );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, null );
     }
 
     @Test
     public void testGetDatasetsAnnotationWhenLimitExceedHardCap() {
-        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 3000 ).request().get() )
+        assertThat( target( "/datasets/annotations" ).queryParam( "limit", 10000 ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verifyNoInteractions( expressionExperimentService );
@@ -277,9 +327,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
-                .hasFieldOrPropertyWithValue( "limit", 2000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 2000, 10, Collections.emptySet() );
+                .hasFieldOrPropertyWithValue( "limit", 5000 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, null, null, null );
     }
 
     @Test
@@ -291,7 +341,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, null, null, null );
+    }
+
+    @Test
+    public void testGetDatasetsAnnotationsForUncategorizedTerms() {
+        assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, null );
+    }
+
+    @Test
+    public void testGetDatasetsCategories() {
+        assertThat( target( "/datasets/categories" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null );
     }
 
     @Test
@@ -333,13 +399,31 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+    public void testGetDatasetRawExpressionByQuantitationTypeWhenQtIsNotFromTheDataset() throws IOException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( quantitationTypeService.findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class ) ).thenReturn( qt );
+        qt.setId( 12L );
+        when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( false );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
-        verify( quantitationTypeService ).findByIdAndDataVectorType( ee, 12L, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).load( 12L );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
+        verifyNoInteractions( expressionDataFileService );
+        assertThat( res )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setId( 12L );
+        when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
+        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( true );
+        Response res = target( "/datasets/1/data/raw" )
+                .queryParam( "quantitationType", "12" ).request().get();
+        verify( quantitationTypeService ).load( 12L );
+        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )

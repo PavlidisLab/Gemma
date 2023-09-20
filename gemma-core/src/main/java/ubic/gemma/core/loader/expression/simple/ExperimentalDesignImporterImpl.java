@@ -582,8 +582,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         OntologyTerm t = null;
         String lookup = category.replaceAll( "_", " " ).toLowerCase();
         for ( OntologyTerm to : terms ) {
-            if ( to.getLabel().equals( category ) || to.getLabel().toLowerCase()
-                    .equals( lookup ) ) {
+            if ( to.getLabel().equals( category )
+                    || to.getLabel().toLowerCase().equals( lookup )
+                    // if EFO is loaded, the "sex" term is actually named "biological sex"
+                    || ( to.getLabel().equals( "biological sex" ) && lookup.equals( "sex" ) ) ) {
                 t = to;
                 break;
             }

@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.model.OntologyResource;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -231,7 +231,7 @@ public class BioMaterialController {
 
     private String getLabelFromUri( String uri ) {
         if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyResource resource = ontologyService.getResource( uri );
+        OntologyTerm resource = ontologyService.getTerm( uri );
         if ( resource != null )
             return resource.getLabel();
 

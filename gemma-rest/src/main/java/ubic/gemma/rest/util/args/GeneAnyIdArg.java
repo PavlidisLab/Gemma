@@ -2,13 +2,10 @@ package ubic.gemma.rest.util.args;
 
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Base class for GeneArg representing any of the identifiers of a Gene.
@@ -22,29 +19,14 @@ public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
         super( propertyName, propertyType, value );
     }
 
+    @Nullable
     @Override
-    public List<GeneValueObject> getValueObjects( GeneService service ) {
-        GeneValueObject vo = service.loadValueObject( this.getEntity( service ) );
-        if ( vo != null ) {
-            return Collections.singletonList( vo );
-        } else {
-            return Collections.emptyList();
+    Gene getEntityWithTaxon( GeneService geneService, Taxon taxon ) {
+        // gene retrieved by ID are unambiguous
+        Gene gene = getEntity( geneService );
+        if ( gene != null && !gene.getTaxon().equals( taxon ) ) {
+            throw new BadRequestException( String.format( "The gene %s does not belong to taxon %s.", gene, taxon ) );
         }
+        return gene;
     }
-
-    @Override
-    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
-        Gene gene = this.getEntity( geneService );
-        return geneService.getPhysicalLocationsValueObjects( gene );
-    }
-
-    @Override
-    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
-        Gene gene = this.getEntity( geneService );
-        if ( !gene.getTaxon().equals( taxon ) ) {
-            throw new BadRequestException( "Taxon does not match the gene's taxon." );
-        }
-        return geneService.getPhysicalLocationsValueObjects( gene );
-    }
-
 }

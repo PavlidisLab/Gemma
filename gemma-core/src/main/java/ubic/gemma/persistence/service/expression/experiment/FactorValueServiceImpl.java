@@ -74,4 +74,10 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     public Set<Statement> cloneCharacteristics( FactorValue fv ) {
         return factorValueDao.cloneCharacteristics( ensureInSession( fv ) );
     }
+
+    @Override
+    @Transactional
+    public void remove( Collection<FactorValue> entities ) {
+        super.remove( ensureInSession( entities ) );
+    }
 }

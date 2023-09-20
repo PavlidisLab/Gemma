@@ -74,6 +74,14 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
             }
             entity = builder.toString();
         }
-        return Response.status( code ).type( mediaType ).entity( entity ).build();
+        // FIXME: request is null in tests (like above)
+        return Response.status( request != null && isXmlHttpRequest( request ) ? Response.Status.OK : code )
+                .type( mediaType )
+                .entity( entity )
+                .build();
+    }
+
+    private boolean isXmlHttpRequest( HttpServletRequest request ) {
+        return "XMLHttpRequest".equalsIgnoreCase( request.getHeader( "X-Requested-With" ) );
     }
 }

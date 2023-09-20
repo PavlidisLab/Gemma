@@ -19,7 +19,7 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class TwoChannelMissingValueTaskImpl extends AbstractTask<TaskResult, TwoChannelMissingValueTaskCommand>
+public class TwoChannelMissingValueTaskImpl extends AbstractTask<TwoChannelMissingValueTaskCommand>
         implements TwoChannelMissingValueTask {
 
     @Autowired

@@ -31,7 +31,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -75,6 +74,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddOKEvent() {
+        auditable.getCurationDetails().setTroubled( true );
         auditTrailService.addUpdateEvent( auditable, NotTroubledStatusFlagEvent.class, "nothing special, just testing" );
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
@@ -129,7 +129,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
+        // FIXME: one of the two date makes a round-trip in the database and is of type Timestamp (which is a subclass of Date)
+        assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( AlignmentBasedGeneMappingEvent.class, ev.getEventType().getClass() );
     }

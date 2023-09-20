@@ -1,8 +1,8 @@
 package ubic.gemma.rest.util.args;
 
-import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -28,7 +28,7 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayD
      */
     @SuppressWarnings("unused")
     public static PlatformArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( Strings.isNullOrEmpty( s ) ) {
+        if ( StringUtils.isBlank( s ) ) {
             throw new MalformedArgException( String.format( PlatformArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }

@@ -6,7 +6,7 @@
 
     <!-- executor used for loading ontologies in background -->
     <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-        <property name="maxPoolSize" value="4"/>
+        <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
     </bean>
 
     <beans profile="!test">
@@ -23,18 +23,6 @@
             <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
         </bean>
-        <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
-            <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
-            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
-        </bean>
-        <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
-            <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
-            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
-        </bean>
-        <bean id="diseaseOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
-            <constructor-arg value="ubic.basecode.ontology.providers.DiseaseOntologyService"/>
-            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
-        </bean>
         <bean id="cellTypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.CellTypeOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
@@ -42,6 +30,7 @@
         <bean id="chebiOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.ChebiOntologyService"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="inferenceMode" value="NONE"/>
         </bean>
         <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>

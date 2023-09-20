@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,13 +50,5 @@ public class RawExpressionDataVectorServiceImpl extends AbstractDesignElementDat
     @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
         return mainDao.find( designElements, quantitationType );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<RawExpressionDataVector> thaw( Collection<RawExpressionDataVector> vectors ) {
-        vectors = ensureInSession( vectors );
-        this.mainDao.thaw( vectors );
-        return vectors;
     }
 }

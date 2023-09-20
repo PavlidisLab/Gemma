@@ -5,8 +5,6 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nonnull;
-
 /**
  * Represents an expression analysis result set identifier.
  */

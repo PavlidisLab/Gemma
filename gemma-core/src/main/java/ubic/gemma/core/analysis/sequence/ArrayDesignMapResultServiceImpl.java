@@ -188,8 +188,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             Collection<BlatResult> blats = blatResultService.findByBioSequence( bioSequence );
             summary.setBlatResults( blats );
 
-            Collection<BlatAssociation> maps = blatAssociationService.find( bioSequence );
-            maps = blatAssociationService.thaw( maps );
+            Collection<BlatAssociation> maps = blatAssociationService.findAndThaw( bioSequence );
             for ( BlatAssociation association : maps ) {
                 summary.getGeneProducts().add( association.getGeneProduct() );
                 summary.getGenes().add( association.getGeneProduct().getGene() );

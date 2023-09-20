@@ -34,7 +34,6 @@ import ubic.gemma.core.job.executor.common.TaskCommandToTaskMatcher;
 import ubic.gemma.core.job.executor.common.TaskPostProcessing;
 import ubic.gemma.core.tasks.Task;
 
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -48,14 +47,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author pavlidis
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 // Valid, inspection is not parsing the context file for some reason
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
     private final ListeningExecutorService executorService = MoreExecutors
             .listeningDecorator( Executors.newFixedThreadPool( 20 ) );
-    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<>();
+    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
@@ -68,12 +66,12 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks() {
+    public Collection<SubmittedTask> getSubmittedTasks() {
         return submittedTasks.values();
     }
 
     @Override
-    public <T extends Task> String submitTask( T task ) {
+    public <T extends Task<?>> String submitTask( T task ) {
         this.checkTask( task );
 
         TaskCommand taskCommand = task.getTaskCommand();
@@ -88,7 +86,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing, executorService );
 
-        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand.getTaskId() );
+        final ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
 
         executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
             @Override
@@ -137,11 +135,11 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     @Override
     public <C extends TaskCommand> String submitTaskCommand( final C taskCommand ) {
         this.checkTaskCommand( taskCommand );
-        final Task<? extends TaskResult, ? extends TaskCommand> task = taskCommandToTaskMatcher.match( taskCommand );
+        final Task<? extends TaskCommand> task = taskCommandToTaskMatcher.match( taskCommand );
         return this.submitTask( task );
     }
 
-    private void checkTask( Task task ) {
+    private void checkTask( Task<?> task ) {
         checkNotNull( task, "Must provide a task." );
     }
 

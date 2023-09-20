@@ -25,7 +25,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -72,15 +71,6 @@ public interface PhenotypeAssociationService extends BaseImmutableService<Phenot
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     PhenotypeAssociation load( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalEvidence loadExperimentalEvidence( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GenericEvidence loadGenericEvidence( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    LiteratureEvidence loadLiteratureEvidence( Long id );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( PhenotypeAssociation evidence );
@@ -156,7 +146,4 @@ public interface PhenotypeAssociationService extends BaseImmutableService<Phenot
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
 
     void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
-
-    Collection<String> loadAllDescription();
-
 }

@@ -20,6 +20,9 @@ package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -31,6 +34,7 @@ import java.util.Set;
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
+@Indexed
 public class FactorValue implements Identifiable, Serializable, gemma.gsec.model.SecuredChild {
 
     /**
@@ -65,13 +69,13 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
-                
-                if (c == null) {
+
+                if ( c == null ) {
                     continue;
                 }
-                
+
                 assert c != null;
-                
+
                 builder.append( c.hashCode() );
             }
         }
@@ -112,7 +116,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
             buf.append( this.getExperimentalFactor().getName() ).append( ": " );
         if ( this.getCharacteristics().size() > 0 ) {
             for ( Characteristic c : this.getCharacteristics() ) {
-                buf.append(c.getCategory() + " - ");
+                buf.append( c.getCategory() + " - " );
                 buf.append( c.getValue() );
                 if ( this.getCharacteristics().size() > 1 )
                     buf.append( " | " );
@@ -126,6 +130,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return this.id;
     }
@@ -144,6 +149,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.securityOwner = ee;
     }
 
+    @IndexedEmbedded
     public Set<Statement> getCharacteristics() {
         return this.characteristics;
     }

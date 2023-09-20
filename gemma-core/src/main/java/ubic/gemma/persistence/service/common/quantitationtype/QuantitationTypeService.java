@@ -37,7 +37,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
-     * 
+     *
      * @return                  found QT
      */
     @Secured({ "GROUP_USER" })
@@ -49,12 +49,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * While the QT can be retrieved uniquely by ID, the purpose of this method is to ensure that it also belongs to a
      * given expression experiment and data vector type.
      */
-    QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorType );
-
-    /**
-     * Locate a QT by name.
-     */
-    QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorType );
+    boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -87,6 +82,5 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );
 
-    @Secured({ "GROUP_USER" })
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 }

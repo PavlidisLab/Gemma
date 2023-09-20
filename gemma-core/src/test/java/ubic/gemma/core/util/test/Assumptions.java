@@ -1,5 +1,6 @@
 package ubic.gemma.core.util.test;
 
+import javax.net.ssl.SSLException;
 import java.net.*;
 
 import static org.junit.Assume.assumeNoException;
@@ -38,6 +39,8 @@ public class Assumptions {
             }
         } catch ( UnknownHostException | ConnectException e ) {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
+        } catch ( SSLException e ) {
+            assumeNoException( String.format( "SSL issue attempting to connect to %s.", url ), e );
         } finally {
             if ( con instanceof HttpURLConnection ) {
                 ( ( HttpURLConnection ) con ).disconnect();

@@ -4,7 +4,7 @@ Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
    layout : 'hbox',
    height : 60,
-   width : 880,
+   width : 500,
    padding : 5,
    layoutConfig : {
       align : 'middle',
@@ -77,13 +77,11 @@ Gemma.Search.GeneralSearchSimpleCombo = Ext.extend( Ext.form.ComboBox, {
    editable : false,
    forceSelection : true,
    lazyInit : false,
-   value : 'everything',
+   value : 'experiments',
    boxLabel : 'Search for',
    store : new Ext.data.ArrayStore( {
       fields : [ 'myTextId', 'displayText' ],
-      data : [ [ 'everything', 'everything' ], [ 'genes', 'genes' ], [ 'phenotypes', 'phenotypes' ],
-              [ 'experiments', 'experiments' ] ]
-   // ,['geneSets', 'gene groups'], ['eeSets', 'experiment groups']]
+      data : [ [ 'experiments', 'experiments' ] ,[ 'genes', 'genes' ] ]
    } ),
    valueField : 'myTextId',
    displayField : 'displayText',
@@ -95,10 +93,7 @@ Gemma.Search.GeneralSearchSimpleCombo = Ext.extend( Ext.form.ComboBox, {
    searchOptionToLinkScopeLetters : {
       everything : [ "P", "G", "E", "A", "M", "H", "N", "B" ],
       genes : [ "G" ],
-      phenotypes : [ "H" ],
-      experiments : [ "E" ],
-      geneSets : [ "M" ],
-      eeSets : [ "N" ]
+      experiments : [ "E" ]
    },
    /**
     * returns an array of letters that can be used to code for the scope in a searcher.html URL query

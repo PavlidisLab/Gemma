@@ -238,7 +238,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
-            experimentalFactorService.delete( experimentalFactor );
+            experimentalFactorService.remove( experimentalFactor );
         }
 
         ee = expressionExperimentService.thawLite( ee );

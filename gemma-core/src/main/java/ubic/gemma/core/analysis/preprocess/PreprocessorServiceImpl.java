@@ -14,14 +14,10 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-import java.util.LinkedList;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +31,9 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -47,6 +46,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
+
+import java.util.Collection;
+import java.util.LinkedList;
 
 @Service
 public class PreprocessorServiceImpl implements PreprocessorService {
@@ -207,6 +209,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             meanVarianceService.create( ee, true );
         } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedMeanVarianceUpdateEvent.class, null, e );
             throw new PreprocessingException( ee, e );
         }
     }
@@ -235,6 +238,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             svdService.svd( ee );
         } catch ( SVDException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedPCAAnalysisEvent.class, null, e );
             throw new SVDRelatedPreprocessingException( ee, e );
         }
     }
@@ -242,8 +246,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Create the heatmaps used to judge similarity among samples.
      */
-    private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        sampleCoexpressionAnalysisService.compute( ee );
+    private void processForSampleCorrelation( ExpressionExperiment ee ) throws SampleCoexpressionRelatedPreprocessingException {
+        try {
+            sampleCoexpressionAnalysisService.compute( ee );
+        } catch ( RuntimeException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            throw new SampleCoexpressionRelatedPreprocessingException( ee, e );
+        }
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
@@ -295,13 +304,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
+                .getProcessedDataVectorsAndThaw( ee );
         if ( vecs.isEmpty() ) {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
             this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            return this.processedExpressionDataVectorService.getProcessedDataVectors( ee );
+            vecs = this.processedExpressionDataVectorService.getProcessedDataVectorsAndThaw( ee );
         }
-        return processedExpressionDataVectorService.thaw( vecs );
+        return vecs;
     }
 
     @SuppressWarnings("unused")

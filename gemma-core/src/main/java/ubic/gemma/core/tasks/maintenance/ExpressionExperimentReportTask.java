@@ -1,6 +1,5 @@
 package ubic.gemma.core.tasks.maintenance;
 
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
@@ -10,7 +9,7 @@ import ubic.gemma.core.tasks.Task;
  *
  */
 
-public interface ExpressionExperimentReportTask extends Task<TaskResult, ExpressionExperimentReportTaskCommand> {
+public interface ExpressionExperimentReportTask extends Task<ExpressionExperimentReportTaskCommand> {
 }
 
 

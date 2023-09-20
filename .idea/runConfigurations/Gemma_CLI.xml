@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Gemma CLI" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="ubic.gemma.core.apps.GemmaCLI" />
+    <module name="gemma-cli" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev -Dgemma.log.dir=$PROJECT_DIR$/gemma-logs -Dlog4j.configuration=$PROJECT_DIR$/gemma-cli/src/main/config/log4j.properties" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

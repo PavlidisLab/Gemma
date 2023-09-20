@@ -174,13 +174,9 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
      */
     @CheckReturnValue
     protected Collection<O> ensureInSession( Collection<O> entities ) {
-        List<O> result = new ArrayList<>();
-        Iterator<O> it = entities.iterator();
         boolean allEntitiesAlreadyInSession = true;
-        while ( it.hasNext() ) {
-            O e = it.next();
+        for ( O e : entities ) {
             O se = ensureInSession( e );
-            result.add( se );
             if ( e != se ) {
                 allEntitiesAlreadyInSession = false;
                 break;
@@ -193,13 +189,14 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
         // bulk load the remaining persistent entities (if any)
         Set<Long> ids = new HashSet<>( entities.size() );
-        it.forEachRemaining( f -> {
+        List<O> result = new ArrayList<>( entities.size() );
+        for ( O f : entities ) {
             if ( f.getId() == null ) {
                 result.add( f ); // transient
             } else {
                 ids.add( f.getId() );
             }
-        } );
+        }
         if ( !ids.isEmpty() ) {
             result.addAll( mainDao.load( ids ) );
         }

@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,14 +7,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDaoImpl;
 import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,49 +63,69 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testEnsureInSessionWithCollection() {
+    public void testEnsureInSessionReturnsOriginalCollectionIfAlreadyInSession() {
+        List<ExternalDatabase> entities = new ArrayList<>();
+        for ( int k = 0; k < 100; k++ ) {
+            entities.add( createFixture() );
+        }
+        assertThat( myService.ensureInSession( entities ) )
+                .isSameAs( entities )
+                .containsExactlyElementsOf( entities );
+    }
+
+    @Test
+    public void testEnsureInSessionPreserveInputOrder() {
         List<ExternalDatabase> entities = new ArrayList<>();
 
         for ( int k = 0; k < 100; k++ ) {
-            if ( k % 20 == 0 ) {
-                entities.add( ExternalDatabase.Factory.newInstance( "test" + ( ++i ), DatabaseType.OTHER ) );
+            entities.add( createFixture() );
+        }
+
+        // elements must honor the input order
+        Collections.shuffle( entities );
+
+        // evict everything, they must be reloaded in the same order
+        sessionFactory.getCurrentSession().clear();
+        assertThat( myService.ensureInSession( entities ) )
+                .isNotSameAs( entities )
+                .containsExactlyElementsOf( entities );
+    }
+
+    @Test
+    public void testEnsureInSessionWhenSomeElementsAreNotInSessionOnlyLoadThoseElements() {
+        List<ExternalDatabase> entities = new ArrayList<>();
+
+        for ( int k = 0; k < 100; k++ ) {
+            if ( k % 15 == 0 ) {
+                entities.add( ExternalDatabase.Factory.newInstance( "test" + k, DatabaseType.OTHER ) ); // a transient instance
             } else {
                 entities.add( createFixture() );
             }
         }
 
-        ExternalDatabase firstEntity = entities.iterator().next();
-        assertThat( myService.ensureInSession( entities ) )
-                .isSameAs( entities )
-                .containsExactlyElementsOf( entities )
-                .first()
-                .isEqualTo( firstEntity )
-                .isSameAs( firstEntity );
+        sessionFactory.getCurrentSession().flush();
 
-        // elements must honor the input order
-        Collections.shuffle( entities );
-        assertThat( myService.ensureInSession( entities ) )
+        // evict every 1 in 10 elements
+        for ( int k = 0; k < 100; k += 10 ) {
+            sessionFactory.getCurrentSession().evict( entities.get( k ) );
+        }
+
+        List<ExternalDatabase> loadedEntities = new ArrayList<>( myService.ensureInSession( entities ) );
+
+        assertThat( loadedEntities )
                 .containsExactlyElementsOf( entities );
 
-        // evict one element
-        sessionFactory.getCurrentSession().evict( firstEntity );
-
-        assertThat( myService.ensureInSession( entities ) )
-                .isNotSameAs( entities )
-                .containsExactlyElementsOf( entities )
-                .first()
-                .isEqualTo( firstEntity )
-                .isNotSameAs( firstEntity );
-
-        // evict everything
-        sessionFactory.getCurrentSession().clear();
-
-        firstEntity = entities.iterator().next();
-        assertThat( myService.ensureInSession( entities ) )
-                .containsExactlyElementsOf( entities )
-                .first()
-                .isEqualTo( firstEntity )
-                .isNotSameAs( firstEntity );
+        // only those elements are reloaded (if non-transient)
+        for ( int k = 0; k < 100; k++ ) {
+            if ( k % 15 != 0 && k % 10 == 0 ) {
+                assertThat( loadedEntities.get( k ) )
+                        .isNotSameAs( entities.get( k ) )
+                        .isEqualTo( entities.get( k ) );
+            } else {
+                assertThat( loadedEntities.get( k ) )
+                        .isSameAs( entities.get( k ) );
+            }
+        }
     }
 
     private ExternalDatabase createFixture() {

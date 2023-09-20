@@ -142,24 +142,16 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
-    public void svd( Collection<ExpressionExperiment> ees ) throws SVDException {
-        for ( ExpressionExperiment ee : ees ) {
-            this.svd( ee );
-        }
-    }
-
-    @Override
     public SVDValueObject svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
+                .getProcessedDataVectorsAndThaw( ee );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
         }
 
-        vectors = processedExpressionDataVectorService.thaw( vectors );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
 
         SVDServiceHelperImpl.log.info( "Starting SVD" );

@@ -21,14 +21,13 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.type.DoubleType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
 import ubic.basecode.util.SQLUtils;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -41,6 +40,7 @@ import ubic.gemma.persistence.util.TaskCancelledException;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -117,6 +117,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         super( DifferentialExpressionAnalysisResult.class, sessionFactory );
         this.differentialExpressionResultCache = differentialExpressionResultCache;
         // previously: 500
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysisResult> create( Collection<DifferentialExpressionAnalysisResult> entities ) {
+        throw new UnsupportedOperationException( "Results cannot be created directly, use DifferentialExpressionAnalysisDao.create() instead." );
+    }
+
+    @Override
+    public void remove( DifferentialExpressionAnalysisResult entity ) {
+        throw new UnsupportedOperationException( "Results cannot be removed directly, use DifferentialExpressionAnalysisDao.remove() instead." );
     }
 
     @Override
@@ -296,8 +306,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = EntityUtils
-                .getPropertyMap( resultSets, "resultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = resultSets.stream()
+                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getResultSetId, rs -> rs, ( a, b ) -> b ) );
 
         Map<Long, Collection<Long>> foundInCache = this.fillFromCache( results, resultSetIdsMap.keySet(), geneIds );
 
@@ -486,7 +496,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         queryObject.setMaxResults( limit );
 
-        queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
+        queryObject.addScalar( "CORRECTED_PVALUE", StandardBasicTypes.DOUBLE );
         //noinspection unchecked
         results = queryObject.list();
 
@@ -753,10 +763,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         Collection<ContrastResult> contrasts = result.getContrasts();
         for ( ContrastResult contrast : contrasts ) {
-            FactorValue f = contrast.getFactorValue();
-            Hibernate.initialize( f );
-            //noinspection ResultOfMethodCallIgnored
-            f.getIsBaseline();
+            Hibernate.initialize( contrast.getFactorValue() );
         }
     }
 
@@ -922,33 +929,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
-    }
-
-    @Override
-    public void remove( Collection<DifferentialExpressionAnalysisResult> entities ) {
-        if ( entities == null || entities.size() < 1 ) return;
-        Collection<Long> cIds = new HashSet<>();
-
-        // Read contrast ids and wipe references
-        for ( DifferentialExpressionAnalysisResult r : entities ) {
-            cIds.addAll( EntityUtils.getIds( r.getContrasts() ) );
-            r.setContrasts( new HashSet<ContrastResult>() );
-        }
-
-        // Remove contrasts
-        if ( cIds.size() > 0 ) {
-            AbstractDao.log.info( "Removing contrasts..." );
-            this.getSessionFactory().getCurrentSession().createQuery( "delete from ContrastResult e where e.id in (:ids)" )
-                    .setParameterList( "ids", cIds )
-                    .executeUpdate();
-
-        }
-
-        // Remove results
-        AbstractDao.log.info( "Removing DEA results" );
-        this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from DifferentialExpressionAnalysisResult e where e.id in (:ids)" )
-                .setParameterList( "ids", EntityUtils.getIds( entities ) ).executeUpdate();
     }
 
     /**

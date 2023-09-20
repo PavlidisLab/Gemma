@@ -32,6 +32,8 @@ import java.util.HashSet;
 public class GeoSubset extends GeoData {
 
     private static final long serialVersionUID = 2392295178038874633L;
+
+    private String dataSet;
     private GeoDataset owningDataset;
     private String description = "";
     private Collection<GeoSample> samples;
@@ -103,4 +105,11 @@ public class GeoSubset extends GeoData {
         this.owningDataset = owningDataset;
     }
 
+    public String getDataSet() {
+        return dataSet;
+    }
+
+    public void setDataSet( String dataSet ) {
+        this.dataSet = dataSet;
+    }
 }

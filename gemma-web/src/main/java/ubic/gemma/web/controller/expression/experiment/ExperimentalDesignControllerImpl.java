@@ -535,7 +535,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
-        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId(), request.getServletContext() ) );
+        mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, request.getServletContext() ) );
 
         return mnv;
     }
@@ -761,7 +761,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     private void delete( Collection<ExperimentalFactor> toDelete ) {
         for ( ExperimentalFactor factorRemove : toDelete ) {
-            experimentalFactorService.delete( factorRemove );
+            experimentalFactorService.remove( factorRemove );
         }
 
         for ( ExperimentalFactor ef : toDelete ) {

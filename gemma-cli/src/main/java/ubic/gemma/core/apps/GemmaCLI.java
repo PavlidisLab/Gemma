@@ -75,7 +75,7 @@ public class GemmaCLI {
                 .build();
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
-                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+                .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). For example, '--logger ubic.gemma=5' or '--logger org.hibernate.SQL=5'" )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
@@ -145,12 +145,12 @@ public class GemmaCLI {
 
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
+
+        // check for the -testing/--testing flag to load the appropriate application context
         if ( commandLine.hasOption( TESTING_OPTION ) ) {
             profiles.add( SpringProfiles.TEST );
         }
 
-        // check for the -testing flag to load the appropriate application context
-        /* webapp */
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*

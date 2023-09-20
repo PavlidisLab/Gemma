@@ -25,8 +25,8 @@ import java.util.List;
 /**
  * Represents paginated results with offset and limit.
  *
- * @param <T>
  * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort, int, int)
+ * @author poirigui
  */
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -40,7 +40,6 @@ public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> 
 
     /**
      * @param payload the data to be serialised and returned as the response payload.
-     * @param groupBy
      */
     public PaginatedResponseDataObject( Slice<T> payload, String[] groupBy ) {
         super( payload );

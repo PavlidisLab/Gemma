@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -40,9 +41,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.expression.arrayDesign.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -56,7 +55,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
-        extends BaseService<ExpressionExperiment>, FilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -87,9 +86,6 @@ public interface ExpressionExperimentService
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    long countNotTroubled();
-
     /**
      * returns ids of search results.
      *
@@ -107,57 +103,21 @@ public interface ExpressionExperimentService
      */
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment find( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( Long id );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithCharacteristics( Long id );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadAll();
+    List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
+
+    long countWithCache( @Nullable Filters filters );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment loadWithPrimaryPublication(Long id);
+    ExpressionExperiment loadWithPrimaryPublication( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    /**
-     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
-     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically).
-     *
-     * @param expressionExperiment experiment to be deleted.
-     */
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    void update( ExpressionExperiment expressionExperiment );
 
     /**
      * @param accession accession
@@ -259,9 +219,12 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
-     * @param impliedTermUris if non-null, all the implied terms are added to the collection
+     * @param mentionedTermUris if non-null, all the terms explicitly mentioned in the filters are added to the
+     *                          collection. The returned filter might contain terms that have been inferred.
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris );
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
+
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -284,6 +247,12 @@ public interface ExpressionExperimentService
     }
 
     /**
+     * Special indicator for uncategorized terms.
+     * @see ExpressionExperimentDao#UNCATEGORIZED
+     */
+    String UNCATEGORIZED = ExpressionExperimentDao.UNCATEGORIZED;
+
+    /**
      * Obtain annotation usage frequency for datasets matching the given filters.
      * <p>
      * Terms may originate from the experiment tags, experimental design or samples.
@@ -291,13 +260,19 @@ public interface ExpressionExperimentService
      * The implementation uses a denormalized table for associating EEs to characteristics which is not always in sync
      * if new terms are attached.
      *
-     * @param filters          filters restricting the terms to a given set of datasets
-     * @param maxResults       maximum number of results to return, not including the parent terms if inference is applied
-     * @param retainedTermUris ensure that the given terms are retained
+     * @param filters              filters restricting the terms to a given set of datasets
+     * @param maxResults           maximum number of results to return
+     * @param minFrequency         minimum occurrences of a term to be included in the results
+     * @param category             a category to restrict annotations to, or null to include all categories
+     * @param excludedCategoryUris ensure that the given categories are excluded
+     * @param excludedTermUris     ensure that the given terms and their sub-terms (as per {@code subClassOf} relation)
+     *                             are excluded; this requires relevant ontologies to be loaded in {@link ubic.gemma.core.ontology.OntologyService}.
+     * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
+     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
      * @param expressionExperiment experiment
@@ -308,15 +283,15 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters );
+
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
-     * @param filters                  a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
-     * @param includeOriginalPlatforms if true, original platforms as per {@link BioAssay#getOriginalPlatform()} are
-     *                                 also included.
-     * @param maxResults               the maximum of results, or unlimited if less than 1
+     * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
+     * @param maxResults the maximum of results, or unlimited if less than 1
      */
-    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults );
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults );
 
     /**
      * Calculate the usage frequency of taxa by the datasets matching the provided filters.
@@ -504,48 +479,27 @@ public interface ExpressionExperimentService
      */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Check if the dataset is either troubled or uses a troubled platform.
+     */
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity );
-
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentValueObject loadValueObjectById( Long entityId );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadAllValueObjects();
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
-
     /**
-     * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int) for
-     * description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
-
-    /**
-     * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
+     * @see ExpressionExperimentDao#loadDetailsValueObjects(Collection, Taxon, Sort, int, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
+
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
@@ -555,15 +509,21 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
+     * Load VOs for the given dataset IDs and initialize their relations like {@link #load(Filters, Sort)}.
+     * <p>
+     * The order of VOs is preserved.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids );
+
+    /**
+     * Variant of {@link #loadValueObjectsByIds(Collection)} that preserve its input order.
      * @param ids           ids to load
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return value objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     /**
      * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples

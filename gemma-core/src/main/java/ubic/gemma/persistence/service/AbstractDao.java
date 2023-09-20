@@ -115,6 +115,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         warnIfBatchingIsNotAdvisable( "create", entities );
         int i = 0;
         for ( T t : entities ) {
+            //noinspection ResultOfMethodCallIgnored
             this.create( t );
             if ( ++i % batchSize == 0 && isBatchingAdvisable() ) {
                 flushAndClear();
@@ -201,7 +202,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             //noinspection unchecked
             results.addAll( sessionFactory.getCurrentSession()
                     .createCriteria( elementClass )
-                    .add( Restrictions.in( idPropertyName, new HashSet<>( ids ) ) )
+                    .add( Restrictions.in( idPropertyName, new HashSet<>( unloadedIds ) ) )
                     .list() );
         }
 

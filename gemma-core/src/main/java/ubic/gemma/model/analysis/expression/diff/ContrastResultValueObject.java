@@ -1,6 +1,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
@@ -33,7 +35,11 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
         this.tStat = contrastResult.getTstat();
         this.coefficient = contrastResult.getCoefficient();
         this.logFoldChange = contrastResult.getLogFoldChange();
-        this.factorValue = new FactorValueBasicValueObject( contrastResult.getFactorValue() );
+        if ( contrastResult.getFactorValue() != null ) {
+            this.factorValue = new FactorValueBasicValueObject( contrastResult.getFactorValue() );
+        } else {
+            this.factorValue = null;
+        }
         // not all contrast results have a second factor value
         if ( contrastResult.getSecondFactorValue() != null ) {
             this.secondFactorValue = new FactorValueBasicValueObject( contrastResult.getSecondFactorValue() );

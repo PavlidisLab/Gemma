@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
-public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
+public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> implements CachedFilteringVoEnabledDao<O, VO> {
 
     protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
@@ -36,15 +36,29 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * <p>
      * Note that if your implementation does not produce a {@link List} of {@link O} when {@link Query#list()} is invoked,
      * you must override {@link AbstractQueryFilteringVoEnabledDao#getValueObjectTransformer()}.
+     * <p>
+     * The make the cached query (i.e. {@link #loadWithCache(Filters, Sort)} behave the same, you also have to
+     * explicitly initialize any lazy relations in {@link #doLoadValueObject(Identifiable)} because the VO constructor
+     * will not initialize them.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
     protected abstract Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort );
 
     /**
+     * Initialize a result from {@link #getFilteringQuery(Filters, Sort)} retrieved from the Hibernate
+     * {@link org.hibernate.cache.internal.StandardQueryCache}.
+     * <p>
+     * Lazy-loaded relations that are fetched in {@link #getFilteringQuery(Filters, Sort)} must be initialized manually
+     * in this method to ensure that the entity has all the expected fields if they are retrieved from the second-level
+     * cache.
+     */
+    protected abstract void initializeCachedFilteringResult( O cachedEntity );
+
+    /**
      * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
      */
-    protected Query getFilteringIdQuery( @Nullable Filters filters ) {
+    protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         throw new NotImplementedException( "Retrieving IDs for " + elementClass + " is not supported." );
     }
 
@@ -61,7 +75,11 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         @Nullable
         public O transformTuple( Object[] tuple, String[] aliases ) {
             //noinspection unchecked
-            return ( O ) tuple[0];
+            O entity = ( O ) tuple[0];
+            if ( entity != null ) {
+                initializeCachedFilteringResult( entity );
+            }
+            return entity;
         }
 
         @Override
@@ -73,13 +91,22 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     };
 
     /**
-     * Obtain a value object transformer for the result of {@link #getFilteringQuery(Filters, Sort)}.
+     * Obtain an entity transformer for the results of {@link #getFilteringQuery(Filters, Sort)}.
+     * <p>
+     * The default entity transformer simply returns the first element of the tuple and omit null values.
+     */
+    protected TypedResultTransformer<O> getEntityTransformer() {
+        return DEFAULT_ENTITY_TRANSFORMER;
+    }
+
+    /**
+     * Obtain a value object transformer for the results of {@link #getFilteringQuery(Filters, Sort)}.
      * <p>
      * By default, it will process the first element of the tuple with {@link #doLoadValueObjects(Collection)} and then
      * post-process the resulting VOs with {@link #postProcessValueObjects(List)}.
      */
     protected TypedResultTransformer<VO> getValueObjectTransformer() {
-        TypedResultTransformer<O> entityTransformer = DEFAULT_ENTITY_TRANSFORMER;
+        TypedResultTransformer<O> entityTransformer = getEntityTransformer();
         return new TypedResultTransformer<VO>() {
 
             @Override
@@ -96,31 +123,106 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         };
     }
 
-    private TypedResultTransformer<VO> getValueObjectTransformer( StopWatch postProcessingStopWatch ) {
-        TypedResultTransformer<VO> transformer = getValueObjectTransformer();
-        return new TypedResultTransformer<VO>() {
-            @Override
-            public VO transformTuple( Object[] tuple, String[] aliases ) {
-                return transformer.transformTuple( tuple, aliases );
-            }
+    /**
+     * Simple {@link TypedResultTransformer} wrapper that monitors the time spent post-processing.
+     */
+    private class ValueObjectTransformerTimer implements TypedResultTransformer<VO> {
 
-            @Override
-            public List<VO> transformListTyped( List<VO> collection ) {
-                try {
-                    postProcessingStopWatch.start();
-                    return transformer.transformListTyped( collection );
-                } finally {
-                    postProcessingStopWatch.stop();
-                }
+        private final TypedResultTransformer<VO> transformer;
+        private final StopWatch postProcessingStopWatch;
+
+        private ValueObjectTransformerTimer( TypedResultTransformer<VO> transformer, StopWatch postProcessingStopWatch ) {
+            this.transformer = transformer;
+            this.postProcessingStopWatch = postProcessingStopWatch;
+            postProcessingStopWatch.start();
+            postProcessingStopWatch.suspend();
+        }
+
+        @Override
+        public VO transformTuple( Object[] tuple, String[] aliases ) {
+            try {
+                postProcessingStopWatch.resume();
+                return transformer.transformTuple( tuple, aliases );
+            } finally {
+                postProcessingStopWatch.suspend();
             }
-        };
+        }
+
+        @Override
+        public List<VO> transformListTyped( List<VO> collection ) {
+            try {
+                postProcessingStopWatch.resume();
+                return transformer.transformListTyped( collection );
+            } finally {
+                postProcessingStopWatch.suspend();
+            }
+        }
     }
 
     @Override
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadIdsWithCache( filters, sort, false );
+    }
+
+    @Override
+    public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadIdsWithCache( filters, sort, true );
+    }
+
+    @Override
+    public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadWithCache( filters, sort, false );
+    }
+
+    @Override
+    public Slice<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return doLoadWithCache( filters, sort, offset, limit, true );
+    }
+
+    @Override
+    public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return doLoadWithCache( filters, sort, offset, limit, false );
+    }
+
+    @Override
+    public List<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadWithCache( filters, sort, true );
+    }
+
+    @Override
+    public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return doLoadValueObjectsWithCache( filters, sort, offset, limit, false );
+    }
+
+    @Override
+    public Slice<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return doLoadValueObjectsWithCache( filters, sort, offset, limit, true );
+    }
+
+    @Override
+    public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadValueObjectsWithCache( filters, sort, false );
+    }
+
+    @Override
+    public List<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return doLoadValueObjectsWithCache( filters, sort, true );
+    }
+
+    @Override
+    public long count( @Nullable Filters filters ) {
+        return doCountWithCache( filters, false );
+    }
+
+    @Override
+    public long countWithCache( @Nullable Filters filters ) {
+        return doCountWithCache( filters, true );
+    }
+
+    private List<Long> doLoadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        List<Long> result = getFilteringIdQuery( filters ).list();
+        List<Long> result = getFilteringIdQuery( filters, sort ).setCacheable( cacheable ).list();
         timer.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(),
@@ -129,12 +231,12 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         return result;
     }
 
-    @Override
-    public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
+    private List<O> doLoadWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<O> result = getFilteringQuery( filters, sort )
-                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .setResultTransformer( getEntityTransformer() )
+                .setCacheable( cacheable )
                 .list();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
@@ -143,8 +245,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         return result;
     }
 
-    @Override
-    public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    private Slice<O> doLoadWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         Query query = this.getFilteringQuery( filters, sort );
         Query totalElementsQuery = getFilteringCountQuery( filters );
@@ -155,18 +256,46 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             query.setMaxResults( limit );
         //noinspection unchecked
         List<O> result = query
-                .setResultTransformer( DEFAULT_ENTITY_TRANSFORMER )
+                .setResultTransformer( getEntityTransformer() )
+                .setCacheable( cacheable )
                 .list();
-        Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        StopWatch countingStopWatch = StopWatch.createStarted();
+        Long totalElements;
+        if ( limit > 0 && ( result.isEmpty() || result.size() == limit ) ) {
+            totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
+        } else {
+            totalElements = offset + ( long ) result.size();
+        }
+        countingStopWatch.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
-                    timer.getTime( TimeUnit.MILLISECONDS ) ) );
+            log.warn( String.format( "Loading and counting %d entities for %s took %s ms (querying: %d ms, counting: %d ms).",
+                    result.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ),
+                    timer.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return new Slice<>( result, sort, offset, limit, totalElements );
     }
 
-    @Override
-    public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+    private List<VO> doLoadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch postProcessingStopWatch = StopWatch.create();
+        //noinspection unchecked
+        List<VO> results = this.getFilteringQuery( filters, sort )
+                .setResultTransformer( new ValueObjectTransformerTimer( getValueObjectTransformer(), postProcessingStopWatch ) )
+                .setCacheable( cacheable )
+                .list();
+        stopWatch.stop();
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
+                    results.size(),
+                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return results;
+    }
+
+    private Slice<VO> doLoadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit, boolean cacheable ) {
         StopWatch stopWatch = StopWatch.createStarted();
         StopWatch postProcessingStopWatch = StopWatch.create();
 
@@ -181,11 +310,19 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         //noinspection unchecked
         List<VO> list = query
-                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
+                .setResultTransformer( new ValueObjectTransformerTimer( getValueObjectTransformer(), postProcessingStopWatch ) )
+                .setCacheable( cacheable )
                 .list();
 
         StopWatch countingStopWatch = StopWatch.createStarted();
-        Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        Long totalElements;
+        if ( limit > 0 && ( list.isEmpty() || list.size() == limit ) ) {
+            totalElements = ( Long ) totalElementsQuery
+                    .setCacheable( cacheable )
+                    .uniqueResult();
+        } else {
+            totalElements = offset + ( long ) list.size();
+        }
         countingStopWatch.stop();
 
         stopWatch.stop();
@@ -203,34 +340,14 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         return new Slice<>( list, sort, offset, limit, totalElements );
     }
 
-    @Override
-    public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch postProcessingStopWatch = StopWatch.create();
-        //noinspection unchecked
-        List<VO> results = this.getFilteringQuery( filters, sort )
-                .setResultTransformer( getValueObjectTransformer( postProcessingStopWatch ) )
-                .list();
-        stopWatch.stop();
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.info( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
-                    results.size(),
-                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-        return results;
-    }
-
-    @Override
-    public long count( @Nullable Filters filters ) {
+    private long doCountWithCache( @Nullable Filters filters, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         try {
-            return ( Long ) this.getFilteringCountQuery( filters ).uniqueResult();
+            return ( Long ) this.getFilteringCountQuery( filters ).setCacheable( cacheable ).uniqueResult();
         } finally {
             timer.stop();
             if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-                log.info( String.format( "Count VOs for %s took %d ms.",
+                log.warn( String.format( "Count VOs for %s took %d ms.",
                         elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
             }
         }

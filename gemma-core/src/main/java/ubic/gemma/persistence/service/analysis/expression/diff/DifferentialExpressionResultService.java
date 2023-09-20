@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseReadOnlyService;
 import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.CheckReturnValue;
@@ -40,7 +41,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-public interface DifferentialExpressionResultService extends BaseImmutableService<DifferentialExpressionAnalysisResult> {
+public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given

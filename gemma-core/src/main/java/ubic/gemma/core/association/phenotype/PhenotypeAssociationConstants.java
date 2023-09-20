@@ -36,7 +36,7 @@ public class PhenotypeAssociationConstants {
 
     // those are used to write files the PhenocartaExport
 
-    public final static String DISEASE_ONTOLOGY_ROOT = "DOID_4";
+    public final static String DISEASE_ONTOLOGY_ROOT = "MONDO_0000001";
     public final static String PHENOCARTA_EXPORT = "PhenocartaExport";
     public final static String MANUAL_CURATION = "Manual Curation";
 

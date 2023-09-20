@@ -71,13 +71,6 @@ public interface CharacteristicDao
     Collection<? extends Characteristic> findByCategory( String query );
 
     /**
-     * @param  classes            constraint of who the 'owner' of the Characteristic has to be.
-     * @param  characteristicUris uris
-     * @return characteristics
-     */
-    Collection<Characteristic> findByUri( Collection<Class<?>> classes, @Nullable Collection<String> characteristicUris );
-
-    /**
      * This search looks at direct annotations, factor values and biomaterials in that order.
      * <p>
      * Resulting EEs are filtered by ACLs.
@@ -155,17 +148,11 @@ public interface CharacteristicDao
     Collection<Characteristic> findByValue( String search );
 
     /**
-     * @param  characteristics characteristics
-     * @param  parentClass     parent class
-     * @return a map of the specified characteristics to their parent objects.
+     * Obtain the parents (i.e. owners) of the given characteristics.
+     * <p>
+     * If a characteristic lacks a parent, its entry will be missing from the returned map.
      */
-    Map<Characteristic, Object> getParents( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
-
-    /**
-     * Optimized version that only retrieves the IDs of the owning objects. The parentClass has to be kept track of by
-     * the caller.
-     */
-    Map<Characteristic, Long> getParentIds( Class<?> parentClass, @Nullable Collection<Characteristic> characteristics );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
 
     /**
      * Create a statement.

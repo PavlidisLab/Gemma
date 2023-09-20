@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,7 +39,6 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -73,17 +73,17 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Gene findByAccession( String accession, @Nullable ExternalDatabase source ) {
-        Collection<Gene> genes = new HashSet<>();
-        final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
+        Gene gene = null;
+        final String accessionQuery = "select distinct g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbQuery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
-            //noinspection unchecked
-            genes = this.getSessionFactory().getCurrentSession()
+            gene = ( Gene ) this.getSessionFactory().getCurrentSession()
                     .createQuery( accessionQuery )
                     .setParameter( "accession", accession )
-                    .list();
-            if ( genes.isEmpty() ) {
+                    .setMaxResults( 1 )
+                    .uniqueResult();
+            if ( gene == null ) {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );
                 } catch ( NumberFormatException e ) {
@@ -98,19 +98,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     // it's not an NCBIid
                 }
             } else {
-                //noinspection unchecked
-                genes = this.getSessionFactory().getCurrentSession()
+                gene = ( Gene ) this.getSessionFactory().getCurrentSession()
                         .createQuery( externalDbQuery )
                         .setParameter( "accession", accession )
                         .setParameter( "source", source )
-                        .list();
+                        .setMaxResults( 1 )
+                        .uniqueResult();
             }
         }
-        if ( genes.size() > 0 ) {
-            return genes.iterator().next();
-        }
-        return null;
 
+        return gene;
     }
 
     /**
@@ -162,7 +159,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
+                .createQuery( "select g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
@@ -242,11 +239,15 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                        + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
+        final String queryString = "select cs from Gene as gene "
+                + "inner join gene.products gp, "
+                + "BioSequence2GeneProduct as bs2gp, "
+                + "CompositeSequence as cs "
+                + "where gp=bs2gp.geneProduct "
+                + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                + "and gene = :gene "
+                + "and cs.arrayDesign = :arrayDesign "
+                + "group by cs";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
@@ -265,9 +266,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
-                        + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+                "select cs from Gene as gene inner join gene.products as gp, "
+                        + "BioSequence2GeneProduct as bs2gp, "
+                        + "CompositeSequence as cs "
+                        + "where gp=bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and gene.id = :id "
+                        + "group by cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "id", id )
@@ -416,7 +421,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             return gene;
 
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g from Gene g left join fetch g.taxon where g.id=:gid" )
+                .createQuery( "select g from Gene g left join fetch g.taxon where g.id=:gid" )
                 .setParameter( "gid", gene.getId() )
                 .uniqueResult();
     }
@@ -548,6 +553,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    protected void initializeCachedFilteringResult( Gene entity ) {
+        Hibernate.initialize( entity.getMultifunctionality() );
+    }
+
+    @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(gene) from Gene as gene " // gene
@@ -574,7 +584,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
+                "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
                         + "where g.id in (:gIds)" ).setParameterList( "gIds", ids ).list();
     }
@@ -594,7 +604,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             @Nullable final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        //language=none // Prevents unresolvable missing value warnings.
         String query = "select distinct g from Gene as g "
                 + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "

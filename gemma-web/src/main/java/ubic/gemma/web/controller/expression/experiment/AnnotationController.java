@@ -24,9 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -138,7 +136,7 @@ public class AnnotationController {
             }
 
             return sortedResults;
-        } catch ( OntologySearchException | SearchException e ) {
+        } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search query.", e );
         }
     }
@@ -151,7 +149,7 @@ public class AnnotationController {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
             return;
         }
-        ontologyService.reinitializeAllOntologies();
+        ontologyService.reinitializeAndReindexAllOntologies();
     }
 
     public void removeBiomaterialTag( Characteristic vc, Long id ) {

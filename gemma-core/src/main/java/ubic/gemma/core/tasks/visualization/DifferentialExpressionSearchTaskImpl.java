@@ -42,6 +42,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Encapsulates the search for differential expression results, for a set of genes and experiments (which can be
@@ -52,7 +53,7 @@ import java.util.Map.Entry;
 @Component
 @Scope("prototype")
 public class DifferentialExpressionSearchTaskImpl
-        extends AbstractTask<TaskResult, DifferentialExpressionSearchTaskCommand>
+        extends AbstractTask<DifferentialExpressionSearchTaskCommand>
         implements DifferentialExpressionSearchTask {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionSearchTaskImpl.class );
@@ -567,8 +568,8 @@ public class DifferentialExpressionSearchTaskImpl
             Map<Long, ContrastsValueObject> detailedResults ) {
 
         int i = 0;
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils
-                .getPropertyMap( resultSets, "resultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = resultSets.stream()
+                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getResultSetId, rs -> rs, ( a, b ) -> b ) );
 
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 

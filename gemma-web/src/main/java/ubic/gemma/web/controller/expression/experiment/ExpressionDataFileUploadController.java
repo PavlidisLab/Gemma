@@ -212,7 +212,7 @@ public class ExpressionDataFileUploadController {
         return StringEscapeUtils.escapeHtml4( s );
     }
 
-    private class SimpleEELoadLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
+    private class SimpleEELoadLocalTask extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
 
         public SimpleEELoadLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
@@ -299,7 +299,7 @@ public class ExpressionDataFileUploadController {
     }
 
     private class SimpleEEValidateLocalTask
-            extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
+            extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
 
         public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );

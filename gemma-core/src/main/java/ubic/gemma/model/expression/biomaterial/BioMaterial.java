@@ -20,6 +20,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import gemma.gsec.model.Securable;
+import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -29,9 +30,8 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * In MAGE, BioMaterial is an abstract class that represents the important substances such as cells, tissues, DNA,
@@ -39,6 +39,7 @@ import java.util.HashSet;
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
+@Indexed
 public class BioMaterial extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
 
     private static final long serialVersionUID = 4374359557498220256L;
@@ -49,6 +50,19 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
     private Set<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry externalAccession;
 
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
+    }
+
+    @Override
+    @Field
+    public String getName() {
+        return super.getName();
+    }
+
+    @ContainedIn
     public Set<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;
     }
@@ -57,6 +71,7 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
         this.bioAssaysUsedIn = bioAssaysUsedIn;
     }
 
+    @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
@@ -72,6 +87,7 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
      *         than one
      *         BioMaterial may reference a given external accession.
      */
+    @IndexedEmbedded
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;
     }
@@ -83,6 +99,7 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
     /**
      * @return The values that this BioAssay is associated with for the experiment.
      */
+    @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }

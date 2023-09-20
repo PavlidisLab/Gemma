@@ -19,7 +19,6 @@
 package ubic.gemma.core.tasks.analysis.diffex;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 import java.util.Collection;
@@ -72,7 +71,7 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return DiffExMetaAnalyzerTask.class;
     }
 }

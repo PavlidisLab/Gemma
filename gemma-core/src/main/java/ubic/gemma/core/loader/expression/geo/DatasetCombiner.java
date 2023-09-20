@@ -313,7 +313,7 @@ public class DatasetCombiner {
      * @return geo sample correspondence
      */
     public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
-        Collection<GeoDataset> datasets = series.getDatasets();
+        Collection<GeoDataset> datasets = series.getDataSets();
         if ( datasets != null && datasets.size() > 0 ) {
             this.fillAccessionMaps( datasets );
 

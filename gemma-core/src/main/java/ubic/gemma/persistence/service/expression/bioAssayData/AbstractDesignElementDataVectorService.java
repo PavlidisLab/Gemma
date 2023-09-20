@@ -26,13 +26,45 @@ public abstract class AbstractDesignElementDataVectorService<T extends DesignEle
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<T> findAndThaw( BioAssayDimension bioAssayDimension ) {
+        Collection<T> vectors = this.designElementDataVectorDao.find( bioAssayDimension );
+        this.designElementDataVectorDao.thaw( vectors );
+        return vectors;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<T> find( Collection<QuantitationType> quantitationTypes ) {
         return this.designElementDataVectorDao.find( quantitationTypes );
     }
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<T> findAndThaw( Collection<QuantitationType> quantitationTypes ) {
+        Collection<T> vectors = this.designElementDataVectorDao.find( quantitationTypes );
+        this.designElementDataVectorDao.thaw( vectors );
+        return vectors;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<T> find( QuantitationType quantitationType ) {
         return this.designElementDataVectorDao.find( quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<T> findAndThaw( QuantitationType qt ) {
+        Collection<T> vectors = designElementDataVectorDao.find( qt );
+        designElementDataVectorDao.thaw( vectors );
+        return vectors;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<T> thaw( Collection<T> vectors ) {
+        vectors = ensureInSession( vectors );
+        designElementDataVectorDao.thaw( vectors );
+        return vectors;
     }
 }

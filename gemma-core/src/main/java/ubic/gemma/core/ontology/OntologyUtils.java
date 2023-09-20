@@ -1,13 +1,7 @@
 package ubic.gemma.core.ontology;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
-
-import java.util.List;
 
 /**
  * Utilities for working with ontologies.
@@ -32,6 +26,7 @@ public class OntologyUtils {
             log.info( String.format( "Waiting for %s to load...", service ) );
             service.waitForInitializationThread();
         } else {
+            log.info( String.format( "Force-loading %s...", service ) );
             service.initialize( true, false );
         }
     }

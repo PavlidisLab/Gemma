@@ -18,6 +18,7 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
     </context:component-scan>
 
+    <!-- perform placeholder substitution in the servlet environment (i.e. web.xml init params) -->
     <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
         <property name="environment">
             <bean class="org.springframework.web.context.support.StandardServletEnvironment"/>
@@ -101,12 +102,20 @@
     <!-- Exception handler. -->
     <!-- ==================================================== -->
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
-        <property name="defaultErrorView" value="error"/>
+        <property name="defaultErrorView" value="error/500"/>
+        <property name="statusCodes">
+            <props>
+                <prop key="error/400">400</prop>
+                <prop key="error/403">403</prop>
+                <prop key="error/404">404</prop>
+                <prop key="error/500">500</prop>
+            </props>
+        </property>
         <property name="exceptionMappings">
             <props>
-                <prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
-                <prop key="org.springframework.security.access.AccessDeniedException">accessDeniedFailure</prop>
-                <prop key="java.lang.Exception">error</prop>
+                <prop key="org.springframework.security.access.AccessDeniedException">error/403</prop>
+                <prop key="ubic.gemma.web.util.EntityNotFoundException">error/404</prop>
+                <prop key="java.lang.IllegalArgumentException">error/400</prop>
             </props>
         </property>
     </bean>
@@ -836,6 +845,8 @@
         <dwr:convert type="bean" class="ubic.gemma.model.genome.TaxonValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject"/>
+
+        <dwr:convert type="bean" class="ubic.gemma.model.common.measurement.MeasurementValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.ontology.OntologyTreeNode"/>
         <!-- yes, used -->

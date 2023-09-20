@@ -6,6 +6,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseReadOnlyService<T> {
@@ -19,6 +20,9 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<T> find( BioAssayDimension bioAssayDimension );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> findAndThaw( BioAssayDimension bioAssayDimension );
+
     /**
      * Find specific type ({@link T}) of vectors that meet the given criteria.
      *
@@ -28,6 +32,9 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
     @Secured({ "GROUP_ADMIN" })
     Collection<T> find( Collection<QuantitationType> quantitationTypes );
 
+    @Secured({ "GROUP_ADMIN" })
+    Collection<T> findAndThaw( Collection<QuantitationType> quantitationTypes );
+
     /**
      * Find specific type ({@link T}) of vectors that meet the given criteria.
      *
@@ -36,4 +43,19 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<T> find( QuantitationType quantitationType );
+
+    /**
+     * Find and thaw specific type ({@link T}) of vectors that meet the given criteria.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> findAndThaw( QuantitationType quantitationType );
+
+    /**
+     * Thaw the given vectors.
+     * @deprecated Use {@link #findAndThaw(QuantitationType)}, {@link #findAndThaw(Collection)} or
+     *             {@link #findAndThaw(BioAssayDimension)} instead, it's much more efficient.
+     */
+    @CheckReturnValue
+    @Deprecated
+    Collection<T> thaw( Collection<T> vectors );
 }

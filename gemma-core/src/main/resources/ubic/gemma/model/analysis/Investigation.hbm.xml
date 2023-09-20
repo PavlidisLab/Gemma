@@ -121,7 +121,6 @@
 				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
@@ -129,7 +128,6 @@
 				</set>
 				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all,delete-orphan">
-					<cache usage="read-write"/>
 					<key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
@@ -162,7 +160,7 @@
 					  discriminator-value="ExpressionExperimentSubSet" abstract="false">
 				<!-- this is assumed readily available in ExpressionExperimentSubSetValueObject -->
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-							 cascade="none" lazy="false" fetch="join">
+							 cascade="none" lazy="false" fetch="select">
 					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select">

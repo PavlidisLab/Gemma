@@ -30,8 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
- * either in the webapp or in a javaspaces grid. The choice depends on how the system and client is configured.
+ * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX.
  *
  * @author pavlidis
  * @author keshav

@@ -20,7 +20,9 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
+
+import javax.annotation.Nullable;
+import javax.persistence.Transient;
 
 /**
  * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator
@@ -31,13 +33,14 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     private static final long serialVersionUID = 5006465967597402551L;
 
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
+    @Nullable
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
 
     protected SampleCoexpressionAnalysis() {
     }
 
     public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
-            SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
+            @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
         super( experimentAnalyzed );
         this.fullCoexpressionMatrix = fullCoexpressionMatrix;
         this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
@@ -63,12 +66,17 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
      *
      * @return a coexpression matrix with regressed out major factors.
      */
+    @Nullable
     public SampleCoexpressionMatrix getRegressedCoexpressionMatrix() {
         return regressedCoexpressionMatrix;
     }
 
-    public void setRegressedCoexpressionMatrix( SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
+    public void setRegressedCoexpressionMatrix( @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
         this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
     }
 
+    @Transient
+    public SampleCoexpressionMatrix getBestCoexpressionMatrix() {
+        return regressedCoexpressionMatrix != null ? regressedCoexpressionMatrix : fullCoexpressionMatrix;
+    }
 }

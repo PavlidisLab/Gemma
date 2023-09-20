@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -20,6 +21,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.util.args.*;
@@ -65,12 +69,12 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public TaxonArgService taxonArgService( TaxonService taxonService ) {
-            return new TaxonArgService( taxonService );
+            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), mock( GeneService.class ) );
         }
 
         @Bean
         public PlatformArgService platformArgService( ArrayDesignService arrayDesignService ) {
-            return new PlatformArgService( arrayDesignService );
+            return new PlatformArgService( arrayDesignService, mock( ExpressionExperimentService.class ), mock( CompositeSequenceService.class ) );
         }
     }
 

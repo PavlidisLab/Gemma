@@ -20,29 +20,34 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -59,25 +64,31 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
+    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet entity ) {
+        throw new UnsupportedOperationException( "Individual result sets cannot be created directly, use DifferentialExpressionAnalysisDao.create() instead." );
+    }
+
+    @Override
+    public void remove( ExpressionAnalysisResultSet entity ) {
+        throw new UnsupportedOperationException( "Individual result sets cannot be removed directly, use DifferentialExpressionAnalysisDao.remove() instead." );
+    }
+
+    @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        //noinspection unchecked
-        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select r from ExpressionAnalysisResultSet r "
-                                + "left join fetch r.results res "
-                                + "left join fetch res.probe p "
-                                + "left join fetch res.contrasts c "
-                                + "left join fetch c.factorValue "
-                                + "left join fetch c.secondFactorValue "
-                                + "where r.id = :rs " )
-                .setParameter( "rs", id )
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ears from ExpressionAnalysisResultSet ears "
+                        + "left join fetch ears.results res "
+                        + "left join fetch res.probe probe "
+                        + "left join fetch probe.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "left join fetch res.contrasts "
+                        + "where ears.id = :rsId" )
+                .setParameter( "rsId", id )
                 .uniqueResult();
-        if ( ears == null ) {
-            return null;
-        }
-        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
-            log.info( "Loaded [" + elementClass.getName() + " id=" + id + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
         }
         return ears;
     }
@@ -88,47 +99,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         "select a from GeneDifferentialExpressionMetaAnalysis a"
                                 + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
                 .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
-    }
-
-    @Override
-    public void remove( ExpressionAnalysisResultSet resultSet ) {
-        // flush any pending changes before running a bulk query
-        Session session = this.getSessionFactory().getCurrentSession();
-        session.flush();
-
-        // Remove results - Not using DifferentialExpressionResultDaoImpl.remove() for speed
-        {
-            int contrastsDone = 0;
-            int resultsDone = 0;
-
-            AbstractDao.log.info( "Bulk removing dea results..." );
-
-            // Delete contrasts
-            //language=MySQL
-            final String nativeDeleteContrastsQuery =
-                    "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                            + " WHERE d.RESULT_SET_FK = :rsid AND d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
-            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
-            q.setParameter( "rsid", resultSet.getId() );
-            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
-
-            // Delete AnalysisResults
-            //language=MySQL
-            String nativeDeleteARQuery = "DELETE d FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d WHERE d.RESULT_SET_FK = :rsid  ";
-            q = session.createSQLQuery( nativeDeleteARQuery );
-            q.setParameter( "rsid", resultSet.getId() );
-            resultsDone += q.executeUpdate();
-
-            AbstractDao.log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results. Flushing..." );
-        }
-
-        // clear manually removed result sets
-        resultSet.setResults( new HashSet<>() );
-
-        // Remove result set
-        AbstractDao.log.info( "Removing result set " + resultSet.getId() );
-        super.remove( resultSet );
-        flush();
     }
 
     @Override
@@ -252,13 +222,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
-                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where {result}.RESULT_SET_FK = :rsid" )
-                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                        + "where result.RESULT_SET_FK = :rsid" )
+                .addSynchronizedQuerySpace( "GENE2CS" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
                 .setCacheable( true );
@@ -269,7 +240,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // YAY! my brain was almost fried writing that collector
         return list.stream()
                 .collect( Collectors.groupingBy(
-                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        l -> ( Long ) l[0],
                         Collectors.collectingAndThen( Collectors.toList(),
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )

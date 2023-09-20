@@ -36,13 +36,16 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -74,18 +77,14 @@ public class BioAssayController {
 
         ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
-        Collection<OutlierDetails> outliers = null;
-        try {
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            outliers = Collections.emptySet();
-        } catch ( FilteringException e ) {
-            throw new RuntimeException( e );
-        }
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
 
-        for ( BioAssay assay : ee.getBioAssays() ) {
-            result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
+        if ( outliers != null ) {
+            Map<Long, OutlierDetails> outlierMap = outliers.stream()
+                    .collect( Collectors.toMap( od -> od.getBioAssay().getId(), od -> od, ( a, b ) -> b ) );
+            for ( BioAssay assay : ee.getBioAssays() ) {
+                result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
+            }
         }
 
         BioAssayController.log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );

@@ -60,7 +60,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         // let it go a little while
         Thread.sleep( 100 );
 
-        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         assertNotNull( task );
 
         // cancel it.

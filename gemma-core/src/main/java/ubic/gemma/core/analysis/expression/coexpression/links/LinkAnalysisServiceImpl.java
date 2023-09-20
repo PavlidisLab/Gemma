@@ -30,7 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.analysis.preprocess.*;
+import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
+import ubic.gemma.core.analysis.preprocess.OutlierDetails;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -110,8 +113,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             LinkAnalysisServiceImpl.log.info( "Fetching expression data for " + ee );
 
             Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
-                    .getProcessedDataVectors( ee );
-            dataVectors = processedExpressionDataVectorService.thaw( dataVectors );
+                    .getProcessedDataVectorsAndThaw( ee );
 
             LinkAnalysisServiceImpl.log.info( "Starting analysis" );
             this.analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors );

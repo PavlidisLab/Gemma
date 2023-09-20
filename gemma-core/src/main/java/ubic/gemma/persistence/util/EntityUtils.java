@@ -25,7 +25,6 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
@@ -37,7 +36,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -95,61 +93,7 @@ public class EntityUtils {
         }
         return result;
     }
-
-    /**
-     * Get a property of an entity object via its getter.
-     *
-     * @param entity       the entity
-     * @param propertyName name of the property
-     * @param <T>          type of the property
-     * @return the return value of the getter for the property
-     * @see PropertyUtils#getProperty(Object, String)
-     */
-    public static <T> T getProperty( Object entity, String propertyName ) {
-        try {
-            //noinspection unchecked
-            return ( T ) PropertyUtils.getProperty( entity, propertyName );
-        } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Group entities by their property.
-     *
-     * @param entities     entities
-     * @param propertyName property name (e.g. "id")
-     * @param <T>        the type
-     * @return the created map
-     * @see #getProperty(Object, String)
-     */
-    public static <S, T> Map<S, T> getPropertyMap( Collection<? extends T> entities, String propertyName ) {
-        Map<S, T> result = new HashMap<>();
-        for ( T object : entities ) {
-            result.put( EntityUtils.getProperty( object, propertyName ), object );
-        }
-        return result;
-    }
-
-    /**
-     * Group entities by their property using a nested property.
-     *
-     * @param entities       entities
-     * @param nestedProperty nested property
-     * @param propertyName   property name (e.g. "id")
-     * @param <T>            the type
-     * @return the created map
-     * @see #getProperty(Object, String)
-     */
-    public static <S, T> Map<S, T> getNestedPropertyMap( Collection<T> entities, String nestedProperty,
-            String propertyName ) {
-        Map<S, T> result = new HashMap<>();
-        for ( T object : entities ) {
-            result.put( EntityUtils.getProperty( EntityUtils.getProperty( object, nestedProperty ), propertyName ), object );
-        }
-        return result;
-    }
-
+    
     public static Class<?> getImplClass( Class<?> type ) {
         String canonicalName = type.getName();
         try {
@@ -182,77 +126,6 @@ public class EntityUtils {
      */
     public static boolean isProxy( Object target ) {
         return target instanceof HibernateProxy;
-    }
-
-    /**
-     * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
-     *
-     * @param sess             session
-     * @param securedClass     Securable type
-     * @param ids              to be filtered
-     * @param showPublic       also show public items (won't work if showOnlyEditable is true)
-     * @param showOnlyEditable show only editable
-     * @return filtered IDs, at the very least limited to those that are readable by the current user
-     */
-    public static Collection<Long> securityFilterIds( Class<? extends Securable> securedClass, Collection<Long> ids,
-            boolean showOnlyEditable, boolean showPublic, Session sess ) {
-
-        if ( ids.isEmpty() )
-            return ids;
-        if ( SecurityUtil.isUserAdmin() ) {
-            return ids;
-        }
-
-        /*
-         * Find groups user is a member of
-         */
-
-        String userName = SecurityUtil.getCurrentUsername();
-
-        boolean isAnonymous = SecurityUtil.isUserAnonymous();
-
-        if ( isAnonymous && ( showOnlyEditable || !showPublic ) ) {
-            return new HashSet<>();
-        }
-
-        String queryString = "select aoi.OBJECT_ID";
-        queryString += " from ACLOBJECTIDENTITY aoi";
-        queryString += " join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
-        queryString += " join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
-        queryString += " where aoi.OBJECT_ID in (:ids)";
-        queryString += " and aoi.OBJECT_CLASS = :clazz and ";
-        queryString += EntityUtils.addGroupAndUserNameRestriction( showOnlyEditable, showPublic );
-
-        // will be empty if anonymous
-        //noinspection unchecked
-        Collection<String> groups = sess.createQuery(
-                        "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
-                .setParameter( "user", userName ).list();
-
-        Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedClass.getName() )
-                .setParameterList( "ids", ids );
-
-        if ( queryString.contains( ":groups" ) ) {
-            query.setParameterList( "groups", groups );
-        }
-
-        if ( queryString.contains( ":userName" ) ) {
-            query.setParameter( "userName", userName );
-        }
-
-        //noinspection unchecked
-        List<BigInteger> r = query.list();
-        Set<Long> rl = new HashSet<>();
-        for ( BigInteger bi : r ) {
-            rl.add( bi.longValue() );
-        }
-
-        if ( !ids.containsAll( rl ) ) {
-            // really an assertion, but being extra-careful
-            throw new SecurityException( "Security filter failure" );
-        }
-
-        return rl;
     }
 
     /**

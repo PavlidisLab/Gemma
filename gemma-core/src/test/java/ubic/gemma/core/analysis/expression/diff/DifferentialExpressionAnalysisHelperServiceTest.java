@@ -19,6 +19,8 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.junit.Assert.assertTrue;
 

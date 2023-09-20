@@ -79,7 +79,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * Create a new provisional search result with a result type and ID.
      */
-    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, Map<String, String> highlights, Object source ) {
+    public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, @Nullable Map<String, String> highlights, Object source ) {
         return new SearchResult<>( resultType, entityId, score, highlights, source );
     }
 

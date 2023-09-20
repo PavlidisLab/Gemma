@@ -13,6 +13,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -78,21 +82,24 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
 
     private Session session;
 
+    private SQLQuery query;
+
     private Path gene2csInfoPath;
 
     @Before
     public void setUp() throws IOException {
         when( externalDatabaseService.findByNameWithAuditTrail( "gene2cs" ) ).thenReturn( gene2csDatabaseEntry );
+        query = mock( SQLQuery.class, RETURNS_SELF );
         session = mock( Session.class );
+        when( session.createSQLQuery( any() ) ).thenReturn( query );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
-        when( session.createSQLQuery( any() ) ).thenReturn( mock( SQLQuery.class ) );
         gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
         tableMaintenanceUtil.setGene2CsInfoPath( gene2csInfoPath );
     }
 
     @After
     public void tearDown() {
-        reset( externalDatabaseService, sessionFactory, session );
+        reset( externalDatabaseService, sessionFactory, session, query );
         File f = gene2csInfoPath.toFile();
         if ( f.exists() ) {
             assertThat( f.delete() ).isTrue();
@@ -106,6 +113,8 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
         verify( session ).createSQLQuery( startsWith( "REPLACE INTO GENE2CS" ) );
+        verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
+        verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "" ), any() );
         verify( mailEngine ).send( any() );

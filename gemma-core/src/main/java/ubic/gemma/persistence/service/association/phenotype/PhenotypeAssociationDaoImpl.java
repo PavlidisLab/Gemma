@@ -563,14 +563,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
-    @Override
-    public Collection<String> loadAllDescription() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct p.description from PhenotypeAssociation as p" )
-                .list();
-    }
-
     /**
      * find all phenotypes in Neurocarta, this was requested by AspireBD
      */
@@ -932,4 +924,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return genesWithPhenotypes.values();
     }
 
+    @Override
+    public void remove( PhenotypeAssociation entity ) {
+        // detach the PA from the gene to prevent re-save by cascade
+        entity.getGene().getPhenotypeAssociations().remove( entity );
+        super.remove( entity );
+    }
 }

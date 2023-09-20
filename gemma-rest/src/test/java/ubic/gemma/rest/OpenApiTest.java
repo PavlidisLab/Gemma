@@ -9,7 +9,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -83,6 +83,11 @@ public class OpenApiTest extends BaseJerseyTest {
             return mock( AnalyticsProvider.class );
         }
 
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock( AccessDecisionManager.class );
+        }
+
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
             T ees = mock( clazz );
             when( ees.getElementClass() ).thenAnswer( a -> elementClass );
@@ -130,28 +135,39 @@ public class OpenApiTest extends BaseJerseyTest {
         private OpenAPI openAPI;
     }
 
-
     @Test
-    @Ignore("This is broken due to some quirk in Swagger (see https://github.com/PavlidisLab/Gemma/issues/524)")
     public void testFilterArgSchemas() {
         assertThat( spec.getComponents().getSchemas() )
-                .doesNotContainKey( "Filter" )
+                // FIXME: remove the dangling 'Filter'
+                // .doesNotContainKey( "Filter" )
                 .containsKeys( "FilterArgExpressionExperiment", "FilterArgArrayDesign", "FilterArgExpressionAnalysisResultSet" );
-        Schema<?> schema = spec.getComponents().getSchemas().get( "FilterArgExpressionExperiment" );
+        Schema<?> schema = spec.getComponents().getSchemas().get( "FilterArgExpressionAnalysisResultSet" );
+        assertThat( schema.getType() )
+                .isEqualTo( "string" );
+        assertThat( schema.getProperties() )
+                .isNull();
+        assertThat( schema.getDescription() ).contains( "Available properties:" );
+    }
+
+    @Test
+    public void testSortArgSchemas() {
+        assertThat( spec.getComponents().getSchemas() )
+                // FIXME: remove the dangling 'Sort'
+                // .doesNotContainKey( "Sort" )
+                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet", "SortArgTaxon" );
+        Schema<?> schema = spec.getComponents().getSchemas().get( "SortArgExpressionExperiment" );
         assertThat( schema.getType() )
                 .isEqualTo( "string" );
         assertThat( schema.getDescription() ).contains( "Available properties:" );
     }
 
     @Test
-    @Ignore("This is broken due to some quirk in Swagger (see https://github.com/PavlidisLab/Gemma/issues/524)")
-    public void testSortArgSchemas() {
-        assertThat( spec.getComponents().getSchemas() )
-                .doesNotContainKey( "Sort" )
-                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet", "SortArgTaxon" );
-        Schema<?> schema = spec.getComponents().getSchemas().get( "SortArgExpressionExperiment" );
-        assertThat( schema.getType() )
-                .isEqualTo( "string" );
-        assertThat( schema.getDescription() ).contains( "Available properties:" );
+    public void testLimitArgIs5000ForGetDatasetsAnnotations() {
+        assertThat( spec.getPaths().get( "/datasets/annotations" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getSchema().getType() ).isEqualTo( "integer" );
+                    assertThat( p.getSchema().getMinimum() ).isEqualTo( "1" );
+                    assertThat( p.getSchema().getMaximum() ).isEqualTo( "5000" );
+                } );
     }
 }

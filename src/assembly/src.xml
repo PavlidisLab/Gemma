@@ -9,10 +9,6 @@
     <moduleSets>
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
-            <includes>
-                <include>gemma:gemma-core</include>
-                <include>gemma:gemma-web</include>
-            </includes>
             <sources/>
         </moduleSet>
     </moduleSets>

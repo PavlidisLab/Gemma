@@ -23,15 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDao;
-
-import java.util.Collection;
 
 /**
  * Transactional methods for dealing with differential expression analyses.
@@ -46,24 +43,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
-    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
-
-    @Autowired
     private Persister persisterHelper = null;
-
-    @Override
-    @Transactional
-    public void addResults( DifferentialExpressionAnalysis entity,
-            Collection<ExpressionAnalysisResultSet> resultSets ) {
-        entity.getResultSets().addAll( resultSets );
-        differentialExpressionAnalysisService.update( entity ); // could be sped up.
-    }
-
-    @Override
-    @Transactional
-    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {
-        return this.expressionAnalysisResultSetDao.create( rs );
-    }
 
     @Override
     @Transactional

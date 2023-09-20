@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -50,7 +51,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     private final AuditEventDao auditEventDao;
 
-    private final CurationDetailsService curationDetailsService;
+    private final GenericCuratableDao curatableDao;
 
     private final UserManager userManager;
 
@@ -58,11 +59,11 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     @Autowired
     public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, AuditEventDao auditEventDao,
-            CurationDetailsService curationDetailsService, UserManager userManager, SessionFactory sessionFactory ) {
+            GenericCuratableDao curatableDao, UserManager userManager, SessionFactory sessionFactory ) {
         super( auditTrailDao );
         this.auditTrailDao = auditTrailDao;
         this.auditEventDao = auditEventDao;
-        this.curationDetailsService = curationDetailsService;
+        this.curatableDao = curatableDao;
         this.userManager = userManager;
         this.sessionFactory = sessionFactory;
     }
@@ -119,8 +120,8 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         //Create new audit event
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType );
         //If object is curatable, update curation details
-        if ( auditable instanceof Curatable && auditEvent.getEventType() != null ) {
-            curationDetailsService.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        if ( auditable instanceof Curatable ) {
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
         return this.addEvent( auditable, auditEvent );
     }

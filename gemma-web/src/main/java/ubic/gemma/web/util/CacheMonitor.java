@@ -14,6 +14,8 @@
  */
 package ubic.gemma.web.util;
 
+import java.util.Locale;
+
 /**
  * @author paul
  */
@@ -25,16 +27,26 @@ public interface CacheMonitor {
     void clearAllCaches();
 
     /**
-     * Remove all items from the cache given
+     * Remove all items from the cache with the given name.
      *
      * @param cacheName cache
+     * @throws IllegalArgumentException if no such cache exist with the given name
      */
-    void clearCache( String cacheName );
+    void clearCache( String cacheName ) throws IllegalArgumentException;
 
+    /**
+     * Disable collection of statistics on the caches.
+     */
     void disableStatistics();
 
+    /**
+     * Enable collection of statistics on the caches.
+     */
     void enableStatistics();
 
-    String getStats();
-
+    /**
+     * Obtain the cache statistics in HTML format.
+     * @param locale a locale to use to format numbers and render messages
+     */
+    String getStats( Locale locale );
 }

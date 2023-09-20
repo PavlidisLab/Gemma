@@ -88,9 +88,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "from INVESTIGATION I "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
-                    + "join BIO_MATERIAL_FACTOR_VALUES BMFV on BM.ID = BMFV.BIO_MATERIALS_FK "
-                    + "join FACTOR_VALUE FV on BMFV.FACTOR_VALUES_FK = FV.ID "
-                    + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
+                    + "join CHARACTERISTIC C on BM.ID = C.BIO_MATERIAL_FK "
                     + "where I.class = 'ExpressionExperiment' "
                     + "union "
                     + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:edClass as char(255)) "
@@ -190,6 +188,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     public int updateExpressionExperiment2CharacteristicEntries() {
         log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
         int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
+                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .setParameter( "eeClass", ExpressionExperiment.class )
                 .setParameter( "bmClass", BioMaterial.class )
                 .setParameter( "edClass", ExperimentalDesign.class )
@@ -224,6 +223,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         int updated = this.sessionFactory.getCurrentSession()
                 .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
+                .addSynchronizedQuerySpace( "GENE2CS" )
                 .executeUpdate();
         TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
     }

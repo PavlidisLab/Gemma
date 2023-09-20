@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
-import io.micrometer.core.annotation.Timed;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
@@ -133,13 +132,6 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
         super( expressionExperimentDao );
         this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    @Override
-    @Timed
-    @Transactional(readOnly = true)
-    public ExpressionExperiment load( Long id ) {
-        return super.load( id );
     }
 
     @Override
@@ -279,12 +271,6 @@ public class ExpressionExperimentServiceImpl
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
-    }
-
     /**
      * returns ids of search results
      *
@@ -321,7 +307,12 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
-            Hibernate.initialize( ee.getPrimaryPublication() );
+            if ( ee.getPrimaryPublication() != null ) {
+                Hibernate.initialize( ee.getPrimaryPublication() );
+                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
+                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
+                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+            }
         }
         return ee;
     }
@@ -534,15 +525,13 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
+     * <p>
+     * Note: we do not apply inference to category URIs as they are (a) too broad and (b) their sub-terms are never used.
      */
     private static final String[] PROPERTIES_USED_FOR_ANNOTATIONS = {
-            "allCharacteristics.categoryUri",
             "allCharacteristics.valueUri",
-            "characteristics.categoryUri",
             "characteristics.valueUri",
-            "bioAssays.sampleUsed.characteristics.categoryUri",
             "bioAssays.sampleUsed.characteristics.valueUri",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.categoryUri",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
     };
 
@@ -563,32 +552,24 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<String> impliedTermUris ) {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms ) {
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
-        final Map<SubClauseKey, Set<String>> impliedTermsUrisBySubClause = new HashMap<>();
+        final Map<SubClauseKey, Set<String>> termUrisBySubClause = new HashMap<>();
         for ( List<Filter> clause : f ) {
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
                     // handle nested subqueries
-                    while ( subClause.getRequiredValue() instanceof Subquery ) {
-                        subClause = ( ( Subquery ) subClause.getRequiredValue() ).getFilter();
-                    }
-                    Set<String> it = impliedTermsUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
+                    subClause = FiltersUtils.unnestSubquery( subClause );
+                    Set<String> it = termUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
                     // rewrite the clause to contain all the inferred terms
                     if ( subClause.getRequiredValue() instanceof Collection ) {
                         //noinspection unchecked
                         it.addAll( ( Collection<String> ) subClause.getRequiredValue() );
-                        //noinspection unchecked
-                        it.addAll( ( ( Collection<String> ) subClause.getRequiredValue() ).stream()
-                                .map( this::inferTermUris )
-                                .flatMap( List::stream )
-                                .collect( Collectors.toList() ) );
                     } else if ( subClause.getRequiredValue() instanceof String ) {
                         it.add( ( String ) subClause.getRequiredValue() );
-                        it.addAll( inferTermUris( ( String ) subClause.getRequiredValue() ) );
                     } else {
                         clauseBuilder = clauseBuilder.or( subClause );
                     }
@@ -597,13 +578,21 @@ public class ExpressionExperimentServiceImpl
                     clauseBuilder = clauseBuilder.or( subClause );
                 }
             }
-            // recreate a clause
-            for ( Map.Entry<SubClauseKey, Set<String>> e : impliedTermsUrisBySubClause.entrySet() ) {
+            // recreate a clause with inferred terms
+            for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
+                Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
+                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
+                        .map( OntologyTerm::getUri )
+                        .collect( Collectors.toList() ) );
+                if ( mentionedTerms != null ) {
+                    mentionedTerms.addAll( terms );
+                }
                 Filter g;
-                if ( e.getValue().size() == 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, e.getValue().iterator().next(), e.getKey().getOriginalProperty() );
-                } else if ( e.getValue().size() > 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, e.getValue(), e.getKey().getOriginalProperty() );
+                if ( termAndChildrenUris.size() == 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUris.iterator().next(), e.getKey().getOriginalProperty() );
+                } else if ( termAndChildrenUris.size() > 1 ) {
+                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUris, e.getKey().getOriginalProperty() );
                 } else {
                     continue; // empty clause, is that even possible?
                 }
@@ -615,12 +604,9 @@ public class ExpressionExperimentServiceImpl
                 String objectAlias = g.getObjectAlias();
                 clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
                         Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
-                if ( impliedTermUris != null ) {
-                    impliedTermUris.addAll( e.getValue() );
-                }
             }
             f2 = clauseBuilder.build();
-            impliedTermsUrisBySubClause.clear();
+            termUrisBySubClause.clear();
         }
         return f2;
     }
@@ -635,13 +621,22 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
-    private List<String> inferTermUris( String uri ) {
-        OntologyTerm term = ontologyService.getTerm( uri );
-        if ( term != null ) {
-            return term.getChildren( false ).stream().map( OntologyTerm::getUri ).collect( Collectors.toList() );
-        } else {
-            return Collections.emptyList();
-        }
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
+        return expressionExperimentDao.loadIdsWithCache( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countWithCache( @Nullable Filters filters ) {
+        return expressionExperimentDao.countWithCache( filters );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        return expressionExperimentDao.loadValueObjectsWithCache( filters, sort, offset, limit );
     }
 
     /**
@@ -654,60 +649,114 @@ public class ExpressionExperimentServiceImpl
         String originalProperty;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+        List<Long> eeIds;
+        if ( filters == null || filters.isEmpty() ) {
+            eeIds = null;
+        } else {
+            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+        }
+        if ( excludedTermUris != null ) {
+            excludedTermUris = inferTermsUris( excludedTermUris );
+        }
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris );
+    }
+
     /**
      * If the term cannot be resolved via {@link OntologyService#getTerm(String)}, an attempt is done to resolve its
      * category and assign it as its parent. This handles free-text terms that lack a value URI.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable Collection<String> retainedTermUris ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+        if ( excludedTermUris != null ) {
+            excludedTermUris = inferTermsUris( excludedTermUris );
+        }
+
         Map<Characteristic, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, retainedTermUris );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         } else {
-            List<Long> eeIds = expressionExperimentDao.loadIds( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, retainedTermUris );
+            List<Long> eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
         }
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
 
+        // gather all the values and categories
+        Set<String> uris = result.keySet().stream()
+                .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        // TODO: handle more than one term per URI
+        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+                .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
+
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
-            OntologyTerm term = null;
-
-            if ( entry.getKey().getValueUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getValueUri() );
+            Characteristic c = entry.getKey();
+            OntologyTerm term;
+            if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
+                term = termByUri.get( c.getValueUri() ).iterator().next();
+            } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
+            } else {
+                // create an uncategorized term
+                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), null );
             }
-
-            // create a fake term with its category as parent
-            if ( term == null && entry.getKey().getCategoryUri() != null ) {
-                term = ontologyService.getTerm( entry.getKey().getCategoryUri() );
-                if ( term != null ) {
-                    // create a fake term with its category as parent
-                    final Set<OntologyTerm> parentTerms = Collections.singleton( term );
-                    term = new OntologyTermSimple( entry.getKey().getValueUri(), entry.getKey().getValue() ) {
-                        @Override
-                        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
-                            if ( direct ) {
-                                return parentTerms;
-                            } else {
-                                // combine the direct parents + all the parents from the parents
-                                return Stream.concat( parentTerms.stream(), parentTerms.stream().flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
-                                        .collect( Collectors.toSet() );
-                            }
-                        }
-
-                        @Override
-                        public boolean isRoot() {
-                            return false;
-                        }
-                    };
-                }
-            }
-
             resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
         }
 
         return resultWithParents;
+    }
+
+    /**
+     * Infer all the implied terms from the given collection of term URIs.
+     */
+    private Set<String> inferTermsUris( Collection<String> termUris ) {
+        Set<String> excludedTermUris = new HashSet<>( termUris );
+        // expand exclusions with implied terms via subclass relation
+        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+        // exclude terms using the subClass relation
+        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+        for ( OntologyTerm t : impliedTerms ) {
+            excludedTermUris.add( t.getUri() );
+        }
+        return excludedTermUris;
+    }
+
+    /**
+     * Extension of {@link OntologyTermSimple} that adds a category term as unique parent.
+     */
+    private static class OntologyTermSimpleWithCategory extends OntologyTermSimple {
+
+        @Nullable
+        private final OntologyTerm categoryTerm;
+
+        public OntologyTermSimpleWithCategory( String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+            super( uri, term );
+            this.categoryTerm = categoryTerm;
+        }
+
+        @Override
+        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
+            if ( categoryTerm == null ) {
+                return Collections.emptySet();
+            }
+            if ( direct ) {
+                return Collections.singleton( categoryTerm );
+            } else {
+                // combine the direct parents + all the parents from the parents
+                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
+                        .collect( Collectors.toSet() );
+            }
+        }
+
+        @Override
+        public boolean isRoot() {
+            return categoryTerm == null;
+        }
     }
 
     @Override
@@ -718,22 +767,29 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, boolean includeOriginalPlatforms, int maxResults ) {
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters ) {
+        if ( filters == null || filters.isEmpty() ) {
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency();
+        } else {
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults ) {
         Map<ArrayDesign, Long> result;
         if ( filters == null || filters.isEmpty() ) {
             result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( maxResults ) );
-            if ( includeOriginalPlatforms ) {
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
+            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
+                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
             }
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids, maxResults ) );
-            if ( includeOriginalPlatforms ) {
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
+            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
+                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
             }
         }
         // retain top results
@@ -754,7 +810,7 @@ public class ExpressionExperimentServiceImpl
         if ( filters == null || filters.isEmpty() ) {
             return expressionExperimentDao.getPerTaxonCount();
         } else {
-            List<Long> ids = this.expressionExperimentDao.loadIds( filters, null );
+            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
             return expressionExperimentDao.getPerTaxonCount( ids );
         }
     }
@@ -1086,16 +1142,28 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
+        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids, taxon, sort, offset, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }
@@ -1114,6 +1182,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids ) {
+        List<ExpressionExperiment> results = expressionExperimentDao.loadWithRelationsAndCache( ids );
+        Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
+        return expressionExperimentDao.loadValueObjects( results ).stream()
+                .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
         List<ExpressionExperimentValueObject> results = this.expressionExperimentDao.loadValueObjectsByIds( ids );
@@ -1127,12 +1205,6 @@ public class ExpressionExperimentServiceImpl
         }
 
         return results;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadValueObjectsByIds( ids );
     }
 
     @Override
@@ -1250,6 +1322,11 @@ public class ExpressionExperimentServiceImpl
         remove( ee );
     }
 
+    /**
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically).
+     */
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
@@ -1304,9 +1381,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
-        for ( ExpressionExperiment ee : entities ) {
-            remove( ee );
-        }
+        entities.forEach( this::remove );
     }
 
     @Override

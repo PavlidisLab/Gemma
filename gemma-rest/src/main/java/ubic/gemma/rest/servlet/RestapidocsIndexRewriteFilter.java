@@ -5,7 +5,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class RestapidocsIndexRewriteFilter extends OncePerRequestFilter {
 
         if ( REQUEST_WITH_MISSING_SLASH_MATCHER.matches( servletRequest ) ) {
             String redirectUrl = ServletUriComponentsBuilder.fromRequest( servletRequest )
-                    .scheme( null ).host( null )
+                    .scheme( null ).host( null ).port( -1 )
                     .replacePath( servletRequest.getContextPath() + "/resources/restapidocs/" )
                     .build()
                     .toString();

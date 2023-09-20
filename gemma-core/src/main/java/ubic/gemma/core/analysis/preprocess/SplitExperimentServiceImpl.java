@@ -126,8 +126,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     throw new UnsupportedOperationException( "Non-double values currently not supported for experiment split" );
                 }
 
-                Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( qt );
-                vectors = rawExpressionDataVectorService.thaw( vectors );
+                Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.findAndThaw( qt );
                 if ( vectors.isEmpty() ) {
                     // this is okay if the data is processed, or if we have stray orphaned QTs
                     log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );

@@ -21,14 +21,16 @@ package ubic.gemma.core.search;
 
 import com.google.common.collect.Sets;
 import gemma.gsec.util.SecurityUtil;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -36,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -148,11 +149,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     /* sources */
     @Autowired
-    @Qualifier("compassSearchSource")
-    private SearchSource compassSearchSource;
-    @Autowired
     @Qualifier("databaseSearchSource")
     private SearchSource databaseSearchSource;
+    @Autowired
+    @Qualifier("hibernateSearchSource")
+    private SearchSource hibernateSearchSource;
     @Autowired
     @Qualifier("ontologySearchSource")
     private SearchSource ontologySearchSource;
@@ -228,7 +229,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, compassSearchSource ) );
+        searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, hibernateSearchSource, ontologySearchSource ) );
         initializeSupportedResultTypes();
         this.initializeNameToTaxonMap();
     }
@@ -422,18 +423,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         if ( settings.hasResultType( Gene.class ) && settings.isUseGo() ) {
-            try {
-                // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
-                String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-                results.addAll( this.dbHitsToSearchResult(
-                        Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), 0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
-            } catch ( OntologySearchException e ) {
-                throw new BaseCodeOntologySearchException( e );
-            }
+            // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
+            String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
+            results.addAll( this.dbHitsToSearchResult(
+                    Gene.class, geneSearchService.getGOGroupGenes( query, settings.getTaxon() ), 0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
         }
 
         if ( settings.hasResultType( BibliographicReference.class ) ) {
-            results.addAll( this.compassSearchSource.searchBibliographicReference( settings ) );
+            results.addAll( this.searchSource.searchBibliographicReference( settings ) );
         }
 
         if ( settings.hasResultType( GeneSet.class ) ) {
@@ -459,15 +456,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
-        try {
-            // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
-            String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-            return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
-                    .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                    .collect( Collectors.toCollection( SearchResultSet::new ) );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
-        }
+        // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
+        String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
+        return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
+                .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
+                .collect( Collectors.toCollection( SearchResultSet::new ) );
     }
 
     //    /**
@@ -621,28 +614,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          */
         results.addAll( searchSource.searchArrayDesign( settings ) );
 
-        Collection<SearchResult<CompositeSequence>> probes;
-        if ( probeResults == null ) {
-            probes = this.compassSearchSource.searchCompositeSequenceAndGene( settings ).stream()
-                    // strip all the gene results
-                    .filter( result -> CompositeSequence.class.equals( result.getResultType() ) )
-                    .map( result -> SearchResult.from( result, ( CompositeSequence ) result.getResultObject() ) )
-                    .collect( Collectors.toCollection( SearchResultSet::new ) );
-        } else {
-            probes = probeResults;
-        }
-
-        for ( SearchResult<CompositeSequence> r : probes ) {
-            CompositeSequence cs = r.getResultObject();
-            // This might happen as compass might not have indexed the AD for the CS
-            if ( cs == null || cs.getArrayDesign() == null ) {
-                continue;
-            }
-            // FIXME: this should not be necessary, the AD is eagerly fetched in the model definition (see https://github.com/PavlidisLab/Gemma/issues/483)
-            Hibernate.initialize( cs.getArrayDesign() );
-            results.add( SearchResult.from( ArrayDesign.class, cs.getArrayDesign(), INDIRECT_HIT_PENALTY * r.getScore(), "ArrayDesign associated to probes obtained by a Compass search." ) );
-        }
-
         watch.stop();
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log.warn( "Array Design search for " + settings + " took " + watch.getTime() + " ms" );
@@ -795,7 +766,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          */
 
         // Skip compass searching of composite sequences because it only bloats the results.
-        Collection<SearchResult<?>> compositeSequenceResults = new HashSet<>( this.databaseSearchSource.searchCompositeSequenceAndGene( settings ) );
+        Collection<SearchResult<?>> compositeSequenceResults = new HashSet<>( this.searchSource.searchCompositeSequenceAndGene( settings ) );
 
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
@@ -947,7 +918,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // searches for GEO names, etc - "exact" matches.
         if ( settings.isUseDatabase() ) {
-            results.addAll( this.databaseSearchSource.searchExpressionExperiment( settings ) );
+            results.addAll( this.searchSource.searchExpressionExperiment( settings ) );
             if ( watch.getTime() > 500 )
                 SearchServiceImpl.log
                         .info( "Expression Experiment database search for " + settings + " took " + watch.getTime()
@@ -1001,18 +972,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 SearchServiceImpl.log
                         .warn( String.format( "Expression Experiment search via characteristics for %s took %d ms, %d hits.",
                                 settings, watch.getTime(), results.size() ) );
-            watch.reset();
-            watch.start();
-        }
-
-        // searches for strings in associated free text including factorvalues and biomaterials
-        // we have toyed with having this be done before the characteristic search
-        if ( settings.isUseIndices() && !isFilled( results, settings ) ) {
-            results.addAll( this.compassSearchSource.searchExpressionExperiment( settings ) );
-            if ( watch.getTime() > 500 )
-                SearchServiceImpl.log
-                        .warn( "Expression Experiment index search for " + settings + " took " + watch.getTime()
-                                + " ms, " + results.size() + " hits." );
             watch.reset();
             watch.start();
         }
@@ -1181,7 +1140,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         StopWatch watch = StopWatch.createStarted();
 
-        Collection<SearchResult<Gene>> geneDbList = this.databaseSearchSource.searchGene( settings );
+        Collection<SearchResult<Gene>> geneDbList = this.searchSource.searchGene( settings );
 
         if ( settings.getMode() == SearchSettings.SearchMode.FAST && geneDbList.size() > 0 ) {
             return geneDbList;
@@ -1189,11 +1148,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         Set<SearchResult<Gene>> combinedGeneList = new HashSet<>( geneDbList );
 
-        Collection<SearchResult<Gene>> geneCompassList = this.compassSearchSource.searchGene( settings );
-        combinedGeneList.addAll( geneCompassList );
-
         if ( combinedGeneList.isEmpty() ) {
-            Collection<SearchResult<?>> geneCsList = this.databaseSearchSource.searchCompositeSequenceAndGene( settings );
+            Collection<SearchResult<?>> geneCsList = this.searchSource.searchCompositeSequenceAndGene( settings );
             for ( SearchResult<?> res : geneCsList ) {
                 if ( Gene.class.equals( res.getResultType() ) )
                     //noinspection unchecked

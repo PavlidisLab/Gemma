@@ -37,7 +37,26 @@ public class GeoContact implements Serializable {
     private String postCode;
     private String state;
     private String webLink;
+
     private String country;
+    private String laboratory;
+    private String address;
+
+    public String getLaboratory() {
+        return laboratory;
+    }
+
+    public void setLaboratory( String laboratory ) {
+        this.laboratory = laboratory;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress( String address ) {
+        this.address = address;
+    }
 
     /**
      * @return Returns the country.

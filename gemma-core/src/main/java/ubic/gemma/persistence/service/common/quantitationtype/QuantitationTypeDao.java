@@ -43,12 +43,10 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      */
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
-    QuantitationType findByIdAndDataVectorType( ExpressionExperiment ee, Long id, Class<? extends DesignElementDataVector> dataVectorClass );
-
     /**
-     * Retrieve the quantitation type matching.
+     * Test if a given quantitation type is used by a given experiment for a given vector type.
      */
-    QuantitationType findByNameAndDataVectorType( ExpressionExperiment ee, String name, Class<? extends DesignElementDataVector> dataVectorClass );
+    boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorClass );
 
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment ee );
 }

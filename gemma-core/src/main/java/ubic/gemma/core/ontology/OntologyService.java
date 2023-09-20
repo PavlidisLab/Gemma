@@ -14,12 +14,7 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.*;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -29,7 +24,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,7 +42,18 @@ public interface OntologyService {
      */
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
-    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
+    /**
+     * <p>
+     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
+     * </p>
+     * <p>
+     *     Will also find terms that are no longer in an ontology we use.
+     * </p>
+     *
+     * @return map of value URI to a representative characteristic using the term. The latter will contain a count
+     * of how many ocurrences there were.
+     */
+    Map<String, CharacteristicValueObject> findObsoleteTermUsage();
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -59,18 +64,7 @@ public interface OntologyService {
      * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology ) throws OntologySearchException;
-
-    Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException;
-
-    /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
-     * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
-     *
-     * @param  search search
-     * @return a collection of Characteristics that are backed by the corresponding found OntologyTerm
-     */
-    Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException;
+            boolean useNeuroCartaOntology ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -80,13 +74,12 @@ public interface OntologyService {
      * @param  search search
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException;
+    Collection<OntologyTerm> findTerms( String search ) throws SearchException;
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
-     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
-     * match the search term exactly
+     * returned list also.
      *
      * @param  taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
      *                          restriction is
@@ -94,7 +87,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException;
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic
@@ -121,16 +114,9 @@ public interface OntologyService {
 
     /**
      * @param  uri uri
-     * @return the OntologyResource
-     */
-    @Nullable
-    OntologyResource getResource( String uri );
-
-    /**
-     * @param  uri uri
      * @return the definition of the associated OntologyTerm. This requires that the ontology be loaded.
      */
-    String getDefinition(String uri);
+    String getDefinition( String uri );
 
     /**
      * @param  uri uri
@@ -138,6 +124,11 @@ public interface OntologyService {
      */
     @Nullable
     OntologyTerm getTerm( String uri );
+
+    /**
+     * Return all the terms matching the given URIs.
+     */
+    Set<OntologyTerm> getTerms( Collection<String> uris );
 
     boolean isObsolete( String uri );
 
@@ -147,10 +138,10 @@ public interface OntologyService {
     void reindexAllOntologies();
 
     /**
-     * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
+     * Reinitialize (and reindex) all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
      */
-    void reinitializeAllOntologies();
+    void reinitializeAndReindexAllOntologies();
 
     void removeBioMaterialStatement( Long characterId, BioMaterial bm );
 
@@ -162,5 +153,5 @@ public interface OntologyService {
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
-    Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
+    Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
 }

@@ -14,6 +14,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,10 +22,10 @@ import static java.util.function.Function.identity;
 
 @Service
 @CommonsLog
-public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileService<ExpressionAnalysisResultSet> implements ExpressionAnalysisResultSetFileService {
+public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileService<ExpressionAnalysisResultSet> implements ExpressionAnalysisResultSetFileService {
 
     @Override
-    public void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes, Appendable appendable ) throws IOException {
+    public void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
                 .map( this::formatExperimentalFactor )
                 .collect( Collectors.joining( ", " ) ) + "]";
@@ -62,7 +63,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
                 .build()
                 .print( appendable ) ) {
             for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
-                final List<Gene> genes = result2Genes.getOrDefault( analysisResult, Collections.emptyList() );
+                final List<Gene> genes = resultId2Genes.getOrDefault( analysisResult.getId(), Collections.emptyList() );
                 final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),
                         analysisResult.getProbe().getId(),
                         analysisResult.getProbe().getName(),
@@ -122,7 +123,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
     }
 
     @Override
-    public void writeTsvToAppendable( ExpressionAnalysisResultSet entity, Appendable appendable ) throws IOException {
-        writeTsvToAppendable( entity, Collections.emptyMap(), appendable );
+    public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
+        writeTsvToAppendable( entity, Collections.emptyMap(), writer );
     }
 }

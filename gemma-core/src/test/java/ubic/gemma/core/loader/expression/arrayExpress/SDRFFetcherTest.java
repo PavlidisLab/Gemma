@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -35,6 +36,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 public class SDRFFetcherTest {
 
     @Test
+    @Ignore("This test is broken due to a missing remote file. See https://github.com/PavlidisLab/Gemma/issues/766 for details.")
     @Category(SlowTest.class)
     public final void testFetch() throws Exception {
         assumeThatResourceIsAvailable( "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt" );

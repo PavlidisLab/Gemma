@@ -42,32 +42,4 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
             return new PlatformStringArg( s );
         }
     }
-
-    /**
-     * Retrieves the Datasets of the Platform that this argument represents.
-     *
-     * @param service   service that will be used to retrieve the persistent AD object.
-     * @param eeService service to use to retrieve the EEs.
-     * @return a collection of Datasets that the platform represented by this argument contains.
-     */
-    public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
-            ExpressionExperimentService eeService, int limit, int offset ) {
-        ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return eeService.loadValueObjects( filters, service.getSort( "id", null ), offset, limit );
-    }
-
-    /**
-     * Retrieves the Elements of the Platform that this argument represents.
-     *
-     * @param service service that will be used to retrieve the persistent AD object.
-     * @return a collection of Composite Sequence VOs that the platform represented by this argument contains.
-     */
-    public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
-            CompositeSequenceService csService, int limit, int offset ) {
-        final ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.by( service.getFilter( "id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return csService.loadValueObjects( filters, null, offset, limit );
-
-    }
 }

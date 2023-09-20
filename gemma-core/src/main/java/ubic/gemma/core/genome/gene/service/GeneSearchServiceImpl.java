@@ -103,7 +103,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) throws OntologySearchException {
+    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) throws SearchException {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
@@ -269,14 +269,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             return displayResults;
         }
 
-        List<SearchResultDisplayObject> srDos;
         // get GO group results
         GeneSearchServiceImpl.log.debug( "Getting GO group results for " + query );
-        try {
-            srDos = this.getGOGroupResults( query, taxon );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
-        }
+        List<SearchResultDisplayObject> srDos = this.getGOGroupResults( query, taxon );
 
         List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();
 
@@ -285,11 +280,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         if ( !query.toUpperCase().startsWith( "GO" ) ) {
             GeneSearchServiceImpl.log.info( "getting Phenotype Association results for " + query );
-            try {
-                phenotypeSrDos = this.getPhenotypeAssociationSearchResults( query, taxon );
-            } catch ( OntologySearchException e ) {
-                throw new SearchException( "Failed to search for genes via phenotype associations.", e );
-            }
+            phenotypeSrDos = this.getPhenotypeAssociationSearchResults( query, taxon );
         }
 
         // }
@@ -441,7 +432,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * @param taxon taxon
      * @return list of search result display objects
      */
-    private List<SearchResultDisplayObject> getGOGroupResults( String query, Taxon taxon ) throws OntologySearchException {
+    private List<SearchResultDisplayObject> getGOGroupResults( String query, Taxon taxon ) throws SearchException {
         StopWatch timer = new StopWatch();
         timer.start();
         List<SearchResultDisplayObject> srDos = new ArrayList<>();
@@ -559,7 +550,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * @param taxon taxon
      * @return list of search result display objects
      */
-    private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) throws OntologySearchException {
+    private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) throws SearchException {
 
         List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();
         // if taxon==null then it grabs results for all taxons

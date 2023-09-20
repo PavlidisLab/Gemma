@@ -17,7 +17,6 @@ import java.util.Set;
 
 /**
  * Bridges {@link Arg} operating on entities with their corresponding {@link FilteringService}.
- * @param <T>
  */
 public interface EntityArgService<T extends Identifiable, S extends FilteringService<T>> {
 
@@ -60,6 +59,8 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
 
     @Nonnull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
+
+    List<T> getEntities( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
     List<T> getEntities( AbstractEntityArrayArg<T, S> entitiesArg ) throws NotFoundException, BadRequestException;
 

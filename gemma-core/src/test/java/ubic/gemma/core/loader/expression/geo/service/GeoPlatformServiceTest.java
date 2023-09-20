@@ -19,9 +19,11 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 /**
  * Tests of GeoPlatformService
@@ -37,6 +39,7 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
      * Test method for 'ubic.gemma.core.loader.expression.geo.GeoPlatformService.fetchAndLoad(String)'
      */
     @Test
+    @Category(SlowTest.class)
     public void testFetchAndLoadGPL101Short() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
