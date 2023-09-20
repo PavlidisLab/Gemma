@@ -36,12 +36,12 @@
          flex : '0'
       } );
 
-      summaryPanel.on( 'showExperimentsByIds', function( ids ) {
-         eeGrid.loadExperimentsById( ids );
-      } );
-      summaryPanel.on( 'showExperimentsByTaxon', function( ids ) {
-         eeGrid.loadExperimentsByTaxon( ids );
-      } );
+      // summaryPanel.on( 'showExperimentsByIds', function( ids ) {
+      //    eeGrid.loadExperimentsById( ids );
+      // } );
+      // summaryPanel.on( 'showExperimentsByTaxon', function( ids ) {
+      //    eeGrid.loadExperimentsByTaxon( ids );
+      // } );
 
       summaryPanel.render( "summaryPanel-div" );
 
@@ -56,10 +56,10 @@
 <input type="hidden" id="reloadOnLogout" value="false">
 
 
-<div style="margin: 0 auto; width: 900px; padding-top: 30px; padding-bottom: 30px;">
-    <div style="margin-bottom: 30px;" id="generalSearchSimple-div"></div>
-
+<div style="margin: 0 auto; width: 1100px; padding-top: 30px; padding-bottom: 30px;">
+    <div style="margin-bottom: 30px;width:600px" id="generalSearchSimple-div"></div>
     <div id="main-wrapper" style="display:flex">
+
         <div id="news-updates" style="padding-left: 15px; padding-right: 15px;">
             <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
                 <p style="margin-right: 15px;">
@@ -71,13 +71,13 @@
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
                     <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
                          alt="Bioconductor Logo"
-                         width="200"
+                         width="175"
                          style="margin-right: 15px;"/>
                 </a>
                 <a href="https://pypi.org/project/gemmapy/">
                     <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
                          alt="PyPi Logo"
-                         width="100"/>
+                         width="75"/>
                 </a>
             </div>
             <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
@@ -91,15 +91,15 @@
                 <a href="${pageContext.request.contextPath}/browse" style="align-self: center;">
                     <img
                             src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
-                            alt="A snapshot of the new Gemma Browser."
-                            width="350"/>
+                            alt="A screenshot of the new Gemma Browser."
+                            width="300"/>
                 </a>
             </div>
 
             <p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
         </div>
-
         <div style="padding-left:40px;width:30%" id="summaryPanel-div" />
+
     </div>
 
 </div>
