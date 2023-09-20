@@ -699,12 +699,12 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                 avo.setSubsetFactor(
                         new ExperimentalFactorValueObject( analysis.getSubsetFactorValue().getExperimentalFactor() ) );
                 assert bioAssaySet instanceof ExpressionExperimentSubSet;
-                avo.setSourceExperiment( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
+                avo.setSourceExperimentId( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
                 if ( arrayDesignsUsed.containsKey( bioAssaySet.getId() ) ) {
                     avo.setArrayDesignsUsed( arrayDesignsUsed.get( bioAssaySet.getId() ) );
                 } else {
-                    assert arrayDesignsUsed.containsKey( avo.getSourceExperiment() );
-                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperiment() ) );
+                    assert arrayDesignsUsed.containsKey( avo.getSourceExperimentId() );
+                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperimentId() ) );
                 }
             } else {
                 Collection<Long> adids = arrayDesignsUsed.get( bioAssaySet.getId() );
