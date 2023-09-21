@@ -25,7 +25,6 @@ public class CharacteristicTest {
                 .hasSameHashCodeAs( A )
                 .isEqualByComparingTo( A )
                 .isNotEqualTo( createTransientCharacteristic( "a", null, "foo", null ) )
-                .doesNotHaveSameHashCodeAs( createTransientCharacteristic( "a", null, "foo", null ) )
                 .isNotEqualByComparingTo( createTransientCharacteristic( "a", null, "foo", null ) );
 
     }

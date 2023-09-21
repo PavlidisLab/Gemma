@@ -237,10 +237,10 @@ public class Statement extends Characteristic {
             return super.hashCode();
         // don't both hashing labels unless the URI is null
         return super.hashCode() + 31 * Objects.hash(
-                predicateUri != null ? predicateUri : predicate,
-                object,
-                secondPredicateUri != null ? secondPredicateUri : secondPredicate,
-                secondObject );
+                StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),
+                StringUtils.lowerCase( objectUri != null ? objectUri : object ),
+                StringUtils.lowerCase( secondPredicateUri != null ? secondPredicateUri : secondPredicate ),
+                StringUtils.lowerCase( secondObjectUri != null ? secondObjectUri : secondObject ) );
     }
 
     @Override
