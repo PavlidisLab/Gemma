@@ -50,6 +50,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
 import java.util.*;
@@ -517,15 +518,7 @@ public class SecurityControllerImpl implements SecurityController {
      * @throws IllegalArgumentException if the Securable cannot be loaded
      */
     private Securable getSecurable( EntityDelegator<? extends Securable> ed ) {
-        String classDelegatingFor = ed.getClassDelegatingFor();
-
-        Class<?> clazz;
         Securable s;
-        try {
-            clazz = Class.forName( classDelegatingFor );
-        } catch ( ClassNotFoundException e1 ) {
-            throw new RuntimeException( e1 );
-        }
         if ( ed.holds( ExpressionExperiment.class ) ) {
             s = expressionExperimentService.load( ed.getId() );
         } else if ( ed.holds( GeneSet.class ) ) {
@@ -537,11 +530,10 @@ public class SecurityControllerImpl implements SecurityController {
         } else if ( ed.holds( GeneDifferentialExpressionMetaAnalysis.class ) ) {
             s = geneDiffExMetaAnalysisService.load( ed.getId() );
         } else {
-            throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
+            throw new IllegalArgumentException( "Delegating " + ed.getClassDelegatingFor() + " is not supported by security controller yet." );
         }
-
         if ( s == null ) {
-            throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
+            throw new EntityNotFoundException( "Entity does not exist or user does not have access." );
         }
         return s;
     }
