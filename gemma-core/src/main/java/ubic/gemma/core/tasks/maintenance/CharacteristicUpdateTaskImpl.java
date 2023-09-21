@@ -313,7 +313,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             bioMaterialService.update( bm );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
-            factorValueService.removeCharacteristic( fv, c );
+            factorValueService.removeCharacteristic( fv, ( Statement ) c );
         }
     }
 }

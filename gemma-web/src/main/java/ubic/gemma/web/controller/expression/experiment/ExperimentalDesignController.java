@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,7 +44,7 @@ public interface ExperimentalDesignController {
      *
      * @param e an EntityDelegator representing a FactorValue
      */
-    void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, CharacteristicBasicValueObject c );
+    void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, StatementValueObject c );
 
     /**
      * Deletes the specified ExperimentalFactors and removes them from the ExperimentalDesign specified by the

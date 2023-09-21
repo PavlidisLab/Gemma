@@ -27,7 +27,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.Collection;
 import java.util.Collections;

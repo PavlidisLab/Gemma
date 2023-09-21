@@ -87,53 +87,9 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public void removeCharacteristic( FactorValue fv, Characteristic statement ) {
-        boolean removed = false;
-
-        if ( statement instanceof Statement ) {
-            removed = fv.getCharacteristics().remove( ( Statement ) statement );
-        } else {
-            // detach the statement if it is referred as an object of any remaining statement
-            for ( Statement s : fv.getCharacteristics() ) {
-                if ( s.getObject() != null && s.getObject().equals( statement ) ) {
-                    AbstractDao.log.debug( String.format( "Detaching %s from %s", statement, s ) );
-                    s.setObject( null );
-                    removed = true;
-                }
-                if ( s.getSecondObject() != null && s.getSecondObject().equals( statement ) ) {
-                    AbstractDao.log.debug( String.format( "Detaching %s from %s", statement, s ) );
-                    s.setSecondObject( null );
-                    removed = true;
-                }
-            }
-        }
-
-        if ( !removed ) {
+    public void removeCharacteristic( FactorValue fv, Statement statement ) {
+        if ( !fv.getCharacteristics().remove( statement ) ) {
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
-        }
-
-        // collect all remaining characteristics in the FV
-        Set<Characteristic> remainingCharacteristics = new HashSet<>();
-        for ( Statement s : fv.getCharacteristics() ) {
-            if ( s.getObject() != null ) {
-                remainingCharacteristics.add( s.getObject() );
-            }
-            if ( s.getSecondObject() != null ) {
-                remainingCharacteristics.add( s.getSecondObject() );
-            }
-        }
-
-        // detach any remaining characteristics from the statement to be removed
-        if ( statement instanceof Statement ) {
-            Statement s = ( Statement ) statement;
-            if ( s.getObject() != null && remainingCharacteristics.contains( s.getObject() ) ) {
-                AbstractDao.log.debug( String.format( "Detaching %s from %s", s.getObject(), s ) );
-                s.setObject( null );
-            }
-            if ( s.getSecondObject() != null && remainingCharacteristics.contains( s.getSecondObject() ) ) {
-                AbstractDao.log.debug( String.format( "Detaching %s from %s", s.getSecondObject(), s ) );
-                s.setSecondObject( null );
-            }
         }
 
         // now we can safely delete it
@@ -167,14 +123,12 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         clone.setEvidenceCode( s.getEvidenceCode() );
         clone.setPredicate( s.getPredicate() );
         clone.setPredicateUri( s.getPredicateUri() );
-        if ( s.getObject() != null ) {
-            clone.setObject( cloneCharacteristic( s.getObject() ) );
-        }
+        clone.setObject( s.getObject() );
+        clone.setObjectUri( s.getObjectUri() );
         clone.setSecondPredicate( s.getSecondPredicate() );
         clone.setSecondPredicateUri( s.getSecondPredicateUri() );
-        if ( s.getSecondObject() != null ) {
-            clone.setSecondObject( cloneCharacteristic( s.getSecondObject() ) );
-        }
+        clone.setSecondObject( s.getSecondObject() );
+        clone.setSecondObjectUri( s.getSecondObjectUri() );
         return clone;
     }
 

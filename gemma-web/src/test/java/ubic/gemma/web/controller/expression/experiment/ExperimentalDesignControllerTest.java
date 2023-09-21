@@ -14,7 +14,7 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
+import ubic.gemma.model.expression.experiment.StatementValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -108,12 +108,11 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     private FactorValueService factorValueService;
 
     /* fixtures */
-    private ExpressionExperiment ee;
     private FactorValue fv;
 
     @Before
     public void setUp() {
-        ee = new ExpressionExperiment();
+        ExpressionExperiment ee = new ExpressionExperiment();
         fv = new FactorValue();
         fv.setId( 1L );
         when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
@@ -128,13 +127,11 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueCharacteristic() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        CharacteristicBasicValueObject cvo = new CharacteristicBasicValueObject();
+        StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         cvo.setValue( "test2" );
         cvo.setPredicate( "has" );
-        cvo.setObject( new CharacteristicBasicValueObject() );
-        assertThat( cvo.getObject() ).isNotNull();
-        cvo.getObject().setValue( "test3" );
+        cvo.setObject( "test3" );
         experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
         verify( factorValueService ).load( 1L );
         verify( factorValueService ).update( fv );
@@ -144,11 +141,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
                 .satisfies( stmt -> {
                     assertThat( stmt.getCategory() ).isEqualTo( "test" );
                     assertThat( stmt.getValue() ).isEqualTo( "test2" );
-                    assertThat( stmt.getObject() )
-                            .hasFieldOrPropertyWithValue( "category", null )
-                            .hasFieldOrPropertyWithValue( "categoryUri", null )
-                            .hasFieldOrPropertyWithValue( "value", "test3" )
-                            .hasFieldOrPropertyWithValue( "valueUri", null );
+                    assertThat( stmt.getObject() ).isEqualTo( "test3" );
                     assertThat( stmt.getSecondObject() ).isNull();
                 } );
     }
@@ -156,7 +149,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueWithBlankCategory() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        CharacteristicBasicValueObject cvo = new CharacteristicBasicValueObject();
+        StatementValueObject cvo = new StatementValueObject();
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The category cannot be blank" );
@@ -167,7 +160,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueWithBlankValue() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        CharacteristicBasicValueObject cvo = new CharacteristicBasicValueObject();
+        StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
@@ -183,7 +176,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         s.setValue( "test" );
         fv.getCharacteristics().add( s );
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        CharacteristicBasicValueObject cvo = new CharacteristicBasicValueObject();
+        StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         cvo.setValue( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
@@ -195,9 +188,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
 
     @Test
     public void testCreateFactorValueWithMissingObject() {
-        Statement s = new Statement();
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        CharacteristicBasicValueObject cvo = new CharacteristicBasicValueObject();
+        StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         cvo.setValue( "test" );
         cvo.setPredicate( "test" );

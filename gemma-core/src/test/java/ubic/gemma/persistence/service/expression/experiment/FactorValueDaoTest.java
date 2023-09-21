@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -58,61 +57,20 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
     public void testDeleteStatement() {
         FactorValue fv = createFactorValue();
         Statement s1;
-        Characteristic object;
         s1 = Statement.Factory.newInstance();
-        object = Characteristic.Factory.newInstance();
-        s1.setObject( object );
+        s1.setObject( "test" );
         fv.getCharacteristics().add( s1 );
         sessionFactory.getCurrentSession().persist( fv );
         assertNotNull( fv.getId() );
         assertNotNull( s1.getId() );
-        assertNotNull( object.getId() ); // persisted in cascade
 
         // later on
         fv = reload( fv );
         s1 = ( Statement ) sessionFactory.getCurrentSession().get( Statement.class, s1.getId() );
-        object = ( Characteristic ) sessionFactory.getCurrentSession().get( Characteristic.class, object.getId() );
         factorValueDao.removeCharacteristic( fv, s1 );
-        // object is deleted in cascade
-        assertFalse( sessionFactory.getCurrentSession().contains( object ) );
 
         fv = reload( fv );
         assertTrue( fv.getCharacteristics().isEmpty() );
-    }
-
-    @Test
-    public void testDeleteStatementWhenObjectIsReusedInAnotherStatement() {
-        FactorValue fv = createFactorValue();
-        Statement s1, s2;
-        Characteristic c;
-        s1 = Statement.Factory.newInstance();
-        s1.setValue( "1" );
-        s2 = Statement.Factory.newInstance();
-        s2.setValue( "2" );
-        c = Characteristic.Factory.newInstance();
-        s1.setSecondObject( c );
-        s2.setObject( c );
-        fv.getCharacteristics().add( s1 );
-        fv.getCharacteristics().add( s2 );
-        sessionFactory.getCurrentSession().persist( fv );
-        assertNotNull( fv.getId() );
-        assertNotNull( s1.getId() );
-        assertNotNull( s2.getId() ); // persisted in cascade
-        assertNotNull( c.getId() ); // also persisted in cascade
-
-        // later on
-        fv = reload( fv );
-        s1 = ( Statement ) sessionFactory.getCurrentSession().get( Statement.class, s1.getId() );
-        factorValueDao.removeCharacteristic( fv, s1 );
-
-        fv = reload( fv );
-        Assertions.assertThat( fv.getCharacteristics() )
-                .hasSize( 1 )
-                .doesNotContain( s1 )
-                .satisfiesOnlyOnce( s -> {
-                    assertEquals( "2", s.getValue() );
-                    assertEquals( c, s.getObject() );
-                } );
     }
 
     @Test
@@ -158,18 +116,14 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         s1.setValue( "1" );
         s2 = Statement.Factory.newInstance();
         s2.setValue( "2" );
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setValue( "3" );
-        s1.setObject( c );
-        s2.setSecondObject( c );
+        s1.setObject( "3" );
+        s2.setSecondObject( "3" );
         fv.getCharacteristics().add( s1 );
         fv.getCharacteristics().add( s2 );
         sessionFactory.getCurrentSession().persist( fv );
         Set<Statement> clonedCharacteristics = factorValueDao.cloneCharacteristics( fv );
         for ( Statement s : clonedCharacteristics ) {
             assertNull( s.getId() );
-            assertTrue( s.getObject() == null || s.getObject().getId() == null );
-            assertTrue( s.getSecondObject() == null || s.getSecondObject().getId() == null );
         }
         FactorValue fvWithClonedCharacteristics = createFactorValue( clonedCharacteristics );
         assertEquals( 2, fvWithClonedCharacteristics.getCharacteristics().size() );
@@ -178,13 +132,13 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
                 .satisfiesOnlyOnce( s -> {
                     assertEquals( "1", s.getValue() );
                     assertNotNull( s.getObject() );
-                    assertEquals( "3", s.getObject().getValue() );
+                    assertEquals( "3", s.getObject() );
                 } )
                 .satisfiesOnlyOnce( s -> {
                     assertEquals( "2", s.getValue() );
                     assertNull( s.getObject() );
                     assertNotNull( s.getSecondObject() );
-                    assertEquals( "3", s.getSecondObject().getValue() );
+                    assertEquals( "3", s.getSecondObject() );
                 } )
                 .noneSatisfy( s -> assertEquals( "3", s.getValue() ) );
     }

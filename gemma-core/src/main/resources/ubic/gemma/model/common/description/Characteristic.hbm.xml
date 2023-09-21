@@ -58,20 +58,24 @@
             <property name="predicateUri" type="java.lang.String">
                 <column name="PREDICATE_URI"/>
             </property>
-            <many-to-one name="object" class="ubic.gemma.model.common.description.Characteristic"
-                         lazy="false" fetch="join" cascade="all">
-                <column name="OBJECT_FK"/>
-            </many-to-one>
+            <property name="object" type="java.lang.String">
+                <column name="OBJECT"/>
+            </property>
+            <property name="objectUri" type="java.lang.String">
+                <column name="OBJECT_URI"/>
+            </property>
             <property name="secondPredicate" type="java.lang.String">
                 <column name="SECOND_PREDICATE"/>
             </property>
             <property name="secondPredicateUri" type="java.lang.String">
                 <column name="SECOND_PREDICATE_URI"/>
             </property>
-            <many-to-one name="secondObject" class="ubic.gemma.model.common.description.Characteristic"
-                         lazy="false" fetch="join" cascade="all">
-                <column name="SECOND_OBJECT_FK"/>
-            </many-to-one>
+            <property name="secondObject" type="java.lang.String">
+                <column name="SECOND_OBJECT"/>
+            </property>
+            <property name="secondObjectUri" type="java.lang.String">
+                <column name="SECOND_OBJECT_URI"/>
+            </property>
         </subclass>
     </class>
 </hibernate-mapping>

@@ -14,10 +14,9 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +38,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MeasurementValueObject measurement;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<CharacteristicBasicValueObject> characteristics;
+    private List<StatementValueObject> characteristics;
     private boolean isMeasurement;
 
     /**
@@ -78,9 +77,8 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         }
 
         this.characteristics = fv.getCharacteristics().stream()
-                .map( CharacteristicBasicValueObject::new )
-                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
-                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .sorted()
+                .map( StatementValueObject::new )
                 .collect( Collectors.toList() );
 
         this.value = fv.getValue();
@@ -99,7 +97,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     static String getSummaryString( FactorValue fv ) {
         StringBuilder buf = new StringBuilder();
-        if ( fv.getCharacteristics().size() > 0 ) {
+        if ( !fv.getCharacteristics().isEmpty() ) {
             for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
                 buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );

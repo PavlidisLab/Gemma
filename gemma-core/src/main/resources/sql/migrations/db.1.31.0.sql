@@ -3,13 +3,19 @@ alter table CHARACTERISTIC
     add column class                VARCHAR(255) after ID,
     add column PREDICATE            VARCHAR(255) after ORIGINAL_VALUE,
     add column PREDICATE_URI        VARCHAR(255) after PREDICATE,
-    add column OBJECT_FK            BIGINT after PREDICATE_URI,
-    add column SECOND_PREDICATE     VARCHAR(255) after OBJECT_FK,
+    add column OBJECT               VARCHAR(255) after PREDICATE_URI,
+    add column OBJECT_URI           VARCHAR(255) after OBJECT,
+    add column SECOND_PREDICATE     VARCHAR(255) after OBJECT_URI,
     add column SECOND_PREDICATE_URI VARCHAR(255) after SECOND_PREDICATE,
-    add column SECOND_OBJECT_FK     BIGINT after SECOND_PREDICATE_URI;
+    add column SECOND_OBJECT        VARCHAR(255) after SECOND_PREDICATE_URI,
+    add column SECOND_OBJECT_URI    VARCHAR(255) after SECOND_OBJECT;
+-- add indices we need for querying triplets
 alter table CHARACTERISTIC
-    add constraint CHARACTERISTIC_OBJECT_FKC foreign key (OBJECT_FK) references CHARACTERISTIC (ID),
-    add constraint CHARACTERISTIC_SECOND_OBJECT_FKC foreign key (SECOND_OBJECT_FK) references CHARACTERISTIC (ID)
+    add index class (class),
+    add index CHARACTERISTIC_PREDICATE_URI_PREDICATE (PREDICATE_URI(100), PREDICATE),
+    add index CHARACTERISTIC_OBJECT_URI_OBJECT (OBJECT_URI(100), OBJECT),
+    add index CHARACTERISTIC_SECOND_PREDICATE_URI_SECOND_PREDICATE (SECOND_PREDICATE_URI(100), SECOND_PREDICATE),
+    add index CHARACTERISTIC_SECOND_OBJECT_URI_SECOND_OBJECT (SECOND_OBJECT_URI(100), SECOND_OBJECT);
 -- all characteristics in FV bags are statements
 update CHARACTERISTIC
 set class = 'Statement'

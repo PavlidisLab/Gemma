@@ -24,7 +24,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import java.util.Collection;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject<ExperimentalEvidence> {
 

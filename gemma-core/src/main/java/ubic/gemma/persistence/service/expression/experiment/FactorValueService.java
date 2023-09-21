@@ -59,11 +59,12 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      * @see FactorValueDao#removeCharacteristic(FactorValue, Statement)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCharacteristic( FactorValue fv, Characteristic c );
+    void removeCharacteristic( FactorValue fv, Statement c );
 
     /**
      * @see FactorValueDao#cloneCharacteristics(FactorValue)
      */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     Set<Statement> cloneCharacteristics( FactorValue fv );
 
     @Override

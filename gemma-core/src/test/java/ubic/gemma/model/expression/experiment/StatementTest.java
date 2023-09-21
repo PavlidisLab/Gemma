@@ -1,7 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.junit.Test;
-import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 
@@ -28,10 +27,8 @@ public class StatementTest {
         s.setValue( value );
         s.setPredicateUri( predicateUri );
         s.setPredicate( predicate );
-        Characteristic o = new Characteristic();
-        o.setValueUri( objectUri );
-        o.setValue( object );
-        s.setObject( o );
+        s.setObjectUri( objectUri );
+        s.setObject( object );
         return s;
     }
 }

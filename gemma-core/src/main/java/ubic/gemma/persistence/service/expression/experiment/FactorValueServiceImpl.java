@@ -17,7 +17,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -65,7 +64,7 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     @Override
     @Transactional
-    public void removeCharacteristic( FactorValue fv, Characteristic c ) {
+    public void removeCharacteristic( FactorValue fv, Statement c ) {
         this.factorValueDao.removeCharacteristic( ensureInSession( fv ), c );
     }
 

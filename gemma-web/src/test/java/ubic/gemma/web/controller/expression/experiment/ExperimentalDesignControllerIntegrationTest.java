@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
+import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -116,7 +116,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         assertNotNull( ef );
         FactorValue fv2 = ef.getFactorValues().iterator().next();
 
-        CharacteristicBasicValueObject vc = new CharacteristicBasicValueObject();
+        StatementValueObject vc = new StatementValueObject();
         vc.setValue( "foo" );
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );
@@ -152,14 +152,13 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         assertNotNull( ef );
         EntityDelegator<FactorValue> e = new EntityDelegator<>( ef.getFactorValues().iterator().next() );
 
-        CharacteristicBasicValueObject vc = new CharacteristicBasicValueObject();
+        StatementValueObject vc = new StatementValueObject();
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );
         vc.setValue( "foo" );
         vc.setValueUri( "foo" );
         vc.setPredicate( "has" );
-        vc.setObject( new CharacteristicBasicValueObject() );
-        vc.getObject().setValue( "bar2" );
+        vc.setObject( "bar2" );
 
         experimentalDesignController.createFactorValueCharacteristic( e, vc );
 
@@ -176,10 +175,48 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
                     assertEquals( "has", c.getPredicate() );
                     assertNull( c.getPredicateUri() );
                     assertNotNull( c.getObject() );
-                    assertNull( c.getObject().getCategory() );
-                    assertNull( c.getObject().getCategoryUri() );
-                    assertEquals( "bar2", c.getObject().getValue() );
-                    assertNull( c.getObject().getValueUri() );
+                    assertEquals( "bar2", c.getObject() );
+                    assertNull( c.getObjectUri() );
+                } );
+    }
+
+    @Test
+    public void testUpdateFactorValueStatement() {
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        assertNotNull( ef );
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        Statement stmt = fv.getCharacteristics().iterator().next();
+        EntityDelegator<FactorValue> e = new EntityDelegator<>();
+
+        FactorValueValueObject fvvo = new FactorValueValueObject();
+        fvvo.setId( fv.getId() );
+        fvvo.setFactorId( ef.getId() );
+        fvvo.setCharId( stmt.getId() );
+        fvvo.setCategory( "bar" );
+        fvvo.setCategoryUri( "bar" );
+        fvvo.setValue( "foo" );
+        fvvo.setValueUri( "foo" );
+        fvvo.setPredicate( "has" );
+        fvvo.setObject( "bar2" );
+
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+
+        ef = experimentalFactorService.load( ef.getId() );
+        assertNotNull( ef );
+        assertEquals( 2, ef.getFactorValues().size() );
+        Assertions.assertThat( ef.getFactorValues() )
+                .flatExtracting( FactorValue::getCharacteristics )
+                .anySatisfy( c -> {
+                    assertEquals( fv.getId(), c.getId() );
+                    assertEquals( "bar", c.getCategory() );
+                    assertEquals( "bar", c.getCategoryUri() );
+                    assertEquals( "foo", c.getValue() );
+                    assertEquals( "foo", c.getValueUri() );
+                    assertEquals( "has", c.getPredicate() );
+                    assertNull( c.getPredicateUri() );
+                    assertNotNull( c.getObject() );
+                    assertEquals( "bar2", c.getObject() );
+                    assertNull( c.getObjectUri() );
                 } );
     }
 }

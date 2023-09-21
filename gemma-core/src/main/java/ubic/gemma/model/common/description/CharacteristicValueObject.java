@@ -12,18 +12,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.genome.gene.phenotype.valueObject;
+package ubic.gemma.model.common.description;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
-import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.ArrayList;
 import java.util.Collection;

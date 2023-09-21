@@ -47,7 +47,7 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      * The characteristic can be mentioned directly in {@link FactorValue#getCharacteristics()} or indirectly via
      * {@link Statement#getObject()} or {@link Statement#getSecondObject()} in the graph structure.
      */
-    void removeCharacteristic( FactorValue fv, Characteristic statement );
+    void removeCharacteristic( FactorValue fv, Statement statement );
 
     /**
      * Clone the characteristics of a factor value, preserving any structure between statements and their objects.

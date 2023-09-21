@@ -13,9 +13,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
+import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -39,23 +40,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    private String category;
-    private String categoryUri;
-    private String description;
-    private String factorValue;
-    private String value;
-    private String valueUri;
-
-    /*
-     * TODO: support objects and predicates for extension of the characteristics
-     */
-
-
     /**
-     * It could be the id of the measurement if there is no characteristic.
+     * ID of the experimental factor this FV belongs to.
      */
-    private Long charId;
     private Long factorId;
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("measurement")
     private MeasurementValueObject measurementObject;
@@ -63,6 +52,42 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     private boolean measurement = false;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<CharacteristicBasicValueObject> characteristics;
+
+    // fields of the characteristic being focused on
+    // this is used by the FV editor to model each individual characteristic with its FV
+    /**
+     * It could be the id of the measurement if there is no characteristic.
+     */
+    @GemmaWebOnly
+    private Long charId;
+    @GemmaWebOnly
+    private String category;
+    @GemmaWebOnly
+    private String categoryUri;
+    @GemmaWebOnly
+    private String description;
+    @GemmaWebOnly
+    private String factorValue;
+    @GemmaWebOnly
+    private String value;
+    @GemmaWebOnly
+    private String valueUri;
+    @GemmaWebOnly
+    private String predicate;
+    @GemmaWebOnly
+    private String predicateUri;
+    @GemmaWebOnly
+    private String object;
+    @GemmaWebOnly
+    private String objectUri;
+    @GemmaWebOnly
+    private String secondPredicate;
+    @GemmaWebOnly
+    private String secondPredicateUri;
+    @GemmaWebOnly
+    private String secondObject;
+    @GemmaWebOnly
+    private String secondObjectUri;
 
     /**
      * Required when using the class as a spring bean.
