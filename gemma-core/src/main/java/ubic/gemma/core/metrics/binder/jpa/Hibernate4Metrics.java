@@ -26,30 +26,6 @@ public class Hibernate4Metrics implements MeterBinder {
     private final Statistics statistics;
 
     /**
-     * Create {@code HibernateMetrics} and bind to the specified meter registry.
-     * @param registry meter registry to use
-     * @param sessionFactory session factory to use
-     * @param sessionFactoryName session factory name as a tag value
-     * @param tags additional tags
-     */
-    public static void monitor( MeterRegistry registry, SessionFactory sessionFactory, String sessionFactoryName,
-            String... tags ) {
-        monitor( registry, sessionFactory, sessionFactoryName, Tags.of( tags ) );
-    }
-
-    /**
-     * Create {@code HibernateMetrics} and bind to the specified meter registry.
-     * @param registry meter registry to use
-     * @param sessionFactory session factory to use
-     * @param sessionFactoryName session factory name as a tag value
-     * @param tags additional tags
-     */
-    public static void monitor( MeterRegistry registry, SessionFactory sessionFactory, String sessionFactoryName,
-            Iterable<Tag> tags ) {
-        new Hibernate4Metrics( sessionFactory, sessionFactoryName, tags ).bindTo( registry );
-    }
-
-    /**
      * Create a {@code HibernateMetrics}.
      * @param sessionFactory session factory to use
      * @param sessionFactoryName session factory name as a tag value
