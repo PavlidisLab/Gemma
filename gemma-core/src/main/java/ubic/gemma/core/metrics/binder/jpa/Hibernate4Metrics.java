@@ -15,7 +15,6 @@ import java.util.function.ToDoubleFunction;
  *
  * @author poirigui
  * @see io.micrometer.core.instrument.binder.jpa.HibernateMetrics
- * @see io.micrometer.core.instrument.binder.jpa.HibernateQueryMetrics
  */
 public class Hibernate4Metrics implements MeterBinder {
 
@@ -175,43 +174,6 @@ public class Hibernate4Metrics implements MeterBinder {
                 Statistics::getQueryCacheMissCount, "result", "miss" );
         counter( registry, "hibernate.cache.query.puts", "The number of cacheable queries put in cache",
                 Statistics::getQueryCachePutCount );
-
-        for ( String query : statistics.getQueries() ) {
-            QueryStatistics queryStatistics = statistics.getQueryStatistics( query );
-
-            FunctionCounter
-                    .builder( "hibernate.query.cache.requests", queryStatistics, QueryStatistics::getCacheHitCount )
-                    .tags( tags ).tags( "result", "hit", "query", query ).description( "Number of query cache hits" )
-                    .register( registry );
-
-            FunctionCounter
-                    .builder( "hibernate.query.cache.requests", queryStatistics, QueryStatistics::getCacheMissCount )
-                    .tags( tags ).tags( "result", "miss", "query", query ).description( "Number of query cache misses" )
-                    .register( registry );
-
-            FunctionCounter
-                    .builder( "hibernate.query.cache.puts", queryStatistics, QueryStatistics::getCachePutCount )
-                    .tags( tags ).tags( "query", query ).description( "Number of cache puts for a query" )
-                    .register( registry );
-
-            TimeGauge
-                    .builder( "hibernate.query.execution.max", queryStatistics, TimeUnit.MILLISECONDS,
-                            QueryStatistics::getExecutionMaxTime )
-                    .tags( tags ).tags( "query", query ).description( "Query maximum execution time" )
-                    .register( registry );
-
-            TimeGauge
-                    .builder( "hibernate.query.execution.min", queryStatistics, TimeUnit.MILLISECONDS,
-                            QueryStatistics::getExecutionMinTime )
-                    .tags( tags ).tags( "query", query ).description( "Query minimum execution time" )
-                    .register( registry );
-
-            FunctionCounter
-                    .builder( "hibernate.query.execution.rows", queryStatistics,
-                            QueryStatistics::getExecutionRowCount )
-                    .tags( tags ).tags( "query", query ).description( "Number of rows processed for a query" )
-                    .register( registry );
-        }
     }
 
 }
