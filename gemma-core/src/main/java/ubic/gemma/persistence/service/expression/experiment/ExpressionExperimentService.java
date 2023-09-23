@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.expression.arrayDesign.CuratableService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -55,7 +55,7 @@ import java.util.*;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
-        extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
