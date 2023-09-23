@@ -147,7 +147,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 LimitArg.valueOf( "20" ),
                 SortArg.valueOf( "+id" ) );
         assertThat( payload )
-                .hasFieldOrPropertyWithValue( "filter", "commonName = human or scientificName = human and id in (1)" )
+                .hasFieldOrPropertyWithValue( "filter", "id in (1) and commonName = human or scientificName = human" )
                 .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ) )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )

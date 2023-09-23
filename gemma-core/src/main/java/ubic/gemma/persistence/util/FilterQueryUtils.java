@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.util.ListUtils.padToNextPowerOfTwo;
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
 /**
@@ -69,8 +70,8 @@ public class FilterQueryUtils {
             return "";
         int i = 0;
         StringBuilder conjunction = new StringBuilder();
-        for ( List<Filter> clause : filters ) {
-            if ( clause == null || clause.isEmpty() )
+        for ( Iterable<Filter> clause : filters ) {
+            if ( clause == null || !clause.iterator().hasNext() )
                 continue;
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
@@ -200,7 +201,7 @@ public class FilterQueryUtils {
     private static void addRestrictionParameters( Query query, @Nullable Filters filters, int i ) {
         if ( filters == null )
             return;
-        for ( List<Filter> clause : filters ) {
+        for ( Iterable<Filter> clause : filters ) {
             if ( clause == null )
                 continue;
             for ( Filter subClause : clause ) {
@@ -212,8 +213,12 @@ public class FilterQueryUtils {
                     addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
                 } else if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
-                            .stream().sorted().distinct().collect( Collectors.toList() ) );
+                    List<?> item = requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
+                            .stream().sorted().distinct().collect( Collectors.toList() );
+                    if ( item.isEmpty() ) {
+                        throw new IllegalArgumentException( "The right hand size of a in operator cannot be empty." );
+                    }
+                    query.setParameterList( paramName, padToNextPowerOfTwo( item, item.get( item.size() - 1 ) ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
                     query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {

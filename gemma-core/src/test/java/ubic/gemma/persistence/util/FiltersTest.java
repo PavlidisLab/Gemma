@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,13 +23,16 @@ public class FiltersTest {
                     .or( "ee", "shortName", String.class, Filter.Operator.like, "%brain%" )
                     .or( "ee", "description", String.class, Filter.Operator.like, "%tumor%" )
                 .build();
-        List<List<Filter>> clauses = IterableUtils.toList( filters );
-        assertThat( clauses ).hasSize( 4 );
-        assertThat( clauses.get( 0 ) ).extracting( "requiredValue" ).containsExactly( 3L );
-        assertThat( clauses.get( 1 ) ).extracting( "requiredValue" ).containsExactly( 1L, 2L );
-        assertThat( clauses.get( 2 ) ).isEmpty();
-        assertThat( clauses.get( 3 ) ).extracting( "requiredValue" ).containsExactly( "%brain%", "%tumor%" );
-        assertThat( filters ).hasToString( "ee.id = 3 and ee.id = 1 or ee.id = 2 and ee.shortName like %brain% or ee.description like %tumor%" );
+        assertThat( filters )
+                .hasSize( 4 )
+                .hasToString( "ee.description like %tumor% or ee.shortName like %brain% and ee.id = 1 or ee.id = 2 and ee.id = 3" )
+                .flatExtracting( it -> {
+                    List<Filter> f = new ArrayList<>();
+                    it.forEach( f::add );
+                    return f;
+                } )
+                .extracting( Filter::getRequiredValue )
+                .containsExactly( "%tumor%", "%brain%", 1L, 2L, 3L );
     }
 
     @Test

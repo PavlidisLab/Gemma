@@ -1,9 +1,6 @@
 package ubic.gemma.core.util;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Utilities and algorithms for {@link List}.
@@ -43,5 +40,22 @@ public class ListUtils {
                 element2position.put( element, i );
             }
         }
+    }
+
+    /**
+     * Pad a list to the next power of 2 with the given element.
+     */
+    public static List<?> padToNextPowerOfTwo( List<?> list, Object elementForPadding ) {
+        int k = Integer.highestOneBit( list.size() );
+        if ( list.size() == k ) {
+            return list; // already a power of 2
+        }
+        k <<= 1;
+        List<Object> paddedList = new ArrayList<>( k );
+        paddedList.addAll( list );
+        for ( int j = list.size(); j < k; j++ ) {
+            paddedList.add( elementForPadding );
+        }
+        return paddedList;
     }
 }

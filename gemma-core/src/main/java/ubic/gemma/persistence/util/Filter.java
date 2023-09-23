@@ -38,6 +38,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -45,13 +46,15 @@ import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
 /**
  * Holds the necessary information to filter an entity with a property, operator and right-hand side value.
- *
+ * <p>
+ * Clauses and sub-clauses are always sorted by objectAlias, propertyName, operator and requiredValue. A clause is
+ * sorted by its first element, if any.
  * @author tesarst
  * @author poirigui
  */
 @Value
-@EqualsAndHashCode(of = { "objectAlias", "operator", "requiredValue" })
-public class Filter implements PropertyMapping {
+@EqualsAndHashCode(of = { "objectAlias", "propertyName", "operator", "requiredValue" })
+public class Filter implements PropertyMapping, Comparable<Filter> {
 
     /**
      * This is only the date part of the ISO 8601 standard.
@@ -62,6 +65,25 @@ public class Filter implements PropertyMapping {
      * Provide all the supported type conversion for parsing required values.
      */
     private static final ConfigurableConversionService conversionService = new GenericConversionService();
+
+    private static final Comparator<Filter> comparator = Comparator
+            .comparing( Filter::getObjectAlias, Comparator.nullsFirst( Comparator.naturalOrder() ) )
+            .thenComparing( Filter::getPropertyName )
+            .thenComparing( Filter::getOperator )
+            .thenComparing( Filter::getComparableRequiredValue, Comparator.nullsLast( Comparator.naturalOrder() ) );
+
+    @Nullable
+    private Comparable<Object> getComparableRequiredValue() {
+        Object requiredValue = this.requiredValue;
+        if ( operator.requiredType != null && Collection.class.isAssignableFrom( operator.requiredType ) ) {
+            // unpack the first element of the collection
+            if ( requiredValue != null ) {
+                requiredValue = ( ( Collection<?> ) requiredValue ).iterator().next();
+            }
+        }
+        //noinspection unchecked
+        return ( Comparable<Object> ) requiredValue;
+    }
 
     private static <T> void addConverter( Class<T> targetClass, Converter<String, T> converter, Converter<T, String> reverseConverter ) {
         conversionService.addConverter( String.class, targetClass, converter );
@@ -251,6 +273,11 @@ public class Filter implements PropertyMapping {
         this.requiredValue = requiredValue;
         this.originalProperty = originalProperty;
         this.checkTypeCorrect();
+    }
+
+    @Override
+    public int compareTo( Filter filter ) {
+        return comparator.compare( this, filter );
     }
 
     @Override

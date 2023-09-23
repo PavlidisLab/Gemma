@@ -135,7 +135,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     public void testAllFilterByIdIn() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
-                .extracting( of -> of.get( 0 ) )
+                .extracting( of -> of.iterator().next() )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
@@ -159,7 +159,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     public void testAllFilterByShortName() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
         assertThat( datasetArgService.getFilters( filterArg ) )
-                .extracting( of -> of.get( 0 ) )
+                .extracting( of -> of.iterator().next() )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
@@ -183,7 +183,7 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     public void testAllFilterByShortNameIn() {
         FilterArg<ExpressionExperiment> filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
         assertThat( datasetArgService.getFilters( filterArg ) )
-                .extracting( of -> of.get( 0 ) )
+                .extracting( of -> of.iterator().next() )
                 .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )

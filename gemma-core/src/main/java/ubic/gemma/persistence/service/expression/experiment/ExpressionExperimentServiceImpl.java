@@ -564,7 +564,7 @@ public class ExpressionExperimentServiceImpl
         // apply inference to terms
         // collect clauses mentioning terms
         final Map<SubClauseKey, Set<String>> termUrisBySubClause = new HashMap<>();
-        for ( List<Filter> clause : f ) {
+        for ( Iterable<Filter> clause : f ) {
             Filters.FiltersClauseBuilder clauseBuilder = f2.and();
             for ( Filter subClause : clause ) {
                 if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
