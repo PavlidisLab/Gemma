@@ -441,4 +441,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC, "id" ), 0, 20 );
     }
+
+    @Test
+    public void testGetDatasetAnnotations() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1/annotations" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasHeader( "Cache-Control", "max-age=1200" );
+        verify( expressionExperimentService ).load( 1L );
+        verify( expressionExperimentService ).getAnnotationsById( 1L );
+    }
 }
