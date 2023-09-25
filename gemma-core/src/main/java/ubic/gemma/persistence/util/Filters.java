@@ -96,6 +96,10 @@ public class Filters implements Iterable<Iterable<Filter>> {
         return empty().and( subClauses );
     }
 
+    public static Filters by( Collection<Filter> subClauses ) {
+        return empty().and( subClauses );
+    }
+
     /**
      * Create a singleton {@link Filters} from an explicit clause.
      */
@@ -178,6 +182,11 @@ public class Filters implements Iterable<Iterable<Filter>> {
      */
     public Filters and( Filter... filters ) {
         clauses.add( new TreeSet<>( Arrays.asList( filters ) ) );
+        return this;
+    }
+
+    public Filters and( Collection<Filter> filters ) {
+        clauses.add( new TreeSet<>( filters ) );
         return this;
     }
 

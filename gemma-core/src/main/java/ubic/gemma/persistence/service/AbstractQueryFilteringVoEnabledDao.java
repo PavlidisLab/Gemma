@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
@@ -9,9 +10,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -166,7 +165,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
-        return doLoadIdsWithCache( filters, sort, true );
+        return doLoadIdsWithCache( getByIdsFiltersIfPossible( filters ), sort, true );
     }
 
     @Override
@@ -176,7 +175,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public Slice<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return doLoadWithCache( filters, sort, offset, limit, true );
+        return doLoadWithCache( getByIdsFiltersIfPossible( filters ), sort, offset, limit, true );
     }
 
     @Override
@@ -186,7 +185,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public List<O> loadWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
-        return doLoadWithCache( filters, sort, true );
+        return doLoadWithCache( getByIdsFiltersIfPossible( filters ), sort, true );
     }
 
     @Override
@@ -196,7 +195,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public Slice<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return doLoadValueObjectsWithCache( filters, sort, offset, limit, true );
+        return doLoadValueObjectsWithCache( getByIdsFiltersIfPossible( filters ), sort, offset, limit, true );
     }
 
     @Override
@@ -206,7 +205,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public List<VO> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
-        return doLoadValueObjectsWithCache( filters, sort, true );
+        return doLoadValueObjectsWithCache( getByIdsFiltersIfPossible( filters ), sort, true );
     }
 
     @Override
@@ -216,7 +215,30 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public long countWithCache( @Nullable Filters filters ) {
-        return doCountWithCache( filters, true );
+        return doCountWithCache( getByIdsFiltersIfPossible( filters ), true );
+    }
+
+    /**
+     * Optimize a filter by replacing it with a filter over IDs if possible.
+     * <p>
+     * This is taking advantage of the fact that we can cache the IDs of individual filters and intersect those results
+     * instead of running a complex database query.
+     *
+     * @param filters   the filters to be optimized
+     * @return an equivalent filter, optimized
+     */
+    private Filters getByIdsFiltersIfPossible( @Nullable Filters filters ) {
+        if ( filters != null ) {
+            Iterator<Iterable<Filter>> it = filters.iterator();
+            if ( it.hasNext() ) {
+                Set<Long> ids = new HashSet<>( doLoadIdsWithCache( Filters.by( IterableUtils.toList( it.next() ) ), null, true ) );
+                it.forEachRemaining( clause -> {
+                    ids.retainAll( doLoadIdsWithCache( Filters.by( IterableUtils.toList( it.next() ) ), null, true ) );
+                } );
+                return Filters.by( getFilter( "id", Long.class, Filter.Operator.in, ids ) );
+            }
+        }
+        return filters;
     }
 
     private List<Long> doLoadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
