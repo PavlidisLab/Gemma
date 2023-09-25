@@ -12,6 +12,7 @@ http://purl.obolibrary.org/obo/RO_0001025	located in
 http://purl.obolibrary.org/obo/GENO_0000222	has_genotype
 http://purl.obolibrary.org/obo/GENO_0000413	has_allele
 http://purl.obolibrary.org/obo/GENO_0000447	is_gene_target_of
+http://purl.obolibrary.org/obo/CLO_0037209	derived from cell
 http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
 http://purl.obolibrary.org/obo/RO_0002220	adjacent to
