@@ -45,7 +45,7 @@ public interface CoexpressionAnalysisService extends BaseService<CoexpressionAna
     void update( CoexpressionAnalysis o );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void update( Collection<CoexpressionAnalysis> o );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
