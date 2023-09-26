@@ -100,26 +100,12 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<VO> loadAllValueObjects();
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * TODO: add ACL_SECURABLE_EDIT, but this method accepts transient entities which do not have ACLs yet.
-     * @deprecated do not use this until the issue with ACLs is resolved.
-     */
-    @Deprecated
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT_IGNORE_TRANSIENT" })
     Collection<C> save( Collection<C> entities );
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * TODO: add ACL_SECURABLE_EDIT, but this method accepts transient entities which do not have ACLs yet.
-     * @deprecated do not use this until the issue with ACLs is resolved.
-     */
-    @Deprecated
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT_IGNORE_TRANSIENT" })
     C save( C entity );
 
     @Override
