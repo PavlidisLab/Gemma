@@ -206,8 +206,13 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     public String getDescriptiveString() {
         if ( this.characteristics != null && this.characteristics.size() > 0 ) {
             StringBuilder fvString = new StringBuilder();
+            boolean first = true;
             for ( Characteristic c : this.characteristics ) {
-                fvString.append( c.getValue() ).append( " " );
+                if ( !first ) {
+                    fvString.append( " " );
+                }
+                fvString.append( c.getValue() );
+                first = false;
             }
             return fvString.toString();
         } else if ( this.measurement != null ) {
