@@ -32,16 +32,19 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
 
@@ -177,6 +180,29 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         ExpressionExperimentSet results = splitService.split( ee, splitOn, false );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
+    }
+
+    @Test
+    public void testGenerateName() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setName( "test" );
+        Characteristic c = new Characteristic();
+        c.setValue( "bar" );
+        FactorValue fv = new FactorValue();
+        fv.getCharacteristics().add( c );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setName( "foo" );
+        fv.setExperimentalFactor( ef );
+        assertEquals( "Split part 1 of: test [foo = bar]", SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) );
+        ee.setName( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
+        String name = SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv );
+        assertEquals( 255, name.length() );
+        assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
+        ee.setName( "test" );
+        c.setValue( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
+        assertThatThrownBy( () -> SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
     }
 
     @After
