@@ -176,8 +176,12 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
                 return null;
             }
 
-            evcode = GOEvidenceCode.valueOf( evidenceCode );
-
+            try {
+                evcode = GOEvidenceCode.valueOf( evidenceCode );
+            } catch ( IllegalArgumentException e ) {
+                log.warn( String.format( "Unknown GO evidence code %s, will be mapping it as %s.", evidenceCode, GOEvidenceCode.OTHER ) );
+                evcode = GOEvidenceCode.OTHER;
+            }
         }
         Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance( gene, oe, evcode );
 
