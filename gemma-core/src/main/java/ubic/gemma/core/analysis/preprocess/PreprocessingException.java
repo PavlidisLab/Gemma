@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -33,6 +34,6 @@ public class PreprocessingException extends RuntimeException {
     }
 
     public PreprocessingException( ExpressionExperiment ee, Throwable cause ) {
-        super( String.format( "Failed to pre-process %s", ee.getShortName() ), cause );
+        super( String.format( "Failed to pre-process %s: %s", ee.getShortName(), ExceptionUtils.getRootCauseMessage( cause ) ), cause );
     }
 }
