@@ -343,27 +343,26 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
         String template = "Split part %d of: %s [%s = %s]";
-        String factorValueString = splitValue.getValue();
-        if ( StringUtils.isBlank( factorValueString ) ) {
-            factorValueString = splitValue.getDescriptiveString();
-        }
-        String newFullName = String.format( template, splitNumber, toSplit.getName(),
-                splitValue.getExperimentalFactor().getCategory() != null ?
+        String originalName = StringUtils.strip( toSplit.getName() );
+        String factorValueString = splitValue.getDescriptiveString();
+        String newFullName = String.format( template, splitNumber, originalName,
+                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
                         splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName(),
+                        splitValue.getExperimentalFactor().getName() ),
                 factorValueString );
         if ( newFullName.length() <= MAX_SPLIT_NAME_LENGTH )
             return newFullName;
         // truncate the original name
-        int lengthOfEverythingElse = newFullName.length() - String.format( "%s", toSplit.getName() ).length();
+        int lengthOfEverythingElse = newFullName.length() - String.format( "%s", originalName ).length();
         //  we want at least 100 characters of the original name
         if ( lengthOfEverythingElse > MAX_SPLIT_NAME_LENGTH - 100 ) {
             throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
         }
-        return String.format( template, splitNumber, StringUtils.abbreviate( toSplit.getName(), "…", 255 - lengthOfEverythingElse ),
-                splitValue.getExperimentalFactor().getCategory() != null ?
+        return String.format( template, splitNumber, StringUtils.abbreviate( originalName, "…", 255 - lengthOfEverythingElse )
+                        .replace( "\\s+…$", "…" ),
+                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
                         splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName(),
+                        splitValue.getExperimentalFactor().getName() ),
                 factorValueString );
     }
 

@@ -201,27 +201,28 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.value = value;
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    /**
+     * Produce a descriptive string for this factor value.
+     */
     @Transient
     public String getDescriptiveString() {
-        if ( this.characteristics != null && this.characteristics.size() > 0 ) {
+        if ( this.characteristics != null && !this.characteristics.isEmpty() ) {
             StringBuilder fvString = new StringBuilder();
             boolean first = true;
             for ( Characteristic c : this.characteristics ) {
                 if ( !first ) {
                     fvString.append( " " );
                 }
-                fvString.append( c.getValue() );
+                fvString.append( StringUtils.strip( c.getValue() ) );
                 first = false;
             }
             return fvString.toString();
         } else if ( this.measurement != null ) {
-            return this.measurement.getValue();
-        } else if ( this.value != null && !this.value.isEmpty() ) {
-            return this.value;
+            return StringUtils.strip( this.measurement.getValue() );
+        } else if ( StringUtils.isNotBlank( this.value ) ) {
+            return StringUtils.strip( this.value );
         }
-
-        return "absent ";
+        return "absent";
     }
 
     private boolean checkGuts( FactorValue that ) {

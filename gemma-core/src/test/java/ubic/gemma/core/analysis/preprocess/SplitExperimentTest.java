@@ -203,6 +203,13 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertThatThrownBy( () -> SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
+
+        // make sure that whitespaces before the ellipsis are trimmed
+        int lengthOfEverythingElse = "Split part 1 of:  [foo = bar]".length();
+        ee.setName( String.join( "", java.util.Collections.nCopies( 255 - lengthOfEverythingElse - 1, "a" ) ) + " " );
+        c.setValue( "bar" );
+        assertEquals( 254, SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ).length() );
+        assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
     }
 
     @After
