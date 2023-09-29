@@ -33,6 +33,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -41,8 +42,9 @@ import java.util.*;
  *
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
- * @deprecated Use {@link org.springframework.beans.factory.annotation.Value} to inject configurations. You can either
- *             use {@code @Value("#{environment['property']}")} or the shorthand {@code @Value("${property}")}.
+ * @deprecated This has been replaced with Spring-based configuration {@link SettingsConfig} and usage of {@link org.springframework.beans.factory.annotation.Value}
+ *             to inject configurations. You can either use {@code @Value("#{environment['property']}")} or the
+ *             shorthand {@code @Value("${property}")} as replacement.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Deprecated
@@ -85,12 +87,26 @@ public class Settings {
          * will be checked"
          */
 
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadConfig( Settings.USER_CONFIGURATION );
+        boolean userConfigLoaded = false;
 
-            Settings.config.addConfiguration( pc );
+        String catalinaBase;
+        if ( ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
+            File f = Paths.get( catalinaBase, Settings.USER_CONFIGURATION ).toFile();
+            log.debug( "Loading configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
+            try {
+                Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
+                userConfigLoaded = true;
+            } catch ( ConfigurationException e ) {
+                throw new RuntimeException( f.getAbsolutePath() + " could not be loaded.", e );
+            }
+        }
+
+        try {
+            Settings.config.addConfiguration( ConfigUtils.loadConfig( Settings.USER_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
-            Settings.log.warn( Settings.USER_CONFIGURATION + " not found" );
+            if ( !userConfigLoaded ) {
+                throw new RuntimeException( Settings.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied.", e );
+            }
         }
 
         try {
