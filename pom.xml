@@ -645,6 +645,7 @@
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.29.2</slack.version>
 		<micrometer.version>1.11.0</micrometer.version>
+		<tomcat.version>9.0.80</tomcat.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
