@@ -228,7 +228,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( StringUtils.isBlank( vo.getCategory() ) ) {
             throw new IllegalArgumentException( "The category cannot be blank for " + vo );
         }
-        if ( StringUtils.isBlank( vo.getValue() ) ) {
+        if ( StringUtils.isBlank( vo.getSubject() ) ) {
             throw new IllegalArgumentException( "The value cannot be blank for " + vo );
         }
         if ( StringUtils.isBlank( vo.getPredicate() ) ^ StringUtils.isBlank( vo.getObject() ) ) {
@@ -240,8 +240,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Statement c = new Statement();
         c.setCategory( vo.getCategory() );
         c.setCategoryUri( StringUtils.stripToNull( vo.getCategoryUri() ) );
-        c.setSubject( vo.getValue() );
-        c.setSubjectUri( StringUtils.stripToNull( vo.getValueUri() ) );
+        c.setSubject( vo.getSubject() );
+        c.setSubjectUri( StringUtils.stripToNull( vo.getSubjectUri() ) );
         if ( !StringUtils.isBlank( vo.getObject() ) ) {
             c.setPredicate( vo.getPredicate() );
             c.setPredicateUri( StringUtils.stripToNull( vo.getPredicateUri() ) );
@@ -282,7 +282,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 continue;
             }
 
-            Statement c = characteristicService.loadStatement( fvvo.getCharId() );
+            Statement c = factorValueService.loadStatement( fvvo.getCharId() );
 
             if ( c == null ) {
                 log.warn( "Characteristic ID is null for FactorValueValueObject with id=" + fvvo.getId() );
@@ -715,7 +715,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
             if ( charId != null ) {
-                c = characteristicService.loadStatement( charId );
+                c = factorValueService.loadStatement( charId );
                 if ( c == null ) {
                     /*
                      * This shouldn't happen but just in case...

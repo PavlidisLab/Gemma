@@ -21,7 +21,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 
 import java.util.Collection;
 import java.util.Set;
@@ -41,16 +40,17 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         implements FactorValueService {
 
     private final FactorValueDao factorValueDao;
-    private final CharacteristicDao characteristicDao;
+    private final StatementDao statementDao;
 
     @Autowired
-    public FactorValueServiceImpl( FactorValueDao factorValueDao, CharacteristicDao characteristicDao ) {
+    public FactorValueServiceImpl( FactorValueDao factorValueDao, StatementDao statementDao ) {
         super( factorValueDao );
         this.factorValueDao = factorValueDao;
-        this.characteristicDao = characteristicDao;
+        this.statementDao = statementDao;
     }
 
     @Override
+    @Deprecated
     @Transactional(readOnly = true)
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.factorValueDao.findByValue( valuePrefix );
@@ -60,6 +60,18 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional
     public void remove( FactorValue entity ) {
         super.remove( ensureInSession( entity ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Statement loadStatement( Long statementId ) {
+        return statementDao.load( statementId );
+    }
+
+    @Override
+    @Transactional
+    public Statement createStatement( Statement vc ) {
+        return this.statementDao.create( vc );
     }
 
     @Override

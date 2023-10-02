@@ -2,8 +2,8 @@ package ubic.gemma.model.expression.experiment;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
-import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 
 import javax.annotation.Nullable;
 
@@ -18,7 +18,15 @@ import javax.annotation.Nullable;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class StatementValueObject extends CharacteristicBasicValueObject {
+public class StatementValueObject extends IdentifiableValueObject<Statement> {
+
+    private String category;
+    @Nullable
+    private String categoryUri;
+
+    private String subject;
+    @Nullable
+    private String subjectUri;
 
     @GemmaWebOnly
     private String predicate;
@@ -50,6 +58,10 @@ public class StatementValueObject extends CharacteristicBasicValueObject {
 
     public StatementValueObject( Statement s ) {
         super( s );
+        this.category = s.getCategory();
+        this.categoryUri = s.getCategoryUri();
+        this.subject = s.getSubject();
+        this.subjectUri = s.getSubjectUri();
         this.predicate = s.getPredicate();
         this.predicateUri = s.getPredicateUri();
         this.object = s.getObject();
@@ -58,5 +70,27 @@ public class StatementValueObject extends CharacteristicBasicValueObject {
         this.secondPredicateUri = s.getSecondPredicateUri();
         this.secondObject = s.getSecondObject();
         this.secondObjectUri = s.getSecondObjectUri();
+    }
+
+    // for backward-compatibility because FactorValueBasicValueObject characteristics used to be CharacteristicBasicValueObject
+
+    @Deprecated
+    public String getValue() {
+        return subject;
+    }
+
+    @Deprecated
+    public void setValue( String value ) {
+        this.subject = value;
+    }
+
+    @Deprecated
+    public String getValueUri() {
+        return subjectUri;
+    }
+
+    @Deprecated
+    public void setValueUri( String valueUri ) {
+        this.subjectUri = valueUri;
     }
 }

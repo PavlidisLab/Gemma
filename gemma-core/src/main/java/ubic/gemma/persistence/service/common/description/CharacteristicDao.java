@@ -21,10 +21,9 @@ package ubic.gemma.persistence.service.common.description;
 import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
@@ -42,9 +41,6 @@ public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
     String OBJECT_ALIAS = "ch";
-
-    @Nullable
-    Statement loadStatement( Long charId );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -153,9 +149,4 @@ public interface CharacteristicDao
      * If a characteristic lacks a parent, its entry will be missing from the returned map.
      */
     Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
-
-    /**
-     * Create a statement.
-     */
-    Statement create( Statement s );
 }

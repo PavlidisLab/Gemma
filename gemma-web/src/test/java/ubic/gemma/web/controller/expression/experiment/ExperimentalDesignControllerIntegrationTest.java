@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -117,10 +116,10 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         FactorValue fv2 = ef.getFactorValues().iterator().next();
 
         StatementValueObject vc = new StatementValueObject();
-        vc.setValue( "foo" );
+        vc.setSubject( "foo" );
+        vc.setSubjectUri( "foo" );
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );
-        vc.setValueUri( "foo" );
 
         experimentalDesignController.createFactorValueCharacteristic( new EntityDelegator<>( fv2 ), vc );
         assertEquals( 2, ef.getFactorValues().size() );
@@ -140,8 +139,8 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
                             .anySatisfy( c -> {
                                 assertEquals( "bar", c.getCategory() );
                                 assertEquals( "bar", c.getCategoryUri() );
-                                assertEquals( "foo", c.getValue() );
-                                assertEquals( "foo", c.getValueUri() );
+                                assertEquals( "foo", c.getSubject() );
+                                assertEquals( "foo", c.getSubjectUri() );
                             } );
                 } );
     }
@@ -155,8 +154,8 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         StatementValueObject vc = new StatementValueObject();
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );
-        vc.setValue( "foo" );
-        vc.setValueUri( "foo" );
+        vc.setSubject( "foo" );
+        vc.setSubjectUri( "foo" );
         vc.setPredicate( "has" );
         vc.setObject( "bar2" );
 
@@ -170,8 +169,8 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
                 .anySatisfy( c -> {
                     assertEquals( "bar", c.getCategory() );
                     assertEquals( "bar", c.getCategoryUri() );
-                    assertEquals( "foo", c.getValue() );
-                    assertEquals( "foo", c.getValueUri() );
+                    assertEquals( "foo", c.getSubject() );
+                    assertEquals( "foo", c.getSubjectUri() );
                     assertEquals( "has", c.getPredicate() );
                     assertNull( c.getPredicateUri() );
                     assertNotNull( c.getObject() );
@@ -186,7 +185,6 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         assertNotNull( ef );
         FactorValue fv = ef.getFactorValues().iterator().next();
         Statement stmt = fv.getCharacteristics().iterator().next();
-        EntityDelegator<FactorValue> e = new EntityDelegator<>();
 
         FactorValueValueObject fvvo = new FactorValueValueObject();
         fvvo.setId( fv.getId() );
@@ -207,11 +205,11 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         Assertions.assertThat( ef.getFactorValues() )
                 .flatExtracting( FactorValue::getCharacteristics )
                 .anySatisfy( c -> {
-                    assertEquals( fv.getId(), c.getId() );
+                    assertEquals( stmt.getId(), c.getId() );
                     assertEquals( "bar", c.getCategory() );
                     assertEquals( "bar", c.getCategoryUri() );
-                    assertEquals( "foo", c.getValue() );
-                    assertEquals( "foo", c.getValueUri() );
+                    assertEquals( "foo", c.getSubject() );
+                    assertEquals( "foo", c.getSubjectUri() );
                     assertEquals( "has", c.getPredicate() );
                     assertNull( c.getPredicateUri() );
                     assertNotNull( c.getObject() );

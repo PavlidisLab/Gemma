@@ -129,7 +129,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
         StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
-        cvo.setValue( "test2" );
+        cvo.setSubject( "test2" );
         cvo.setPredicate( "has" );
         cvo.setObject( "test3" );
         experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
@@ -140,7 +140,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
                 .first()
                 .satisfies( stmt -> {
                     assertThat( stmt.getCategory() ).isEqualTo( "test" );
-                    assertThat( stmt.getValue() ).isEqualTo( "test2" );
+                    assertThat( stmt.getSubject() ).isEqualTo( "test2" );
                     assertThat( stmt.getObject() ).isEqualTo( "test3" );
                     assertThat( stmt.getSecondObject() ).isNull();
                 } );
@@ -173,12 +173,12 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     public void testCreateFactorValueWithAlreadyExistingStatement() {
         Statement s = new Statement();
         s.setCategory( "test" );
-        s.setValue( "test" );
+        s.setSubject( "test" );
         fv.getCharacteristics().add( s );
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
         StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
-        cvo.setValue( "test" );
+        cvo.setSubject( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The factor value already has this characteristic." );
@@ -191,7 +191,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
         StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
-        cvo.setValue( "test" );
+        cvo.setSubject( "test" );
         cvo.setPredicate( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )

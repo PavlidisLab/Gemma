@@ -64,11 +64,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Statement loadStatement( Long charId ) {
-        return ( Statement ) getSessionFactory().getCurrentSession().get( Statement.class, charId );
-    }
-
-    @Override
     public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
@@ -373,12 +368,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         return charToParent;
-    }
-
-    @Override
-    public Statement create( Statement s ) {
-        getSessionFactory().getCurrentSession().persist( s );
-        return s;
     }
 
     @Override

@@ -19,13 +19,13 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Set;
 
@@ -55,7 +55,19 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     void remove( FactorValue factorValue );
 
     /**
-     * This method accepts a {@link Characteristic} for compatibility with existing code.
+     * Load a given statement by ID.
+     */
+    @Nullable
+    @Secured({ "GROUP_USER" })
+    Statement loadStatement( Long statementId );
+
+    /**
+     * Create a given statement.
+     */
+    @Secured({ "GROUP_USER" })
+    Statement createStatement( Statement vc );
+
+    /**
      * @see FactorValueDao#removeCharacteristic(FactorValue, Statement)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
