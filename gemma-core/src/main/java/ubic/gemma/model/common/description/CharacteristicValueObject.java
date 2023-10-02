@@ -30,11 +30,13 @@ import java.util.List;
 
 /**
  * ValueObject wrapper for a Characteristic
- *
+ * @deprecated use {@link CharacteristicBasicValueObject} instead, we will eventually move this class back into
+ *             Phenocarta package
  * @see Characteristic
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 @Data
+@Deprecated
 public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
         implements Comparable<CharacteristicValueObject> {
 

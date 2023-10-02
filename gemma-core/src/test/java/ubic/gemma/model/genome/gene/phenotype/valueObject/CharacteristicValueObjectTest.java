@@ -29,6 +29,7 @@ import java.util.List;
 /**
  * @author mjacobson
  */
+@Deprecated
 public class CharacteristicValueObjectTest extends TestCase {
 
     private CharacteristicValueObject a;
