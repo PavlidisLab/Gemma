@@ -1,5 +1,8 @@
 root = true
 
+[init-indices.sql]
+indent_size=2
+
 [/pom.xml]
 indent_style=tab
 
