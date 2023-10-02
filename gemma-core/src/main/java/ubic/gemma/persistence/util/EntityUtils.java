@@ -23,11 +23,8 @@ import gemma.gsec.acl.domain.AclEntry;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-import org.hibernate.Query;
 import org.hibernate.SQLQuery;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.acls.domain.BasePermission;
@@ -36,7 +33,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -93,7 +89,7 @@ public class EntityUtils {
         }
         return result;
     }
-    
+
     public static Class<?> getImplClass( Class<?> type ) {
         String canonicalName = type.getName();
         try {
@@ -229,8 +225,7 @@ public class EntityUtils {
             } else if ( SecurityUtil.isUserAnonymous() ) {
                 canWrite = false;
             } else {
-                if ( ace.getPermission().getMask() == BasePermission.WRITE.getMask() || ace.getPermission().getMask() == BasePermission.ADMINISTRATION
-                        .getMask() ) {
+                if ( ( ace.getMask() & BasePermission.WRITE.getMask() ) != 0 || ( ace.getMask() & BasePermission.ADMINISTRATION.getMask() ) != 0 ) {
                     Sid sid = ace.getSid();
                     if ( sid instanceof AclGrantedAuthoritySid ) {
                         //noinspection unused //FIXME if user is in granted group then he can write probably
@@ -244,7 +239,7 @@ public class EntityUtils {
             }
 
             // Check public and shared - code adapted from SecurityUtils, only we do not hold an ACL object.
-            if ( ace.getPermission().equals( BasePermission.READ ) ) {
+            if ( ( ace.getMask() & BasePermission.READ.getMask() ) != 0 ) {
                 Sid sid = ace.getSid();
                 if ( sid instanceof AclGrantedAuthoritySid ) {
                     String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();

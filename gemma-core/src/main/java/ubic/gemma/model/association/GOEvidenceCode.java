@@ -91,5 +91,9 @@ public enum GOEvidenceCode {
     /**
      * Quantitative Trait Measurement (RGD code)
      */
-    QTM;
+    QTM,
+    /**
+     * Unsupported/unknown GO evidence code are mapped to this value.
+     */
+    OTHER;
 }

@@ -323,7 +323,7 @@ K-ras Status: Wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotyp
 KCl	potassium chloride	http://purl.obolibrary.org/obo/CHEBI_32588	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 kidney	kidney	http://purl.obolibrary.org/obo/UBERON_0002113	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 kidney tissue	kidney	http://purl.obolibrary.org/obo/UBERON_0002113	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-knockdown	Knockdown	http://gemma.msl.ubc.ca/ont/TGEMO_00007	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
+knockdown	gene knockdown	http://purl.obolibrary.org/obo/OBI_0002625	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 left liver lobe	left lobe of liver	http://purl.obolibrary.org/obo/UBERON_0001115	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Left ventricle	heart left ventricle	http://purl.obolibrary.org/obo/UBERON_0002084	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Left ventricle of heart	heart left ventricle	http://purl.obolibrary.org/obo/UBERON_0002084	organism part	http://www.ebi.ac.uk/efo/EFO_0000635

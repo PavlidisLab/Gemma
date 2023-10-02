@@ -653,6 +653,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
+    @CacheControl(maxAge = 1200)
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
