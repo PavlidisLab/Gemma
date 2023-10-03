@@ -15,11 +15,10 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -141,9 +140,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         }
 
         this.characteristics = value.getCharacteristics().stream()
+                .sorted()
                 .map( CharacteristicBasicValueObject::new )
-                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
-                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
     }
 
