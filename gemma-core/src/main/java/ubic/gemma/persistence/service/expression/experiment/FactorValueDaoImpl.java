@@ -114,15 +114,14 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     public Set<Statement> cloneCharacteristics( FactorValue fv ) {
         Collection<Statement> ch = fv.getCharacteristics();
         // pair of original -> clone
-        Map<Characteristic, Characteristic> clonedCharacteristics = new HashMap<>();
         List<Statement> result = new ArrayList<>( ch.size() );
         for ( Statement s : ch ) {
-            result.add( cloneStatement( s, clonedCharacteristics ) );
+            result.add( cloneStatement( s ) );
         }
         return new HashSet<>( result );
     }
 
-    private Statement cloneStatement( Statement s, Map<Characteristic, Characteristic> clonedCharacteristics ) {
+    private Statement cloneStatement( Statement s ) {
         // because of how statements (and characteristics) are hashed, the ID must be non-null
         if ( s.getId() == null ) {
             throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", s ) );
@@ -130,8 +129,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         Statement clone = Statement.Factory.newInstance();
         clone.setName( s.getName() );
         clone.setDescription( s.getDescription() );
-        clone.setValue( s.getValue() );
-        clone.setValueUri( s.getValueUri() );
+        clone.setSubject( s.getSubject() );
+        clone.setSubjectUri( s.getSubjectUri() );
         clone.setCategory( s.getCategory() );
         clone.setCategoryUri( s.getCategoryUri() );
         clone.setEvidenceCode( s.getEvidenceCode() );
