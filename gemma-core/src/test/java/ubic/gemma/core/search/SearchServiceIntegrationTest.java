@@ -234,6 +234,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchByBibRefIdProblemsB() throws SearchException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
