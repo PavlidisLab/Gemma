@@ -463,7 +463,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ExpressionExperiment ee = new ExpressionExperiment();
         ExpressionExperiment createdEE = expressionExperimentService.save( ee );
         assertNotNull( createdEE.getId() );
-        ees.add( createdEE );
+        // ees.add( createdEE );
         assertThat( createdEE.getAuditTrail().getEvents() )
                 .extracting( AuditEvent::getAction )
                 .containsExactly( AuditAction.CREATE );
