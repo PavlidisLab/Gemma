@@ -51,30 +51,29 @@
         </property>
         <subclass name="ubic.gemma.model.expression.experiment.Statement"
                   discriminator-value="Statement">
-            <!-- cannot use not-null for the main predicate/object because -->
             <property name="predicate" type="java.lang.String">
-                <column name="PREDICATE"/>
+                <column name="PREDICATE" sql-type="VARCHAR(255)"/>
             </property>
             <property name="predicateUri" type="java.lang.String">
-                <column name="PREDICATE_URI"/>
+                <column name="PREDICATE_URI" sql-type="VARCHAR(255)"/>
             </property>
             <property name="object" type="java.lang.String">
-                <column name="OBJECT"/>
+                <column name="OBJECT" sql-type="VARCHAR(255)"/>
             </property>
             <property name="objectUri" type="java.lang.String">
-                <column name="OBJECT_URI"/>
+                <column name="OBJECT_URI" sql-type="VARCHAR(255)"/>
             </property>
             <property name="secondPredicate" type="java.lang.String">
-                <column name="SECOND_PREDICATE"/>
+                <column name="SECOND_PREDICATE" sql-type="VARCHAR(255)"/>
             </property>
             <property name="secondPredicateUri" type="java.lang.String">
-                <column name="SECOND_PREDICATE_URI"/>
+                <column name="SECOND_PREDICATE_URI" sql-type="VARCHAR(255)"/>
             </property>
             <property name="secondObject" type="java.lang.String">
-                <column name="SECOND_OBJECT"/>
+                <column name="SECOND_OBJECT" sql-type="VARCHAR(255)"/>
             </property>
             <property name="secondObjectUri" type="java.lang.String">
-                <column name="SECOND_OBJECT_URI"/>
+                <column name="SECOND_OBJECT_URI" sql-type="VARCHAR(255)"/>
             </property>
         </subclass>
     </class>
