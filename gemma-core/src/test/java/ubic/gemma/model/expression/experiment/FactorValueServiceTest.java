@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,11 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import org.assertj.core.api.Assertions;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -45,42 +47,48 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
     @Autowired
     private BioMaterialService bioMaterialService;
 
+    private ExpressionExperiment ee;
+
+    @Before
+    public void setUp() {
+        ee = getTestPersistentCompleteExpressionExperiment( false );
+    }
+
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( ee );
+    }
+
     @Test
     public void testDelete() {
-
-        ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
-
         ee = expressionExperimentService.thawLite( ee );
 
         FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues()
                 .iterator().next();
 
+        // attach the FV to all the samples
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             bm.getFactorValues().add( fv );
             bioMaterialService.update( bm );
-
         }
 
         ee = expressionExperimentService.thawLite( ee );
-
-        // done with setup
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
+        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
             BioMaterial bm = ba.getSampleUsed();
-            assertTrue( bm.getFactorValues().size() > 0 );
-            fv = bm.getFactorValues().iterator().next();
+            assertTrue( bm.getFactorValues().contains( fv ) );
+        } );
 
-        }
-
-        assertNotNull( fv );
-
+        // delete the FV
         Long id = fv.getId();
-
         factorValueService.remove( fv );
-
         assertNull( factorValueService.load( id ) );
 
+        ee = expressionExperimentService.thawLite( ee );
+        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
+            BioMaterial bm = ba.getSampleUsed();
+            assertFalse( bm.getFactorValues().contains( fv ) );
+        } );
     }
 
 }
