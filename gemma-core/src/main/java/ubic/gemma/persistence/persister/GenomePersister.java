@@ -868,8 +868,10 @@ public abstract class GenomePersister extends CommonPersister {
             AbstractPersister.log.debug( "Creating new: " + bioSequence );
 
         // ensure that a new database entry is created since the biosequence will own it
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            bioSequence.getSequenceDatabaseEntry().setId( null );
+        if ( bioSequence.getSequenceDatabaseEntry() != null
+                && bioSequence.getSequenceDatabaseEntry().getId() != null ) {
+            log.debug( "An persistent database entry was passed to persistNewBioSequence(), making a non-persistent copy..." );
+            bioSequence.setSequenceDatabaseEntry( cloneDatabaseEntry( bioSequence.getSequenceDatabaseEntry() ) );
         }
 
         this.fillInBioSequenceTaxon( bioSequence, caches );
@@ -880,6 +882,15 @@ public abstract class GenomePersister extends CommonPersister {
 
         assert bioSequence.getTaxon().getId() != null;
         return bioSequenceDao.create( bioSequence );
+    }
+
+    private DatabaseEntry cloneDatabaseEntry( DatabaseEntry databaseEntry ) {
+        DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
+        clone.setAccession( databaseEntry.getAccession() );
+        clone.setAccessionVersion( databaseEntry.getAccessionVersion() );
+        clone.setUri( databaseEntry.getUri() );
+        clone.setExternalDatabase( databaseEntry.getExternalDatabase() );
+        return clone;
     }
 
     private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult(
