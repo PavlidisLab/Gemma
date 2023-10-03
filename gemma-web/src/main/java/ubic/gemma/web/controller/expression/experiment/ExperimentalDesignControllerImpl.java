@@ -209,15 +209,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new EntityNotFoundException( "No such experiment with " + fv );
         }
 
-        Statement c = statementFromVo( cvo );
-
-        if ( fv.getCharacteristics().contains( c ) ) {
-            throw new IllegalArgumentException( "The factor value already has this characteristic." );
-        }
-
-        fv.getCharacteristics().add( c );
-
-        factorValueService.update( fv );
+        factorValueService.createStatement( fv, statementFromVo( cvo ) );
 
         // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
         // "FactorValue characteristic added to: " + fv, c.toString() );
@@ -289,7 +281,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 continue;
             }
 
-            factorValueService.removeCharacteristic( fv, c );
+            factorValueService.removeStatement( fv, c );
         }
     }
 
@@ -780,8 +772,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             if ( c.getId() != null ) {
                 characteristicService.update( c );
             } else {
-                fv.getCharacteristics().add( c );
-                factorValueService.update( fv ); // cascade
+                factorValueService.createStatement( fv, c );
             }
         }
 

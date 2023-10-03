@@ -18,14 +18,11 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
@@ -40,19 +37,4 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      */
     @Deprecated
     Collection<FactorValue> findByValue( String valuePrefix );
-
-    /**
-     * Remove a given characteristic from a factor value.
-     * <p>
-     * The characteristic can be mentioned directly in {@link FactorValue#getCharacteristics()} or indirectly via
-     * {@link Statement#getObject()} or {@link Statement#getSecondObject()} in the graph structure.
-     */
-    void removeCharacteristic( FactorValue fv, Statement statement );
-
-    /**
-     * Clone the characteristics of a factor value, preserving any structure between statements and their objects.
-     * <p>
-     * If objects are reused in the graph, they will be reused in the clones as well.
-     */
-    Set<Statement> cloneCharacteristics( FactorValue fv );
 }

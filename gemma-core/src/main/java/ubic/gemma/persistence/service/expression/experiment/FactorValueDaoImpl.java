@@ -22,7 +22,6 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -31,7 +30,8 @@ import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * <p>
@@ -78,7 +78,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                 .setParameter( "fvId", factorValue.getId() )
                 .executeUpdate();
 
-        // evict the collections from the caches
+        // evict the collections from the cache
         for ( Long bmId : bmIds ) {
             this.getSessionFactory().getCache()
                     .evictCollection( "ubic.gemma.model.expression.biomaterial.BioMaterial.factorValues", bmId );
@@ -98,59 +98,6 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         BusinessKey.createQueryObject( queryObject, factorValue );
 
         return ( FactorValue ) queryObject.uniqueResult();
-    }
-
-    @Override
-    public void removeCharacteristic( FactorValue fv, Statement statement ) {
-        if ( !fv.getCharacteristics().remove( statement ) ) {
-            throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
-        }
-
-        // now we can safely delete it
-        getSessionFactory().getCurrentSession().delete( statement );
-    }
-
-    @Override
-    public Set<Statement> cloneCharacteristics( FactorValue fv ) {
-        Collection<Statement> ch = fv.getCharacteristics();
-        // pair of original -> clone
-        List<Statement> result = new ArrayList<>( ch.size() );
-        for ( Statement s : ch ) {
-            result.add( cloneStatement( s ) );
-        }
-        return new HashSet<>( result );
-    }
-
-    private Statement cloneStatement( Statement s ) {
-        // because of how statements (and characteristics) are hashed, the ID must be non-null
-        if ( s.getId() == null ) {
-            throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", s ) );
-        }
-        Statement clone = Statement.Factory.newInstance();
-        clone.setName( s.getName() );
-        clone.setDescription( s.getDescription() );
-        clone.setSubject( s.getSubject() );
-        clone.setSubjectUri( s.getSubjectUri() );
-        clone.setCategory( s.getCategory() );
-        clone.setCategoryUri( s.getCategoryUri() );
-        clone.setEvidenceCode( s.getEvidenceCode() );
-        clone.setPredicate( s.getPredicate() );
-        clone.setPredicateUri( s.getPredicateUri() );
-        clone.setObject( s.getObject() );
-        clone.setObjectUri( s.getObjectUri() );
-        clone.setSecondPredicate( s.getSecondPredicate() );
-        clone.setSecondPredicateUri( s.getSecondPredicateUri() );
-        clone.setSecondObject( s.getSecondObject() );
-        clone.setSecondObjectUri( s.getSecondObjectUri() );
-        return clone;
-    }
-
-    private Characteristic cloneCharacteristic( Characteristic c ) {
-        if ( c.getId() == null ) {
-            throw new IllegalArgumentException( String.format( "Cannot clone non-persistent %s.", c ) );
-        }
-        return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
-                c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
     }
 
     @Override

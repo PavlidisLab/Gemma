@@ -23,7 +23,6 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * <p>
@@ -70,20 +69,28 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     @Override
     @Transactional
-    public Statement createStatement( Statement vc ) {
-        return this.statementDao.create( vc );
+    public Statement createStatement( FactorValue factorValue, Statement statement ) {
+        if ( statement.getId() != null ) {
+            throw new IllegalArgumentException( "The statement must not be persistent in order to be added to a given factor value." );
+        }
+        statement = this.statementDao.create( statement );
+        // note here that once the statement is persisted, it is compared by ID, so it won't clash with any other
+        // identical statement
+        factorValue.getCharacteristics().add( statement );
+        return statement;
     }
 
     @Override
     @Transactional
-    public void removeCharacteristic( FactorValue fv, Statement c ) {
-        this.factorValueDao.removeCharacteristic( ensureInSession( fv ), c );
-    }
+    public void removeStatement( FactorValue fv, Statement statement ) {
+        fv = ensureInSession( fv );
 
-    @Override
-    @Transactional(readOnly = true)
-    public Set<Statement> cloneCharacteristics( FactorValue fv ) {
-        return factorValueDao.cloneCharacteristics( ensureInSession( fv ) );
+        if ( !fv.getCharacteristics().remove( statement ) ) {
+            throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
+        }
+
+        // now we can safely delete it
+        this.statementDao.remove( statement );
     }
 
     @Override

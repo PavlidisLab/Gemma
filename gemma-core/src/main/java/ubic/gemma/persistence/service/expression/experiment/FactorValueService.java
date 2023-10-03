@@ -27,7 +27,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * @author kelsey
@@ -62,22 +61,20 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     Statement loadStatement( Long statementId );
 
     /**
-     * Create a given statement.
-     */
-    @Secured({ "GROUP_USER" })
-    Statement createStatement( Statement vc );
-
-    /**
-     * @see FactorValueDao#removeCharacteristic(FactorValue, Statement)
+     * Create a given statement and add it to the given factor value.
+     * @param factorValue the factor value to add the statement to
+     * @param statement   the statement to be created and added to the factor value
+     * @return the created statement
+     * @throws IllegalArgumentException if the statement already exists
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCharacteristic( FactorValue fv, Statement c );
+    Statement createStatement( FactorValue factorValue, Statement statement );
 
     /**
-     * @see FactorValueDao#cloneCharacteristics(FactorValue)
+     * Remove a statement from a factor value.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    Set<Statement> cloneCharacteristics( FactorValue fv );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeStatement( FactorValue fv, Statement c );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })

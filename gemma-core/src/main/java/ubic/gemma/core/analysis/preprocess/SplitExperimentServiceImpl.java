@@ -402,7 +402,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
-            clone.setCharacteristics( factorValueService.cloneCharacteristics( fv ) );
+            clone.setCharacteristics( cloneStatements( fv ) );
             clone.setIsBaseline( fv.getIsBaseline() );
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
@@ -412,6 +412,36 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         }
 
         return result;
+    }
+
+    private Set<Statement> cloneStatements( FactorValue fv ) {
+        Collection<Statement> ch = fv.getCharacteristics();
+        // pair of original -> clone
+        List<Statement> result = new ArrayList<>( ch.size() );
+        for ( Statement s : ch ) {
+            result.add( cloneStatement( s ) );
+        }
+        return new HashSet<>( result );
+    }
+
+    private Statement cloneStatement( Statement s ) {
+        Statement clone = Statement.Factory.newInstance();
+        clone.setName( s.getName() );
+        clone.setDescription( s.getDescription() );
+        clone.setSubject( s.getSubject() );
+        clone.setSubjectUri( s.getSubjectUri() );
+        clone.setCategory( s.getCategory() );
+        clone.setCategoryUri( s.getCategoryUri() );
+        clone.setEvidenceCode( s.getEvidenceCode() );
+        clone.setPredicate( s.getPredicate() );
+        clone.setPredicateUri( s.getPredicateUri() );
+        clone.setObject( s.getObject() );
+        clone.setObjectUri( s.getObjectUri() );
+        clone.setSecondPredicate( s.getSecondPredicate() );
+        clone.setSecondPredicateUri( s.getSecondPredicateUri() );
+        clone.setSecondObject( s.getSecondObject() );
+        clone.setSecondObjectUri( s.getSecondObjectUri() );
+        return clone;
     }
 
     private Measurement cloneMeasurement( Measurement measurement ) {

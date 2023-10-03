@@ -1,94 +1,102 @@
-/*
- * The Gemma project
- *
- * Copyright (c) 2011 University of British Columbia
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 package ubic.gemma.model.expression.experiment;
 
-import org.assertj.core.api.Assertions;
-import org.junit.After;
-import org.junit.Before;
+import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.util.TestComponent;
+
+import java.util.Collections;
+import java.util.Set;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
-/**
- * @author paul
- */
-public class FactorValueServiceTest extends BaseSpringContextTest {
+@ContextConfiguration
+public class FactorValueServiceTest extends BaseDatabaseTest {
+
+    @Configuration
+    @TestComponent
+    static class FactorValueServiceTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public FactorValueDao factorValueDao( SessionFactory sessionFactory ) {
+            return new FactorValueDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public StatementDao statementDao( SessionFactory sessionFactory ) {
+            return new StatementDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public FactorValueService factorValueService( FactorValueDao factorValueDao, StatementDao statementDao ) {
+            return new FactorValueServiceImpl( factorValueDao, statementDao );
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock();
+        }
+    }
 
     @Autowired
     private FactorValueService factorValueService;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    @Test
+    public void testRemoveStatement() {
+        FactorValue fv = createFactorValue();
+        Statement s1;
+        s1 = Statement.Factory.newInstance();
+        s1.setObject( "test" );
+        fv.getCharacteristics().add( s1 );
+        sessionFactory.getCurrentSession().persist( fv );
+        assertNotNull( fv.getId() );
+        assertNotNull( s1.getId() );
 
-    @Autowired
-    private BioMaterialService bioMaterialService;
+        // later on
+        fv = reload( fv );
+        s1 = ( Statement ) sessionFactory.getCurrentSession().get( Statement.class, s1.getId() );
+        factorValueService.removeStatement( fv, s1 );
 
-    private ExpressionExperiment ee;
-
-    @Before
-    public void setUp() {
-        ee = getTestPersistentCompleteExpressionExperiment( false );
-    }
-
-    @After
-    public void tearDown() {
-        expressionExperimentService.remove( ee );
+        fv = reload( fv );
+        assertTrue( fv.getCharacteristics().isEmpty() );
     }
 
     @Test
-    public void testDelete() {
-        ee = expressionExperimentService.thawLite( ee );
-
-        FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues()
-                .iterator().next();
-
-        // attach the FV to all the samples
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            bm.getFactorValues().add( fv );
-            bioMaterialService.update( bm );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
-            BioMaterial bm = ba.getSampleUsed();
-            assertTrue( bm.getFactorValues().contains( fv ) );
-        } );
-
-        // delete the FV
-        Long id = fv.getId();
-        factorValueService.remove( fv );
-        assertNull( factorValueService.load( id ) );
-
-        ee = expressionExperimentService.thawLite( ee );
-        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
-            BioMaterial bm = ba.getSampleUsed();
-            assertFalse( bm.getFactorValues().contains( fv ) );
-        } );
+    public void testRemoveUnrelatedStatementRaisesAnException() {
+        FactorValue fv = createFactorValue();
+        Statement s = Statement.Factory.newInstance();
+        sessionFactory.getCurrentSession().persist( s );
+        assertThrows( IllegalArgumentException.class, () -> factorValueService.removeStatement( fv, s ) );
     }
 
+    private FactorValue createFactorValue() {
+        return createFactorValue( Collections.emptySet() );
+    }
+
+    private FactorValue createFactorValue( Set<Statement> statements ) {
+        ExperimentalDesign ed = new ExperimentalDesign();
+        sessionFactory.getCurrentSession().persist( ed );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ef );
+        FactorValue fv = FactorValue.Factory.newInstance();
+        fv.setExperimentalFactor( ef );
+        fv.getCharacteristics().addAll( statements );
+        sessionFactory.getCurrentSession().persist( fv );
+        return fv;
+    }
+
+    private FactorValue reload( FactorValue fv ) {
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        return ( FactorValue ) sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() );
+    }
 }
