@@ -14,18 +14,12 @@ Gemma.RelationCombo = Ext.extend(Ext.form.ComboBox, {
    triggerAction: 'all',
    typeAhead: true,
    forceSelection: true,
-   displayField: 'term',
+   displayField: 'label',
 
    record: Ext.data.Record.create([{
       name: "uri"
-   }, {
-      name: "term"
-   }, {
-      name: "comment"
-   }, {
+   },  {
       name: "label"
-   },{
-      name: "obsolete" // boolean
    }
    ]),
 
@@ -45,7 +39,7 @@ Gemma.RelationCombo = Ext.extend(Ext.form.ComboBox, {
          }, this.record),
          remoteSort: false,
          sortInfo: {
-            field: "term"
+            field: "label"
          }
       });
 
@@ -54,7 +48,7 @@ Gemma.RelationCombo = Ext.extend(Ext.form.ComboBox, {
       this.on("change", function (combo) {
          if(combo.value){
             this.selectedTerm = combo.store.data.items[combo.selectedIndex].data;
-            combo.setValue(this.selectedTerm.term);
+            combo.setValue(this.selectedTerm.label);
          }else{
             this.selectedTerm = undefined;
          }

@@ -33,12 +33,33 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     private static final long serialVersionUID = 3378801249808036785L;
 
+    /**
+     * The ID of the experimental factor this factor value belongs to.
+     */
     private Long experimentalFactorId;
+
+    /**
+     * The experiment factor category.
+     */
     private CharacteristicBasicValueObject experimentalFactorCategory;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MeasurementValueObject measurement;
+
+    /**
+     * The characteristics associated with this factor value.
+     */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<StatementValueObject> characteristics;
+
+    /**
+     * The measurement associated with this factor value.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private MeasurementValueObject measurement;
+
+    /**
+     * Indicate if this factor value is a measurement.
+     * <p>
+     * Note that measurements can have characteristics as optional annotations.
+     */
     private boolean isMeasurement;
 
     /**
@@ -46,6 +67,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
      */
     @Deprecated
     private String value;
+
     /**
      * @deprecated define your own logic for summarizing a factor value
      */
@@ -89,11 +111,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     public String toString() {
         return "FactorValueValueObject [factor=" + summary + ", value=" + value + "]";
     }
-
-    // causes a conflict with getMeasurement...
-//    public Boolean isMeasurement() {
-//        return this.measurement != null;
-//    }
 
     static String getSummaryString( FactorValue fv ) {
         StringBuilder buf = new StringBuilder();

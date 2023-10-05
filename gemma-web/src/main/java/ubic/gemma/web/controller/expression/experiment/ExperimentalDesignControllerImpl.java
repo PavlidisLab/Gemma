@@ -488,8 +488,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
 
         for ( FactorValue value : ef.getFactorValues() ) {
-            if ( value.getCharacteristics().size() > 0 ) {
-                for ( Characteristic c : value.getCharacteristics() ) {
+            if ( !value.getCharacteristics().isEmpty() ) {
+                for ( Statement c : value.getCharacteristics() ) {
                     result.add( new FactorValueValueObject( value, c ) );
                 }
             } else {
@@ -736,7 +736,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             // preserve original data
             if ( StringUtils.isBlank( c.getOriginalValue() ) ) {
-                c.setOriginalValue( c.getValue() );
+                c.setOriginalValue( c.getSubject() );
             }
 
             c.setCategory( fvvo.getCategory() );

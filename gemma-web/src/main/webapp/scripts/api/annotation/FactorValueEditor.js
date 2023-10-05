@@ -37,16 +37,16 @@ Gemma.FactorValueRecord = Ext.data.Record.create( [ {
    name : "predicateUri",
    type : "string"
 }, {
-   name : "object2",
+   name : "secondObject",
    type : "string"
 }, {
-   name : "objectUri2",
+   name : "secondObjectUri",
    type : "string"
 }, {
-   name : "predicate2",
+   name : "secondPredicate",
    type : "string"
 }, {
-   name : "predicateUri2",
+   name : "secondPredicateUri",
    type : "string"
 }, {
    name : "factorValue",
@@ -70,11 +70,11 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
    /**
     * @memberOf Gemma.FactorValueGrid
     */
-   categoryStyler : function( value, metadata, record, row, col, ds ) {
+   categoryStyler : function( value, metadata, record ) {
       return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.categoryUri );
    },
 
-   valueStyler : function( value, metadata, record, row, col, ds ) {
+   valueStyler : function( value, metadata, record ) {
       if ( value ) {
          return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.valueUri );
       } else {
@@ -83,8 +83,7 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
       }
    },
 
-
-   predicateStyler : function( value, metadata, record, row, col, ds ) {
+   predicateStyler : function( value, metadata, record ) {
       if ( value ) {
          return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.predicateUri );
       } else {
@@ -93,8 +92,7 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
       }
    },
 
-
-   objectStyler : function( value, metadata, record, row, col, ds ) {
+   objectStyler : function( value, metadata, record ) {
       if ( value ) {
          return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.objectUri );
       } else {
@@ -103,21 +101,19 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
       }
    },
 
-
-   // FIXME repeat stylers seems unnecessary
-   predicateStyler2 : function( value, metadata, record, row, col, ds ) {
+   secondPredicateStyler : function( value, metadata, record ) {
       if ( value ) {
-         return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.predicateUri2 );
+         return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.secondPredicateUri );
       } else {
          return '<span style="color:grey">'
             + ((this.editable) ? 'Double-click to define the predicate' : '(no value)') + '</span>';
       }
    },
 
-
-   objectStyler2 : function( value, metadata, record, row, col, ds ) {
+   secondObjectStyler : function( value, metadata, record ) {
+      console.log( value, metadata, record.data );
       if ( value ) {
-         return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.objectUri2 );
+         return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.secondObjectUri );
       } else {
          return '<span style="color:#c47474">'
             + ((this.editable) ? 'Double-click to define the object term' : '(no value)') + '</span>';
@@ -174,20 +170,20 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
          renderer : this.objectStyler,
          width : 200
       }, {
-         header : "Predicate2",
-         dataIndex : "predicate2",
-         renderer : this.predicateStyler2,
+         header : "Second Predicate",
+         dataIndex : "secondPredicate",
+         renderer : this.secondPredicateStyler,
          width : 100
       }, {
-         header : "Object2",
-         dataIndex : "object2",
-         renderer : this.objectStyler2,
+         header : "Second Object",
+         dataIndex : "secondObject",
+         renderer : this.secondObjectStyler,
          width : 200
       }, {
-            header : "Summary",
-            dataIndex : "factorValue",
-            hidden : true
-         } ];
+         header : "Summary",
+         dataIndex : "factorValue",
+         hidden : true
+      } ];
 
       this.experimentalDesign = {
          id : this.edId,
@@ -220,8 +216,7 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
 
 
       this.predicateCombo = new Gemma.RelationCombo( {
-         lazyRender : true,
-         termKey : "predicate" // not sure this does anything
+         lazyRender : true
       } );
       var predicateEditor = new Ext.grid.GridEditor( this.predicateCombo );
       // when user selects a predicate from the combo.
@@ -240,8 +235,7 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
 
 
       this.predicateCombo2 = new Gemma.RelationCombo( {
-         lazyRender : true,
-         termKey : "predicate2" // not sure this does anything
+         lazyRender : true
       } );
       var predicateEditor2 = new Ext.grid.GridEditor( this.predicateCombo2 );
       // when user selects a predicate from the combo.
@@ -317,32 +311,32 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
 
          this.on( "afteredit", function( e ) {
             var col = this.getColumnModel().getColumnId( e.column );
-            if ( col == CATEGORY_COLUMN ) {
+            if ( col === CATEGORY_COLUMN ) {
                var term = this.categoryCombo.getTerm.call( this.categoryCombo );
                e.record.set( "category", term.term );
                e.record.set( "categoryUri", term.uri );
-            } else if ( col == VALUE_COLUMN ) {
+            } else if ( col === VALUE_COLUMN ) {
                var c = this.valueCombo.getCharacteristic.call( this.valueCombo );
                e.record.set( "value", c.value );
                e.record.set( "valueUri", c.valueUri );
                this.valueCombo.clearCharacteristic.call( this.valueCombo ); // avoid carryover
-            } else if ( col == PREDICATE_COLUMN ) {
+            } else if ( col === PREDICATE_COLUMN ) {
                var c = this.predicateCombo.getTerm.call( this.predicateCombo );
-               e.record.set( "predicate", c.term );
+               e.record.set( "predicate", c.label );
                e.record.set( "predicateUri", c.uri );
-            } else if ( col == OBJECT_COLUMN ) {
+            } else if ( col === OBJECT_COLUMN ) {
                var c = this.objectCombo.getCharacteristic.call( this.objectCombo );
                e.record.set( "object", c.value );
                e.record.set( "objectUri", c.valueUri );
                this.objectCombo.clearCharacteristic.call( this.objectCombo ); // avoid carryover
-            } else if ( col == PREDICATE_COLUMN2 ) {
+            } else if ( col === PREDICATE_COLUMN2 ) {
                var c = this.predicateCombo2.getTerm.call( this.predicateCombo2 );
-               e.record.set( "predicate2", c.term );
-               e.record.set( "predicateUri2", c.uri );
-            } else if ( col == OBJECT_COLUMN2 ) {
+               e.record.set( "secondPredicate", c.label );
+               e.record.set( "secondPredicateUri", c.uri );
+            } else if ( col === OBJECT_COLUMN2 ) {
                var c = this.objectCombo2.getCharacteristic.call( this.objectCombo2 );
-               e.record.set( "object2", c.value );
-               e.record.set( "objectUri2", c.valueUri );
+               e.record.set( "secondObject", c.value );
+               e.record.set( "secondObjectUri", c.valueUri );
                this.objectCombo.clearCharacteristic.call( this.objectCombo2 ); // avoid carryover
             }
             this.getView().refresh();
