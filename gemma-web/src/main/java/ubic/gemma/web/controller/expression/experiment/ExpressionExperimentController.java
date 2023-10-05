@@ -484,7 +484,7 @@ public class ExpressionExperimentController {
 
         // this is the slow part
         reportTimer.start();
-        WhatsNew wn = whatsNewService.getLatestPublicWeeklyReport();
+        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
         if ( wn == null ) {
             log.warn( "Latest What's new report is not available, recomputing it on-the-fly..." );
             wn = whatsNewService.getWeeklyReport();

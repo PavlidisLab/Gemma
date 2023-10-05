@@ -56,7 +56,7 @@ public class WhatsNewController {
         ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
 
         // save a report for a week's duration
-        whatsNewService.generatePublicWeeklyReport();
+        whatsNewService.generateWeeklyReport();
 
         return mav;
     }

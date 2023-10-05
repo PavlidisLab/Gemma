@@ -20,10 +20,10 @@ public class WhatsNewServiceTest extends BaseSpringContextTest {
     @Test
     public void testGeneratePublicWeeklyReport() {
         // FIXME: generate some test data because we currently rely on other tests left-overs
-        WhatsNew initialReport = whatsNewService.generatePublicWeeklyReport();
+        WhatsNew initialReport = whatsNewService.generateWeeklyReport();
         assertThat( Paths.get( appDataHome, "WhatsNew", "WhatsNew.new" ) ).exists();
         assertThat( Paths.get( appDataHome, "WhatsNew", "WhatsNew.updated" ) ).exists();
-        WhatsNew report = whatsNewService.getLatestPublicWeeklyReport();
+        WhatsNew report = whatsNewService.getLatestWeeklyReport();
         assertThat( report ).isNotNull();
         assertThat( report.getDate() ).isEqualTo( initialReport.getDate() );
         assertThat( report.getNewArrayDesigns() )

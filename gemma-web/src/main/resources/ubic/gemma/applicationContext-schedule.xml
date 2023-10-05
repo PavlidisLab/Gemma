@@ -110,7 +110,7 @@
           class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="whatsNewService"/>
         <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="generatePublicWeeklyReport"/>
+        <property name="targetMethod" value="generateWeeklyReport"/>
     </bean>
 
     <bean id="gene2CsUpdateJobDetail"

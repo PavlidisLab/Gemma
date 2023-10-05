@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 
 /**
  * Creates reports that can be shown on the web pages or in social media feeds.
+ * <p>
+ * Reports are always generated from an anonymous user's perspective.
  *
  * @author paul
  */
@@ -42,17 +44,15 @@ public interface WhatsNewService {
     WhatsNew getWeeklyReport();
 
     /**
-     * Generate and save the report from last week. It can later be retrieved with {@link #getLatestPublicWeeklyReport()}.
-     * <p>
-     * This report is public and can thus be cached and displayed on the homepage or used in a public RSS feed.
+     * Generate and save the report from last week. It can later be retrieved with {@link #getLatestWeeklyReport()}.
      */
     @Secured({ "GROUP_AGENT" })
-    WhatsNew generatePublicWeeklyReport();
+    WhatsNew generateWeeklyReport();
 
     /**
-     * Retrieve the latest public weekly report if available.
+     * Retrieve the latest weekly report if available.
      * @return the latest weekly report, or null if unavailable
      */
     @Nullable
-    WhatsNew getLatestPublicWeeklyReport();
+    WhatsNew getLatestWeeklyReport();
 }
