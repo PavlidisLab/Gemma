@@ -370,4 +370,6 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
 
     @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
     Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort );
+
+    long countWithCache( @Nullable Filters filters );
 }
