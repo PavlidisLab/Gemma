@@ -25,6 +25,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -88,6 +89,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -504,17 +506,20 @@ public class ExpressionExperimentController {
         Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
         Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
 
+        Locale locale = LocaleContextHolder.getLocale();
+        NumberFormat integerFormat = NumberFormat.getIntegerInstance( locale );
+
         for ( Taxon t : eesPerTaxon.keySet() ) {
             Map<String, Object> taxLine = new HashMap<>();
             taxLine.put( "taxonId", t.getId() );
             taxLine.put( "taxonName", t.getScientificName() );
-            taxLine.put( "totalCount", eesPerTaxon.get( t ) );
+            taxLine.put( "totalCount", integerFormat.format( eesPerTaxon.get( t ) ) );
             if ( newEEsPerTaxon.containsKey( t ) ) {
-                taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
+                taxLine.put( "newCount", integerFormat.format( newEEsPerTaxon.get( t ).size() ) );
                 taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
             }
             if ( updatedEEsPerTaxon.containsKey( t ) ) {
-                taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
+                taxLine.put( "updatedCount", integerFormat.format( updatedEEsPerTaxon.get( t ).size() ) );
                 taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
             }
             taxonEntries.add( taxLine );
@@ -536,22 +541,24 @@ public class ExpressionExperimentController {
         summary.put( "updateDate", date );
         summary.put( "drawNewColumn", drawNewColumn );
         summary.put( "drawUpdatedColumn", drawUpdatedColumn );
-        if ( newBioMaterialCount != 0 ) summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
-        if ( newArrayCount != 0 ) summary.put( "newArrayDesignCount", ( long ) newArrayCount );
-        if ( updatedArrayCount != 0 ) summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
+        if ( newBioMaterialCount != 0 )
+            summary.put( "newBioMaterialCount", integerFormat.format( newBioMaterialCount ) );
+        if ( newArrayCount != 0 ) summary.put( "newArrayDesignCount", integerFormat.format( newArrayCount ) );
+        if ( updatedArrayCount != 0 )
+            summary.put( "updatedArrayDesignCount", integerFormat.format( updatedArrayCount ) );
         if ( newExpressionExperimentCount != 0 )
-            summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
+            summary.put( "newExpressionExperimentCount", integerFormat.format( newExpressionExperimentCount ) );
         if ( updatedExpressionExperimentCount != 0 )
-            summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+            summary.put( "updatedExpressionExperimentCount", integerFormat.format( updatedExpressionExperimentCount ) );
         if ( newExpressionExperimentCount != 0 )
             summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
         if ( updatedExpressionExperimentCount != 0 )
             summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
 
-        summary.put( "bioMaterialCount", bioMaterialCount );
-        summary.put( "arrayDesignCount", arrayDesignCount );
+        summary.put( "bioMaterialCount", integerFormat.format( bioMaterialCount ) );
+        summary.put( "arrayDesignCount", integerFormat.format( arrayDesignCount ) );
 
-        summary.put( "expressionExperimentCount", expressionExperimentCount );
+        summary.put( "expressionExperimentCount", integerFormat.format( expressionExperimentCount ) );
 
         if ( sw.getTime( TimeUnit.MILLISECONDS ) > 1000 ) {
             log.info( "Retrieving EE summary took " + sw.getTime( TimeUnit.MILLISECONDS ) + " ms (" + "counting: " + countTimer.getTime() + " ms, " + "report: " + reportTimer.getTime() + " ms)." );
