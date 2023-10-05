@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,8 +29,6 @@ import ubic.gemma.web.controller.WebConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Controller to provide information on "what's new" in the system
@@ -48,10 +45,7 @@ public class WhatsNewController {
     @RequestMapping("/daily.html")
     public ModelAndView daily( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnDay" );
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addDays( date, -1 );
-        WhatsNew wn = whatsNewService.getReport( date );
+        WhatsNew wn = whatsNewService.getDailyReport();
         mav.addObject( "whatsnew", wn );
         mav.addObject( "timeSpan", "In the past day" );
         return mav;
@@ -61,11 +55,8 @@ public class WhatsNewController {
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
 
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addDays( date, -7 );
         // save a report for a week's duration
-        whatsNewService.saveReport( date );
+        whatsNewService.generatePublicWeeklyReport();
 
         return mav;
     }
@@ -77,13 +68,9 @@ public class WhatsNewController {
     @RequestMapping("/weekly.html")
     public ModelAndView weekly( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnWeek" );
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addWeeks( date, -1 );
-        WhatsNew wn = whatsNewService.getReport( date );
+        WhatsNew wn = whatsNewService.getWeeklyReport();
         mav.addObject( "whatsnew", wn );
         mav.addObject( "timeSpan", "In the past week" );
         return mav;
     }
-
 }
