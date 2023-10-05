@@ -4,16 +4,14 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.test.BaseCliTest;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.util.TestComponent;
-
-import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -27,12 +25,8 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
     static class FindObsoleteTermsCliTestContextConfiguration extends BaseCliTestContextConfiguration {
 
         @Bean
-        public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-            PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-            Properties props = new Properties();
-            props.setProperty( "load.ontologies", "false" );
-            configurer.setProperties( props );
-            return configurer;
+        public static TestPropertyPlaceholderConfigurer testPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false" );
         }
 
         @Bean
