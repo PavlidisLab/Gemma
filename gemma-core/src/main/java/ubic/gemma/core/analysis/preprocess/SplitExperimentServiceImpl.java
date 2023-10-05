@@ -428,6 +428,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Statement clone = Statement.Factory.newInstance();
         clone.setName( s.getName() );
         clone.setDescription( s.getDescription() );
+        clone.setOriginalValue( s.getOriginalValue() );
         clone.setSubject( s.getSubject() );
         clone.setSubjectUri( s.getSubjectUri() );
         clone.setCategory( s.getCategory() );
