@@ -292,4 +292,11 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * Count the number of biomaterials of datasets satisfying the given filters.
+     * <p>
+     * The result is stored in the standard query cache.
+     */
+    long countBioMaterials( @Nullable Filters filters );
 }

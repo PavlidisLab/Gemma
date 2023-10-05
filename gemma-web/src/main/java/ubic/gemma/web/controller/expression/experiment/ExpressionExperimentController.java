@@ -471,12 +471,12 @@ public class ExpressionExperimentController {
         StopWatch reportTimer = StopWatch.create();
 
         Map<String, Object> summary = new HashMap<>();
-        List<Map<String, Object>> taxonEntries = new ArrayList();
+        List<Map<String, Object>> taxonEntries = new ArrayList<>();
 
         countTimer.start();
-        long bioMaterialCount = bioMaterialService.countAll();
-        long arrayDesignCount = arrayDesignService.countAll();
-        long expressionExperimentCount = expressionExperimentService.countAll();
+        long bioMaterialCount = expressionExperimentService.countBioMaterials( null );
+        long arrayDesignCount = arrayDesignService.countWithCache( null );
+        long expressionExperimentCount = expressionExperimentService.countWithCache( null );
         Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
         countTimer.stop();
 

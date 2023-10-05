@@ -593,4 +593,9 @@ public interface ExpressionExperimentService
 
     @Secured({ "GROUP_USER" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * @see ExpressionExperimentDao#countBioMaterials(Filters)
+     */
+    long countBioMaterials( @Nullable Filters filters );
 }

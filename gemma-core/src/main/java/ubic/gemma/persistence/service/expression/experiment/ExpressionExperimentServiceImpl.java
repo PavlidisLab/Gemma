@@ -1457,6 +1457,12 @@ public class ExpressionExperimentServiceImpl
         return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countBioMaterials( @Nullable Filters filters ) {
+        return expressionExperimentDao.countBioMaterials( filters );
+    }
+
     /**
      * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
      * {@inheritDoc}

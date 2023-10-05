@@ -272,6 +272,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public long countWithCache( @Nullable Filters filters ) {
+        return arrayDesignDao.countWithCache( filters );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
         return this.arrayDesignDao.isMerged( ids );
     }

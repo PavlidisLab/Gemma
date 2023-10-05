@@ -781,6 +781,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public long countBioMaterials( @Nullable Filters filters ) {
+        //language=HQL
+        Query query = finishFilteringQuery( "select count(distinct bm) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm",
+                filters, null, null );
+        return ( Long ) query.setCacheable( true ).uniqueResult();
+    }
+
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
 
         ExpressionExperiment ee;
