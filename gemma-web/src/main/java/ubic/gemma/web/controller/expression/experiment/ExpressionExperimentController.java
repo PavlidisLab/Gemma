@@ -482,7 +482,7 @@ public class ExpressionExperimentController {
 
         // this is the slow part
         reportTimer.start();
-        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
+        WhatsNew wn = whatsNewService.getLatestPublicWeeklyReport();
         if ( wn == null ) {
             log.warn( "Latest What's new report is not available, recomputing it on-the-fly..." );
             wn = whatsNewService.getWeeklyReport();
@@ -490,7 +490,7 @@ public class ExpressionExperimentController {
         reportTimer.stop();
 
         // Get count for new assays
-        int newBioMaterialCount = wn.getNewBioMaterialCount();
+        long newBioMaterialCount = wn.getNewBioMaterialCount();
 
         Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
         Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments ) : new ArrayList<>();

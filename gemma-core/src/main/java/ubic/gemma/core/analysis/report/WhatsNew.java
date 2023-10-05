@@ -38,7 +38,7 @@ public class WhatsNew {
     private Map<Taxon, Long> eeCountPerTaxon;
     private Map<Taxon, Collection<Long>> newEEIdsPerTaxon;
     private Map<Taxon, Collection<Long>> updatedEEIdsPerTaxon;
-    private int newBioMaterialCount = 0;
+    private long newBioMaterialCount = 0L;
     private Date date;
 
     public WhatsNew( Date date ) {
@@ -195,11 +195,11 @@ public class WhatsNew {
     /**
      * @return get a count of the number of biomaterials in the new expression experiments
      */
-    public int getNewBioMaterialCount() {
+    public long getNewBioMaterialCount() {
         return this.newBioMaterialCount;
     }
 
-    public void setNewBioMaterialCount( int count ) {
+    public void setNewBioMaterialCount( long count ) {
         this.newBioMaterialCount = count;
     }
 

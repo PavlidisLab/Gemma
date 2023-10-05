@@ -18,12 +18,19 @@
  */
 package ubic.gemma.core.analysis.report;
 
+import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
@@ -34,9 +41,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,42 +56,163 @@ import java.util.stream.Collectors;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class WhatsNewServiceImpl implements WhatsNewService {
 
+    private static final Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
+
     private static final String WHATS_NEW_DIR = "WhatsNew";
     private static final String WHATS_NEW_FILE = "WhatsNew";
-    private static final Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
-    private final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
+
     @Autowired
-    private ArrayDesignService arrayDesignService = null;
+    private ArrayDesignService arrayDesignService;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private SecurityService securityService = null;
+    private SecurityService securityService;
+
+    @Value("${gemma.appdata.home}")
+    private String homeDir;
 
     @Override
-    @Transactional
-    public void generateWeeklyReport() {
+    @Transactional(readOnly = true)
+    public WhatsNew getDailyReport() {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
-        date = DateUtils.addDays( date, -7 );
-        this.saveReport( date );
+        date = DateUtils.addDays( date, -1 );
+        return this.getReport( date );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WhatsNew getWeeklyReport() {
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+        return this.getReport( date );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WhatsNew generatePublicWeeklyReport() {
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        WhatsNew wn = this.getReportAsAnonymousUser( DateUtils.addWeeks( date, -1 ) );
+        this.initDirectories();
+        this.saveLatestWeeklyReport( wn, date );
+        return wn;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WhatsNew getLatestPublicWeeklyReport() {
+        WhatsNew wn = new WhatsNew();
+        File newObjects = new File(
+                homeDir + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                        + WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" );
+        File updatedObjects = new File(
+                homeDir + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                        + WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" );
+        if ( !newObjects.exists() && !updatedObjects.exists() ) {
+            return null;
+        }
+
+        StopWatch timer = StopWatch.createStarted();
+        StopWatch loadNewObjectsTimer = StopWatch.create();
+        StopWatch loadUpdatedObjectsTimer = StopWatch.create();
+
+        // restore the date from the last modified -1 week
+        wn.setDate( DateUtils.addWeeks( new Date( newObjects.lastModified() ), -1 ) );
+
+        // load up all new objects
+        loadNewObjectsTimer.start();
+        if ( newObjects.exists() ) {
+            Collection<AuditableObject> aos = this.loadAuditableObjects( newObjects );
+            Map<String, List<AuditableObject>> aosByType = aos.stream()
+                    .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
+            for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
+                Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
+                for ( AuditableObject ao : entry.getValue() ) {
+                    this.updateDate( wn, ao );
+                }
+                wn.addNewObjects( objects );
+            }
+        }
+        loadNewObjectsTimer.stop();
+
+        // load up all updated objects
+        loadUpdatedObjectsTimer.start();
+        if ( updatedObjects.exists() ) {
+            Collection<AuditableObject> aos = this.loadAuditableObjects( updatedObjects );
+            Map<String, List<AuditableObject>> aosByType = aos.stream()
+                    .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
+            for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
+                /*
+                 * This call takes ~ 15-20 ms, but it can be called many times if there are a lot of updated
+                 * experiments, meaning this loop can take >8500 ms (over tunnel for ~450 experiments).
+                 *
+                 * Loading objects could be avoided since we only need ids on the front end, but we would need to
+                 * refactor the cache, because object-type is used to calculate counts for updated array design
+                 * objects vs updated experiments
+                 *
+                 * This is probably not necessary because usually the number of updated or new experiments will be
+                 * much lower than 450.
+                 */
+                Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
+                for ( AuditableObject ao : entry.getValue() ) {
+                    this.updateDate( wn, ao );
+                }
+                wn.addUpdatedObjects( objects );
+            }
+        }
+        loadUpdatedObjectsTimer.stop();
+
+        // build total, new and updated counts by taxon to display in data summary widget on front page
+        StopWatch funkyMapGenerationTimer = StopWatch.createStarted();
+        wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
+        wn.setUpdatedEEIdsPerTaxon(
+                this.getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments() ) );
+        funkyMapGenerationTimer.stop();
+        timer.stop();
+
+        if ( timer.getTime() > 500 ) {
+            log.info( "Retrieving report took " + timer.getTime() + "ms ("
+                    + "loading new: " + loadNewObjectsTimer.getTime() + " ms, "
+                    + "loading updated: " + loadUpdatedObjectsTimer.getTime() + " ms, "
+                    + "ee by taxon map creation: " + funkyMapGenerationTimer.getTime() + "ms)." );
+        }
+        return wn;
+    }
+
+    private Collection<? extends Auditable> fetchAllByType( List<AuditableObject> object, String type ) {
+        if ( object == null )
+            return null;
+        List<Long> objectIds = object.stream().map( AuditableObject::getId ).collect( Collectors.toList() );
+        if ( type.equalsIgnoreCase( "ArrayDesign" ) ) {
+            return arrayDesignService.load( objectIds );
+        } else if ( type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
+            // this is slower than loading them all at once but the cache saves even more time.
+            return expressionExperimentService.load( objectIds );
+        } else {
+            throw new IllegalArgumentException( "Unsupported auditable " + type + "." );
+        }
     }
 
     /**
-     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
+     * Obtain the report from the perspective of an anonymous user.
      */
-    @Override
-    @Transactional(readOnly = true)
-    public void saveReport( Date date ) {
-        WhatsNew wn = this.getReport( date );
-        this.initDirectories();
-        this.saveFile( wn );
+    private WhatsNew getReportAsAnonymousUser( Date date ) {
+        // generate the report from an anonymous user perspective
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication( new AnonymousAuthenticationToken( "1234", AuthorityConstants.ANONYMOUS_USER_NAME,
+                Collections.singleton( new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) ) ) );
+        try {
+            return new DelegatingSecurityContextCallable<>( () -> getReport( date ), context ).call();
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public WhatsNew getReport( Date date ) {
+    private WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
 
         Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
@@ -113,138 +241,6 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         return wn;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public WhatsNew getWeeklyReport() {
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addWeeks( date, -1 );
-        return this.getReport( date );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public WhatsNew getLatestWeeklyReport() {
-        WhatsNew wn = new WhatsNew();
-        try {
-            File newObjects = new File(
-                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
-                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" );
-            File updatedObjects = new File(
-                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
-                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" );
-            if ( !newObjects.exists() && !updatedObjects.exists() ) {
-                return null;
-            }
-
-            StopWatch timer = StopWatch.createStarted();
-            StopWatch loadNewObjectsTimer = StopWatch.create();
-            StopWatch loadUpdatedObjectsTimer = StopWatch.create();
-
-            // load up all new objects
-            loadNewObjectsTimer.start();
-            if ( newObjects.exists() ) {
-                Collection<AuditableObject> aos = this.loadAuditableObjects( newObjects );
-                Map<String, List<AuditableObject>> aosByType = aos.stream()
-                        .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
-                for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
-                    Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
-                    for ( AuditableObject ao : entry.getValue() ) {
-                        this.updateDate( wn, ao );
-                    }
-                    wn.addNewObjects( objects );
-                }
-            }
-            loadNewObjectsTimer.stop();
-
-            // load up all updated objects
-            loadUpdatedObjectsTimer.start();
-            if ( updatedObjects.exists() ) {
-                Collection<AuditableObject> aos = this.loadAuditableObjects( updatedObjects );
-                Map<String, List<AuditableObject>> aosByType = aos.stream()
-                        .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
-                for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
-                    /*
-                     * This call takes ~ 15-20 ms but it can be called many times if there are a lot of updated
-                     * experiments, meaning this loop can take >8500 ms (over tunnel for ~450 experiments).
-                     *
-                     * Loading objects could be avoided since we only need ids on the front end, but we would need to
-                     * refactor the cache, because object-type is used to calculate counts for updated array design
-                     * objects vs updated experiments
-                     *
-                     * This is probably not necessary because usually the number of updated or new experiments will be
-                     * much lower than 450.
-                     */
-                    Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
-                    for ( AuditableObject ao : entry.getValue() ) {
-                        this.updateDate( wn, ao );
-                    }
-                    wn.addUpdatedObjects( objects );
-                }
-            }
-            loadUpdatedObjectsTimer.stop();
-
-            // build total, new and updated counts by taxon to display in data summary widget on front page
-            StopWatch funkyMapGenerationTimer = StopWatch.createStarted();
-            wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
-            wn.setUpdatedEEIdsPerTaxon(
-                    this.getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments() ) );
-            funkyMapGenerationTimer.stop();
-            timer.stop();
-
-            if ( timer.getTime() > 500 ) {
-                log.info( "Retrieving report took " + timer.getTime() + "ms ("
-                        + "loading new: " + loadNewObjectsTimer.getTime() + " ms, "
-                        + "loading updated: " + loadUpdatedObjectsTimer.getTime() + " ms, "
-                        + "ee by taxon map creation: " + funkyMapGenerationTimer.getTime() + "ms)." );
-            }
-
-        } catch ( Throwable e ) {
-            WhatsNewServiceImpl.log.error( e, e );
-            return null;
-        }
-        return wn;
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setAuditEventService( AuditEventService auditEventService ) {
-        this.auditEventService = auditEventService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param securityService the securityService to set
-     */
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    private Collection<? extends Auditable> fetchAllByType( List<AuditableObject> object, String type ) {
-        if ( object == null )
-            return null;
-        List<Long> objectIds = object.stream().map( AuditableObject::getId ).collect( Collectors.toList() );
-        if ( type.equalsIgnoreCase( "ArrayDesign" ) ) {
-            return arrayDesignService.load( objectIds );
-        } else if ( type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
-            // this is slower than loading them all at once but the cache saves even more time.
-            return expressionExperimentService.load( objectIds );
-        } else {
-            throw new IllegalArgumentException( "Unsupported auditable " + type + "." );
-        }
-    }
-
     /**
      * @param items a collection of objects that may include array designs
      * @return the array design subset of the collection passed in
@@ -264,9 +260,8 @@ public class WhatsNewServiceImpl implements WhatsNewService {
      * @param ees a collection of expression experiments
      * @return the number of biomaterials in all the expression experiments passed in
      */
-    private int getBioMaterialCount( Collection<ExpressionExperiment> ees ) {
-
-        int count = 0;
+    private long getBioMaterialCount( Collection<ExpressionExperiment> ees ) {
+        long count = 0;
         for ( ExpressionExperiment ee : ees ) {
             count += this.expressionExperimentService.getBioMaterialCount( ee );
         }
@@ -280,18 +275,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         /*
          * Sort taxa by name.
          */
-        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                if ( o1 == null ) {
-                    return 1;
-                } else if ( o2 == null ) {
-                    return -1;
-                } else {
-                    return o1.getScientificName().compareTo( o2.getScientificName() );
-                }
-            }
-        } );
+        SortedMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<>( Comparator.comparing( Taxon::getScientificName, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         if ( ees.isEmpty() )
             return eesPerTaxon;
@@ -333,9 +317,9 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private void initDirectories() {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
+        FileTools.createDir( homeDir );
+        FileTools.createDir( homeDir + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
+        File f = new File( homeDir + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
         Collection<File> files = new ArrayList<>();
         File[] fileArray = f.listFiles();
         if ( fileArray != null ) {
@@ -345,65 +329,61 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         FileTools.deleteFiles( files );
     }
 
-    private Collection<AuditableObject> loadAuditableObjects( File newObjects )
-            throws IOException, ClassNotFoundException {
+    private Collection<AuditableObject> loadAuditableObjects( File newObjects ) {
         try ( FileInputStream fis = new FileInputStream( newObjects );
                 ObjectInputStream ois = new ObjectInputStream( fis ) ) {
             @SuppressWarnings("unchecked")
             Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
                     .readObject();
             return aos;
+        } catch ( IOException | ClassNotFoundException e ) {
+            throw new RuntimeException( e );
         }
     }
 
-    private void saveFile( WhatsNew wn ) {
-        try {
-            // remove file first
-            File newOutput = new File(
-                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
-                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" );
-            File updatedOutput = new File(
-                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
-                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" );
-            if ( newOutput.exists() ) {
-                if ( !newOutput.delete() ) {
-                    WhatsNewServiceImpl.log.error( "Could not delete " + newOutput.getName() );
-                }
-            }
-            if ( updatedOutput.exists() ) {
-                if ( !updatedOutput.delete() ) {
-                    WhatsNewServiceImpl.log.error( "Could not delete " + updatedOutput.getName() );
-                }
-            }
-            Calendar c = Calendar.getInstance();
-            Date date = c.getTime();
+    private void saveLatestWeeklyReport( WhatsNew wn, Date dateRetrieved ) {
+        // remove file first
+        File newOutput = Paths.get( homeDir, WhatsNewServiceImpl.WHATS_NEW_DIR, WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" ).toFile();
+        File updatedOutput = Paths.get( homeDir, WhatsNewServiceImpl.WHATS_NEW_DIR, WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" ).toFile();
+        if ( newOutput.exists() && !newOutput.delete() ) {
+            throw new RuntimeException( "Could not delete " + newOutput.getName() );
+        }
+        if ( updatedOutput.exists() && !updatedOutput.delete() ) {
+            throw new RuntimeException( "Could not delete " + updatedOutput.getName() );
+        }
 
-            Collection<ArrayDesign> ads = wn.getNewArrayDesigns();
-            Collection<ExpressionExperiment> ees = wn.getNewExpressionExperiments();
-            // save the IDs for new Auditables
-            Collection<AuditableObject> newObjects = new ArrayList<>();
-            this.addAllADs( date, ads, newObjects );
-            this.addAllEEs( date, ees, newObjects );
+        Collection<ArrayDesign> ads = wn.getNewArrayDesigns();
+        Collection<ExpressionExperiment> ees = wn.getNewExpressionExperiments();
+        // save the IDs for new Auditables
+        Collection<AuditableObject> newObjects = new ArrayList<>();
+        this.addAllADs( dateRetrieved, ads, newObjects );
+        this.addAllEEs( dateRetrieved, ees, newObjects );
 
-            // save the ids for updated Auditables
-            ads = wn.getUpdatedArrayDesigns();
-            ees = wn.getUpdatedExpressionExperiments();
-            // save the IDs for new Auditables
-            Collection<AuditableObject> updatedObjects = new ArrayList<>();
-            this.addAllADs( date, ads, updatedObjects );
-            this.addAllEEs( date, ees, updatedObjects );
-            try ( FileOutputStream fos = new FileOutputStream( newOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-                oos.writeObject( newObjects );
-            }
+        // save the ids for updated Auditables
+        ads = wn.getUpdatedArrayDesigns();
+        ees = wn.getUpdatedExpressionExperiments();
+        // save the IDs for new Auditables
+        Collection<AuditableObject> updatedObjects = new ArrayList<>();
+        this.addAllADs( dateRetrieved, ads, updatedObjects );
+        this.addAllEEs( dateRetrieved, ees, updatedObjects );
+        try ( FileOutputStream fos = new FileOutputStream( newOutput );
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
+            oos.writeObject( newObjects );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-            try ( FileOutputStream fos = new FileOutputStream( updatedOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-                oos.writeObject( updatedObjects );
-            }
+        try ( FileOutputStream fos = new FileOutputStream( updatedOutput );
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
+            oos.writeObject( updatedObjects );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-        } catch ( Throwable e ) {
-            log.error( "Error while saving the what's new file.", e );
+        // set the last modified on the generated files, so that we can restore the report date when it's loaded at a
+        // later point
+        if ( !newOutput.setLastModified( dateRetrieved.getTime() ) || !updatedOutput.setLastModified( dateRetrieved.getTime() ) ) {
+            log.warn( "Failed to set the last modified date on the WhatsNew files, the date might be inaccurate when loading the report." );
         }
     }
 
