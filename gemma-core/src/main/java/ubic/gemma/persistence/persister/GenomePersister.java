@@ -790,6 +790,20 @@ public abstract class GenomePersister extends CommonPersister {
         return toRemove;
     }
 
+    private void persistBioSequenceAssociations( BioSequence bioSequence, Caches caches ) {
+        this.fillInBioSequenceTaxon( bioSequence, caches );
+
+        if ( bioSequence.getSequenceDatabaseEntry() != null
+                && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+            bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
+                    this.persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase(), caches ) );
+        }
+
+        for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
+            this.persistBioSequence2GeneProduct( bioSequence2GeneProduct, caches );
+        }
+    }
+
     /**
      * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
      * time.
@@ -867,17 +881,7 @@ public abstract class GenomePersister extends CommonPersister {
         if ( AbstractPersister.log.isDebugEnabled() )
             AbstractPersister.log.debug( "Creating new: " + bioSequence );
 
-        if ( bioSequence.getSequenceDatabaseEntry() != null
-                && bioSequence.getSequenceDatabaseEntry().getId() != null ) {
-            throw new IllegalArgumentException( String.format( "%s must have its own sequence database entry: %s already exists.",
-                    bioSequence, bioSequence.getSequenceDatabaseEntry() ) );
-        }
-
-        this.fillInBioSequenceTaxon( bioSequence, caches );
-
-        for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
-            this.persistBioSequence2GeneProduct( bioSequence2GeneProduct, caches );
-        }
+        this.persistBioSequenceAssociations( bioSequence, caches );
 
         assert bioSequence.getTaxon().getId() != null;
         return bioSequenceDao.create( bioSequence );
