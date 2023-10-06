@@ -1002,9 +1002,8 @@ public class ExpressionExperimentController {
         String details = "Changed: ";
         boolean changed = false;
         Long entityId = command.getEntityId();
-        ExpressionExperiment ee = expressionExperimentService.load( entityId );
-        if ( ee == null )
-            throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( entityId,
+                EntityNotFoundException::new, "Cannot locate or access experiment with id=" + entityId );
 
         if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
             if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
@@ -1639,7 +1638,7 @@ public class ExpressionExperimentController {
                 // if there are none, or more than one, add an error message and do nothing
                 if ( publications.isEmpty() ) {
                     ExpressionExperimentController.log.info( "No matching publication found" );
-                    throw new IllegalArgumentException( "No matching publication found" );
+                    throw new EntityNotFoundException( "No matching publication found" );
                 } else if ( publications.size() > 1 ) {
                     ExpressionExperimentController.log.info( "Multiple matching publications found!" );
                     throw new IllegalArgumentException( "Multiple matching publications found!" );

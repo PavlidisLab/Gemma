@@ -463,8 +463,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( !assays.isEmpty() ) {
-            throw new IllegalArgumentException(
-                    "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );
+            throw new IllegalArgumentException( "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );
         }
 
         RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );

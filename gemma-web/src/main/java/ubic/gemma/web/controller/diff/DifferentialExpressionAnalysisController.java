@@ -141,15 +141,10 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      */
     public String remove( Long eeId, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
-        }
-
-        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
-        if ( toRemove == null ) {
-            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + eeId );
+        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
         this.experimentReportService.evictFromCache( ee.getId() );
@@ -163,11 +158,8 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      */
     public String run( Long id ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
         ee = expressionExperimentService.thawLite( ee );
 
@@ -196,12 +188,8 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "You must provide at least one factor to analyze" );
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
         /*
          * Get the factors matching the factorids
@@ -230,8 +218,7 @@ public class DifferentialExpressionAnalysisController {
             }
 
             if ( factors.contains( subsetFactor ) ) {
-                throw new IllegalArgumentException(
-                        "Subset factor must not be one of the factors used in the analysis" );
+                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
             }
         }
 

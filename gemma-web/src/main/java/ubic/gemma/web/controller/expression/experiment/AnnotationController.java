@@ -37,6 +37,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -78,10 +79,8 @@ public class AnnotationController {
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
-        if ( bm == null ) {
-            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
-        }
+        BioMaterial bm = bioMaterialService.loadOrFail( id,
+                EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
         ontologyService.saveBioMaterialStatement( vc, bm );
     }
@@ -93,11 +92,8 @@ public class AnnotationController {
      * @param id of the expression experiment
      */
     public void createExperimentTag( Characteristic vc, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No such experiment with id=" + id );
-        }
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "No such experiment with id=" + id );
         ontologyService.addExpressionExperimentStatement( vc, ee );
         expressionExperimentService.update( ee );
     }
@@ -149,10 +145,7 @@ public class AnnotationController {
     }
 
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
-        if ( bm == null ) {
-            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
-        }
+        BioMaterial bm = bioMaterialService.loadOrFail( id, EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
         ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }

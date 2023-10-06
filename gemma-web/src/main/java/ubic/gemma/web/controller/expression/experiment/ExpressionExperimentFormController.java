@@ -184,7 +184,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         ExpressionExperimentValueObject vo = expressionExperimentService.loadValueObject( ee );
 
         if ( vo == null ) {
-            throw new IllegalArgumentException( String.format( "Could load experiment VO with ID %d", id ) );
+            throw new EntityNotFoundException( String.format( "Could load experiment VO with ID %d", id ) );
         }
 
         obj = new ExpressionExperimentEditValueObject( vo );
@@ -297,12 +297,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 newMaterialId = bioAssay2BioMaterialMap.getLong( bioAssayKey );
             }
 
-            BioAssay bioAssay = bioAssayService.load( bioAssayId ); // maybe we need to do
-            // this load to avoid stale data?
+            BioAssay bioAssay = bioAssayService.loadOrFail( bioAssayId, EntityNotFoundException::new, "No Bioassay with ID " + bioAssayId ); // maybe we need to do
 
-            if ( bioAssay == null ) {
-                throw new IllegalArgumentException(
-                        "Bioassay with id=" + bioAssayId + " was not associated with the experiment" );
+            if ( !expressionExperiment.getBioAssays().contains( bioAssay ) ) {
+                throw new IllegalArgumentException( "Bioassay with id=" + bioAssayId + " was not associated with the experiment" );
             }
 
             BioMaterial currentBioMaterial = bioAssay.getSampleUsed();
@@ -321,11 +319,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 newBioMaterialCount++;
             } else {
                 // FIXME can we just use this from the experiment, probably no need to fetch it again.
-                newMaterial = bioMaterialService.load( newMaterialId );
-                if ( newMaterial == null ) {
-                    throw new IllegalArgumentException(
-                            "BioMaterial with id=" + newMaterialId + " could not be loaded" );
-                }
+                newMaterial = bioMaterialService.loadOrFail( newMaterialId, EntityNotFoundException::new,
+                        "BioMaterial with id=" + newMaterialId + " could not be loaded" );
             }
             anyChanges = true;
             BaseFormController.log.info( "Associating " + bioAssay + " with " + newMaterial );

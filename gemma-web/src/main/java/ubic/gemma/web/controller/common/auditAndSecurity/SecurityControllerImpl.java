@@ -50,6 +50,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
 import java.util.*;
@@ -108,7 +109,7 @@ public class SecurityControllerImpl implements SecurityController {
             String uname = u.getUserName();
             securityService.addUserToGroup( uname, groupName );
         } else {
-            throw new IllegalArgumentException( "Sorry, there is no matching user." );
+            throw new EntityNotFoundException( "Sorry, there is no matching user." );
         }
 
         /*
@@ -541,8 +542,9 @@ public class SecurityControllerImpl implements SecurityController {
         }
 
         if ( s == null ) {
-            throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
+            throw new EntityNotFoundException( clazz.getSimpleName() + " with ID " + ed.getId() + " does not exist or user does not have access." );
         }
+
         return s;
     }
 

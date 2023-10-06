@@ -86,6 +86,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
 import javax.imageio.ImageIO;
@@ -434,10 +435,8 @@ public class ExpressionExperimentQCController extends BaseController {
     @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", produces = "image/png")
     public void visualizePvalueDist( Long id, Long analysisId, Long rsid, String factorName, Integer size,
             OutputStream os ) throws Exception {
-        ExpressionExperiment ee = this.expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id " + id );
-        }
+        ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( id, EntityNotFoundException::new,
+                "Could not load experiment with id " + id );
 
         if ( size == null ) {
             if ( !this.writePValueHistImage( os, ee, analysisId, rsid, factorName ) ) {
@@ -452,10 +451,8 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @RequestMapping("/expressionExperiment/eigenGenes.html")
     public ModelAndView writeEigenGenes( Long eeid ) throws IOException {
-        ExpressionExperiment ee = expressionExperimentService.load( eeid );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id " + eeid ); // or access deined.
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
+                EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
         SVDValueObject svdo = svdService.getSvd( ee.getId() );
 
         DoubleMatrix<Long, Integer> vMatrix = svdo.getvMatrix();

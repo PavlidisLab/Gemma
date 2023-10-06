@@ -29,7 +29,6 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -48,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -94,16 +94,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid );
-        ee = expressionExperimentService.thaw( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid,
+                EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
 
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
-        }
-
-        if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
-            throw new IllegalArgumentException(
-                    "Cannot import an experimental design for an experiment that already has design data populated." );
+        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalArgumentException( "Cannot import an experimental design for an experiment that already has design data populated." );
         }
 
         File f = new File( filePath );
@@ -177,8 +172,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         if ( chars.isEmpty() ) {
             if ( ef.getCategory() == null ) {
-                throw new IllegalArgumentException(
-                        "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
+                throw new IllegalArgumentException( "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
             }
             chars.add( this.createTemplateCharacteristic( ef.getCategory() ) );
         }
@@ -622,8 +616,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 if ( ef.getFactorValues().isEmpty() ) {
                     ef.setType( newType );
                 } else {
-                    throw new IllegalArgumentException(
-                            "You cannot change the 'type' of a factor once it has factor values. Delete the factor values first." );
+                    throw new IllegalArgumentException( "You cannot change the 'type' of a factor once it has factor values. Delete the factor values first." );
                 }
             }
 
@@ -649,7 +642,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ExperimentalFactor ef = experimentalFactorService.loadOrFail( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
         if ( ee == null )
-            throw new IllegalArgumentException( "No experiment for factor: " + ef );
+            throw new EntityNotFoundException( "No experiment for factor: " + ef );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
@@ -667,10 +660,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 throw new IllegalArgumentException( "Factor value id must be supplied" );
             }
 
-            FactorValue fv = this.factorValueService.load( fvID );
-            if ( fv == null ) {
-                throw new IllegalArgumentException( "Could not load factorvalue with id=" + fvID );
-            }
+            FactorValue fv = this.factorValueService.loadOrFail( fvID, EntityNotFoundException::new, "Could not load factorvalue with id=" + fvID );
 
             if ( !securityService.isEditable( fv ) ) {
                 /*
@@ -696,8 +686,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 }
 
                 if ( !fv.getCharacteristics().contains( c ) ) {
-                    throw new IllegalArgumentException(
-                            "Characteristic with id=" + charId + " does not belong to factorvalue with id=" + fvID );
+                    throw new IllegalArgumentException( "Characteristic with id=" + charId + " does not belong to factorvalue with id=" + fvID );
                 }
 
             } else {
