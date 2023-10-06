@@ -638,6 +638,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thaw( ee );
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
         return expressionExperimentDao.loadIdsWithCache( filters, sort );
     }

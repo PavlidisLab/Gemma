@@ -353,11 +353,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( id == null ) {
             throw new IllegalArgumentException( "ID cannot be null" );
         }
-        ArrayDesign arrayDesign = arrayDesignService.loadAndThawLite( id );
-        if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( "No platform with id=" + id + " could be loaded" );
-        }
-        return arrayDesign;
+        return arrayDesignService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "No platform with id=" + id + " could be loaded" );
     }
 
     /**

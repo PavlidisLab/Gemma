@@ -36,6 +36,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author klc
@@ -59,11 +60,9 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public ArrayDesign loadAndThawLite( Long id ) {
-        ArrayDesign ad = load( id );
-        if ( ad != null ) {
-            arrayDesignDao.thawLite( ad );
-        }
+    public <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ArrayDesign ad = loadOrFail( id, exceptionSupplier, message );
+        arrayDesignDao.thawLite( ad );
         return ad;
     }
 
