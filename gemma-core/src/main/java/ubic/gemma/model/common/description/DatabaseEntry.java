@@ -179,16 +179,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
             entity.setExternalDatabase( externalDatabase );
             return entity;
         }
-
-        /**
-         * Create a copy of the given database entry.
-         */
-        public static DatabaseEntry newInstance( DatabaseEntry sequenceDatabaseEntry ) {
-            DatabaseEntry clone = new DatabaseEntry();
-            clone.setAccession( sequenceDatabaseEntry.getAccession() );
-            clone.setExternalDatabase( sequenceDatabaseEntry.getExternalDatabase() );
-            return clone;
-        }
     }
 
 }
