@@ -106,11 +106,8 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      */
     public String redo( Long eeId, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
-        }
-
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + eeId );
         DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.loadOrFail( id,
                 EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );

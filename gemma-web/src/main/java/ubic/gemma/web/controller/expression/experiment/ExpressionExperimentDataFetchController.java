@@ -435,7 +435,7 @@ public class ExpressionExperimentDataFetchController {
                     + " milliseconds" );
 
             if ( files.isEmpty() ) {
-                throw new IllegalArgumentException( "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
+                throw new EntityNotFoundException( "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
                 // } else if ( files.size() > 1 ) {
                 // throw new UnsupportedOperationException(
                 // "Sorry, you can't get multiple analyses at once using this method." );
