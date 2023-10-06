@@ -29,18 +29,10 @@ import java.util.Set;
 public class SettingsConfig {
 
     /**
-     * Populates the Spring {@link org.springframework.core.env.Environment} with the content of the settings.
-     */
-    @Bean
-    public static PropertySourcesConfigurer propertySourcesConfigurer() throws IOException {
-        return new PropertySourcesConfigurer( propertySources() );
-    }
-
-    /**
      * Allow for substitution placeholders with values from the settings.
      */
     @Bean
-    public static PropertySourcesPlaceholderConfigurer settingsBasedPlaceholderConfigurer() throws IOException {
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() throws IOException {
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
         MutablePropertySources mutablePropertySources = new MutablePropertySources();
         for ( PropertySource<?> ps : propertySources() ) {
@@ -48,14 +40,6 @@ public class SettingsConfig {
         }
         configurer.setPropertySources( mutablePropertySources );
         return configurer;
-    }
-
-    /**
-     * This is needed for environment-based substitution which is the default for {@link PropertySourcesPlaceholderConfigurer}.
-     */
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
     }
 
     private static List<PropertySource<?>> propertySources() throws IOException {

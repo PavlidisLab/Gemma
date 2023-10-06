@@ -43,8 +43,7 @@ import java.util.*;
  * @author pavlidis
  * @see org.apache.commons.configuration2.CompositeConfiguration
  * @deprecated This has been replaced with Spring-based configuration {@link SettingsConfig} and usage of {@link org.springframework.beans.factory.annotation.Value}
- *             to inject configurations. You can either use {@code @Value("#{environment['property']}")} or the
- *             shorthand {@code @Value("${property}")} as replacement.
+ *             to inject configurations. You can use {@code @Value("${property}")} as replacement.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Deprecated
