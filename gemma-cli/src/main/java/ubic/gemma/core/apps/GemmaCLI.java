@@ -227,6 +227,10 @@ public class GemmaCLI {
         if ( Settings.getBoolean( "load.homologene" ) ) {
             log.warn( "Homologene is enabled, this is not recommended for the CLI. Disable it by setting load.homologene=false in Gemma.properties." );
         }
+
+        if ( Settings.getString( "gemma.hibernate.hbm2ddl.auto" ).equals( "validate" ) ) {
+            log.warn( "Hibernate is configured to validate the database schema, this is not recommended for the CLI. Disable it by setting gemma.hibernate.hbm2ddl.auto= in Gemma.properties." );
+        }
     }
 
     private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
