@@ -54,11 +54,8 @@ public class PreprocessController {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null )
-            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Could not load experiment with id=" + id );
 
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         experimentReportService.evictFromCache( id );
@@ -75,11 +72,8 @@ public class PreprocessController {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null )
-            throw new EntityNotFoundException( "Could not load experiment with id=" + id );
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Could not load experiment with id=" + id );
 
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         cmd.setDiagnosticsOnly( true );

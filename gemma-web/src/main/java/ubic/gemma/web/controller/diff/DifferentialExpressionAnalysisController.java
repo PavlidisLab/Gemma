@@ -68,12 +68,8 @@ public class DifferentialExpressionAnalysisController {
      * @return analysis info
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new EntityNotFoundException( "Cannot access experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils
                 .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -115,10 +111,8 @@ public class DifferentialExpressionAnalysisController {
             throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
         }
 
-        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.load( id );
-        if ( toRedo == null ) {
-            throw new EntityNotFoundException( "Cannot access analysis with id=" + id );
-        }
+        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo );
         return taskRunningService.submitTaskCommand( cmd );
@@ -158,10 +152,9 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      */
     public String run( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id,
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "Cannot access experiment with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
-        ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );

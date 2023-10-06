@@ -68,10 +68,9 @@ public class BioAssayController {
     private OutlierDetectionService outlierDetectionService;
 
     public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
-        ExpressionExperiment ee = eeService.loadOrFail( eeId,
+        ExpressionExperiment ee = eeService.loadAndThawLiteOrFail( eeId,
                 EntityNotFoundException::new, "Could not load experiment with ID=" + eeId );
 
-        ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
         Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
 

@@ -46,12 +46,8 @@ public class TwoChannelMissingValueController {
      * AJAX entry point. -- uses default settings
      */
     public String run( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) {
-            throw new EntityNotFoundException( "Cannot access experiment with id=" + id );
-        }
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
         experimentReportService.evictFromCache( id );
