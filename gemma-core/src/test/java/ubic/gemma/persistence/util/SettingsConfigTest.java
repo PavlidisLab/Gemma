@@ -6,15 +6,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.PropertySources;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -30,18 +29,17 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() throws IOException {
             PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-            MutablePropertySources mps = new MutablePropertySources();
-            for ( PropertySource<?> ps : propertySources() ) {
-                mps.addLast( ps );
-            }
-            configurer.setPropertySources( mps );
+            configurer.setPropertySources( propertySources() );
             return configurer;
         }
 
-        private static List<PropertySource<?>> propertySources() throws IOException {
-            return Arrays.asList( new ResourcePropertySource( "classpath:default.properties" ),
-                    new ResourcePropertySource( "classpath:project.properties" ),
-                    new ResourcePropertySource( "classpath:ubic/gemma/version.properties" ) );
+        private static PropertySources propertySources() throws IOException {
+            MutablePropertySources result = new MutablePropertySources();
+            result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
+            result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
+            // FIXME: local local.properties from ${gemma.appdata.home}
+            result.addLast( new ResourcePropertySource( new ClassPathResource( "ubic/gemma/version.properties" ) ) );
+            return result;
         }
     }
 
