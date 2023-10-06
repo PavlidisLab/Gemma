@@ -56,7 +56,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
     static class GeneOntologyServiceTestContextConfiguration {
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            GeneOntologyService goService = new GeneOntologyServiceImpl( false );
+            GeneOntologyService goService = new GeneOntologyServiceImpl();
             /*
              * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
              */
