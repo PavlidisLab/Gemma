@@ -179,7 +179,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
             entity.setExternalDatabase( externalDatabase );
             return entity;
         }
-
     }
 
 }
