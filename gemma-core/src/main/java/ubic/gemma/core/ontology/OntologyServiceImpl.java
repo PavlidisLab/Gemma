@@ -784,7 +784,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
             this.categoryTerms = Collections.unmodifiableSet( categoryTerms );
         }
-        if ( !experimentalFactorOntologyService.isEnabled() ) {
+        if ( autoLoadOntologies && !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
         }
