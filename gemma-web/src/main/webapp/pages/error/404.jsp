@@ -15,4 +15,8 @@
             </fmt:param>
         </fmt:message>
     </p>
+
+    <hr class="normal">
+
+    <p><c:out value="${exception.message}"/></p>
 </div>
