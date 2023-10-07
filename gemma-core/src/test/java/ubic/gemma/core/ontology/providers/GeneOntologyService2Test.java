@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.ontology.providers;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.TestComponent;
@@ -53,13 +55,15 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
     @Configuration
     @TestComponent
     public static class GeneOntologyService2TestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "url.geneOntology=dummy" );
+        }
+
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            GeneOntologyServiceImpl gos = new GeneOntologyServiceImpl();
-            InputStream is = new GZIPInputStream(
-                    new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-            OntologyTestUtils.initialize( gos, is );
-            return gos;
+            return new GeneOntologyServiceImpl();
         }
 
         @Bean
@@ -80,6 +84,13 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
 
     @Autowired
     private GeneOntologyService gos;
+
+    @Before
+    public void setUp() throws InterruptedException, IOException {
+        InputStream is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
+        OntologyTestUtils.initialize( gos, is );
+    }
 
     @Test
     @Category(SlowTest.class)
