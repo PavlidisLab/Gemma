@@ -24,11 +24,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.logging.LoggingConfigurer;
+import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
-import ubic.gemma.core.logging.log4j.Log4jConfigurer;
-import ubic.gemma.core.logging.LoggingConfigurer;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.util.Command;
 import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
 
@@ -94,7 +94,7 @@ public class GemmaCLI {
 
         // quick help without loading the context
         if ( commandLine.hasOption( HELP_OPTION ) ) {
-            GemmaCLI.printHelp( options, null );
+            GemmaCLI.printHelp( options, null, null );
             System.exit( 0 );
             return;
         }
@@ -156,27 +156,44 @@ public class GemmaCLI {
         /*
          * Build a map from command names to classes.
          */
-        Map<String, CLI> commandBeans = ctx.getBeansOfType( CLI.class );
-        Map<String, CLI> commandsByName = new HashMap<>();
-        SortedMap<CommandGroup, SortedMap<String, CLI>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
-        for ( CLI cliInstance : commandBeans.values() ) {
-            String commandName = cliInstance.getCommandName();
+        String[] commandBeans = ctx.getBeanNamesForType( CLI.class );
+        Map<String, String> commandsByName = new HashMap<>();
+        Map<String, String> descriptionByName = new HashMap<>();
+        SortedMap<CommandGroup, SortedMap<String, String>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
+        for ( String beanName : commandBeans ) {
+            //noinspection unchecked
+            Class<? extends CLI> clazz = ( Class<? extends CLI> ) ctx.getType( beanName );
+            String commandName, commandDescription;
+            CommandGroup commandGroup;
+            if ( clazz.isAnnotationPresent( Command.class ) ) {
+                Command cmdMeta = clazz.getAnnotation( Command.class );
+                commandName = cmdMeta.name();
+                commandDescription = cmdMeta.description();
+                commandGroup = cmdMeta.group();
+            } else {
+                // force to initialize
+                CLI cliInstance = ctx.getBean( beanName, CLI.class );
+                log.warn( String.format( "%s is not annotated with @Command, we are forced to initialize it to determine its metadata.", cliInstance ) );
+                commandName = cliInstance.getCommandName();
+                commandDescription = cliInstance.getShortDesc();
+                commandGroup = cliInstance.getCommandGroup();
+            }
             if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                 // keep null to avoid printing some commands...
                 continue;
             }
-            commandsByName.put( commandName, cliInstance );
-            CommandGroup g = cliInstance.getCommandGroup();
-            if ( !commandGroups.containsKey( g ) ) {
-                commandGroups.put( g, new TreeMap<>() );
+            commandsByName.put( commandName, beanName );
+            descriptionByName.put( beanName, commandDescription );
+            if ( !commandGroups.containsKey( commandGroup ) ) {
+                commandGroups.put( commandGroup, new TreeMap<>() );
             }
-            commandGroups.get( g ).put( commandName, cliInstance );
+            commandGroups.get( commandGroup ).put( commandName, beanName );
         }
 
         // no command is passed
         if ( commandLine.getArgList().isEmpty() ) {
             System.err.println( "No command was supplied." );
-            GemmaCLI.printHelp( options, commandGroups );
+            GemmaCLI.printHelp( options, commandGroups, descriptionByName );
             System.exit( 1 );
         }
 
@@ -187,11 +204,12 @@ public class GemmaCLI {
 
         if ( !commandsByName.containsKey( commandRequested ) ) {
             System.err.println( "Unrecognized command: " + commandRequested );
-            GemmaCLI.printHelp( options, commandGroups );
+            GemmaCLI.printHelp( options, commandGroups, descriptionByName );
             System.exit( 1 );
         } else {
             try {
-                CLI cli = commandsByName.get( commandRequested );
+                String beanName = commandsByName.get( commandRequested );
+                CLI cli = ctx.getBean( beanName, CLI.class );
                 System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                 System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
                 System.exit( cli.executeCommand( argsToPass ) );
@@ -216,20 +234,21 @@ public class GemmaCLI {
         return matcher.replaceAll( "$1 XXXXXX" );
     }
 
-    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
+    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, String>> commands, @Nullable Map<String, String> descriptions ) {
         System.err.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
         if ( commands != null ) {
+            assert descriptions != null;
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
-            for ( Map.Entry<CommandGroup, SortedMap<String, CLI>> entry : commands.entrySet() ) {
+            for ( Map.Entry<CommandGroup, SortedMap<String, String>> entry : commands.entrySet() ) {
                 if ( entry.getKey().equals( CommandGroup.DEPRECATED ) )
                     continue;
-                Map<String, CLI> commandsInGroup = entry.getValue();
+                Map<String, String> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
-                for ( Map.Entry<String, CLI> e : commandsInGroup.entrySet() ) {
-                    footer.append( e.getKey() ).append( " - " ).append( e.getValue().getShortDesc() ).append( '\n' );
+                for ( Map.Entry<String, String> e : commandsInGroup.entrySet() ) {
+                    footer.append( e.getKey() ).append( " - " ).append( descriptions.get( e.getValue() ) ).append( '\n' );
                 }
                 footer.append( '\n' );
             }
