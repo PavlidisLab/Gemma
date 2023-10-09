@@ -22,6 +22,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.BeanInstantiationException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.logging.LoggingConfigurer;
@@ -171,9 +173,15 @@ public class GemmaCLI {
                 commandDescription = cmdMeta.description();
                 commandGroup = cmdMeta.group();
             } else {
-                // force to initialize
-                CLI cliInstance = ctx.getBean( beanName, CLI.class );
-                log.warn( String.format( "%s is not annotated with @Command, we are forced to initialize it to determine its metadata.", cliInstance ) );
+                CLI cliInstance;
+                try {
+                    // attempt to instantiate the CLI to get the metadata without initializing it
+                    //noinspection unchecked
+                    cliInstance = BeanUtils.instantiate( ( Class<? extends CLI> ) ctx.getType( beanName ) );
+                } catch ( BeanInstantiationException e ) {
+                    cliInstance = ctx.getBean( beanName, CLI.class );
+                    log.warn( String.format( "%s is not annotated with @Command, we are forced to initialize it to determine its metadata.", cliInstance ) );
+                }
                 commandName = cliInstance.getCommandName();
                 commandDescription = cliInstance.getShortDesc();
                 commandGroup = cliInstance.getCommandGroup();
