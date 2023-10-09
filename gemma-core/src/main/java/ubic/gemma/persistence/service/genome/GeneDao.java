@@ -140,4 +140,6 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
     Gene thawLite( Gene gene );
 
     Gene thawLiter( Gene gene );
+
+    int removeAll();
 }

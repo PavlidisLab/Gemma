@@ -205,7 +205,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
-        flush();
+        getSessionFactory().getCurrentSession().flush();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
@@ -873,10 +873,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );
 
         this.update( candidateSubsumer );
-        flush();
+        getSessionFactory().getCurrentSession().flush();
 
         this.update( candidateSubsumee );
-        flush();
+        getSessionFactory().getCurrentSession().flush();
 
         return true;
     }

@@ -106,7 +106,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         assert files.size() == 1;
         LocalFile gene2Gofile = files.iterator().next();
         AbstractCLI.log.info( "Removing all old GO associations" );
-        gene2GOAssociationService.removeAllInBatch();
+        gene2GOAssociationService.removeAll();
 
         AbstractCLI.log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );

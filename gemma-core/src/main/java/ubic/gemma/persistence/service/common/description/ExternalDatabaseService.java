@@ -76,9 +76,5 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
     @Secured({ "GROUP_ADMIN" })
     void remove( Collection<ExternalDatabase> entities );
 
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
-
     List<ExternalDatabase> findAllByNameIn( List<String> names );
 }

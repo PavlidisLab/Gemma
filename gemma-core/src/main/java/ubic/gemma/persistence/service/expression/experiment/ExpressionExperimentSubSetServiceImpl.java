@@ -91,9 +91,4 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     public void remove( Long id ) {
         throw new UnsupportedOperationException( "Removing an experiment subset by ID is not supported." );
     }
-
-    @Override
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "This would be nuts." );
-    }
 }

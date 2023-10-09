@@ -1407,12 +1407,6 @@ public class ExpressionExperimentServiceImpl
         entities.forEach( this::remove );
     }
 
-    @Override
-    @Transactional
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "That would be nut." );
-    }
-
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }

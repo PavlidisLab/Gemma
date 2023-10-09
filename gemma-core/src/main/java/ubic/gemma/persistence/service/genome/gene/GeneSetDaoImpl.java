@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -207,6 +208,34 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         for ( GeneSetMember gsm : geneSet.getMembers() ) {
             Hibernate.initialize( gsm.getGene() );
         }
+    }
+
+    @Autowired
+    private AuditTrailDao auditTrailDao;
+
+    @Override
+    public int removeAll() {
+        //noinspection unchecked
+        List<Long> atIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select at.id from GeneSet gs join gs.auditTrail at" )
+                .list();
+        int removedMembers = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneSetMember gsm" )
+                .executeUpdate();
+        // FIXME: use HQL delete from Characteristic
+        int removedCharacteristics = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
+                .executeUpdate();
+        //noinspection SqlWithoutWhere
+        int removedLiteratureSourcesAssociations = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
+                .executeUpdate();
+        int removedGeneSet = getSessionFactory().getCurrentSession().createQuery( "delete from GeneSet" )
+                .executeUpdate();
+        auditTrailDao.removeByIds( atIds );
+        log.debug( String.format( "Removed all %d GeneSet. %d GeneSetMember, %d Characteristic and %d BibliographicReference associations were removed in cascade.",
+                removedGeneSet, removedMembers, removedCharacteristics, removedLiteratureSourcesAssociations ) );
+        return removedGeneSet;
     }
 
     @Override

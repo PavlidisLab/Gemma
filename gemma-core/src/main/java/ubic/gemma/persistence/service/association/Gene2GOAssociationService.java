@@ -24,7 +24,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -53,8 +52,11 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
 
     Collection<Gene> findByGOTerm( String goID, Taxon taxon );
 
+    /**
+     * Remove all Gene2GO associations in batch.
+     */
     @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
+    int removeAll();
 
     /**
      * @param  termsToFetch terms

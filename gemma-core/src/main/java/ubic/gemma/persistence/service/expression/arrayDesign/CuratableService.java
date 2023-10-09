@@ -141,13 +141,4 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( C expressionExperiment );
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Only administrators are allowed to remove all entities in batch.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
 }
