@@ -18,6 +18,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -36,6 +37,11 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
     @Configuration
     @TestComponent
     static class OntologyServiceTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false" );
+        }
 
         @Bean
         public OntologyService ontologyService() {

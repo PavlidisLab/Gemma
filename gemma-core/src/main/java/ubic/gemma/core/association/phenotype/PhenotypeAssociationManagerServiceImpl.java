@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -145,13 +146,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private Future<HomologeneService> homologeneService;
 
+    /**
+     * Indicate if ontologies are loaded on startup.
+     */
+    @Value("${load.ontologies}")
+    private boolean autoLoadOntologies;
+
     @Override
     public void afterPropertiesSet() {
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
         Set<ubic.basecode.ontology.providers.OntologyService> disabledOntologies = ontologyHelper.getOntologyServices().stream()
                 .filter( os -> !os.isEnabled() )
                 .collect( Collectors.toSet() );
-        if ( !disabledOntologies.isEmpty() ) {
+        if ( autoLoadOntologies && !disabledOntologies.isEmpty() ) {
             log.warn( String.format( "The following ontologies are required by Phenocarta are not enabled:\n\t%s.",
                     disabledOntologies.stream().map( Object::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         }

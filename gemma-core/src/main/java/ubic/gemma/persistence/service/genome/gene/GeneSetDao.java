@@ -74,4 +74,6 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
      * @param geneSet gene set
      */
     void thaw( GeneSet geneSet );
+
+    int removeAll();
 }

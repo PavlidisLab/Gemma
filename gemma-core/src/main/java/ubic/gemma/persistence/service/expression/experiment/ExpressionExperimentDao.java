@@ -41,6 +41,9 @@ public interface ExpressionExperimentDao
 
     String OBJECT_ALIAS = "ee";
 
+    @Nullable
+    BioAssaySet loadBioAssaySet( Long id );
+
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     ExpressionExperiment findByShortName( String shortName );

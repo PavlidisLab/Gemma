@@ -243,18 +243,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "Removing all analyses in batch is not supported." );
-    }
-
-    @Override
     @Transactional
     public void removeForExperiment( BioAssaySet ee ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByExperiment( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            this.remove( de );
-        }
+        this.remove( diffAnalyses );
     }
 
     @Override

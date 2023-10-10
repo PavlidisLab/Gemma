@@ -79,7 +79,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         date = DateUtils.addDays( date, -1 );
-        return this.getReport( date );
+        return this.getReportAsAnonymousUser( date );
     }
 
     @Override
@@ -88,12 +88,12 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         date = DateUtils.addWeeks( date, -1 );
-        return this.getReport( date );
+        return this.getReportAsAnonymousUser( date );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public WhatsNew generatePublicWeeklyReport() {
+    public WhatsNew generateWeeklyReport() {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         WhatsNew wn = this.getReportAsAnonymousUser( DateUtils.addWeeks( date, -1 ) );
@@ -104,7 +104,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
 
     @Override
     @Transactional(readOnly = true)
-    public WhatsNew getLatestPublicWeeklyReport() {
+    public WhatsNew getLatestWeeklyReport() {
         WhatsNew wn = new WhatsNew();
         File newObjects = new File(
                 homeDir + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar

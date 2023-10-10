@@ -54,7 +54,7 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
     public void tearDown() {
         eeService.remove( expressionExperiment );
         arrayDesignService.remove( arrayDesign );
-        blacklistedEntityService.removeAllInBatch();
+        blacklistedEntityService.removeAll();
     }
 
     @Test

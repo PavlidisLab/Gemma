@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -117,6 +118,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private CacheManager cacheManager;
 
+    @Value("${load.ontologies}")
+    private boolean autoLoadOntologies;
+
     private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
@@ -135,12 +139,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     } )
                     .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
                     .collect( Collectors.toList() );
-            if ( enabledOntologyServices.isEmpty() ) {
-                log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
-            } else {
+            if ( !enabledOntologyServices.isEmpty() ) {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
+            } else if ( autoLoadOntologies ) {
+                log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
             }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
@@ -776,7 +780,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
             this.categoryTerms = Collections.unmodifiableSet( categoryTerms );
         }
-        if ( !experimentalFactorOntologyService.isEnabled() ) {
+        if ( autoLoadOntologies && !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
         }

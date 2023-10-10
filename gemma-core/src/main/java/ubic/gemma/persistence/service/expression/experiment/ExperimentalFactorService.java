@@ -60,10 +60,6 @@ public interface ExperimentalFactorService
     void remove( Long id );
 
     @Override
-    @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
-
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 

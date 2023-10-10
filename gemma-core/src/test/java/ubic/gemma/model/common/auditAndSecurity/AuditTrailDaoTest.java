@@ -22,7 +22,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -96,5 +95,4 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
         assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
 
     }
-
 }

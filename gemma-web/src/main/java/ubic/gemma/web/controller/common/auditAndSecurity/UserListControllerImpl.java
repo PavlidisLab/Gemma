@@ -25,7 +25,6 @@ import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,14 +32,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * For display and editing of users. Note: do not use parametrized collections as parameters for ajax methods in this
@@ -107,7 +104,7 @@ public class UserListControllerImpl implements UserListController {
         User u = userManager.findByUserName( userName );
 
         if ( u == null ) {
-            throw new IllegalArgumentException( String.format( "No user with username %s.", userName ) );
+            throw new EntityNotFoundException( String.format( "No user with username %s.", userName ) );
         }
 
         UserDetailsImpl userDetails;

@@ -30,7 +30,6 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -64,6 +63,8 @@ import java.util.*;
 public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private static final Log log = LogFactory.getLog( SplitExperimentServiceImpl.class );
+
+    private static final int MAX_SPLIT_NAME_LENGTH = 255;
 
     @Autowired
     private PreprocessorService preprocessor;
@@ -156,17 +157,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setShortName( sourceShortName + "." + splitNumber );
 
             // copy everything but samples over
-            String factorValueString = splitValue.getValue();
-            if ( StringUtils.isBlank( factorValueString ) ) {
-                factorValueString = splitValue.getDescriptiveString();
-            }
-            split.setName( String.format( "Split part %d of: %s [%s = %s]",
-                    splitNumber,
-                    toSplit.getName(),
-                    splitValue.getExperimentalFactor().getCategory() != null ?
-                            splitValue.getExperimentalFactor().getCategory().getValue() :
-                            splitValue.getExperimentalFactor().getName(),
-                    factorValueString ) );
+            split.setName( generateNameForSplit( toSplit, splitNumber, splitValue ) );
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
@@ -348,6 +339,31 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         // Or mark it as troubled?
 
         return g;
+    }
+
+    static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
+        String template = "Split part %d of: %s [%s = %s]";
+        String originalName = StringUtils.strip( toSplit.getName() );
+        String factorValueString = splitValue.getDescriptiveString();
+        String newFullName = String.format( template, splitNumber, originalName,
+                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
+                        splitValue.getExperimentalFactor().getCategory().getValue() :
+                        splitValue.getExperimentalFactor().getName() ),
+                factorValueString );
+        if ( newFullName.length() <= MAX_SPLIT_NAME_LENGTH )
+            return newFullName;
+        // truncate the original name
+        int lengthOfEverythingElse = newFullName.length() - String.format( "%s", originalName ).length();
+        //  we want at least 100 characters of the original name
+        if ( lengthOfEverythingElse > MAX_SPLIT_NAME_LENGTH - 100 ) {
+            throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
+        }
+        return String.format( template, splitNumber, StringUtils.abbreviate( originalName, "…", 255 - lengthOfEverythingElse )
+                        .replace( "\\s+…$", "…" ),
+                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
+                        splitValue.getExperimentalFactor().getCategory().getValue() :
+                        splitValue.getExperimentalFactor().getName() ),
+                factorValueString );
     }
 
     private void enforceOtherParts( Collection<ExpressionExperiment> result ) {

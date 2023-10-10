@@ -115,6 +115,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public BioAssaySet loadBioAssaySet( Long id ) {
+        return ( BioAssaySet ) getSessionFactory().getCurrentSession().get( BioAssaySet.class, id );
+    }
+
+    @Override
     public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )

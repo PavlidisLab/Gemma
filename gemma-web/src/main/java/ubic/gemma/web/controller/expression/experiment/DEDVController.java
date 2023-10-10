@@ -409,7 +409,7 @@ public class DEDVController {
             Double givenThreshold ) {
 
         if ( resultSetId == null ) {
-            throw new IllegalArgumentException( "Results    etId cannot be null" );
+            throw new IllegalArgumentException( "The resultSetId parameter cannot be null" );
         }
 
         double threshold = DEFAULT_THRESHOLD;

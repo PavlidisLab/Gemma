@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
@@ -516,7 +515,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
 
     @Override
     @Transactional
-    public void removeAll() {
-        this.geneSetDao.removeAllInBatch();
+    public int removeAll() {
+        return geneSetDao.removeAll();
     }
 }

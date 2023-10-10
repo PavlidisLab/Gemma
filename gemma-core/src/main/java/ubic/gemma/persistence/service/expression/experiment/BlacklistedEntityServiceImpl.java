@@ -12,7 +12,6 @@ import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -110,6 +109,12 @@ public class BlacklistedEntityServiceImpl extends AbstractVoEnabledService<Black
         }
 
         return bp;
+    }
+
+    @Override
+    @Transactional
+    public int removeAll() {
+        return blacklistedEntityDao.removeAll();
     }
 
     private BlacklistedExperiment doBlacklistExpressionExperiment( ExpressionExperiment dataset, String reason ) {

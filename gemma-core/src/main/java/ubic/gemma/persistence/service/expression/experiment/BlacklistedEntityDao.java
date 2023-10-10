@@ -45,4 +45,6 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
     boolean isBlacklisted( ExpressionExperiment dataset );
 
     Collection<ExpressionExperiment> getNonBlacklistedExpressionExperiments( ArrayDesign arrayDesign );
+
+    int removeAll();
 }

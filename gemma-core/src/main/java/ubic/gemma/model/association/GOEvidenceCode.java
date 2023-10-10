@@ -15,6 +15,8 @@ import java.util.*;
  * </ul>
  * And our own custom code IIA which means Inferred from Imported Annotation to distinguish IEAs that we ourselves have
  * computed
+ *
+ * See https://geneontology.org/docs/guide-go-evidence-codes/ for documentation of GO evidence codes.
  */
 public enum GOEvidenceCode {
     IC,
@@ -92,6 +94,28 @@ public enum GOEvidenceCode {
      * Quantitative Trait Measurement (RGD code)
      */
     QTM,
+    /**
+     Inferred from High Throughput Direct Assay (HDA)
+     */
+    HDA,
+    /**
+     *  Inferred from High Throughput Expression Pattern (HEP)
+     */
+    HEP,
+    /**
+     *  Inferred from High Throughput Genetic Interaction (HGI)
+     */
+    HGI,
+
+    /**
+     * Inferred from High Throughput Mutant Phenotype (HMP)
+     */
+    HMP,
+
+    /**
+     *  Inferred from High Throughput Experiment (HTP)
+     */
+    HTP,
     /**
      * Unsupported/unknown GO evidence code are mapped to this value.
      */

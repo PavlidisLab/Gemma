@@ -60,9 +60,4 @@ public interface BaseImmutableService<O extends Identifiable> extends BaseReadOn
      * @param entity the entity to be removed.
      */
     void remove( O entity );
-
-    /**
-     * Remove all entities from the persistent storage.
-     */
-    void removeAllInBatch();
 }
