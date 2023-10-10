@@ -817,7 +817,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
-    public ResponseDataObject<Boolean> getDatasetHasBatch( // Params:
+    public ResponseDataObject<Boolean> getDatasetHasBatchInformation( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
