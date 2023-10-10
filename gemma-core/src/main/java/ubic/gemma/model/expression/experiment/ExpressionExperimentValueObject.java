@@ -126,7 +126,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Batch info
-        batchEffect = ee.getBatchEffect().name();
+        if ( ee.getBatchEffect() != null ) {
+            batchEffect = ee.getBatchEffect().name();
+        }
         batchEffectStatistics = ee.getBatchEffectStatistics();
         batchConfound = ee.getBatchConfound();
 

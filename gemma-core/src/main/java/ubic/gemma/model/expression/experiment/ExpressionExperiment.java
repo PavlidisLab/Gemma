@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,12 +46,22 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     private static final long serialVersionUID = -1342753625018841735L;
-    private String batchConfound;
+    /**
+     * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
+     */
+    @Nullable
     private BatchEffectType batchEffect;
     /**
      * Summary statistics of the batch effect, if present.
      */
+    @Nullable
     private String batchEffectStatistics;
+    /**
+     * A string describing the batch confound if a batch effect is present and confounded with one of the experimental
+     * factor.
+     */
+    @Nullable
+    private String batchConfound;
     private CurationDetails curationDetails = new CurationDetails();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
