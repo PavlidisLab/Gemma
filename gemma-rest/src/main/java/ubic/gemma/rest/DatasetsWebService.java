@@ -61,7 +61,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -116,8 +115,6 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private AuditEventService auditEventService;
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
@@ -653,6 +650,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
+    @CacheControl(maxAge = 1200)
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
@@ -1009,7 +1007,7 @@ public class DatasetsWebService {
     private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
-        if ( map == null || map.size() < 1 ) {
+        if ( map == null || map.isEmpty() ) {
             return Collections.emptyList();
         }
         return map.get( map.keySet().iterator().next() );

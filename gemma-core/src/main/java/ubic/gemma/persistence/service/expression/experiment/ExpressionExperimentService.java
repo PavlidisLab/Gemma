@@ -49,6 +49,7 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author kelsey
@@ -103,8 +104,29 @@ public interface ExpressionExperimentService
      */
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithCharacteristics( Long id );
+
+    /**
+     * Load a {@link BioAssaySet} by ID which can be either a {@link ExpressionExperiment} or a {@link ExpressionExperimentSubSet}.
+     */
+    @Nullable
+    BioAssaySet loadBioAssaySet( Long id );
+
+    /**
+     * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
+     * and message.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
+
+    /**
+     * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
+     * and message.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 
@@ -113,9 +135,11 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithPrimaryPublication( Long id );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithMeanVarianceRelation( Long id );
 
@@ -193,6 +217,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByQuantitationType( QuantitationType type );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment findByShortName( String shortName );
 
@@ -593,4 +618,9 @@ public interface ExpressionExperimentService
 
     @Secured({ "GROUP_USER" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * @see ExpressionExperimentDao#countBioMaterials(Filters)
+     */
+    long countBioMaterials( @Nullable Filters filters );
 }

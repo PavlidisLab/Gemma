@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -174,12 +175,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         BaseFormController.log.debug( id );
         ExpressionExperimentEditValueObject obj;
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, String.format( "No experiment with ID %d", id ) );
 
         List<QuantitationTypeValueObject> qts = new ArrayList<>(
                 quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
@@ -187,7 +184,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         ExpressionExperimentValueObject vo = expressionExperimentService.loadValueObject( ee );
 
         if ( vo == null ) {
-            throw new IllegalArgumentException( String.format( "Could load experiment VO with ID %d", id ) );
+            throw new EntityNotFoundException( String.format( "Could load experiment VO with ID %d", id ) );
         }
 
         obj = new ExpressionExperimentEditValueObject( vo );
@@ -234,13 +231,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
             BindException errors ) {
 
         ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
-
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Could not load experiment" );
-        }
-
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadAndThawLiteOrFail( eeCommand.getId(),
+                EntityNotFoundException::new, String.format( "No experiment with ID %d", eeCommand.getId() ) );
 
         /*
          * Much more complicated
@@ -305,12 +297,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 newMaterialId = bioAssay2BioMaterialMap.getLong( bioAssayKey );
             }
 
-            BioAssay bioAssay = bioAssayService.load( bioAssayId ); // maybe we need to do
-            // this load to avoid stale data?
+            BioAssay bioAssay = bioAssayService.loadOrFail( bioAssayId, EntityNotFoundException::new, "No Bioassay with ID " + bioAssayId ); // maybe we need to do
 
-            if ( bioAssay == null ) {
-                throw new IllegalArgumentException(
-                        "Bioassay with id=" + bioAssayId + " was not associated with the experiment" );
+            if ( !expressionExperiment.getBioAssays().contains( bioAssay ) ) {
+                throw new IllegalArgumentException( "Bioassay with id=" + bioAssayId + " was not associated with the experiment" );
             }
 
             BioMaterial currentBioMaterial = bioAssay.getSampleUsed();
@@ -329,11 +319,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 newBioMaterialCount++;
             } else {
                 // FIXME can we just use this from the experiment, probably no need to fetch it again.
-                newMaterial = bioMaterialService.load( newMaterialId );
-                if ( newMaterial == null ) {
-                    throw new IllegalArgumentException(
-                            "BioMaterial with id=" + newMaterialId + " could not be loaded" );
-                }
+                newMaterial = bioMaterialService.loadOrFail( newMaterialId, EntityNotFoundException::new,
+                        "BioMaterial with id=" + newMaterialId + " could not be loaded" );
             }
             anyChanges = true;
             BaseFormController.log.info( "Associating " + bioAssay + " with " + newMaterial );

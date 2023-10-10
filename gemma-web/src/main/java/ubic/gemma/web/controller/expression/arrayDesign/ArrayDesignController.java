@@ -14,9 +14,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -27,9 +24,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -57,7 +52,7 @@ public interface ArrayDesignController {
      * Delete an arrayDesign.
      */
     @RequestMapping("/deleteArrayDesign.html")
-    ModelAndView delete( HttpServletRequest request, HttpServletResponse response );
+    ModelAndView delete( @RequestParam("id") Long id );
 
     @RequestMapping("/downloadAnnotationFile.html")
     void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse httpServletResponse ) throws IOException;
@@ -66,13 +61,13 @@ public interface ArrayDesignController {
      * Show array designs that match search criteria.
      */
     @RequestMapping("/filterArrayDesigns.html")
-    ModelAndView filter( HttpServletRequest request, HttpServletResponse response );
+    ModelAndView filter( @RequestParam("filter") String filter );
 
     /**
      * Build summary report for an array design
      */
     @RequestMapping("/generateArrayDesignSummary.html")
-    ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response );
+    ModelAndView generateSummary( @RequestParam(value = "id", required = false) Long id );
 
     Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans );
@@ -101,16 +96,19 @@ public interface ArrayDesignController {
      * Show all array designs, or according to a list of IDs passed in.
      */
     @RequestMapping("/showAllArrayDesigns.html")
-    ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response );
+    ModelAndView showAllArrayDesigns();
 
-    @RequestMapping({ "/showArrayDesign.html", "/" })
-    ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response );
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "id" })
+    ModelAndView showArrayDesign( @RequestParam("id") Long id );
+
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "name" })
+    ModelAndView showArrayDesignByName( @RequestParam("name") String name );
 
     /**
      * Show (some of) the probes from an array.
      */
     @RequestMapping("/showCompositeSequenceSummary.html")
-    ModelAndView showCompositeSequences( HttpServletRequest request );
+    ModelAndView showCompositeSequences( @RequestParam("id") Long id );
 
     /**
      * shows a list of BioAssays for an expression experiment subset
@@ -118,7 +116,7 @@ public interface ArrayDesignController {
      * @return ModelAndView
      */
     @RequestMapping("/showExpressionExperiments.html")
-    ModelAndView showExpressionExperiments( HttpServletRequest request );
+    ModelAndView showExpressionExperiments( @RequestParam("id") Long id );
 
     String updateReport( EntityDelegator ed );
 

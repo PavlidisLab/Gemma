@@ -18,25 +18,18 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.xml.sax.SAXException;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
@@ -44,32 +37,31 @@ import static org.junit.Assume.assumeNoException;
 @Category(PubMedTest.class)
 public class PubMedSearchTest {
 
+    @Before
+    public void setUp() throws Exception {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+    }
+
     /*
      * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
-        try {
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
-            searchTerms.add( "brain" );
-            searchTerms.add( "hippocampus" );
-            searchTerms.add( "habenula" );
-            searchTerms.add( "glucose" );
-            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
-            assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
-            /*
-             * at least, this was the result on 4/2008.
-             */
-            BibliographicReference r = actualResult.iterator().next();
-            assertNotNull( r.getAuthorList() );
-            assertNotNull( r.getPublicationDate() );
-        } catch ( java.io.IOException e ) {
-            checkCause( e );
-        } catch ( ESearchException e ) {
-            assumeNoException( e );
-        }
+        PubMedSearch pms = new PubMedSearch();
+        Collection<String> searchTerms = new HashSet<>();
+        searchTerms.add( "brain" );
+        searchTerms.add( "hippocampus" );
+        searchTerms.add( "habenula" );
+        searchTerms.add( "glucose" );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+        /*
+         * at least, this was the result on 4/2008.
+         */
+        BibliographicReference r = actualResult.iterator().next();
+        assertNotNull( r.getAuthorList() );
+        assertNotNull( r.getPublicationDate() );
     }
 
     /*
@@ -78,66 +70,37 @@ public class PubMedSearchTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
-        try {
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
-            searchTerms.add( "brain" );
-            searchTerms.add( "hippocampus" );
-            searchTerms.add( "habenula" );
-            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
-            /*
-             * at least, this was the result on 4/2008.
-             */
-            assertTrue( "Expected at least 10, got " + actualResult.size(), actualResult.size() >= 10 );
-        } catch ( java.io.IOException e ) {
-            this.checkCause( e );
-        } catch ( ESearchException e ) {
-            assumeNoException( e );
-        }
+        PubMedSearch pms = new PubMedSearch();
+        Collection<String> searchTerms = new HashSet<>();
+        searchTerms.add( "brain" );
+        searchTerms.add( "hippocampus" );
+        searchTerms.add( "habenula" );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        /*
+         * at least, this was the result on 4/2008.
+         */
+        assertTrue( "Expected at least 10, got " + actualResult.size(), actualResult.size() >= 10 );
     }
 
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
-        try {
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
-            searchTerms.add( "23865096" );
-            Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
-            assertEquals( 1, actualResult.size() );
-        } catch ( java.io.IOException e ) {
-            this.checkCause( e );
-        }
+        PubMedSearch pms = new PubMedSearch();
+        Collection<String> searchTerms = new HashSet<>();
+        searchTerms.add( "23865096" );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
+        assertEquals( 1, actualResult.size() );
     }
 
     @Test
     public void testSearchAndRetrieveIdsByHTTP() throws Exception {
-        try {
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
-            searchTerms.add( "brain" );
-            searchTerms.add( "hippocampus" );
-            searchTerms.add( "habenula" );
-            searchTerms.add( "glucose" );
-            Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
-            assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
-            /*
-             * at least, this was the result on 4/2008.
-             */
-        } catch ( java.io.IOException e ) {
-            this.checkCause( e );
-        } catch ( ESearchException e ) {
-            assumeNoException( e );
-        }
-    }
-
-    private void checkCause( java.io.IOException e ) throws IOException {
-        if ( e instanceof UnknownHostException ) {
-            assumeNoException( "Test skipped due to unknown host exception", e );
-        } else if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
-            assumeNoException( "Test skipped due to a 50x from NCBI", e );
-        } else {
-            throw e;
-        }
+        PubMedSearch pms = new PubMedSearch();
+        Collection<String> searchTerms = new HashSet<>();
+        searchTerms.add( "brain" );
+        searchTerms.add( "hippocampus" );
+        searchTerms.add( "habenula" );
+        searchTerms.add( "glucose" );
+        Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
+        assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
     }
 }

@@ -75,6 +75,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -618,6 +619,28 @@ public class ExpressionExperimentServiceImpl
         if ( ee != null ) {
             Hibernate.initialize( ee.getCharacteristics() );
         }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssaySet loadBioAssaySet( Long id ) {
+        return expressionExperimentDao.loadBioAssaySet( id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thawWithoutVectors( ee );
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thaw( ee );
         return ee;
     }
 
@@ -1384,12 +1407,6 @@ public class ExpressionExperimentServiceImpl
         entities.forEach( this::remove );
     }
 
-    @Override
-    @Transactional
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "That would be nut." );
-    }
-
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }
@@ -1455,6 +1472,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
         return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countBioMaterials( @Nullable Filters filters ) {
+        return expressionExperimentDao.countBioMaterials( filters );
     }
 
     /**

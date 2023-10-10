@@ -198,4 +198,7 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
     Gene thawLiter( Gene gene );
 
     Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException;
+
+    @Secured({ "GROUP_ADMIN" })
+    int removeAll();
 }

@@ -14,15 +14,10 @@
  */
 package ubic.gemma.core.apps;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -48,6 +43,10 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Create (or update) an array design based on the current set of transcripts for a taxon.
@@ -242,12 +241,19 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     }
                     bioSequence.setSequenceDatabaseEntry( de );
                 } else {
-                    bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
-                    existing = bioSequenceService.findByAccession( accessions.iterator().next() );
-
                     // FIXME It is possible that this sequence will have been aligned to the genome, which is a bit
                     // confusing. So it will map to a gene. Worse case: it maps to more than one gene ...
-
+                    existing = bioSequenceService.findByAccession( accessions.iterator().next() );
+                    if ( existing == null ) {
+                        // create a copy, each biosequence must own their database entry
+                        DatabaseEntry databaseEntry = accessions.iterator().next();
+                        DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
+                        clone.setAccession( databaseEntry.getAccession() );
+                        clone.setAccessionVersion( databaseEntry.getAccessionVersion() );
+                        clone.setUri( databaseEntry.getUri() );
+                        clone.setExternalDatabase( databaseEntry.getExternalDatabase() );
+                        bioSequence.setSequenceDatabaseEntry( clone );
+                    }
                 }
 
                 if ( existing == null ) {

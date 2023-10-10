@@ -123,11 +123,6 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
     }
 
     @Override
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "Removing all coexpression analyses in batch is not supported." );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> findByExperiment( BioAssaySet investigation ) {
         return this.coexpressionAnalysisDao.findByExperiment( investigation );

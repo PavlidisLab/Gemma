@@ -208,8 +208,10 @@ public class DifferentialExpressionSearchController {
             } else if ( eevo.getName() != null ) {
                 Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService
                         .findByName( eevo.getName() );
-                if ( eesets.isEmpty() || eesets.size() > 1 ) {
-                    throw new IllegalArgumentException( "Experiment set not found by name=" + eevo.getName() );
+                if ( eesets.isEmpty() ) {
+                    throw new EntityNotFoundException( "No experiment set found by name=" + eevo.getName() );
+                } else if ( eesets.size() > 1 ) {
+                    throw new IllegalArgumentException( "A unique experiment set not found by name=" + eevo.getName() );
                 }
                 experiments = expressionExperimentSetService
                         .getExperimentValueObjectsInSet( eesets.iterator().next().getId() );

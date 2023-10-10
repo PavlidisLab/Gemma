@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -51,6 +53,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 /**
@@ -453,5 +456,29 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         // since deletions are cascaded, the change will be reflected immediatly
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .noneSatisfy( consumer );
+    }
+
+    @Test
+    public void testSaveWithTransientEntity() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExpressionExperiment createdEE = expressionExperimentService.save( ee );
+        assertNotNull( createdEE.getId() );
+        // ees.add( createdEE );
+        assertThat( createdEE.getAuditTrail().getEvents() )
+                .extracting( AuditEvent::getAction )
+                .containsExactly( AuditAction.CREATE );
+        ExpressionExperiment updatedEE = expressionExperimentService.save( ee );
+        assertThat( updatedEE.getId() ).isEqualTo( createdEE.getId() );
+        assertThat( createdEE.getAuditTrail().getEvents() )
+                .extracting( AuditEvent::getAction )
+                .containsExactly( AuditAction.CREATE, AuditAction.UPDATE );
+    }
+
+    @Test
+    public void testUpdateWithTransientEntity() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        assertThatThrownBy( () -> expressionExperimentService.update( ee ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "ID is required to be non-null" );
     }
 }

@@ -50,4 +50,10 @@ public interface BlacklistedEntityService extends BaseImmutableService<Blacklist
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     BlacklistedPlatform blacklistPlatform( ArrayDesign platform, String reason );
+
+    /**
+     * Remove all blacklisted platforms and experiments.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    int removeAll();
 }

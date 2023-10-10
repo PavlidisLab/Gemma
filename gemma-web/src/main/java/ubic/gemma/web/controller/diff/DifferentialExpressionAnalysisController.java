@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -64,15 +65,11 @@ public class DifferentialExpressionAnalysisController {
      * Ajax method. Pick the analysis type when we want it to be completely automated. Does not support subset factors
      *
      * @param  id id
-     * @return    analysis info
+     * @return analysis info
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils
                 .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -106,33 +103,23 @@ public class DifferentialExpressionAnalysisController {
      *
      * @param  eeId ee id
      * @param  id   id
-     * @return      string
+     * @return string
      */
     public String redo( Long eeId, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
-        }
-
-        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.load( id );
-        if ( toRedo == null ) {
-            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + eeId );
+        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo );
         return taskRunningService.submitTaskCommand( cmd );
     }
 
     public String refreshStats( Long eeId, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
-        }
-
-        DifferentialExpressionAnalysis toRefresh = differentialExpressionAnalysisService.load( id );
-        if ( toRefresh == null ) {
-            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + eeId );
+        DifferentialExpressionAnalysis toRefresh = differentialExpressionAnalysisService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh );
         return taskRunningService.submitTaskCommand( cmd );
@@ -142,18 +129,13 @@ public class DifferentialExpressionAnalysisController {
      * AJAX entry point to remove an analysis given by the ID
      *
      * @param  id id
-     * @return    string
+     * @return string
      */
     public String remove( Long eeId, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
-        }
-
-        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
-        if ( toRemove == null ) {
-            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + eeId );
+        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.loadOrFail( id,
+                EntityNotFoundException::new, "Cannot access analysis with id=" + id );
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
         this.experimentReportService.evictFromCache( ee.getId() );
@@ -164,16 +146,12 @@ public class DifferentialExpressionAnalysisController {
      * AJAX entry point when running completely automatically.
      *
      * @param  id id
-     * @return    string
+     * @return string
      */
     public String run( Long id ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
         this.experimentReportService.evictFromCache( ee.getId() );
-        ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
@@ -187,12 +165,12 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * Perform a customized DEA based on user input on web interface.
-     * 
+     *
      * @param  id                  of the experiment
      * @param  factorids           to include
      * @param  includeInteractions if possible
      * @param  subsetFactorId      if required
-     * @return                     task identifier
+     * @return task identifier
      */
     public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId ) {
 
@@ -200,12 +178,8 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "You must provide at least one factor to analyze" );
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
+                EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
         /*
          * Get the factors matching the factorids
@@ -234,8 +208,7 @@ public class DifferentialExpressionAnalysisController {
             }
 
             if ( factors.contains( subsetFactor ) ) {
-                throw new IllegalArgumentException(
-                        "Subset factor must not be one of the factors used in the analysis" );
+                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
             }
         }
 

@@ -25,9 +25,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
@@ -88,6 +90,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -209,9 +212,10 @@ public class ExpressionExperimentController {
      * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
      */
     public boolean canCurrentUserEditExperiment( Long eeId ) {
+        ExpressionExperiment ee = getExperimentById( eeId, false );
         boolean userCanEditGroup;
         try {
-            userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eeId ) );
+            userCanEditGroup = securityService.isEditable( ee );
         } catch ( org.springframework.security.access.AccessDeniedException ade ) {
             return false;
         }
@@ -239,9 +243,10 @@ public class ExpressionExperimentController {
      * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
      */
     public boolean doesCurrentUserOwnExperiment( Long eeId ) {
+        ExpressionExperiment ee = getExperimentById( eeId, false );
         boolean userOwnsGroup;
         try {
-            userOwnsGroup = securityService.isOwnedByCurrentUser( expressionExperimentService.load( eeId ) );
+            userOwnsGroup = securityService.isOwnedByCurrentUser( ee );
         } catch ( org.springframework.security.access.AccessDeniedException ade ) {
             return false;
         }
@@ -325,31 +330,25 @@ public class ExpressionExperimentController {
      *         expander)
      */
     public String getDescription( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) return null;
-
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = getExperimentById( id, true );
 
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
         StringBuilder descriptive = new StringBuilder();
 
-        String eeDescription = ee.getDescription() == null ? "" : ee.getDescription().trim();
-
-        // Need to trim?
-        if ( eeDescription.length() < ExpressionExperimentController.TRIM_SIZE + 1 )
-            descriptive.append( eeDescription );
-        else
-            descriptive.append( eeDescription.substring( 0, ExpressionExperimentController.TRIM_SIZE ) ).append( "...&nbsp;&nbsp;" );
+        if ( ee.getDescription() != null ) {
+            descriptive.append( StringUtils.abbreviate( StringUtils.strip( ee.getDescription() ), "…",
+                    ExpressionExperimentController.TRIM_SIZE ) );
+        }
 
         // Is there any factor info to add?
-        if ( efs.size() < 1 ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
+        if ( efs.isEmpty() ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
         String efUri = "&nbsp;<a target='_blank' href='" + servletContext.getContextPath()
                 + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
         int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
-        if ( tags.size() > 0 ) {
+        if ( !tags.isEmpty() ) {
             descriptive.append( "</br>&nbsp;<b>Tags:</b>&nbsp;" );
             int i = 0;
             for ( Characteristic tag : tags ) {
@@ -378,12 +377,10 @@ public class ExpressionExperimentController {
      * AJAX
      */
     public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
-
-        if ( e == null || e.getId() == null ) return null;
-        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        if ( ee == null ) return null;
-
-        ee = expressionExperimentService.thawLite( ee );
+        if ( e == null || e.getId() == null ) {
+            throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
+        }
+        ExpressionExperiment ee = getExperimentById( e.getId(), true );
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
     }
 
@@ -393,10 +390,11 @@ public class ExpressionExperimentController {
      * @return a collection of factor value objects that represent the factors of a given experiment
      */
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) {
+            throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
+        }
 
-        if ( e == null || e.getId() == null ) return null;
-
-        ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( e.getId() );
+        ExpressionExperiment ee = getExperimentById( e.getId(), false );
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
 
@@ -416,11 +414,11 @@ public class ExpressionExperimentController {
      * @return A collection of factor value objects for the specified experimental factor
      */
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) {
+            throw new IllegalArgumentException( "A non-null ExperimentalFactor ID must be supplied." );
+        }
 
-        if ( e == null || e.getId() == null ) return null;
-
-        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null ) return null;
+        ExperimentalFactor ef = this.experimentalFactorService.loadOrFail( e.getId(), EntityNotFoundException::new, "ExperimentalFactor with ID " + e.getId() + " does not exist." );
 
         Collection<FactorValueValueObject> result = new HashSet<>();
 
@@ -451,10 +449,8 @@ public class ExpressionExperimentController {
         qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
         try {
             qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
-        } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
-            ExpressionExperimentController.log.error( e );
-        } catch ( IllegalStateException e ) {
-            ExpressionExperimentController.log.error( e );
+        } catch ( ArrayIndexOutOfBoundsException | IllegalStateException e ) {
+            ExpressionExperimentController.log.error( "Error while setting the number of possible outliers for " + ee + ".", e );
         }
         return qc.getQChtml();
     }
@@ -471,12 +467,12 @@ public class ExpressionExperimentController {
         StopWatch reportTimer = StopWatch.create();
 
         Map<String, Object> summary = new HashMap<>();
-        List<Map<String, Object>> taxonEntries = new ArrayList();
+        List<Map<String, Object>> taxonEntries = new ArrayList<>();
 
         countTimer.start();
-        long bioMaterialCount = bioMaterialService.countAll();
-        long arrayDesignCount = arrayDesignService.countAll();
-        long expressionExperimentCount = expressionExperimentService.countAll();
+        long bioMaterialCount = expressionExperimentService.countBioMaterials( null );
+        long arrayDesignCount = arrayDesignService.countWithCache( null );
+        long expressionExperimentCount = expressionExperimentService.countWithCache( null );
         Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
         countTimer.stop();
 
@@ -490,7 +486,7 @@ public class ExpressionExperimentController {
         reportTimer.stop();
 
         // Get count for new assays
-        int newBioMaterialCount = wn.getNewBioMaterialCount();
+        long newBioMaterialCount = wn.getNewBioMaterialCount();
 
         Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
         Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
@@ -504,17 +500,20 @@ public class ExpressionExperimentController {
         Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
         Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
 
+        Locale locale = LocaleContextHolder.getLocale();
+        NumberFormat integerFormat = NumberFormat.getIntegerInstance( locale );
+
         for ( Taxon t : eesPerTaxon.keySet() ) {
             Map<String, Object> taxLine = new HashMap<>();
             taxLine.put( "taxonId", t.getId() );
             taxLine.put( "taxonName", t.getScientificName() );
-            taxLine.put( "totalCount", eesPerTaxon.get( t ) );
+            taxLine.put( "totalCount", integerFormat.format( eesPerTaxon.get( t ) ) );
             if ( newEEsPerTaxon.containsKey( t ) ) {
-                taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
+                taxLine.put( "newCount", integerFormat.format( newEEsPerTaxon.get( t ).size() ) );
                 taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
             }
             if ( updatedEEsPerTaxon.containsKey( t ) ) {
-                taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
+                taxLine.put( "updatedCount", integerFormat.format( updatedEEsPerTaxon.get( t ).size() ) );
                 taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
             }
             taxonEntries.add( taxLine );
@@ -536,22 +535,24 @@ public class ExpressionExperimentController {
         summary.put( "updateDate", date );
         summary.put( "drawNewColumn", drawNewColumn );
         summary.put( "drawUpdatedColumn", drawUpdatedColumn );
-        if ( newBioMaterialCount != 0 ) summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
-        if ( newArrayCount != 0 ) summary.put( "newArrayDesignCount", ( long ) newArrayCount );
-        if ( updatedArrayCount != 0 ) summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
+        if ( newBioMaterialCount != 0 )
+            summary.put( "newBioMaterialCount", integerFormat.format( newBioMaterialCount ) );
+        if ( newArrayCount != 0 ) summary.put( "newArrayDesignCount", integerFormat.format( newArrayCount ) );
+        if ( updatedArrayCount != 0 )
+            summary.put( "updatedArrayDesignCount", integerFormat.format( updatedArrayCount ) );
         if ( newExpressionExperimentCount != 0 )
-            summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
+            summary.put( "newExpressionExperimentCount", integerFormat.format( newExpressionExperimentCount ) );
         if ( updatedExpressionExperimentCount != 0 )
-            summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+            summary.put( "updatedExpressionExperimentCount", integerFormat.format( updatedExpressionExperimentCount ) );
         if ( newExpressionExperimentCount != 0 )
             summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
         if ( updatedExpressionExperimentCount != 0 )
             summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
 
-        summary.put( "bioMaterialCount", bioMaterialCount );
-        summary.put( "arrayDesignCount", arrayDesignCount );
+        summary.put( "bioMaterialCount", integerFormat.format( bioMaterialCount ) );
+        summary.put( "arrayDesignCount", integerFormat.format( arrayDesignCount ) );
 
-        summary.put( "expressionExperimentCount", expressionExperimentCount );
+        summary.put( "expressionExperimentCount", integerFormat.format( expressionExperimentCount ) );
 
         if ( sw.getTime( TimeUnit.MILLISECONDS ) > 1000 ) {
             log.info( "Retrieving EE summary took " + sw.getTime( TimeUnit.MILLISECONDS ) + " ms (" + "counting: " + countTimer.getTime() + " ms, " + "report: " + reportTimer.getTime() + " ms)." );
@@ -567,12 +568,15 @@ public class ExpressionExperimentController {
      * @return ee details vo
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
-
-        ExpressionExperiment ee = this.getEESafely( id );
+        ExpressionExperiment ee = getExperimentById( id, false );
+        ee = expressionExperimentService.thawLiter( ee );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment with ID " + id + "." );
+        }
         Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService.loadDetailsValueObjectsByIdsWithCache( Collections.singleton( id ) );
 
-        if ( initialResults.size() == 0 ) {
-            return null;
+        if ( initialResults.isEmpty() ) {
+            throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
 
         expressionExperimentReportService.populateReportInformation( initialResults );
@@ -603,19 +607,19 @@ public class ExpressionExperimentController {
     }
 
     public void recalculateBatchConfound( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        ExpressionExperiment ee = getExperimentById( id, false );
         ee.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void recalculateBatchEffect( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        ExpressionExperiment ee = getExperimentById( id, false );
         ee.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void runGeeq( Long id, String mode ) {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
+        ExpressionExperiment ee = getExperimentById( id, false );
         geeqService.calculateScore( ee, GeeqService.ScoreMode.valueOf( mode ) );
     }
 
@@ -639,7 +643,7 @@ public class ExpressionExperimentController {
      * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        ArrayDesign ad = arrayDesignService.loadOrFail( id );
+        ArrayDesign ad = arrayDesignService.loadOrFail( id, EntityNotFoundException::new, "No platform with ID " + id + "." );
 
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
                 EntityUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
@@ -680,15 +684,14 @@ public class ExpressionExperimentController {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
 
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        ees.addAll( outlierEEs );
-        // ees.addAll( batchEffectEEs );
+        Collection<ExpressionExperiment> ees = new HashSet<>( outlierEEs );
+        // TODO: ees.addAll( batchEffectEEs );
 
         List<Map<String, Object>> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
             //noinspection MismatchedQueryAndUpdateOfCollection
-            Map<String, Object> record = new HashMap();
+            Map<String, Object> record = new HashMap<>();
             record.put( "id", ee.getId() );
             record.put( "shortName", ee.getShortName() );
             record.put( "name", ee.getName() );
@@ -712,11 +715,8 @@ public class ExpressionExperimentController {
      * @return security-filtered set of value objects.
      */
     public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeId ) {
-
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         // need to thawRawAndProcessed?
-        ee = expressionExperimentService.thawLite( ee );
-
+        ExpressionExperiment ee = getExperimentById( eeId, true );
         return expressionExperimentService.getQuantitationTypeValueObjects( ee );
     }
 
@@ -800,7 +800,6 @@ public class ExpressionExperimentController {
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
         boolean taxonLimited = ( taxonId != null );
-        List<SearchResultDisplayObject> displayResults = new ArrayList<>();
 
         // add session bound sets
         // get any session-bound groups
@@ -809,7 +808,7 @@ public class ExpressionExperimentController {
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
         // create SearchResultDisplayObjects
-        if ( sessionResult != null && sessionResult.size() > 0 ) {
+        if ( sessionResult != null && !sessionResult.isEmpty() ) {
             for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
                 SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
                 srdo.setUserOwned( true );
@@ -819,7 +818,7 @@ public class ExpressionExperimentController {
 
         // keep sets in proper order (session-bound groups first)
         Collections.sort( sessionSets );
-        displayResults.addAll( sessionSets );
+        List<SearchResultDisplayObject> displayResults = new ArrayList<>( sessionSets );
         try {
             displayResults.addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
         } catch ( SearchException e ) {
@@ -867,46 +866,17 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" })
-    public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
-        String idStr = request.getParameter( "id" );
-
-        if ( idStr == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-        Long id = Long.parseLong( idStr );
-
-        ExpressionExperiment expressionExperiment = expressionExperimentService.loadOrFail( id );
-
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
-
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
-        request.setAttribute( "id", id );
+    public ModelAndView showBioAssays( @RequestParam("id") Long id ) {
+        ExpressionExperiment expressionExperiment = getExperimentById( id, true );
         ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
-
         this.addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
         return mv;
     }
 
     @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" })
-    public ModelAndView showBioMaterials( HttpServletRequest request, HttpServletResponse response ) {
-        String idStr = request.getParameter( "id" );
-
-        if ( idStr == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-        Long id = Long.parseLong( idStr );
-
-        ExpressionExperiment expressionExperiment = expressionExperimentService.loadOrFail( id );
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
-
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
+    public ModelAndView showBioMaterials( @RequestParam("id") Long id ) {
+        ExpressionExperiment expressionExperiment = getExperimentById( id, true );
 
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<>();
@@ -931,25 +901,30 @@ public class ExpressionExperimentController {
         return mav;
     }
 
-    @RequestMapping({ "/showExpressionExperiment.html", "/", "/show" })
-    public ModelAndView showExpressionExperiment( HttpServletRequest request, HttpServletResponse response ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
-        BioAssaySet expExp = this.getExpressionExperimentFromRequest( request );
-
-        mav.addObject( "expressionExperiment", expExp );
-
-        mav.addObject( "eeId", expExp.getId() );
-        mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
-
-        if ( timer.getTime() > 200 ) {
-            ExpressionExperimentController.log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" })
+    public ModelAndView showExpressionExperiment( @RequestParam(value = "id") Long id ) {
+        BioAssaySet bioAssaySet;
+        bioAssaySet = expressionExperimentService.loadBioAssaySet( id );
+        if ( bioAssaySet == null ) {
+            throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
+        return showBioAssaySet( bioAssaySet );
+    }
 
-        return mav;
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" })
+    public ModelAndView showExpressionExperimentByShortName( @RequestParam(value = "shortName") String shortName ) {
+        ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortName( shortName );
+        if ( experimentExperiment == null ) {
+            throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
+        }
+        return showBioAssaySet( experimentExperiment );
+    }
+
+    private ModelAndView showBioAssaySet( BioAssaySet ee ) {
+        return new ModelAndView( "expressionExperiment.detail" )
+                .addObject( "expressionExperiment", ee )
+                .addObject( "eeId", ee.getId() )
+                .addObject( "eeClass", ee.getClass() );
     }
 
     /**
@@ -973,18 +948,14 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Completely reset the pairing of bioassays to biomaterials so they are no longer paired. New biomaterials are
+     * Completely reset the pairing of bioassays to biomaterials, so they are no longer paired. New biomaterials are
      * constructed where necessary; they retain the characteristics of the original. Experimental design might need to
      * be redone after this operation. (AJAX)
      *
      * @param eeId ee id
      */
     public void unmatchAllBioAssays( Long eeId ) {
-        ExpressionExperiment ee = this.expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
-        }
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = getExperimentById( eeId, true );
 
         Collection<BioMaterial> needToProcess = new HashSet<>();
 
@@ -1020,20 +991,19 @@ public class ExpressionExperimentController {
 
     }
 
-    public ExpressionExperimentDetailsValueObject updateBasics( UpdateEEDetailsCommand command ) throws Exception {
+    public ExpressionExperimentDetailsValueObject updateBasics( UpdateEEDetailsCommand command ) {
         if ( command.getEntityId() == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
 
         /*
-         * This should be fast so I'm not using a background task.
+         * This should be fast, so I'm not using a background task.
          */
         String details = "Changed: ";
         boolean changed = false;
         Long entityId = command.getEntityId();
-        ExpressionExperiment ee = expressionExperimentService.load( entityId );
-        if ( ee == null )
-            throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( entityId,
+                EntityNotFoundException::new, "Cannot locate or access experiment with id=" + entityId );
 
         if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
             if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
@@ -1102,7 +1072,7 @@ public class ExpressionExperimentController {
         String eeSetName = request.getParameter( "esn" ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );
-        if ( ( eeIds == null || eeIds.isEmpty() ) && ( eeSetIds == null || eeSetIds.isEmpty() ) ) {
+        if ( eeIds.isEmpty() && eeSetIds.isEmpty() ) {
             mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds + "} or expression experiment set ids {" + eeSetIds + "}" );
             return mav;
         }
@@ -1115,7 +1085,7 @@ public class ExpressionExperimentController {
 
         mav.addObject( TextView.TEXT_PARAM, this.format4File( ees, eeSetName ) );
         watch.stop();
-        Long time = watch.getTime();
+        long time = watch.getTime();
 
         if ( time > 100 ) {
             ExpressionExperimentController.log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
@@ -1189,7 +1159,6 @@ public class ExpressionExperimentController {
      *
      * @param  ee          ee
      * @param  finalResult result
-     * @return ee details vo
      */
     private void setBatchInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
@@ -1206,7 +1175,6 @@ public class ExpressionExperimentController {
      *
      * @param  ee          ee
      * @param  finalResult result
-     * @return ee details vo
      */
     private void setPublicationAndAuthor( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
@@ -1232,8 +1200,8 @@ public class ExpressionExperimentController {
      */
     private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( ads == null ) {
-            throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
+        if ( ads.isEmpty() ) {
+            throw new EntityNotFoundException( "No array designs for experiment " + ee.getId() + " could be loaded." );
         }
         ads = arrayDesignService.thawLite( ads );
 
@@ -1241,27 +1209,10 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Loads, checks not null, and thaws the ee with given ID;
-     *
-     * @param  id id
-     * @return ee
-     */
-    private ExpressionExperiment getEESafely( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
-        }
-        ee = expressionExperimentService.thawLiter( ee );
-
-        return ee;
-    }
-
-    /**
      * Checks and sets multiple technology types and RNA-seq status
      *
      * @param  ee          ee
      * @param  finalResult result
-     * @return ee details vo
      */
     private void setTechTypeInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         Collection<TechnologyType> techTypes = new HashSet<>();
@@ -1279,7 +1230,6 @@ public class ExpressionExperimentController {
      *
      * @param  ee          ee
      * @param  finalResult result
-     * @return ee details vo
      */
     private void setPreferredAndReprocessed( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
@@ -1415,7 +1365,7 @@ public class ExpressionExperimentController {
         strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
 
-        if ( eeSetName != null && eeSetName.length() != 0 )
+        if ( eeSetName != null && !eeSetName.isEmpty() )
             strBuff.append( "# Experiment Set: " ).append( eeSetName ).append( "\n" );
         strBuff.append( "# " ).append( ees.size() ).append( ( ees.size() > 1 ) ? " experiments" : " experiment" ).append( "\n#\n" );
 
@@ -1445,7 +1395,7 @@ public class ExpressionExperimentController {
 
         Taxon taxon;
         if ( taxonId != null ) {
-            taxon = taxonService.loadOrFail( taxonId );
+            taxon = taxonService.loadOrFail( taxonId, EntityNotFoundException::new, "No taxon with ID " + taxonId + "." );
         } else {
             taxon = null;
         }
@@ -1460,49 +1410,8 @@ public class ExpressionExperimentController {
         if ( filter != null && filter > 0 ) {
             eeVos = this.applyFilter( eeVos, filter );
         }
-        if ( eeVos.isEmpty() ) {
-            return eeVos;
-        }
 
         return eeVos;
-
-    }
-
-    /**
-     * @param  request                  request
-     * @return bio assay set
-     * @throws IllegalArgumentException if a matching EE can't be loaded
-     */
-    private BioAssaySet getExpressionExperimentFromRequest( HttpServletRequest request ) {
-
-        BioAssaySet expressionExperiment = null;
-        Long id;
-
-        if ( request.getParameter( "id" ) == null ) {
-
-            String shortName = request.getParameter( "shortName" );
-
-            if ( StringUtils.isNotBlank( shortName ) ) {
-                expressionExperiment = expressionExperimentService.findByShortName( shortName );
-            }
-
-            if ( expressionExperiment == null ) {
-                throw new IllegalArgumentException( "Unable to access experiment with shortName=" + shortName );
-            }
-
-        } else {
-            try {
-                id = Long.parseLong( request.getParameter( "id" ) );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-            }
-            expressionExperiment = expressionExperimentService.load( id );
-
-            if ( expressionExperiment == null ) {
-                throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-            }
-        }
-        return expressionExperiment;
     }
 
     private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( BioAssaySet ee ) {
@@ -1621,12 +1530,7 @@ public class ExpressionExperimentController {
      * @param id id
      */
     private void updateCorrelationMatrixFile( Long id ) {
-        ExpressionExperiment ee;
-        ee = expressionExperimentService.loadOrFail( id );
-        ee = expressionExperimentService.thawLiter( ee );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-        }
+        ExpressionExperiment ee = getExperimentById( id, true );
         try {
             sampleCoexpressionAnalysisService.compute( ee );
         } catch ( Exception e ) {
@@ -1636,11 +1540,7 @@ public class ExpressionExperimentController {
     }
 
     private void updateMV( Long id ) {
-        ExpressionExperiment expressionExperiment;
-        expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-        }
+        ExpressionExperiment expressionExperiment = getExperimentById( id, false );
         try {
             meanVarianceService.create( expressionExperiment, true );
         } catch ( Exception e ) {
@@ -1677,9 +1577,7 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult call() {
-            ExpressionExperiment ee = expressionExperimentService.loadOrFail( taskCommand.getEntityId() );
-
-            ee = expressionExperimentService.thawLite( ee );
+            ExpressionExperiment ee = getExperimentById( taskCommand.getEntityId(), true );
 
             if ( ee.getPrimaryPublication() == null ) {
                 return new TaskResult( taskCommand, false );
@@ -1706,7 +1604,7 @@ public class ExpressionExperimentController {
             Long eeId = taskCommand.getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( eeId );
             if ( expressionExperiment == null )
-                throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+                throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
 
             String pubmedId = taskCommand.getPubmedId();
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
@@ -1738,9 +1636,9 @@ public class ExpressionExperimentController {
                 }
                 // check to see if there are publications found
                 // if there are none, or more than one, add an error message and do nothing
-                if ( publications.size() == 0 ) {
+                if ( publications.isEmpty() ) {
                     ExpressionExperimentController.log.info( "No matching publication found" );
-                    throw new IllegalArgumentException( "No matching publication found" );
+                    throw new EntityNotFoundException( "No matching publication found" );
                 } else if ( publications.size() > 1 ) {
                     ExpressionExperimentController.log.info( "Multiple matching publications found!" );
                     throw new IllegalArgumentException( "Multiple matching publications found!" );
@@ -1775,4 +1673,16 @@ public class ExpressionExperimentController {
 
     }
 
+    /**
+     * Load an {@link ExpressionExperiment} by ID, optionally thawing it with {@link ExpressionExperimentService#thawLite}.
+     */
+    private ExpressionExperiment getExperimentById( Long id, boolean thawLite ) throws EntityNotFoundException {
+        if ( thawLite ) {
+            return this.expressionExperimentService.loadAndThawLiteOrFail( id,
+                    EntityNotFoundException::new, "No experiment with ID " + id + "." );
+        } else {
+            return this.expressionExperimentService.loadOrFail( id,
+                    EntityNotFoundException::new, "No experiment with ID " + id + "." );
+        }
+    }
 }

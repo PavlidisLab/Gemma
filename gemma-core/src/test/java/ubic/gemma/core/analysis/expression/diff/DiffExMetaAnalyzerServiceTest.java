@@ -531,7 +531,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             arrayDesignService.remove( gpl97 );
         }
 
-        geneService.removeAllInBatch();
+        geneService.removeAll();
     }
 
     private void deleteSet( String shortName ) {

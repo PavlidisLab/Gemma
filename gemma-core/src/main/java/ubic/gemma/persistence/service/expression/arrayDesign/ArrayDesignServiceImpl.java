@@ -36,6 +36,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author klc
@@ -55,6 +56,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
         super( arrayDesignDao );
         this.arrayDesignDao = arrayDesignDao;
         this.auditEventDao = auditEventDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ArrayDesign ad = loadOrFail( id, exceptionSupplier, message );
+        arrayDesignDao.thawLite( ad );
+        return ad;
     }
 
     @Override
@@ -272,6 +281,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public long countWithCache( @Nullable Filters filters ) {
+        return arrayDesignDao.countWithCache( filters );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
         return this.arrayDesignDao.isMerged( ids );
     }
@@ -416,7 +431,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         arrayDesign = ensureInSession( arrayDesign );
-        arrayDesignDao.thaw( arrayDesign );
+        arrayDesignDao.thawLite( arrayDesign );
         return arrayDesign;
     }
 

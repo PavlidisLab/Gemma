@@ -24,6 +24,7 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author klc
@@ -39,7 +40,7 @@ public class ExpressionExperimentReportGenerationController {
     public String run( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not access experiment with id=" + id );
+            throw new EntityNotFoundException( "Could not access experiment with id=" + id );
         }
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );

@@ -72,11 +72,6 @@ public class ExperimentalFactorServiceImpl
     }
 
     @Override
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "Removing all experimental factors in batch is not supported." );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
         return this.experimentalFactorDao.thaw( ef );

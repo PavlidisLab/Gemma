@@ -115,6 +115,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public BioAssaySet loadBioAssaySet( Long id ) {
+        return ( BioAssaySet ) getSessionFactory().getCurrentSession().get( BioAssaySet.class, id );
+    }
+
+    @Override
     public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )
@@ -778,6 +783,16 @@ public class ExpressionExperimentDaoImpl
         ee.setMeanVarianceRelation( mvr );
         update( ee );
         return mvr;
+    }
+
+    @Override
+    public long countBioMaterials( @Nullable Filters filters ) {
+        //language=HQL
+        Query query = finishFilteringQuery( "select count(distinct bm) from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm",
+                filters, null, null );
+        return ( Long ) query.setCacheable( true ).uniqueResult();
     }
 
     @Override

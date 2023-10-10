@@ -23,12 +23,6 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
      */
     private static final boolean isAutoLoad = ( StringUtils.isBlank( Configuration.getString( "load.ontologies" ) ) || Configuration.getBoolean( "load.ontologies" ) );
 
-    static {
-        if ( !isAutoLoad ) {
-            log.warn( "Auto-loading of ontologies is disabled, enable it by setting load.ontologies=true in Gemma.properties." );
-        }
-    }
-
     private final Class<T> ontologyServiceClass;
     private boolean forceLoad = false;
     private boolean forceIndexing = false;

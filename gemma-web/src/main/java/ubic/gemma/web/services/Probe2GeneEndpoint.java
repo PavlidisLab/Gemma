@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -90,7 +91,7 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
         for ( String id : adResults ) {
             adid = id;
         }
-        ArrayDesign ad = arrayDesignService.loadOrFail( Long.parseLong( adid ) );
+        ArrayDesign ad = arrayDesignService.loadOrFail( Long.parseLong( adid ), EntityNotFoundException::new, "No platform with ID " + adid + "." );
 
         // get genes, given probe (which is unique to an Array Design
         // therefore, the Array Design Identifier input is not really necessary
