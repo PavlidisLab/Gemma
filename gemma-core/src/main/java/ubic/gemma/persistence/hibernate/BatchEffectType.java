@@ -8,7 +8,8 @@ import java.sql.SQLException;
 
 /**
  * Workaround to handle existing batch effect value in the database.
- * FIXME: remove this once the 1.31 is out and the database has been fully migrated.
+ * <p>
+ * FIXME: remove this once the 1.31 is out and the database has been fully migrated (see <a href="https://github.com/PavlidisLab/Gemma/issues/894">#894</a> for details).
  * @author poirigui
  */
 public class BatchEffectType extends EnumType {
