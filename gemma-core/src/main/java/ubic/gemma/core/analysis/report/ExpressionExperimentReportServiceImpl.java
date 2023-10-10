@@ -407,23 +407,25 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        String confound = expressionExperimentService.getBatchConfound( ee );
         BatchEffectType effect = expressionExperimentService.getBatchEffect( ee );
         String effectStatistics = expressionExperimentService.getBatchEffectStatistics( ee );
+        String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
+        String confound = expressionExperimentService.getBatchConfound( ee );
+        String confoundSummary = confound != null ? confound : "<no confound>";
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound != null ? confound : "<no confound>" );
-            log.info( "New batch confound for " + ee + ": " + ( confound != null ? confound : "<no confound>" ) );
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
+            log.info( "New batch confound for " + ee + ": " + confoundSummary );
         }
 
-        if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
+        if ( !Objects.equals( effect, ee.getBatchEffect() ) || !Objects.equals( effectStatistics, ee.getBatchEffectStatistics() ) ) {
             ee.setBatchEffect( effect );
             ee.setBatchEffectStatistics( effectStatistics );
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectStatistics != null ? effectStatistics : effect.name() );
-            log.info( "New batch effect for " + ee + ": " + effect );
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
+            log.info( "New batch effect for " + ee + ": " + effectSummary );
         }
     }
 
