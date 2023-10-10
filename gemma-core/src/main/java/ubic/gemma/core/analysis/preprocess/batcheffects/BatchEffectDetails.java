@@ -14,7 +14,10 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
 
 import javax.annotation.Nullable;
 
@@ -25,75 +28,88 @@ import javax.annotation.Nullable;
  */
 public class BatchEffectDetails {
 
-    private Integer component = null;
+    public class BatchEffectStatistics {
 
-    private double componentVarianceProportion;
-    private final boolean dataWasBatchCorrected;
-    private boolean failedToGetBatchInformation = false;
-    private Boolean hadSingletonBatches = false;
-    private Boolean hadUninformativeHeaders = false;
+        private BatchEffectStatistics() {
+
+        }
+
+        public int getComponent() {
+            return component;
+        }
+
+        public double getComponentVarianceProportion() {
+            return componentVarianceProportion;
+        }
+
+        public double getPvalue() {
+            return pvalue;
+        }
+    }
+
+    /**
+     * Indicate if the batch information is present.
+     */
     private final boolean hasBatchInformation;
-    private double pvalue;
+    /**
+     * Indicate if the batch information is problematic.
+     */
+    private final boolean hasProblematicBatchInformation;
+    /**
+     * Indicate if the dataset has singleton batches (i.e. a batch only one sample).
+     */
+    private final boolean hadSingletonBatches;
+    /**
+     * Indicate if the batch information is uninformative.
+     */
+    private final boolean hadUninformativeHeaders;
+    /**
+     * Indicate if batch correction was performed on the expression data.
+     */
+    private final boolean dataWasBatchCorrected;
 
     private final boolean singleBatch;
 
+    /* if present and suitable, those are filled */
+    private boolean hasBatchEffectStatistics = false;
+    private double pvalue;
+    private int component;
+    private double componentVarianceProportion;
+
     public BatchEffectDetails( @Nullable BatchInformationFetchingEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
-
-        if ( infoEvent == null ) {
-            this.hasBatchInformation = false;
+        this.hasBatchInformation = infoEvent != null;
+        if ( infoEvent != null ) {
+            this.hasProblematicBatchInformation = FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) );
+            this.hadSingletonBatches = SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() );
+            this.hadUninformativeHeaders = UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() );
         } else {
-            if ( SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
-                this.hasBatchInformation = false;
-                this.hadSingletonBatches = true;
-            } else if ( UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
-                this.hasBatchInformation = false;
-                this.hadUninformativeHeaders = true;
-            } else if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
-                this.hasBatchInformation = false;
-                this.failedToGetBatchInformation = true;
-            } else if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) ) ) {
-                this.hasBatchInformation = false;
-                this.failedToGetBatchInformation = true;
-            } else {
-                this.hasBatchInformation = true;
-            }
+            this.hasProblematicBatchInformation = false;
+            this.hadSingletonBatches = false;
+            this.hadUninformativeHeaders = false;
         }
-
         this.dataWasBatchCorrected = dataWasBatchCorrected;
         this.singleBatch = singleBatch;
         this.pvalue = 1.0;
-    }
-
-    public Integer getComponent() {
-        return component;
-    }
-
-    public double getComponentVarianceProportion() {
-        return componentVarianceProportion;
     }
 
     public boolean getDataWasBatchCorrected() {
         return this.dataWasBatchCorrected;
     }
 
-    public Boolean getHadSingletonBatches() {
+    public boolean getHadSingletonBatches() {
         return hadSingletonBatches;
     }
 
-    public Boolean getHadUninformativeHeaders() {
+    public boolean getHadUninformativeHeaders() {
         return hadUninformativeHeaders;
-    }
-
-    public double getPvalue() {
-        return pvalue;
     }
 
     public boolean hasBatchInformation() {
         return hasBatchInformation;
     }
 
-    public boolean isFailedToGetBatchInformation() {
-        return failedToGetBatchInformation;
+    public boolean hasProblematicBatchInformation() {
+        return hasProblematicBatchInformation;
     }
 
     /**
@@ -105,22 +121,29 @@ public class BatchEffectDetails {
         return singleBatch;
     }
 
-    public void setComponent( Integer component ) {
-        this.component = component;
+    @Nullable
+    public BatchEffectStatistics getBatchEffectStatistics() {
+        if ( hasBatchEffectStatistics ) {
+            return new BatchEffectStatistics();
+        } else {
+            return null;
+        }
     }
 
-    public void setComponentVarianceProportion( double componentVarianceProportion ) {
-        this.componentVarianceProportion = componentVarianceProportion;
-    }
-
-    public void setPvalue( double pvalue ) {
-        this.pvalue = pvalue;
+    public void setBatchEffectStatistics( double pVal, int i, double variance ) {
+        this.hasBatchEffectStatistics = true;
+        this.pvalue = pVal;
+        this.component = i;
+        this.componentVarianceProportion = variance;
     }
 
     @Override
     public String toString() {
-        return String.format( "BatchEffectDetails [pvalue=%.2g, component=%d, varFraction=%.2f]", pvalue, component,
-                componentVarianceProportion );
+        if ( hasBatchEffectStatistics ) {
+            return String.format( "BatchEffectDetails [pvalue=%.2g, component=%d, varFraction=%.2f]", pvalue, component,
+                    componentVarianceProportion );
+        } else {
+            return "BatchEffectDetails";
+        }
     }
-
 }

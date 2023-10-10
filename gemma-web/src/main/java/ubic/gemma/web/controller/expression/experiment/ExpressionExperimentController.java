@@ -611,6 +611,7 @@ public class ExpressionExperimentController {
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id );
         ee.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
+        ee.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1197,8 +1198,8 @@ public class ExpressionExperimentController {
         if ( hasBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
         }
-
-        finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
+        finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ).name() );
+        finalResult.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
     }
 
     /**

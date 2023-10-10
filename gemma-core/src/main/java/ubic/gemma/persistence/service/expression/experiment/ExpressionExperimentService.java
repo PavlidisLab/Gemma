@@ -318,13 +318,17 @@ public interface ExpressionExperimentService
      */
     BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
 
+
     /**
      * Composes a string describing the batch effect state of the given experiment.
      *
      * @param ee the experiment to get the batch effect for.
      * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
-    String getBatchEffect( ExpressionExperiment ee );
+    BatchEffectType getBatchEffect( ExpressionExperiment ee );
+
+    @Nullable
+    String getBatchEffectStatistics( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment

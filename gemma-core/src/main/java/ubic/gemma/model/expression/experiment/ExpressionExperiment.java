@@ -46,7 +46,11 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     private static final long serialVersionUID = -1342753625018841735L;
     private String batchConfound;
-    private String batchEffect;
+    private BatchEffectType batchEffect;
+    /**
+     * Summary statistics of the batch effect, if present.
+     */
+    private String batchEffectStatistics;
     private CurationDetails curationDetails = new CurationDetails();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
@@ -152,8 +156,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return batchConfound;
     }
 
-    public String getBatchEffect() {
+    public BatchEffectType getBatchEffect() {
         return batchEffect;
+    }
+
+    public String getBatchEffectStatistics() {
+        return batchEffectStatistics;
     }
 
     @Override
@@ -244,8 +252,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.batchConfound = batchConfound;
     }
 
-    public void setBatchEffect( String batchEffect ) { // FIXME don't use a string for this
+    public void setBatchEffect( BatchEffectType batchEffect ) { // FIXME don't use a string for this
         this.batchEffect = batchEffect;
+    }
+
+    public void setBatchEffectStatistics( String batchEffectStatistics ) {
+        this.batchEffectStatistics = batchEffectStatistics;
     }
 
     @Override

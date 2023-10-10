@@ -520,9 +520,12 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             } else {
                 BatchEffectDetails be = expressionExperimentService.getBatchEffectDetails( ee );
                 hasInfo = be.hasBatchInformation();
-                hasStrong = be.getPvalue() < 0.0001;
-                hasNone = be.getPvalue() > 0.1;
                 corrected = be.getDataWasBatchCorrected();
+                BatchEffectDetails.BatchEffectStatistics statistics = be.getBatchEffectStatistics();
+                if ( statistics != null ) {
+                    hasStrong = statistics.getPvalue() < 0.0001;
+                    hasNone = statistics.getPvalue() > 0.1;
+                }
             }
         }
 

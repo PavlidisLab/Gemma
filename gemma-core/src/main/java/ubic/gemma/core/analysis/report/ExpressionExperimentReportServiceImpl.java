@@ -35,6 +35,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -407,7 +408,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
         String confound = expressionExperimentService.getBatchConfound( ee );
-        String effect = expressionExperimentService.getBatchEffect( ee );
+        BatchEffectType effect = expressionExperimentService.getBatchEffect( ee );
+        String effectStatistics = expressionExperimentService.getBatchEffectStatistics( ee );
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
@@ -417,9 +419,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
             ee.setBatchEffect( effect );
+            ee.setBatchEffectStatistics( effectStatistics );
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectStatistics != null ? effectStatistics : effect.name() );
             log.info( "New batch effect for " + ee + ": " + effect );
         }
     }
