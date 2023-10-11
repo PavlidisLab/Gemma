@@ -146,4 +146,7 @@ public interface PhenotypeAssociationService extends BaseImmutableService<Phenot
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
 
     void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
+
+    @Secured({ "GROUP_ADMIN" })
+    int removeAll();
 }

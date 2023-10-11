@@ -454,16 +454,19 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                         "No batch information available, out of an abundance of caution we are skipping" );
             }
 
-            if ( batchEffect.getPvalue() < 0.001 ) {
+            if ( batchEffect.getBatchEffectStatistics() == null ) {
+                throw new UnsuitableForAnalysisException( ee,
+                        "Batch effect statistics are missing, it's not possible to detect a batch effect." );
+            }
 
-                double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
-                Integer component = batchEffect.getComponent();
+            if ( batchEffect.getBatchEffectStatistics().getPvalue() < 0.001 ) {
+                double componentVarianceProportion = batchEffect.getBatchEffectStatistics().getComponentVarianceProportion();
+                int component = batchEffect.getBatchEffectStatistics().getComponent();
                 // don't worry if it is a "minor" component. remember that is must be one of the first few to make it
                 // this far.
                 if ( component > 2 && componentVarianceProportion < 0.1 ) {
                     return;
                 }
-
                 throw new UnsuitableForAnalysisException( ee,
                         String.format( "Strong batch effect detected (%s)", batchEffect ) );
             }

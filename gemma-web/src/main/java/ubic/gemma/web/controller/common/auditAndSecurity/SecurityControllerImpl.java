@@ -89,7 +89,7 @@ public class SecurityControllerImpl implements SecurityController {
         User userTakingAction = userManager.getCurrentUser();
 
         if ( userTakingAction == null ) {
-            throw new IllegalStateException( "Cannot add user to group when user is not logged in" );
+            throw new AccessDeniedException( "Cannot add user to group when user is not logged in" );
         }
 
         User u;
@@ -109,7 +109,7 @@ public class SecurityControllerImpl implements SecurityController {
             String uname = u.getUserName();
             securityService.addUserToGroup( uname, groupName );
         } else {
-            throw new IllegalArgumentException( "Sorry, there is no matching user." );
+            throw new EntityNotFoundException( "Sorry, there is no matching user." );
         }
 
         /*

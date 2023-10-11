@@ -19,7 +19,17 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
+ * Event that tracks when batch effects or problems are detected.
+ * <p>
+ * There are three relevant fields in {@link ExpressionExperiment} whose change triggers this event:
+ *<ul>
+ *     <li>{@link ExpressionExperiment#getBatchEffect()}</li>
+ *     <li>{@link ExpressionExperiment#getBatchEffectStatistics()}</li>
+ *     <li>{@link ExpressionExperiment#getBatchConfound()}</li>
+ *</ul>
  * @author paul
  */
 public class BatchProblemsUpdateEvent extends ExpressionExperimentAnalysisEvent {

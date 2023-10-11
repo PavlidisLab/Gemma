@@ -21,9 +21,19 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  */
 public interface AuditTrailDao extends BaseDao<AuditTrail> {
 
+    /**
+     * Remove the given audit trails by IDs.
+     * <p>
+     * This is more efficient than using {@link #remove(Collection)} because batch operations are performed without
+     * retrieving entities.
+     * @return number of entities removed
+     */
+    int removeByIds( Collection<Long> ids );
 }

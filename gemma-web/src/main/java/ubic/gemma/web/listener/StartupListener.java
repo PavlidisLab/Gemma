@@ -105,6 +105,8 @@ public class StartupListener extends ContextLoaderListener {
 
         this.loadTrackerInformation( config );
 
+        this.lintConfiguration();
+
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
 
         servletContext.setAttribute( Constants.CONFIG, config );
@@ -116,6 +118,18 @@ public class StartupListener extends ContextLoaderListener {
         StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
                 sw.getTime( TimeUnit.SECONDS ),
                 String.join( ", ", ctx.getEnvironment().getActiveProfiles() ) ) );
+    }
+
+    /**
+     * Perform some basic sanity checks for the configuration.
+     */
+    private void lintConfiguration() {
+        if ( !Settings.getBoolean( "load.ontologies" ) ) {
+            log.warn( "Auto-loading of ontologies is disabled, enable it by setting load.ontologies=true in Gemma.properties." );
+        }
+        if ( !Settings.getBoolean( "load.homologene" ) ) {
+            log.warn( "Homologene is not enabled, set load.homologene=true in Gemma.properties to load it on startup." );
+        }
     }
 
     private static final String JAWR_DEBUG_ON_SYSTEM_PROPERTY = "net.jawr.debug.on";

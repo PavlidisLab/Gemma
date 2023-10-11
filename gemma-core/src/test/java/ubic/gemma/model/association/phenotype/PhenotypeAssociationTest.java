@@ -98,7 +98,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         this.runAsAdmin();
-        phenotypeAssociationService.removeAllInBatch();
+        phenotypeAssociationService.removeAll();
     }
 
     @Test

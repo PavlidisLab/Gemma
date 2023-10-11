@@ -27,6 +27,7 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.coexp.LinkAnalysisTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * A controller to pre-process expression data vectors.
@@ -49,7 +50,7 @@ public class LinkAnalysisController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
 
         if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+            throw new EntityNotFoundException( "Cannot access experiment with id=" + id );
         }
 
         experimentReportService.evictFromCache( id );

@@ -13,6 +13,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Interface for curatable services.
@@ -43,6 +45,7 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     Collection<C> load( Collection<Long> ids );
 
     @Override
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     C load( Long id );
 
@@ -50,6 +53,16 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     C loadOrFail( Long id ) throws NullPointerException;
+
+    @Nonnull
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> C loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T;
+
+    @Nonnull
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -128,13 +141,4 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( C expressionExperiment );
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Only administrators are allowed to remove all entities in batch.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
 }

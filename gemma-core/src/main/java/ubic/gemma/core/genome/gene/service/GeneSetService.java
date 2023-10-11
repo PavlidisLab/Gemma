@@ -328,9 +328,5 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
     void remove( Long id );
 
     @Secured({ "GROUP_ADMIN" })
-    void removeAll();
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void removeAllInBatch();
+    int removeAll();
 }

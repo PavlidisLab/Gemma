@@ -121,6 +121,12 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     }
 
     @Override
+    @Transactional
+    public int removeAll() {
+        return this.gene2GOAssociationDao.removeAll();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon ) {
         return this.gene2GOAssociationDao.getGenes( termsToFetch, taxon );

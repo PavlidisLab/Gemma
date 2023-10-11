@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,8 +46,22 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     private static final long serialVersionUID = -1342753625018841735L;
+    /**
+     * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
+     */
+    @Nullable
+    private BatchEffectType batchEffect;
+    /**
+     * Summary statistics of the batch effect, if present.
+     */
+    @Nullable
+    private String batchEffectStatistics;
+    /**
+     * A string describing the batch confound if a batch effect is present and confounded with one of the experimental
+     * factor.
+     */
+    @Nullable
     private String batchConfound;
-    private String batchEffect;
     private CurationDetails curationDetails = new CurationDetails();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
@@ -152,8 +167,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return batchConfound;
     }
 
-    public String getBatchEffect() {
+    public BatchEffectType getBatchEffect() {
         return batchEffect;
+    }
+
+    public String getBatchEffectStatistics() {
+        return batchEffectStatistics;
     }
 
     @Override
@@ -244,8 +263,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.batchConfound = batchConfound;
     }
 
-    public void setBatchEffect( String batchEffect ) { // FIXME don't use a string for this
+    public void setBatchEffect( BatchEffectType batchEffect ) { // FIXME don't use a string for this
         this.batchEffect = batchEffect;
+    }
+
+    public void setBatchEffectStatistics( String batchEffectStatistics ) {
+        this.batchEffectStatistics = batchEffectStatistics;
     }
 
     @Override

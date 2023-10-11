@@ -19,19 +19,12 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -39,6 +32,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -129,5 +128,26 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
                                 + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be))" )
                 .setParameter( "ad", arrayDesign )
                 .list();
+    }
+
+    @Override
+    public int removeAll() {
+        //noinspection unchecked
+        List<Long> deIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select ea.id from BlacklistedEntity be join be.externalAccession ea" ).list();
+        int removedBe = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from BlacklistedEntity" )
+                .executeUpdate();
+        int removedDe;
+        if ( !deIds.isEmpty() ) {
+            removedDe = getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from DatabaseEntry where id in :deIds" )
+                    .setParameterList( "deIds", deIds )
+                    .executeUpdate();
+        } else {
+            removedDe = 0;
+        }
+        log.debug( String.format( "Removed all %d BlacklistedEntity. %d DatabaseEntry were removed in cascade.", removedBe, removedDe ) );
+        return removedBe;
     }
 }

@@ -3,10 +3,9 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns="http://www.springframework.org/schema/beans"
        xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
@@ -23,30 +22,6 @@
         </property>
         <property name="fallbackToSystemLocale" value="false"/>
     </bean>
-
-    <bean id="propertySourcesConfigurer" class="ubic.gemma.persistence.util.PropertySourcesConfigurer">
-        <constructor-arg>
-            <list>
-                <bean class="org.springframework.core.io.support.ResourcePropertySource">
-                    <constructor-arg value="file:${user.home}/Gemma.properties"/>
-                </bean>
-                <bean class="org.springframework.core.io.support.ResourcePropertySource">
-                    <constructor-arg value="classpath:default.properties"/>
-                </bean>
-                <bean class="org.springframework.core.io.support.ResourcePropertySource">
-                    <constructor-arg value="classpath:project.properties"/>
-                </bean>
-                <bean class="org.springframework.core.io.support.ResourcePropertySource">
-                    <constructor-arg value="classpath:ubic/gemma/version.properties"/>
-                </bean>
-            </list>
-        </constructor-arg>
-    </bean>
-
-    <context:property-placeholder location="file:${user.home}/Gemma.properties" ignore-unresolvable="true"/>
-    <context:property-placeholder location="classpath:default.properties" ignore-unresolvable="true"/>
-    <context:property-placeholder location="classpath:project.properties" ignore-unresolvable="true"/>
-    <context:property-placeholder location="classpath:ubic/gemma/version.properties"/>
 
     <!-- Configure Velocity for sending e-mail -->
     <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">

@@ -75,9 +75,11 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.SubqueryUtils.guessAliases;
 
 /**
@@ -153,7 +155,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
         assert fv.getExperimentalFactor() != null;
-        ExpressionExperiment experiment = Objects.requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         fv = this.factorValueService.create( fv );
@@ -486,7 +488,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
-        ExpressionExperiment expressionExperiment = Objects.requireNonNull( this.load( eeId ) );
+        ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
 
         Collection<String> seenTerms = new HashSet<>();
@@ -618,6 +620,28 @@ public class ExpressionExperimentServiceImpl
         if ( ee != null ) {
             Hibernate.initialize( ee.getCharacteristics() );
         }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssaySet loadBioAssaySet( Long id ) {
+        return expressionExperimentDao.loadBioAssaySet( id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thawWithoutVectors( ee );
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+        this.expressionExperimentDao.thaw( ee );
         return ee;
     }
 
@@ -897,25 +921,30 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
-        if ( !details.hasBatchInformation() || details.isSingleBatch() || details.isFailedToGetBatchInformation()
-                || details.getHadUninformativeHeaders() || details.getHadSingletonBatches() ) {
+        // if missing or failed, we can't compute a P-value
+        if ( !details.hasBatchInformation() || details.hasProblematicBatchInformation() ) {
+            return details;
+        }
+
+        // we can't compute a P-value for a single batch
+        if ( details.isSingleBatch() ) {
             return details;
         }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null )
+                if ( svd == null ) {
+                    log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
                     break;
+                }
                 double minP = 1.0;
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
                     Double pVal = cmpEffects.get( ef.getId() );
 
                     if ( pVal != null && pVal < minP ) {
-                        details.setPvalue( pVal );
-                        details.setComponent( component + 1 );
-                        details.setComponentVarianceProportion( svd.getVariances()[component] );
+                        details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                         minP = pVal;
                     }
 
@@ -923,6 +952,9 @@ public class ExpressionExperimentServiceImpl
                 return details;
             }
         }
+
+        log.warn( String.format( "No suitable batch factor was found for %s to obtain batch effect statistics.", ee ) );
+
         return details;
     }
 
@@ -931,31 +963,42 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public String getBatchEffect( ExpressionExperiment ee ) {
+    public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
-
-        String result;
         if ( !beDetails.hasBatchInformation() ) {
-            result = "NO_BATCH_INFO";
-        } else if ( beDetails.getHadSingletonBatches() ) {
-            result = "SINGLETON_BATCHES_FAILURE";
-        } else if ( beDetails.getHadUninformativeHeaders() ) {
-            result = "UNINFORMATIVE_HEADERS_FAILURE";
+            return BatchEffectType.NO_BATCH_INFO;
+        } else if ( beDetails.getHasSingletonBatches() ) {
+            return BatchEffectType.SINGLETON_BATCHES_FAILURE;
+        } else if ( beDetails.getHasUninformativeBatchInformation() ) {
+            return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
-            result = "SINGLE_BATCH_SUCCESS";
+            return BatchEffectType.SINGLE_BATCH_SUCCESS;
         } else if ( beDetails.getDataWasBatchCorrected() ) {
-            result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-        } else if ( beDetails.isFailedToGetBatchInformation() ) {
-            result = "NO_BATCH_INFO"; // sort of generic
-        } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-            result = String.format( "This data set may have a batch artifact%s, p=%.5g",
-                    beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "",
-                    beDetails.getPvalue() );
+            // Checked for in ExpressionExperimentDetails.js::renderStatus()
+            return BatchEffectType.BATCH_CORRECTED_SUCCESS;
+        } else if ( beDetails.hasProblematicBatchInformation() ) {
+            // sort of generic
+            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
+        } else if ( beDetails.getBatchEffectStatistics() == null ) {
+            return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
+        } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
-            result = "NO_BATCH_EFFECT_SUCCESS";
+            return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
         }
+    }
 
-        return result;
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public String getBatchEffectStatistics( ExpressionExperiment ee ) {
+        BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
+        if ( beDetails.getBatchEffectStatistics() != null ) {
+            return String.format( "This data set may have a batch artifact (PC %d), p=%.5g",
+                    beDetails.getBatchEffectStatistics().getComponent(),
+                    beDetails.getBatchEffectStatistics().getPvalue() );
+        }
+        return null;
     }
 
     @Override
@@ -1259,7 +1302,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        ee = this.thawLite( Objects.requireNonNull( this.load( ee.getId() ) ) ); // Necessary to make sure we have the persistent version of the given ee.
+        ee = this.thawLite( requireNonNull( this.load( ee.getId() ) ) ); // Necessary to make sure we have the persistent version of the given ee.
         ontologyService.addExpressionExperimentStatement( vc, ee );
         this.update( ee );
     }
@@ -1384,12 +1427,6 @@ public class ExpressionExperimentServiceImpl
         entities.forEach( this::remove );
     }
 
-    @Override
-    @Transactional
-    public void removeAllInBatch() {
-        throw new UnsupportedOperationException( "That would be nut." );
-    }
-
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }
@@ -1455,6 +1492,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
         return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countBioMaterials( @Nullable Filters filters ) {
+        return expressionExperimentDao.countBioMaterials( filters );
     }
 
     /**

@@ -20,7 +20,9 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.*;
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -52,11 +54,6 @@ public interface BaseDao<T> {
     Collection<T> create( Collection<T> entities );
 
     /**
-     * Create all the given entities in batch.
-     */
-    void createInBatch( Collection<T> entities );
-
-    /**
      * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
      * appropriate 'find' method.
      *
@@ -77,8 +74,6 @@ public interface BaseDao<T> {
      */
     @CheckReturnValue
     Collection<T> save( Collection<T> entities );
-
-    void saveInBatch( Collection<T> entities );
 
     /**
      * Create or update an entity whether it is transient.
@@ -148,11 +143,6 @@ public interface BaseDao<T> {
     void remove( Collection<T> entities );
 
     /**
-     * Remove all given instances in batch.
-     */
-    void removeInBatch( Collection<T> entities );
-
-    /**
      * Remove a persistent instance based on its ID.
      *
      * The implementer is trusted to know what type of object to remove.
@@ -172,16 +162,9 @@ public interface BaseDao<T> {
     void remove( T entity );
 
     /**
-     * Remove all entities from persistent storage.
-     */
-    void removeAllInBatch();
-
-    /**
      * @param entities Update the entities. Not supported if the entities are immutable.
      */
     void update( Collection<T> entities );
-
-    void updateInBatch( Collection<T> entities );
 
     /**
      * @param entity Update the entity. Not supported if the entity is immutable.

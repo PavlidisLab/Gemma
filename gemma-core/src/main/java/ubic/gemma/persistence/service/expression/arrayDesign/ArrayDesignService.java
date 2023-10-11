@@ -37,9 +37,16 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayDesignValueObject> {
+
+    /**
+     * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
@@ -370,4 +377,6 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
 
     @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
     Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort );
+
+    long countWithCache( @Nullable Filters filters );
 }

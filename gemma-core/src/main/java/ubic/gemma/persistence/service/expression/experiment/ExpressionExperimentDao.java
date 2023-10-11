@@ -41,6 +41,9 @@ public interface ExpressionExperimentDao
 
     String OBJECT_ALIAS = "ee";
 
+    @Nullable
+    BioAssaySet loadBioAssaySet( Long id );
+
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     ExpressionExperiment findByShortName( String shortName );
@@ -292,4 +295,11 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * Count the number of biomaterials of datasets satisfying the given filters.
+     * <p>
+     * The result is stored in the standard query cache.
+     */
+    long countBioMaterials( @Nullable Filters filters );
 }

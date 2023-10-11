@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -140,7 +141,7 @@ public class GeneSetController {
         if ( gsvo instanceof DatabaseBackedGeneSetValueObject ) {
             groupIsDBBacked = true;
             try {
-                userCanEditGroup = securityService.isEditable( geneSetService.load( gsvo.getId() ) );
+                userCanEditGroup = securityService.isEditable( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
             }
@@ -284,12 +285,14 @@ public class GeneSetController {
      * @return gene set vos
      */
     public DatabaseBackedGeneSetValueObject load( Long id ) {
-
         if ( id == null ) {
             throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
         }
-        return geneSetService.loadValueObjectById( id );
-
+        DatabaseBackedGeneSetValueObject gsvo = geneSetService.loadValueObjectById( id );
+        if ( gsvo == null ) {
+            throw new EntityNotFoundException( "No GeneSet with ID " + id + "." );
+        }
+        return gsvo;
     }
 
     /**
@@ -496,7 +499,7 @@ public class GeneSetController {
             geneSet = geneSetService.loadValueObjectById( id );
 
             if ( geneSet == null ) {
-                throw new IllegalArgumentException( "Unable to access gene set with id=" + id );
+                throw new EntityNotFoundException( "Unable to access gene set with id=" + id );
             }
         } else {
             throw new IllegalArgumentException( "You must provide an id" );
