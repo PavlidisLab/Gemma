@@ -337,21 +337,23 @@ public interface ExpressionExperimentService
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
+     * Obtain the full batch effect details of a given experiment.
      * @param ee experiment
      * @return details for the principal component most associated with batches (even if it isn't "significant"). Note
      * that we don't look at every component, just the first few.
      */
     BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
 
-
     /**
-     * Composes a string describing the batch effect state of the given experiment.
-     *
+     * Obtain a {@link BatchEffectType} describing the batch effect state of the given experiment.
      * @param ee the experiment to get the batch effect for.
-     * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
     BatchEffectType getBatchEffect( ExpressionExperiment ee );
 
+    /**
+     * Obtain a string describing the summary statistics of a batch effect is present in the given experiment.
+     * @return summary statistics or null if there is no batch effect
+     */
     @Nullable
     String getBatchEffectStatistics( ExpressionExperiment ee );
 

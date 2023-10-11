@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
@@ -34,14 +35,23 @@ public class BatchEffectDetails {
 
         }
 
+        /**
+         * A PCA component that is explained by the batch factor. It is 1-based.
+         */
         public int getComponent() {
             return component;
         }
 
+        /**
+         * The variance explained by the component.
+         */
         public double getComponentVarianceProportion() {
             return componentVarianceProportion;
         }
 
+        /**
+         * A P-value statistic for that component.
+         */
         public double getPvalue() {
             return pvalue;
         }
@@ -52,17 +62,17 @@ public class BatchEffectDetails {
      */
     private final boolean hasBatchInformation;
     /**
+     * Indicate if the batch information is uninformative.
+     */
+    private final boolean hasUninformativeBatchInformation;
+    /**
      * Indicate if the batch information is problematic.
      */
     private final boolean hasProblematicBatchInformation;
     /**
      * Indicate if the dataset has singleton batches (i.e. a batch only one sample).
      */
-    private final boolean hadSingletonBatches;
-    /**
-     * Indicate if the batch information is uninformative.
-     */
-    private final boolean hadUninformativeHeaders;
+    private final boolean hasSingletonBatches;
     /**
      * Indicate if batch correction was performed on the expression data.
      */
@@ -80,12 +90,12 @@ public class BatchEffectDetails {
         this.hasBatchInformation = infoEvent != null;
         if ( infoEvent != null ) {
             this.hasProblematicBatchInformation = FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) );
-            this.hadSingletonBatches = SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() );
-            this.hadUninformativeHeaders = UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() );
+            this.hasSingletonBatches = SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() );
+            this.hasUninformativeBatchInformation = UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() );
         } else {
             this.hasProblematicBatchInformation = false;
-            this.hadSingletonBatches = false;
-            this.hadUninformativeHeaders = false;
+            this.hasSingletonBatches = false;
+            this.hasUninformativeBatchInformation = false;
         }
         this.dataWasBatchCorrected = dataWasBatchCorrected;
         this.singleBatch = singleBatch;
@@ -96,12 +106,12 @@ public class BatchEffectDetails {
         return this.dataWasBatchCorrected;
     }
 
-    public boolean getHadSingletonBatches() {
-        return hadSingletonBatches;
+    public boolean getHasSingletonBatches() {
+        return hasSingletonBatches;
     }
 
-    public boolean getHadUninformativeHeaders() {
-        return hadUninformativeHeaders;
+    public boolean getHasUninformativeBatchInformation() {
+        return hasUninformativeBatchInformation;
     }
 
     public boolean hasBatchInformation() {
@@ -131,6 +141,10 @@ public class BatchEffectDetails {
     }
 
     public void setBatchEffectStatistics( double pVal, int i, double variance ) {
+        Assert.isTrue( pVal >= 0 );
+        Assert.isTrue( pVal <= 1 );
+        Assert.isTrue( i >= 1 );
+        Assert.isTrue( variance >= 0 );
         this.hasBatchEffectStatistics = true;
         this.pvalue = pVal;
         this.component = i;

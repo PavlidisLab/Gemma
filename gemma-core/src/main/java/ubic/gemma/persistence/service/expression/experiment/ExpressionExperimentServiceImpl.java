@@ -934,8 +934,10 @@ public class ExpressionExperimentServiceImpl
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null )
+                if ( svd == null ) {
+                    log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
                     break;
+                }
                 double minP = 1.0;
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
@@ -950,6 +952,9 @@ public class ExpressionExperimentServiceImpl
                 return details;
             }
         }
+
+        log.warn( String.format( "No suitable batch factor was found for %s to obtain batch effect statistics.", ee ) );
+
         return details;
     }
 
@@ -962,9 +967,9 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
         if ( !beDetails.hasBatchInformation() ) {
             return BatchEffectType.NO_BATCH_INFO;
-        } else if ( beDetails.getHadSingletonBatches() ) {
+        } else if ( beDetails.getHasSingletonBatches() ) {
             return BatchEffectType.SINGLETON_BATCHES_FAILURE;
-        } else if ( beDetails.getHadUninformativeHeaders() ) {
+        } else if ( beDetails.getHasUninformativeBatchInformation() ) {
             return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
             return BatchEffectType.SINGLE_BATCH_SUCCESS;

@@ -67,8 +67,6 @@ import java.io.Writer;
 import java.text.NumberFormat;
 import java.util.*;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Running link analyses through the spring context; will persist the results if the configuration says so. See
  * LinkAnalysisCli for more instructions.
@@ -456,7 +454,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                         "No batch information available, out of an abundance of caution we are skipping" );
             }
 
-            if ( requireNonNull( batchEffect.getBatchEffectStatistics() ).getPvalue() < 0.001 ) {
+            if ( batchEffect.getBatchEffectStatistics() == null ) {
+                throw new UnsuitableForAnalysisException( ee,
+                        "Batch effect statistics are missing, it's not possible to detect a batch effect." );
+            }
+
+            if ( batchEffect.getBatchEffectStatistics().getPvalue() < 0.001 ) {
                 double componentVarianceProportion = batchEffect.getBatchEffectStatistics().getComponentVarianceProportion();
                 int component = batchEffect.getBatchEffectStatistics().getComponent();
                 // don't worry if it is a "minor" component. remember that is must be one of the first few to make it
