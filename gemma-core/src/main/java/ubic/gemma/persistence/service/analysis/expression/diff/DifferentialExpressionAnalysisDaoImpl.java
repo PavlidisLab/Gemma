@@ -198,6 +198,8 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
             insertRowsAndAssignGeneratedKeys( INSERT_CONTRAST_SQL, insertContrastStmt, contrasts, contrastPersister, ( SessionImplementor ) session );
         } );
 
+        getSessionFactory().getCurrentSession().flush();
+
         return finalEntity;
     }
 
