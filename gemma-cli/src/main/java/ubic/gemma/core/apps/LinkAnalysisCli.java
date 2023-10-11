@@ -22,6 +22,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.time.StopWatch;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
@@ -44,8 +46,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
@@ -60,13 +64,27 @@ import java.util.*;
  * @author paul (refactoring)
  * @author vaneet
  */
+@Component
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
+
+    @Autowired
+    private LinkAnalysisService linkAnalysisService;
+    @Autowired
+    private LinkAnalysisPersister linkAnalysisPersister;
+    @Autowired
+    private CoexpressionService coexpressionService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     private final FilterConfig filterConfig = new FilterConfig();
     private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
     private String analysisTaxon = null;
     private String dataFileName = null;
-    private LinkAnalysisService linkAnalysisService;
+    private Taxon taxon;
     private boolean initializeFromOldData = false;
     private boolean updateNodeDegree = false;
     private boolean deleteAnalyses = false;
@@ -79,27 +97,20 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void doWork() throws Exception {
         if ( initializeFromOldData ) {
-            AbstractCLI.log.info( "Initializing links from old data for " + this.getTaxon() );
-            LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
-            s.initializeLinksFromOldData( this.getTaxon() );
+            AbstractCLI.log.info( "Initializing links from old data for " + taxon );
+            linkAnalysisPersister.initializeLinksFromOldData( taxon );
             return;
         } else if ( updateNodeDegree ) {
-
             // we waste some time here getting the experiments.
             this.loadTaxon();
-
-            this.getBean( CoexpressionService.class ).updateNodeDegrees( this.getTaxon() );
+            coexpressionService.updateNodeDegrees( taxon );
         }
-
-        this.linkAnalysisService = this.getBean( LinkAnalysisService.class );
 
         if ( this.dataFileName != null ) {
             /*
              * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
              * code)
              */
-            ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
-
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
 
             if ( arrayDesign == null ) {
@@ -118,10 +129,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             QuantitationType qtype = this.makeQuantitationType();
 
-            SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = this
-                    .getBean( SimpleExpressionDataLoaderService.class );
             ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-            try ( InputStream data = new FileInputStream( new File( this.dataFileName ) ) ) {
+            try ( InputStream data = new FileInputStream( this.dataFileName ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
 
@@ -147,11 +156,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 }
                 AbstractCLI.log.info( "Read " + dataVectors.size() + " data vectors" );
 
-            } catch ( Exception e ) {
-                throw e;
             }
 
-            this.linkAnalysisService.processVectors( this.getTaxon(), dataVectors, filterConfig, linkAnalysisConfig );
+            this.linkAnalysisService.processVectors( taxon, dataVectors, filterConfig, linkAnalysisConfig );
         } else {
 
             /*
@@ -166,19 +173,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
                 final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
 
-                Collections.sort( sees, new Comparator<BioAssaySet>() {
-                    @Override
-                    public int compare( BioAssaySet o1, BioAssaySet o2 ) {
+                sees.sort( ( o1, o2 ) -> {
 
-                        ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
-                        ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
+                    ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
+                    ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
 
-                        assert e1 != null : "No valueobject: " + e2;
-                        assert e2 != null : "No valueobject: " + e1;
+                    assert e1 != null : "No valueobject: " + e2;
+                    assert e2 != null : "No valueobject: " + e1;
 
-                        return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
+                    return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
 
-                    }
                 } );
             }
 
@@ -197,7 +201,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return "Analyze expression data sets for coexpressed genes";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -334,7 +337,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "dataFile" ) ) {
-            if ( this.expressionExperiments.size() > 0 ) {
+            if ( !this.expressionExperiments.isEmpty() ) {
                 throw new RuntimeException( "The 'dataFile' option is incompatible with other data set selection options" );
             }
 
@@ -429,7 +432,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     }
 
-    @SuppressWarnings("static-access")
     private void buildFilterConfigOptions( Options options ) {
         Option minPresentFraction = Option.builder( "m" ).hasArg().argName( "Missing Value Threshold" ).desc(
                         "Fraction of data points that must be present in a profile to be retained , default="
@@ -473,11 +475,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private void loadTaxon() {
-        super.setTaxon( this.getTaxonService().findByCommonName( analysisTaxon ) );
-        if ( this.getTaxon() == null || !this.getTaxon().getIsGenesUsable() ) {
-            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + getTaxon() );
+        this.taxon = this.taxonService.findByCommonName( analysisTaxon );
+        if ( taxon == null || !taxon.getIsGenesUsable() ) {
+            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
         }
-        AbstractCLI.log.debug( getTaxon() + "is used" );
+        AbstractCLI.log.debug( taxon + "is used" );
     }
 
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
@@ -489,7 +491,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( columnName.toString() );
-            bioMaterial.setSourceTaxon( getTaxon() );
+            bioMaterial.setSourceTaxon( taxon );
 
             BioAssay assay = BioAssay.Factory.newInstance();
             assay.setName( columnName.toString() );
@@ -524,7 +526,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( this.deleteAnalyses ) {
             AbstractCLI.log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
-            if ( this.getBean( LinkAnalysisPersister.class ).deleteAnalyses( ee ) ) {
+            if ( linkAnalysisPersister.deleteAnalyses( ee ) ) {
                 addSuccessObject( ee );
             } else {
                 addErrorObject( ee, "Seems to not have any eligible link analysis to remove" );
