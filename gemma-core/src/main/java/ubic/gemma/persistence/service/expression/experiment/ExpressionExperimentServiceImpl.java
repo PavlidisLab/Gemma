@@ -974,7 +974,9 @@ public class ExpressionExperimentServiceImpl
         } else if ( beDetails.hasProblematicBatchInformation() ) {
             // sort of generic
             return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
-        } else if ( requireNonNull( beDetails.getBatchEffectStatistics(), "Expected batch information statistics." ).getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+        } else if ( beDetails.getBatchEffectStatistics() == null ) {
+            return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
+        } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
             return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
             return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
