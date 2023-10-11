@@ -84,16 +84,13 @@ function getBatchInfoBadges(ee) {
     }
 
     // batch status, shown whether we have batch information or not.
-    if (ee.batchEffect !== null && ee.batchEffect !== "") {
+    if (ee.batchEffect !== null) {
 		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
-  
 		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
-  
-	
 		} else if (ee.batchEffect === "BATCH_CORRECTED_SUCCESS") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
-            result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffect)
+            result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffectStatistics)
         }  else if (ee.batchEffect === "NO_BATCH_EFFECT_SUCCESS" ) {
             // if there is also a batch confound, don't show this.
             if (ee.batchConfound !== null && ee.batchConfound !== "") {
@@ -103,10 +100,15 @@ function getBatchInfoBadges(ee) {
             }
         } else if (ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
-        } else if (ee.batchEffect === "NO_BATCH_INFO") { 
+        } else if (ee.batchEffect === "NO_BATCH_INFO") {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo);
+        } else if (ee.batchEffect === "BATCH_EFFECT_FAILURE") {
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffectStatistics )
+        } else if (ee.batchEffect === "BATCH_EFFECT_UNDETERMINED_FAILURE") {
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect is undetermined, there was likely a problem with the SVD or a missing batch factor.');
         } else {
-            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
+            // unsupported batch effect type
+            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Unsupported batch effect type')
         }
     }
 

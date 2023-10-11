@@ -517,4 +517,10 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         return geneValueObjects;
     }
 
+    @Override
+    @Transactional
+    public int removeAll() {
+        return geneDao.removeAll();
+    }
+
 }

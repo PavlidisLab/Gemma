@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -48,7 +49,7 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
             SecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
-        assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
+        assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
     }
 
@@ -64,7 +65,7 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
             SecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
-        assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
+        assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
     }
 
@@ -80,7 +81,7 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
             SecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
-        assertEquals( "NO_BATCH_INFO", ee.getBatchEffect() );
+        assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );
         assertNull( ee.getBatchConfound() );
     }
 }

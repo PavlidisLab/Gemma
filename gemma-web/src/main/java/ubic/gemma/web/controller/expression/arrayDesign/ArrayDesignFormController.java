@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,7 +110,7 @@ public class ArrayDesignFormController extends BaseFormController {
             try {
                 id = Long.parseLong( idString );
             } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException( "Invalid ID for platform.", e );
             }
             Collection<Long> ids = new HashSet<Long>();
             ids.add( id );

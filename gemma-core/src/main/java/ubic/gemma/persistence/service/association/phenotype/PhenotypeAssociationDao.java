@@ -203,4 +203,5 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      */
     void removePhenotypePublication( PhenotypeAssociationPublication phenotypeAssociationPublicationId );
 
+    int removeAll();
 }

@@ -11,6 +11,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Service
 public class BioAssaySetServiceImpl implements BioAssaySetService {
@@ -54,19 +56,54 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Override
     public Collection<BioAssaySet> load( Collection<Long> ids ) {
-        throw new UnsupportedOperationException( "Cannot load BioAssaySet by ID, use a specific service instead." );
+        Collection<BioAssaySet> result = new ArrayList<>();
+        result.addAll( expressionExperimentService.load( ids ) );
+        result.addAll( expressionExperimentSubSetService.load( ids ) );
+        return result;
     }
 
     @Nullable
     @Override
     public BioAssaySet load( Long id ) {
-        throw new UnsupportedOperationException( "Cannot load BioAssaySet by ID, use a specific service instead." );
+        BioAssaySet bas;
+        bas = expressionExperimentService.load( id );
+        if ( bas != null ) {
+            return bas;
+        }
+        return expressionExperimentSubSetService.load( id );
     }
 
     @Nonnull
     @Override
     public BioAssaySet loadOrFail( Long id ) throws NullPointerException {
-        throw new UnsupportedOperationException( "Cannot load BioAssaySet by ID, use a specific service instead." );
+        BioAssaySet bas;
+        bas = expressionExperimentService.load( id );
+        if ( bas != null ) {
+            return bas;
+        }
+        return expressionExperimentSubSetService.loadOrFail( id );
+    }
+
+    @Nonnull
+    @Override
+    public <T extends Exception> BioAssaySet loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
+        BioAssaySet bas;
+        bas = expressionExperimentService.load( id );
+        if ( bas != null ) {
+            return bas;
+        }
+        return expressionExperimentSubSetService.loadOrFail( id, exceptionSupplier );
+    }
+
+    @Nonnull
+    @Override
+    public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
+        BioAssaySet bas;
+        bas = expressionExperimentService.load( id );
+        if ( bas != null ) {
+            return bas;
+        }
+        return expressionExperimentSubSetService.loadOrFail( id, exceptionSupplier, message );
     }
 
     @Override

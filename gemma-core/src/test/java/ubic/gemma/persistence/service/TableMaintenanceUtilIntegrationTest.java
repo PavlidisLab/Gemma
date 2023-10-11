@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.util.Settings;
 
@@ -18,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author poirigui
  */
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
 
     private static final Path GENE2CS_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );

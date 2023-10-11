@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -58,6 +59,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             + "'ubic.gemma.model.association.phenotype.ExperimentalEvidence',"
             + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence') ";
     private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
+
+    @Autowired
+    private AuditTrailDao auditTrailDao;
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
@@ -759,6 +763,25 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .createQuery( "delete from PhenotypeAssociationPublication p where p = :p" )
                 .setParameter( "p", phenotypeAssociationPublication )
                 .executeUpdate();
+    }
+
+    @Override
+    public int removeAll() {
+        //noinspection unchecked
+        List<Long> atIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select at.id from PhenotypeAssociation pa join pa.auditTrail at" )
+                .list();
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from CHARACTERISTIC where PHENOTYPE_ASSOCIATION_FK is not null" )
+                .executeUpdate();
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from PHENOTYPE_ASSOCIATION_PUBLICATIONS where PHENOTYPE_ASSOCIATION_FK is not null" )
+                .executeUpdate();
+        int associationsRemoved = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from PhenotypeAssociation" )
+                .executeUpdate();
+        auditTrailDao.removeByIds( atIds );
+        return associationsRemoved;
     }
 
     @SuppressWarnings("ConstantConditions") // Better readability

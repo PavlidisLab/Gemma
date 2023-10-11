@@ -23,6 +23,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -85,7 +86,7 @@ public class UserFormMultiActionController extends BaseController {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             if ( !username.equals( originalUserName ) ) {
-                throw new RuntimeException( "You must be logged in to edit your profile." );
+                throw new AccessDeniedException( "You must be logged in to edit your profile." );
             }
 
             UserDetailsImpl user = ( UserDetailsImpl ) userManager.loadUserByUsername( username );
@@ -106,7 +107,7 @@ public class UserFormMultiActionController extends BaseController {
 
             if ( password.length() > 0 ) {
                 if ( !StringUtils.equals( password, passwordConfirm ) ) {
-                    throw new RuntimeException( "Passwords do not match." );
+                    throw new IllegalArgumentException( "Passwords do not match." );
                 }
                 String encryptedPassword = passwordEncoder.encodePassword( password, user.getUsername() );
                 userManager.changePassword( oldPassword, encryptedPassword );
@@ -177,7 +178,7 @@ public class UserFormMultiActionController extends BaseController {
         if ( StringUtils.isEmpty( email ) || StringUtils.isEmpty( username ) ) {
             String txt = "Email or username not specified.  These are required fields.";
             log.warn( txt );
-            throw new RuntimeException( txt );
+            throw new IllegalArgumentException( txt );
         }
 
         /* look up the user's information and reset password. */

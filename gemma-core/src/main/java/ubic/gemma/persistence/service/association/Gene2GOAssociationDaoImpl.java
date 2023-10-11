@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.association;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -145,6 +144,29 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                         "select distinct  " + "  gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
                                 + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
                 .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
+    }
+
+    @Override
+    public int removeAll() {
+        //noinspection unchecked
+        List<Long> cIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select c.id from Gene2GOAssociation g2g join g2g.ontologyEntry c" )
+                .list();
+        int removedAssociations = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from Gene2GOAssociation" )
+                .executeUpdate();
+        int removedCharacteristics;
+        if ( !cIds.isEmpty() ) {
+            removedCharacteristics = getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from Characteristic where id in :cIds" )
+                    .setParameterList( "cIds", cIds )
+                    .executeUpdate();
+        } else {
+            removedCharacteristics = 0;
+        }
+        log.debug( String.format( "Removed all %d Gene2GOAssociation. %d Characteristic were removed in cascade.",
+                removedAssociations, removedCharacteristics ) );
+        return removedAssociations;
     }
 
     private Map<? extends Gene, ? extends Collection<Characteristic>> fetchBatch( Set<Gene> batch ) {

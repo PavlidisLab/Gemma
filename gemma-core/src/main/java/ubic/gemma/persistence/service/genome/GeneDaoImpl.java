@@ -427,6 +427,71 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    public int removeAll() {
+        // remove associations
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene is not null)" )
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneSetMember gm where gm.gene is not null" )
+                .executeUpdate();
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene is not null" )
+                .executeUpdate();
+        int removedAccessions = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
+                .executeUpdate();
+        // we have to do some manual deletion because no cascading is performed when deleting in batch
+        //noinspection unchecked
+        List<Long> gpIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select gp.id from Gene g join g.products gp" )
+                .list();
+        int removedGeneProductsAccessions;
+        if ( !gpIds.isEmpty() ) {
+            removedGeneProductsAccessions = getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" )
+                    .setParameterList( "gpIds", gpIds )
+                    .executeUpdate();
+        } else {
+            removedGeneProductsAccessions = 0;
+        }
+        int removedProducts = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneProduct gp where gp.gene is not null" )
+                .executeUpdate();
+        //noinspection unchecked
+        List<Long> gaIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select ga.id from Gene g join g.aliases ga" )
+                .list();
+        int removedAliases;
+        if ( !gaIds.isEmpty() ) {
+            removedAliases = getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" )
+                    .setParameterList( "gaIds", gaIds )
+                    .executeUpdate();
+        } else {
+            removedAliases = 0;
+        }
+        //noinspection unchecked
+        List<Long> plIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select pl.id from Gene g join g.physicalLocation pl" )
+                .list();
+        int removedGenes = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from Gene" )
+                .executeUpdate();
+        int removedPhysicalLocations;
+        if ( !plIds.isEmpty() ) {
+            removedPhysicalLocations = getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from PhysicalLocation pl where pl.id in :plIds" )
+                    .executeUpdate();
+        } else {
+            removedPhysicalLocations = 0;
+        }
+        log.debug( String.format( "Removed all %d Gene. %d GeneProduct, %d DatabaseEntry, %d GeneAlias and %d PhysicalLocation were also removed in cascade.",
+                removedGenes, removedProducts, removedAccessions + removedGeneProductsAccessions, removedAliases, removedPhysicalLocations ) );
+        return removedGenes;
+    }
+
+    @Override
     public void remove( Gene gene ) {
         // remove associations
         this.getSessionFactory().getCurrentSession()

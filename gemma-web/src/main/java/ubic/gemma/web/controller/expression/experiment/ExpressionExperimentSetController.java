@@ -37,6 +37,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -168,7 +169,7 @@ public class ExpressionExperimentSetController extends BaseController {
 
         ExpressionExperimentSetValueObject vo = expressionExperimentSetService.loadValueObjectById( id );
         if ( vo == null ) {
-            throw new IllegalArgumentException( "No such set with id=" + id );
+            throw new EntityNotFoundException( "No such set with id=" + id );
         }
         // FIXME this is a bit inefficient, for security filtering ... could have an ID-filtering interceptor.
         return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
@@ -472,7 +473,7 @@ public class ExpressionExperimentSetController extends BaseController {
             set = expressionExperimentSetService.loadValueObjectById( id );
 
             if ( set == null ) {
-                throw new IllegalArgumentException( "Unable to access experiment set with id=" + id );
+                throw new EntityNotFoundException( "Unable to access experiment set with id=" + id );
             }
         } else {
             throw new IllegalArgumentException( "You must provide an id" );

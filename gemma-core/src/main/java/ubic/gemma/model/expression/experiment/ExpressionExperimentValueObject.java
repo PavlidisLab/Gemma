@@ -8,7 +8,8 @@ import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -33,7 +34,15 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
     private String batchConfound;
+    /**
+     * Batch effect type. See {@link BatchEffectType} enum for possible values.
+     */
     private String batchEffect;
+    /**
+     * Summary statistics of a batch effect is present.
+     */
+    @Nullable
+    private String batchEffectStatistics;
     @JsonIgnore
     private Integer bioMaterialCount;
     @JsonIgnore
@@ -117,7 +126,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Batch info
-        batchEffect = ee.getBatchEffect();
+        if ( ee.getBatchEffect() != null ) {
+            batchEffect = ee.getBatchEffect().name();
+        }
+        batchEffectStatistics = ee.getBatchEffectStatistics();
         batchConfound = ee.getBatchConfound();
 
         // GEEQ: for administrators, create an admin geeq VO. Normal GEEQ VO otherwise.

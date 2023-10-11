@@ -42,13 +42,15 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
@@ -122,11 +124,8 @@ public class ExpressionExperimentDataFetchController {
      * @return an array of files available in the metadata directory for the given experiment.
      */
     public MetaFile[] getMetadataFiles( Long eeId ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Experiment with given ID does not exist." );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
+                EntityNotFoundException::new, "Experiment with given ID does not exist." );
 
         MetaFile[] metaFiles = new MetaFile[ExpressionExperimentMetaFileType.values().length];
 
@@ -436,8 +435,7 @@ public class ExpressionExperimentDataFetchController {
                     + " milliseconds" );
 
             if ( files.isEmpty() ) {
-                throw new IllegalArgumentException(
-                        "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
+                throw new EntityNotFoundException( "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
                 // } else if ( files.size() > 1 ) {
                 // throw new UnsupportedOperationException(
                 // "Sorry, you can't get multiple analyses at once using this method." );
