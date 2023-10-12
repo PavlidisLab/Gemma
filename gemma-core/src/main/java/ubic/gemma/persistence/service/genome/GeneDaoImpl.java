@@ -482,6 +482,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( !plIds.isEmpty() ) {
             removedPhysicalLocations = getSessionFactory().getCurrentSession()
                     .createQuery( "delete from PhysicalLocation pl where pl.id in :plIds" )
+                    .setParameterList( "plIds", plIds )
                     .executeUpdate();
         } else {
             removedPhysicalLocations = 0;
