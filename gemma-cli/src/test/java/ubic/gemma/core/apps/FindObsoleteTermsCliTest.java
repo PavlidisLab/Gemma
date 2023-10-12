@@ -22,7 +22,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class FindObsoleteTermsCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class FindObsoleteTermsCliTestContextConfiguration {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPlaceholderConfigurer() {

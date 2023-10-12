@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -28,25 +29,30 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -70,7 +76,7 @@ import java.util.stream.Collectors;
  *
  * @author Paul
  */
-public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
+public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthenticatedCLI {
 
     @Autowired
     protected ExpressionExperimentService eeService;
@@ -84,6 +90,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     private SearchService searchService;
     @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    protected AuditTrailService auditTrailService;
+    @Autowired
+    protected AuditEventService auditEventService;
 
     protected final Set<BioAssaySet> expressionExperiments = new HashSet<>();
     /**
@@ -91,6 +101,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Taxon taxon = null;
     protected boolean force = false;
+
+    /**
+     * The event type to look for the lack of, when using auto-seek.
+     */
+    protected Class<? extends AuditEventType> autoSeekEventType = null;
 
     protected ExpressionExperimentManipulatingCLI() {
     }
@@ -149,9 +164,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( commandLine, taxonService );
+            this.taxon = this.getTaxonByName( commandLine );
         }
 
         if ( commandLine.hasOption( "force" ) ) {
@@ -190,8 +205,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         if ( !force && !expressionExperiments.isEmpty() ) {
 
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                this.autoSeek = true;
+            if ( isAutoSeek() ) {
                 if ( this.autoSeekEventType == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
                 }
@@ -340,7 +354,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();
-        for ( String eeName : AbstractCLIContextCLI.readListFileToStrings( fileName ) ) {
+        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -377,5 +391,73 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 .map( ExpressionExperiment.class::cast )
                 .filter( ee -> ee.getCurationDetails().getTroubled() )
                 .collect( Collectors.toSet() );
+    }
+
+    /**
+     * @param auditable  auditable
+     * @param eventClass can be null
+     * @return boolean
+     */
+    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
+        boolean needToRun = true;
+        Date skipIfLastRunLaterThan = this.getLimitingDate();
+        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
+
+        boolean okToRun = true; // assume okay unless indicated otherwise
+
+        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
+        // count.
+        for ( int j = events.size() - 1; j >= 0; j-- ) {
+            AuditEvent event = events.get( j );
+            if ( event == null ) {
+                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
+            }
+            AuditEventType eventType = event.getEventType();
+            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
+                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
+                if ( skipIfLastRunLaterThan != null ) {
+                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
+                        AbstractCLI.log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
+                        needToRun = false;
+                    }
+                } else {
+                    needToRun = false; // it has been run already at some point
+                }
+            }
+        }
+
+        /*
+         * Always skip if the object is curatable and troubled
+         */
+        if ( auditable instanceof Curatable ) {
+            Curatable curatable = ( Curatable ) auditable;
+            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
+
+            // special case for expression experiments - check associated ADs.
+            if ( okToRun && curatable instanceof ExpressionExperiment ) {
+                for ( ArrayDesign ad : eeService.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                    if ( ad.getCurationDetails().getTroubled() ) {
+                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+                        break;
+                    }
+                }
+            }
+
+            if ( !okToRun ) {
+                addErrorObject( auditable, "Has an active 'trouble' flag" );
+            }
+        }
+
+        return !needToRun || !okToRun;
+    }
+
+    protected Taxon getTaxonByName( CommandLine commandLine ) {
+        String taxonName = commandLine.getOptionValue( 't' );
+        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+        }
+        return taxon;
     }
 }

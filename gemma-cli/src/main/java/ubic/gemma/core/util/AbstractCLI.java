@@ -26,11 +26,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.DateUtil;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
@@ -47,7 +47,6 @@ import java.util.concurrent.*;
  *
  * @author pavlidis
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AbstractCLI implements CLI {
 
     /**
@@ -63,36 +62,31 @@ public abstract class AbstractCLI implements CLI {
      */
     public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
 
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
-    protected static final String AUTO_OPTION_NAME = "auto";
-    protected static final String THREADS_OPTION = "threads";
-    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
-    private static final int DEFAULT_PORT = 3306;
     public static final String HEADER = "Options:";
-    private static final String HOST_OPTION = "H";
-    private static final String PORT_OPTION = "P";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
+
+    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
+
+    private static final String AUTO_OPTION_NAME = "auto";
+    private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
     private static final String TESTING_OPTION = "testing";
     private static final String DATE_OPTION = "mdate";
 
+    @Autowired
+    private BeanFactory ctx;
+
     /* support for convenience options */
-    private final String DEFAULT_HOST = "localhost";
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
-    protected boolean autoSeek = false;
-    /**
-     * The event type to look for the lack of, when using auto-seek.
-     */
-    protected Class<? extends AuditEventType> autoSeekEventType = null;
+    private boolean autoSeek = false;
     /**
      * Date used to identify which entities to run the tool on (e.g., those which were run less recently than mDate). To
      * enable call addDateOption.
      */
-    protected String mDate = null;
-    protected int numThreads = 1;
-    protected String host = DEFAULT_HOST;
-    protected int port = AbstractCLI.DEFAULT_PORT;
+    private String mDate = null;
+    private int numThreads = 1;
     private ExecutorService executorService;
 
     // hold the results of the command execution
@@ -101,50 +95,51 @@ public abstract class AbstractCLI implements CLI {
     private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<>() );
 
     /**
-     * Run the command.
-     * <p>
-     * Parse and process CLI arguments, invoke the command doWork implementation, and print basic statistics about time
-     * usage.
+     * Convenience method to obtain instance of any bean by name.
      *
-     * @param args Arguments to pass to {@link #processCommandLine(Options, String[])}
-     * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
-     * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
-     * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
+     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
+     * {@link BeanFactory}.
+     *
+     * @param <T>  the bean class type
+     * @param clz  class
+     * @param name name
+     * @return bean
+     */
+    @SuppressWarnings("SameParameterValue") // Better for general use
+    @Deprecated
+    protected <T> T getBean( String name, Class<T> clz ) {
+        assert ctx != null : "Spring context was not initialized";
+        return ctx.getBean( name, clz );
+    }
+
+    @Deprecated
+    protected <T> T getBean( Class<T> clz ) {
+        assert ctx != null : "Spring context was not initialized";
+        return ctx.getBean( clz );
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Parse and process CLI arguments, invoke the command {@link #doWork()} implementation, and print basic statistics
+     * about time usage.
+     * <p>
+     * Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the internal error
+     * objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
     public int executeCommand( String[] args ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
+        StopWatch watch = StopWatch.createStarted();
         if ( args == null ) {
             System.err.println( "No arguments" );
             return FAILURE;
         }
+        Options options = new Options();
+        buildStandardOptions( options );
+        buildOptions( options );
         try {
-            Options options = new Options();
-            buildStandardOptions( options );
-            buildOptions( options );
             DefaultParser parser = new DefaultParser();
-            CommandLine commandLine;
-            try {
-                commandLine = parser.parse( options, args );
-            } catch ( ParseException e ) {
-                if ( e instanceof MissingOptionException ) {
-                    // check if -h/--help was passed alongside a required argument
-                    if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
-                        printHelp( options );
-                        return SUCCESS;
-                    }
-                    System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
-                } else if ( e instanceof AlreadySelectedException ) {
-                    System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
-                } else if ( e instanceof MissingArgumentException ) {
-                    System.err.println( "Missing argument: " + e.getMessage() );
-                } else if ( e instanceof UnrecognizedOptionException ) {
-                    System.err.println( "Unrecognized option: " + e.getMessage() );
-                }
-                printHelp( options );
-                return FAILURE;
-            }
+            CommandLine commandLine = parser.parse( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options );
@@ -158,6 +153,23 @@ public abstract class AbstractCLI implements CLI {
             processOptions( commandLine );
             doWork();
             return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+        } catch ( ParseException e ) {
+            if ( e instanceof MissingOptionException ) {
+                // check if -h/--help was passed alongside a required argument
+                if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
+                    printHelp( options );
+                    return SUCCESS;
+                }
+                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
+            } else if ( e instanceof AlreadySelectedException ) {
+                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
+            } else if ( e instanceof MissingArgumentException ) {
+                System.err.println( "Missing argument: " + e.getMessage() );
+            } else if ( e instanceof UnrecognizedOptionException ) {
+                System.err.println( "Unrecognized option: " + e.getMessage() );
+            }
+            printHelp( options );
+            return FAILURE;
         } catch ( Exception e ) {
             log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
@@ -175,7 +187,6 @@ public abstract class AbstractCLI implements CLI {
         Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
                 .build();
-
         options.addOption( autoSeekOption );
     }
 
@@ -187,29 +198,6 @@ public abstract class AbstractCLI implements CLI {
                 .build();
 
         options.addOption( dateOption );
-    }
-
-    /**
-     * Convenience method to add a standard pair of options to intake a host name and port number. *
-     *
-     * @param hostRequired Whether the host name is required
-     * @param portRequired Whether the port is required
-     */
-    protected void addHostAndPortOptions( Options options, boolean hostRequired, boolean portRequired ) {
-        Option hostOpt = Option.builder( HOST_OPTION ).argName( "host name" ).longOpt( "host" ).hasArg()
-                .desc( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
-                .build();
-
-        hostOpt.setRequired( hostRequired );
-
-        Option portOpt = Option.builder( PORT_OPTION ).argName( "port" ).longOpt( "port" ).hasArg()
-                .desc( "Port to use on host (Default = " + AbstractCLI.DEFAULT_PORT + ")" )
-                .build();
-
-        portOpt.setRequired( portRequired );
-
-        options.addOption( hostOpt );
-        options.addOption( portOpt );
     }
 
     /**
@@ -248,54 +236,12 @@ public abstract class AbstractCLI implements CLI {
      */
     protected abstract void doWork() throws Exception;
 
-    protected final double getDoubleOptionValue( CommandLine commandLine, char option ) {
-        try {
-            return Double.parseDouble( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( option ) ) + ", not a valid double", e );
-        }
+    protected boolean isAutoSeek() {
+        return autoSeek;
     }
 
-    protected final double getDoubleOptionValue( CommandLine commandLine, String option ) {
-        try {
-            return Double.parseDouble( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid double", e );
-        }
-    }
-
-    protected final String getFileNameOptionValue( CommandLine commandLine, char c ) {
-        String fileName = commandLine.getOptionValue( c );
-        File f = new File( fileName );
-        if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( c ) ) + ", cannot read from file" );
-        }
-        return fileName;
-    }
-
-    protected final String getFileNameOptionValue( CommandLine commandLine, String c ) {
-        String fileName = commandLine.getOptionValue( c );
-        File f = new File( fileName );
-        if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, c ) + ", cannot read from file" );
-        }
-        return fileName;
-    }
-
-    protected final int getIntegerOptionValue( CommandLine commandLine, char option ) {
-        try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, String.valueOf( option ) ) + ", not a valid integer", e );
-        }
-    }
-
-    protected final int getIntegerOptionValue( CommandLine commandLine, String option ) {
-        try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid integer", e );
-        }
+    protected int getNumThreads() {
+        return numThreads;
     }
 
     protected Date getLimitingDate() {
@@ -307,7 +253,7 @@ public abstract class AbstractCLI implements CLI {
         return skipIfLastRunLaterThan;
     }
 
-    protected void printHelp( Options options ) {
+    private void printHelp( Options options ) {
         new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
                 this.getCommandName() + " [options]",
                 this.getShortDesc() + "\n" + AbstractCLI.HEADER,
@@ -319,11 +265,10 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
      * {@link #doWork()}.
-     *
-     * @throws Exception in case of unrecoverable failure (i.e. missing option or invalid value), an exception can be
-     *                   raised and will result in an exit code of {@link #FAILURE}.
+     * @throws ParseException in case of unrecoverable failure (i.e. missing option or invalid value), an exception can
+     *                        be raised and will result in an exit code of {@link #FAILURE}.
      */
-    protected abstract void processOptions( CommandLine commandLine ) throws Exception;
+    protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
 
     /**
      * Add a success object to indicate success in a batch processing.
@@ -383,7 +328,7 @@ public abstract class AbstractCLI implements CLI {
      * 'successObjects' and 'errorObjects'
      */
     private void summarizeProcessing() {
-        if ( successObjects.size() > 0 ) {
+        if ( !successObjects.isEmpty() ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
                     .append( " objects:\n" );
@@ -395,7 +340,7 @@ public abstract class AbstractCLI implements CLI {
             AbstractCLI.log.info( buf );
         }
 
-        if ( errorObjects.size() > 0 ) {
+        if ( !errorObjects.isEmpty() ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nErrors occurred during the processing of " )
                     .append( errorObjects.size() ).append( " objects:\n" );
@@ -425,36 +370,34 @@ public abstract class AbstractCLI implements CLI {
         return futureResults;
     }
 
-    private String invalidOptionString( CommandLine commandLine, String option ) {
-        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
-    }
-
     /**
      * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
      * purposes.
      */
-    protected void processStandardOptions( CommandLine commandLine ) {
-
-        if ( commandLine.hasOption( AbstractCLI.HOST_OPTION ) ) {
-            this.host = commandLine.getOptionValue( AbstractCLI.HOST_OPTION );
-        } else {
-            this.host = DEFAULT_HOST;
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.PORT_OPTION ) ) {
-            this.port = this.getIntegerOptionValue( commandLine, AbstractCLI.PORT_OPTION );
-        } else {
-            this.port = AbstractCLI.DEFAULT_PORT;
+    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
+        if ( commandLine.hasOption( DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", DATE_OPTION, AUTO_OPTION_NAME ) );
         }
 
         if ( commandLine.hasOption( DATE_OPTION ) ) {
             this.mDate = commandLine.getOptionValue( DATE_OPTION );
         }
 
-        if ( this.numThreads < 1 ) {
-            throw new IllegalArgumentException( "Number of threads must be greater than 1." );
+        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            this.autoSeek = true;
         }
-        this.executorService = new ForkJoinPool( this.numThreads );
+
+        if ( commandLine.hasOption( THREADS_OPTION ) ) {
+            this.numThreads = ( Integer ) commandLine.getParsedOptionValue( THREADS_OPTION );
+            if ( this.numThreads < 1 ) {
+                throw new IllegalArgumentException( "Number of threads must be greater than 1." );
+            }
+        }
+        if ( this.numThreads > 1 ) {
+            this.executorService = Executors.newFixedThreadPool( this.numThreads );
+        } else {
+            this.executorService = Executors.newSingleThreadExecutor();
+        }
     }
 
     /**

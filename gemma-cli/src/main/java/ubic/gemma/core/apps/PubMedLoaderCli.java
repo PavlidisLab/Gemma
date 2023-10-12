@@ -23,7 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 
 import java.io.File;
 
@@ -32,7 +32,7 @@ import java.io.File;
  *
  * @author pavlidis
  */
-public class PubMedLoaderCli extends AbstractCLIContextCLI {
+public class PubMedLoaderCli extends AbstractAuthenticatedCLI {
 
     private String directory;
 

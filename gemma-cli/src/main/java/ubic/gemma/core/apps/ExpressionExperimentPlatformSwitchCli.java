@@ -21,14 +21,17 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Collection;
 
 /**
  * Switch the array design used to the merged one.
@@ -78,7 +81,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.arrayDesignName = commandLine.getOptionValue( 'a' );
@@ -93,7 +96,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
             if ( this.arrayDesignName != null ) {
-                ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
+                ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName );
                 if ( ad == null ) {
                     throw new RuntimeException( "Unknown array design" );
                 }
@@ -112,5 +115,31 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         } catch ( Exception e ) {
             addErrorObject( ee, e );
         }
+    }
+
+    /**
+     * @param  name               of the array design to find.
+     * @param  arrayDesignService the arrayDesignService to use for the AD retrieval
+     * @return an array design, if found. Bails otherwise with an error exit code
+     */
+    private ArrayDesign locateArrayDesign( String name ) {
+
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
+        }
+        return arrayDesign;
     }
 }

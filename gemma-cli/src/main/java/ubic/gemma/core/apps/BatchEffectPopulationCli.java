@@ -16,8 +16,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -30,7 +28,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  *
  * @author paul
  */
-@Component
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired

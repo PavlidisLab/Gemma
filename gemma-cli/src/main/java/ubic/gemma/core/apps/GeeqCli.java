@@ -21,8 +21,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -34,7 +34,6 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqService;
  *
  * @author tesar
  */
-@Component
 public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
@@ -48,7 +47,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'm' ) ) {
             this.mode = GeeqService.ScoreMode.valueOf( commandLine.getOptionValue( 'm' ) );

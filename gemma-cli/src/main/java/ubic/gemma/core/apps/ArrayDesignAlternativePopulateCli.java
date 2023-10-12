@@ -24,7 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -38,7 +38,7 @@ import java.io.InputStreamReader;
  *
  * @author paul
  */
-public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
+public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI {
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -61,7 +61,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

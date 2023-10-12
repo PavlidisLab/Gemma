@@ -14,20 +14,19 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * @author nicolas
  */
 @Deprecated
-public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
+public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractAuthenticatedCLI {
 
     protected String writeFolder = null;
 

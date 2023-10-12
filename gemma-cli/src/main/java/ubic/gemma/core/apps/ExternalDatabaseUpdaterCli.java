@@ -3,10 +3,10 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractSpringAwareCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -15,8 +15,7 @@ import java.util.Date;
 
 import static java.util.Objects.requireNonNull;
 
-@Component
-public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
+public class ExternalDatabaseUpdaterCli extends AbstractAuthenticatedCLI {
 
     private static final String NAME_OPTION = "n",
             DESCRIPTION_OPTION = "d",
@@ -87,7 +86,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         name = commandLine.getOptionValue( NAME_OPTION );
         description = commandLine.getOptionValue( DESCRIPTION_OPTION );
         release = commandLine.hasOption( RELEASE_OPTION );

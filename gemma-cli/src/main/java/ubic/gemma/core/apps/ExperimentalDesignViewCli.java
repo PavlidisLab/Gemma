@@ -2,7 +2,7 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * @author paul
  */
-public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
+public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -36,7 +36,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

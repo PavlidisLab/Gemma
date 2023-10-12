@@ -21,9 +21,9 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
@@ -64,7 +64,6 @@ import java.util.*;
  * @author paul (refactoring)
  * @author vaneet
  */
-@Component
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
@@ -292,6 +291,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .build();
         options.addOption( chooseCutOption );
 
+        options.addOption( Option.builder( "probeDegreeLim" ).hasArg().type( Integer.class ).build() );
+
         // finer-grained control is possible, of course.
         Option skipQC = Option.builder( "noqc" )
                 .desc( "Skip strict QC for outliers, batch effects and correlation distribution" )
@@ -308,7 +309,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions( commandLine );
 
@@ -427,7 +428,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "probeDegreeLim" ) ) {
-            this.linkAnalysisConfig.setProbeDegreeThreshold( this.getIntegerOptionValue( commandLine, "probeDegreeLim" ) );
+            this.linkAnalysisConfig.setProbeDegreeThreshold( ( Integer ) commandLine.getParsedOptionValue( "probeDegreeLim" ) );
         }
 
     }

@@ -22,13 +22,12 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.LocalFile;
@@ -49,8 +48,7 @@ import java.util.HashSet;
  *
  * @author pavlidis
  */
-@Component
-public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
+public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
 
     private static final String GENE2GO_FILE = "gene2go.gz";
 

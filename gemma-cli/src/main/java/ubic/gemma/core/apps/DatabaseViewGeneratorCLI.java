@@ -23,8 +23,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
@@ -32,7 +32,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  * @author paul
  */
 @SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
-public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
+public class DatabaseViewGeneratorCLI extends AbstractAuthenticatedCLI {
 
     private boolean generateDatasetSummary = false;
     private boolean generateDiffExpressionSummary = false;
