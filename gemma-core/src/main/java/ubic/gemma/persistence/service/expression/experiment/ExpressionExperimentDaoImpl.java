@@ -1347,15 +1347,15 @@ public class ExpressionExperimentDaoImpl
     private static class ExpressionExperimentDetail {
 
         public static ExpressionExperimentDetail fromRow( Object[] row ) {
-            return new ExpressionExperimentDetail( ( ArrayDesign ) row[1], ( ArrayDesign ) row[2], ( ExpressionExperiment ) row[3], ( Integer ) row[4] );
+            return new ExpressionExperimentDetail( ( Long ) row[1], ( Long ) row[2], ( Long ) row[3], ( Integer ) row[4] );
         }
 
         @Nullable
-        ArrayDesign arrayDesignUsed;
+        Long arrayDesignUsedId;
         @Nullable
-        ArrayDesign originalPlatform;
+        Long originalPlatformId;
         @Nullable
-        ExpressionExperiment otherPart;
+        Long otherPartId;
         Integer bioAssaysCount;
     }
 
@@ -1368,13 +1368,14 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
+                .createQuery( "select ee.id, ad.id, op.id, oe.id, ee.bioAssays.size from ExpressionExperiment as ee "
                         + "left join ee.bioAssays ba "
                         + "left join ba.arrayDesignUsed ad "
                         + "left join ba.originalPlatform op " // not all bioAssays have an original platform
                         + "left join ee.otherParts as oe "    // not all experiments are splitted
                         + "where ee.id in :eeIds "
-                        + "group by ee, ad, op" )
+                        // FIXME: apply ACLs, other parts or platform might be private
+                        + "group by ee, ad, op, oe" )
                 .setParameterList( "eeIds", expressionExperimentIds )
                 .setCacheable( cacheable )
                 .list();
@@ -1540,22 +1541,25 @@ public class ExpressionExperimentDaoImpl
                 for ( ExpressionExperimentDetailsValueObject vo : vos ) {
                     List<ExpressionExperimentDetail> details = detailsByEE.get( vo.getId() );
 
-                    // we need those later for computing original platforms
-                    Collection<ArrayDesign> arrayDesignsUsed = details.stream()
-                            .map( ExpressionExperimentDetail::getArrayDesignUsed )
+                    Set<Long> arrayDesignsUsedIds = details.stream()
+                            .map( ExpressionExperimentDetail::getArrayDesignUsedId )
                             .filter( Objects::nonNull )
                             .collect( Collectors.toSet() );
 
-                    Collection<ArrayDesignValueObject> adVos = arrayDesignsUsed.stream()
+                    // we need those later for computing original platforms
+                    Collection<ArrayDesignValueObject> adVos = arrayDesignsUsedIds.stream()
+                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
 
                     // original platforms
                     Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
-                            .map( ExpressionExperimentDetail::getOriginalPlatform )
+                            .map( ExpressionExperimentDetail::getOriginalPlatformId )
                             .filter( Objects::nonNull ) // on original platform for the bioAssay
-                            .filter( op -> !arrayDesignsUsed.contains( op ) )
+                            .distinct()
+                            .filter( op -> !arrayDesignsUsedIds.contains( op ) ) // omit noop switches
+                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setOriginalPlatforms( originalPlatformsVos );
@@ -1566,13 +1570,16 @@ public class ExpressionExperimentDaoImpl
                             .orElse( 0 );
                     vo.setNumberOfBioAssays( bioAssayCount );
 
-                    Set<ExpressionExperiment> otherParts = details.stream()
-                            .map( ExpressionExperimentDetail::getOtherPart )
+                    Set<Long> otherPartsIds = details.stream()
+                            .map( ExpressionExperimentDetail::getOtherPartId )
                             .filter( Objects::nonNull )
                             .collect( Collectors.toSet() );
 
+                    List<ExpressionExperimentValueObject> otherPartsVos = loadValueObjectsByIds( otherPartsIds ).stream()
+                            .sorted( Comparator.comparing( ExpressionExperimentValueObject::getShortName ) ).collect( Collectors.toList() );
+
                     // other parts (maybe fetch in details query?)
-                    vo.getOtherParts().addAll( otherParts.stream().map( ee2 -> doLoadValueObject( ee2 ) ).collect( Collectors.toList() ) );
+                    vo.setOtherParts( otherPartsVos );
                 }
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
