@@ -397,6 +397,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<ExperimentalFactor> result = new HashSet<>();
         for ( ExperimentalFactor ef : experimentalFactors ) {
             ExperimentalFactor clone = ExperimentalFactor.Factory.newInstance();
+            //noinspection deprecation
             clone.setAnnotations( this.cloneCharacteristics( ef.getAnnotations() ) );
             if ( ef.getCategory() != null ) {
                 clone.setCategory( this.cloneCharacteristic( ef.getCategory() ) );
@@ -417,9 +418,11 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         assert ef.getId() == null;
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
-            FactorValue clone = FactorValue.Factory.newInstance( ef );
+            FactorValue clone = FactorValue.Factory.newInstance();
+            clone.setExperimentalFactor( ef );
             clone.setCharacteristics( this.cloneCharacteristics( fv.getCharacteristics() ) );
             clone.setIsBaseline( fv.getIsBaseline() );
+            //noinspection deprecation
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
             result.add( clone );
@@ -451,6 +454,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setIsBackground( qt.getIsBackground() );
         clone.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
         clone.setIsBatchCorrected( qt.getIsBatchCorrected() );
+        //noinspection deprecation
         clone.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
         clone.setIsNormalized( qt.getIsNormalized() );
         clone.setIsPreferred( qt.getIsPreferred() );
@@ -473,8 +477,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     private Characteristic cloneCharacteristic( Characteristic c ) {
-        return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
-                c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
+        Characteristic clone = Characteristic.Factory.newInstance();
+        clone.setName( c.getName() );
+        clone.setDescription( c.getDescription() );
+        clone.setCategory( c.getCategory() );
+        clone.setCategoryUri( c.getCategoryUri() );
+        clone.setValue( c.getValue() );
+        clone.setValueUri( c.getValueUri() );
+        clone.setOriginalValue( c.getOriginalValue() );
+        clone.setEvidenceCode( c.getEvidenceCode() );
+        return clone;
     }
 
     private BioAssay cloneBioAssay( BioAssay ba ) {
@@ -500,8 +512,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
         if ( de == null ) return null;
-        return DatabaseEntry.Factory.newInstance( de.getAccession(), de.getAccessionVersion(), de.getUri(),
-                de.getExternalDatabase() );
+        DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
+        clone.setAccession( de.getAccession() );
+        clone.setAccessionVersion( de.getAccessionVersion() );
+        //noinspection deprecation
+        clone.setUri( de.getUri() );
+        clone.setExternalDatabase( de.getExternalDatabase() );
+        ;
+        return clone;
     }
 
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
