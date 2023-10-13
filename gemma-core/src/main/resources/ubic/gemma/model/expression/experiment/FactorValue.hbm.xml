@@ -28,7 +28,15 @@
          <column name="MEASUREMENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- assumed readily available in FactorValueValueObject -->
-      <set name="characteristics" lazy="false" fetch="select" cascade="all">
+      <set name="characteristics" lazy="false" fetch="select" cascade="all" where="class = 'Statement'">
+         <cache usage="read-write"/>
+         <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
+            <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.expression.experiment.Statement"/>
+      </set>
+      <!-- non-migrated characteristics -->
+      <set name="oldCharacteristics" lazy="false" fetch="select" cascade="all" where="class is null">
          <cache usage="read-write"/>
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>

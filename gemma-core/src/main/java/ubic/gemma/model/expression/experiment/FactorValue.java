@@ -29,6 +29,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -51,7 +52,12 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Long id;
     private ExperimentalFactor experimentalFactor;
     private Measurement measurement;
-    private Set<Statement> characteristics = new java.util.HashSet<>();
+    private Set<Statement> characteristics = new HashSet<>();
+    /**
+     * Old-style characteristics.
+     */
+    @Deprecated
+    private Set<Characteristic> oldCharacteristics = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -156,6 +162,16 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
 
     public void setCharacteristics( Set<Statement> characteristics ) {
         this.characteristics = characteristics;
+    }
+
+    @Deprecated
+    public Set<Characteristic> getOldCharacteristics() {
+        return oldCharacteristics;
+    }
+
+    @Deprecated
+    public void setOldCharacteristics( Set<Characteristic> oldCharacteristics ) {
+        this.oldCharacteristics = oldCharacteristics;
     }
 
     public ExperimentalFactor getExperimentalFactor() {

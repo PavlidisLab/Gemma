@@ -12,6 +12,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
+import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.Set;
 
@@ -50,6 +51,30 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         fv = reload( fv );
         assertEquals( 2, fv.getCharacteristics().size() );
         assertTrue( fv.getCharacteristics().contains( s1 ) );
+    }
+
+    @Test
+    public void testLoadFactorValueWithRegularCharacteristic() {
+        FactorValue fv = createFactorValue();
+        Statement s1, s2;
+        s1 = Statement.Factory.newInstance();
+        s1.setSubject( "1" );
+        s2 = Statement.Factory.newInstance();
+        s2.setSubject( "2" );
+        fv.getCharacteristics().add( s1 );
+        fv.getCharacteristics().add( s2 );
+        sessionFactory.getCurrentSession().persist( fv );
+        // create a regular characteristic
+        FactorValue finalFv = fv;
+        sessionFactory.getCurrentSession().doWork( work -> {
+            PreparedStatement stmt = work.prepareStatement( "insert into CHARACTERISTIC (CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, FACTOR_VALUE_FK) values ('foo', null, 'foo', null, ?)" );
+            stmt.setLong( 1, finalFv.getId() );
+            assertEquals( 1, stmt.executeUpdate() );
+        } );
+        fv = reload( fv );
+        fv.getCharacteristics().forEach( System.out::println );
+        assertEquals( 2, fv.getCharacteristics().size() );
+        assertEquals( 1, fv.getOldCharacteristics().size() );
     }
 
     @Test
