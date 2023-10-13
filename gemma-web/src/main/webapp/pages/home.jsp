@@ -30,21 +30,6 @@
       	hideDelay : 0
       });*/
 
-
-      var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
-         height : 180,
-         flex : '0'
-      } );
-
-      // summaryPanel.on( 'showExperimentsByIds', function( ids ) {
-      //    eeGrid.loadExperimentsById( ids );
-      // } );
-      // summaryPanel.on( 'showExperimentsByTaxon', function( ids ) {
-      //    eeGrid.loadExperimentsByTaxon( ids );
-      // } );
-
-      summaryPanel.render( "summaryPanel-div" );
-
       var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
       generalSearchPanel.render( "generalSearchSimple-div" );
 
@@ -98,8 +83,6 @@
 
             <p>Questions? Feel free to <a href="mailto:pavlab-support@msl.ubc.ca?subject=Gemma">reach out</a>.</p>
         </div>
-        <div style="padding-left:40px;width:30%" id="summaryPanel-div" />
-
     </div>
 
 </div>
