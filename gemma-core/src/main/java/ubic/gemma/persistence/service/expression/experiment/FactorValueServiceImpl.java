@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,17 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional(readOnly = true)
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.factorValueDao.findByValue( valuePrefix );
+    }
+
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public FactorValue loadWithOldStyleCharacteristics( Long id ) {
+        FactorValue fv = load( id );
+        if ( fv != null ) {
+            Hibernate.initialize( fv.getOldStyleCharacteristics() );
+        }
+        return fv;
     }
 
     @Override
