@@ -54,10 +54,12 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Measurement measurement;
     private Set<Statement> characteristics = new HashSet<>();
     /**
-     * Old-style characteristics.
+     * Old-style characteristics from the 1.30 series.
+     * <p>
+     * This will be removed when all the characteristics are ported to the new style using {@link Statement}.
      */
     @Deprecated
-    private Set<Characteristic> oldCharacteristics = new HashSet<>();
+    private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -165,13 +167,13 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     @Deprecated
-    public Set<Characteristic> getOldCharacteristics() {
-        return oldCharacteristics;
+    public Set<Characteristic> getOldStyleCharacteristics() {
+        return oldStyleCharacteristics;
     }
 
     @Deprecated
-    public void setOldCharacteristics( Set<Characteristic> oldCharacteristics ) {
-        this.oldCharacteristics = oldCharacteristics;
+    public void setOldStyleCharacteristics( Set<Characteristic> oldCharacteristics ) {
+        this.oldStyleCharacteristics = oldCharacteristics;
     }
 
     public ExperimentalFactor getExperimentalFactor() {

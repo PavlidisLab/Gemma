@@ -36,12 +36,11 @@
          <one-to-many class="ubic.gemma.model.expression.experiment.Statement"/>
       </set>
       <!-- non-migrated characteristics -->
-      <set name="oldCharacteristics" lazy="false" fetch="select" cascade="all" where="class is null">
-         <cache usage="read-write"/>
+      <set name="oldStyleCharacteristics" lazy="true" fetch="select" where="class is null" mutable="false">
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.experiment.Statement"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
    </class>
 </hibernate-mapping>

@@ -74,7 +74,7 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         fv = reload( fv );
         fv.getCharacteristics().forEach( System.out::println );
         assertEquals( 2, fv.getCharacteristics().size() );
-        assertEquals( 1, fv.getOldCharacteristics().size() );
+        assertEquals( 1, fv.getOldStyleCharacteristics().size() );
     }
 
     @Test
