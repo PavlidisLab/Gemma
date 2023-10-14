@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
@@ -67,8 +68,19 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      * @return the created statement
      * @throws IllegalArgumentException if the statement already exists
      */
+    @CheckReturnValue
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Statement createStatement( FactorValue factorValue, Statement statement );
+
+    /**
+     * Create a given statement as per {@link #createStatement(FactorValue, Statement)} if it is transient, otherwise
+     * update an existing statement.
+     * <p>
+     * This method has the benefit of only updating the given statement and not the whole {@link FactorValue}.
+     */
+    @CheckReturnValue
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Statement saveStatement( FactorValue fv, Statement statement );
 
     /**
      * Remove a statement from a factor value.

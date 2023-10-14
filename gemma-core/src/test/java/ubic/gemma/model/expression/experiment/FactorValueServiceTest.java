@@ -49,6 +49,47 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
     private FactorValueService factorValueService;
 
     @Test
+    public void testCreateStatement() {
+        FactorValue fv = createFactorValue();
+        Statement s1;
+        s1 = Statement.Factory.newInstance();
+        s1.setObject( "test" );
+        fv.getCharacteristics().add( s1 );
+        s1 = factorValueService.createStatement( fv, s1 );
+        assertNotNull( s1.getId() );
+        assertTrue( fv.getCharacteristics().contains( s1 ) );
+    }
+
+    @Test
+    public void testCreateStatementWithDetachedFactorValue() {
+        FactorValue fv = createFactorValue();
+        sessionFactory.getCurrentSession().evict( fv );
+        assertFalse( sessionFactory.getCurrentSession().contains( fv ) );
+        Statement s1;
+        s1 = Statement.Factory.newInstance();
+        s1.setObject( "test" );
+        fv.getCharacteristics().add( s1 );
+        s1 = factorValueService.createStatement( fv, s1 );
+        assertNotNull( s1.getId() );
+        assertTrue( fv.getCharacteristics().contains( s1 ) );
+        assertTrue( sessionFactory.getCurrentSession().contains( fv ) );
+    }
+
+    @Test
+    public void testSaveStatement() {
+        FactorValue fv = createFactorValue();
+        Statement s1;
+        s1 = Statement.Factory.newInstance();
+        s1.setObject( "test" );
+        fv.getCharacteristics().add( s1 );
+        s1 = factorValueService.saveStatement( fv, s1 );
+        assertNotNull( s1.getId() );
+        s1 = factorValueService.saveStatement( fv, s1 );
+        Long previousId = s1.getId();
+        assertEquals( previousId, s1.getId() );
+    }
+
+    @Test
     public void testRemoveStatement() {
         FactorValue fv = createFactorValue();
         Statement s1;
@@ -66,6 +107,19 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
 
         fv = reload( fv );
         assertTrue( fv.getCharacteristics().isEmpty() );
+    }
+
+    @Test
+    public void testRemoveDetachedStatementFromDetachedFactorValue() {
+        FactorValue fv = createFactorValue();
+        Statement s1;
+        s1 = Statement.Factory.newInstance();
+        s1.setObject( "test" );
+        fv.getCharacteristics().add( s1 );
+        sessionFactory.getCurrentSession().persist( fv );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( fv );
+        factorValueService.removeStatement( fv, s1 );
     }
 
     @Test
