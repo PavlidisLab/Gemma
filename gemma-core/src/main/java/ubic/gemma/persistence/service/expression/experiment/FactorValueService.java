@@ -28,6 +28,9 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -46,6 +49,9 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue load( Long id );
 
+    /**
+     * Load a {@link FactorValue} with an initialized experimental factor or fail.
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue loadWithExperimentalFactorOrFail( Long id );
 
@@ -56,12 +62,18 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      */
     @Nullable
     @Deprecated
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue loadWithOldStyleCharacteristics( Long id );
+    @Secured({ "GROUP_ADMIN" })
+    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" }), but some FVs have broken ACLs
+    FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<FactorValue> loadAll();
+    /**
+     * Load all the factor values except the ones with the given IDs.
+     * @deprecated do not use, this is only for migrating old-style characteristics to statements and will be removed
+     */
+    @Deprecated
+    @Secured({ "GROUP_ADMIN" })
+    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
+    Map<Long, Integer> loadAllWithNumberOfOldStyleCharacteristicsExceptIds( Set<Long> excludedIds );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -88,8 +100,6 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     /**
      * Create a given statement as per {@link #createStatement(FactorValue, Statement)} if it is transient, otherwise
      * update an existing statement.
-     * <p>
-     * This method has the benefit of only updating the given statement and not the whole {@link FactorValue}.
      */
     @CheckReturnValue
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -108,4 +118,7 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( FactorValue factorValue );
+
+    @Deprecated
+    void flushAndEvict( List<Long> batch );
 }

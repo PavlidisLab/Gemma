@@ -101,6 +101,14 @@ public class Characteristic extends AbstractDescribable implements Serializable,
     private String value;
     @Nullable
     private String valueUri;
+    /**
+     * Indicate if this "old-style" characteristic has been migrated to a {@link ubic.gemma.model.expression.experiment.Statement}.
+     * This is only meaningful for {@link ubic.gemma.model.expression.experiment.FactorValue} characteristics.
+     * @deprecated do not rely on this field, it will be removed once the migration is completed.
+     */
+    @Deprecated
+    private boolean migratedToStatement;
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -195,6 +203,16 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
     public void setValueUri( @Nullable String uri ) {
         this.valueUri = uri;
+    }
+
+    @Deprecated
+    public boolean isMigratedToStatement() {
+        return migratedToStatement;
+    }
+
+    @Deprecated
+    public void setMigratedToStatement( boolean migratedToStatement ) {
+        this.migratedToStatement = migratedToStatement;
     }
 
     @Override

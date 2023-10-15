@@ -26,7 +26,6 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -134,16 +133,14 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         cvo.setObject( "test3" );
         experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
         verify( factorValueService ).load( 1L );
-        verify( factorValueService ).update( fv );
+        Statement stmt = new Statement();
+        stmt.setCategory( "test" );
+        stmt.setSubject( "test2" );
+        stmt.setPredicate( "has" );
+        stmt.setObject( "test3" );
+        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).createStatement( fv, stmt );
         verifyNoMoreInteractions( factorValueService );
-        assertThat( fv.getCharacteristics() ).hasSize( 1 )
-                .first()
-                .satisfies( stmt -> {
-                    assertThat( stmt.getCategory() ).isEqualTo( "test" );
-                    assertThat( stmt.getSubject() ).isEqualTo( "test2" );
-                    assertThat( stmt.getObject() ).isEqualTo( "test3" );
-                    assertThat( stmt.getSecondObject() ).isNull();
-                } );
     }
 
     @Test
@@ -165,23 +162,6 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The value cannot be blank" );
-        verify( factorValueService ).load( 1L );
-        verifyNoMoreInteractions( factorValueService );
-    }
-
-    @Test
-    public void testCreateFactorValueWithAlreadyExistingStatement() {
-        Statement s = new Statement();
-        s.setCategory( "test" );
-        s.setSubject( "test" );
-        fv.getCharacteristics().add( s );
-        EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        StatementValueObject cvo = new StatementValueObject();
-        cvo.setCategory( "test" );
-        cvo.setSubject( "test" );
-        assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "The factor value already has this characteristic." );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
