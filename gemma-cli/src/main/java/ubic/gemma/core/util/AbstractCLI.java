@@ -378,7 +378,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
         errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
-        log.error( message, throwable );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
     /**
@@ -387,7 +387,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, String message ) {
         errorObjects.add( new BatchProcessingResult( errorObject, message, null ) );
-        log.error( message );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
 
     /**
@@ -396,7 +396,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
         errorObjects.add( new BatchProcessingResult( errorObject, exception.getMessage(), exception ) );
-        log.error( exception.getMessage(), exception );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
 
     /**
