@@ -59,7 +59,7 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
         fv.getOldStyleCharacteristics().add( c2 );
         when( factorValueService.loadWithOldStyleCharacteristics( 1L ) ).thenReturn( fv );
         when( factorValueService.saveStatement( any(), any() ) ).thenAnswer( a -> a.getArgument( 1, Statement.class ) );
-        assertEquals( AbstractCLI.SUCCESS, cli.executeCommand( new String[] { "-migrationFile", new ClassPathResource( "factor-value-migration.tsv" ).getFile().getAbsolutePath() } ) );
+        assertEquals( AbstractCLI.SUCCESS, cli.executeCommand( new String[] { "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath() } ) );
         verify( factorValueService ).loadWithOldStyleCharacteristics( 1L );
     }
 }

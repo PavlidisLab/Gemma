@@ -95,7 +95,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
-        rpkmFile = new ClassPathResource( "test.rpkm.txt" ).getFile().getAbsolutePath();
+        rpkmFile = new ClassPathResource( "ubic/gemma/core/apps/test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
         when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );
     }
