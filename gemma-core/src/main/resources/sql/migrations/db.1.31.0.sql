@@ -7,15 +7,16 @@ set BATCH_EFFECT_STATISTICS = BATCH_EFFECT,
 where BATCH_EFFECT like 'This data set may have a batch artifact%';
 -- allow distinguishing characteristics from statements
 alter table CHARACTERISTIC
-    add column class                VARCHAR(255) after ID,
-    add column PREDICATE            VARCHAR(255) after ORIGINAL_VALUE,
-    add column PREDICATE_URI        VARCHAR(255) after PREDICATE,
-    add column OBJECT               VARCHAR(255) after PREDICATE_URI,
-    add column OBJECT_URI           VARCHAR(255) after OBJECT,
-    add column SECOND_PREDICATE     VARCHAR(255) after OBJECT_URI,
-    add column SECOND_PREDICATE_URI VARCHAR(255) after SECOND_PREDICATE,
-    add column SECOND_OBJECT        VARCHAR(255) after SECOND_PREDICATE_URI,
-    add column SECOND_OBJECT_URI    VARCHAR(255) after SECOND_OBJECT;
+    add column class                 VARCHAR(255) after ID,
+    add column MIGRATED_TO_STATEMENT TINYINT(1) not null default false after ORIGINAL_VALUE,
+    add column PREDICATE             VARCHAR(255) after MIGRATED_TO_STATEMENT,
+    add column PREDICATE_URI         VARCHAR(255) after PREDICATE,
+    add column OBJECT                VARCHAR(255) after PREDICATE_URI,
+    add column OBJECT_URI            VARCHAR(255) after OBJECT,
+    add column SECOND_PREDICATE      VARCHAR(255) after OBJECT_URI,
+    add column SECOND_PREDICATE_URI  VARCHAR(255) after SECOND_PREDICATE,
+    add column SECOND_OBJECT         VARCHAR(255) after SECOND_PREDICATE_URI,
+    add column SECOND_OBJECT_URI     VARCHAR(255) after SECOND_OBJECT;
 -- add indices we need for querying triplets
 alter table CHARACTERISTIC
     add index class (class),

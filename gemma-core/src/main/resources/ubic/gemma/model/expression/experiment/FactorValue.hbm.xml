@@ -35,7 +35,7 @@
          <one-to-many class="ubic.gemma.model.expression.experiment.Statement"/>
       </set>
       <!-- non-migrated characteristics -->
-      <set name="oldStyleCharacteristics" lazy="true" fetch="select" where="class is null" mutable="false">
+      <set name="oldStyleCharacteristics" lazy="true" fetch="select" where="class is null" mutable="false" cascade="evict">
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
          </key>

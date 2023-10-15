@@ -23,6 +23,9 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
@@ -37,4 +40,16 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      */
     @Deprecated
     Collection<FactorValue> findByValue( String valuePrefix );
+
+    @Deprecated
+    FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
+
+    @Deprecated
+    Map<Long, Integer> loadAllExceptIds( Set<Long> excludedIds );
+
+    /**
+     * Flush pending changes and evict the given factor values from the session by IDs.
+     */
+    @Deprecated
+    void flushAndEvict( List<Long> batch );
 }

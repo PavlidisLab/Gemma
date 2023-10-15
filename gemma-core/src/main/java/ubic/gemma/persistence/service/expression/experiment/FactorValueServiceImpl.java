@@ -25,6 +25,9 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -63,19 +66,26 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Override
     @Deprecated
     @Transactional(readOnly = true)
-    public Collection<FactorValue> findByValue( String valuePrefix ) {
-        return this.factorValueDao.findByValue( valuePrefix );
+    public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
+        return factorValueDao.loadWithOldStyleCharacteristics( id, readOnly );
+    }
+
+    /**
+     * Load all factor values with their number of old-style characteristics.
+     * @param excludedIds list of excluded FactorValue IDs
+     */
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> loadAllWithNumberOfOldStyleCharacteristicsExceptIds( Set<Long> excludedIds ) {
+        return factorValueDao.loadAllExceptIds( excludedIds );
     }
 
     @Override
     @Deprecated
     @Transactional(readOnly = true)
-    public FactorValue loadWithOldStyleCharacteristics( Long id ) {
-        FactorValue fv = load( id );
-        if ( fv != null ) {
-            Hibernate.initialize( fv.getOldStyleCharacteristics() );
-        }
-        return fv;
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        return this.factorValueDao.findByValue( valuePrefix );
     }
 
     @Override
@@ -134,6 +144,11 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
         // now we can safely delete it
         this.statementDao.remove( statement );
+    }
+
+    @Override
+    public void flushAndEvict( List<Long> batch ) {
+        this.factorValueDao.flushAndEvict( batch );
     }
 
     @Override

@@ -19,12 +19,12 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
@@ -32,6 +32,9 @@ import ubic.gemma.persistence.util.BusinessKey;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -53,6 +56,47 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "from FactorValue where value like :q" )
                 .setParameter( "q", valuePrefix + "%" ).list();
+    }
+
+    @Override
+    @Deprecated
+    public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
+        boolean previousReadOnly = getSessionFactory().getCurrentSession().isDefaultReadOnly();
+        try {
+            getSessionFactory().getCurrentSession().setDefaultReadOnly( readOnly );
+            FactorValue fv = load( id );
+            if ( fv != null ) {
+                Hibernate.initialize( fv.getOldStyleCharacteristics() );
+            }
+            return fv;
+        } finally {
+            getSessionFactory().getCurrentSession().setDefaultReadOnly( previousReadOnly );
+        }
+    }
+
+    @Override
+    @Deprecated
+    public Map<Long, Integer> loadAllExceptIds( Set<Long> excludedIds ) {
+        List<Object[]> result;
+        if ( excludedIds.isEmpty() ) {
+            //noinspection unchecked
+            result = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select fv.id, size(fv.oldStyleCharacteristics) from FactorValue fv group by fv order by id" )
+                    .list();
+        } else {
+            //noinspection unchecked
+            result = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select fv.id, size(fv.oldStyleCharacteristics) from FactorValue fv where fv.id not in :ids group by fv order by id" )
+                    .setParameterList( "ids", excludedIds )
+                    .list();
+        }
+        return result.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Integer ) row[1] ) );
+    }
+
+    @Override
+    public void flushAndEvict( List<Long> batch ) {
+        getSessionFactory().getCurrentSession().flush();
+        load( batch ).forEach( getSessionFactory().getCurrentSession()::evict );
     }
 
     @Override

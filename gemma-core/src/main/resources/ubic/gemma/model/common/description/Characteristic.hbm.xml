@@ -49,6 +49,9 @@
             <column name="ORIGINAL_VALUE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
+        <property name="migratedToStatement" type="boolean">
+            <column name="MIGRATED_TO_STATEMENT" not-null="true" default="false" sql-type="TINYINT"/>
+        </property>
         <subclass name="ubic.gemma.model.expression.experiment.Statement"
                   discriminator-value="Statement">
             <property name="predicate" type="java.lang.String">
