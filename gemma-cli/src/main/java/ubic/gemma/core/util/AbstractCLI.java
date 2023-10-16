@@ -21,12 +21,12 @@ package ubic.gemma.core.util;
 import lombok.Value;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -125,7 +125,7 @@ public abstract class AbstractCLI implements CLI {
                 return SUCCESS;
             }
             if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                System.err.printf( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() );
+                AbstractCLI.log.error( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
                 return FAILURE;
             }
             processStandardOptions( commandLine );
@@ -133,12 +133,12 @@ public abstract class AbstractCLI implements CLI {
             doWork();
             return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
-            log.error( getCommandName() + " failed.", e );
+            log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
         } finally {
             // always summarize processing, even if an error is thrown
             summarizeProcessing();
-            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
+            log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
         }
     }
 
@@ -297,17 +297,14 @@ public abstract class AbstractCLI implements CLI {
      * @param args args
      * @return Exception; null if nothing went wrong.
      */
-    private CommandLine processCommandLine( Options options, String[] args ) throws Exception {
+    private CommandLine processCommandLine( Options options, String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
-        String appVersion = Settings.getAppVersion();
-        if ( appVersion == null )
-            appVersion = "?";
-        System.err.println( "Gemma version " + appVersion );
 
         if ( args == null ) {
+            System.err.println( "No arguments" );
             this.printHelp( options );
-            throw new Exception( "No arguments" );
+            throw new RuntimeException( "No arguments" );
         }
 
         try {
@@ -321,17 +318,11 @@ public abstract class AbstractCLI implements CLI {
                 System.err.println( "Missing argument: " + e.getMessage() );
             } else if ( e instanceof UnrecognizedOptionException ) {
                 System.err.println( "Unrecognized option: " + e.getMessage() );
-            } else {
-                e.printStackTrace();
             }
 
             this.printHelp( options );
 
-            if ( AbstractCLI.log.isDebugEnabled() ) {
-                AbstractCLI.log.debug( e );
-            }
-
-            throw e;
+            throw new RuntimeException( e );
         }
     }
 
