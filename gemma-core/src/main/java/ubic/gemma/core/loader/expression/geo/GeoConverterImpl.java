@@ -805,7 +805,10 @@ public class GeoConverterImpl implements GeoConverter {
             /*
              * Sometimes values are like Age:8 weeks, so we can try to convert them.
              */
-            String[] fields = field.split( "[:=]", 2 ); // sometimes it is '='
+            String[] fields = field.split( ":", 2 ); // sometimes it is '=' ,but not allowed any more see https://www.ncbi.nlm.nih.gov/geo/info/soft.html#guidelines_tabs
+            if ( fields.length != 2 ) {
+                fields = field.split( "=", 2 ); // this shouldn't occur, but is present in some old GEO records apparently
+            }
             String defaultDescription = "GEO Sample characteristic";
             if ( fields.length == 2 ) {
 

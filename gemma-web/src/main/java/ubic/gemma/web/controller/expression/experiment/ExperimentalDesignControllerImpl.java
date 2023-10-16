@@ -309,7 +309,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                     /*
                     Experimental: split on ":" or "=", use first part as the category.
                      */
-                    if ( StringUtils.isNotBlank( value ) && value.matches( ".+[:=].+" ) ) {
+                    if ( StringUtils.isNotBlank( value ) && value.matches( ".+[:=].+" ) ) { // note: GEO only allows ":" now but we have "=" in the db for older entries.
                         String[] split = value.split( "[:=]", 2 );
                         category = StringUtils.strip( split[0] );
                     } else {
