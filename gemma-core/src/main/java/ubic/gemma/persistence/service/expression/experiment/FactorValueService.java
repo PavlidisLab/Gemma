@@ -46,6 +46,9 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    FactorValue loadWithExperimentalFactorOrFail( Long id );
+
     /**
      * Load a {@link FactorValue} along with its old-style characteristics.
      * @deprecated do not use this, it is only meant for the purpose of migrating old-style characteristics to

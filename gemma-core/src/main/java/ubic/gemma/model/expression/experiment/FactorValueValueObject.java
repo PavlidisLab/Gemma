@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
@@ -115,10 +116,12 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.factorId = value.getExperimentalFactor().getId();
 
         // make sure we fill in the category for this if no characteristic is being *focused* on
-        Characteristic factorCategory = value.getExperimentalFactor().getCategory();
-        if ( factorCategory != null ) {
-            this.category = factorCategory.getCategory();
-            this.categoryUri = factorCategory.getCategoryUri();
+        if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
+            Characteristic factorCategory = value.getExperimentalFactor().getCategory();
+            if ( factorCategory != null ) {
+                this.category = factorCategory.getCategory();
+                this.categoryUri = factorCategory.getCategoryUri();
+            }
         }
 
         if ( value.getMeasurement() != null ) {

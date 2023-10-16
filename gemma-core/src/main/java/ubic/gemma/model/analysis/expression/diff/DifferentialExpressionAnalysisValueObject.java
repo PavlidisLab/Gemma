@@ -16,14 +16,14 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,6 +53,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private Long bioAssaySetId;
     private Long sourceExperiment;
     private ExperimentalFactorValueObject subsetFactor;
+    private Long subsetFactorId;
     private FactorValueValueObject subsetFactorValue;
 
     public DifferentialExpressionAnalysisValueObject() {
@@ -74,8 +75,11 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
         }
         if ( analysis.getSubsetFactorValue() != null && Hibernate.isInitialized( ( analysis.getSubsetFactorValue() ) ) ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
-            this.subsetFactor = new ExperimentalFactorValueObject(
-                    analysis.getSubsetFactorValue().getExperimentalFactor() );
+            this.subsetFactorId = analysis.getSubsetFactorValue().getExperimentalFactor().getId();
+            if ( Hibernate.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
+                this.subsetFactor = new ExperimentalFactorValueObject(
+                        analysis.getSubsetFactorValue().getExperimentalFactor() );
+            }
             // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
     }

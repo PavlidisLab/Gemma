@@ -20,7 +20,8 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
@@ -54,7 +55,7 @@ import java.util.*;
  * @author paul
  * @see    PrincipalComponentAnalysisService
  */
-@Component
+@Service
 public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     /**
@@ -99,7 +100,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
 
             if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
-                bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
+                bioMaterialFactorMap.put( experimentalFactor, new HashMap<>() );
             }
 
             double valueToStore;
@@ -128,6 +129,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @return value or null if there isn't one.
      */
     @Override
+    @Transactional(readOnly = true)
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null )
@@ -142,6 +144,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
+    @Transactional
     public SVDValueObject svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
@@ -172,6 +175,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
             int count ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
@@ -248,11 +252,13 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasPca( ExpressionExperiment ee ) {
         return this.retrieveSvd( ee ) != null;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
             Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
         Set<ExperimentalFactor> importantFactors = new HashSet<>();
@@ -290,6 +296,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
@@ -330,6 +337,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) {
@@ -421,7 +429,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
             boolean initializing = false;
             if ( !svo.getFactors().containsKey( ef.getId() ) ) {
-                svo.getFactors().put( ef.getId(), new ArrayList<Double>() );
+                svo.getFactors().put( ef.getId(), new ArrayList<>() );
                 initializing = true;
             }
 

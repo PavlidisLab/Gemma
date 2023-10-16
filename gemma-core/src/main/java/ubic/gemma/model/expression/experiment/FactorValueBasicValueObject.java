@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
@@ -41,6 +42,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     /**
      * The experiment factor category.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private CharacteristicBasicValueObject experimentalFactorCategory;
 
     /**
@@ -89,8 +91,10 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         super( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
 
-        if ( fv.getExperimentalFactor().getCategory() != null ) {
-            this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
+        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+            if ( fv.getExperimentalFactor().getCategory() != null ) {
+                this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
+            }
         }
 
         if ( fv.getMeasurement() != null ) {

@@ -23,16 +23,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.*;
 
@@ -135,7 +136,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
-            this.factors.put( factorId, factor.getName() );
+            if ( Hibernate.isInitialized( factor ) ) {
+                this.factors.put( factorId, factor.getName() );
+            }
             this.factorValues.put( factorValueId, this.getFactorValueString( fv ) );
 
             if ( fv.getMeasurement() == null ) {

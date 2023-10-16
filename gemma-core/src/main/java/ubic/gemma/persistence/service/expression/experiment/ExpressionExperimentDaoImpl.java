@@ -1771,6 +1771,9 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
+            for ( FactorValue fv : ba.getSampleUsed().getFactorValues() ) {
+                Hibernate.initialize( fv.getExperimentalFactor() );
+            }
             Hibernate.initialize( ba.getOriginalPlatform() );
         }
     }
@@ -1805,6 +1808,12 @@ public class ExpressionExperimentDaoImpl
         if ( expressionExperiment.getExperimentalDesign() != null ) {
             Hibernate.initialize( expressionExperiment.getExperimentalDesign() );
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+            for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+                Hibernate.initialize( ef );
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() ); // is it even necessary?
+                }
+            }
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }
 

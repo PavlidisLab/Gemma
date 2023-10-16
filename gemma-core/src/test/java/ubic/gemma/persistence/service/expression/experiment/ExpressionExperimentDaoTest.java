@@ -17,6 +17,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -62,6 +63,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         BioAssay ba = new BioAssay();
+        ba.setSampleUsed( new BioMaterial() );
         ba.setArrayDesignUsed( new ArrayDesign() );
         ee.setBioAssays( Collections.singleton( ba ) );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );

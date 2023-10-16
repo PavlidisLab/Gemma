@@ -81,7 +81,7 @@ public class BioMaterialController {
     public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator<FactorValue> factorValueId ) {
 
         Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
-        FactorValue factorVToAdd = factorValueService.loadOrFail( factorValueId.getId() );
+        FactorValue factorVToAdd = factorValueService.loadWithExperimentalFactorOrFail( factorValueId.getId() );
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
         for ( BioMaterial material : bms ) {
