@@ -43,6 +43,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -50,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -738,6 +740,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 100, e.getRawExpressionDataVectors().size() );
         assertEquals( 1, e.getQuantitationTypes().size() ); // this is normal, before any processing.
 
+
         QuantitationType qt = e.getQuantitationTypes().iterator().next();
         assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
 
@@ -770,6 +773,28 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 2, ee.getQuantitationTypes().size() );
 
         assertNotNull( ee.getTaxon() );
+
+        // Confirmation for #908 that we take in the right data from sample characteristics.
+        boolean found1 = false;
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
+               // log.info( c );
+                String category = c.getCategory();
+                if ( !category.equals( "molecular entity" ) && !category.equals( "labelling" ) && !category.equals( "BioSource" ) ) { // we lose these original strings, or they have diff format; not important.
+                    assertNotNull( c.getOriginalValue() );
+                    assertTrue( c.getOriginalValue().contains( ":" ) ); // for this particular dataset; just a check that we are storing the actual original, not just the second half.
+                }
+                assertNotNull( category );
+                if ( !category.equals( "strain" ) )
+                    assertTrue( !c.getValue().contains( ":" ) ); // this is actually allowed if there's : in the value itself...Crl:CD1(ICR)
+                if ( category.equals( "weight" ) ) { // some crazy non-standard category.
+                    found1 = true;
+                }
+            }
+        }
+
+        assertTrue( found1 );
+
     }
 
     /*
