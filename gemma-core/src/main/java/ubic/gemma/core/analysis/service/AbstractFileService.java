@@ -69,9 +69,11 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
     protected String format( @Nullable Double d ) {
         if ( d == null ) {
             return "";
-        } else if ( d < 1e-4 ) {
+        } else if ( d == 0.0 ) {
+            return "0.0";
+        } else if ( Math.abs( d ) < 1e-4 ) {
             return smallNumberFormat.format( d );
-        } else if ( d < 1e3 ) {
+        } else if ( Math.abs( d ) < 1e3 ) {
             return midNumberFormat.format( d );
         } else {
             return largeNumberFormat.format( d );
