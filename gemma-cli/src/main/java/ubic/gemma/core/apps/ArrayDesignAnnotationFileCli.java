@@ -18,21 +18,10 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -44,6 +33,11 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
@@ -109,7 +103,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     @Override
     protected void processOptions( CommandLine commandLine ) {
 
-        if ( autoSeek ) {
+        if ( isAutoSeek() ) {
             throw new IllegalArgumentException( "This CLI doesn't support the auto option" );
         }
 

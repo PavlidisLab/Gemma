@@ -90,12 +90,12 @@ public class IndexGemmaCLI extends AbstractCLI {
     protected void doWork() throws Exception {
         if ( classesToIndex.isEmpty() ) {
             log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
-            indexerService.index( numThreads );
+            indexerService.index( getNumThreads() );
         } else {
             log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
                     searchDir.getAbsolutePath(),
                     classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
-            indexerService.index( classesToIndex, numThreads );
+            indexerService.index( classesToIndex, getNumThreads() );
         }
     }
 }

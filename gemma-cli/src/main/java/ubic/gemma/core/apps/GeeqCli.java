@@ -64,9 +64,8 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions( Options options ) {
 
         super.buildOptions( options );
-        super.addAutoOption( options );
+        super.addAutoOption( options, GeeqEvent.class );
         super.addDateOption( options );
-        this.autoSeekEventType = GeeqEvent.class;
         super.addForceOption( options );
 
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )

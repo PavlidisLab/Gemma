@@ -105,7 +105,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 //        }
 
         if ( commandLine.hasOption( 's' ) ) {
-            this.blatScoreThreshold = this.getDoubleOptionValue( commandLine, 's' );
+            double result;
+            try {
+                result = Double.parseDouble( commandLine.getOptionValue( 's' ) );
+            } catch ( NumberFormatException e ) {
+                String option1 = String.valueOf( 's' );
+                throw new RuntimeException( "Invalid value '" + commandLine.getOptionValue( option1 ) + " for option " + option1 + ", not a valid double", e );
+            }
+            this.blatScoreThreshold = result;
         }
 
         TaxonService taxonService = this.getBean( TaxonService.class );

@@ -99,10 +99,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
 
-        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
-        }
-
         if ( commandLine.hasOption( 'w' ) ) {
             this.force_write = true;
         }

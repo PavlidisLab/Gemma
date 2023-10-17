@@ -43,7 +43,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -100,6 +103,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     private TaxonService taxonService;
     private GeneService geneService;
     private SearchService searchService;
+
+    protected ExpressionExperimentManipulatingCLI() {
+        super();
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -205,14 +212,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                this.autoSeek = true;
-                if ( this.autoSeekEventType == null ) {
+            if ( isAutoSeek() ) {
+                if ( this.getAutoSeekEventType() == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
                 }
-                AbstractCLI.log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName()
+                AbstractCLI.log.info( "Filtering for experiments lacking a " + this.getAutoSeekEventType().getSimpleName()
                         + " event" );
-                auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
+                auditEventService.retainLackingEvent( this.expressionExperiments, this.getAutoSeekEventType() );
             }
 
             Set<BioAssaySet> troubledExpressionExperiments = this.getTroubledExpressionExperiments();

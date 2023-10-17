@@ -301,12 +301,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( deleteOption );
 
         this.addForceOption( options );
-        this.addAutoOption( options );
+        this.addAutoOption( options, LinkAnalysisEvent.class );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions( commandLine );
 
         if ( commandLine.hasOption( "delete" ) ) {
@@ -424,7 +423,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "probeDegreeLim" ) ) {
-            this.linkAnalysisConfig.setProbeDegreeThreshold( this.getIntegerOptionValue( commandLine, "probeDegreeLim" ) );
+            int result;
+            try {
+                result = Integer.parseInt( commandLine.getOptionValue( "probeDegreeLim" ) );
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( "Invalid value '" + commandLine.getOptionValue( "probeDegreeLim" ) + " for option " + "probeDegreeLim" + ", not a valid integer", e );
+            }
+            this.linkAnalysisConfig.setProbeDegreeThreshold( result );
         }
 
     }

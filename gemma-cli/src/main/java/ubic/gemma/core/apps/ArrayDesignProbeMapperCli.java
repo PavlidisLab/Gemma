@@ -183,10 +183,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
         taxonService = this.getBean( TaxonService.class );
 
-        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
-        }
-
         if ( commandLine.hasOption( "import" ) ) {
             if ( !commandLine.hasOption( 't' ) ) {
                 throw new IllegalArgumentException( "You must provide the taxon when using the import option" );
@@ -230,7 +226,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( commandLine.hasOption( 's' ) ) {
-            blatScoreThreshold = getDoubleOptionValue( commandLine, 's' );
+            double result;
+            try {
+                result = Double.parseDouble( commandLine.getOptionValue( 's' ) );
+            } catch ( NumberFormatException e ) {
+                String option1 = String.valueOf( 's' );
+                throw new RuntimeException( "Invalid value '" + commandLine.getOptionValue( option1 ) + " for option " + option1 + ", not a valid double", e );
+            }
+            blatScoreThreshold = result;
             if ( blatScoreThreshold < 0 || blatScoreThreshold > 1 ) {
                 throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
             }
@@ -245,14 +248,28 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.mirnaOnlyModeOption = commandLine.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION );
 
         if ( commandLine.hasOption( 'i' ) ) {
-            identityThreshold = this.getDoubleOptionValue( commandLine, 'i' );
+            double result;
+            try {
+                result = Double.parseDouble( commandLine.getOptionValue( 'i' ) );
+            } catch ( NumberFormatException e ) {
+                String option1 = String.valueOf( 'i' );
+                throw new RuntimeException( "Invalid value '" + commandLine.getOptionValue( option1 ) + " for option " + option1 + ", not a valid double", e );
+            }
+            identityThreshold = result;
             if ( identityThreshold < 0 || identityThreshold > 1 ) {
                 throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
             }
         }
 
         if ( commandLine.hasOption( 'o' ) ) {
-            overlapThreshold = this.getDoubleOptionValue( commandLine, 'o' );
+            double result;
+            try {
+                result = Double.parseDouble( commandLine.getOptionValue( 'o' ) );
+            } catch ( NumberFormatException e ) {
+                String option1 = String.valueOf( 'o' );
+                throw new RuntimeException( "Invalid value '" + commandLine.getOptionValue( option1 ) + " for option " + option1 + ", not a valid double", e );
+            }
+            overlapThreshold = result;
             if ( overlapThreshold < 0 || overlapThreshold > 1 ) {
                 throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
             }
@@ -476,7 +493,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 }
 
             }
-        } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
+        } else if ( taxon != null || skipIfLastRunLaterThan != null || isAutoSeek() ) {
 
             if ( directAnnotationInputFileName != null ) {
                 throw new IllegalStateException(

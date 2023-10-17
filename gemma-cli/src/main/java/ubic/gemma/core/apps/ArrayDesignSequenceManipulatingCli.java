@@ -92,20 +92,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                 throw new RuntimeException( e );
             }
         }
-
-        if ( commandLine.hasOption( "mdate" ) ) {
-            super.mDate = commandLine.getOptionValue( "mdate" );
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-            if ( commandLine.hasOption( "mdate" ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
     }
 
     protected ArrayDesignReportService getArrayDesignReportService() {
@@ -191,7 +177,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( autoSeek ) {
+        if ( isAutoSeek() ) {
             return this.needToAutoRun( arrayDesign, eventClass );
         }
 
@@ -260,7 +246,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( !autoSeek ) {
+        if ( !isAutoSeek() ) {
             return false;
         }
 
