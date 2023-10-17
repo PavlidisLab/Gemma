@@ -81,10 +81,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  * RESTful interface for datasets.
@@ -719,6 +722,8 @@ public class DatasetsWebService {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
             throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -803,7 +808,11 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return this.outputDesignFile( ee );
+        try {
+            return this.outputDesignFile( ee );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
+        }
     }
 
     /**
@@ -981,24 +990,24 @@ public class DatasetsWebService {
         );
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException {
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputDesignFile( ExpressionExperiment ee ) {
+    private Response outputDesignFile( ExpressionExperiment ee ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
         return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputFile( File file, String error, String shortName ) {
+    private Response outputFile( File file, String error, String shortName ) throws IOException {
         if ( file == null || !file.exists() ) {
             throw new NotFoundException( String.format( error, shortName ) );
         }
         // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( file )
+        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
                 .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();
