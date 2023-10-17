@@ -234,7 +234,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          */
         ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<>( matrix, designU );
 
-        DoubleMatrix2D results = comBat.run( true ); // false: NONPARAMETRIC
+        DoubleMatrix2D results = null;
+
+        try {
+            results = comBat.run( true ); // false: NONPARAMETRIC
+        } catch (ComBatException e ) {
+            throw new IllegalStateException("ComBat failed likely due to confounds between batching and other factors: " + e.getMessage(), e );
+        }
 
         // note these plots always reflect the parametric setup.
         comBat.plot( ee.getId() + "." + FileTools.cleanForFileName( ee.getShortName() ) ); // TEMPORARY?
