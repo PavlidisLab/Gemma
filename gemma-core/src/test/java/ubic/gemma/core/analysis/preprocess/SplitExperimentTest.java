@@ -243,11 +243,13 @@ public class SplitExperimentTest extends BaseSpringContextTest {
             bioAssaySetService.remove( ees );
         }
         // remove any created subsets
-        for ( BioAssaySet b : results.getExperiments() ) {
-            if ( b instanceof ExpressionExperiment ) {
-                bioAssaySetService.remove( b );
-            } else if ( b instanceof ExpressionExperimentSubSet ) {
-                bioAssaySetService.remove( b );
+        if ( results != null ) {
+            for ( BioAssaySet b : results.getExperiments() ) {
+                if ( b instanceof ExpressionExperiment ) {
+                    bioAssaySetService.remove( b );
+                } else if ( b instanceof ExpressionExperimentSubSet ) {
+                    bioAssaySetService.remove( b );
+                }
             }
         }
     }
