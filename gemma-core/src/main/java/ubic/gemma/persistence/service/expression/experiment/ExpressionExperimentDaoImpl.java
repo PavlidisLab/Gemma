@@ -674,11 +674,8 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
-        if ( excludeUncategorized ) {
-            query += getExcludeUrisClause( "COALESCE(T.CATEGORY_URI, T.CATEGORY)", "excludedCategoryUris", Collections.emptyList(), true, retainedTermUris );
-        }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, retainedTermUris );
+        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
+        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
         query += AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
                 + "order by EE_COUNT desc";
@@ -761,11 +758,8 @@ public class ExpressionExperimentDaoImpl
                 query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category";
             }
         }
-        if ( excludeUncategorized ) {
-            query += getExcludeUrisClause( "COALESCE(T.CATEGORY_URI, T.CATEGORY)", "excludedCategoryUris", Collections.emptyList(), true, retainedTermUris );
-        }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, retainedTermUris );
+        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
+        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
         query += AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                 + "having EE_COUNT >= :minFrequency ";
@@ -827,25 +821,35 @@ public class ExpressionExperimentDaoImpl
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
      * @param column            column holding the URI to be excluded
+     * @param labelColumn       column holding the label (only used if excludeFreeText or excludeUncategorized is true,
+     *                          then we will check if the label is non-null to cover some edge cases)
      * @param excludedUrisParam name of the binding parameter for the excluded URIs
      * @param excludedUris      list of URIs to exclude
      * @param excludeFreeText   whether to exclude free-text URIs
      * @param retainedTermUris  list of terms that should bypass the exclusion
      */
-    private String getExcludeUrisClause( String column, String excludedUrisParam, @Nullable Collection<String> excludedUris, boolean excludeFreeText, @Nullable Collection<String> retainedTermUris ) {
+    private String getExcludeUrisClause( String column, String labelColumn, String excludedUrisParam, @Nullable Collection<String> excludedUris, boolean excludeFreeText, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
         String query = "";
         if ( excludedUris != null && !excludedUris.isEmpty() ) {
             query += " and ((" + column + " not in (:" + excludedUrisParam + ")";
+            if ( excludeUncategorized ) {
+                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
+            }
             if ( excludeFreeText ) {
-                query += " and " + column + " is not null";
+                query += " and (" + column + " is not null or " + labelColumn + " is null)";
             }
             query += ")";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
                 query += " or T.VALUE_URI in (:retainedTermUris)";
             }
             query += ")";
-        } else if ( excludeFreeText ) {
-            query += " and " + column + " is not null";
+        } else {
+            if ( excludeUncategorized ) {
+                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
+            }
+            if ( excludeFreeText ) {
+                query += " and (" + column + " is not null or " + labelColumn + " is null)";
+            }
         }
         return query;
     }

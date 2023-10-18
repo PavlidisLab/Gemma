@@ -181,13 +181,25 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyExcludingFreeTextCategories() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
+        Characteristic c1 = createCharacteristic( "foo", null, "bar", null );
+        Characteristic c2 = createCharacteristic( null, null, "bar", null );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null ) )
+                .containsEntry( c, 1L )
+                .doesNotContainKey( c1 )
+                .containsEntry( c2, 1L ); // uncategorized is not a free-text category
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetAnnotationUsageFrequencyExcludingUncategorizedTerms() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
-        Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
+        Characteristic c1 = createCharacteristic( "bar", null, "bar", "http://bar" );
         Characteristic c2 = createCharacteristic( null, null, "bar", "http://bar" );
         Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null ) )
                 .containsEntry( c, 1L )
-                .containsEntry( c1, 1L )
+                .containsEntry( c1, 1L ) // free-text category is not uncategorized
                 .doesNotContainKey( c2 );
     }
 
