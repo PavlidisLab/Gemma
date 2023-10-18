@@ -389,7 +389,11 @@ public abstract class AbstractCLI implements CLI {
     private void summarizeBatchProcessingToTsv( Appendable dest ) throws IOException {
         try ( CSVPrinter printer = new CSVPrinter( dest, CSVFormat.TDF ) ) {
             for ( BatchProcessingResult result : batchProcessingResults ) {
-                printer.printRecord( result.getSource(), result.isError() ? "ERROR" : "SUCCESS", result.getMessage() );
+                printer.printRecord(
+                        result.getSource(),
+                        result.isError() ? "ERROR" : "SUCCESS",
+                        result.getMessage(),
+                        result.throwable != null ? ExceptionUtils.getRootCauseMessage( result.throwable ) : null );
             }
         }
     }
@@ -486,6 +490,11 @@ public abstract class AbstractCLI implements CLI {
             if ( message != null ) {
                 buf.append( ":\n\t" )
                         .append( message.replace( "\n", "\n\t" ) );
+            }
+            if ( throwable != null ) {
+                buf.append( "\n\t" )
+                        .append( "Reason: " )
+                        .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }
             return buf.toString();
         }
