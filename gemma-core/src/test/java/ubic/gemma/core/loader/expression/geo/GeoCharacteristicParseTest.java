@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,17 +19,15 @@
 
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
+import static org.junit.Assert.*;
+
 /**
- * 
- * 
+ *
+ *
  * @author paul
  */
 public class GeoCharacteristicParseTest {
@@ -81,8 +79,11 @@ public class GeoCharacteristicParseTest {
         t = BioMaterial.Factory.newInstance();
         g.parseGEOSampleCharacteristicString( "Clinical info: Submitting diagnosis: DLBCL", t );
         c = t.getCharacteristics().iterator().next();
-        assertEquals( "Clinical info: Submitting diagnosis: DLBCL", c.getValue() );
-        
+        assertEquals( "Clinical info", c.getCategory() );
+        assertNull( c.getCategoryUri() );
+        assertEquals( "Submitting diagnosis: DLBCL", c.getValue() );
+        assertNull( c.getValueUri() );
+
         // test trimming of species names
         t = BioMaterial.Factory.newInstance();
         g.parseGEOSampleCharacteristicString( "cell type: human fibroblast", t );
