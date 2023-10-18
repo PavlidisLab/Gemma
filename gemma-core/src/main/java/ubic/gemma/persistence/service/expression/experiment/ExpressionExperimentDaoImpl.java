@@ -668,7 +668,7 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+        String query = "select max(T.CATEGORY) as CATEGORY, max(T.CATEGORY_URI) as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.ID is not null ";
         if ( eeIds != null ) {
@@ -683,8 +683,8 @@ public class ExpressionExperimentDaoImpl
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
                 + "order by EE_COUNT desc";
         Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
-                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .addSynchronizedEntityClass( Characteristic.class )
@@ -745,7 +745,7 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+        String query = "select max(T.`VALUE`) as `VALUE`, max(T.VALUE_URI) as VALUE_URI, max(T.CATEGORY) as CATEGORY, max(T.CATEGORY_URI) as CATEGORY_URI, max(T.EVIDENCE_CODE) as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.ID is not null"; // this is necessary for the clause building since there might be no clause
         if ( eeIds != null ) {
@@ -770,16 +770,16 @@ public class ExpressionExperimentDaoImpl
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
                 + "having EE_COUNT >= :minFrequency ";
         if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
-            query += " or T.VALUE_URI in (:retainedTermUris)";
+            query += " or VALUE_URI in (:retainedTermUris)";
         }
         query += "order by EE_COUNT desc";
         Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
-                .addScalar( "T.VALUE", StandardBasicTypes.STRING )
-                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 // FIXME: use an EnumType for converting
-                .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
