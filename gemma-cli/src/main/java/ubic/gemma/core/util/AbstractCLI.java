@@ -343,7 +343,7 @@ public abstract class AbstractCLI implements CLI {
         if ( batchProcessingResults.isEmpty() ) {
             return;
         }
-        if ( batchOutputFile != null ) {
+        if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
             log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
         }
         try ( Writer dest = new OutputStreamWriter( batchOutputFile != null ? new FileOutputStream( batchOutputFile ) : System.out ) ) {
@@ -353,6 +353,8 @@ public abstract class AbstractCLI implements CLI {
                     break;
                 case TSV:
                     summarizeBatchProcessingToTsv( dest );
+                    break;
+                case SUPPRESS:
                     break;
             }
         } catch ( IOException e ) {
@@ -460,7 +462,8 @@ public abstract class AbstractCLI implements CLI {
 
     private enum BatchFormat {
         TEXT,
-        TSV
+        TSV,
+        SUPPRESS
     }
 
     /**
