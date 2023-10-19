@@ -28,7 +28,7 @@
          <column name="MEASUREMENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- assumed readily available in FactorValueValueObject -->
-      <set name="characteristics" lazy="false" fetch="select" cascade="all">
+      <set name="characteristics" lazy="false" fetch="select" cascade="all" where="class is null">
          <cache usage="read-write"/>
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
