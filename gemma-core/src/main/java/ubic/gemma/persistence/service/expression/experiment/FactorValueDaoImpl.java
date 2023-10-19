@@ -89,6 +89,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         }
 
         // remove any attached statements since those are not mapped in the collection
+        // remove this in the 1.31 since it will become unnecessary (see https://github.com/PavlidisLab/Gemma/issues/909)
         int removedStatements = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "delete from CHARACTERISTIC where class = 'Statement' and FACTOR_VALUE_FK = :fvId" )
                 .setParameter( "fvId", factorValue.getId() )

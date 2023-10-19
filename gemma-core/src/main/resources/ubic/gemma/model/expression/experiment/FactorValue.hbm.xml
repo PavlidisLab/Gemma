@@ -28,6 +28,7 @@
          <column name="MEASUREMENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <!-- assumed readily available in FactorValueValueObject -->
+      <!-- revert the 'class is null' in the 1.31 (see https://github.com/PavlidisLab/Gemma/issues/909) -->
       <set name="characteristics" lazy="false" fetch="select" cascade="all" where="class is null">
          <cache usage="read-write"/>
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
