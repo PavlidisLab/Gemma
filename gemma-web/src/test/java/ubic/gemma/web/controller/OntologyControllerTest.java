@@ -37,7 +37,7 @@ public class OntologyControllerTest extends BaseSpringWebTest {
     public void testGetTerm() throws Exception {
         mvc.perform( get( "/ont/TGEMO_00001" ) )
                 .andExpect( status().isFound() )
-                .andExpect( redirectedUrl( gemmaOntologyUrl + "#TGEMO_00001" ) );
+                .andExpect( redirectedUrl( gemmaOntologyUrl + "#http://gemma.msl.ubc.ca/ont/TGEMO_00001" ) );
     }
 
     @Test
