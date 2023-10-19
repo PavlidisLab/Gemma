@@ -33,5 +33,5 @@ public interface CLI {
     /**
      * Execute the given command given CLI arguments.
      */
-    int executeCommand( String[] args );
+    int executeCommand( String... args );
 }

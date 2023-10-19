@@ -125,7 +125,7 @@ public abstract class AbstractCLI implements CLI {
      * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
-    public int executeCommand( String[] args ) {
+    public int executeCommand( String... args ) {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
