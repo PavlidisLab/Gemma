@@ -328,6 +328,12 @@
         <location>/503.jsp</location>
     </error-page>
 
+    <!-- https://github.com/PavlidisLab/Gemma/issues/923 -->
+    <mime-mapping>
+        <extension>js</extension>
+        <mime-type>application/javascript</mime-type>
+    </mime-mapping>
+
     <!--  for web fonts -->
     <mime-mapping>
         <extension>eot</extension>
