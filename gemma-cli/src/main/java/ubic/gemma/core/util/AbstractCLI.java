@@ -20,6 +20,7 @@ package ubic.gemma.core.util;
 
 import lombok.Value;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -114,13 +115,38 @@ public abstract class AbstractCLI implements CLI {
     public int executeCommand( String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
+        if ( args == null ) {
+            System.err.println( "No arguments" );
+            return FAILURE;
+        }
         try {
             Options options = new Options();
             buildStandardOptions( options );
             buildOptions( options );
-            CommandLine commandLine = processCommandLine( options, args );
+            DefaultParser parser = new DefaultParser();
+            CommandLine commandLine;
+            try {
+                commandLine = parser.parse( options, args );
+            } catch ( ParseException e ) {
+                if ( e instanceof MissingOptionException ) {
+                    // check if -h/--help was passed alongside a required argument
+                    if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
+                        printHelp( options );
+                        return SUCCESS;
+                    }
+                    System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
+                } else if ( e instanceof AlreadySelectedException ) {
+                    System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
+                } else if ( e instanceof MissingArgumentException ) {
+                    System.err.println( "Missing argument: " + e.getMessage() );
+                } else if ( e instanceof UnrecognizedOptionException ) {
+                    System.err.println( "Unrecognized option: " + e.getMessage() );
+                }
+                printHelp( options );
+                return FAILURE;
+            }
             // check if -h/--help is provided before pursuing option processing
-            if ( commandLine.hasOption( 'h' ) ) {
+            if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options );
                 return SUCCESS;
             }
@@ -207,10 +233,8 @@ public abstract class AbstractCLI implements CLI {
 
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
-        Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
-        Option testOpt = new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( helpOpt );
-        options.addOption( testOpt );
+        options.addOption( HELP_OPTION, "help", false, "Print this message" );
+        options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
     }
 
     /**
@@ -288,42 +312,6 @@ public abstract class AbstractCLI implements CLI {
                 this.getCommandName() + " [options]",
                 this.getShortDesc() + "\n" + AbstractCLI.HEADER,
                 options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
-    }
-
-    /**
-     * This must be called in your main method. It triggers parsing of the command line and processing of the options.
-     * Check the error code to decide whether execution of your program should proceed.
-     *
-     * @param args args
-     * @return Exception; null if nothing went wrong.
-     */
-    private CommandLine processCommandLine( Options options, String[] args ) {
-        /* COMMAND LINE PARSER STAGE */
-        DefaultParser parser = new DefaultParser();
-
-        if ( args == null ) {
-            System.err.println( "No arguments" );
-            this.printHelp( options );
-            throw new RuntimeException( "No arguments" );
-        }
-
-        try {
-            return parser.parse( options, args );
-        } catch ( ParseException e ) {
-            if ( e instanceof MissingOptionException ) {
-                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
-            } else if ( e instanceof AlreadySelectedException ) {
-                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
-            } else if ( e instanceof MissingArgumentException ) {
-                System.err.println( "Missing argument: " + e.getMessage() );
-            } else if ( e instanceof UnrecognizedOptionException ) {
-                System.err.println( "Unrecognized option: " + e.getMessage() );
-            }
-
-            this.printHelp( options );
-
-            throw new RuntimeException( e );
-        }
     }
 
     /**
