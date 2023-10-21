@@ -47,7 +47,6 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                 Option.builder( "a" ).longOpt( "array" )
                         .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
                         .argName( "comma-delimited list of platform short names" ).hasArg().build() );
-        super.suppressAllOption();
     }
 
     @Override

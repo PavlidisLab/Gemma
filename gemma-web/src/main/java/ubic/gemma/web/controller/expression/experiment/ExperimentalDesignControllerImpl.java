@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.directwebremoting.extend.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -303,13 +304,13 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             for ( CharacteristicValueObject ch : bmo.getCharacteristics() ) {
 
                 String category = ch.getCategory();
+                String value = ch.getValue();
                 if ( StringUtils.isBlank( category ) ) {
-
                     /*
-                    Experimental: split on ":", use first part as the category.
+                    Experimental: split on ":" or "=", use first part as the category.
                      */
-                    if ( StringUtils.isNotBlank( ch.getValue() ) && ch.getValue().contains( ":" ) ) {
-                        String[] split = ch.getValue().split( ":" );
+                    if ( StringUtils.isNotBlank( value ) && value.matches( ".+[:=].+" ) ) { // note: GEO only allows ":" now but we have "=" in the db for older entries.
+                        String[] split = value.split( "[:=]", 2 );
                         category = StringUtils.strip( split[0] );
                     } else {
                         continue;
@@ -328,7 +329,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
          */
         Collection<String> toremove = new HashSet<>();
         for ( String category : map.keySet() ) {
-            // log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
+            //log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
                 toremove.add( category );
                 continue;
@@ -352,9 +353,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
                     if ( StringUtils.isBlank( mappedCategory ) ) {
                         // redo split (will refactor later)
-                        if ( StringUtils.isNotBlank( mappedValue ) && mappedValue.contains( ":" ) ) {
-                            String[] split = mappedValue.split( ":" );
+                        if ( StringUtils.isNotBlank( mappedValue ) && mappedValue.matches( ".+[:=].+" ) ) {
+                            String[] split = mappedValue.split( "[:=]", 2 );
                             mappedCategory = StringUtils.strip( split[0] );
+                            mappedValue = StringUtils.strip( split[1] ); // to show the trimmed up value.
                         } else {
                             continue bms;
                         }
@@ -381,7 +383,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 //                }
             }
 
-            if ( vals.size() < 2 ) {
+            if ( vals.size() < 2 ) { // constant
                 toremove.add( category );
             }
         }

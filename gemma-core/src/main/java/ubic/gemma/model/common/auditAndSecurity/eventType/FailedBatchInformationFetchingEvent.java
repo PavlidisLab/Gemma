@@ -19,17 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
+ * Indicates that the attempt to get batch information failed due to an error.
  * <p>
- * Indicates that the attempt to get batch information failed due to an error. If the problem is that the information
- * just isn't available, use the specific subtype of this.
- * </p>
+ * If the problem is that the information just isn't available, use {@link BatchInformationMissingEvent} instead.
  */
-public class FailedBatchInformationFetchingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3776787605548724345L;
-
+public class FailedBatchInformationFetchingEvent extends BatchInformationFetchingEvent {
 }

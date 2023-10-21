@@ -277,6 +277,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return otherParts;
     }
 
+    public void setOtherParts( Collection<ExpressionExperimentValueObject> otherParts ) {
+        this.otherParts = otherParts;
+    }
+
     public String getPcaAnalysisEventType() {
         return pcaAnalysisEventType;
     }

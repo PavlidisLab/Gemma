@@ -19,16 +19,18 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
+ * Indicates that batch information was successfully obtained.
  * <p>
- * Indicates that batch information was obtained
+ * Successful obtention is not indicative of problematic batch information and the {@link FailedBatchInformationFetchingEvent}
+ * for representing such cases.
  * </p>
+ * Use {@link BatchInformationMissingEvent} for missing batch information.
+ * @author poirigui
  */
-public class BatchInformationFetchingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
+public class BatchInformationFetchingEvent extends BatchInformationEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4635587632131568136L;
-
 }

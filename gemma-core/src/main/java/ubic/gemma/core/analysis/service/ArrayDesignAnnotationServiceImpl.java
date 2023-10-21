@@ -648,7 +648,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         buf.append( "# " ).append( arrayDesign.getPrimaryTaxon().getScientificName() ).append( "\n" );
 
         writer.write( buf.toString() );
-        writer.write( "ProbeName\tGeneSymbols\tGeneNames\tGOTerms\tGemmaIDs\tNCBIids\n" );
+        writer.write( "ElementName\tGeneSymbols\tGeneNames\tGOTerms\tGemmaIDs\tNCBIids\n" );
 
         return writer;
     }

@@ -67,19 +67,24 @@
             </subclass>
             <subclass abstract="false" discriminator-value="ExpressionExperimentVectorMergeEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent"/>
-            <subclass abstract="false" discriminator-value="BatchInformationFetchingEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent">
-                <subclass abstract="false" discriminator-value="FailedBatchInformationFetchingEvent"
-                          name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent">
+            <subclass abstract="true" name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent">
+                <subclass abstract="false" discriminator-value="BatchInformationFetchingEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent">
+                    <subclass abstract="false" name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent"
+                              discriminator-value="FailedBatchInformationFetchingEvent">
+                        <subclass abstract="false" discriminator-value="UninformativeFASTQHeadersForBatchingEvent"
+                                  name="ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent"/>
+                        <subclass abstract="false" discriminator-value="SingletonBatchInvalidEvent"
+                                  name="ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent"/>
+                    </subclass>
+                    <subclass abstract="false" discriminator-value="SingleBatchDeterminationEvent"
+                              name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent">
+                    </subclass>
+                </subclass>
+                <subclass abstract="false" discriminator-value="BatchInformationMissingEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent">
                     <subclass abstract="false" discriminator-value="FailedBatchInformationMissingEvent"
                               name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent"/>
-                    <subclass abstract="false" discriminator-value="UninformativeFASTQHeadersForBatchingEvent"
-                              name="ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent"/>
-                    <subclass abstract="false" discriminator-value="SingletonBatchInvalidEvent"
-                              name="ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent"/>
-                </subclass>
-                <subclass abstract="false" discriminator-value="SingleBatchDeterminationEvent"
-                          name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent">
                 </subclass>
             </subclass>
             <subclass abstract="false" discriminator-value="PCAAnalysisEvent"

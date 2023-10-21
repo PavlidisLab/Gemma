@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -70,6 +71,11 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         public ArrayDesignService arrayDesignService() {
             return mock();
         }
+
+        @Bean
+        public ExpressionExperimentSetService expressionExperimentSetService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -94,6 +100,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         ee = new ExpressionExperiment();
         rpkmFile = new ClassPathResource( "test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
+        when( expressionExperimentService.thawLite( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );
     }
 

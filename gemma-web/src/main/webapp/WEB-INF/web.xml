@@ -325,8 +325,14 @@
     </error-page>
     <error-page>
         <error-code>503</error-code>
-        <location>/500.jsp</location>
+        <location>/503.jsp</location>
     </error-page>
+
+    <!-- https://github.com/PavlidisLab/Gemma/issues/923 -->
+    <mime-mapping>
+        <extension>js</extension>
+        <mime-type>application/javascript</mime-type>
+    </mime-mapping>
 
     <!--  for web fonts -->
     <mime-mapping>

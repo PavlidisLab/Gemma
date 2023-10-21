@@ -649,21 +649,39 @@ public class ExpressionExperimentDaoImpl
             excludedTermUris = new HashSet<>( excludedTermUris );
             excludedTermUris.removeAll( retainedTermUris );
         }
-        Query q = getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select T.CATEGORY, T.CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                                + "where T.ID is not null "
-                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
-                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
-                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
-                                //        parentheses
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
-                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
-                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
-                                + "order by EE_COUNT desc" )
-                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+        boolean excludeFreeTextCategories = false;
+        boolean excludeUncategorized = false;
+        if ( excludedCategoryUris != null ) {
+            if ( excludedCategoryUris.contains( null ) ) {
+                excludeFreeTextCategories = true;
+                excludedCategoryUris = excludedCategoryUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+            }
+            if ( excludedCategoryUris.contains( UNCATEGORIZED ) ) {
+                excludeUncategorized = true;
+                excludedCategoryUris = excludedCategoryUris.stream().filter( c -> !c.equals( UNCATEGORIZED ) ).collect( Collectors.toList() );
+            }
+        }
+        boolean excludeFreeTextTerms = false;
+        if ( excludedTermUris != null ) {
+            if ( excludedTermUris.contains( null ) ) {
+                excludeFreeTextTerms = true;
+                excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+            }
+        }
+        String query = "select max(T.CATEGORY) as CATEGORY, max(T.CATEGORY_URI) as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + "where T.ID is not null ";
+        if ( eeIds != null ) {
+            query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+        }
+        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
+        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
+        query += AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
+                + "order by EE_COUNT desc";
+        Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .addSynchronizedEntityClass( Characteristic.class )
@@ -705,29 +723,57 @@ public class ExpressionExperimentDaoImpl
             excludedTermUris = new HashSet<>( excludedTermUris );
             excludedTermUris.removeAll( retainedTermUris );
         }
-        Query q = getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select T.`VALUE`, T.VALUE_URI, T.CATEGORY, T.CATEGORY_URI, T.EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                                + "where T.ID is not null " // this is necessary for the clause building since there might be no clause
-                                + ( eeIds != null ? " and T.EXPRESSION_EXPERIMENT_FK in :eeIds" : "" )
-                                + ( level != null ? " and T.LEVEL = :level" : "" )
-                                + ( category != null ? category.equals( UNCATEGORIZED ) ? " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL" : " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category" : "" )
-                                // FIXME: there's a bug in Hibernate that that prevents it from producing proper tuples
-                                //        for the excludedCategoryUris, retainedTermUris parameters, so we add explicit
-                                //        parentheses
-                                + ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ? " and (T.CATEGORY_URI not in (:excludedCategoryUris)" + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? " or T.VALUE_URI in (:retainedTermUris)" : "" ) + ")" : "" )
-                                + ( excludedTermUris != null && !excludedTermUris.isEmpty() ? " and T.VALUE_URI not in :excludedTermUris" : "" )
-                                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
-                                + "having EE_COUNT >= :minFrequency "
-                                + ( retainedTermUris != null && !retainedTermUris.isEmpty() ? "or T.VALUE_URI in (:retainedTermUris) " : "" )
-                                + "order by EE_COUNT desc" )
-                .addScalar( "T.VALUE", StandardBasicTypes.STRING )
-                .addScalar( "T.VALUE_URI", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "T.CATEGORY_URI", StandardBasicTypes.STRING )
+        boolean excludeFreeTextCategories = false;
+        boolean excludeUncategorized = false;
+        if ( excludedCategoryUris != null ) {
+            if ( excludedCategoryUris.contains( null ) ) {
+                excludeFreeTextCategories = true;
+                excludedCategoryUris = excludedCategoryUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+            }
+            if ( excludedCategoryUris.contains( UNCATEGORIZED ) ) {
+                excludeUncategorized = true;
+                excludedCategoryUris = excludedCategoryUris.stream().filter( c -> !c.equals( UNCATEGORIZED ) ).collect( Collectors.toList() );
+            }
+        }
+        boolean excludeFreeTextTerms = false;
+        if ( excludedTermUris != null ) {
+            if ( excludedTermUris.contains( null ) ) {
+                excludeFreeTextTerms = true;
+                excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
+            }
+        }
+        String query = "select max(T.`VALUE`) as `VALUE`, max(T.VALUE_URI) as VALUE_URI, max(T.CATEGORY) as CATEGORY, max(T.CATEGORY_URI) as CATEGORY_URI, max(T.EVIDENCE_CODE) as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + "where T.ID is not null"; // this is necessary for the clause building since there might be no clause
+        if ( eeIds != null ) {
+            query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+        }
+        if ( level != null ) {
+            query += " and T.LEVEL = :level";
+        }
+        if ( category != null ) {
+            if ( category.equals( UNCATEGORIZED ) ) {
+                query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL";
+            } else {
+                query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category";
+            }
+        }
+        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
+        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
+        query += AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
+                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
+                + "having EE_COUNT >= :minFrequency ";
+        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+            query += " or VALUE_URI in (:retainedTermUris)";
+        }
+        query += "order by EE_COUNT desc";
+        Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 // FIXME: use an EnumType for converting
-                .addScalar( "T.EVIDENCE_CODE", StandardBasicTypes.STRING )
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
                 .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
@@ -767,6 +813,45 @@ public class ExpressionExperimentDaoImpl
             byC.put( c, ( Long ) row[5] );
         }
         return byC;
+    }
+
+    /**
+     * Produce a SQL clause for excluding URIs and free-text (i.e. null) URIs.
+     * <p>
+     * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
+     *        retained term URIs
+     * @param column            column holding the URI to be excluded
+     * @param labelColumn       column holding the label (only used if excludeFreeText or excludeUncategorized is true,
+     *                          then we will check if the label is non-null to cover some edge cases)
+     * @param excludedUrisParam name of the binding parameter for the excluded URIs
+     * @param excludedUris      list of URIs to exclude
+     * @param excludeFreeText   whether to exclude free-text URIs
+     * @param retainedTermUris  list of terms that should bypass the exclusion
+     */
+    private String getExcludeUrisClause( String column, String labelColumn, String excludedUrisParam, @Nullable Collection<String> excludedUris, boolean excludeFreeText, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
+        String query = "";
+        if ( excludedUris != null && !excludedUris.isEmpty() ) {
+            query += " and ((" + column + " not in (:" + excludedUrisParam + ")";
+            if ( excludeUncategorized ) {
+                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
+            }
+            if ( excludeFreeText ) {
+                query += " and (" + column + " is not null or " + labelColumn + " is null)";
+            }
+            query += ")";
+            if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+                query += " or T.VALUE_URI in (:retainedTermUris)";
+            }
+            query += ")";
+        } else {
+            if ( excludeUncategorized ) {
+                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
+            }
+            if ( excludeFreeText ) {
+                query += " and (" + column + " is not null or " + labelColumn + " is null)";
+            }
+        }
+        return query;
     }
 
     @Override
@@ -1347,15 +1432,15 @@ public class ExpressionExperimentDaoImpl
     private static class ExpressionExperimentDetail {
 
         public static ExpressionExperimentDetail fromRow( Object[] row ) {
-            return new ExpressionExperimentDetail( ( ArrayDesign ) row[1], ( ArrayDesign ) row[2], ( ExpressionExperiment ) row[3], ( Integer ) row[4] );
+            return new ExpressionExperimentDetail( ( Long ) row[1], ( Long ) row[2], ( Long ) row[3], ( Integer ) row[4] );
         }
 
         @Nullable
-        ArrayDesign arrayDesignUsed;
+        Long arrayDesignUsedId;
         @Nullable
-        ArrayDesign originalPlatform;
+        Long originalPlatformId;
         @Nullable
-        ExpressionExperiment otherPart;
+        Long otherPartId;
         Integer bioAssaysCount;
     }
 
@@ -1368,13 +1453,14 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, ad, op, oe, ee.bioAssays.size from ExpressionExperiment as ee "
+                .createQuery( "select ee.id, ad.id, op.id, oe.id, ee.bioAssays.size from ExpressionExperiment as ee "
                         + "left join ee.bioAssays ba "
                         + "left join ba.arrayDesignUsed ad "
                         + "left join ba.originalPlatform op " // not all bioAssays have an original platform
                         + "left join ee.otherParts as oe "    // not all experiments are splitted
                         + "where ee.id in :eeIds "
-                        + "group by ee, ad, op" )
+                        // FIXME: apply ACLs, other parts or platform might be private
+                        + "group by ee, ad, op, oe" )
                 .setParameterList( "eeIds", expressionExperimentIds )
                 .setCacheable( cacheable )
                 .list();
@@ -1540,22 +1626,25 @@ public class ExpressionExperimentDaoImpl
                 for ( ExpressionExperimentDetailsValueObject vo : vos ) {
                     List<ExpressionExperimentDetail> details = detailsByEE.get( vo.getId() );
 
-                    // we need those later for computing original platforms
-                    Collection<ArrayDesign> arrayDesignsUsed = details.stream()
-                            .map( ExpressionExperimentDetail::getArrayDesignUsed )
+                    Set<Long> arrayDesignsUsedIds = details.stream()
+                            .map( ExpressionExperimentDetail::getArrayDesignUsedId )
                             .filter( Objects::nonNull )
                             .collect( Collectors.toSet() );
 
-                    Collection<ArrayDesignValueObject> adVos = arrayDesignsUsed.stream()
+                    // we need those later for computing original platforms
+                    Collection<ArrayDesignValueObject> adVos = arrayDesignsUsedIds.stream()
+                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
 
                     // original platforms
                     Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
-                            .map( ExpressionExperimentDetail::getOriginalPlatform )
+                            .map( ExpressionExperimentDetail::getOriginalPlatformId )
                             .filter( Objects::nonNull ) // on original platform for the bioAssay
-                            .filter( op -> !arrayDesignsUsed.contains( op ) )
+                            .distinct()
+                            .filter( op -> !arrayDesignsUsedIds.contains( op ) ) // omit noop switches
+                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setOriginalPlatforms( originalPlatformsVos );
@@ -1566,13 +1655,16 @@ public class ExpressionExperimentDaoImpl
                             .orElse( 0 );
                     vo.setNumberOfBioAssays( bioAssayCount );
 
-                    Set<ExpressionExperiment> otherParts = details.stream()
-                            .map( ExpressionExperimentDetail::getOtherPart )
+                    Set<Long> otherPartsIds = details.stream()
+                            .map( ExpressionExperimentDetail::getOtherPartId )
                             .filter( Objects::nonNull )
                             .collect( Collectors.toSet() );
 
+                    List<ExpressionExperimentValueObject> otherPartsVos = loadValueObjectsByIds( otherPartsIds ).stream()
+                            .sorted( Comparator.comparing( ExpressionExperimentValueObject::getShortName ) ).collect( Collectors.toList() );
+
                     // other parts (maybe fetch in details query?)
-                    vo.getOtherParts().addAll( otherParts.stream().map( ee2 -> doLoadValueObject( ee2 ) ).collect( Collectors.toList() ) );
+                    vo.setOtherParts( otherPartsVos );
                 }
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {

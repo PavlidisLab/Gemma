@@ -19,13 +19,13 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Use to indicate that the batch information has been successfully looked for, but is not available, so we shouldn't
  * look again. Do not use to indicate other types of failure such as an unsupported raw data type.
- * </p>
+ * <p>
+ * @deprecated use {@link BatchInformationMissingEvent}
  */
-public class FailedBatchInformationMissingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent {
+@Deprecated
+public class FailedBatchInformationMissingEvent extends BatchInformationMissingEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.

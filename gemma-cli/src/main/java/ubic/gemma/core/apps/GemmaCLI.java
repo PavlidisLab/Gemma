@@ -187,24 +187,27 @@ public class GemmaCLI {
         String commandRequested = commandArgs.remove( 0 );
         String[] argsToPass = commandArgs.toArray( new String[] {} );
 
+        int statusCode;
         if ( !commandsByName.containsKey( commandRequested ) ) {
             System.err.println( "Unrecognized command: " + commandRequested );
             GemmaCLI.printHelp( options, commandGroups );
-            System.exit( 1 );
+            statusCode = 1;
         } else {
             try {
                 CLI cli = commandsByName.get( commandRequested );
                 System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                 System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
-                System.exit( cli.executeCommand( argsToPass ) );
+                statusCode = cli.executeCommand( argsToPass );
             } catch ( Exception e ) {
                 System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
                 System.err.println( ExceptionUtils.getStackTrace( e ) );
-                throw new RuntimeException( e );
+                statusCode = 1;
             } finally {
                 System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
             }
         }
+
+        System.exit( statusCode );
     }
 
     /**

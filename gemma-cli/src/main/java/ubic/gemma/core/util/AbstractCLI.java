@@ -20,13 +20,14 @@ package ubic.gemma.core.util;
 
 import lombok.Value;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -114,18 +115,43 @@ public abstract class AbstractCLI implements CLI {
     public int executeCommand( String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
+        if ( args == null ) {
+            System.err.println( "No arguments" );
+            return FAILURE;
+        }
         try {
             Options options = new Options();
             buildStandardOptions( options );
             buildOptions( options );
-            CommandLine commandLine = processCommandLine( options, args );
+            DefaultParser parser = new DefaultParser();
+            CommandLine commandLine;
+            try {
+                commandLine = parser.parse( options, args );
+            } catch ( ParseException e ) {
+                if ( e instanceof MissingOptionException ) {
+                    // check if -h/--help was passed alongside a required argument
+                    if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
+                        printHelp( options );
+                        return SUCCESS;
+                    }
+                    System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
+                } else if ( e instanceof AlreadySelectedException ) {
+                    System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
+                } else if ( e instanceof MissingArgumentException ) {
+                    System.err.println( "Missing argument: " + e.getMessage() );
+                } else if ( e instanceof UnrecognizedOptionException ) {
+                    System.err.println( "Unrecognized option: " + e.getMessage() );
+                }
+                printHelp( options );
+                return FAILURE;
+            }
             // check if -h/--help is provided before pursuing option processing
-            if ( commandLine.hasOption( 'h' ) ) {
+            if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options );
                 return SUCCESS;
             }
             if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                System.err.printf( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() );
+                AbstractCLI.log.error( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
                 return FAILURE;
             }
             processStandardOptions( commandLine );
@@ -133,12 +159,12 @@ public abstract class AbstractCLI implements CLI {
             doWork();
             return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
-            log.error( getCommandName() + " failed.", e );
+            log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
         } finally {
             // always summarize processing, even if an error is thrown
             summarizeProcessing();
-            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
+            log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
         }
     }
 
@@ -207,10 +233,8 @@ public abstract class AbstractCLI implements CLI {
 
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
-        Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
-        Option testOpt = new Option( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( helpOpt );
-        options.addOption( testOpt );
+        options.addOption( HELP_OPTION, "help", false, "Print this message" );
+        options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
     }
 
     /**
@@ -291,51 +315,6 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * This must be called in your main method. It triggers parsing of the command line and processing of the options.
-     * Check the error code to decide whether execution of your program should proceed.
-     *
-     * @param args args
-     * @return Exception; null if nothing went wrong.
-     */
-    private CommandLine processCommandLine( Options options, String[] args ) throws Exception {
-        /* COMMAND LINE PARSER STAGE */
-        DefaultParser parser = new DefaultParser();
-        String appVersion = Settings.getAppVersion();
-        if ( appVersion == null )
-            appVersion = "?";
-        System.err.println( "Gemma version " + appVersion );
-
-        if ( args == null ) {
-            this.printHelp( options );
-            throw new Exception( "No arguments" );
-        }
-
-        try {
-            return parser.parse( options, args );
-        } catch ( ParseException e ) {
-            if ( e instanceof MissingOptionException ) {
-                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
-            } else if ( e instanceof AlreadySelectedException ) {
-                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
-            } else if ( e instanceof MissingArgumentException ) {
-                System.err.println( "Missing argument: " + e.getMessage() );
-            } else if ( e instanceof UnrecognizedOptionException ) {
-                System.err.println( "Unrecognized option: " + e.getMessage() );
-            } else {
-                e.printStackTrace();
-            }
-
-            this.printHelp( options );
-
-            if ( AbstractCLI.log.isDebugEnabled() ) {
-                AbstractCLI.log.debug( e );
-            }
-
-            throw e;
-        }
-    }
-
-    /**
      * Process command line options.
      * <p>
      * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
@@ -378,7 +357,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
         errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
-        log.error( message, throwable );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
     /**
@@ -387,7 +366,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, String message ) {
         errorObjects.add( new BatchProcessingResult( errorObject, message, null ) );
-        log.error( message );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
 
     /**
@@ -396,7 +375,7 @@ public abstract class AbstractCLI implements CLI {
      */
     protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
         errorObjects.add( new BatchProcessingResult( errorObject, exception.getMessage(), exception ) );
-        log.error( exception.getMessage(), exception );
+        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
 
     /**

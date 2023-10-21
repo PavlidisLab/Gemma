@@ -259,12 +259,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                         return reader.readLine();
                     }
                 } else {
-                    log.error( "Could not read the password from '" + passwordCommand + "':\n"
+                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "':\n"
                             + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
-                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'." );
                 }
             } catch ( IOException | InterruptedException e ) {
-                log.error( "Could not read the password from '" + passwordCommand + "'.", e );
                 throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
             }
         }

@@ -81,10 +81,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  * RESTful interface for datasets.
@@ -296,7 +299,10 @@ public class DatasetsWebService {
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
+            @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
+            @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
+            @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
             @Parameter(description = "Retain the categories applicable to terms mentioned in the `filter` parameter even if they are excluded by `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
     ) {
         // ensure that implied terms are retained in the usage frequency
@@ -310,8 +316,8 @@ public class DatasetsWebService {
         }
         List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
                         filtersWithQuery,
-                        excludedCategoryUris != null ? excludedCategoryUris.getValue() : null,
-                        excludedTermUris != null ? excludedTermUris.getValue() : null,
+                        datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                        datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
                         mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null )
                 .entrySet()
                 .stream()
@@ -353,7 +359,10 @@ public class DatasetsWebService {
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
             @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported. If empty, uncategorized terms are reported.") @QueryParam("category") String category,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
+            @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
+            @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
+            @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
             @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
@@ -380,8 +389,8 @@ public class DatasetsWebService {
                 limit,
                 minFrequency != null ? minFrequency : 0,
                 category,
-                excludedCategoryUris != null ? excludedCategoryUris.getValue() : null,
-                excludedTermUris != null ? excludedTermUris.getValue() : null,
+                datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
                 mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null );
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
@@ -719,6 +728,8 @@ public class DatasetsWebService {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
             throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -803,7 +814,11 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return this.outputDesignFile( ee );
+        try {
+            return this.outputDesignFile( ee );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
+        }
     }
 
     /**
@@ -817,7 +832,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
-    public ResponseDataObject<Boolean> getDatasetHasBatch( // Params:
+    public ResponseDataObject<Boolean> getDatasetHasBatchInformation( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -981,24 +996,24 @@ public class DatasetsWebService {
         );
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException {
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputDesignFile( ExpressionExperiment ee ) {
+    private Response outputDesignFile( ExpressionExperiment ee ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
         return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputFile( File file, String error, String shortName ) {
+    private Response outputFile( File file, String error, String shortName ) throws IOException {
         if ( file == null || !file.exists() ) {
             throw new NotFoundException( String.format( error, shortName ) );
         }
         // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( file )
+        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
                 .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();

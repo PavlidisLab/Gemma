@@ -33,6 +33,9 @@ import java.util.List;
  */
 public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ExternalDatabase> loadAllWithAuditTrail();
+
     @Override
     @Secured({ "GROUP_ADMIN" })
     Collection<ExternalDatabase> create( Collection<ExternalDatabase> entities );

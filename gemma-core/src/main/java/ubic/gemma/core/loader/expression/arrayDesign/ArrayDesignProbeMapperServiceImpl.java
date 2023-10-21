@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
@@ -123,13 +124,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void processArrayDesign( ArrayDesign arrayDesign ) {
         this.processArrayDesign( arrayDesign, new ProbeMapperConfig(), true );
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
         assert config != null;
@@ -217,7 +218,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
             boolean ncbiIds ) throws IOException {
 
@@ -380,7 +381,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public Map<String, Collection<BlatAssociation>> processCompositeSequence( ProbeMapperConfig config, Taxon taxon,
             GoldenPathSequenceAnalysis goldenPathDb, CompositeSequence compositeSequence ) {
         BioSequence bs = compositeSequence.getBiologicalCharacteristic();
