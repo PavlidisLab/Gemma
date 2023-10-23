@@ -79,7 +79,7 @@
 					</type>
 				</property>
 				<property name="batchEffectStatistics" type="java.lang.String">
-					<column name="BATCH_EFFECT_STATISTICS" sql-type="VARCHAR(255)"/>
+					<column name="BATCH_EFFECT_STATISTICS" sql-type="TEXT"/>
 				</property>
 				<property name="batchConfound" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
