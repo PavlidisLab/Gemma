@@ -36,7 +36,7 @@
                         sql-type="VARCHAR(255)"/>
             </property>
             <property name="dummy" type="java.lang.Boolean">
-                <column name="DUMMY" not-null="false" sql-type="TINYINT(1)"/>
+                <column name="DUMMY" not-null="false" sql-type="TINYINT"/>
             </property>
             <!--  having cascade-all here is a problem since the same entry can be associated with a biosequence as well -->
             <set name="accessions" lazy="true" fetch="select" cascade="all">
