@@ -42,6 +42,12 @@ public class GeneProduct extends ChromosomeFeature {
      */
     private Set<PhysicalLocation> exons = new java.util.HashSet<>();
     private Gene gene;
+    /**
+     * Indicate if this GeneProduct is dummy.
+     * <p>
+     * Dummy {@link GeneProduct} are not listed in the {@link Gene#getProducts()} associations.
+     */
+    private boolean dummy;
 
     @Override
     public int hashCode() {
@@ -155,6 +161,14 @@ public class GeneProduct extends ChromosomeFeature {
     @Field
     public String getPreviousNcbiId() {
         return super.getPreviousNcbiId();
+    }
+
+    public boolean isDummy() {
+        return dummy;
+    }
+
+    public void setDummy( boolean dummy ) {
+        this.dummy = dummy;
     }
 
     private int computeHashCode() {

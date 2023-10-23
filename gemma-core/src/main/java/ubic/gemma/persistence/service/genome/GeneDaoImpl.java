@@ -507,6 +507,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene = :g" )
                 .setParameter( "g", gene )
                 .executeUpdate();
+        // those genes are not visible from the products collection
+        int removedDummyProducts = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneProduct where gene = :g and dummy = true" )
+                .setParameter( "g", gene )
+                .executeUpdate();
         super.remove( gene );
     }
 
