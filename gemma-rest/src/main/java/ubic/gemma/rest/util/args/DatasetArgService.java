@@ -47,6 +47,35 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         this.outlierDetectionService = outlierDetectionService;
     }
 
+    /**
+     * Obtain a list of exclude URIs from an argument containing excluded URIs.
+     * @param excludedUrisArg    argument containing excluded URIs or null if unspecified
+     * @param excludeFreeText if true, null will be included in the returned list which will result in the exclusion of
+     *                        free-text categories or terms
+     * @return null if excludedUrisArg is null and excludeFreeText is false, otherwise a list of excluded URIs
+     */
+    @Nullable
+    public List<String> getExcludedUris( @Nullable StringArrayArg excludedUrisArg, boolean excludeFreeText, boolean excludeUncategorizedTerms ) {
+        List<String> result = null;
+        if ( excludedUrisArg != null ) {
+            result = excludedUrisArg.getValue();
+        }
+        if ( excludeFreeText || excludeUncategorizedTerms ) {
+            if ( result == null ) {
+                result = new ArrayList<>();
+            } else {
+                result = new ArrayList<>( result );
+            }
+        }
+        if ( excludeFreeText ) {
+            result.add( null );
+        }
+        if ( excludeUncategorizedTerms ) {
+            result.add( ExpressionExperimentService.UNCATEGORIZED );
+        }
+        return result;
+    }
+
     @Override
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) throws BadRequestException {
         return getFilters( filterArg, null );

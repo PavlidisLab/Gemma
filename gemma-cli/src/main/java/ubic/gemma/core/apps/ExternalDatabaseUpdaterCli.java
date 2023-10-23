@@ -20,28 +20,33 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
 
     private static final String NAME_OPTION = "n",
             DESCRIPTION_OPTION = "d",
+            PARENT_DATABASE_OPTION = "parentDatabase",
             RELEASE_OPTION = "release",
             RELEASE_NOTE_OPTION = "releaseNote",
             RELEASE_VERSION_OPTION = "releaseVersion",
             RELEASE_URL_OPTION = "releaseUrl",
-            LAST_UPDATED_OPTION = "lastUpdated",
-            PARENT_DATABASE_OPTION = "parentDatabase";
+            LAST_UPDATED_OPTION = "lastUpdated";
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
     private String name;
     private String description;
+    private ExternalDatabase parentDatabase;
     private boolean release;
     private String releaseNote;
     private String releaseVersion;
     private URL releaseUrl;
     private Date lastUpdated;
-    private ExternalDatabase parentDatabase;
 
     @Override
     public String getCommandName() {
         return "updateExternalDatabase";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Update an external database and optionally perform a release.";
     }
 
     @Override
@@ -62,9 +67,11 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
                 .optionalArg( false )
                 .desc( "External database name" )
                 .required( true ).build() );
-        options.addOption( DESCRIPTION_OPTION, "description", true, "New description" );
-        options.addOption( RELEASE_OPTION, "release", false, "Update the release (only affects last modified moment))" );
-        options.addOption( RELEASE_VERSION_OPTION, "release-version", true, "Release version" );
+        options.addOption( DESCRIPTION_OPTION, "description", true, "Update the description" );
+        options.addOption( PARENT_DATABASE_OPTION, "parent-database", true, "Update the parent database either by ID or name" );
+        // release-specific options
+        options.addOption( RELEASE_OPTION, "release", false, "Update the release details" );
+        options.addOption( RELEASE_VERSION_OPTION, "release-version", true, "Release version (optional)" );
         options.addOption( Option.builder( RELEASE_URL_OPTION )
                 .longOpt( "release-url" )
                 .hasArg()
@@ -74,13 +81,8 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
         options.addOption( Option.builder( LAST_UPDATED_OPTION )
                 .longOpt( "last-updated" )
                 .hasArg()
-                .desc( "Moment the release was performed if known, otherwise the current time will be used." )
+                .desc( "Moment the release was performed if known, otherwise the current time will be used" )
                 .type( Date.class ).build() );
-        options.addOption( Option.builder( PARENT_DATABASE_OPTION )
-                .longOpt( "parent-database" )
-                .hasArg()
-                .desc( "Identifier or name of the parent database." )
-                .build() );
 
     }
 
@@ -93,6 +95,9 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
         releaseVersion = commandLine.getOptionValue( RELEASE_VERSION_OPTION );
         releaseUrl = ( URL ) commandLine.getParsedOptionValue( RELEASE_URL_OPTION );
         lastUpdated = ( Date ) commandLine.getParsedOptionValue( LAST_UPDATED_OPTION );
+        if ( !release && ( releaseNote != null || releaseVersion != null || releaseUrl != null || lastUpdated != null ) ) {
+            throw new IllegalArgumentException( "The -release,--release flag must be used to update release details." );
+        }
         if ( lastUpdated == null ) {
             lastUpdated = new Date();
         }
@@ -117,7 +122,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractSpringAwareCLI {
         if ( description != null ) {
             ed.setDescription( description );
         }
-        if ( release || releaseVersion != null ) {
+        if ( release ) {
             if ( releaseVersion != null ) {
                 AbstractCLI.log.info( String.format( "Updating %s release version to %s.", name, releaseVersion ) );
                 externalDatabaseService.updateReleaseDetails( ed, releaseVersion, releaseUrl, releaseNote, lastUpdated );

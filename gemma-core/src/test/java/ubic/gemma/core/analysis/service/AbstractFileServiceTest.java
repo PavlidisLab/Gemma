@@ -23,7 +23,10 @@ public class AbstractFileServiceTest {
 
     @Test
     public void testFormatNumber() {
+        assertEquals( "0.0", tsvFileService.format( 0.0 ) );
+        assertEquals( "0.0", tsvFileService.format( -0.0 ) );
         assertEquals( "1E-14", tsvFileService.format( 1e-14 ) );
+        assertEquals( "-1E-14", tsvFileService.format( -1e-14 ) );
         assertEquals( "0.1111", tsvFileService.format( 0.1111 ) );
         assertEquals( "0.0001", tsvFileService.format( 0.0001 ) );
         assertEquals( "1E-5", tsvFileService.format( 1e-5 ) );
@@ -31,7 +34,9 @@ public class AbstractFileServiceTest {
         assertEquals( "1000.0", tsvFileService.format( 1000.0 ) );
         assertEquals( "1234.5", tsvFileService.format( 1234.5 ) );
         assertEquals( "100000.0", tsvFileService.format( 1e5 ) );
+        assertEquals( "-100000.0", tsvFileService.format( -1e5 ) );
         assertEquals( "100.1234", tsvFileService.format( 100.1234 ) );
+        assertEquals( "-100.1234", tsvFileService.format( -100.1234 ) );
         assertEquals( "1000.1", tsvFileService.format( 1000.1234 ) );
         assertEquals( "100000.1", tsvFileService.format( 100000.1234 ) );
         assertEquals( "", tsvFileService.format( null ) );

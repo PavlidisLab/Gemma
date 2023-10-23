@@ -108,6 +108,7 @@
             <props>
                 <prop key="org.springframework.security.access.AccessDeniedException">error/403</prop>
                 <prop key="ubic.gemma.web.util.EntityNotFoundException">error/404</prop>
+                <prop key="ubic.gemma.web.util.ServiceUnavailableException">error/503</prop>
                 <prop key="java.lang.IllegalArgumentException">error/400</prop>
             </props>
         </property>

@@ -1344,7 +1344,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( this.startsWithIgnoreCase( line, "!Sample_characteristics" ) ) {
             int channel = this.extractChannelNumber( line );
             GeoSample sample = results.getSampleMap().get( currentSampleAccession );
-            sample.getChannel( channel ).addCharacteristic( value );
+            sample.getChannel( channel ).addCharacteristic( value ); // might be something like "rin: 7.2"
         } else if ( this.startsWithIgnoreCase( line, "!Sample_platform_id" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setId, value );
             if ( results.getPlatformMap().containsKey( value ) ) {
