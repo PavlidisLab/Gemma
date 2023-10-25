@@ -151,16 +151,18 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     /**
      * Create a FactorValue VO focusing on a specific statement.
      */
-    public FactorValueValueObject( FactorValue fv, Statement c ) {
+    public FactorValueValueObject( FactorValue fv, @Nullable Statement c ) {
         this( fv, ( Characteristic ) c );
-        this.predicate = c.getPredicate();
-        this.predicateUri = c.getPredicateUri();
-        this.object = c.getObject();
-        this.objectUri = c.getObjectUri();
-        this.secondPredicate = c.getSecondPredicate();
-        this.secondPredicateUri = c.getSecondPredicateUri();
-        this.secondObject = c.getSecondObject();
-        this.secondObjectUri = c.getSecondObjectUri();
+        if ( c != null ) {
+            this.predicate = c.getPredicate();
+            this.predicateUri = c.getPredicateUri();
+            this.object = c.getObject();
+            this.objectUri = c.getObjectUri();
+            this.secondPredicate = c.getSecondPredicate();
+            this.secondPredicateUri = c.getSecondPredicateUri();
+            this.secondObject = c.getSecondObject();
+            this.secondObjectUri = c.getSecondObjectUri();
+        }
     }
 
     /**
