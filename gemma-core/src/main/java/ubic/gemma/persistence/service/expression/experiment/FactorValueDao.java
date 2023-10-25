@@ -23,7 +23,6 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,12 +43,17 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
     @Deprecated
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 
-    @Deprecated
-    Map<Long, Integer> loadAllExceptIds( Set<Long> excludedIds );
-
     /**
-     * Flush pending changes and evict the given factor values from the session by IDs.
+     * Load all the factor values IDs with their number of old-style characteristics.
+     * @param excludedIds list of excluded IDs
      */
     @Deprecated
-    void flushAndEvict( List<Long> batch );
+    Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
+
+    /**
+     * Update a FactorValue without involving ACL advice.
+     * @deprecated do not use this, it is only a workaround to make FV migration faster
+     */
+    @Deprecated
+    void updateIgnoreAcl( FactorValue fv );
 }

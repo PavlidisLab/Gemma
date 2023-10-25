@@ -76,7 +76,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     @Deprecated
-    public Map<Long, Integer> loadAllExceptIds( Set<Long> excludedIds ) {
+    public Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds ) {
         List<Object[]> result;
         if ( excludedIds.isEmpty() ) {
             //noinspection unchecked
@@ -94,9 +94,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public void flushAndEvict( List<Long> batch ) {
-        getSessionFactory().getCurrentSession().flush();
-        load( batch ).forEach( getSessionFactory().getCurrentSession()::evict );
+    public void updateIgnoreAcl( FactorValue fv ) {
+        update( fv );
     }
 
     @Override

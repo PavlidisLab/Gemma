@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -32,6 +33,11 @@ public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextT
 
         @Bean
         public FactorValueService factorValueService() {
+            return mock();
+        }
+
+        @Bean
+        public PlatformTransactionManager platformTransactionManager() {
             return mock();
         }
     }
@@ -62,7 +68,7 @@ public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextT
         when( factorValueService.loadWithOldStyleCharacteristics( 1L, false ) ).thenReturn( fv );
         factorValueMigratorService.performMigration( migration, false );
         verify( factorValueService ).loadWithOldStyleCharacteristics( 1L, false );
-        verify( factorValueService ).saveStatement( same( fv ), same( stmt ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( same( fv ), same( stmt ) );
     }
 
     @Test
@@ -91,6 +97,6 @@ public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextT
         when( factorValueService.loadWithOldStyleCharacteristics( 1L, false ) ).thenReturn( fv );
         factorValueMigratorService.performMigration( migration, false );
         verify( factorValueService ).loadWithOldStyleCharacteristics( 1L, false );
-        verify( factorValueService ).saveStatement( same( fv ), eq( stmt ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( same( fv ), eq( stmt ) );
     }
 }

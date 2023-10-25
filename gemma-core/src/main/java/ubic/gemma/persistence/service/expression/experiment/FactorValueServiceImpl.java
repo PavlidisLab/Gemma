@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,15 +69,11 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         return factorValueDao.loadWithOldStyleCharacteristics( id, readOnly );
     }
 
-    /**
-     * Load all factor values with their number of old-style characteristics.
-     * @param excludedIds list of excluded FactorValue IDs
-     */
     @Override
     @Deprecated
     @Transactional(readOnly = true)
-    public Map<Long, Integer> loadAllWithNumberOfOldStyleCharacteristicsExceptIds( Set<Long> excludedIds ) {
-        return factorValueDao.loadAllExceptIds( excludedIds );
+    public Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds ) {
+        return factorValueDao.loadIdsWithNumberOfOldStyleCharacteristics( excludedIds );
     }
 
     @Override
@@ -130,6 +125,22 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     @Override
     @Transactional
+    public Statement saveStatementIgnoreAcl( FactorValue fv, Statement statement ) {
+        Assert.notNull( fv.getId(), "The factor value must be persistent." );
+        if ( statement.getId() != null && !fv.getCharacteristics().contains( statement ) ) {
+            throw new IllegalArgumentException( "The given persistent statement is not associated with the factor value." );
+        }
+        statement = statementDao.save( statement );
+        // same for createStatement() not applies here and in addition, if the statement already belongs to the FV, this
+        // is a noop
+        fv.getCharacteristics().add( statement );
+        // careful here!
+        factorValueDao.updateIgnoreAcl( fv );
+        return statement;
+    }
+
+    @Override
+    @Transactional
     public void removeStatement( FactorValue fv, Statement statement ) {
         Assert.notNull( fv.getId(), "The factor value must be persistent." );
         Assert.notNull( statement.getId(), "The statement to be removed must be persistent." );
@@ -144,11 +155,6 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
         // now we can safely delete it
         this.statementDao.remove( statement );
-    }
-
-    @Override
-    public void flushAndEvict( List<Long> batch ) {
-        this.factorValueDao.flushAndEvict( batch );
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -46,6 +47,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
         @Bean
         public FactorValueService factorValueService() {
+            return mock();
+        }
+
+        @Bean
+        public PlatformTransactionManager platformTransactionManager() {
             return mock();
         }
     }
@@ -88,7 +94,7 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
                 .thenAnswer( a -> fvs[a.getArgument( 0, Long.class ).intValue() - 1] );
         when( factorValueService.countAll() ).thenReturn( ( long ) fvs.length );
         AtomicLong id = new AtomicLong( 0L );
-        when( factorValueService.saveStatement( any(), any() ) ).thenAnswer( a -> {
+        when( factorValueService.saveStatementIgnoreAcl( any(), any() ) ).thenAnswer( a -> {
             Statement s = a.getArgument( 1, Statement.class );
             if ( s.getId() == null ) {
                 s.setId( id.incrementAndGet() );
@@ -104,14 +110,14 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
                 "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
                 "-batchFormat", "suppress" );
         verify( factorValueService, times( 8 ) ).loadWithOldStyleCharacteristics( any(), eq( false ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 1L, 1L ), "Pax6", "has_modifier", getObject( 1L, 2L ), "has_modifier", getObject( 1L, 3L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( "Gene", "Pax6" ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 3L, 4L ), getObject( 3L, 4L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 4L, 5L ), getObject( 4L, 5L ), "has_modifier", getObject( 4L, 6L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 5L, 7L ), getObject( 5L, 7L ), "has_modifier", getObject( 5L, 8L ), "has_modifier", getObject( 5L, 9L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 6L, 10L ), getObject( 6L, 10L ), "has_dose", "5mg", "has_modifier", getObject( 6L, 11L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( "genotype", "Pax7", "has_modifier", getObject( 7L, 12L ), "has_modifier", getObject( 7L, 13L ) ) ) );
-        verify( factorValueService ).saveStatement( any(), eq( createStatement( getCategory( 8L, 14L ), getObject( 8L, 14L ), "has_modifier", getObject( 8L, 15L ), "has_modifier", getObject( 8L, 15L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 1L, 1L ), "Pax6", "has_modifier", getObject( 1L, 2L ), "has_modifier", getObject( 1L, 3L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "Gene", "Pax6" ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 3L, 4L ), getObject( 3L, 4L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 4L, 5L ), getObject( 4L, 5L ), "has_modifier", getObject( 4L, 6L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 5L, 7L ), getObject( 5L, 7L ), "has_modifier", getObject( 5L, 8L ), "has_modifier", getObject( 5L, 9L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 6L, 10L ), getObject( 6L, 10L ), "has_dose", "5mg", "has_modifier", getObject( 6L, 11L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "genotype", "Pax7", "has_modifier", getObject( 7L, 12L ), "has_modifier", getObject( 7L, 13L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 8L, 14L ), getObject( 8L, 14L ), "has_modifier", getObject( 8L, 15L ), "has_modifier", getObject( 8L, 15L ) ) ) );
         verifyNoMoreInteractions( factorValueService );
     }
 
