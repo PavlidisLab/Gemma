@@ -19,7 +19,10 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
@@ -126,6 +130,9 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
                 Hibernate.initialize( bm );
                 Hibernate.initialize( bm.getBioAssaysUsedIn() );
                 Hibernate.initialize( bm.getFactorValues() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
             }
         }
     }
