@@ -37,8 +37,8 @@ public class FactorValueMigratorCLI extends AbstractSpringAwareCLI {
 
     private static final String
             MIGRATION_FILE_OPTION = "migrationFile",
-            MIGRATE_REMAINING_CHARACTERISTICS = "migrateRemainingCharacteristics",
-            MIGRATE_REMAINING_FACTOR_VALUES = "migrateRemainingFactorValues",
+            MIGRATE_REMAINING_CHARACTERISTICS_OPTION = "migrateRemainingCharacteristics",
+            MIGRATE_REMAINING_FACTOR_VALUES_OPTION = "migrateRemainingFactorValues",
             NOOP_OPTION = "noop";
 
     @Autowired
@@ -69,14 +69,9 @@ public class FactorValueMigratorCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( MIGRATION_FILE_OPTION )
-                .type( File.class )
-                .desc( "File containing the factor value migrations" )
-                .hasArg()
-                .required()
-                .build() );
-        options.addOption( MIGRATE_REMAINING_CHARACTERISTICS, false, "Migrate remaining characteristics of factor values that were mentioned in the migration file." );
-        options.addOption( MIGRATE_REMAINING_FACTOR_VALUES, false, "Migrate remaining factor values that weren't mentioned in the migration file." );
+        options.addOption( Option.builder( MIGRATION_FILE_OPTION ).hasArg().type( File.class ).desc( "File containing factor value migrations" ).build() );
+        options.addOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION, false, "Migrate remaining characteristics of factor values that were mentioned in the migration file." );
+        options.addOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION, false, "Migrate remaining factor values that weren't mentioned in the migration file." );
         options.addOption( NOOP_OPTION, false, "Only validate migrations" );
     }
 
@@ -93,28 +88,32 @@ public class FactorValueMigratorCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws Exception {
-        File migrationFile = ( File ) commandLine.getParsedOptionValue( MIGRATION_FILE_OPTION );
         migrations = new ArrayList<>();
-        try ( CSVParser parser = CSVParser.parse( migrationFile, StandardCharsets.UTF_8, CSVFormat.TDF.withFirstRecordAsHeader() ) ) {
-            for ( CSVRecord row : parser ) {
-                FactorValueMigratorService.Migration migration = FactorValueMigratorService.Migration.builder()
-                        .factorValueId( parseLongIfNonBlank( row.get( "FactorValueID" ) ) )
-                        .category( stripToNull( row.get( "Category" ) ) ).categoryUri( stripToNull( row.get( "CategoryURI" ) ) )
-                        .oldStyleCharacteristicIdUsedAsSubject( parseLongIfNonBlank( row.get( "SubjectID" ) ) )
-                        .subject( stripToNull( row.get( "Subject" ) ) ).subjectUri( stripToNull( row.get( "SubjectURI" ) ) )
-                        .predicate( stripToNull( row.get( "Predicate" ) ) ).predicateUri( stripToNull( row.get( "PredicateURI" ) ) )
-                        .oldStyleCharacteristicIdUsedAsObject( parseLongIfNonBlank( row.get( "ObjectID" ) ) )
-                        .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) )
-                        .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
-                        .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
-                        .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) )
-                        .build();
-                migrations.add( new MigrationWithLineNumber( row.getRecordNumber(), migration ) );
+        if ( commandLine.hasOption( MIGRATION_FILE_OPTION ) ) {
+            File migrationFile = ( File ) commandLine.getParsedOptionValue( MIGRATION_FILE_OPTION );
+            try ( CSVParser parser = CSVParser.parse( migrationFile, StandardCharsets.UTF_8, CSVFormat.TDF.withFirstRecordAsHeader() ) ) {
+                for ( CSVRecord row : parser ) {
+                    FactorValueMigratorService.Migration migration = FactorValueMigratorService.Migration.builder()
+                            .factorValueId( parseLongIfNonBlank( row.get( "FactorValueID" ) ) )
+                            .category( stripToNull( row.get( "Category" ) ) ).categoryUri( stripToNull( row.get( "CategoryURI" ) ) )
+                            .oldStyleCharacteristicIdUsedAsSubject( parseLongIfNonBlank( row.get( "SubjectID" ) ) )
+                            .subject( stripToNull( row.get( "Subject" ) ) ).subjectUri( stripToNull( row.get( "SubjectURI" ) ) )
+                            .predicate( stripToNull( row.get( "Predicate" ) ) ).predicateUri( stripToNull( row.get( "PredicateURI" ) ) )
+                            .oldStyleCharacteristicIdUsedAsObject( parseLongIfNonBlank( row.get( "ObjectID" ) ) )
+                            .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) )
+                            .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
+                            .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
+                            .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) )
+                            .build();
+                    migrations.add( new MigrationWithLineNumber( row.getRecordNumber(), migration ) );
+                }
+            }
+            if ( migrations.isEmpty() ) {
+                log.warn( String.format( "The migration file %s is empty.", migrationFile.getAbsolutePath() ) );
             }
         }
-        if ( migrations.isEmpty() ) {
-            log.warn( String.format( "The migration file %s is empty.", migrationFile.getAbsolutePath() ) );
-        }
+        migrateRemainingCharacteristics = commandLine.hasOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION );
+        migrateRemainingFactorValues = commandLine.hasOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION );
         noop = commandLine.hasOption( NOOP_OPTION );
     }
 
