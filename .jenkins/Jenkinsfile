@@ -1,0 +1,153 @@
+void setBuildStatus(String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "Jenkins"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
+}
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven 3.8.1'
+    }
+    stages {
+        stage('Set build status on GitHub') {
+            steps {
+                setBuildStatus 'The build has started...', 'PENDING'
+            }
+        }
+        stage('Checkout scm') {
+            steps {
+                checkout scm
+                script {
+                    def pom = readMavenPom();
+                    def testdbName = pom.properties['gemma.testdb.name'];
+                    def gemmaVersion = pom.version;
+                    if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
+                        error("A production build must not have a -SNAPSHOT suffix.");
+                    }
+                    if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
+                        error("A development build must have a -SNAPSHOT suffix.");
+                    }
+                    def baseCodeVersion;
+                    for (dep in pom.dependencies) {
+                        if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
+                            baseCodeVersion = dep.version;
+                            break;
+                        }
+                    }
+                    if (baseCodeVersion == null) {
+                        error("The baseCode dependency was not found in pom.xml.");
+                    }
+                    def siteDir = '/space/web/maven-sites';
+                    def dataDir = '/space/gemmaData';
+                    if (env.BRANCH_NAME == 'development') {
+                        dataDir = '/space/sandboxgemmaData';
+                    }
+                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        dataDir = '/space/staginggemmaData';
+                    }
+                    def deployDir = '/var/local/tomcat/gemma';
+                    if (env.BRANCH_NAME == 'master') {
+                        deployDir = 'moe:' + deployDir;
+                    } else {
+                        deployDir = 'chalmers:' + deployDir;
+                    }
+                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        deployDir += '-staging';
+                    }
+                    def cliDir = '/space/grp/gemma-cli'
+                    if (env.BRANCH_NAME != 'master') {
+                        cliDir += '-' + gemmaVersion;
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn -B package -DskipTests'
+            }
+        }
+        stage('Run quick unit tests') {
+            steps {
+                sh 'mvn -B test -DexcludedGroups=SlowTest'
+            }
+        }
+        stage('Run slow unit tests and integration tests') {
+            when {
+                branch 'hotfix-*';
+                branch 'release-*';
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B test -Dgroups=SlowTest'
+                lock('test-database/' + testdbName) {
+                    sh 'mvn -B verify -DskipUnitTests'
+                }
+            }
+        }
+        stage('Deploy artifacts') {
+            when {
+                branch 'master';
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B deploy -DskipTests'
+            }
+        }
+        stage('Deploy Maven website') {
+            when {
+                branch 'master';
+                branch 'hotfix-*';
+                branch 'release-*';
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B site-deploy';
+            }
+        }
+        stage ('Deploy WAR') {
+            when {
+                branch 'master'
+                branch 'hotfix-*';
+                branch 'release-*'
+                branch 'development'
+            }
+            steps {
+                sh 'rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties';
+                sh 'rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war';
+                sh 'ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite'
+                sh 'ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-devsite';
+            }
+        }
+        stage ('Deploy CLI') {
+            when {
+                branch 'master'
+                branch 'hotfix-*';
+                branch 'release-*'
+            }
+            steps {
+                sh 'rsync -adv gemma-cli/target/appassembler ${cliDir}'
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+            junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+            junit testResults: '**/target/failsafe-reports/*.xml', allowEmptyResults: true
+        }
+        failure {
+            setBuildStatus 'The build failed due to an error.', 'ERROR'
+        }
+        success {
+            setBuildStatus 'The build succeeded.', 'SUCCESS'
+        }
+        unstable {
+            setBuildStatus 'The build is unstable: some tests might have failed.', 'UNSTABLE'
+        }
+    }
+}
