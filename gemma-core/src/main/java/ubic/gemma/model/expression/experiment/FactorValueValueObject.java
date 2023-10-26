@@ -112,7 +112,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value );
-        this.factorValue = FactorValueBasicValueObject.getSummaryString( value );
+        this.factorValue = FactorValueUtils.getSummaryString( value );
         this.factorId = value.getExperimentalFactor().getId();
 
         // make sure we fill in the category for this if no characteristic is being *focused* on

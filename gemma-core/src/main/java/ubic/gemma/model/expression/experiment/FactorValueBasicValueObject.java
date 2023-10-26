@@ -11,14 +11,11 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,30 +105,11 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
                 .collect( Collectors.toList() );
 
         this.value = fv.getValue();
-        this.summary = getSummaryString( fv );
+        this.summary = FactorValueUtils.getSummaryString( fv );
     }
 
     @Override
     public String toString() {
         return "FactorValueValueObject [factor=" + summary + ", value=" + value + "]";
-    }
-
-    static String getSummaryString( FactorValue fv ) {
-        StringBuilder buf = new StringBuilder();
-        if ( !fv.getCharacteristics().isEmpty() ) {
-            for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() )
-                    buf.append( ", " );
-            }
-        } else if ( fv.getMeasurement() != null ) {
-            buf.append( fv.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-            buf.append( fv.getValue() );
-        } else {
-            buf.append( "?" );
-        }
-        return buf.toString();
     }
 }

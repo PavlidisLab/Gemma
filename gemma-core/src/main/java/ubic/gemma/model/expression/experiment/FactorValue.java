@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
@@ -119,21 +118,10 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         StringBuilder buf = new StringBuilder();
         // this can be null in tests or with half-setup transient objects
         buf.append( "FactorValue " ).append( this.getId() ).append( ": " );
-
+        // the experimental factor is lazy-loaded, so it's safer to use the ID
         if ( this.getExperimentalFactor() != null )
-            buf.append( this.getExperimentalFactor().getName() ).append( ": " );
-        if ( this.getCharacteristics().size() > 0 ) {
-            for ( Characteristic c : this.getCharacteristics() ) {
-                buf.append( c.getCategory() + " - " );
-                buf.append( c.getValue() );
-                if ( this.getCharacteristics().size() > 1 )
-                    buf.append( " | " );
-            }
-        } else if ( this.getMeasurement() != null ) {
-            buf.append( this.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
-            buf.append( this.getValue() );
-        }
+            buf.append( "ExperimentalFactor #" ).append( this.getExperimentalFactor().getId() ).append( ": " );
+        buf.append( FactorValueUtils.getSummaryString( this ) );
         return buf.toString();
     }
 
@@ -218,30 +206,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     @Deprecated
     public void setValue( String value ) {
         this.value = value;
-    }
-
-    /**
-     * Produce a descriptive string for this factor value.
-     */
-    @Transient
-    public String getDescriptiveString() {
-        if ( this.characteristics != null && !this.characteristics.isEmpty() ) {
-            StringBuilder fvString = new StringBuilder();
-            boolean first = true;
-            for ( Characteristic c : this.characteristics ) {
-                if ( !first ) {
-                    fvString.append( " " );
-                }
-                fvString.append( StringUtils.strip( c.getValue() ) );
-                first = false;
-            }
-            return fvString.toString();
-        } else if ( this.measurement != null ) {
-            return StringUtils.strip( this.measurement.getValue() );
-        } else if ( StringUtils.isNotBlank( this.value ) ) {
-            return StringUtils.strip( this.value );
-        }
-        return "absent";
     }
 
     private boolean checkGuts( FactorValue that ) {

@@ -1,0 +1,47 @@
+package ubic.gemma.model.expression.experiment;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Iterator;
+
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+
+public class FactorValueUtils {
+
+    /**
+     * Produce a summary string for this factor value.
+     */
+    public static String getSummaryString( FactorValue fv ) {
+        return getSummaryString( fv, ", " );
+    }
+
+    public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
+        StringBuilder buf = new StringBuilder();
+        if ( !fv.getCharacteristics().isEmpty() ) {
+            for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Statement c = iter.next();
+                buf.append( defaultIfBlank( c.getSubject(), "?" ) );
+                if ( c.getObject() != null ) {
+                    buf.append( " " ).append( defaultIfBlank( c.getPredicate(), "?" ) );
+                    buf.append( " " ).append( defaultIfBlank( c.getObject(), "?" ) );
+                }
+                if ( c.getSecondObject() != null ) {
+                    if ( c.getObject() != null ) {
+                        buf.append( " and" );
+                    }
+                    buf.append( " " ).append( defaultIfBlank( c.getSecondPredicate(), "?" ) );
+                    buf.append( " " ).append( defaultIfBlank( c.getSecondObject(), "?" ) );
+                }
+                if ( iter.hasNext() )
+                    buf.append( statementDelimiter );
+            }
+        } else if ( fv.getMeasurement() != null && !StringUtils.isBlank( fv.getMeasurement().getValue() ) ) {
+            buf.append( fv.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+            buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
+    }
+}

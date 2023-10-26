@@ -36,7 +36,6 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -1374,27 +1373,6 @@ public class DEDVController {
         FactorValue facVal = fvs.get( id );
         assert facVal != null;
         fvs.put( facVal.getId(), facVal );
-        return getFactorValueDisplayString( facVal );
-    }
-
-    private String getFactorValueDisplayString( FactorValue facVal ) {
-
-        StringBuilder facValsStrBuff = new StringBuilder();
-
-        if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
-            facValsStrBuff.append( facVal.getValue() ).append( ", " );
-        }
-        for ( Characteristic characteristic : facVal.getCharacteristics() ) {
-            facValsStrBuff.append( characteristic.getValue() ).append( ", " );
-        }
-        if ( facValsStrBuff.length() > 0 ) {
-            facValsStrBuff.delete( facValsStrBuff.length() - 2, facValsStrBuff.length() );
-        }
-        if ( facValsStrBuff.length() == 0 ) {
-            facValsStrBuff.append( "FactorValue id:" ).append( Math.round( facVal.getId() ) )
-                    .append( " was not null but no value was found." );
-        }
-
-        return facValsStrBuff.toString();
+        return FactorValueUtils.getSummaryString( facVal );
     }
 }

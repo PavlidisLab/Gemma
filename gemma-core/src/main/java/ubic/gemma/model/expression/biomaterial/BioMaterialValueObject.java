@@ -30,10 +30,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.*;
 
 import java.util.*;
 
@@ -139,7 +136,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             if ( Hibernate.isInitialized( factor ) ) {
                 this.factors.put( factorId, factor.getName() );
             }
-            this.factorValues.put( factorValueId, this.getFactorValueString( fv ) );
+            this.factorValues.put( factorValueId, FactorValueUtils.getSummaryString( fv, BioMaterialValueObject.CHARACTERISTIC_DELIMITER ) );
 
             if ( fv.getMeasurement() == null ) {
                 this.factorIdToFactorValueId.put( factorId, factorValueId );
@@ -183,19 +180,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     @JsonProperty("factorValueObjects")
     public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
-    }
-
-    /**
-     * Format the value as a string, either using the characteristic, value or measurement.
-     */
-    private String getFactorValueString( FactorValue value ) {
-        if ( !value.getCharacteristics().isEmpty() ) {
-            return StringUtils.join( value.getCharacteristics(), BioMaterialValueObject.CHARACTERISTIC_DELIMITER );
-        } else if ( value.getMeasurement() != null ) {
-            return value.getMeasurement().getValue();
-        } else {
-            return value.getValue();
-        }
     }
 
     @Override

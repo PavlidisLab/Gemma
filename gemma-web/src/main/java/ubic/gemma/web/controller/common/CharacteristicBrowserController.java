@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -182,13 +183,11 @@ public class CharacteristicBrowserController {
         if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
             Collection<FactorValue> factorValues = factorValueService.findByValue( queryString );
             for ( FactorValue factorValue : factorValues ) {
-                if ( factorValue.getCharacteristics().size() > 0 )
-                    continue;
-                if ( StringUtils.isBlank( factorValue.getValue() ) )
+                if ( !factorValue.getCharacteristics().isEmpty() )
                     continue;
 
                 AnnotationValueObject avo = new AnnotationValueObject( factorValue.getId() );
-                avo.setTermName( factorValue.getValue() );
+                avo.setTermName( FactorValueUtils.getSummaryString( factorValue ) );
                 avo.setObjectClass( FactorValue.class.getSimpleName() );
 
                 populateParentInformation( avo, factorValue );
@@ -255,7 +254,7 @@ public class CharacteristicBrowserController {
 
         } else if ( annotatedItem instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) annotatedItem;
-            avo.setParentDescription( String.format( "FactorValue: %s", fv.getDescriptiveString() ) );
+            avo.setParentDescription( String.format( "FactorValue: %s", FactorValueUtils.getSummaryString( fv ) ) );
             ExperimentalFactor ef = fv.getExperimentalFactor();
             avo.setParentOfParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign(),
                     "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")", servletContext ) );
