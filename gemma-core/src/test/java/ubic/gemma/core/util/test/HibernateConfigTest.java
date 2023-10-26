@@ -11,11 +11,12 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.junit.Test;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.persistence.util.EhcacheConfig;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.sql.DataSource;
@@ -27,18 +28,13 @@ import static org.junit.Assert.*;
 @ContextConfiguration
 public class HibernateConfigTest extends BaseDatabaseTest {
 
+    @Import(EhcacheConfig.class)
     @Configuration
     @TestComponent
     static class HibernateConfigTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
-        @Bean
-        public FactoryBean<net.sf.ehcache.CacheManager> cacheManager() {
-            EhCacheManagerFactoryBean bean = new EhCacheManagerFactoryBean();
-            bean.setShared( true );
-            return bean;
-        }
-
         @Override
+        @DependsOn("ehcache")
         public FactoryBean<SessionFactory> sessionFactory( DataSource dataSource ) {
             FactoryBean<SessionFactory> factory = super.sessionFactory( dataSource );
             ( ( LocalSessionFactoryBean ) factory ).getHibernateProperties()
