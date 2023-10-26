@@ -23,7 +23,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -88,6 +87,14 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
             ef.getFactorValues().remove( factorValue );
             this.getSessionFactory().getCurrentSession().update( ef );
         }
+
+        // remove any attached statements since those are not mapped in the collection
+        // remove this in the 1.31 since it will become unnecessary (see https://github.com/PavlidisLab/Gemma/issues/909)
+        int removedStatements = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete from CHARACTERISTIC where class = 'Statement' and FACTOR_VALUE_FK = :fvId" )
+                .setParameter( "fvId", factorValue.getId() )
+                .executeUpdate();
+        log.info( String.format( "Removed %d statements from %s", removedStatements, factorValue ) );
 
         super.remove( factorValue );
     }

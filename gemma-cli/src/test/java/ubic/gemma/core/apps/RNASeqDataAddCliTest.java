@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +21,12 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -36,7 +41,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class RNASeqDataAddCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class RNASeqDataAddCliTestContextConfiguration {
 
         @Bean
         @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -73,6 +78,31 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         public ArrayDesignService arrayDesignService() {
             return mock();
         }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentSetService expressionExperimentSetService() {
+            return mock();
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -97,6 +127,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         ee = new ExpressionExperiment();
         rpkmFile = new ClassPathResource( "test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
+        when( expressionExperimentService.thawLite( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );
     }
 

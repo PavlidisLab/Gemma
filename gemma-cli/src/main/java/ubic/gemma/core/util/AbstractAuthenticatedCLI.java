@@ -20,6 +20,7 @@ package ubic.gemma.core.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -27,34 +28,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 /**
- * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
- * are provided to manage authentication.
- *
+ * Subclass this to create command line interface (CLI) tools that need authentication.
+ * <p>
+ * A standard set of CLI options are provided to manage authentication.
  * @author pavlidis
  */
-public abstract class AbstractSpringAwareCLI extends AbstractCLI {
+public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
 
     /**
      * Environment variable used to store the username (if not passed directly to the CLI).
@@ -72,23 +62,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
 
     @Autowired
-    private BeanFactory ctx;
-    @Autowired
     private ManualAuthenticationService manAuthentication;
-    @Autowired
-    protected AuditTrailService auditTrailService;
-    @Autowired
-    protected AuditEventService auditEventService;
-    @Autowired
-    private ExpressionExperimentService ees;
-    @Autowired
-    private Persister persisterHelper;
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    @Autowired
-    public AbstractSpringAwareCLI() {
-        super();
-    }
 
     @Override
     public String getShortDesc() {
@@ -110,97 +84,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * You must override this method to process any options you added.
      */
     @Override
-    protected void processStandardOptions( CommandLine commandLine ) {
+    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
         super.processStandardOptions( commandLine );
         this.authenticate();
-    }
-
-    /**
-     * Convenience method to obtain instance of any bean by name.
-     *
-     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
-     * {@link BeanFactory}.
-     *
-     * @param <T>  the bean class type
-     * @param clz  class
-     * @param name name
-     * @return bean
-     */
-    @SuppressWarnings("SameParameterValue") // Better for general use
-    @Deprecated
-    protected <T> T getBean( String name, Class<T> clz ) {
-        assert ctx != null : "Spring context was not initialized";
-        return ctx.getBean( name, clz );
-    }
-
-    @Deprecated
-    protected <T> T getBean( Class<T> clz ) {
-        assert ctx != null : "Spring context was not initialized";
-        return ctx.getBean( clz );
-    }
-
-    @Deprecated
-    protected Persister getPersisterHelper() {
-        return persisterHelper;
-    }
-
-    /**
-     * @param auditable  auditable
-     * @param eventClass can be null
-     * @return boolean
-     */
-    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
-        boolean needToRun = true;
-        Date skipIfLastRunLaterThan = this.getLimitingDate();
-        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
-
-        boolean okToRun = true; // assume okay unless indicated otherwise
-
-        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
-        // count.
-        for ( int j = events.size() - 1; j >= 0; j-- ) {
-            AuditEvent event = events.get( j );
-            if ( event == null ) {
-                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
-            }
-            AuditEventType eventType = event.getEventType();
-            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
-                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
-                if ( skipIfLastRunLaterThan != null ) {
-                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
-                        AbstractCLI.log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
-                        needToRun = false;
-                    }
-                } else {
-                    needToRun = false; // it has been run already at some point
-                }
-            }
-        }
-
-        /*
-         * Always skip if the object is curatable and troubled
-         */
-        if ( auditable instanceof Curatable ) {
-            Curatable curatable = ( Curatable ) auditable;
-            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
-
-            // special case for expression experiments - check associated ADs.
-            if ( okToRun && curatable instanceof ExpressionExperiment ) {
-                for ( ArrayDesign ad : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                    if ( ad.getCurationDetails().getTroubled() ) {
-                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
-                        break;
-                    }
-                }
-            }
-
-            if ( !okToRun ) {
-                addErrorObject( auditable, "Has an active 'trouble' flag" );
-            }
-        }
-
-        return !needToRun || !okToRun;
     }
 
     /**
@@ -259,12 +145,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                         return reader.readLine();
                     }
                 } else {
-                    log.error( "Could not read the password from '" + passwordCommand + "':\n"
+                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "':\n"
                             + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
-                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'." );
                 }
             } catch ( IOException | InterruptedException e ) {
-                log.error( "Could not read the password from '" + passwordCommand + "'.", e );
                 throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
             }
         }

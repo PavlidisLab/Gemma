@@ -4,7 +4,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -22,8 +21,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
 public class IndexGemmaCLI extends AbstractCLI {
+
+    private static final String THREADS_OPTION = "threads";
 
     /**
      * A list of all searchable entities this CLI supports.
@@ -53,6 +53,7 @@ public class IndexGemmaCLI extends AbstractCLI {
     private File searchDir;
 
     private final Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
+    private int numThreads;
 
     @Override
     public String getCommandName() {
@@ -78,7 +79,7 @@ public class IndexGemmaCLI extends AbstractCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
         for ( IndexableEntity ie : indexableEntities ) {
             if ( commandLine.hasOption( ie.option ) ) {
                 classesToIndex.add( ie.clazz );
@@ -90,12 +91,12 @@ public class IndexGemmaCLI extends AbstractCLI {
     protected void doWork() throws Exception {
         if ( classesToIndex.isEmpty() ) {
             log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
-            indexerService.index( numThreads );
+            indexerService.index( getNumThreads() );
         } else {
             log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
                     searchDir.getAbsolutePath(),
                     classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
-            indexerService.index( classesToIndex, numThreads );
+            indexerService.index( classesToIndex, getNumThreads() );
         }
     }
 }

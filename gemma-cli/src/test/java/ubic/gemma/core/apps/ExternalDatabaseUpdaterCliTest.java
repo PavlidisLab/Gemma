@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -30,7 +32,7 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class ExternalDatabaseUpdaterCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class ExternalDatabaseUpdaterCliTestContextConfiguration {
 
         @Bean
         public ExternalDatabaseUpdaterCli externalDatabaseUpdaterCli() {
@@ -45,6 +47,16 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         @Bean
         public UserManager userManager() {
             return mock( UserManager.class );
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
         }
     }
 
@@ -77,7 +89,7 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         when( userManager.getCurrentUser() ).thenReturn( user );
         when( externalDatabaseService.findByNameWithAuditTrail( "test" ) ).thenReturn( ed );
         when( externalDatabaseService.findByNameWithExternalDatabases( "test2" ) ).thenReturn( ed2 );
-        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" } );
+        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" } );
         verify( externalDatabaseService ).findByNameWithExternalDatabases( "test2" );
         verify( externalDatabaseService ).findByNameWithAuditTrail( "test" );
         assertThat( ed.getDescription() ).isEqualTo( "Youpi!" );

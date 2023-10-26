@@ -21,22 +21,31 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -50,63 +59,62 @@ import java.util.stream.Collectors;
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
  * them in:
  * <ul>
- * <li>All EEs
- * <li>All EEs for a particular taxon.
+ * <li>All EEs (if -all is supplied)</li>
+ * <li>All EEs for a particular taxon.</li>
  * <li>A specific ExpressionExperimentSet, identified by name</li>
- * <li>A comma-delimited list of one or more EEs identified by short name given on the command line
- * <li>From a file, with one short name per line.
- * <li>EEs matching a query string (e.g., 'brain')
+ * <li>A comma-delimited list of one or more EEs identified by short name given on the command line</li>
+ * <li>From a file, with one short name per line.</li>
+ * <li>EEs matching a query string (e.g., 'brain')</li>
  * <li>(Optional) 'Auto' mode, in which experiments to analyze are selected automatically based on their workflow state.
- * This can be enabled and modified by subclasses who override the "needToRun" method.
- * <li>All EEs that were last processed after a given date, similar to 'auto' otherwise.
+ * This can be enabled and modified by subclasses who override the "needToRun" method.</li>
+ * <li>All EEs that were last processed after a given date, similar to 'auto' otherwise.</li>
  * </ul>
  * Some of these options can be (or should be) combined, and modified by a (optional) "force" option, and will have
  * customized behavior.
+ * <p>
  * In addition, EEs can be excluded based on a list given in a separate file.
  *
  * @author Paul
  */
-public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
-    ExpressionExperimentService eeService;
-    Set<BioAssaySet> expressionExperiments = new HashSet<>();
-    private boolean allowProcessingAll = true;
+public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthenticatedCLI {
 
-    public Set<BioAssaySet> getExpressionExperiments() {
-        return expressionExperiments;
-    }
-
-    protected ExpressionExperimentService getEeService() {
-        return eeService;
-    }
-
-    protected Taxon getTaxon() {
-        return taxon;
-    }
-
-    protected void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
-    }
-
-    protected TaxonService getTaxonService() {
-        return taxonService;
-    }
-
-    protected GeneService getGeneService() {
-        return geneService;
-    }
-
-    boolean force = false;
-    private Taxon taxon = null;
+    @Autowired
+    protected ExpressionExperimentService eeService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
     private TaxonService taxonService;
+    @Autowired
     private GeneService geneService;
+    @Autowired
     private SearchService searchService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    protected AuditTrailService auditTrailService;
+    @Autowired
+    protected AuditEventService auditEventService;
+
+    protected final Set<BioAssaySet> expressionExperiments = new HashSet<>();
+    /**
+     * Taxon used for filtering EEs.
+     */
+    private Taxon taxon = null;
+    protected boolean force = false;
+
+    /**
+     * The event type to look for the lack of, when using auto-seek.
+     */
+    protected Class<? extends AuditEventType> autoSeekEventType = null;
+
+    protected ExpressionExperimentManipulatingCLI() {
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
 
-    @SuppressWarnings("AccessStaticViaInstance") // Cleaner like this
     @Override
     protected void buildOptions( Options options ) {
         Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
@@ -115,6 +123,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 .longOpt( "experiment" ).build();
 
         options.addOption( expOption );
+
+        options.addOption( "all", false, "Process all expression experiments" );
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
                         "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
@@ -154,21 +164,19 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        eeService = this.getBean( ExpressionExperimentService.class );
-        geneService = this.getBean( GeneService.class );
-        taxonService = this.getBean( TaxonService.class );
-        searchService = this.getBean( SearchService.class );
-        this.auditEventService = this.getBean( AuditEventService.class );
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( commandLine, taxonService );
+            this.taxon = this.getTaxonByName( commandLine );
         }
 
         if ( commandLine.hasOption( "force" ) ) {
             this.force = true;
         }
 
-        if ( commandLine.hasOption( "eeset" ) ) {
+        if ( commandLine.hasOption( "all" ) ) {
+            log.warn( "Loading all expression experiments, this might take a while..." );
+            this.expressionExperiments.addAll( eeService.loadAll() );
+        } else if ( commandLine.hasOption( "eeset" ) ) {
             this.experimentsFromEeSet( commandLine.getOptionValue( "eeset" ) );
         } else if ( commandLine.hasOption( 'e' ) ) {
             this.experimentsFromCliList( commandLine );
@@ -176,37 +184,28 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             String experimentListFile = commandLine.getOptionValue( 'f' );
             AbstractCLI.log.info( "Reading experiment list from " + experimentListFile );
             try {
-                this.expressionExperiments = this.readExpressionExperimentListFile( experimentListFile );
+                this.expressionExperiments.addAll( this.readExpressionExperimentListFile( experimentListFile ) );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         } else if ( commandLine.hasOption( 'q' ) ) {
             AbstractCLI.log.info( "Processing all experiments that match query " + commandLine.getOptionValue( 'q' ) );
             try {
-                this.expressionExperiments = this.findExpressionExperimentsByQuery( commandLine.getOptionValue( 'q' ) );
+                this.expressionExperiments.addAll( this.findExpressionExperimentsByQuery( commandLine.getOptionValue( 'q' ) ) );
             } catch ( SearchException e ) {
                 log.error( "Failed to retrieve EEs for the passed query via -q.", e );
             }
-        } else if ( taxon != null ) {
-            if ( !commandLine.hasOption( "dataFile" ) ) {
-                AbstractCLI.log.info( "Processing all experiments for " + taxon.getCommonName() );
-                this.expressionExperiments = new HashSet<BioAssaySet>( eeService.findByTaxon( taxon ) );
-            }
         } else {
-            if ( !commandLine.hasOption( "dataFile" ) && allowProcessingAll ) {
-                AbstractCLI.log.info( "Processing all experiments (further filtering may modify)" );
-                this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
-            }
+            throw new IllegalArgumentException( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         }
 
-        if ( commandLine.hasOption( 'x' ) ) {
+        if ( commandLine.hasOption( 'x' ) && !expressionExperiments.isEmpty() ) {
             this.excludeFromFile( commandLine );
         }
 
-        if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
+        if ( !force && !expressionExperiments.isEmpty() ) {
 
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                this.autoSeek = true;
+            if ( isAutoSeek() ) {
                 if ( this.autoSeekEventType == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
                 }
@@ -228,22 +227,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             }
         }
 
-        if ( expressionExperiments != null && expressionExperiments.size() > 1 ) {
-            AbstractCLI.log.info( "Final list: " + this.expressionExperiments.size()
-                    + " expressionExperiments (futher filtering may modify)" );
-        } else if ( expressionExperiments == null || expressionExperiments.size() == 0 ) {
-            if ( commandLine.hasOption( "dataFile" ) ) {
-                //    AbstractCLI.log.info( "Expression matrix from data file selected" );
-            } else {
-                //   AbstractCLI.log.info( "No experiments selected" );
-            }
+        if ( expressionExperiments.isEmpty() ) {
+            log.warn( "No expression experiments matched the given options." );
+        } else if ( expressionExperiments.size() == 1 ) {
+            AbstractCLI.log.info( "Final dataset: " + expressionExperiments.iterator().next() );
+        } else {
+            AbstractCLI.log.info( String.format( "Final list: %d expression experiments", this.expressionExperiments.size() ) );
         }
-
     }
 
     void addForceOption( Options options ) {
         String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        @SuppressWarnings("static-access")
         Option forceOption = Option.builder( "force" ).longOpt( "force" ).desc( desc ).build();
         options.addOption( forceOption );
     }
@@ -256,7 +250,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-        assert expressionExperiments.size() > 0;
+        assert !expressionExperiments.isEmpty();
 
         int before = expressionExperiments.size();
 
@@ -277,10 +271,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 AbstractCLI.log.warn( shortName + " not found" );
                 continue;
             }
-            eeService.thawLite( expressionExperiment );
-            expressionExperiments.add( expressionExperiment );
+            expressionExperiments.add( eeService.thawLite( expressionExperiment ) );
         }
-        if ( expressionExperiments.size() == 0 ) {
+        if ( expressionExperiments.isEmpty() ) {
             throw new RuntimeException( "There were no valid experimnents specified" );
         }
     }
@@ -291,16 +284,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             throw new IllegalArgumentException( "Please provide an eeset name" );
         }
 
-        ExpressionExperimentSetService expressionExperimentSetService = this
-                .getBean( ExpressionExperimentSetService.class );
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( optionValue );
         if ( sets.size() > 1 ) {
             throw new IllegalArgumentException( "More than on EE set has name '" + optionValue + "'" );
-        } else if ( sets.size() == 0 ) {
+        } else if ( sets.isEmpty() ) {
             throw new IllegalArgumentException( "No EE set has name '" + optionValue + "'" );
         }
         ExpressionExperimentSet set = sets.iterator().next();
-        this.expressionExperiments = new HashSet<>( set.getExperiments() );
+        this.expressionExperiments.addAll( set.getExperiments() );
 
     }
 
@@ -312,9 +303,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         // explicitly support one case
         if ( query.matches( "GPL[0-9]+" ) ) {
-            ArrayDesign ad = this.getBean( ArrayDesignService.class ).findByShortName( query );
+            ArrayDesign ad = arrayDesignService.findByShortName( query );
             if ( ad != null ) {
-                Collection<ExpressionExperiment> ees2 = this.getBean( ArrayDesignService.class ).getExpressionExperiments( ad );
+                Collection<ExpressionExperiment> ees2 = arrayDesignService.getExpressionExperiments( ad );
                 ees.addAll( ees2 );
                 log.info( ees.size() + " experiments matched to platform " + ad );
             }
@@ -363,7 +354,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();
-        for ( String eeName : AbstractCLIContextCLI.readListFileToStrings( fileName ) ) {
+        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -391,7 +382,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      * @return a collection of troubled experiemnt, or an empty set of non are
      */
     private Set<BioAssaySet> getTroubledExpressionExperiments() {
-        if ( expressionExperiments == null || expressionExperiments.size() == 0 ) {
+        if ( expressionExperiments.isEmpty() ) {
             AbstractCLI.log.warn( "No experiments to remove troubled from" );
             return Collections.emptySet();
         }
@@ -403,10 +394,70 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
-     * Disable the ability for this CLI to process all experiments when no other specification is given.
-     * The user must explicitly define the experiments to be processed.
+     * @param auditable  auditable
+     * @param eventClass can be null
+     * @return boolean
      */
-    protected void suppressAllOption() {
-        this.allowProcessingAll = false;
+    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
+        boolean needToRun = true;
+        Date skipIfLastRunLaterThan = this.getLimitingDate();
+        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
+
+        boolean okToRun = true; // assume okay unless indicated otherwise
+
+        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
+        // count.
+        for ( int j = events.size() - 1; j >= 0; j-- ) {
+            AuditEvent event = events.get( j );
+            if ( event == null ) {
+                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
+            }
+            AuditEventType eventType = event.getEventType();
+            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
+                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
+                if ( skipIfLastRunLaterThan != null ) {
+                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
+                        AbstractCLI.log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
+                        needToRun = false;
+                    }
+                } else {
+                    needToRun = false; // it has been run already at some point
+                }
+            }
+        }
+
+        /*
+         * Always skip if the object is curatable and troubled
+         */
+        if ( auditable instanceof Curatable ) {
+            Curatable curatable = ( Curatable ) auditable;
+            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
+
+            // special case for expression experiments - check associated ADs.
+            if ( okToRun && curatable instanceof ExpressionExperiment ) {
+                for ( ArrayDesign ad : eeService.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                    if ( ad.getCurationDetails().getTroubled() ) {
+                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+                        break;
+                    }
+                }
+            }
+
+            if ( !okToRun ) {
+                addErrorObject( auditable, "Has an active 'trouble' flag" );
+            }
+        }
+
+        return !needToRun || !okToRun;
+    }
+
+    protected Taxon getTaxonByName( CommandLine commandLine ) {
+        String taxonName = commandLine.getOptionValue( 't' );
+        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+        }
+        return taxon;
     }
 }

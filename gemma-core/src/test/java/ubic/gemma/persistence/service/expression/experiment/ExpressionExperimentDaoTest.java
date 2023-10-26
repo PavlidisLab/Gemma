@@ -13,6 +13,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -22,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -145,15 +147,97 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetCategoriesWithUsageFrequency() {
-        expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null );
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
+        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null ) )
+                .containsEntry( c, 1L );
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetAnnotationUsageFrequency() {
-        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null );
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
+                .containsEntry( c, 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyRetainMentionedTerm() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
+        Characteristic c1 = createCharacteristic( "foo", "foo", "bar", "bar" );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 2, null, null, null, Collections.singleton( "http://bar" ) ) )
+                .containsEntry( c, 1L ) // bypasses the minimum frequency requirement
+                .doesNotContainKey( c1 );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyExcludingFreeTextTerms() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
+        Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null ) )
+                .containsEntry( c, 1L )
+                .doesNotContainKey( c1 );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyExcludingFreeTextCategories() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
+        Characteristic c1 = createCharacteristic( "foo", null, "bar", null );
+        Characteristic c2 = createCharacteristic( null, null, "bar", null );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null ) )
+                .containsEntry( c, 1L )
+                .doesNotContainKey( c1 )
+                .containsEntry( c2, 1L ); // uncategorized is not a free-text category
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyExcludingUncategorizedTerms() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
+        Characteristic c1 = createCharacteristic( "bar", null, "bar", "http://bar" );
+        Characteristic c2 = createCharacteristic( null, null, "bar", "http://bar" );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null ) )
+                .containsEntry( c, 1L )
+                .containsEntry( c1, 1L ) // free-text category is not uncategorized
+                .doesNotContainKey( c2 );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyWithUncategorizedCategory() {
+        Characteristic c = createCharacteristic( null, null, "bar", "bar" );
+        Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
+        Characteristic c2 = createCharacteristic( "foo", null, "bar", null );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, ExpressionExperimentDao.UNCATEGORIZED, null, null, null ) )
+                .containsEntry( c, 1L )
+                .doesNotContainKey( c1 )
+                .doesNotContainKey( c2 );
+    }
+
+    private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        Characteristic c = new Characteristic();
+        c.setCategory( category );
+        c.setCategoryUri( categoryUri );
+        c.setValue( value );
+        c.setValueUri( valueUri );
+        sessionFactory.getCurrentSession().persist( c );
+        sessionFactory.getCurrentSession()
+                .createSQLQuery( "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, EXPRESSION_EXPERIMENT_FK, LEVEL) values (:id, :category, :categoryUri, :value, :valueUri, :eeId, :level)" )
+                .setParameter( "id", c.getId() )
+                .setParameter( "category", c.getCategory() )
+                .setParameter( "categoryUri", c.getCategoryUri() )
+                .setParameter( "value", c.getValue() )
+                .setParameter( "valueUri", c.getValueUri() )
+                .setParameter( "eeId", ee.getId() )
+                .setParameter( "level", ExpressionExperiment.class )
+                .executeUpdate();
+        return c;
     }
 
     @Test

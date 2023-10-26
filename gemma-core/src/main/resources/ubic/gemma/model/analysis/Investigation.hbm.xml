@@ -68,9 +68,10 @@
 					<column name="METADATA" not-null="false" unique="false"
 							sql-type="text"/>
 				</property>
+				<!-- FIXME: migrate this column to a VARCHAR(255) -->
 				<property name="batchEffect">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
-							sql-type="VARCHAR(255)"/>
+							sql-type="TEXT"/>
 					<!-- FIXME: use EnumType once the 1.31 is out and the database has been migrated (see https://github.com/PavlidisLab/Gemma/issues/894 for details) -->
 					<type name="ubic.gemma.persistence.hibernate.BatchEffectType">
 						<param name="enumClass">ubic.gemma.model.expression.experiment.BatchEffectType</param>
@@ -78,7 +79,7 @@
 					</type>
 				</property>
 				<property name="batchEffectStatistics" type="java.lang.String">
-					<column name="BATCH_EFFECT_STATISTICS" sql-type="VARCHAR(255)"/>
+					<column name="BATCH_EFFECT_STATISTICS" sql-type="TEXT"/>
 				</property>
 				<property name="batchConfound" type="org.hibernate.type.MaterializedClobType">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"

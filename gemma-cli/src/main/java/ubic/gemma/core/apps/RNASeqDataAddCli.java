@@ -17,9 +17,9 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -45,7 +45,6 @@ import java.util.Collection;
  *
  * @author Paul
  */
-@Component
 public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String ALLOW_MISSING = "allowMissing";
@@ -93,7 +92,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
 
         if ( commandLine.hasOption( "log2cpm" ) ) {

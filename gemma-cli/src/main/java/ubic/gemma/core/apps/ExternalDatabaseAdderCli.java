@@ -20,8 +20,11 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -30,7 +33,13 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
  *
  * @author paul
  */
-public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
+public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
+
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
+    private String name;
+    private DatabaseType type;
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -44,49 +53,24 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.";
+        return "Add a new external database.";
     }
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( Option.builder( "n" ).longOpt( "name" ).hasArg().required().build() );
+        options.addOption( Option.builder( "t" ).longOpt( "type" ).hasArg().required().build() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
-
+    protected void processOptions( CommandLine commandLine ) {
+        this.name = commandLine.getOptionValue( "n" );
+        this.type = DatabaseType.valueOf( commandLine.getOptionValue( "t" ).toUpperCase() );
     }
 
     @Override
     protected void doWork() throws Exception {
-        // ContactService contactService = this.getBean( ContactService.class );
-
-        ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
-
-        // Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
-        // toAdd.setDatabaseSupplier( c );
-        // toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
-        // + "GeneChip array results with array design and annotation information." );
-        // toAdd.setName( "NetAFFX" );
-        // toAdd.setType( DatabaseType.SEQUENCE );
-        // toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
-
-        // Contact c = Contact.Factory.newInstance();
-        // c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
-        // c = contactService.findOrCreate( c );
-        // toAdd.setDatabaseSupplier( c );
-        // toAdd.setDescription(
-        // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human
-        // genes and genetic phenotypes. "
-        // +
-        // "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University."
-        // );
-        // toAdd.setName( "OMIM" );
-        // toAdd.setType( DatabaseType.OTHER );
-        // toAdd.setWebUri( "http://omim.org/" );
-
-        ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
-
-        eds.findOrCreate( toAdd );
+        ExternalDatabase created = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( name, type ) );
+        log.info( "Created " + created );
     }
-
 }

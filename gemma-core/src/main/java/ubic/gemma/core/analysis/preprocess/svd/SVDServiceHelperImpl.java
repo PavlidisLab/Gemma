@@ -86,31 +86,34 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     private ExpressionExperimentService expressionExperimentService;
 
     /**
-     * Retrieve relationships between factors, biomaterials and factorvalues.
-     *
-     * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; ID of the factor value
-     *                             (just an indicator)
+     * Retrieve relationships between factors, biomaterials and factor values.
+     * <p>
+     * Continuous factor values are converted to a {@link Double} if possible, otherwise the {@link FactorValue#getId()}
+     * is used. This is the case for categorical measurement.
+     * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; factor value
+     *                             (double value if possible otherwise ID)
      * @param bm                   to populate for
      */
     public static void populateBMFMap( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
             BioMaterial bm ) {
         for ( FactorValue fv : bm.getFactorValues() ) {
-
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-
-            if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
-                bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
-            }
-
             double valueToStore;
             if ( fv.getMeasurement() != null ) {
-                try {
-                    valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                } catch ( NumberFormatException e ) {
-                    SVDServiceHelperImpl.log.warn( "Measurement wasn't a number for " + fv );
-                    valueToStore = Double.NaN;
+                switch ( fv.getMeasurement().getRepresentation() ) {
+                    case INT:
+                        valueToStore = Integer.parseInt( fv.getMeasurement().getValue() );
+                        break;
+                    case LONG:
+                        valueToStore = Long.parseLong( fv.getMeasurement().getValue() );
+                        break;
+                    case DOUBLE:
+                        valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
+                        break;
+                    default:
+                        // non-numerical measurement can be treated as categorical
+                        valueToStore = fv.getId().doubleValue();
                 }
-
             } else {
                 /*
                  * This is a hack so we don't need special datastructures for
@@ -118,7 +121,9 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                  */
                 valueToStore = fv.getId().doubleValue();
             }
-            bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
+            bioMaterialFactorMap
+                    .computeIfAbsent( experimentalFactor, k -> new HashMap<>() )
+                    .put( bm.getId(), valueToStore );
         }
     }
 

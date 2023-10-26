@@ -30,10 +30,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import javax.annotation.Nullable;
 import java.net.URL;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +46,14 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     public ExternalDatabaseServiceImpl( ExternalDatabaseDao mainDao ) {
         super( mainDao );
         externalDatabaseDao = mainDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExternalDatabase> loadAllWithAuditTrail() {
+        Collection<ExternalDatabase> eds = externalDatabaseDao.loadAll();
+        eds.forEach( ed -> Hibernate.initialize( ed.getAuditTrail() ) );
+        return eds;
     }
 
     @Override

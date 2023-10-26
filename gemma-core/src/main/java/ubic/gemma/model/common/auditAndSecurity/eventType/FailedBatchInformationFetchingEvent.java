@@ -23,5 +23,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * If the problem is that the information just isn't available, use {@link BatchInformationMissingEvent} instead.
  */
-public abstract class FailedBatchInformationFetchingEvent extends BatchInformationFetchingEvent {
+public class FailedBatchInformationFetchingEvent extends BatchInformationFetchingEvent {
 }

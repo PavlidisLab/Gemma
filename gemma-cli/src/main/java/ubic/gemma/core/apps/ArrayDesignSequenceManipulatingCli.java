@@ -21,16 +21,20 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.IOException;
@@ -42,10 +46,15 @@ import java.util.*;
  *
  * @author pavlidis
  */
-public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
+public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
     private ArrayDesignReportService arrayDesignReportService;
+    @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    protected AuditTrailService auditTrailService;
+
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
     @Override
@@ -72,15 +81,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
         this.addDateOption( options );
         this.addAutoOption( options );
-
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-
-        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
-        arrayDesignService = this.getBean( ArrayDesignService.class );
-
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'a' ) ) {
             this.arraysFromCliList( commandLine );
         } else if ( commandLine.hasOption( 'f' ) ) {
@@ -90,20 +94,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                 this.arrayDesignsToProcess = this.readListFile( experimentListFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
-            }
-        }
-
-        if ( commandLine.hasOption( "mdate" ) ) {
-            super.mDate = commandLine.getOptionValue( "mdate" );
-            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-            if ( commandLine.hasOption( "mdate" ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
     }
@@ -191,7 +181,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( autoSeek ) {
+        if ( isAutoSeek() ) {
             return this.needToAutoRun( arrayDesign, eventClass );
         }
 
@@ -215,7 +205,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         for ( String shortName : shortNames ) {
             if ( StringUtils.isBlank( shortName ) )
                 continue;
-            ArrayDesign ad = this.locateArrayDesign( shortName, arrayDesignService );
+            ArrayDesign ad = this.locateArrayDesign( shortName );
             if ( ad == null ) {
                 AbstractCLI.log.warn( shortName + " not found" );
                 continue;
@@ -260,7 +250,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( !autoSeek ) {
+        if ( !isAutoSeek() ) {
             return false;
         }
 
@@ -315,7 +305,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      */
     private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
         Set<ArrayDesign> ees = new HashSet<>();
-        for ( String eeName : AbstractCLIContextCLI.readListFileToStrings( fileName ) ) {
+        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
             ArrayDesign ee = arrayDesignService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -335,5 +325,30 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             ees.add( ee );
         }
         return ees;
+    }
+
+    /**
+     * @param name of the array design to find.
+     * @return an array design, if found. Bails otherwise with an error exit code
+     */
+    protected ArrayDesign locateArrayDesign( String name ) {
+
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
+        }
+        return arrayDesign;
     }
 }

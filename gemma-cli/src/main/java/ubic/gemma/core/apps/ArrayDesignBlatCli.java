@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -36,7 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -72,6 +73,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .desc(
                         "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
                 .longOpt( "scoreThresh" )
+                .type( Double.class )
                 .build();
 
         options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
@@ -89,7 +91,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
 
         if ( commandLine.hasOption( "sensitive" ) ) {
@@ -105,7 +107,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 //        }
 
         if ( commandLine.hasOption( 's' ) ) {
-            this.blatScoreThreshold = this.getDoubleOptionValue( commandLine, 's' );
+            this.blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
         }
 
         TaxonService taxonService = this.getBean( TaxonService.class );

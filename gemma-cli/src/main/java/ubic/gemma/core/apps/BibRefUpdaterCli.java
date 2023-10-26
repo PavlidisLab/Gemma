@@ -25,7 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.RandomUtils;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import java.util.Collection;
  *
  * @author Paul
  */
-public class BibRefUpdaterCli extends AbstractCLIContextCLI {
+public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
 
     private String[] pmids;
 
@@ -66,7 +66,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
     }
 
     @Override

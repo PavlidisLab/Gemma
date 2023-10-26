@@ -26,8 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.BlacklistedEntity;
@@ -51,7 +51,7 @@ import java.util.List;
  *
  * @author paul
  */
-public class BlacklistCli extends AbstractCLIContextCLI {
+public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     private static final int MAX_RETRIES = 3;
     String fileName = null;

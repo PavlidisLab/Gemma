@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -30,11 +32,21 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    public static class ArrayDesignMergeCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    public static class ArrayDesignMergeCliTestContextConfiguration {
 
         @Bean
         public ArrayDesignMergeCli arrayDesignMergeCli() {
             return new ArrayDesignMergeCli();
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
         }
 
         @Bean

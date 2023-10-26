@@ -45,15 +45,15 @@
 		<constructor-arg name="traverseCauses" value="true"/>
 	</bean>
 
-	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager"
-		  lazy-init="true">
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
 
 	<!-- Hibernate SessionFactory -->
-	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean" lazy-init="true">
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+		  depends-on="ehcache">
 		<property name="dataSource" ref="dataSource"/>
 		<property name="configLocation" value="classpath:hibernate.cfg.xml"/>
 		<property name="hibernateProperties">
@@ -61,7 +61,9 @@
 				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
 				<prop key="hibernate.dialect">ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect</prop>
 				<!-- caching options -->
-				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
+				<prop
+					key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory
+				</prop>
 				<prop key="hibernate.cache.use_query_cache">true</prop>
 				<prop key="hibernate.cache.use_second_level_cache">true</prop>
 				<!-- defaults for fetching/inserting -->
@@ -89,12 +91,6 @@
 
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
 		<constructor-arg ref="ehcache"/>
-	</bean>
-
-	<!-- the Ehcache cache manager is shared so that it can be reused by Hibernate -->
-	<!-- gsec expect this bean to be defined, otherwise it would be inlined in cacheManager -->
-	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
-		<property name="shared" value="true"/>
 	</bean>
 
 	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>

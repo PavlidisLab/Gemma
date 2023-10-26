@@ -11,6 +11,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.ServiceUnavailableException;
 
 /**
  * Provide minimal support for exposing Gemma ontology.
@@ -32,13 +33,17 @@ public class OntologyController {
 
     @RequestMapping(value = "/ont/{termId}", method = RequestMethod.GET)
     public RedirectView getTerm( @PathVariable("termId") String termId ) {
-        OntologyTerm term = gemmaOntologyService.getTerm( "http://gemma.msl.ubc.ca/ont/" + termId );
+        if ( !gemmaOntologyService.isOntologyLoaded() ) {
+            throw new ServiceUnavailableException( "TGEMO is not loaded." );
+        }
+        String iri = "http://gemma.msl.ubc.ca/ont/" + termId;
+        OntologyTerm term = gemmaOntologyService.getTerm( iri );
         if ( term == null ) {
-            throw new EntityNotFoundException( String.format( "No term with ID %s in TGEMO.", termId ) );
+            throw new EntityNotFoundException( String.format( "No term with IRI %s in TGEMO.", iri ) );
         }
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         String urlWithFragment = UriComponentsBuilder.fromHttpUrl( gemmaOntologyUrl )
-                .fragment( term.getLocalName() )
+                .fragment( iri )
                 .build()
                 .toUriString();
         RedirectView redirectView = new RedirectView( urlWithFragment );

@@ -20,8 +20,8 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
  * @author xwan, paul
  * @see    ProcessedExpressionDataVectorServiceImpl
  */
-@Component
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String
@@ -79,7 +78,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         this.updateDiagnostics = commandLine.hasOption( UPDATE_DIAGNOSTICS_OPTION );
         this.updateRanks = commandLine.hasOption( UPDATE_RANKS_OPTION );

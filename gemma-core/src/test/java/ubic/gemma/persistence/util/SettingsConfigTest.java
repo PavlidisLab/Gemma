@@ -73,7 +73,7 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertTrue( allowedOrigins.contains( hostUrl ) );
         assertThat( featuredExternalDatabases )
                 .isNotNull()
-                .contains( "hg38", "mm10" );
+                .contains( "hg38", "mm39" );
         assertEquals( "/var/tmp/gemmaData", appDataHome );
         assertEquals( appDataHome + "/download", downloadPath );
         assertEquals( appDataHome + "/searchIndices", searchDir );

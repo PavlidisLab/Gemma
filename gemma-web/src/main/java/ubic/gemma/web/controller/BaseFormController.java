@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,9 +46,11 @@ import java.util.Map;
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
  * example, getting the current user and saving messages/errors. This class is intended to be a base class for all Form
  * controllers.
+ * @deprecated {@link SimpleFormController} is deprecated, use annotations-based GET/POST mapping instead.
  *
  * @author pavlidis (originally based on Appfuse code)
  */
+@Deprecated
 public abstract class BaseFormController extends SimpleFormController {
     protected static final Log log = LogFactory.getLog( BaseFormController.class.getName() );
 

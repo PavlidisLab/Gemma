@@ -3,6 +3,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -14,6 +16,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -54,6 +57,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private final static String OPTION_MRNA = "m";
     private final static String OPTION_REFSEQ = "r";
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     private String[] probeNames = null;
     private ProbeMapperConfig config;
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
@@ -80,17 +86,19 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        options.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
-                        "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
+        options.addOption( Option.builder( "i" ).hasArg().argName( "value" )
+                .type( Double.class )
+                .desc( "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .longOpt( "identityThreshold" ).build() );
 
         options.addOption( Option.builder( "s" ).hasArg().argName( "value" )
+                .type( Double.class )
                 .desc( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
                 .longOpt( "scoreThreshold" ).build() );
 
-        options.addOption( Option.builder( "o" ).hasArg().argName( "value" ).desc(
-                        "Minimum fraction of probe overlap with exons, default = "
-                                + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
+        options.addOption( Option.builder( "o" ).hasArg().argName( "value" )
+                .type( Double.class )
+                .desc( "Minimum fraction of probe overlap with exons, default = " + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
                 .longOpt( "overlapThreshold" )
                 .build() );
 
@@ -178,14 +186,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * @see AbstractCLI#processOptions(CommandLine)
      */
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
         taxonService = this.getBean( TaxonService.class );
-
-        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
-        }
 
         if ( commandLine.hasOption( "import" ) ) {
             if ( !commandLine.hasOption( 't' ) ) {
@@ -208,7 +212,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
         }
         if ( commandLine.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( commandLine, taxonService );
+            this.taxon = this.getTaxonByName( commandLine );
         }
 
         if ( commandLine.hasOption( "nodb" ) ) {
@@ -230,7 +234,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( commandLine.hasOption( 's' ) ) {
-            blatScoreThreshold = getDoubleOptionValue( commandLine, 's' );
+            blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
             if ( blatScoreThreshold < 0 || blatScoreThreshold > 1 ) {
                 throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
             }
@@ -245,14 +249,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.mirnaOnlyModeOption = commandLine.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION );
 
         if ( commandLine.hasOption( 'i' ) ) {
-            identityThreshold = this.getDoubleOptionValue( commandLine, 'i' );
+            identityThreshold = ( Double ) commandLine.getParsedOptionValue( 'i' );
             if ( identityThreshold < 0 || identityThreshold > 1 ) {
                 throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
             }
         }
 
         if ( commandLine.hasOption( 'o' ) ) {
-            overlapThreshold = this.getDoubleOptionValue( commandLine, 'o' );
+            overlapThreshold = ( Double ) commandLine.getParsedOptionValue( 'o' );
             if ( overlapThreshold < 0 || overlapThreshold > 1 ) {
                 throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
             }
@@ -476,7 +480,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 }
 
             }
-        } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
+        } else if ( taxon != null || skipIfLastRunLaterThan != null || isAutoSeek() ) {
 
             if ( directAnnotationInputFileName != null ) {
                 throw new IllegalStateException(
@@ -699,5 +703,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             return null;
         }
+    }
+
+    protected Taxon getTaxonByName( CommandLine commandLine ) {
+        String taxonName = commandLine.getOptionValue( 't' );
+        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+        }
+        return taxon;
     }
 }
