@@ -1756,6 +1756,9 @@ public class ExpressionExperimentDaoImpl
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
                 Hibernate.initialize( bm.getFactorValues() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
                 Hibernate.initialize( bm.getTreatments() );
             }
         }
