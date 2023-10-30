@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -329,6 +330,41 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 } );
         // assertEquals( "and (ee.id in (select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.valueUri in (:ac_valueUri1)))",
         //         FilterQueryUtils.formRestrictionClause( Filters.by( f ) ) );
+    }
+
+    @Test
+    public void testRemoveExperimentWithSharedBioMaterial() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba1 = new BioAssay();
+        ba1.setArrayDesignUsed( arrayDesign );
+        ba1.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba1 );
+        BioAssay ba2 = new BioAssay();
+        ba2.setArrayDesignUsed( arrayDesign );
+        ba2.setSampleUsed( bm );
+        ExpressionExperiment ee1 = new ExpressionExperiment();
+        ee1.getBioAssays().add( ba1 );
+        ExpressionExperiment ee2 = new ExpressionExperiment();
+        ee2.getBioAssays().add( ba2 );
+        sessionFactory.getCurrentSession().persist( ee1 );
+        sessionFactory.getCurrentSession().persist( ee2 );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ee1 = expressionExperimentDao.load( ee1.getId() );
+        assertNotNull( ee1 );
+        expressionExperimentDao.remove( ee1 );
+        // verify that the sample still exists and is still attached to ee2
+        bm = ( BioMaterial ) sessionFactory.getCurrentSession().get( BioMaterial.class, bm.getId() );
+        assertNotNull( bm );
+        assertFalse( bm.getBioAssaysUsedIn().contains( ba1 ) );
+        assertTrue( bm.getBioAssaysUsedIn().contains( ba2 ) );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
