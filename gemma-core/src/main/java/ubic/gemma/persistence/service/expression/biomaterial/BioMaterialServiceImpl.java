@@ -93,7 +93,9 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        return this.bioMaterialDao.thaw( bioMaterials );
+        bioMaterials = ensureInSession( bioMaterials );
+        bioMaterials.forEach( this.bioMaterialDao::thaw );
+        return bioMaterials;
     }
 
     @Override

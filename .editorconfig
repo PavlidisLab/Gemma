@@ -9,6 +9,12 @@ indent_style=tab
 [/gemma-web/pom.xml]
 indent_style=tab
 
+[BioMaterial.hbm.xml]
+indent_size=3
+
+[BioAssay.hbm.xml]
+indent_size=3
+
 [Investigation.hbm.xml]
 indent_style=tab
 
