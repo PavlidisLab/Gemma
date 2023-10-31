@@ -1,6 +1,7 @@
 package ubic.gemma.core.apps;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorS
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.TestComponent;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @Deprecated
@@ -47,6 +49,11 @@ public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextT
 
     @Autowired
     private FactorValueService factorValueService;
+
+    @Before
+    public void setUp() {
+        when( factorValueService.saveStatementIgnoreAcl( any(), any() ) ).thenAnswer( a -> a.getArgument( 1 ) );
+    }
 
     @After
     public void tearDown() {
@@ -98,5 +105,30 @@ public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextT
         factorValueMigratorService.performMigration( migration, false );
         verify( factorValueService ).loadWithOldStyleCharacteristics( 1L, false );
         verify( factorValueService ).saveStatementIgnoreAcl( same( fv ), eq( stmt ) );
+    }
+
+    @Test
+    public void testMigrationWithFreeTextSubject() {
+        FactorValue fv = new FactorValue();
+        Characteristic c = new Characteristic();
+        c.setId( 2L );
+        c.setCategory( "bar" );
+        c.setCategoryUri( "http://bar" );
+        c.setValueUri( "http://foo/" );
+        fv.getOldStyleCharacteristics().add( c );
+        FactorValueMigratorService.Migration migration = FactorValueMigratorService.Migration.builder()
+                .factorValueId( 1L )
+                .oldStyleCharacteristicIdUsedAsSubject( 2L )
+                .subject( "foo" )
+                .subjectUri( null )
+                .build();
+        when( factorValueService.loadWithOldStyleCharacteristics( 1L, false ) ).thenReturn( fv );
+        FactorValueMigratorService.MigrationResult result = factorValueMigratorService.performMigration( migration, false );
+        assertThat( result.getStatement() )
+                .hasFieldOrPropertyWithValue( "category", "bar" )
+                .hasFieldOrPropertyWithValue( "categoryUri", "http://bar" )
+                .hasFieldOrPropertyWithValue( "subject", "foo" )
+                .hasFieldOrPropertyWithValue( "subjectUri", null );
+        verify( factorValueService ).saveStatementIgnoreAcl( same( fv ), any() );
     }
 }

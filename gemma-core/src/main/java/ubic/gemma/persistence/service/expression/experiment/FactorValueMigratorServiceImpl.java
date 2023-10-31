@@ -33,6 +33,10 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
     @Override
     @Transactional
     public MigrationResult performMigration( Migration migration, boolean noop ) {
+        if ( migration.getFactorValueId() == null ) {
+            throw new IllegalArgumentException( "The FactorValue ID cannot be null." );
+        }
+
         FactorValue fv = factorValueService.loadWithOldStyleCharacteristics( migration.getFactorValueId(), noop );
 
         if ( fv == null ) {
@@ -60,14 +64,19 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             statement = new Statement();
         }
 
-        if ( migration.getCategory() != null )
+        if ( migration.getCategory() != null ) {
             statement.setCategory( migration.getCategory() );
-        if ( migration.getCategoryUri() != null )
             statement.setCategoryUri( migration.getCategoryUri() );
-        if ( migration.getSubject() != null )
+        } else if ( migration.getCategoryUri() != null ) {
+            statement.setCategoryUri( migration.getCategoryUri() );
+        }
+
+        if ( migration.getSubject() != null ) {
             statement.setSubject( migration.getSubject() );
-        if ( migration.getSubjectUri() != null )
             statement.setSubjectUri( migration.getSubjectUri() );
+        } else if ( migration.getSubjectUri() != null ) {
+            statement.setSubjectUri( migration.getSubjectUri() );
+        }
 
         // if an identical statement exists, reuse it instead of creating a duplicate
         statement = findStatementByCategoryAndSubject( fv, statement ).orElse( statement );
@@ -83,10 +92,12 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             log.debug( c + " has been migrated to a statement object." );
         }
 
-        if ( migration.getObject() != null )
+        if ( migration.getObject() != null ) {
             statement.setObject( migration.getObject() );
-        if ( migration.getObjectUri() != null )
             statement.setObjectUri( migration.getObjectUri() );
+        } else if ( statement.getObjectUri() != null ) {
+            statement.setObjectUri( migration.getObjectUri() );
+        }
 
         statement.setSecondPredicate( migration.getSecondPredicate() );
         statement.setSecondPredicateUri( migration.getSecondPredicateUri() );
@@ -99,10 +110,12 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             log.debug( c + " has been migrated to a statement second object." );
         }
 
-        if ( migration.getSecondObject() != null )
+        if ( migration.getSecondObject() != null ) {
             statement.setSecondObject( migration.getSecondObject() );
-        if ( migration.getSecondObjectUri() != null )
             statement.setSecondObjectUri( migration.getSecondObjectUri() );
+        } else if ( migration.getSecondObjectUri() != null ) {
+            statement.setSecondObjectUri( migration.getSecondObjectUri() );
+        }
 
         boolean isTransient = statement.getId() == null;
 
