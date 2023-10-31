@@ -19,8 +19,6 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -28,10 +26,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.*;
 
@@ -40,9 +36,6 @@ import java.util.*;
  */
 @Repository
 public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
-
-    @Autowired
-    private ArrayDesignDao arrayDesignDao;
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
@@ -73,34 +66,6 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
                 .setParameter( "accession", accession ).list();
-    }
-
-    @Override
-    public void thaw( final BioAssay bioAssay ) {
-        try {
-            Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-            Hibernate.initialize( bioAssay.getOriginalPlatform() );
-            BioMaterial bm = bioAssay.getSampleUsed();
-            Hibernate.initialize( bm );
-            Hibernate.initialize( bm.getBioAssaysUsedIn() );
-            Hibernate.initialize( bm.getFactorValues() );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'BioAssayDao.thawRawAndProcessed(BioAssay bioAssay)' --> " + th, th );
-        }
-    }
-
-    @Override
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
-        if ( bioAssays.isEmpty() )
-            return bioAssays;
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
-                        + " left join fetch b.sampleUsed bm"
-                        + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) " )
-                .setParameterList( "ids", EntityUtils.getIds( bioAssays ) )
-                .list();
     }
 
     /**

@@ -1780,41 +1780,41 @@ public class ExpressionExperimentDaoImpl
         ee.getCurationDetails().setLastNoteUpdateEvent( null );
         ee.getCurationDetails().setLastTroubledEvent( null );
 
-        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-
         // dissociate this EE from other parts
         for ( ExpressionExperiment e : ee.getOtherParts() ) {
             e.getOtherParts().remove( ee );
         }
         ee.getOtherParts().clear();
 
+        // detach from BA dimensions
+        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
         for ( BioAssayDimension dim : dims ) {
             dim.getBioAssays().clear();
         }
 
-        // we don't want to remove a biomaterial twice if it is attached to multiple BAs
-        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        for ( BioAssay ba : bioAssays ) {
-            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
-            BioMaterial biomaterial = ba.getSampleUsed();
-            if ( biomaterial == null ) {
-                log.warn( "BioAssay " + ba + " has no associated BioMaterial when attempting to remove its parent ExpressionExperiment. It will be skipped for now." );
-                continue;
-            }
-            bioMaterialsToDelete.add( biomaterial );
-            ba.setSampleUsed( null );
+        // first pass, detach BAs from the samples
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
         }
 
-        // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
-        for ( BioMaterial bm : bioMaterialsToDelete ) {
-            bm.getFactorValues().clear();
-            bm.getBioAssaysUsedIn().clear();
-            getSessionFactory().getCurrentSession().delete( bm );
+        // second pass, delete samples that are no longer attached to BAs
+        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() ) {
+                samplesToRemove.add( ba.getSampleUsed() );
+            } else {
+                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the sample will not be deleted.", ba.getSampleUsed() ) );
+            }
         }
 
         super.remove( ee );
+
+        // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
+        // cascading and that is not allowed in the data model
+        log.debug( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
+        for ( BioMaterial bm : samplesToRemove ) {
+            getSessionFactory().getCurrentSession().delete( bm );
+        }
     }
 
     @Override

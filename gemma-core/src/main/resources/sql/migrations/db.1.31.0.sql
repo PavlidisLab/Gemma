@@ -7,3 +7,5 @@ set BATCH_EFFECT_STATISTICS = BATCH_EFFECT,
 where BATCH_EFFECT like 'This data set may have a batch artifact%';
 alter table CHROMOSOME_FEATURE
     add column DUMMY TINYINT not null default false;
+alter table BIO_ASSAY
+    modify column SAMPLE_USED_FK BIGINT not null;

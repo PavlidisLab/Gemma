@@ -40,9 +40,5 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
 
     Collection<BioAssay> findByAccession( String accession );
 
-    void thaw( BioAssay bioAssay );
-
-    Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
-
     List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic );
 }

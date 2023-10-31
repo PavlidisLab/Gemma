@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
    <class name="ubic.gemma.model.expression.bioAssay.BioAssay" table="BIO_ASSAY">
-      <cache usage="read-write" />
+      <cache usage="read-write"/>
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
          <generator class="native">
@@ -36,21 +36,25 @@
          <column name="METADATA" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="fastqHeaders" type="org.hibernate.type.MaterializedClobType">
-      	<column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
+         <column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
       </property>
       <!-- the four entities below are assumed readily available in BioAssayValueObject -->
-      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="false" fetch="select">
+      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                   lazy="false" fetch="select">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" lazy="false" fetch="select">
+      <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                   lazy="false" fetch="select">
          <column name="ORIGINAL_PLATFORM_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="join">
+      <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
+                   lazy="false" fetch="join">
          <column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <!-- this is practically a one-to-one mapping, so join-fetching is efficient -->
-      <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="join">
-         <column name="SAMPLE_USED_FK" not-null="false" sql-type="BIGINT"/>
+      <!-- BioMaterial are in the second-level cached, so a select fetching is efficient -->
+      <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"
+                   lazy="false" fetch="select">
+         <column name="SAMPLE_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>
 </hibernate-mapping>

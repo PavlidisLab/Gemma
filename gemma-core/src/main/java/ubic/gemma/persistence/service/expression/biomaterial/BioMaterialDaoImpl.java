@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -28,11 +31,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
 
 /**
  * @author pavlidis
@@ -112,22 +112,11 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
-        Hibernate.initialize( bioMaterial );
         Hibernate.initialize( bioMaterial.getSourceTaxon() );
-        Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
         Hibernate.initialize( bioMaterial.getTreatments() );
-        Hibernate.initialize( bioMaterial.getFactorValues() );
-    }
-
-    @Override
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        if ( bioMaterials.isEmpty() )
-            return bioMaterials;
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                                + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
-                .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
+        for ( FactorValue fv : bioMaterial.getFactorValues() ) {
+            Hibernate.initialize( fv.getExperimentalFactor() );
+        }
     }
 
     @Override
