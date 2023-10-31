@@ -96,22 +96,28 @@ public class FactorValueMigratorCLI extends AbstractSpringAwareCLI {
                 boolean hasSecondObjectColumns = CollectionUtils.containsAny( parser.getHeaderNames(),
                         "SecondObjectID", "SecondObjectURI", "SecondObject" );
                 for ( CSVRecord row : parser ) {
-                    FactorValueMigratorService.Migration.MigrationBuilder migrationBuilder = FactorValueMigratorService.Migration.builder()
-                            .factorValueId( parseLongIfNonBlank( row.get( "FactorValueID" ) ) )
-                            .category( stripToNull( row.get( "Category" ) ) ).categoryUri( stripToNull( row.get( "CategoryURI" ) ) )
-                            .oldStyleCharacteristicIdUsedAsSubject( parseLongIfNonBlank( row.get( "SubjectID" ) ) )
-                            .subject( stripToNull( row.get( "Subject" ) ) ).subjectUri( stripToNull( row.get( "SubjectURI" ) ) )
-                            .predicate( stripToNull( row.get( "Predicate" ) ) ).predicateUri( stripToNull( row.get( "PredicateURI" ) ) )
-                            .oldStyleCharacteristicIdUsedAsObject( parseLongIfNonBlank( row.get( "ObjectID" ) ) )
-                            .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) );
-                    if ( hasSecondObjectColumns ) {
-                        // optionally...
-                        migrationBuilder
-                                .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
-                                .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
-                                .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) );
+                    FactorValueMigratorService.Migration migration;
+                    try {
+                        FactorValueMigratorService.Migration.MigrationBuilder migrationBuilder = FactorValueMigratorService.Migration.builder()
+                                .factorValueId( parseLongIfNonBlank( row.get( "FactorValueID" ) ) )
+                                .category( stripToNull( row.get( "Category" ) ) ).categoryUri( stripToNull( row.get( "CategoryURI" ) ) )
+                                .oldStyleCharacteristicIdUsedAsSubject( parseLongIfNonBlank( row.get( "SubjectID" ) ) )
+                                .subject( stripToNull( row.get( "Subject" ) ) ).subjectUri( stripToNull( row.get( "SubjectURI" ) ) )
+                                .predicate( stripToNull( row.get( "Predicate" ) ) ).predicateUri( stripToNull( row.get( "PredicateURI" ) ) )
+                                .oldStyleCharacteristicIdUsedAsObject( parseLongIfNonBlank( row.get( "ObjectID" ) ) )
+                                .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) );
+                        if ( hasSecondObjectColumns ) {
+                            // optionally...
+                            migrationBuilder
+                                    .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
+                                    .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
+                                    .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) );
+                        }
+                        migration = migrationBuilder.build();
+                    } catch ( Exception e ) {
+                        throw new RuntimeException( String.format( "The following migration is invalid:\n\t[%d] %s\n\t%s",
+                                row.getRecordNumber(), Arrays.toString( row.values() ), ExceptionUtils.getRootCauseMessage( e ) ), e );
                     }
-                    FactorValueMigratorService.Migration migration = migrationBuilder.build();
                     migrations.add( new MigrationWithLineNumber( row.getRecordNumber(), migration ) );
                 }
             }
