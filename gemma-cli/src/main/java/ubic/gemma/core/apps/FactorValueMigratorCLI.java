@@ -4,6 +4,7 @@ import lombok.Value;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -92,19 +93,25 @@ public class FactorValueMigratorCLI extends AbstractSpringAwareCLI {
         if ( commandLine.hasOption( MIGRATION_FILE_OPTION ) ) {
             File migrationFile = ( File ) commandLine.getParsedOptionValue( MIGRATION_FILE_OPTION );
             try ( CSVParser parser = CSVParser.parse( migrationFile, StandardCharsets.UTF_8, CSVFormat.TDF.withFirstRecordAsHeader() ) ) {
+                boolean hasSecondObjectColumns = CollectionUtils.containsAny( parser.getHeaderNames(),
+                        "SecondObjectID", "SecondObjectURI", "SecondObject" );
                 for ( CSVRecord row : parser ) {
-                    FactorValueMigratorService.Migration migration = FactorValueMigratorService.Migration.builder()
+                    FactorValueMigratorService.Migration.MigrationBuilder migrationBuilder = FactorValueMigratorService.Migration.builder()
                             .factorValueId( parseLongIfNonBlank( row.get( "FactorValueID" ) ) )
                             .category( stripToNull( row.get( "Category" ) ) ).categoryUri( stripToNull( row.get( "CategoryURI" ) ) )
                             .oldStyleCharacteristicIdUsedAsSubject( parseLongIfNonBlank( row.get( "SubjectID" ) ) )
                             .subject( stripToNull( row.get( "Subject" ) ) ).subjectUri( stripToNull( row.get( "SubjectURI" ) ) )
                             .predicate( stripToNull( row.get( "Predicate" ) ) ).predicateUri( stripToNull( row.get( "PredicateURI" ) ) )
                             .oldStyleCharacteristicIdUsedAsObject( parseLongIfNonBlank( row.get( "ObjectID" ) ) )
-                            .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) )
-                            .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
-                            .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
-                            .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) )
-                            .build();
+                            .object( stripToNull( row.get( "Object" ) ) ).objectUri( stripToNull( row.get( "ObjectURI" ) ) );
+                    if ( hasSecondObjectColumns ) {
+                        // optionally...
+                        migrationBuilder
+                                .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
+                                .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
+                                .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) );
+                    }
+                    FactorValueMigratorService.Migration migration = migrationBuilder.build();
                     migrations.add( new MigrationWithLineNumber( row.getRecordNumber(), migration ) );
                 }
             }
