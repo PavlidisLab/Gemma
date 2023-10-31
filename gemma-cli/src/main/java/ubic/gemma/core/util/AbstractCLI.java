@@ -63,7 +63,7 @@ public abstract class AbstractCLI implements CLI {
      */
     public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
 
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2023 University of British Columbia.";
     protected static final String AUTO_OPTION_NAME = "auto";
     protected static final String THREADS_OPTION = "threads";
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );
