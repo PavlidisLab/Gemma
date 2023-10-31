@@ -80,6 +80,11 @@ public abstract class AbstractCLI implements CLI {
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
 
+    /**
+     * Indicate if this CLI allows positional arguments.
+     */
+    private boolean allowPositionalArguments = false;
+
     /* support for convenience options */
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
@@ -127,51 +132,42 @@ public abstract class AbstractCLI implements CLI {
      */
     @Override
     public int executeCommand( String... args ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
+        StopWatch watch = StopWatch.createStarted();
+        Options options = new Options();
+        buildStandardOptions( options );
+        buildOptions( options );
+        DefaultParser parser = new DefaultParser();
         try {
-            Options options = new Options();
-            buildStandardOptions( options );
-            buildOptions( options );
-            /* COMMAND LINE PARSER STAGE */
-            DefaultParser parser = new DefaultParser();
-            if ( args == null ) {
-                System.err.println( "No arguments" );
+            CommandLine commandLine = parser.parse( options, args );
+            // check if -h/--help is provided before pursuing option processing
+            if ( commandLine.hasOption( 'h' ) ) {
                 printHelp( options );
-                return FAILURE;
+                return SUCCESS;
             }
-            try {
-                CommandLine commandLine = parser.parse( options, args );
-                // check if -h/--help is provided before pursuing option processing
-                if ( commandLine.hasOption( 'h' ) ) {
-                    printHelp( options );
-                    return SUCCESS;
-                }
-                if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                    System.err.printf( String.format( "The -testing/--testing option must be passed before the %s command.%n", getCommandName() ) );
-                    return FAILURE;
-                }
-                processStandardOptions( commandLine );
-                processOptions( commandLine );
-            } catch ( ParseException e ) {
-                if ( e instanceof MissingOptionException ) {
-                    System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
-                } else if ( e instanceof AlreadySelectedException ) {
-                    System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
-                } else if ( e instanceof MissingArgumentException ) {
-                    System.err.println( "Missing argument: " + e.getMessage() );
-                } else if ( e instanceof UnrecognizedOptionException ) {
-                    System.err.println( "Unrecognized option: " + e.getMessage() );
-                } else {
-                    System.err.println( e.getMessage() );
-                }
-                return FAILURE;
-            } catch ( Exception e ) {
-                log.error( "Processing the command line failed.", e );
-                return FAILURE;
+            if ( commandLine.hasOption( TESTING_OPTION ) ) {
+                throw new UnrecognizedOptionException( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
             }
+            if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
+                throw new UnrecognizedOptionException( "The command line does not allow positional arguments." );
+            }
+            processStandardOptions( commandLine );
+            processOptions( commandLine );
             doWork();
             return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+        } catch ( ParseException e ) {
+            if ( e instanceof MissingOptionException ) {
+                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
+            } else if ( e instanceof AlreadySelectedException ) {
+                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
+            } else if ( e instanceof MissingArgumentException ) {
+                System.err.println( "Missing argument: " + e.getMessage() );
+            } else if ( e instanceof UnrecognizedOptionException ) {
+                System.err.println( "Unrecognized option: " + e.getMessage() );
+            } else {
+                System.err.println( e.getMessage() );
+            }
+            printHelp( options );
+            return FAILURE;
         } catch ( Exception e ) {
             log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
@@ -212,6 +208,16 @@ public abstract class AbstractCLI implements CLI {
                 .desc( "Number of threads to use for batch processing." )
                 .type( Integer.class )
                 .build() );
+    }
+
+    /**
+     * Allow positional arguments to be specified. The default is false and an error will be produced if positional
+     * arguments are supplied by the user.
+     * <p>
+     * Those arguments can be retrieved in {@link #processOptions(CommandLine)} by using {@link CommandLine#getArgList()}.
+     */
+    protected void setAllowPositionalArguments( boolean allowPositionalArguments ) {
+        this.allowPositionalArguments = allowPositionalArguments;
     }
 
     /**
