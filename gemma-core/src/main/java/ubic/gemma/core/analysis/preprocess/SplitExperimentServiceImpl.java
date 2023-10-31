@@ -345,7 +345,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
         String template = "Split part %d of: %s [%s = %s]";
         String originalName = StringUtils.strip( toSplit.getName() );
-        String factorValueString = splitValue.getDescriptiveString();
+        String factorValueString = FactorValueUtils.getSummaryString( splitValue );
         String newFullName = String.format( template, splitNumber, originalName,
                 StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
                         splitValue.getExperimentalFactor().getCategory().getValue() :

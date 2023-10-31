@@ -28,7 +28,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,13 +66,13 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 
     /**
-     * Load all the factor values except the ones with the given IDs.
+     * @see FactorValueDao#loadIdsWithNumberOfOldStyleCharacteristics(Set)
      * @deprecated do not use, this is only for migrating old-style characteristics to statements and will be removed
      */
     @Deprecated
     @Secured({ "GROUP_ADMIN" })
     // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
-    Map<Long, Integer> loadAllWithNumberOfOldStyleCharacteristicsExceptIds( Set<Long> excludedIds );
+    Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -106,6 +105,17 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     Statement saveStatement( FactorValue fv, Statement statement );
 
     /**
+     * Save a statement ignoring ACLs.
+     * <p>
+     * This requires the {@code GROUP_ADMIN} authority.
+     * @deprecated do not use this, it is meant for FactorValue migration only
+     */
+    @Deprecated
+    @CheckReturnValue
+    @Secured({ "GROUP_ADMIN" })
+    Statement saveStatementIgnoreAcl( FactorValue fv, Statement statement );
+
+    /**
      * Remove a statement from a factor value.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -118,7 +128,4 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( FactorValue factorValue );
-
-    @Deprecated
-    void flushAndEvict( List<Long> batch );
 }

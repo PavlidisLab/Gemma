@@ -559,7 +559,8 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
-        List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
+        //noinspection unchecked
+        List<Statement> raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
                 + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
                 + "join fv.characteristics c where e.id= :eeid " ).setParameter( "eeid", eeId ).list();
 
@@ -567,11 +568,9 @@ public class ExpressionExperimentDaoImpl
          * FIXME filtering here is going to have to be more elaborate for this to be useful.
          */
         Collection<AnnotationValueObject> results = new HashSet<>();
-        for ( Object o : raw ) {
-            Characteristic c = ( Characteristic ) o;
-
+        for ( Statement c : raw ) {
             // ignore free text values
-            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+            if ( StringUtils.isBlank( c.getSubjectUri() ) ) {
                 continue;
             }
 
@@ -587,11 +586,11 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
-            if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
+            if ( StringUtils.isNotBlank( c.getSubjectUri() ) ) {
                 // DE_include/exclude
-                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
+                if ( c.getSubjectUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
                     continue;
-                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
+                if ( c.getSubjectUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
                     continue;
             }
 
@@ -1757,6 +1756,9 @@ public class ExpressionExperimentDaoImpl
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
                 Hibernate.initialize( bm.getFactorValues() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
                 Hibernate.initialize( bm.getTreatments() );
             }
         }

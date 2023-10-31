@@ -910,7 +910,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 Set<Statement> chars = new HashSet<>();
                 Statement c = Statement.Factory.newInstance();
                 c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
-                c.setValue( batchId );
+                c.setSubject( batchId );
                 c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
                 c.setEvidenceCode( GOEvidenceCode.IIA );
 

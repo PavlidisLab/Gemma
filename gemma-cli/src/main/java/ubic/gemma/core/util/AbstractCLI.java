@@ -32,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -346,13 +347,13 @@ public abstract class AbstractCLI implements CLI {
         if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
             log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
         }
-        try ( Writer dest = new OutputStreamWriter( batchOutputFile != null ? new FileOutputStream( batchOutputFile ) : System.out ) ) {
+        try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
             switch ( batchFormat ) {
                 case TEXT:
-                    summarizeBatchProcessingToText( dest );
+                    summarizeBatchProcessingToText( dest != null ? dest : System.out );
                     break;
                 case TSV:
-                    summarizeBatchProcessingToTsv( dest );
+                    summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
                     break;
                 case SUPPRESS:
                     break;

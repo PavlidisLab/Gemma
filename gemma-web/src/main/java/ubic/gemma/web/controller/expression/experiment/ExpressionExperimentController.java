@@ -314,7 +314,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX
      */
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<Characteristic> e ) {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null )
             return null;
         return expressionExperimentService.getAnnotationsById( e.getId() );

@@ -19,12 +19,12 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 
 /**
  * Utilities for deciding if a factor value is a baseline condition.
@@ -32,129 +32,116 @@ import java.util.Set;
  * @author paul
  */
 public class BaselineSelection {
-    private static final Set<String> controlGroupTerms = new HashSet<>();
+
     // see bug 4316. This term is "control"
-    private static final String FORCED_BASELINE_VALUE_URI = "http://www.ebi.ac.uk/efo/EFO_0001461".toLowerCase();
+    private static final String FORCED_BASELINE_VALUE_URI = "http://www.ebi.ac.uk/efo/EFO_0001461";
 
-    static {
-        /*
-         * Values or ontology terms we treat as 'baseline'.
-         */
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.obolibrary.org/obo/OBI_0000025".toLowerCase() ); // - reference substance
-        // role
+    /**
+     * Values we treat as baseline.
+     */
+    private static final Set<String> controlGroupTerms = createTermSet(
+            "baseline participant role",
+            "baseline",
+            "control diet",
+            "control group",
+            "control",
+            "initial time point",
+            "normal",
+            "placebo",
+            "reference subject role",
+            "reference substance role",
+            "to be treated with placebo role",
+            "untreated",
+            "wild type control",
+            "wild type genotype",
+            "wild type"
+    );
+    /**
+     * Ontology terms we treat as baseline.
+     */
+    private static final Set<String> controlGroupUris = createTermSet(
+            "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type",
+            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001", // normal control_group (retired)
+            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201", // control_group, new version (retired)
+            "http://purl.obolibrary.org/obo/OBI_0000025", // reference substance
+            "http://purl.obolibrary.org/obo/OBI_0000143", // baseline participant role
+            "http://purl.obolibrary.org/obo/OBI_0000220",  // reference subject role
+            "http://purl.obolibrary.org/obo/OBI_0000825", // to be treated with placebo
+            "http://purl.obolibrary.org/obo/OBI_0100046", // phosphate buffered saline
+            "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201", // control group, old
+            "http://www.ebi.ac.uk/efo/EFO_0001461", // control
+            "http://www.ebi.ac.uk/efo/EFO_0001674", // placebo
+            "http://www.ebi.ac.uk/efo/EFO_0004425",// initial time point
+            "http://www.ebi.ac.uk/efo/EFO_0005168" // wild type genotype
+    );
 
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.obolibrary.org/obo/OBI_0000220".toLowerCase() );// - reference subject role
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.obolibrary.org/obo/OBI_0000143".toLowerCase() );// - baseline participant
-        // role
-
-        BaselineSelection.controlGroupTerms.add( "reference_substance_role" );
-        BaselineSelection.controlGroupTerms.add( "reference_subject_role" );
-        BaselineSelection.controlGroupTerms.add( "baseline_participant_role" );
-
-        BaselineSelection.controlGroupTerms.add( "control group" );
-        BaselineSelection.controlGroupTerms.add( "control" );
-        BaselineSelection.controlGroupTerms.add( "normal" );
-        BaselineSelection.controlGroupTerms.add( "untreated" );
-        BaselineSelection.controlGroupTerms.add( "baseline" );
-        BaselineSelection.controlGroupTerms.add( "control_group" );
-        BaselineSelection.controlGroupTerms.add( "wild_type" );
-        BaselineSelection.controlGroupTerms.add( "wild type" );
-        BaselineSelection.controlGroupTerms.add( "wild type genotype" );
-        BaselineSelection.controlGroupTerms.add( "initial time point" );
-
-        BaselineSelection.controlGroupTerms.add( "to_be_treated_with_placebo_role" );
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
-        // saline.
-        BaselineSelection.controlGroupTerms
-                .add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
-                        .toLowerCase() ); // control_group, old.
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201"
-                        .toLowerCase() ); // control_group, new version.(retired)
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001"
-                        .toLowerCase() ); // " normal control_group", (retired)
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://purl.obolibrary.org/obo/OBI_0000825".toLowerCase() ); // - to be treated with
-        // placebo
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://www.ebi.ac.uk/efo/EFO_0005168".toLowerCase() ); // wild type genotype
-
-        BaselineSelection.controlGroupTerms
-                .add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
-    }
-
-    public static boolean isBaselineCondition( FactorValue factorValue ) {
-
-        if ( factorValue.getIsBaseline() != null )
-            return factorValue.getIsBaseline();
-
-        // for backwards compatibility we check anyway
-
-        if ( factorValue.getMeasurement() != null ) {
-            return false;
-        } else if ( factorValue.getCharacteristics().isEmpty() ) {
-            /*
-             * Just use the value.
-             */
-            return StringUtils.isNotBlank( factorValue.getValue() ) && BaselineSelection.controlGroupTerms
-                    .contains( factorValue.getValue().toLowerCase() );
-        } else {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( isBaselineCondition( c ) )
-                    return true;
-            }
-        }
-        return false;
+    /**
+     * Create an immutable, case-insensitive set.
+     */
+    private static Set<String> createTermSet( String... terms ) {
+        Set<String> c = new TreeSet<>( Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+        c.addAll( Arrays.asList( terms ) );
+        return Collections.unmodifiableSet( c );
     }
 
     /**
-     * @param c characteristic
-     * @return true if this looks like a baseline condition
+     * Check if a given factor value indicates a baseline condition.
      */
-    public static boolean isBaselineCondition( Characteristic c ) {
-        String valueUri = c.getValueUri();
-
-        if ( StringUtils.isNotBlank( valueUri ) && BaselineSelection.controlGroupTerms
-                .contains( valueUri.toLowerCase() ) ) {
-            return true;
+    public static boolean isBaselineCondition( FactorValue factorValue ) {
+        if ( factorValue.getMeasurement() != null ) {
+            return false;
         }
+        if ( factorValue.getIsBaseline() != null ) {
+            return factorValue.getIsBaseline();
+        }
+        //noinspection deprecation
+        return factorValue.getCharacteristics().stream().anyMatch( BaselineSelection::isBaselineCondition )
+                // for backwards compatibility we check anyway
+                || BaselineSelection.controlGroupTerms.contains( normalizeTerm( factorValue.getValue() ) );
+    }
 
-        return StringUtils.isNotBlank( c.getValue() ) && BaselineSelection.controlGroupTerms
-                .contains( c.getValue().toLowerCase() );
+    /**
+     * Check if a given statement indicates a baseline condition.
+     */
+    public static boolean isBaselineCondition( Statement c ) {
+        return BaselineSelection.controlGroupUris.contains( c.getSubjectUri() )
+                || BaselineSelection.controlGroupUris.contains( c.getObjectUri() )
+                || BaselineSelection.controlGroupUris.contains( c.getSecondObjectUri() )
+                // free text checks
+                || ( c.getSubjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getSubject() ) ) )
+                || ( c.getObjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getObject() ) ) )
+                || ( c.getSecondObjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getSecondObject() ) ) );
+    }
+
+    private static String normalizeTerm( String term ) {
+        if ( term == null ) {
+            return null;
+        }
+        return normalizeSpace( term.replace( '_', ' ' ) );
     }
 
     /**
      * Check if this factor value is the baseline, overriding other possible baselines.
-     *
-     * @param fv factor value
-     * @return true if given fv is forced baseline
+     * <p>
+     * A baseline can be *forced* in two ways: either by setting {@link FactorValue#setIsBaseline(Boolean)} to true or
+     * by adding a characteristic with the {@code FORCED_BASELINE_VALUE_URI} URI. In practice, this is not much
+     * different from {@link #isBaselineCondition(Statement)}, but there might be cases where you would want to indicate
+     * that the baseline was explicitly forced.
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
-        if ( fv.getMeasurement() != null || fv.getCharacteristics().isEmpty() ) {
+        if ( fv.getMeasurement() != null ) {
             return false;
         }
-        for ( Characteristic c : fv.getCharacteristics() ) {
-            String valueUri = c.getValueUri();
-            if ( StringUtils.isNotBlank( valueUri ) && valueUri.toLowerCase()
-                    .equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
-                return true;
-            }
-
+        if ( fv.getIsBaseline() != null ) {
+            return fv.getIsBaseline();
         }
-        return false;
+        return fv.getCharacteristics().stream().anyMatch( BaselineSelection::isForcedBaseline );
+    }
+
+    private static boolean isForcedBaseline( Statement stmt ) {
+        return BaselineSelection.FORCED_BASELINE_VALUE_URI.equalsIgnoreCase( stmt.getSubjectUri() )
+                || BaselineSelection.FORCED_BASELINE_VALUE_URI.equalsIgnoreCase( stmt.getObjectUri() )
+                || BaselineSelection.FORCED_BASELINE_VALUE_URI.equalsIgnoreCase( stmt.getSecondObjectUri() );
     }
 
 }

@@ -36,6 +36,7 @@ import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -591,8 +592,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE
-                        .equalsIgnoreCase( fv.getDescriptiveString() ) || ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                if ( ExperimentalDesignUtils.isBatch( ef )
+                        || fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( DE_EXCLUDE::equalsIgnoreCase )
+                        || ef.getType().equals( FactorType.CONTINUOUS ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {
                     if ( !keepEfs.contains( ef ) && keepEfs.size() <= GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK ) {

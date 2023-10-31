@@ -11,7 +11,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import ubic.gemma.core.util.AbstractCLI;
+import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -24,7 +24,6 @@ import ubic.gemma.persistence.util.TestComponent;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 @Deprecated
@@ -50,6 +49,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
         public FactorValueService factorValueService() {
             return mock();
         }
+
+        @Bean
+        public PlatformTransactionManager platformTransactionManager() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -69,13 +73,28 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
             createFactorValue( 8L, 14L, 15L )
     };
 
+    private Characteristic getObjectById( long fvId, long id ) {
+        return fvs[( int ) ( fvId - 1 )].getOldStyleCharacteristics().stream()
+                .filter( c -> c.getId().equals( id ) )
+                .findAny()
+                .orElse( null );
+    }
+
+    private String getCategory( long fvId, long id ) {
+        return getObjectById( fvId, id ).getCategory();
+    }
+
+    private String getObject( long fvId, long id ) {
+        return getObjectById( fvId, id ).getValue();
+    }
+
     @Before
     public void setUp() {
         when( factorValueService.loadWithOldStyleCharacteristics( any(), anyBoolean() ) )
                 .thenAnswer( a -> fvs[a.getArgument( 0, Long.class ).intValue() - 1] );
         when( factorValueService.countAll() ).thenReturn( ( long ) fvs.length );
         AtomicLong id = new AtomicLong( 0L );
-        when( factorValueService.saveStatement( any(), any() ) ).thenAnswer( a -> {
+        when( factorValueService.saveStatementIgnoreAcl( any(), any() ) ).thenAnswer( a -> {
             Statement s = a.getArgument( 1, Statement.class );
             if ( s.getId() == null ) {
                 s.setId( id.incrementAndGet() );
@@ -87,10 +106,19 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
     @Test
     @WithMockUser
     public void testMigrateFactorValues() throws IOException {
-        assertEquals( AbstractCLI.SUCCESS, cli.executeCommand(
+        cli.executeCommand(
                 "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
-                "-batchFormat", "suppress" ) );
-        verify( factorValueService ).load( 1L );
+                "-batchFormat", "suppress" );
+        verify( factorValueService, times( 8 ) ).loadWithOldStyleCharacteristics( any(), eq( false ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 1L, 1L ), "Pax6", "has_modifier", getObject( 1L, 2L ), "has_modifier", getObject( 1L, 3L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "Gene", "Pax6" ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 3L, 4L ), getObject( 3L, 4L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 4L, 5L ), getObject( 4L, 5L ), "has_modifier", getObject( 4L, 6L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 5L, 7L ), getObject( 5L, 7L ), "has_modifier", getObject( 5L, 8L ), "has_modifier", getObject( 5L, 9L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 6L, 10L ), getObject( 6L, 10L ), "has_dose", "5mg", "has_modifier", getObject( 6L, 11L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "genotype", "Pax7", "has_modifier", getObject( 7L, 12L ), "has_modifier", getObject( 7L, 13L ) ) ) );
+        verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 8L, 14L ), getObject( 8L, 14L ), "has_modifier", getObject( 8L, 15L ), "has_modifier", getObject( 8L, 15L ) ) ) );
+        verifyNoMoreInteractions( factorValueService );
     }
 
     private FactorValue createFactorValue( Long id, Long... osIds ) {
@@ -108,5 +136,24 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
         c.setValue( RandomStringUtils.randomAlphanumeric( 10 ) );
         c.setId( id );
         return c;
+    }
+
+    private Statement createStatement( String category, String value ) {
+        return createStatement( category, value, null, null, null, null );
+    }
+
+    private Statement createStatement( String category, String value, String predicate, String object ) {
+        return createStatement( category, value, predicate, object, null, null );
+    }
+
+    private Statement createStatement( String category, String value, String predicate, String object, String secondPredicate, String secondObject ) {
+        Statement s = new Statement();
+        s.setCategory( category );
+        s.setSubject( value );
+        s.setPredicate( predicate );
+        s.setObject( object );
+        s.setSecondPredicate( secondPredicate );
+        s.setSecondObject( secondObject );
+        return s;
     }
 }
