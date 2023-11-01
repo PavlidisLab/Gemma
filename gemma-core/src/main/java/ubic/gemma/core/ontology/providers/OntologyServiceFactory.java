@@ -1,12 +1,10 @@
 package ubic.gemma.core.ontology.providers;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.util.Configuration;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -16,14 +14,11 @@ import java.util.Set;
  * @param <T> the type of ontology service this factory produces
  */
 @CommonsLog
+@SuppressWarnings("unused")
 public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 
-    /**
-     * Determine if ontologies are to be loaded on startup.
-     */
-    private static final boolean isAutoLoad = ( StringUtils.isBlank( Configuration.getString( "load.ontologies" ) ) || Configuration.getBoolean( "load.ontologies" ) );
-
     private final Class<T> ontologyServiceClass;
+    private boolean autoLoad = false;
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
     private boolean loadInBackground = true;
@@ -42,6 +37,13 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
      */
     public OntologyServiceFactory( Class<T> ontologyServiceClass ) {
         this.ontologyServiceClass = ontologyServiceClass;
+    }
+
+    /**
+     * Enable loading of ontologies on startup.
+     */
+    public void setAutoLoad( boolean autoLoad ) {
+        this.autoLoad = autoLoad;
     }
 
     /**
@@ -122,16 +124,6 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         this.additionalPropertyUris = additionalPropertyUris;
     }
 
-    /**
-     * Check if the ontology returned by this factory will be loaded.
-     * <p>
-     * This happens if either the {@code load.ontologies} configuration key is set to true or the loading is forced via
-     * {@link #setForceLoad(boolean)}.
-     */
-    public boolean isAutoLoaded() {
-        return isAutoLoad || forceLoad;
-    }
-
     @Override
     public Class<?> getObjectType() {
         return ontologyServiceClass;
@@ -152,7 +144,7 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         if ( additionalPropertyUris != null ) {
             service.setAdditionalPropertyUris( additionalPropertyUris );
         }
-        if ( isAutoLoad || forceLoad ) {
+        if ( autoLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {
                     ontologyTaskExecutor.execute( () -> service.initialize( forceLoad, forceIndexing ) );

@@ -49,13 +49,13 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -128,9 +128,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
-        if ( ontologyServiceFactories != null ) {
+        if ( ontologyServiceFactories != null && autoLoadOntologies ) {
             List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
-                    .filter( OntologyServiceFactory::isAutoLoaded )
                     .map( factory -> {
                         try {
                             return factory.getObject();
@@ -144,7 +143,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
-            } else if ( autoLoadOntologies ) {
+            } else {
                 log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
             }
         }
