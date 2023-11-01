@@ -40,7 +40,10 @@ import java.util.stream.Collectors;
 /**
  * Subclass this to create command line interface (CLI) tools that need authentication.
  * <p>
- * A standard set of CLI options are provided to manage authentication.
+ * Credentials may be supplied via the environment using the {@code $GEMMMA_USERNAME} and {@code $GEMMA_PASSWORD}
+ * variables. A more secure {@code $GEMMA_PASSWORD_CMD} variable can be used to specify a command that produces the
+ * password. If no environment variables are supplied, they will be prompted if the standard input is attached to a
+ * console (i.e tty).
  * @author pavlidis
  */
 public abstract class AbstractAuthenticatedCLI extends AbstractCLI {

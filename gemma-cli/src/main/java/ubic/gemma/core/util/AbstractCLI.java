@@ -41,15 +41,12 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- * Base Command Line Interface. Provides some default functionality.
+ * Basic implementation of the {@link CLI} interface.
  * <p>
- * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
- * to handle any application-specific options (they can be no-ops).
+ * To use this, in your concrete subclass, implement {@link #buildOptions} and {@link #processOptions} to handle any
+ * application-specific options (they can be no-ops) and {@link #doWork()} to perform the actual work of the CLI.
  * <p>
- * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
- * for testing. In that method call processCommandline. You should return any non-null return value from
- * processCommandLine.
- *
+ * Use {@link AbstractAuthenticatedCLI} if you need to authenticate the user.
  * @author pavlidis
  */
 public abstract class AbstractCLI implements CLI {
