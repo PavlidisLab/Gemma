@@ -23,6 +23,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -106,28 +107,17 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         // detach from the experimental factor
         factorValue.getExperimentalFactor().getFactorValues().remove( factorValue );
 
-        // load samples to evict from the cache (because we delete manually)
+        // detach from any sample
         //noinspection unchecked
-        List<Long> bmIds = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select bm.id from BioMaterial bm "
-                        + "join bm.factorValues fv where fv = :fv "
-                        + "group by bm.id" )
+        List<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm "
+                        + "join bm.factorValues fv where fv = :fv" )
                 .setParameter( "fv", factorValue )
                 .list();
-
-        // detach the factor from any sample
-        int deleted = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from BIO_MATERIAL_FACTOR_VALUES where FACTOR_VALUES_FK = :fvId" )
-                .setParameter( "fvId", factorValue.getId() )
-                .executeUpdate();
-
-        // evict the collections from the cache
-        for ( Long bmId : bmIds ) {
-            this.getSessionFactory().getCache()
-                    .evictCollection( "ubic.gemma.model.expression.biomaterial.BioMaterial.factorValues", bmId );
+        for ( BioMaterial bm : bms ) {
+            bm.getFactorValues().remove( factorValue );
         }
-
-        AbstractDao.log.debug( String.format( "%s was detached from %d samples.", factorValue, deleted ) );
+        AbstractDao.log.debug( String.format( "%s was detached from %d samples.", factorValue, bms.size() ) );
 
         super.remove( factorValue );
     }
