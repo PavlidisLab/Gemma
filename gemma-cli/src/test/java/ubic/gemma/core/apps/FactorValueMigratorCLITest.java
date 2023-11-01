@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class FactorValueMigratorCLITestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class FactorValueMigratorCLITestContextConfiguration {
 
         @Bean
         public FactorValueMigratorCLI factorValueMigratorCLI() {
@@ -52,6 +53,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
         @Bean
         public PlatformTransactionManager platformTransactionManager() {
+            return mock();
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
             return mock();
         }
     }

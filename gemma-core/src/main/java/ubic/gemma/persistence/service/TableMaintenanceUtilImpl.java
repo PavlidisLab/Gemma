@@ -46,7 +46,9 @@ import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -97,8 +99,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
                     + "join FACTOR_VALUE FV on FV.EXPERIMENTAL_FACTOR_FK = EF.ID "
                     + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
-                    // exclude statements from being added (see https://github.com/PavlidisLab/Gemma/issues/909 for details)
-                    + "where I.class = 'ExpressionExperiment' and C.class is null";
+                    // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+                    + "where I.class = 'ExpressionExperiment' and C.class = 'Statement'";
     private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired

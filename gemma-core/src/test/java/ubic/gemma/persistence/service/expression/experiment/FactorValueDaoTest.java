@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -46,18 +47,18 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         FactorValue fv = new FactorValue();
         fv.setExperimentalFactor( ef );
         Statement c1 = new Statement();
-        c1.setValue( "test" );
+        c1.setSubject( "test" );
         Statement c2 = new Statement();
-        c1.setValue( "test2" );
+        c1.setSubject( "test2" );
         fv.getCharacteristics().add( c1 );
         fv.getCharacteristics().add( c2 );
         fv = factorValueDao.create( fv );
         assertThat( fv.getId() ).isNotNull();
         assertThat( c1.getId() ).isNotNull();
         assertThat( c2.getId() ).isNotNull();
-        // make c2 a statement
+        // make c2 an old-style characteristic
         sessionFactory.getCurrentSession()
-                .createSQLQuery( "update CHARACTERISTIC set class = 'Statement' where ID = :id" )
+                .createSQLQuery( "update CHARACTERISTIC set class = null where ID = :id" )
                 .setParameter( "id", c2.getId() )
                 .executeUpdate();
         sessionFactory.getCurrentSession().flush();
@@ -68,7 +69,13 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         assertThat( fv.getCharacteristics() )
                 .contains( c1 )
                 .doesNotContain( c2 );
+        assertThat( fv.getOldStyleCharacteristics() )
+                .doesNotContain( c1 )
+                .contains( c2 );
         factorValueDao.remove( fv );
+        // make sure that statements and old-style characteristics are removed in cascade
+        assertThat( sessionFactory.getCurrentSession().get( Statement.class, c1.getId() ) ).isNull();
+        assertThat( sessionFactory.getCurrentSession().get( Characteristic.class, c2.getId() ) ).isNull();
     }
 
     @Test

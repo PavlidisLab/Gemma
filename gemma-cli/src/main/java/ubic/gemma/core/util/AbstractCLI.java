@@ -157,8 +157,7 @@ public abstract class AbstractCLI implements CLI {
      * objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
-    public int executeCommand( String[] args ) {
-        StopWatch watch = StopWatch.createStarted();
+    public int executeCommand( String... args ) {
         if ( args == null ) {
             System.err.println( "No arguments" );
             return FAILURE;
@@ -182,8 +181,6 @@ public abstract class AbstractCLI implements CLI {
             }
             processStandardOptions( commandLine );
             processOptions( commandLine );
-            doWork();
-            return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 // check if -h/--help was passed alongside a required argument
@@ -203,6 +200,11 @@ public abstract class AbstractCLI implements CLI {
             }
             printHelp( options );
             return FAILURE;
+        }
+        StopWatch watch = StopWatch.createStarted();
+        try {
+            doWork();
+            return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
             log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
