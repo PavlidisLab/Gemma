@@ -4,10 +4,7 @@ import org.assertj.core.groups.Tuple;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,7 +23,6 @@ public class CharacteristicTest {
                 .isEqualByComparingTo( A )
                 .isNotEqualTo( createTransientCharacteristic( "a", null, "foo", null ) )
                 .isNotEqualByComparingTo( createTransientCharacteristic( "a", null, "foo", null ) );
-
     }
 
     @Test

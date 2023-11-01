@@ -19,12 +19,12 @@ import java.util.Objects;
 public class Statement extends Characteristic {
 
     private static final Comparator<Statement> COMPARATOR = Comparator
-            .comparing( ( Statement s ) -> s.getCategoryUri() != null ? s.getCategoryUri() : s.getCategory(), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( ( Statement s ) -> s.getSubjectUri() != null ? s.getSubjectUri() : s.getSubject(), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( ( Statement s ) -> s.predicateUri != null ? s.predicateUri : s.predicate, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( ( Statement s ) -> s.objectUri != null ? s.objectUri : s.object, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( ( Statement s ) -> s.secondPredicateUri != null ? s.secondPredicateUri : s.secondPredicate, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( ( Statement s ) -> s.secondObjectUri != null ? s.secondObjectUri : s.secondObject, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+            .comparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.getCategory(), s1.getCategoryUri(), s2.getCategory(), s2.getCategoryUri() ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.getSubject(), s1.getSubjectUri(), s2.getSubject(), s2.getSubjectUri() ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.predicate, s1.predicateUri, s2.predicate, s2.predicateUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.object, s1.objectUri, s2.object, s2.objectUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.secondPredicate, s1.secondPredicateUri, s2.secondPredicate, s2.secondPredicateUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.secondObject, s1.secondObjectUri, s2.secondObject, s2.secondObjectUri ) )
             .thenComparing( Statement::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     public static class Factory {

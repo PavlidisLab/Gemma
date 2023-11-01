@@ -48,11 +48,31 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
     private static final long serialVersionUID = -7242166109264718620L;
 
-    private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = Comparator
-            .comparing( ( Characteristic c ) -> c.categoryUri != null ? c.categoryUri : c.category, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+    /**
+     * Compare a pair of ontology terms.
+     */
+    protected static int compareTerm( String a, @Nullable String aUri, String b, @Nullable String bUri ) {
+        if ( aUri != null && bUri != null ) {
+            return aUri.compareToIgnoreCase( bUri );
+        } else if ( aUri != null ) {
+            return -1;
+        } else if ( bUri != null ) {
+            return 1;
+        } else if ( a != null && b != null ) {
+            return a.compareToIgnoreCase( b );
+        } else if ( a != null ) {
+            return -1;
+        } else if ( b != null ) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
 
     private static final Comparator<Characteristic> BY_CATEGORY_AND_VALUE_COMPARATOR = BY_CATEGORY_COMPARATOR
-            .thenComparing( ( Characteristic c ) -> c.valueUri != null ? c.valueUri : c.value, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+            .thenComparing( c -> c, ( c1, c2 ) -> compareTerm( c1.value, c1.valueUri, c2.value, c2.valueUri ) );
 
     private static final Comparator<Characteristic> COMPARATOR = BY_CATEGORY_AND_VALUE_COMPARATOR
             .thenComparing( Characteristic::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );

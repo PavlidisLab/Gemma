@@ -190,7 +190,8 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyExcludingFreeTextTerms() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null ) )
+        Map<Characteristic, Long> cs = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null );
+        Assertions.assertThat( cs )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 );
     }
