@@ -36,5 +36,5 @@ public interface CLI {
      * Execute the given command given CLI arguments.
      * @return an exit code
      */
-    int executeCommand( String[] args );
+    int executeCommand( String... args );
 }

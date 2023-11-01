@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
@@ -71,7 +70,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
 
     /**
      * Indicate if the command requires authentication.
-     *
+     * <p>
      * Override this to return true to make authentication required.
      *
      * @return true if login is required, otherwise false

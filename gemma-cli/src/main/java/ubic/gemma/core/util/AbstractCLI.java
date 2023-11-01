@@ -20,6 +20,8 @@ package ubic.gemma.core.util;
 
 import lombok.Value;
 import org.apache.commons.cli.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -29,11 +31,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.DateUtil;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
@@ -48,6 +53,8 @@ import java.util.concurrent.*;
  * @author pavlidis
  */
 public abstract class AbstractCLI implements CLI {
+
+    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
 
     /**
      * Exit code used for a successful doWork execution.
@@ -65,34 +72,56 @@ public abstract class AbstractCLI implements CLI {
     public static final String HEADER = "Options:";
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
 
-    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
-
     private static final String AUTO_OPTION_NAME = "auto";
     private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
     private static final String TESTING_OPTION = "testing";
     private static final String DATE_OPTION = "mdate";
+    private static final String BATCH_FORMAT_OPTION = "batchFormat";
+    private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
 
     @Autowired
     private BeanFactory ctx;
+
+    /**
+     * Indicate if this CLI allows positional arguments.
+     */
+    private boolean allowPositionalArguments = false;
 
     /* support for convenience options */
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
-    private boolean autoSeek = false;
+    private boolean autoSeek;
+    /**
+     * The event type to look for the lack of, when using auto-seek.
+     */
+    private Class<? extends AuditEventType> autoSeekEventType;
     /**
      * Date used to identify which entities to run the tool on (e.g., those which were run less recently than mDate). To
      * enable call addDateOption.
      */
-    private String mDate = null;
-    private int numThreads = 1;
+    private String mDate;
+    /**
+     * Number of threads to use for batch processing.
+     */
+    private int numThreads;
+    /**
+     * Format to use to summarize batch processing.
+     */
+    private BatchFormat batchFormat;
+    /**
+     * Destination for batch processing summary.
+     */
+    @Nullable
+    private File batchOutputFile;
     private ExecutorService executorService;
 
-    // hold the results of the command execution
-    // needs to be concurrently modifiable and kept in-order
-    private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<>() );
-    private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<>() );
+    /**
+     * Hold the results of the command execution
+     * needs to be concurrently modifiable and kept in-order
+     */
+    private final List<BatchProcessingResult> batchProcessingResults = Collections.synchronizedList( new ArrayList<>() );
 
     /**
      * Convenience method to obtain instance of any bean by name.
@@ -146,13 +175,15 @@ public abstract class AbstractCLI implements CLI {
                 return SUCCESS;
             }
             if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                AbstractCLI.log.error( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
-                return FAILURE;
+                throw new UnrecognizedOptionException( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
+            }
+            if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
+                throw new UnrecognizedOptionException( "The command line does not allow positional arguments." );
             }
             processStandardOptions( commandLine );
             processOptions( commandLine );
             doWork();
-            return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+            return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 // check if -h/--help was passed alongside a required argument
@@ -167,6 +198,8 @@ public abstract class AbstractCLI implements CLI {
                 System.err.println( "Missing argument: " + e.getMessage() );
             } else if ( e instanceof UnrecognizedOptionException ) {
                 System.err.println( "Unrecognized option: " + e.getMessage() );
+            } else {
+                System.err.println( e.getMessage() );
             }
             printHelp( options );
             return FAILURE;
@@ -175,7 +208,7 @@ public abstract class AbstractCLI implements CLI {
             return FAILURE;
         } finally {
             // always summarize processing, even if an error is thrown
-            summarizeProcessing();
+            summarizeBatchProcessing();
             log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
         }
     }
@@ -184,30 +217,43 @@ public abstract class AbstractCLI implements CLI {
      * You must implement the handling for this option.
      */
     protected void addAutoOption( Options options ) {
-        Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
+        options.addOption( Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
-                .build();
-        options.addOption( autoSeekOption );
+                .build() );
+    }
+
+    protected void addAutoOption( Options options, Class<? extends AuditEventType> autoSeekEventType ) {
+        addAutoOption( options );
+        this.autoSeekEventType = autoSeekEventType;
     }
 
     protected void addDateOption( Options options ) {
-        Option dateOption = Option.builder( DATE_OPTION ).hasArg().desc(
-                        "Constrain to run only on entities with analyses older than the given date. "
-                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." )
-                .build();
-
-        options.addOption( dateOption );
+        options.addOption( Option.builder( DATE_OPTION ).hasArg()
+                .desc( "Constrain to run only on entities with analyses older than the given date. "
+                        + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                        + "If there is no record of when the analysis was last run, it will be run." )
+                .build() );
     }
 
     /**
      * Convenience method to add an option for parallel processing option.
      */
     protected void addThreadsOption( Options options ) {
-        Option threadsOpt = Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
+        options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
-                .build();
-        options.addOption( threadsOpt );
+                .type( Integer.class )
+                .build() );
+    }
+
+    /**
+     * Allow positional arguments to be specified. The default is false and an error will be produced if positional
+     * arguments are supplied by the user.
+     * <p>
+     * Those arguments can be retrieved in {@link #processOptions(CommandLine)} by using {@link CommandLine#getArgList()}.
+     */
+    @SuppressWarnings("unused")
+    protected void setAllowPositionalArguments( boolean allowPositionalArguments ) {
+        this.allowPositionalArguments = allowPositionalArguments;
     }
 
     /**
@@ -223,6 +269,8 @@ public abstract class AbstractCLI implements CLI {
         AbstractCLI.log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
         options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
+        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
     }
 
     /**
@@ -238,6 +286,10 @@ public abstract class AbstractCLI implements CLI {
 
     protected boolean isAutoSeek() {
         return autoSeek;
+    }
+
+    protected Class<? extends AuditEventType> getAutoSeekEventType() {
+        return autoSeekEventType;
     }
 
     protected int getNumThreads() {
@@ -273,26 +325,26 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Add a success object to indicate success in a batch processing.
      * <p>
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     * This is further used in {@link #summarizeBatchProcessing()} to summarize the execution of the command.
      *
      * @param successObject object that was processed
      * @param message       success message
      */
     protected void addSuccessObject( Object successObject, String message ) {
-        successObjects.add( new BatchProcessingResult( successObject, message, null ) );
+        batchProcessingResults.add( new BatchProcessingResult( false, successObject, message, null ) );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
     protected void addSuccessObject( Object successObject ) {
-        successObjects.add( new BatchProcessingResult( successObject, null, null ) );
+        batchProcessingResults.add( new BatchProcessingResult( false, successObject, null, null ) );
     }
 
     /**
      * Add an error object with a stacktrace to indicate failure in a batch processing.
      * <p>
-     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     * This is further used in {@link #summarizeBatchProcessing()} to summarize the execution of the command.
      * <p>
      * This is intended to be used when an {@link Exception} is caught.
      *
@@ -301,7 +353,7 @@ public abstract class AbstractCLI implements CLI {
      * @param throwable   throwable to produce a stacktrace
      */
     protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
+        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, throwable ) );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
@@ -310,7 +362,7 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String)
      */
     protected void addErrorObject( @Nullable Object errorObject, String message ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message, null ) );
+        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, null ) );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
 
@@ -319,7 +371,7 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String, Throwable)
      */
     protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, exception.getMessage(), exception ) );
+        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, exception.getMessage(), exception ) );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
 
@@ -327,7 +379,31 @@ public abstract class AbstractCLI implements CLI {
      * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
      * 'successObjects' and 'errorObjects'
      */
-    private void summarizeProcessing() {
+    private void summarizeBatchProcessing() {
+        if ( batchProcessingResults.isEmpty() ) {
+            return;
+        }
+        if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
+            log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
+        }
+        try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
+            switch ( batchFormat ) {
+                case TEXT:
+                    summarizeBatchProcessingToText( dest != null ? dest : System.out );
+                    break;
+                case TSV:
+                    summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
+                    break;
+                case SUPPRESS:
+                    break;
+            }
+        } catch ( IOException e ) {
+            log.error( "Failed to summarize batch processing.", e );
+        }
+    }
+
+    private void summarizeBatchProcessingToText( Appendable dest ) throws IOException {
+        List<BatchProcessingResult> successObjects = batchProcessingResults.stream().filter( bp -> !bp.isError() ).collect( Collectors.toList() );
         if ( !successObjects.isEmpty() ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
@@ -336,10 +412,10 @@ public abstract class AbstractCLI implements CLI {
                 buf.append( result ).append( "\n" );
             }
             buf.append( "---------------------\n" );
-
-            AbstractCLI.log.info( buf );
+            dest.append( buf );
         }
 
+        List<BatchProcessingResult> errorObjects = batchProcessingResults.stream().filter( BatchProcessingResult::isError ).collect( Collectors.toList() );
         if ( !errorObjects.isEmpty() ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nErrors occurred during the processing of " )
@@ -348,7 +424,19 @@ public abstract class AbstractCLI implements CLI {
                 buf.append( result ).append( "\n" );
             }
             buf.append( "---------------------\n" );
-            AbstractCLI.log.error( buf );
+            dest.append( buf );
+        }
+    }
+
+    private void summarizeBatchProcessingToTsv( Appendable dest ) throws IOException {
+        try ( CSVPrinter printer = new CSVPrinter( dest, CSVFormat.TDF ) ) {
+            for ( BatchProcessingResult result : batchProcessingResults ) {
+                printer.printRecord(
+                        result.getSource(),
+                        result.isError() ? "ERROR" : "SUCCESS",
+                        result.getMessage(),
+                        result.throwable != null ? ExceptionUtils.getRootCauseMessage( result.throwable ) : null );
+            }
         }
     }
 
@@ -383,21 +471,39 @@ public abstract class AbstractCLI implements CLI {
             this.mDate = commandLine.getOptionValue( DATE_OPTION );
         }
 
-        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-        }
+        this.autoSeek = commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME );
 
         if ( commandLine.hasOption( THREADS_OPTION ) ) {
             this.numThreads = ( Integer ) commandLine.getParsedOptionValue( THREADS_OPTION );
             if ( this.numThreads < 1 ) {
                 throw new IllegalArgumentException( "Number of threads must be greater than 1." );
             }
+        } else {
+            this.numThreads = 1;
         }
+
         if ( this.numThreads > 1 ) {
             this.executorService = Executors.newFixedThreadPool( this.numThreads );
         } else {
             this.executorService = Executors.newSingleThreadExecutor();
         }
+
+        if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
+            try {
+                this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
+            } catch ( IllegalArgumentException e ) {
+                throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
+            }
+        } else {
+            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
+        }
+        this.batchOutputFile = ( File ) commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
+    }
+
+    private enum BatchFormat {
+        TEXT,
+        TSV,
+        SUPPRESS
     }
 
     /**
@@ -405,6 +511,7 @@ public abstract class AbstractCLI implements CLI {
      */
     @Value
     private static class BatchProcessingResult {
+        boolean isError;
         @Nullable
         Object source;
         @Nullable
@@ -412,7 +519,8 @@ public abstract class AbstractCLI implements CLI {
         @Nullable
         Throwable throwable;
 
-        public BatchProcessingResult( @Nullable Object source, @Nullable String message, @Nullable Throwable throwable ) {
+        public BatchProcessingResult( boolean isError, @Nullable Object source, @Nullable String message, @Nullable Throwable throwable ) {
+            this.isError = isError;
             this.source = source;
             this.message = message;
             this.throwable = throwable;
@@ -425,6 +533,11 @@ public abstract class AbstractCLI implements CLI {
             if ( message != null ) {
                 buf.append( ":\n\t" )
                         .append( message.replace( "\n", "\n\t" ) );
+            }
+            if ( throwable != null ) {
+                buf.append( "\n\t" )
+                        .append( "Reason: " )
+                        .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }
             return buf.toString();
         }

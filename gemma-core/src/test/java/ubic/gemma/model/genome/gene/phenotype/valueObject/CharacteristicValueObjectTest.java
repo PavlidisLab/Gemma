@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import com.google.common.collect.Lists;
 import junit.framework.TestCase;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.List;
 /**
  * @author mjacobson
  */
+@Deprecated
 public class CharacteristicValueObjectTest extends TestCase {
 
     private CharacteristicValueObject a;

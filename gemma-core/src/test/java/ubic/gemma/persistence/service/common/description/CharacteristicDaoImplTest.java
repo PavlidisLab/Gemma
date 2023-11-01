@@ -219,8 +219,21 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testGetParents() {
+    public void testDiscriminator() {
         Characteristic c = createCharacteristic( "test", "test" );
+        sessionFactory.getCurrentSession().persist( c );
+        List<String> clazz = ( List<String> ) sessionFactory.getCurrentSession()
+                .createSQLQuery( "select C.class from CHARACTERISTIC C where C.ID = :id" )
+                .setParameter( "id", c.getId() )
+                .list();
+        assertThat( clazz )
+                .hasSize( 1 )
+                .allSatisfy( s -> assertThat( s ).isNull() );
+    }
+
+    @Test
+    public void testGetParents() {
+        Statement c = createStatement( "test", "test" );
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         sessionFactory.getCurrentSession().persist( ed );
         ExperimentalFactor ef = new ExperimentalFactor();
@@ -249,4 +262,10 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         return c;
     }
 
+    private Statement createStatement( @Nullable String valueUri, String value ) {
+        Statement c = new Statement();
+        c.setValueUri( valueUri );
+        c.setValue( value );
+        return c;
+    }
 }

@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.common.description.CharacteristicValueObject;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;

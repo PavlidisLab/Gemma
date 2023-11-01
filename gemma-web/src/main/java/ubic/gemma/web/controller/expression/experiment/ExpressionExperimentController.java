@@ -314,7 +314,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX
      */
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null )
             return null;
         return expressionExperimentService.getAnnotationsById( e.getId() );
@@ -376,7 +376,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX
      */
-    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
+    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null ) {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
@@ -389,7 +389,7 @@ public class ExpressionExperimentController {
      *
      * @return a collection of factor value objects that represent the factors of a given experiment
      */
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null ) {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
@@ -413,7 +413,7 @@ public class ExpressionExperimentController {
      *
      * @return A collection of factor value objects for the specified experimental factor
      */
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<ExperimentalFactor> e ) {
         if ( e == null || e.getId() == null ) {
             throw new IllegalArgumentException( "A non-null ExperimentalFactor ID must be supplied." );
         }

@@ -2,10 +2,8 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +27,7 @@ public interface ExperimentalDesignController {
      * @param e    an EntityDelegator representing an ExperimentalDesign
      * @param efvo an ExperimentalFactorValueObject representing the new ExperimentalFactor
      */
-    void createExperimentalFactor( EntityDelegator e, ExperimentalFactorValueObject efvo );
+    void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueObject efvo );
 
     /**
      * Creates a new FactorValue and adds it to the ExperimentalFactor specified by the EntityDelegator. The new
@@ -39,14 +37,14 @@ public interface ExperimentalDesignController {
      *
      * @param e an EntityDelegator representing an ExperimentalFactor
      */
-    void createFactorValue( EntityDelegator e );
+    void createFactorValue( EntityDelegator<ExperimentalFactor> e );
 
     /**
      * Creates a new Characteristic and adds it to the FactorValue specified by the EntityDelegator.
      *
      * @param e an EntityDelegator representing a FactorValue
      */
-    void createFactorValueCharacteristic( EntityDelegator e, Characteristic c );
+    void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, StatementValueObject c );
 
     /**
      * Deletes the specified ExperimentalFactors and removes them from the ExperimentalDesign specified by the
@@ -55,7 +53,7 @@ public interface ExperimentalDesignController {
      * @param e     an EntityDelegator representing an ExperimentalDesign
      * @param efIds a collection of ExperimentalFactor ids
      */
-    void deleteExperimentalFactors( EntityDelegator e, Long[] efIds );
+    void deleteExperimentalFactors( EntityDelegator<ExperimentalDesign> e, Long[] efIds );
 
     /**
      * Deletes the specified Characteristics from their parent FactorValues.
@@ -70,7 +68,7 @@ public interface ExperimentalDesignController {
      * @param e     an EntityDelegator representing an ExperimentalFactor
      * @param fvIds a collection of FactorValue ids
      */
-    void deleteFactorValues( EntityDelegator e, Long[] fvIds );
+    void deleteFactorValues( EntityDelegator<ExperimentalFactor> e, Long[] fvIds );
 
     /**
      * Returns BioMaterialValueObjects for each BioMaterial in the ExpressionExperiment specified by the
@@ -79,7 +77,7 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExpressionExperiment
      * @return a collection of BioMaterialValueObjects
      */
-    Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e );
+    Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator<ExpressionExperiment> e );
 
     /**
      * Returns ExperimentalFactorValueObjects for each ExperimentalFactor in the ExperimentalDesign or
@@ -88,7 +86,7 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExperimentalDesign OR an ExpressionExperiment
      * @return a collection of ExperimentalFactorValueObjects
      */
-    Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e );
+    Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<?> e );
 
     /**
      * Returns FactorValueValueObjects for each FactorValue in the ExperimentalFactor specified by the EntityDelegator.
@@ -97,7 +95,7 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    Collection<FactorValueValueObject> getFactorValues( EntityDelegator e );
+    Collection<FactorValueValueObject> getFactorValues( EntityDelegator<ExperimentalFactor> e );
 
     /**
      * Returns FactorValueValueObjects for each Characteristic belonging to a FactorValue in the ExperimentalFactor
@@ -106,7 +104,7 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e );
+    Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator<ExperimentalFactor> e );
 
     /**
      * @param request  with either 'eeid' (expression experiment id) or 'edid' (experimental design id)

@@ -18,23 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,34 +26,19 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
-import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
-import ubic.gemma.core.loader.expression.geo.model.GeoContact;
-import ubic.gemma.core.loader.expression.geo.model.GeoData;
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
-import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.loader.expression.geo.model.GeoReplication;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
-import ubic.gemma.core.loader.expression.geo.model.GeoValues;
-import ubic.gemma.core.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -81,19 +49,23 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
+import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
@@ -919,7 +891,8 @@ public class GeoConverterImpl implements GeoConverter {
                     continue;
                 }
 
-                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( null, value, valueUri, category, categoryUri );
+                // NOTE: extensions via modifiers is not to be supported here, as GEO only has key-value pairs.
+                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( value, valueUri, category, categoryUri );
                 term2OntologyMappings.get( category ).put( inputValue, c );
             }
         } catch ( IOException e ) {
@@ -1646,8 +1619,8 @@ public class GeoConverterImpl implements GeoConverter {
     /*
      * Note that this is apparently never actually used?
      */
-    private Characteristic convertReplicatationType( ReplicationType repType ) {
-        Characteristic result = Characteristic.Factory.newInstance();
+    private Statement convertReplicatationType( ReplicationType repType ) {
+        Statement result = Statement.Factory.newInstance();
         result.setCategory( "replicate" );
         result.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000683" /* replicate */ );
         result.setEvidenceCode( GOEvidenceCode.IIA );
@@ -1693,7 +1666,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private FactorValue convertReplicationToFactorValue( GeoReplication replication ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        Characteristic term = this.convertReplicatationType( replication.getType() );
+        Statement term = this.convertReplicatationType( replication.getType() );
         factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
         return factorValue;
@@ -2193,7 +2166,7 @@ public class GeoConverterImpl implements GeoConverter {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
 
-        Characteristic term = Characteristic.Factory.newInstance();
+        Statement term = Statement.Factory.newInstance();
         this.convertVariableType( term, geoSubSet.getType() );
         if ( term.getCategory() != null ) {
             term.setValue( geoSubSet.getDescription() );
@@ -2219,7 +2192,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private FactorValue convertTypeToFactorValue( VariableType type, String value ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        Characteristic term = Characteristic.Factory.newInstance();
+        Statement term = Statement.Factory.newInstance();
         this.convertVariableType( term, type );
         if ( term.getCategory() != null ) { // is this right ???
             factorValue.setValue( value );
@@ -2691,7 +2664,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private FactorValue findMatchingExperimentalFactorValue( Collection<ExperimentalFactor> experimentalFactors,
             FactorValue convertVariableToFactorValue ) {
-        Collection<Characteristic> characteristics = convertVariableToFactorValue.getCharacteristics();
+        Collection<Statement> characteristics = convertVariableToFactorValue.getCharacteristics();
         if ( characteristics.size() > 1 )
             throw new UnsupportedOperationException(
                     "Can't handle factor values with multiple characteristics in GEO conversion" );

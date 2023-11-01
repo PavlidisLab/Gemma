@@ -29,6 +29,7 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
@@ -156,7 +157,7 @@ public class PhenotypeController extends BaseController {
                             geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
 
             // get the permission of the metaAnalysis
-            EntityDelegator ed = new EntityDelegator();
+            EntityDelegator<GeneDifferentialExpressionMetaAnalysis> ed = new EntityDelegator<>();
             ed.setId( geneDifferentialExpressionMetaAnalysisId );
             ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
 
@@ -169,7 +170,7 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
-    public ValidateEvidenceValueObject processPhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
+    public ValidateEvidenceValueObject processPhenotypeAssociationForm( EvidenceValueObject<?> evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
 
         try {
@@ -237,7 +238,7 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
-    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
+    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject<PhenotypeAssociation> evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService

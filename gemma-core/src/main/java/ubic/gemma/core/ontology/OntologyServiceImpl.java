@@ -33,11 +33,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -56,7 +55,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -124,6 +123,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
+    private Set<OntologyPropertySimple> relationTerms = null;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
@@ -150,6 +151,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
         initializeCategoryTerms();
+        initializeRelationTerms();
     }
 
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
@@ -431,6 +433,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             return efoTerm;
                         }
                     }
+                    return term;
+                } )
+                .collect( Collectors.toSet() );
+    }
+
+
+    @Override
+    public Collection<OntologyProperty> getRelationTerms() {
+        // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
+        return relationTerms.stream()
+                .map( term -> {
                     return term;
                 } )
                 .collect( Collectors.toSet() );
@@ -783,6 +796,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( autoLoadOntologies && !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
+        }
+    }
+
+
+    private void initializeRelationTerms() throws IOException {
+        Set<OntologyPropertySimple> relationTerms = new HashSet<>();
+        Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+            String line;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
+                    continue;
+                String[] f = StringUtils.split( line, '\t' );
+                if ( f.length < 2 ) {
+                    continue;
+                }
+                relationTerms.add( new OntologyPropertySimple( f[0], f[1] ) );
+            }
+            this.relationTerms = Collections.unmodifiableSet( relationTerms );
         }
     }
 

@@ -32,17 +32,18 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.experiment.BioAssaySetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
@@ -71,9 +72,14 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     private ExpressionExperimentService eeService;
 
     @Autowired
+    private BioAssaySetService bioAssaySetService;
+
+    @Autowired
     private SecurityService securityService;
 
+    /* fixtures */
     private Collection<ExpressionExperiment> ees;
+    private ExpressionExperimentSet results;
 
     @Test
     @Category(SlowTest.class)
@@ -117,11 +123,29 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        ExpressionExperimentSet results = splitService.split( ee, splitOn, true );
+        results = splitService.split( ee, splitOn, true );
+
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
 
         for ( BioAssaySet b : results.getExperiments() ) {
             ExpressionExperiment e = eeService.thaw( ( ExpressionExperiment ) b );
+
+            // sanity checks for the clones
+            assertNotEquals( ee.getAccession().getId(), e.getAccession().getId() );
+            assertEquals( ee.getTaxon(), e.getTaxon() );
+            assertNotEquals( ee.getAuditTrail().getId(), e.getAuditTrail().getId() );
+            assertNotEquals( ee.getCurationDetails().getId(), e.getCurationDetails().getId() );
+            assertNotEquals( ee.getExperimentalDesign().getId(), e.getExperimentalDesign().getId() );
+            assertEquals( ee.getPrimaryPublication(), e.getPrimaryPublication() );
+
+            // make sure that clones are used for BAs and BMs
+            Set<BioMaterial> bms = ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toSet() );
+            for ( BioAssay ba : e.getBioAssays() ) {
+                assertFalse( ee.getBioAssays().contains( ba ) );
+                assertFalse( bms.contains( ba.getSampleUsed() ) );
+            }
+
+            assertEquals( 100, e.getNumberOfDataVectors().intValue() );
 
             Collection<RawExpressionDataVector> rvs = e.getRawExpressionDataVectors();
             assertEquals( 100, rvs.size() );
@@ -178,7 +202,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        ExpressionExperimentSet results = splitService.split( ee, splitOn, false );
+        results = splitService.split( ee, splitOn, false );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
@@ -186,8 +210,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     public void testGenerateName() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setName( "test" );
-        Characteristic c = new Characteristic();
-        c.setValue( "bar" );
+        Statement c = new Statement();
+        c.setSubject( "bar" );
         FactorValue fv = new FactorValue();
         fv.getCharacteristics().add( c );
         ExperimentalFactor ef = new ExperimentalFactor();
@@ -199,7 +223,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertEquals( 255, name.length() );
         assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
         ee.setName( "test" );
-        c.setValue( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
+        c.setSubject( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
         assertThatThrownBy( () -> SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
@@ -207,15 +231,26 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         // make sure that whitespaces before the ellipsis are trimmed
         int lengthOfEverythingElse = "Split part 1 of:  [foo = bar]".length();
         ee.setName( String.join( "", java.util.Collections.nCopies( 255 - lengthOfEverythingElse - 1, "a" ) ) + " " );
-        c.setValue( "bar" );
+        c.setSubject( "bar" );
         assertEquals( 254, SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ).length() );
         assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
     }
 
     @After
     public void teardown() throws Exception {
+        // remove original dataset
         if ( ees != null ) {
-            eeService.remove( ees );
+            bioAssaySetService.remove( ees );
+        }
+        // remove any created subsets
+        if ( results != null ) {
+            for ( BioAssaySet b : results.getExperiments() ) {
+                if ( b instanceof ExpressionExperiment ) {
+                    bioAssaySetService.remove( b );
+                } else if ( b instanceof ExpressionExperimentSubSet ) {
+                    bioAssaySetService.remove( b );
+                }
+            }
         }
     }
 }

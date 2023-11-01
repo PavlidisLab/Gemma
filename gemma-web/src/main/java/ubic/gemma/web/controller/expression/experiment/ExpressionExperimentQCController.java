@@ -73,12 +73,12 @@ import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -490,18 +490,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int maxCategoryLabelLength = 10;
 
         for ( FactorValue fv : ef.getFactorValues() ) {
-            String value = fv.getValue();
-            if ( StringUtils.isBlank( value ) || value.equals( "null" ) ) {
-                for ( Characteristic c : fv.getCharacteristics() ) {
-                    if ( StringUtils.isNotBlank( c.getValue() ) ) {
-                        if ( StringUtils.isNotBlank( value ) ) {
-                            value = value + "; " + c.getValue();
-                        } else {
-                            value = c.getValue();
-                        }
-                    }
-                }
-            }
+            String value = FactorValueUtils.getSummaryString( fv, "; " );
 
             if ( StringUtils.isBlank( value ) ) {
                 value = fv.toString() + "--??";

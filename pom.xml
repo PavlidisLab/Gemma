@@ -600,6 +600,16 @@
 				</site>
 			</distributionManagement>
 		</profile>
+		<profile>
+			<!-- Target Java 8 bytecode on Java 9+ -->
+			<id>java8</id>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<properties>
+				<maven.compiler.release>8</maven.compiler.release>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>

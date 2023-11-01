@@ -50,10 +50,22 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Test
+    public void testGetFilterableProperties() {
+        Assertions.assertThat( expressionExperimentDao.getFilterableProperties() )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
+                // those are hidden for now (see https://github.com/PavlidisLab/Gemma/pull/789)
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.object." ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject." ) );
+    }
+
+    @Test
     public void testThawTransientEntity() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         BioAssay ba = new BioAssay();
+        ba.setSampleUsed( new BioMaterial() );
         ba.setArrayDesignUsed( new ArrayDesign() );
         ee.setBioAssays( Collections.singleton( ba ) );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );

@@ -22,6 +22,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.SortedSet;
 

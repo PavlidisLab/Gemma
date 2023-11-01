@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -119,7 +120,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_TISSUE_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
 
             /*
              * For all of their annotations... if it's a tissue, print out a line
@@ -173,7 +174,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_SUMMARY_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
 
             writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
 
@@ -240,7 +241,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_DIFFEX_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
 
             /*
              * For each gene that is differentially expressed, print out a line per contrast
@@ -283,7 +284,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             continue;
                         }
 
-                        String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
+                        String baselineDescription = FactorValueUtils.getSummaryString( baselineGroup, " | " );
 
                         // Get the factor category name
                         StringBuilder factorName = new StringBuilder();
@@ -360,7 +361,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
             String direction = cr.getLogFoldChange() != null ? ( cr.getLogFoldChange() < 0 ? "-" : "+" ) : "";
 
-            String factorValueDescription = factorValue != null ? ExperimentalDesignUtils.prettyString( factorValue ) : "";
+            String factorValueDescription;
+            factorValueDescription = factorValue != null ? FactorValueUtils.getSummaryString( factorValue, " | " ) : "";
 
             buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(),
                     g.getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,

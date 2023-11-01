@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.description.Characteristic" table="CHARACTERISTIC"
@@ -49,5 +49,35 @@
             <column name="ORIGINAL_VALUE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
+        <property name="migratedToStatement" type="boolean">
+            <column name="MIGRATED_TO_STATEMENT" not-null="true" default="false" sql-type="TINYINT"/>
+        </property>
+        <subclass name="ubic.gemma.model.expression.experiment.Statement"
+                  discriminator-value="Statement">
+            <property name="predicate" type="java.lang.String">
+                <column name="PREDICATE" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="predicateUri" type="java.lang.String">
+                <column name="PREDICATE_URI" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="object" type="java.lang.String">
+                <column name="OBJECT" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="objectUri" type="java.lang.String">
+                <column name="OBJECT_URI" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="secondPredicate" type="java.lang.String">
+                <column name="SECOND_PREDICATE" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="secondPredicateUri" type="java.lang.String">
+                <column name="SECOND_PREDICATE_URI" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="secondObject" type="java.lang.String">
+                <column name="SECOND_OBJECT" sql-type="VARCHAR(255)"/>
+            </property>
+            <property name="secondObjectUri" type="java.lang.String">
+                <column name="SECOND_OBJECT_URI" sql-type="VARCHAR(255)"/>
+            </property>
+        </subclass>
     </class>
 </hibernate-mapping>

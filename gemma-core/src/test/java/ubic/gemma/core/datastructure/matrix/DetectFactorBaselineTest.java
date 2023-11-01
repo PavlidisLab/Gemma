@@ -16,8 +16,8 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.junit.Test;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 
 import static org.junit.Assert.assertTrue;
 
@@ -32,7 +32,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Characteristic c = Characteristic.Factory.newInstance();
+        Statement c = Statement.Factory.newInstance();
         c.setValue( "control_group" );
         fv.getCharacteristics().add( c );
 
@@ -47,7 +47,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Characteristic c = Characteristic.Factory.newInstance();
+        Statement c = Statement.Factory.newInstance();
         c.setValueUri( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201" );
         fv.getCharacteristics().add( c );
 
@@ -62,7 +62,7 @@ public class DetectFactorBaselineTest {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
 
-        Characteristic c = Characteristic.Factory.newInstance();
+        Statement c = Statement.Factory.newInstance();
         c.setValueUri( "http://purl.org/obo/owl/CHEBI#CHEBI_16236" );
         fv.getCharacteristics().add( c );
 

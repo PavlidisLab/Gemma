@@ -21,6 +21,7 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.*;

@@ -14,11 +14,9 @@
  */
 package ubic.gemma.core.ontology;
 
-import org.assertj.core.api.Assertions;
-import org.assertj.core.groups.Tuple;
 import org.junit.Test;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.ArrayList;
 import java.util.List;

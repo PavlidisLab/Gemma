@@ -141,8 +141,8 @@ public class ArrayDesignFormController extends BaseFormController {
             .collect( Collectors.toList() );
 
     @Override
-    protected Map referenceData( HttpServletRequest request ) {
-        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
+    protected Map<String, List<?>> referenceData( HttpServletRequest request ) {
+        Map<String, List<?>> mapping = new HashMap<>();
         mapping.put( "technologyTypes", new ArrayList<>( TECHNOLOGY_TYPES ) );
         return mapping;
     }

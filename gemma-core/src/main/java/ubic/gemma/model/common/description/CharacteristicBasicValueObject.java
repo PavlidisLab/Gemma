@@ -1,17 +1,21 @@
-package ubic.gemma.model.genome.gene.phenotype.valueObject;
+package ubic.gemma.model.common.description;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.description.Characteristic;
 
-@Getter
-@Setter
+import javax.annotation.Nullable;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class CharacteristicBasicValueObject extends IdentifiableValueObject<Characteristic> {
-    protected String value;
-    protected String valueUri;
-    protected String category;
-    protected String categoryUri;
+
+    private String value;
+    @Nullable
+    private String valueUri;
+    private String category;
+    @Nullable
+    private String categoryUri;
 
     /**
      * Required when using the class as a spring bean.
@@ -20,13 +24,9 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
         super();
     }
 
-    public CharacteristicBasicValueObject( Long id ) {
-        super( id );
-    }
-
-    public CharacteristicBasicValueObject( Long id, String value, String valueUri, String category,
-            String categoryUri ) {
-        super( id );
+    public CharacteristicBasicValueObject( String value, @Nullable String valueUri, String category,
+            @Nullable String categoryUri ) {
+        super( ( Long ) null );
         this.value = value;
         this.valueUri = valueUri;
         this.category = category;

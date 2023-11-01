@@ -305,12 +305,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( deleteOption );
 
         this.addForceOption( options );
-        this.addAutoOption( options );
+        this.addAutoOption( options, LinkAnalysisEvent.class );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions( commandLine );
 
         if ( commandLine.hasOption( "delete" ) ) {

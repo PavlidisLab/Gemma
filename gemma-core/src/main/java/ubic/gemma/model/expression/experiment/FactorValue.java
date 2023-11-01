@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
@@ -29,6 +28,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -51,7 +51,14 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Long id;
     private ExperimentalFactor experimentalFactor;
     private Measurement measurement;
-    private Set<Characteristic> characteristics = new java.util.HashSet<>();
+    private Set<Statement> characteristics = new HashSet<>();
+    /**
+     * Old-style characteristics from the 1.30 series.
+     * <p>
+     * This will be removed when all the characteristics are ported to the new style using {@link Statement}.
+     */
+    @Deprecated
+    private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -69,13 +76,13 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
-                
-                if (c == null) {
+
+                if ( c == null ) {
                     continue;
                 }
-                
+
                 assert c != null;
-                
+
                 builder.append( c.hashCode() );
             }
         }
@@ -111,21 +118,10 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         StringBuilder buf = new StringBuilder();
         // this can be null in tests or with half-setup transient objects
         buf.append( "FactorValue " ).append( this.getId() ).append( ": " );
-
+        // the experimental factor is lazy-loaded, so it's safer to use the ID
         if ( this.getExperimentalFactor() != null )
-            buf.append( this.getExperimentalFactor().getName() ).append( ": " );
-        if ( this.getCharacteristics().size() > 0 ) {
-            for ( Characteristic c : this.getCharacteristics() ) {
-                buf.append(c.getCategory() + " - ");
-                buf.append( c.getValue() );
-                if ( this.getCharacteristics().size() > 1 )
-                    buf.append( " | " );
-            }
-        } else if ( this.getMeasurement() != null ) {
-            buf.append( this.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
-            buf.append( this.getValue() );
-        }
+            buf.append( "ExperimentalFactor #" ).append( this.getExperimentalFactor().getId() ).append( ": " );
+        buf.append( FactorValueUtils.getSummaryString( this ) );
         return buf.toString();
     }
 
@@ -150,12 +146,22 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     @IndexedEmbedded
-    public Set<Characteristic> getCharacteristics() {
+    public Set<Statement> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Set<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Statement> characteristics ) {
         this.characteristics = characteristics;
+    }
+
+    @Deprecated
+    public Set<Characteristic> getOldStyleCharacteristics() {
+        return oldStyleCharacteristics;
+    }
+
+    @Deprecated
+    public void setOldStyleCharacteristics( Set<Characteristic> oldCharacteristics ) {
+        this.oldStyleCharacteristics = oldCharacteristics;
     }
 
     public ExperimentalFactor getExperimentalFactor() {
@@ -200,30 +206,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     @Deprecated
     public void setValue( String value ) {
         this.value = value;
-    }
-
-    /**
-     * Produce a descriptive string for this factor value.
-     */
-    @Transient
-    public String getDescriptiveString() {
-        if ( this.characteristics != null && !this.characteristics.isEmpty() ) {
-            StringBuilder fvString = new StringBuilder();
-            boolean first = true;
-            for ( Characteristic c : this.characteristics ) {
-                if ( !first ) {
-                    fvString.append( " " );
-                }
-                fvString.append( StringUtils.strip( c.getValue() ) );
-                first = false;
-            }
-            return fvString.toString();
-        } else if ( this.measurement != null ) {
-            return StringUtils.strip( this.measurement.getValue() );
-        } else if ( StringUtils.isNotBlank( this.value ) ) {
-            return StringUtils.strip( this.value );
-        }
-        return "absent";
     }
 
     private boolean checkGuts( FactorValue that ) {
