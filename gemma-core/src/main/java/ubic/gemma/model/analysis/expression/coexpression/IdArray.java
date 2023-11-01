@@ -14,12 +14,9 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import com.googlecode.javaewah.EWAHCompressedBitmap;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -36,10 +33,10 @@ public abstract class IdArray implements Serializable {
     protected EWAHCompressedBitmap data = new EWAHCompressedBitmap();
 
     private static byte[] pack( EWAHCompressedBitmap bitmap ) {
-        ByteArrayDataOutput os = ByteStreams.newDataOutput();
-        try {
+        try ( ByteArrayOutputStream bos = new ByteArrayOutputStream( bitmap.serializedSizeInBytes() ) ) {
+            DataOutput os = new DataOutputStream( bos );
             bitmap.serialize( os );
-            return os.toByteArray();
+            return bos.toByteArray();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -47,8 +44,8 @@ public abstract class IdArray implements Serializable {
 
     private static EWAHCompressedBitmap unpack( byte[] bitmap ) {
         EWAHCompressedBitmap b = new EWAHCompressedBitmap();
-        try {
-            b.deserialize( ByteStreams.newDataInput( bitmap ) );
+        try ( ByteArrayInputStream bis = new ByteArrayInputStream( bitmap ) ) {
+            b.deserialize( new DataInputStream( bis ) );
             return b;
         } catch ( IOException e ) {
             throw new RuntimeException( e );

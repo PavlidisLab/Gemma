@@ -19,10 +19,10 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import com.google.common.collect.Lists;
 import junit.framework.TestCase;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -175,7 +175,7 @@ public class CharacteristicValueObjectTest extends TestCase {
         TestCase.assertTrue( d.compareTo( e ) < 0 );
 
         // sorting
-        List<CharacteristicValueObject> toSort = Lists.newArrayList( e, d, c, b, a );
+        List<CharacteristicValueObject> toSort = Arrays.asList( e, d, c, b, a );
         Collections.sort( toSort );
 
         Long i = 1L;

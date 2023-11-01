@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import ubic.gemma.core.job.EmailNotificationContext;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -27,9 +26,7 @@ import ubic.gemma.core.job.executor.common.TaskPostProcessing;
 import java.util.Date;
 import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
 
 /**
  * SubmittedTask implementation representing the task running on local TaskRunningService.
@@ -39,7 +36,7 @@ public class SubmittedTaskLocal extends SubmittedTaskAbstract {
     private final TaskPostProcessing taskPostProcessing;
     private final Deque<String> progressUpdates = new LinkedBlockingDeque<>();
     private final Executor executor;
-    private ListenableFuture<TaskResult> future;
+    private CompletableFuture<TaskResult> future;
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
         super( taskCommand );
@@ -91,14 +88,13 @@ public class SubmittedTaskLocal extends SubmittedTaskAbstract {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public synchronized void addEmailAlert() {
         if ( emailAlert )
             return;
         emailAlert = true;
         assert taskPostProcessing != null : "Task postprocessing was null";
-        taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future,
+        taskPostProcessing.addEmailNotification( future,
                 new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
                         taskCommand.getTaskClass().getSimpleName() ), executor );
     }
@@ -123,14 +119,14 @@ public class SubmittedTaskLocal extends SubmittedTaskAbstract {
 
     @SuppressWarnings("unused")
         // Possible external use
-    ListenableFuture<TaskResult> getFuture() {
+    CompletableFuture<TaskResult> getFuture() {
         return future;
     }
 
     /*
      * Package-private methods, used by TaskRunningService
      */
-    void setFuture( ListenableFuture<TaskResult> future ) {
+    void setFuture( CompletableFuture<TaskResult> future ) {
         this.future = future;
     }
 
