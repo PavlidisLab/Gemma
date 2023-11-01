@@ -155,10 +155,6 @@ public abstract class AbstractCLI implements CLI {
      */
     @Override
     public int executeCommand( String... args ) {
-        if ( args == null ) {
-            System.err.println( "No arguments" );
-            return FAILURE;
-        }
         Options options = new Options();
         buildStandardOptions( options );
         buildOptions( options );
