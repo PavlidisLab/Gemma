@@ -28,7 +28,6 @@ import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
 
@@ -151,8 +150,6 @@ public class GemmaCLI {
             profiles.add( SpringProfiles.TEST );
         }
 
-        lintConfiguration();
-
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*
@@ -219,21 +216,6 @@ public class GemmaCLI {
             log.warn( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
         }
         return matcher.replaceAll( "$1 XXXXXX" );
-    }
-
-    private static void lintConfiguration() {
-        // check some common settings that might affect initialization time
-        if ( Settings.getBoolean( "load.ontologies" ) ) {
-            log.warn( "Auto-loading of ontologies is enabled, this is not recommended for the CLI. Disable it by setting load.ontologies=false in Gemma.properties." );
-        }
-
-        if ( Settings.getBoolean( "load.homologene" ) ) {
-            log.warn( "Homologene is enabled, this is not recommended for the CLI. Disable it by setting load.homologene=false in Gemma.properties." );
-        }
-
-        if ( Settings.getString( "gemma.hibernate.hbm2ddl.auto" ).equals( "validate" ) ) {
-            log.warn( "Hibernate is configured to validate the database schema, this is not recommended for the CLI. Disable it by setting gemma.hibernate.hbm2ddl.auto= in Gemma.properties." );
-        }
     }
 
     private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
