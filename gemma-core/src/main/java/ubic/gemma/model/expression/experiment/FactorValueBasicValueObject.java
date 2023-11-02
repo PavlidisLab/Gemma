@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
 import java.util.List;
@@ -40,13 +40,16 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
      * The experiment factor category.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private CharacteristicBasicValueObject experimentalFactorCategory;
+    private CharacteristicValueObject experimentalFactorCategory;
 
     /**
-     * The characteristics associated with this factor value.
+     * Indicate if this factor value is a measurement.
+     * <p>
+     * Note that measurements can have characteristics as optional annotations.
+     * @deprecated simply check if {@link #getMeasurement()} is non-null instead
      */
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<StatementValueObject> characteristics;
+    @Deprecated
+    private boolean isMeasurement;
 
     /**
      * The measurement associated with this factor value.
@@ -55,11 +58,14 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     private MeasurementValueObject measurement;
 
     /**
-     * Indicate if this factor value is a measurement.
-     * <p>
-     * Note that measurements can have characteristics as optional annotations.
+     * The characteristics associated with this factor value.
      */
-    private boolean isMeasurement;
+    private List<CharacteristicValueObject> characteristics;
+
+    /**
+     * The statements associated with this factor value.
+     */
+    private List<StatementValueObject> statements;
 
     /**
      * @deprecated use either {@link #characteristics} or {@link #measurement}
@@ -90,7 +96,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
         if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
             if ( fv.getExperimentalFactor().getCategory() != null ) {
-                this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
+                this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );
             }
         }
 
@@ -100,6 +106,11 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         }
 
         this.characteristics = fv.getCharacteristics().stream()
+                .sorted()
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toList() );
+
+        this.statements = fv.getCharacteristics().stream()
                 .sorted()
                 .map( StatementValueObject::new )
                 .collect( Collectors.toList() );

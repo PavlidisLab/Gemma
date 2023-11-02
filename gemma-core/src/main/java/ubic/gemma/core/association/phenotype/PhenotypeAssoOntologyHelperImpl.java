@@ -169,13 +169,9 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
      */
     private Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
             Collection<OntologyTerm> ontologyTerms ) {
-
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<>();
-
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
-                    ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
-            characteristicsVO.add( phenotype );
+            characteristicsVO.add( new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() ) );
         }
         return characteristicsVO;
     }

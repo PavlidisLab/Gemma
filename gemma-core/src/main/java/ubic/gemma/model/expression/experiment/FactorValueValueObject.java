@@ -16,6 +16,7 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
 import javax.annotation.Nullable;
@@ -44,13 +45,30 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     private Long factorId;
 
+    /**
+     * Indicate if this FactorValue is a measurement.
+     * @deprecated simply check if {@link #getMeasurementObject()} is non-null instead
+     */
+    @Deprecated
+    @JsonProperty("isMeasurement")
+    private boolean measurement;
+
+    /**
+     * Measurement object if this FactorValue is a measurement.
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("measurement")
     private MeasurementValueObject measurementObject;
-    @JsonProperty("isMeasurement")
-    private boolean measurement = false;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<StatementValueObject> characteristics;
+
+    /**
+     * Characteristics.
+     */
+    private List<CharacteristicValueObject> characteristics;
+
+    /**
+     * Statements
+     */
+    private List<StatementValueObject> statements;
 
     // fields of the characteristic being focused on
     // this is used by the FV editor to model each individual characteristic with its FV
@@ -134,6 +152,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         }
 
         this.characteristics = value.getCharacteristics().stream()
+                .sorted()
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toList() );
+
+        this.statements = value.getCharacteristics().stream()
                 .sorted()
                 .map( StatementValueObject::new )
                 .collect( Collectors.toList() );

@@ -4,7 +4,10 @@ import org.assertj.core.groups.Tuple;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,12 +46,12 @@ public class CharacteristicTest {
         assertThat( sortedCs )
                 .extracting( "valueUri", "value" )
                 .containsExactly(
+                        Tuple.tuple( "d", "D" ),
+                        Tuple.tuple( null, "TEST" ),
                         Tuple.tuple( "a", null ),
                         Tuple.tuple( "b", null ),
                         Tuple.tuple( "C", null ),
-                        Tuple.tuple( "d", "D" ),
                         Tuple.tuple( "e", null ),
-                        Tuple.tuple( null, "TEST" ),
                         Tuple.tuple( null, null )
                 );
     }

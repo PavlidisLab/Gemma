@@ -16,32 +16,35 @@ package ubic.gemma.model.common.description;
 
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
-/**
- * ValueObject wrapper for a Characteristic
- * @deprecated use {@link CharacteristicBasicValueObject} instead, we will eventually move this class back into
- *             Phenocarta package
- * @see Characteristic
- */
-@SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
-@Data
-@Deprecated
-public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
-        implements Comparable<CharacteristicValueObject> {
+import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
 
-    private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
+/**
+ * Value object representation of a {@link Characteristic}.
+ * @see Characteristic
+ * @author poirigui
+ */
+@Data
+public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic> implements Comparable<CharacteristicValueObject> {
 
     private static final Comparator<CharacteristicValueObject> COMPARATOR = Comparator
-            .comparing( CharacteristicValueObject::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+            .comparing( ( CharacteristicValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getCategory(), c1.getCategoryUri(), c2.getCategory(), c2.getCategoryUri() ) )
             .thenComparing( CharacteristicValueObject::getTaxon, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-            .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+            .thenComparing( ( CharacteristicValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getValue(), c1.getValueUri(), c2.getValue(), c2.getValueUri() ) )
+            .thenComparing( CharacteristicValueObject::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
+
+    private String category;
+    private String categoryUri;
+    private String value;
+    private String valueUri;
+
+    // TODO: all the following fields are Phenocarta-specific and should be relocated
 
     /**
      * id used by url on the client side
@@ -52,8 +55,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private boolean alreadyPresentInDatabase = false;
     @GemmaWebOnly
     private boolean alreadyPresentOnGene = false;
-    private String category = "";
-    private String categoryUri = null;
     /**
      * child term from a root
      */
@@ -78,13 +79,8 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      */
     @GemmaWebOnly
     private boolean root = false;
-
     @GemmaWebOnly
     private String taxon = "";
-
-    private String value = "";
-    private String valueUri = null;
-
     /**
      * The definition of the value, if it is an ontology term, as supplied by the ontology. If the value is
      * free text, this will be empty
@@ -105,49 +101,21 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
     public CharacteristicValueObject( Characteristic characteristic ) {
         super( characteristic );
-        {
-            this.valueUri = characteristic.getValueUri();
-            if ( this.valueUri != null )
-                this.urlId = parseUrlId( this.valueUri );
-        }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
-
-        if ( this.value == null ) {
-            CharacteristicValueObject.log
-                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
-                            + this.categoryUri );
-        }
+        this.valueUri = characteristic.getValueUri();
+        this.urlId = parseUrlId( characteristic.getValueUri() );
     }
 
-    public CharacteristicValueObject( Long id, String valueUri ) {
-        super( id );
+    public CharacteristicValueObject( String value, @Nullable String valueUri ) {
         this.valueUri = valueUri;
-        this.urlId = parseUrlId( this.valueUri );
-        if ( StringUtils.isNotBlank( this.urlId ) ) {
-            try {
-                // we don't always populate from the database, give it an id anyway
-                this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
-            } catch ( Exception e ) {
-                CharacteristicValueObject.log
-                        .error( "Problem making an id for Phenotype: " + this.urlId + ": " + e.getMessage() );
-            }
-        }
-    }
-
-    public CharacteristicValueObject( Long id, String value, String valueUri ) {
-        this( id, valueUri );
         this.value = value;
-        if ( this.value == null ) {
-            CharacteristicValueObject.log
-                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
-                            + this.categoryUri );
-        }
+        this.urlId = parseUrlId( valueUri );
     }
 
-    public CharacteristicValueObject( Long id, String value, String category, String valueUri, String categoryUri ) {
-        this( id, value, valueUri );
+    public CharacteristicValueObject( String value, @Nullable String valueUri, String category, @Nullable String categoryUri ) {
+        this( value, valueUri );
         this.category = category;
         this.categoryUri = categoryUri;
     }
@@ -171,62 +139,53 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        if ( this.valueUri != null ) {
-            result = prime * result + this.valueUri.hashCode();
-        } else if ( this.value != null ) {
-            result = prime * result + this.value.hashCode();
-        } else {
-            result = prime * result + this.id.hashCode();
+        if ( this.getId() != null ) {
+            return super.hashCode();
         }
-        return result;
+        return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
+                StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
     }
 
     @Override
-    public int compareTo( CharacteristicValueObject o ) {
-        return COMPARATOR.compare( this, o );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
             return true;
-        if ( obj == null )
+        if ( !( object instanceof CharacteristicValueObject ) )
             return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
-        if ( this.valueUri == null ) {
-            if ( other.valueUri != null )
-                return false;
-        } else {
-            return this.valueUri.equals( other.valueUri );
-        }
+        CharacteristicValueObject that = ( CharacteristicValueObject ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return super.equals( object );
+        return CharacteristicUtils.equals( category, categoryUri, that.category, that.categoryUri )
+                && CharacteristicUtils.equals( value, valueUri, that.value, that.valueUri );
+    }
 
-        if ( this.value == null ) {
-            return other.value == null;
-        }
-        return this.value.equals( other.value );
-
+    @Override
+    public int compareTo( @Nonnull CharacteristicValueObject that ) {
+        return COMPARATOR.compare( this, that );
     }
 
     @Override
     public String toString() {
-        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
+        return String.format( "[Category=%s%s Value=%s%s]",
+                category,
+                categoryUri != null ? " (" + categoryUri + ")" : "",
+                value,
+                valueUri != null ? " (" + valueUri + ")" : "" );
     }
 
     public void incrementOccurrenceCount() {
         this.numTimesUsed++;
     }
 
-    private static String parseUrlId( String valueUri ) {
+    private static String parseUrlId( @Nullable String valueUri ) {
         if ( StringUtils.isBlank( valueUri ) )
             return "";
         if ( valueUri.indexOf( "#" ) > 0 ) {
-            return valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, valueUri.length() );
+            return valueUri.substring( valueUri.lastIndexOf( "#" ) + 1 );
         } else if ( valueUri.lastIndexOf( "/" ) > 0 ) {
-            return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, valueUri.length() );
+            return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1 );
         } else {
             return "";
         }

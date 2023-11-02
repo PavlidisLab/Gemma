@@ -713,7 +713,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     private CharacteristicValueObject characteristicToValueObject( Characteristic characteristic ) {
-        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
+        CharacteristicValueObject vo = new CharacteristicValueObject( characteristic.getValue(), characteristic.getValueUri() );
         vo.setCategory( null );
         vo.setCategoryUri( null ); // to avoid us counting separately by category.
         vo.setAlreadyPresentInDatabase( true );
@@ -744,8 +744,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( OntologyTerm ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
-                            ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
                     characteristicsFromOntology.add( phenotype );
                 }
             }

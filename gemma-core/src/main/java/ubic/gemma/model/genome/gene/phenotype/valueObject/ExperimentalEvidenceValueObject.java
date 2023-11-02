@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
+@Deprecated
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject<ExperimentalEvidence> {
 
     private static final long serialVersionUID = 4243531745086284715L;
@@ -44,18 +45,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
 
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
-
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
                 .getCharacteristics();
-
         if ( collectionCharacteristics != null ) {
             for ( Characteristic c : collectionCharacteristics ) {
-
-                CharacteristicValueObject chaValueObject = new CharacteristicValueObject( c.getId(),
-                        c.getValue(), c.getCategory(), c.getValueUri(), c.getCategoryUri() );
-
-                this.experimentCharacteristics.add( chaValueObject );
-
+                this.experimentCharacteristics.add( new CharacteristicValueObject( c ) );
             }
         }
     }

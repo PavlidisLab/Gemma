@@ -2,6 +2,7 @@ package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -19,12 +20,12 @@ import java.util.Objects;
 public class Statement extends Characteristic {
 
     private static final Comparator<Statement> COMPARATOR = Comparator
-            .comparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.getCategory(), s1.getCategoryUri(), s2.getCategory(), s2.getCategoryUri() ) )
-            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.getSubject(), s1.getSubjectUri(), s2.getSubject(), s2.getSubjectUri() ) )
-            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.predicate, s1.predicateUri, s2.predicate, s2.predicateUri ) )
-            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.object, s1.objectUri, s2.object, s2.objectUri ) )
-            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.secondPredicate, s1.secondPredicateUri, s2.secondPredicate, s2.secondPredicateUri ) )
-            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> compareTerm( s1.secondObject, s1.secondObjectUri, s2.secondObject, s2.secondObjectUri ) )
+            .comparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.getCategory(), s1.getCategoryUri(), s2.getCategory(), s2.getCategoryUri() ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.getSubject(), s1.getSubjectUri(), s2.getSubject(), s2.getSubjectUri() ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.predicate, s1.predicateUri, s2.predicate, s2.predicateUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.object, s1.objectUri, s2.object, s2.objectUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.secondPredicate, s1.secondPredicateUri, s2.secondPredicate, s2.secondPredicateUri ) )
+            .thenComparing( ( Statement s ) -> s, ( s1, s2 ) -> CharacteristicUtils.compareTerm( s1.secondObject, s1.secondObjectUri, s2.secondObject, s2.secondObjectUri ) )
             .thenComparing( Statement::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     public static class Factory {
@@ -215,20 +216,11 @@ public class Statement extends Characteristic {
         Statement that = ( Statement ) object;
         if ( this.getId() != null && that.getId() != null )
             return super.equals( that );
-        // if both URIs are non-null, we can compare them directly
-        if ( predicateUri != null ^ that.predicateUri != null )
-            return false;
-        if ( objectUri != null ^ that.objectUri != null )
-            return false;
-        if ( secondPredicateUri != null ^ that.secondPredicateUri != null )
-            return false;
-        if ( secondObjectUri != null ^ that.secondObjectUri != null )
-            return false;
         return super.equals( object )
-                && ( predicateUri != null ? StringUtils.equalsIgnoreCase( predicateUri, that.predicateUri ) : StringUtils.equalsIgnoreCase( predicate, that.predicate ) )
-                && ( objectUri != null ? StringUtils.equalsIgnoreCase( this.objectUri, that.objectUri ) : StringUtils.equalsIgnoreCase( this.object, that.object ) )
-                && ( secondPredicateUri != null ? StringUtils.equalsIgnoreCase( secondPredicateUri, that.secondPredicateUri ) : StringUtils.equalsIgnoreCase( secondPredicate, that.secondPredicate ) )
-                && ( secondObjectUri != null ? StringUtils.equalsIgnoreCase( secondObjectUri, that.secondObjectUri ) : StringUtils.equalsIgnoreCase( secondObject, that.secondObject ) );
+                && CharacteristicUtils.equals( predicate, predicateUri, that.predicate, that.predicateUri )
+                && CharacteristicUtils.equals( this.object, objectUri, that.object, that.objectUri )
+                && CharacteristicUtils.equals( secondPredicate, secondPredicateUri, that.secondPredicate, that.secondPredicateUri )
+                && CharacteristicUtils.equals( secondObject, secondObjectUri, that.secondObject, that.secondObjectUri );
     }
 
     @Override

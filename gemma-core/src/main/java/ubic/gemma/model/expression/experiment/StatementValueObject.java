@@ -28,16 +28,12 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> {
     @Nullable
     private String subjectUri;
 
-    @GemmaWebOnly
     private String predicate;
     @Nullable
-    @GemmaWebOnly
     private String predicateUri;
 
-    @GemmaWebOnly
     private String object;
     @Nullable
-    @GemmaWebOnly
     private String objectUri;
 
     @GemmaWebOnly
@@ -74,22 +70,18 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> {
 
     // for backward-compatibility because FactorValueBasicValueObject characteristics used to be CharacteristicBasicValueObject
 
-    @Deprecated
     public String getValue() {
         return subject;
     }
 
-    @Deprecated
     public void setValue( String value ) {
         this.subject = value;
     }
 
-    @Deprecated
     public String getValueUri() {
         return subjectUri;
     }
 
-    @Deprecated
     public void setValueUri( String valueUri ) {
         this.subjectUri = valueUri;
     }

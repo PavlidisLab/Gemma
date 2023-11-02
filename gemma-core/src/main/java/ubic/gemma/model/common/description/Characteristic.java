@@ -48,31 +48,10 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
     private static final long serialVersionUID = -7242166109264718620L;
 
-    /**
-     * Compare a pair of ontology terms.
-     */
-    protected static int compareTerm( String a, @Nullable String aUri, String b, @Nullable String bUri ) {
-        if ( aUri != null && bUri != null ) {
-            return aUri.compareToIgnoreCase( bUri );
-        } else if ( aUri != null ) {
-            return -1;
-        } else if ( bUri != null ) {
-            return 1;
-        } else if ( a != null && b != null ) {
-            return a.compareToIgnoreCase( b );
-        } else if ( a != null ) {
-            return -1;
-        } else if ( b != null ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-
-    private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
+    private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
 
     private static final Comparator<Characteristic> BY_CATEGORY_AND_VALUE_COMPARATOR = BY_CATEGORY_COMPARATOR
-            .thenComparing( c -> c, ( c1, c2 ) -> compareTerm( c1.value, c1.valueUri, c2.value, c2.valueUri ) );
+            .thenComparing( c -> c, ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.value, c1.valueUri, c2.value, c2.valueUri ) );
 
     private static final Comparator<Characteristic> COMPARATOR = BY_CATEGORY_AND_VALUE_COMPARATOR
             .thenComparing( Characteristic::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
@@ -261,17 +240,8 @@ public class Characteristic extends AbstractDescribable implements Serializable,
          * the fields; we can't just compare the hashcodes because they also look at the id, so comparing one transient
          * and one persistent would always fail...
          */
-
-        if ( categoryUri != null ^ that.categoryUri != null ) {
-            return false;
-        }
-
-        if ( valueUri != null ^ that.valueUri != null ) {
-            return false;
-        }
-
-        return ( categoryUri != null ? StringUtils.equalsIgnoreCase( categoryUri, that.categoryUri ) : StringUtils.equalsIgnoreCase( category, that.category ) )
-                && ( valueUri != null ? StringUtils.equalsIgnoreCase( valueUri, that.valueUri ) : StringUtils.equalsIgnoreCase( value, that.value ) );
+        return CharacteristicUtils.equals( category, categoryUri, that.category, that.categoryUri )
+                && CharacteristicUtils.equals( value, valueUri, that.value, that.valueUri );
     }
 
     @Override

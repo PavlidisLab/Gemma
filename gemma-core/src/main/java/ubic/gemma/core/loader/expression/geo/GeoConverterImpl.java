@@ -54,7 +54,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.model.common.description.CharacteristicBasicValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
@@ -806,7 +805,7 @@ public class GeoConverterImpl implements GeoConverter {
                 assert !vartype.equals( VariableType.other );
                 this.convertVariableType( gemmaChar, vartype );
 
-                CharacteristicBasicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
+                CharacteristicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
 
                 try {
                     if ( mappedValueTerm != null ) {
@@ -837,7 +836,7 @@ public class GeoConverterImpl implements GeoConverter {
      * stored in valueStringToOntologyTermMappings.txt.
      *
      */
-    private CharacteristicBasicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
+    private CharacteristicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
         if ( term2OntologyMappings.isEmpty() ) {
             initializeTerm2OntologyMappings();
         }
@@ -883,7 +882,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
                 if ( !term2OntologyMappings.containsKey( category ) ) {
-                    term2OntologyMappings.put( category, new HashMap<String, CharacteristicBasicValueObject>() );
+                    term2OntologyMappings.put( category, new HashMap<String, CharacteristicValueObject>() );
                 }
 
                 if ( term2OntologyMappings.get( category ).containsKey( inputValue ) ) {
@@ -892,7 +891,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
                 // NOTE: extensions via modifiers is not to be supported here, as GEO only has key-value pairs.
-                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( value, valueUri, category, categoryUri );
+                CharacteristicValueObject c = new CharacteristicValueObject( value, valueUri, category, categoryUri );
                 term2OntologyMappings.get( category ).put( inputValue, c );
             }
         } catch ( IOException e ) {
@@ -901,7 +900,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     }
 
-    private static Map<String, Map<String, CharacteristicBasicValueObject>> term2OntologyMappings = new ConcurrentHashMap<>();
+    private static Map<String, Map<String, CharacteristicValueObject>> term2OntologyMappings = new ConcurrentHashMap<>();
 
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.

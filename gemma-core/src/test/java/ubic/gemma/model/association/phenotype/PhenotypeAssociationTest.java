@@ -324,7 +324,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L, uri );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( "", uri );
 
         phenotypes.add( characteristicValueObject );
 

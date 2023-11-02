@@ -39,7 +39,7 @@ import java.util.*;
  *
  * @author nicolas
  */
-@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     @Override
@@ -255,7 +255,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     private Set<CharacteristicValueObject> experimentTags2Ontology( Set<String> values, String category,
-                                                                    String categoryUri, OntologyService ontologyUsed ) throws OntologySearchException {
+            String categoryUri, OntologyService ontologyUsed ) throws OntologySearchException {
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
@@ -272,7 +272,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 }
             }
 
-            CharacteristicValueObject c = new CharacteristicValueObject( -1L, term, category, valueUri, categoryUri );
+            CharacteristicValueObject c = new CharacteristicValueObject( term, valueUri, category, categoryUri );
             experimentTags.add( c );
         }
         return experimentTags;
@@ -473,7 +473,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject<?> evidence,
-                                                    String evidenceTaxon ) {
+            String evidenceTaxon ) {
         // OMIM got special character in description to find score
         if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
 
@@ -553,7 +553,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String valueUri = this.phenotype2Ontology( phenotype );
 
             if ( valueUri != null ) {
-                CharacteristicValueObject c = new CharacteristicValueObject( -1L, valueUri );
+                CharacteristicValueObject c = new CharacteristicValueObject( "", valueUri );
                 characteristicPhenotypes.add( c );
             }
         }
