@@ -101,7 +101,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.2</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<directory>${project.basedir}/../gemma-rest/src/main/resources/restapidocs</directory>
+							<targetPath>resources/restapidocs</targetPath>
+						</resource>
+					</webResources>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
