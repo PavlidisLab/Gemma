@@ -2083,12 +2083,16 @@ public class ExpressionExperimentDaoImpl
         // attached terms
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
+        configurer.unregisterProperty( "characteristics.migratedToStatement" );
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
+        configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
         configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );

@@ -193,12 +193,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // use the characteristics instead
         configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
         configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
 
         // baseline is always baseline
         configurer.unregisterProperty( "baselineGroup.isBaseline" );
         configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
         configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
+        configurer.unregisterProperty( "baselineGroup.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "baselineGroup.value" );
 
         // not relevant
