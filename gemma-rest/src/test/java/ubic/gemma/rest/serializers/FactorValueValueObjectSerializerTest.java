@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.util.JsonPathExpectationsHelper;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -35,6 +34,7 @@ public class FactorValueValueObjectSerializerTest extends AbstractJUnit4SpringCo
     @Test
     public void test() throws JsonProcessingException, ParseException {
         FactorValue fv = new FactorValue();
+        fv.setId( 1L );
         fv.setExperimentalFactor( new ExperimentalFactor() );
         fv.getCharacteristics().add( createCharacteristic( 1L, "foo", null, "bar", null ) );
         fv.getCharacteristics().add( createStatement( 2L, "foo", null, "bar", null, "has role", null, "control", null ) );
@@ -42,12 +42,13 @@ public class FactorValueValueObjectSerializerTest extends AbstractJUnit4SpringCo
         JsonAssert.with( objectMapper.writeValueAsString( fvvo ) )
                 .assertEquals( "$.characteristics[0].id", 1 )
                 .assertEquals( "$.characteristics[0].category", "foo" )
+                .assertEquals( "$.characteristics[0].valueId", "http://gemma.msl.ubc.ca/ont/TGFVO/1/3" )
                 .assertEquals( "$.characteristics[0].value", "bar" )
                 .assertEquals( "$.statements[0].category", "foo" )
-                .assertEquals( "$.statements[0].subjectId", 2 )
+                .assertEquals( "$.statements[0].subjectId", "http://gemma.msl.ubc.ca/ont/TGFVO/1/1" )
                 .assertEquals( "$.statements[0].subject", "bar" )
                 .assertEquals( "$.statements[0].predicate", "has role" )
-                .assertEquals( "$.statements[0].objectId", 3 )
+                .assertEquals( "$.statements[0].objectId", "http://gemma.msl.ubc.ca/ont/TGFVO/1/2" )
                 .assertEquals( "$.statements[0].object", "control" );
     }
 

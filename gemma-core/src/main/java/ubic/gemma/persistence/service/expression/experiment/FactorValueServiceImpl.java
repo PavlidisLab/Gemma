@@ -56,6 +56,16 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     @Override
     @Transactional(readOnly = true)
+    public FactorValue loadWithExperimentalFactor( Long id ) {
+        FactorValue fv = load( id );
+        if ( fv != null ) {
+            Hibernate.initialize( fv.getExperimentalFactor() );
+        }
+        return fv;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public FactorValue loadWithExperimentalFactorOrFail( Long id ) {
         FactorValue fv = loadOrFail( id );
         Hibernate.initialize( fv.getExperimentalFactor() );

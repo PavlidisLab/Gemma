@@ -48,6 +48,9 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    FactorValue loadWithExperimentalFactor( Long id );
+
     /**
      * Load a {@link FactorValue} with an initialized experimental factor or fail.
      */

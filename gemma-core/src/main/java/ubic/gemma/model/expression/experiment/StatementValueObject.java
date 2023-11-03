@@ -5,7 +5,11 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Comparator;
+
+import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
 
 /**
  * Represents a VO for a {@link Statement}, typically part of a {@link FactorValueBasicValueObject}.
@@ -18,7 +22,16 @@ import javax.annotation.Nullable;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class StatementValueObject extends IdentifiableValueObject<Statement> {
+public class StatementValueObject extends IdentifiableValueObject<Statement> implements Comparable<StatementValueObject> {
+
+    private static final Comparator<StatementValueObject> COMPARATOR = Comparator
+            .comparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getCategory(), c1.getCategoryUri(), c2.getCategory(), c2.getCategoryUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getValue(), c1.getValueUri(), c2.getValue(), c2.getValueUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getPredicate(), c1.getPredicateUri(), c2.getPredicate(), c2.getPredicateUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getObject(), c1.getObjectUri(), c2.getObject(), c2.getObjectUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getSecondPredicate(), c1.getSecondPredicateUri(), c2.getSecondPredicate(), c2.getSecondPredicateUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getSecondObject(), c1.getSecondObjectUri(), c2.getSecondObject(), c2.getSecondObjectUri() ) )
+            .thenComparing( StatementValueObject::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     private String category;
     @Nullable
@@ -84,5 +97,10 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> {
 
     public void setValueUri( String valueUri ) {
         this.subjectUri = valueUri;
+    }
+
+    @Override
+    public int compareTo( @Nonnull StatementValueObject other ) {
+        return COMPARATOR.compare( this, other );
     }
 }
