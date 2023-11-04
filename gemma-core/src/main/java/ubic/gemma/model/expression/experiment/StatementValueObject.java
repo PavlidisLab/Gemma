@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.experiment;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
 import javax.annotation.Nonnull;
@@ -60,6 +61,17 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     @Nullable
     @GemmaWebOnly
     private String secondObjectUri;
+
+    /**
+     * A unique ontology identifier (i.e. IRI) for this subject.
+     */
+    @GemmaRestOnly
+    private String subjectId;
+    /**
+     * A unique ontology identifier (i.e. IRI) for this object.
+     */
+    @GemmaRestOnly
+    private String objectId;
 
     public StatementValueObject() {
         super();

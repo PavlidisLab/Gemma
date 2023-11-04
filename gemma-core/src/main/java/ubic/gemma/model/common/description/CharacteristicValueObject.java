@@ -17,6 +17,7 @@ package ubic.gemma.model.common.description;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
 import javax.annotation.Nonnull;
@@ -43,6 +44,12 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String categoryUri;
     private String value;
     private String valueUri;
+
+    /**
+     * A unique ontology identifier (i.e. IRI) for this FactorValue.
+     */
+    @GemmaRestOnly
+    public String ontologyId;
 
     // TODO: all the following fields are Phenocarta-specific and should be relocated
 

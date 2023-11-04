@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
  * <p>
  * Fields and getters annotated with this are excluded from Jackson JSON serialization and will not appear in the Gemma
  * RESTful API.
+ * @author poirigui
+ * @see GemmaRestOnly for properties or types that should be exclusive to Gemma REST instead
  */
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
