@@ -1,15 +1,18 @@
 package ubic.gemma.core.ontology;
 
-import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static ubic.gemma.core.ontology.FactorValueOntologyUtils.*;
 
 @Service
 public class FactorValueOntologyServiceImpl implements FactorValueOntologyService {
@@ -20,86 +23,47 @@ public class FactorValueOntologyServiceImpl implements FactorValueOntologyServic
     @Override
     @Nullable
     public OntologyIndividual getIndividual( String uri ) {
-        if ( !uri.startsWith( URI_PREFIX ) ) {
+        Long fvId = parseUri( uri );
+        if ( fvId == null ) {
             return null;
         }
-        String t = uri.replaceFirst( URI_PREFIX, "" );
-        String[] pieces = t.split( "/", 2 );
-        try {
-            final FactorValue fv = factorValueService.loadWithExperimentalFactor( Long.parseLong( pieces[0] ) );
+        if ( isAnnotationUri( uri ) ) {
+            FactorValue fv = factorValueService.load( fvId );
             if ( fv == null ) {
                 return null;
             }
-            if ( pieces.length == 2 ) {
-                long id = Long.parseLong( pieces[1] );
-                return getAnnotationById( fv, Long.parseLong( pieces[1] ) )
-                        .map( a -> new FactorValueAnnotationOntologyIndividual( fv, id, a.getUri(), a.getLabel() ) )
-                        .orElse( null );
-            } else {
-                return new FactorValueOntologyIndividual( fv );
+            Annotation annotation = getAnnotationsById( fv ).get( uri );
+            if ( annotation == null ) {
+                return null;
             }
-        } catch ( NumberFormatException e ) {
-            return null;
+            return new FactorValueAnnotationOntologyIndividual( uri, annotation.getUri(), annotation.getLabel() );
+        } else {
+            FactorValue fv = factorValueService.loadWithExperimentalFactor( fvId );
+            if ( fv == null ) {
+                return null;
+            }
+            return new FactorValueOntologyIndividual( fv, uri );
         }
     }
 
     @Override
     public Set<OntologyIndividual> getRelatedIndividuals( String uri ) {
-        if ( !uri.startsWith( URI_PREFIX ) ) {
-            return null;
+        if ( isAnnotationUri( uri ) ) {
+            // this is a specific annotation ID
+            return Collections.emptySet();
         }
-        String t = uri.replaceFirst( URI_PREFIX, "" );
-        String[] pieces = t.split( "/", 2 );
-        final FactorValue fv = factorValueService.loadWithExperimentalFactor( Long.parseLong( pieces[0] ) );
+        Long fvId = parseUri( uri );
+        if ( fvId == null ) {
+            return Collections.emptySet();
+        }
+        final FactorValue fv = factorValueService.load( fvId );
         if ( fv == null ) {
-            return null;
+            return Collections.emptySet();
         }
         HashSet<OntologyIndividual> individuals = new HashSet<>();
-        for ( Map.Entry<Long, Annotation> e : getAnnotationsById( fv ).entrySet() ) {
-            individuals.add( new FactorValueAnnotationOntologyIndividual( fv, e.getKey(), e.getValue().getUri(), e.getValue().getLabel() ) );
+        for ( Map.Entry<String, FactorValueOntologyUtils.Annotation> e : getAnnotationsById( fv ).entrySet() ) {
+            individuals.add( new FactorValueAnnotationOntologyIndividual( e.getKey(), e.getValue().getUri(), e.getValue().getLabel() ) );
         }
         return individuals;
-    }
-
-    @Value
-    private static class Annotation {
-        String label;
-        @Nullable
-        String uri;
-    }
-
-    private Map<Long, Annotation> getAnnotationsById( FactorValue fv ) {
-        Map<Long, Annotation> result = new HashMap<>();
-        long nextAvailableId = 1L;
-        for ( Statement s : new TreeSet<>( fv.getCharacteristics() ) ) {
-            result.put( nextAvailableId++, new Annotation( s.getSubject(), s.getSubjectUri() ) );
-            if ( s.getObject() != null ) {
-                result.put( nextAvailableId++, new Annotation( s.getObject(), s.getObjectUri() ) );
-            }
-            if ( s.getSecondObject() != null ) {
-                result.put( nextAvailableId++, new Annotation( s.getSecondObject(), s.getSecondObjectUri() ) );
-            }
-        }
-        return result;
-    }
-
-    private Optional<Annotation> getAnnotationById( FactorValue fv, long annotationId ) {
-        long nextAvailableId = 1L;
-        for ( Statement s : new TreeSet<>( fv.getCharacteristics() ) ) {
-            if ( annotationId == nextAvailableId++ ) {
-                return Optional.of( new Annotation( s.getSubject(), s.getSubjectUri() ) );
-            }
-            if ( s.getObject() != null ) {
-                if ( annotationId == nextAvailableId++ ) {
-                    return Optional.of( new Annotation( s.getObject(), s.getObjectUri() ) );
-                }
-            }
-            if ( s.getSecondObject() != null ) {
-                if ( annotationId == nextAvailableId++ ) {
-                    return Optional.of( new Annotation( s.getSecondObject(), s.getSecondObjectUri() ) );
-                }
-            }
-        }
-        return Optional.empty();
     }
 }

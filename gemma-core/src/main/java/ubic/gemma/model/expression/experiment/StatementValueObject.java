@@ -1,5 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -23,8 +24,13 @@ import static ubic.gemma.model.common.description.CharacteristicUtils.compareTer
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties({ "id" })
 public class StatementValueObject extends IdentifiableValueObject<Statement> implements Comparable<StatementValueObject> {
 
+    /**
+     * It is critical that the order of the fields in the comparator is the same as the order of the fields in the
+     * {@link Statement} comparator since this is used to assign IDs to annotations (i.e. subjects and objects).
+     */
     private static final Comparator<StatementValueObject> COMPARATOR = Comparator
             .comparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getCategory(), c1.getCategoryUri(), c2.getCategory(), c2.getCategoryUri() ) )
             .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getValue(), c1.getValueUri(), c2.getValue(), c2.getValueUri() ) )

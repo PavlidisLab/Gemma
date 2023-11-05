@@ -15,7 +15,7 @@ class FactorValueOntologyIndividual implements OntologyIndividual {
     private final String label;
     private final String uri;
 
-    public FactorValueOntologyIndividual( FactorValue factorValue ) {
+    public FactorValueOntologyIndividual( FactorValue factorValue, String uri ) {
         if ( factorValue.getExperimentalFactor() != null && factorValue.getExperimentalFactor().getCategory() != null ) {
             String categoryUri = factorValue.getExperimentalFactor().getCategory().getCategoryUri();
             String category = factorValue.getExperimentalFactor().getCategory().getCategory();
@@ -24,7 +24,7 @@ class FactorValueOntologyIndividual implements OntologyIndividual {
             this.instanceOf = null;
         }
         this.label = FactorValueUtils.getSummaryString( factorValue );
-        this.uri = FactorValueOntologyService.factorValueUri( factorValue.getId() );
+        this.uri = uri;
     }
 
     @Override

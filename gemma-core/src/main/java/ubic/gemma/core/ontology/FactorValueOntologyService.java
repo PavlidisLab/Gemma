@@ -11,21 +11,11 @@ import java.util.Set;
  * There are two kind of entities represented in his ontologies:
  * <ul>
  *     <li>Factor values (i.e. http://gemma.msl.ubc.ca/ont/TGFVO/1)</li>
- *     <li>Factor value annotations (i.e. http://gemma.msl.ubc.ca/ont/TGFVO/1/2)</li>
+ *     <li>Factor value annotations (i.e. http://gemma.msl.ubc.ca/ont/TGFVO/1/2) which can be either a subject, object or a characteristic</li>
  * </ul>
  * TODO: fully implement the {@link ubic.basecode.ontology.providers.OntologyService} interface.
  */
 public interface FactorValueOntologyService {
-
-    String URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
-
-    static String factorValueUri( Long factorValueId ) {
-        return FactorValueOntologyService.URI_PREFIX + factorValueId;
-    }
-
-    static String factorValueAnnotationUri( Long factorValueId, Long id ) {
-        return FactorValueOntologyServiceImpl.URI_PREFIX + factorValueId + "/" + id;
-    }
 
     /**
      * Obtain an individual from the ontology by URI.

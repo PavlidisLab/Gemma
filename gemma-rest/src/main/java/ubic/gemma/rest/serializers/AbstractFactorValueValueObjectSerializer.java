@@ -2,13 +2,15 @@ package ubic.gemma.rest.serializers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import lombok.SneakyThrows;
 import ubic.gemma.core.ontology.FactorValueOntologyServiceImpl;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
 import java.io.IOException;
-import java.util.SortedSet;
+import java.util.Collection;
 
-import static ubic.gemma.core.ontology.FactorValueOntologyService.factorValueAnnotationUri;
+import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitCharacteristics;
+import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitStatements;
 
 /**
  * Base serializer for {@link ubic.gemma.model.expression.experiment.FactorValue} VOs.
@@ -20,58 +22,49 @@ public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSer
         super( t );
     }
 
-    protected void writeCharacteristics( Long factorValueId, SortedSet<StatementValueObject> cvos, JsonGenerator jsonGenerator ) throws IOException {
-        long nextAvailableId = 1L;
+    protected void writeCharacteristics( Long factorValueId, Collection<StatementValueObject> cvos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "characteristics" );
-        for ( StatementValueObject cvo : cvos ) {
-            long valueId = nextAvailableId++;
-            // statements are written in a separate collection
-            if ( cvo.getObject() == null && cvo.getSecondObject() == null ) {
-                jsonGenerator.writeStartObject();
-                jsonGenerator.writeObjectField( "id", cvo.getId() );
-                jsonGenerator.writeObjectField( "category", cvo.getCategory() );
-                jsonGenerator.writeObjectField( "categoryUri", cvo.getCategoryUri() );
-                jsonGenerator.writeObjectField( "valueId", factorValueAnnotationUri( factorValueId, valueId ) );
-                jsonGenerator.writeObjectField( "value", cvo.getValue() );
-                jsonGenerator.writeObjectField( "valueUri", cvo.getValueUri() );
-                jsonGenerator.writeEndObject();
-            }
-            if ( cvo.getObject() != null ) {
-                nextAvailableId++;
-            }
-            if ( cvo.getSecondObject() != null ) {
-                nextAvailableId++;
-            }
-        }
+        visitCharacteristics( factorValueId, cvos, ( cvo, valueId ) -> {
+            writeCharacteristic( cvo.getId(), cvo.getCategory(), cvo.getCategoryUri(), valueId, cvo.getValue(), cvo.getValueUri(), jsonGenerator );
+        } );
         jsonGenerator.writeEndArray();
     }
 
-    protected void writeStatements( Long factorValueId, SortedSet<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
-        long nextAvailableId = 1L;
+    protected void writeStatements( Long factorValueId, Collection<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "statements" );
-        for ( StatementValueObject svo : svos ) {
-            long subjectId = nextAvailableId++;
-            if ( svo.getObject() != null ) {
-                writeStatement( factorValueId, svo.getId(), svo.getCategory(), svo.getCategoryUri(), subjectId, svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), nextAvailableId++, svo.getObject(), svo.getObjectUri(), jsonGenerator );
+        visitStatements( factorValueId, svos, ( svo, assignedIds ) -> {
+            if ( assignedIds.getObjectId() != null ) {
+                writeStatement( svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
             }
-            if ( svo.getSecondObject() != null ) {
-                writeStatement( factorValueId, svo.getId(), svo.getCategory(), svo.getCategoryUri(), subjectId, svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), nextAvailableId++, svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
+            if ( assignedIds.getSecondObjectId() != null ) {
+                writeStatement( svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
             }
-        }
+        } );
         jsonGenerator.writeEndArray();
     }
 
-    protected void writeStatement( Long factorValueId, Long id, String category, String categoryUri, Long subjectId, String subject, String subjectUri, String predicate, String predicateUri, Long objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+    @SneakyThrows
+    private void writeCharacteristic( Long id, String category, String categoryUri, String valueId, String value, String valueUri, JsonGenerator jsonGenerator ) {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeObjectField( "category", category );
         jsonGenerator.writeObjectField( "categoryUri", categoryUri );
-        jsonGenerator.writeObjectField( "subjectId", factorValueAnnotationUri( factorValueId, subjectId ) );
+        jsonGenerator.writeObjectField( "valueId", valueId );
+        jsonGenerator.writeObjectField( "value", value );
+        jsonGenerator.writeObjectField( "valueUri", valueUri );
+        jsonGenerator.writeEndObject();
+    }
+
+    private void writeStatement( String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeObjectField( "category", category );
+        jsonGenerator.writeObjectField( "categoryUri", categoryUri );
+        jsonGenerator.writeObjectField( "subjectId", subjectId );
         jsonGenerator.writeObjectField( "subject", subject );
         jsonGenerator.writeObjectField( "subjectUri", subjectUri );
         jsonGenerator.writeObjectField( "predicate", predicate );
         jsonGenerator.writeObjectField( "predicateUri", predicateUri );
-        jsonGenerator.writeObjectField( "objectId", factorValueAnnotationUri( factorValueId, objectId ) );
+        jsonGenerator.writeObjectField( "objectId", objectId );
         jsonGenerator.writeObjectField( "object", object );
         jsonGenerator.writeObjectField( "objectUri", objectUri );
         jsonGenerator.writeEndObject();

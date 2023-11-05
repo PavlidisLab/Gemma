@@ -18,6 +18,8 @@ import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 
+import java.util.regex.Pattern;
+
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
@@ -26,6 +28,10 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  */
 @Controller
 public class OntologyController {
+
+    private static final String
+            TGEMO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/",
+            TGFVO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
 
     @Autowired
     private GemmaOntologyService gemmaOntologyService;
@@ -46,7 +52,7 @@ public class OntologyController {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
         }
-        String iri = "http://gemma.msl.ubc.ca/ont/" + termId;
+        String iri = TGEMO_URI_PREFIX + termId;
         OntologyTerm term = gemmaOntologyService.getTerm( iri );
         if ( term == null ) {
             throw new EntityNotFoundException( String.format( "No term with IRI %s in TGEMO.", iri ) );
@@ -64,7 +70,7 @@ public class OntologyController {
     @ResponseBody
     @RequestMapping(value = "/ont/TGFVO/{factorValueId}", method = RequestMethod.GET, produces = MediaType.TEXT_HTML_VALUE)
     public String getFactorValue( @PathVariable("factorValueId") Long factorValueId ) {
-        String iri = FactorValueOntologyService.URI_PREFIX + factorValueId;
+        String iri = TGFVO_URI_PREFIX + factorValueId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
             throw new EntityNotFoundException( String.format( "No individual with IRI %s in TGFVO.", iri ) );
@@ -88,7 +94,7 @@ public class OntologyController {
     @ResponseBody
     @RequestMapping(value = "/ont/TGFVO/{factorValueId}/{annotationId}", method = RequestMethod.GET, produces = MediaType.TEXT_HTML_VALUE)
     public String getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId ) {
-        String iri = FactorValueOntologyService.URI_PREFIX + factorValueId + "/" + annotationId;
+        String iri = TGFVO_URI_PREFIX + factorValueId + "/" + annotationId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
             throw new EntityNotFoundException( String.format( "No individual with IRI %s in TGFVO.", iri ) );
@@ -101,7 +107,7 @@ public class OntologyController {
         if ( oi.getInstanceOf() != null ) {
             s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
         }
-        OntologyIndividual factorValueOi = factorValueOntologyService.getIndividual( FactorValueOntologyService.URI_PREFIX + factorValueId );
+        OntologyIndividual factorValueOi = factorValueOntologyService.getIndividual( TGFVO_URI_PREFIX + factorValueId );
         if ( factorValueOi != null ) {
             s.append( "<li>part of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
         }
@@ -115,7 +121,9 @@ public class OntologyController {
             return escapeHtml4( oi.getLabel() );
         } else {
             return String.format( "<a href=\"%s\">%s</a>",
-                    escapeHtml4( oi.getUri().replaceFirst( FactorValueOntologyService.URI_PREFIX, "/ont/TGFVO/" ) ),
+                    escapeHtml4( oi.getUri()
+                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), "/ont/TGFVO/" )
+                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), "/ont/" ) ),
                     escapeHtml4( oi.getLabel() ) );
         }
     }

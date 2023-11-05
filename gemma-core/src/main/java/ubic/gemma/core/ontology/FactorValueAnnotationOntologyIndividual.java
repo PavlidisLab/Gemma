@@ -14,9 +14,9 @@ class FactorValueAnnotationOntologyIndividual implements OntologyIndividual {
     private final String uri;
     private final String label;
 
-    public FactorValueAnnotationOntologyIndividual( FactorValue factorValue, Long id, String uri, String label ) {
+    public FactorValueAnnotationOntologyIndividual( String annotationId, String uri, String label ) {
         this.instanceOf = new OntologyTermSimple( uri, label );
-        this.uri = FactorValueOntologyService.factorValueAnnotationUri( factorValue.getId(), id );
+        this.uri = annotationId;
         this.label = label;
     }
 
