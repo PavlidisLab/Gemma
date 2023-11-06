@@ -16,8 +16,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
@@ -326,6 +325,36 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 } );
         // assertEquals( "and (ee.id in (select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.valueUri in (:ac_valueUri1)))",
         //         FilterQueryUtils.formRestrictionClause( Filters.by( f ) ) );
+    }
+
+    @Test
+    public void testRemoveWithStatement() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setType( FactorType.CATEGORICAL );
+        Characteristic c = new Characteristic();
+        FactorValue fv = new FactorValue();
+        fv.getCharacteristics().add( c );
+        fv.setExperimentalFactor( ef );
+        ef.getFactorValues().add( fv );
+        ExperimentalDesign ed = new ExperimentalDesign();
+        ef.setExperimentalDesign( ed );
+        ed.getExperimentalFactors().add( ef );
+        ed.getExperimentalFactors().add( new ExperimentalFactor() );
+        ee.setExperimentalDesign( ed );
+        // convert the characteristic to a statement
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession()
+                .createSQLQuery( "update CHARACTERISTIC set class = 'Statement' where ID = :id" )
+                .setParameter( "id", c.getId() )
+                .executeUpdate();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ee = expressionExperimentDao.load( ee.getId() );
+        assertNotNull( ee );
+        assertTrue( ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().iterator().next().getCharacteristics().isEmpty() );
+        expressionExperimentDao.remove( ee );
+        sessionFactory.getCurrentSession().flush();
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
