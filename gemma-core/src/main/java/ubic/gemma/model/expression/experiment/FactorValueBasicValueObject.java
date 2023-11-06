@@ -74,9 +74,8 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     private String value;
 
     /**
-     * @deprecated define your own logic for summarizing a factor value
+     * Human-readable summary of the factor value.
      */
-    @Deprecated
     private String summary;
 
     /**
