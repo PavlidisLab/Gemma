@@ -1,6 +1,8 @@
 package ubic.gemma.core.ontology;
 
+import lombok.Value;
 import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyProperty;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -29,4 +31,20 @@ public interface FactorValueOntologyService {
      * In general, this is used to retrieve annotations for a factor value.
      */
     Set<OntologyIndividual> getRelatedIndividuals( String uri );
+
+    /**
+     * Represents an ontology statement.
+     * TODO: move this into baseCode.
+     */
+    @Value
+    class OntologyStatement {
+        OntologyIndividual subject;
+        OntologyProperty predicate;
+        OntologyIndividual object;
+    }
+
+    /**
+     * Obtain statements related to the given URI.
+     */
+    Set<OntologyStatement> getRelatedStatements( String uri );
 }

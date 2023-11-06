@@ -1,13 +1,13 @@
 package ubic.gemma.web.controller;
 
+import com.hp.hpl.jena.ontology.*;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
@@ -18,7 +18,11 @@ import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 
+import java.io.StringWriter;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
@@ -27,11 +31,14 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * @author poirigui
  */
 @Controller
+@CommonsLog
 public class OntologyController {
 
     private static final String
             TGEMO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/",
             TGFVO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
+
+    private static final MediaType RDF_XML = MediaType.parseMediaType( "application/rdf+xml" );
 
     @Autowired
     private GemmaOntologyService gemmaOntologyService;
@@ -68,12 +75,20 @@ public class OntologyController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "/ont/TGFVO/{factorValueId}", method = RequestMethod.GET, produces = MediaType.TEXT_HTML_VALUE)
-    public String getFactorValue( @PathVariable("factorValueId") Long factorValueId ) {
+    @RequestMapping(value = "/ont/TGFVO/{factorValueId}", method = RequestMethod.GET, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    public String getFactorValue( @PathVariable("factorValueId") Long factorValueId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
         String iri = TGFVO_URI_PREFIX + factorValueId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
             throw new EntityNotFoundException( String.format( "No individual with IRI %s in TGFVO.", iri ) );
+        }
+        MediaType mediaType = Optional.ofNullable( acceptHeader )
+                .map( MediaType::parseMediaTypes )
+                .map( List::stream )
+                .flatMap( Stream::findFirst )
+                .orElse( MediaType.TEXT_HTML );
+        if ( mediaType.isCompatibleWith( RDF_XML ) ) {
+            return writeRdfModel( oi );
         }
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>FactorValue #%d: %s</title>", factorValueId, escapeHtml4( oi.getLabel() ) ) );
@@ -92,12 +107,20 @@ public class OntologyController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "/ont/TGFVO/{factorValueId}/{annotationId}", method = RequestMethod.GET, produces = MediaType.TEXT_HTML_VALUE)
-    public String getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId ) {
+    @RequestMapping(value = "/ont/TGFVO/{factorValueId}/{annotationId}", method = RequestMethod.GET, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    public String getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
         String iri = TGFVO_URI_PREFIX + factorValueId + "/" + annotationId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
             throw new EntityNotFoundException( String.format( "No individual with IRI %s in TGFVO.", iri ) );
+        }
+        MediaType mediaType = Optional.ofNullable( acceptHeader )
+                .map( MediaType::parseMediaTypes )
+                .map( List::stream )
+                .flatMap( Stream::findFirst )
+                .orElse( MediaType.TEXT_HTML );
+        if ( mediaType.isCompatibleWith( RDF_XML ) ) {
+            return writeRdfModel( oi );
         }
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>Annotation #%d of FactorValue #%d: %s</title>", annotationId, factorValueId, oi.getLabel() ) );
@@ -114,6 +137,46 @@ public class OntologyController {
         s.append( "</ul>" );
         s.append( "</div>" );
         return s.toString();
+    }
+
+    /**
+     * Write a small RDF model for a given factor value.
+     */
+    private String writeRdfModel( OntologyIndividual fv ) {
+        OntModel ontModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        ObjectProperty partOf = ontModel.createObjectProperty( "http://purl.obolibrary.org/obo/BFO_0000050" );
+        partOf.setLabel( "part of", null );
+        ObjectProperty hasPart = ontModel.createObjectProperty( "http://purl.obolibrary.org/obo/BFO_0000051" );
+        hasPart.setLabel( "has part", null );
+        Individual fvI = createIndividual( ontModel, fv );
+        for ( OntologyIndividual oi : factorValueOntologyService.getRelatedIndividuals( fv.getUri() ) ) {
+            Individual annot = createIndividual( ontModel, oi );
+            ontModel.add( annot, partOf, fvI );
+            ontModel.add( fvI, hasPart, annot );
+        }
+        for ( FactorValueOntologyService.OntologyStatement os : factorValueOntologyService.getRelatedStatements( fv.getUri() ) ) {
+            Individual subject = createIndividual( ontModel, os.getSubject() );
+            Individual object = createIndividual( ontModel, os.getObject() );
+            ObjectProperty predicate = ontModel.createObjectProperty( os.getPredicate().getUri() );
+            predicate.setLabel( os.getPredicate().getLabel(), null );
+            ontModel.add( subject, predicate, object );
+        }
+        StringWriter sw = new StringWriter();
+        ontModel.write( sw, "RDF/XML" );
+        return sw.toString();
+    }
+
+    private Individual createIndividual( OntModel ontModel, OntologyIndividual ind ) {
+        OntClass ontClass;
+        if ( ind.getInstanceOf() != null ) {
+            ontClass = ontModel.createClass( ind.getInstanceOf().getUri() );
+            ontClass.setLabel( ind.getInstanceOf().getLabel(), null );
+        } else {
+            ontClass = null;
+        }
+        Individual indI = ontModel.createIndividual( ind.getUri(), ontClass );
+        indI.setLabel( ind.getLabel(), null );
+        return indI;
     }
 
     private String renderOntologyResource( OntologyResource oi ) {
