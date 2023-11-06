@@ -45,6 +45,8 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+
 /**
  * @author pavlidis
  */
@@ -253,6 +255,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", StandardBasicTypes.LONG );
         queryObject.addScalar( "gene", StandardBasicTypes.LONG );
+        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
+        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
+        queryObject.addSynchronizedEntityClass( Gene.class );
 
         Collection<Long> csIdBatch = new HashSet<>();
         for ( CompositeSequence cs : compositeSequences ) {

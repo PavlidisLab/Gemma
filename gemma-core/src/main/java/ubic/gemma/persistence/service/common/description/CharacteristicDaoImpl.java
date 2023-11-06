@@ -35,11 +35,14 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -48,6 +51,8 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 
 /**
  * @author Luke
@@ -159,7 +164,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
                 .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
                 // invalidate the cache when the EE2C table is updated
-                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 // invalidate the cache when new characteristics are added/removed
                 .addSynchronizedEntityClass( Characteristic.class );
 

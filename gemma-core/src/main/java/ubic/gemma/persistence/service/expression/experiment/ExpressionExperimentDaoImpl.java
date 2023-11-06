@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 
 /**
  * @author pavlidis
@@ -682,7 +683,7 @@ public class ExpressionExperimentDaoImpl
                 .addScalar( "CATEGORY", StandardBasicTypes.STRING )
                 .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
-                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .addSynchronizedEntityClass( Characteristic.class )
                 .setCacheable( true );
         if ( eeIds != null ) {
