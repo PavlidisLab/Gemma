@@ -2,6 +2,9 @@ package ubic.gemma.model.expression.experiment;
 
 import org.junit.Test;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,6 +25,15 @@ public class FactorValueUtilsTest {
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", null, null, "for duration", "4h" ) );
         assertEquals( "methoxyacetic acid for duration 4h", FactorValueUtils.getSummaryString( fv ) );
+    }
+
+    @Test
+    public void testMeasurement() {
+        FactorValue fv = new FactorValue();
+        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
+        m.setUnit( Unit.Factory.newInstance( "mg" ) );
+        fv.setMeasurement( m );
+        assertEquals( "5.0 mg", FactorValueUtils.getSummaryString( fv ) );
     }
 
     private Statement createStatement( String subject, String predicate, String object, String secondPredicate, String secondObject ) {

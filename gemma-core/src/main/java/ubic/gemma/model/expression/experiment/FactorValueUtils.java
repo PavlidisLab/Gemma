@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.measurement.Measurement;
 
 import java.util.Iterator;
 
@@ -17,7 +18,13 @@ public class FactorValueUtils {
 
     public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
         StringBuilder buf = new StringBuilder();
-        if ( !fv.getCharacteristics().isEmpty() ) {
+        if ( fv.getMeasurement() != null && StringUtils.isNotBlank( fv.getMeasurement().getValue() ) ) {
+            Measurement measurement = fv.getMeasurement();
+            buf.append( defaultIfBlank( measurement.getValue(), "?" ) );
+            if ( fv.getMeasurement().getUnit() != null ) {
+                buf.append( " " ).append( fv.getMeasurement().getUnit().getUnitNameCV() );
+            }
+        } else if ( !fv.getCharacteristics().isEmpty() ) {
             for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Statement c = iter.next();
                 buf.append( defaultIfBlank( c.getSubject(), "?" ) );
@@ -35,8 +42,6 @@ public class FactorValueUtils {
                 if ( iter.hasNext() )
                     buf.append( statementDelimiter );
             }
-        } else if ( fv.getMeasurement() != null && !StringUtils.isBlank( fv.getMeasurement().getValue() ) ) {
-            buf.append( fv.getMeasurement().getValue() );
         } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
             buf.append( fv.getValue() );
         } else {
