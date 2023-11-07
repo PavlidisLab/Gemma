@@ -11,7 +11,7 @@ alter table BIO_ASSAY
     modify column SAMPLE_USED_FK BIGINT not null;
 -- allow distinguishing characteristics from statements
 alter table CHARACTERISTIC
-    add column MIGRATED_TO_STATEMENT TINYINT(1) not null default false after ORIGINAL_VALUE,
+    add column MIGRATED_TO_STATEMENT TINYINT not null default false after ORIGINAL_VALUE,
     add column PREDICATE             VARCHAR(255) after MIGRATED_TO_STATEMENT,
     add column PREDICATE_URI         VARCHAR(255) after PREDICATE,
     add column OBJECT                VARCHAR(255) after PREDICATE_URI,
@@ -26,3 +26,5 @@ alter table CHARACTERISTIC
     add index CHARACTERISTIC_OBJECT_URI_OBJECT (OBJECT_URI(100), OBJECT),
     add index CHARACTERISTIC_SECOND_PREDICATE_URI_SECOND_PREDICATE (SECOND_PREDICATE_URI(100), SECOND_PREDICATE),
     add index CHARACTERISTIC_SECOND_OBJECT_URI_SECOND_OBJECT (SECOND_OBJECT_URI(100), SECOND_OBJECT);
+alter table FACTOR_VALUE
+    add column NEEDS_ATTENTION TINYINT not null default false;

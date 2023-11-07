@@ -54,17 +54,21 @@ public abstract class AbstractCLI implements CLI {
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );
 
     /**
-     * Exit code used for a successful doWork execution.
+     * Exit code used for a successful {@link #doWork} execution.
      */
-    public static final int SUCCESS = 0;
+    protected static final int SUCCESS = 0;
     /**
-     * Exit code used for a failed doWork execution.
+     * Exit code used for a failed {@link #doWork} execution.
      */
-    public static final int FAILURE = 1;
+    protected static final int FAILURE = 1;
     /**
      * Exit code used for a successful doWork execution that resulted in failed error objects.
      */
-    public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
+    protected static final int FAILURE_FROM_ERROR_OBJECTS = 1;
+    /**
+     * Exit code used when a {@link #doWork()} is aborted.
+     */
+    protected static final int ABORTED = 2;
 
     public static final String HEADER = "Options:";
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
@@ -198,6 +202,9 @@ public abstract class AbstractCLI implements CLI {
         try {
             doWork();
             return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+        } catch ( WorkAbortedException e ) {
+            log.warn( "Operation was aborted by the current user." );
+            return ABORTED;
         } catch ( Exception e ) {
             log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
             return FAILURE;
@@ -208,8 +215,17 @@ public abstract class AbstractCLI implements CLI {
         }
     }
 
+    private void printHelp( Options options ) {
+        new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
+                this.getCommandName() + " [options]",
+                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
+                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
+    }
+
     /**
-     * You must implement the handling for this option.
+     * Add the {@code -auto} option.
+     * <p>
+     * The auto option value can be retrieved with {@link #isAutoSeek()}.
      */
     protected void addAutoOption( Options options ) {
         options.addOption( Option.builder( AUTO_OPTION_NAME )
@@ -217,11 +233,21 @@ public abstract class AbstractCLI implements CLI {
                 .build() );
     }
 
+    /**
+     * Add the {@code -auto} option for a specific {@link AuditEventType}.
+     * <p>
+     * The event type can be retrieved with {@link #getAutoSeekEventType()}.
+     */
     protected void addAutoOption( Options options, Class<? extends AuditEventType> autoSeekEventType ) {
         addAutoOption( options );
         this.autoSeekEventType = autoSeekEventType;
     }
 
+    /**
+     * Add the {@code -mdate} option.
+     * <p>
+     * The limiting date can be retrieved with {@link #getLimitingDate()}.
+     */
     protected void addDateOption( Options options ) {
         options.addOption( Option.builder( DATE_OPTION ).hasArg()
                 .desc( "Constrain to run only on entities with analyses older than the given date. "
@@ -231,7 +257,11 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Convenience method to add an option for parallel processing option.
+     * Add the {@code -threads} option.
+     * <p>
+     * This is used to configure the internal batch processing thread pool which can be used with
+     * {@link #executeBatchTasks(Collection)}. You may also use {@link #getNumThreads()} to retrieve the number of
+     * threads to use.
      */
     protected void addThreadsOption( Options options ) {
         options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
@@ -250,34 +280,6 @@ public abstract class AbstractCLI implements CLI {
     protected void setAllowPositionalArguments( boolean allowPositionalArguments ) {
         this.allowPositionalArguments = allowPositionalArguments;
     }
-
-    /**
-     * Build option implementation.
-     * <p>
-     * Implement this method to add options to your command line, using the OptionBuilder.
-     * <p>
-     * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
-     */
-    protected abstract void buildOptions( Options options );
-
-    protected void buildStandardOptions( Options options ) {
-        AbstractCLI.log.debug( "Creating standard options" );
-        options.addOption( HELP_OPTION, "help", false, "Print this message" );
-        options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
-        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
-    }
-
-    /**
-     * Command line implementation.
-     * <p>
-     * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the implementation can assume that
-     * all its arguments have already been initialized.
-     *
-     * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a {@link #FAILURE}
-     *                   exit code, otherwise use {@link #addErrorObject}
-     */
-    protected abstract void doWork() throws Exception;
 
     protected boolean isAutoSeek() {
         return autoSeek;
@@ -300,11 +302,63 @@ public abstract class AbstractCLI implements CLI {
         return skipIfLastRunLaterThan;
     }
 
-    private void printHelp( Options options ) {
-        new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
-                this.getCommandName() + " [options]",
-                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
-                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
+    protected void buildStandardOptions( Options options ) {
+        AbstractCLI.log.debug( "Creating standard options" );
+        options.addOption( HELP_OPTION, "help", false, "Print this message" );
+        options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
+        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+    }
+
+    /**
+     * Build option implementation.
+     * <p>
+     * Implement this method to add options to your command line, using the OptionBuilder.
+     * <p>
+     * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
+     */
+    protected abstract void buildOptions( Options options );
+
+    /**
+     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
+     * purposes.
+     */
+    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
+        if ( commandLine.hasOption( DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", DATE_OPTION, AUTO_OPTION_NAME ) );
+        }
+
+        if ( commandLine.hasOption( DATE_OPTION ) ) {
+            this.mDate = commandLine.getOptionValue( DATE_OPTION );
+        }
+
+        this.autoSeek = commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME );
+
+        if ( commandLine.hasOption( THREADS_OPTION ) ) {
+            this.numThreads = ( Integer ) commandLine.getParsedOptionValue( THREADS_OPTION );
+            if ( this.numThreads < 1 ) {
+                throw new IllegalArgumentException( "Number of threads must be greater than 1." );
+            }
+        } else {
+            this.numThreads = 1;
+        }
+
+        if ( this.numThreads > 1 ) {
+            this.executorService = Executors.newFixedThreadPool( this.numThreads );
+        } else {
+            this.executorService = Executors.newSingleThreadExecutor();
+        }
+
+        if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
+            try {
+                this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
+            } catch ( IllegalArgumentException e ) {
+                throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
+            }
+        } else {
+            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
+        }
+        this.batchOutputFile = ( File ) commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
     }
 
     /**
@@ -316,6 +370,33 @@ public abstract class AbstractCLI implements CLI {
      *                        be raised and will result in an exit code of {@link #FAILURE}.
      */
     protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
+
+    /**
+     * Command line implementation.
+     * <p>
+     * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the
+     * implementation can assume that all its arguments have already been initialized.
+     *
+     * @throws Exception            in case of unrecoverable failure, an exception is thrown and will result in a
+     *                              {@link #FAILURE} exit code, otherwise use {@link #addErrorObject} to indicate an
+     *                              error and resume processing
+     */
+    protected abstract void doWork() throws Exception;
+
+    /**
+     * Prompt the user for a confirmation or raise an exception to abort the {@link #doWork()} method.
+     */
+    protected void promptConfirmationOrAbort( String message ) throws Exception {
+        if ( System.console() == null ) {
+            throw new IllegalStateException( "A console must be available for prompting confirmation." );
+        }
+        String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
+                message.replaceAll( "\n", "\nWARNING: " ) );
+        if ( "YES".equals( line.trim() ) ) {
+            return;
+        }
+        throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );
+    }
 
     /**
      * Add a success object to indicate success in a batch processing.
@@ -442,57 +523,17 @@ public abstract class AbstractCLI implements CLI {
     protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
         List<Future<T>> futures = executorService.invokeAll( tasks );
         List<T> futureResults = new ArrayList<>( futures.size() );
-        int i = 0;
+        int i = 1;
         for ( Future<T> future : futures ) {
             try {
                 futureResults.add( future.get() );
             } catch ( ExecutionException e ) {
-                addErrorObject( null, String.format( "Batch task #%d failed", ++i ), e.getCause() );
+                addErrorObject( null, String.format( "Batch task #%d failed", i ), e.getCause() );
+            } finally {
+                i++;
             }
         }
         return futureResults;
-    }
-
-    /**
-     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
-     * purposes.
-     */
-    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", DATE_OPTION, AUTO_OPTION_NAME ) );
-        }
-
-        if ( commandLine.hasOption( DATE_OPTION ) ) {
-            this.mDate = commandLine.getOptionValue( DATE_OPTION );
-        }
-
-        this.autoSeek = commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME );
-
-        if ( commandLine.hasOption( THREADS_OPTION ) ) {
-            this.numThreads = ( Integer ) commandLine.getParsedOptionValue( THREADS_OPTION );
-            if ( this.numThreads < 1 ) {
-                throw new IllegalArgumentException( "Number of threads must be greater than 1." );
-            }
-        } else {
-            this.numThreads = 1;
-        }
-
-        if ( this.numThreads > 1 ) {
-            this.executorService = Executors.newFixedThreadPool( this.numThreads );
-        } else {
-            this.executorService = Executors.newSingleThreadExecutor();
-        }
-
-        if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
-            try {
-                this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
-            } catch ( IllegalArgumentException e ) {
-                throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
-            }
-        } else {
-            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
-        }
-        this.batchOutputFile = ( File ) commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
     }
 
     private enum BatchFormat {
@@ -535,6 +576,17 @@ public abstract class AbstractCLI implements CLI {
                         .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }
             return buf.toString();
+        }
+    }
+
+    /**
+     * Exception raised when a {@link #doWork()} aborted by the user.
+     * @author poirigui
+     */
+    private static class WorkAbortedException extends Exception {
+
+        private WorkAbortedException( String message ) {
+            super( message );
         }
     }
 }

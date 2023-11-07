@@ -51,6 +51,9 @@ Gemma.FactorValueRecord = Ext.data.Record.create( [ {
 }, {
    name : "factorValue",
    type : "string"
+}, {
+   name:"needsAttention",
+   type: "boolean"
 } ] );
 
 Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
@@ -264,9 +267,17 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
        * The checkboxes defined here require that this.form be set: a <form> element wrapping the div that this
        * goes in. Clumsy but it works.
        */
-      var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"'
-         + ' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
-      groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValue ]}';
+      var groupTextTpl = "";
+      if ( this.editable ) {
+         groupTextTpl += '<input id="{[ values.rs[0].data.id ]}" type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.id ]}"/>';
+         groupTextTpl += ' ';
+      }
+      // label for the FV
+      groupTextTpl = groupTextTpl + '<span>{[ values.rs[0].data.factorValue ]}</span>';
+      if ( this.editable ) {
+         // indicate if the FV needs attention
+         groupTextTpl += '<tpl if="values.rs[0].data.needsAttention"> <span class="gold"><i class="fa fa-exclamation-circle fa-lg fa-fw"></i> Needs attention</span></tpl>';
+      }
 
       this.view = new Ext.grid.GroupingView( {
          enableGroupingMenu : false,

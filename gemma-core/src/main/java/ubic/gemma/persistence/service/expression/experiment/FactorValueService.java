@@ -131,4 +131,10 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( FactorValue factorValue );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void markAsNeedsAttention( FactorValue factorValue, String note );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void clearNeedsAttentionFlag( FactorValue factorValue );
 }

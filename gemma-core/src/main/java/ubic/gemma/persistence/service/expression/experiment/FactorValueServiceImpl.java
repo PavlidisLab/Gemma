@@ -19,10 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -44,12 +47,16 @@ import static java.util.Objects.requireNonNull;
 public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<FactorValue, FactorValueValueObject>
         implements FactorValueService {
 
+    private final ExpressionExperimentService expressionExperimentService;
+    private final AuditTrailService auditTrailService;
     private final FactorValueDao factorValueDao;
     private final StatementDao statementDao;
 
     @Autowired
-    public FactorValueServiceImpl( FactorValueDao factorValueDao, StatementDao statementDao ) {
+    public FactorValueServiceImpl( ExpressionExperimentService expressionExperimentService, AuditTrailService auditTrailService, FactorValueDao factorValueDao, StatementDao statementDao ) {
         super( factorValueDao );
+        this.expressionExperimentService = expressionExperimentService;
+        this.auditTrailService = auditTrailService;
         this.factorValueDao = factorValueDao;
         this.statementDao = statementDao;
     }
@@ -171,5 +178,23 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional
     public void remove( Collection<FactorValue> entities ) {
         super.remove( ensureInSession( entities ) );
+    }
+
+    @Override
+    @Transactional
+    public void markAsNeedsAttention( FactorValue factorValue, String note ) {
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValue );
+        factorValue.setNeedsAttention( true );
+        factorValueDao.update( factorValue );
+        if ( ee != null ) {
+            auditTrailService.addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, String.format( "%s needs attention: %s", factorValue, note ) );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void clearNeedsAttentionFlag( FactorValue factorValue ) {
+        factorValue.setNeedsAttention( false );
+        factorValueDao.update( factorValue );
     }
 }

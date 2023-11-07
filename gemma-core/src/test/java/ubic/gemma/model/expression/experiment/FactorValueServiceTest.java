@@ -36,7 +36,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
 
         @Bean
         public FactorValueService factorValueService( FactorValueDao factorValueDao, StatementDao statementDao ) {
-            return new FactorValueServiceImpl( factorValueDao, statementDao );
+            return new FactorValueServiceImpl( mock(), mock(), factorValueDao, statementDao );
         }
 
         @Bean

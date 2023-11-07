@@ -112,6 +112,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     private String secondObject;
     @GemmaWebOnly
     private String secondObjectUri;
+    @GemmaWebOnly
+    private Boolean needsAttention;
 
     /**
      * Required when using the class as a spring bean.
@@ -176,6 +178,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
             this.value = c.getValue(); // clobbers if we set it already
             this.valueUri = c.getValueUri();
         }
+
+        this.needsAttention = value.getNeedsAttention();
     }
 
     /**

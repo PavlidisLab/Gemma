@@ -20,8 +20,6 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.directwebremoting.extend.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +37,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
@@ -72,8 +69,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Autowired
     private BioMaterialService bioMaterialService;
-    @Autowired
-    private CharacteristicService characteristicService;
     @Autowired
     private ExperimentalDesignImporter experimentalDesignImporter;
     @Autowired
@@ -204,7 +199,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new EntityNotFoundException( "No such experiment with " + fv );
         }
 
-        factorValueService.createStatement( fv, statementFromVo( cvo ) );
+        Statement c = factorValueService.createStatement( fv, statementFromVo( cvo ) );
+        log.debug( String.format( "Created %s", c ) );
 
         // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
         // "FactorValue characteristic added to: " + fv, c.toString() );
@@ -680,6 +676,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( fvvos == null || fvvos.length == 0 )
             return;
 
+        // validate the VOs
         FactorValue[] fvs = new FactorValue[fvvos.length];
         Statement[] statements = new Statement[fvvos.length];
         for ( int i = 0; i < fvvos.length; i++ ) {
@@ -688,16 +685,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             if ( fvID == null ) {
                 throw new IllegalArgumentException( "Factor value id must be supplied" );
             }
-
             FactorValue fv = this.factorValueService.loadOrFail( fvID, EntityNotFoundException::new, "Could not load factorvalue with id=" + fvID );
-
-            if ( !securityService.isEditable( fv ) ) {
-                /*
-                 * We do this instead of the interceptor because Characteristics are not securable, and we really don't
-                 * want them to be.
-                 */
-                throw new AccessDeniedException( "Access is denied" );
-            }
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
             if ( charId != null ) {
@@ -763,10 +751,12 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 c.setSecondObjectUri( null );
             }
 
-            if ( c.getId() != null ) {
-                characteristicService.update( c );
-            } else {
-                factorValueService.createStatement( fv, c );
+            c = factorValueService.saveStatement( fv, c );
+            log.debug( String.format( "Saved %s", c ) );
+
+            if ( fv.getNeedsAttention() ) {
+                factorValueService.clearNeedsAttentionFlag( fv );
+                log.info( "Reverted needs attention flag for " + fv );
             }
         }
 
@@ -774,6 +764,19 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
         // "FactorValue characteristics updated", StringUtils.join( fvvos, "\n" ) );
         this.experimentReportService.evictFromCache( ee.getId() );
+    }
+
+    @Override
+    public void markFactorValueAsNeedsAttention( EntityDelegator<ExpressionExperiment> ee, EntityDelegator<FactorValue> fv, String note ) {
+        ExpressionExperiment e = expressionExperimentService.loadOrFail( ee.getId(), EntityNotFoundException::new,
+                String.format( "No ExpressionExperiment with ID %d", ee.getId() ) );
+        FactorValue fvs = factorValueService.loadOrFail( fv.getId(), EntityNotFoundException::new,
+                String.format( "No FactorValue with ID %d", fv.getId() ) );
+        if ( fvs.getNeedsAttention() ) {
+            throw new IllegalArgumentException( String.format( "%s is already marked as needs attention, save it to reset the status.", fvs ) );
+        }
+        factorValueService.markAsNeedsAttention( fvs, note );
+        log.info( String.format( "Marked %s as needs attention: %s", fvs, note ) );
     }
 
     private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {

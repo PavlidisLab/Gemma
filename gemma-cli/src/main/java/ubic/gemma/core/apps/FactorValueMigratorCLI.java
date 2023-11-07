@@ -1,10 +1,7 @@
 package ubic.gemma.core.apps;
 
 import lombok.Value;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -42,6 +39,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
             MIGRATION_FILE_OPTION = "migrationFile",
             MIGRATE_REMAINING_CHARACTERISTICS_OPTION = "migrateRemainingCharacteristics",
             MIGRATE_REMAINING_FACTOR_VALUES_OPTION = "migrateRemainingFactorValues",
+            MIGRATE_NON_TRIVIAL_CASES_OPTION = "migrateNonTrivialCases",
             NOOP_OPTION = "noop";
 
     @Autowired
@@ -53,6 +51,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     private List<MigrationWithLineNumber> migrations;
     private boolean migrateRemainingCharacteristics;
     private boolean migrateRemainingFactorValues;
+    private boolean migrateNonTrivialCases;
     private boolean noop;
 
     @Override
@@ -73,9 +72,10 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( MIGRATION_FILE_OPTION ).hasArg().type( File.class ).desc( "File containing factor value migrations" ).build() );
-        options.addOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION, false, "Migrate remaining characteristics of factor values that were mentioned in the migration file." );
+        options.addOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION, false, "Migrate remaining characteristics of factor values that were mentioned in the migration file. The affected factor values will be marked as needs attention." );
         options.addOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION, false, "Migrate remaining factor values that weren't mentioned in the migration file." );
-        options.addOption( NOOP_OPTION, false, "Only validate migrations" );
+        options.addOption( MIGRATE_NON_TRIVIAL_CASES_OPTION, false, "Migrate non-trivial cases (i.e. 2 or more old-style characteristics) to subject-only statements. The affected factor values will be marked as needs attention." );
+        options.addOption( NOOP_OPTION, false, "Only validate migrations; no statements will be saved" );
     }
 
     @Value
@@ -91,6 +91,18 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        if ( !commandLine.hasOption( MIGRATION_FILE_OPTION ) && !commandLine.hasOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION ) ) {
+            throw new MissingOptionException( String.format( "At least one of -%s or -%s must be specified.",
+                    MIGRATION_FILE_OPTION, MIGRATE_REMAINING_FACTOR_VALUES_OPTION ) );
+        }
+        if ( !commandLine.hasOption( MIGRATION_FILE_OPTION ) && commandLine.hasOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION ) ) {
+            throw new MissingOptionException( String.format( "-%s must be specified if -%s is used.",
+                    MIGRATION_FILE_OPTION, MIGRATE_REMAINING_CHARACTERISTICS_OPTION ) );
+        }
+        if ( !commandLine.hasOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION ) && commandLine.hasOption( MIGRATE_NON_TRIVIAL_CASES_OPTION ) ) {
+            throw new MissingOptionException( String.format( "-%s must be specified if -%s is used.",
+                    MIGRATE_REMAINING_FACTOR_VALUES_OPTION, MIGRATE_NON_TRIVIAL_CASES_OPTION ) );
+        }
         migrations = new ArrayList<>();
         if ( commandLine.hasOption( MIGRATION_FILE_OPTION ) ) {
             File migrationFile = ( File ) commandLine.getParsedOptionValue( MIGRATION_FILE_OPTION );
@@ -131,6 +143,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         }
         migrateRemainingCharacteristics = commandLine.hasOption( MIGRATE_REMAINING_CHARACTERISTICS_OPTION );
         migrateRemainingFactorValues = commandLine.hasOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION );
+        migrateNonTrivialCases = commandLine.hasOption( MIGRATE_NON_TRIVIAL_CASES_OPTION );
         noop = commandLine.hasOption( NOOP_OPTION );
     }
 
@@ -142,6 +155,12 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     protected void doWork() throws Exception {
         if ( noop ) {
             log.info( "Noop mode enabled, no statements will be saved." );
+        }
+        if ( migrateRemainingFactorValues ) {
+            promptConfirmationOrAbort( "Migrating remaining factor values will create a lot of statements." );
+        }
+        if ( migrateNonTrivialCases ) {
+            promptConfirmationOrAbort( "Migrating non-trivial cases will create a lot of statements and needs attention events on the affected datasets." );
         }
         Map<Long, List<MigrationWithLineNumber>> migrationsByFactorValue = migrations.stream()
                 .collect( Collectors.groupingBy( migration -> migration.getMigration().getFactorValueId(), Collectors.toList() ) );
@@ -207,7 +226,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         }
         if ( migrateRemainingFactorValues ) {
             try {
-                factorValueMigratorService.performMigrationOfRemainingFactorValues( migrationsByFactorValue.keySet(), noop )
+                factorValueMigratorService.performMigrationOfRemainingFactorValues( migrationsByFactorValue.keySet(), migrateNonTrivialCases, noop )
                         .forEach( ( fvId, stmts ) -> {
                             addSuccessObject( "FactorValue #" + fvId,
                                     summarizeMigrationResults( stmts ) );

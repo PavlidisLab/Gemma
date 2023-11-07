@@ -147,12 +147,22 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             throw new IllegalArgumentException( String.format( "No FactorValue with ID %d.", fvId ) );
         }
 
-        return performMigrationOfRemainingOldStyleCharacteristics( fv, migratedOldStyleCharacteristicIds, noop );
+        List<MigrationResult> results = performMigrationOfRemainingOldStyleCharacteristics( fv, migratedOldStyleCharacteristicIds, false, noop );
+
+        if ( !results.isEmpty() && !fv.getNeedsAttention() ) {
+            String note = "Marked as needs attention because some if its old-style characteristics were automatically migrated.";
+            if ( !noop ) {
+                factorValueService.markAsNeedsAttention( fv, note );
+            }
+            log.warn( "FactorValue #" + fv.getId() + ": " + note );
+        }
+
+        return results;
     }
 
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> migratedFactorValues, boolean noop ) {
+    public Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> migratedFactorValues, boolean migrateNonTrivialCases, boolean noop ) {
         Map<Long, List<MigrationResult>> result = new HashMap<>();
         long total = factorValueService.countAll();
         // this way we avoid loading old-style characteristics unless we need to;
@@ -186,9 +196,29 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
                                 log.warn( String.format( "No FactorValue with ID %d.", fvId ) );
                                 return Collections.emptyList();
                             }
-                            return performMigrationOfRemainingOldStyleCharacteristics( fv, null, noop );
+                            return performMigrationOfRemainingOldStyleCharacteristics( fv, null, false, noop );
                         } ) );
                 done++;
+            } else if ( migrateNonTrivialCases ) {
+                result.computeIfAbsent( fvId, k -> new ArrayList<>() )
+                        .addAll( tt.execute( ts -> {
+                            FactorValue fv = factorValueService.loadWithOldStyleCharacteristics( fvId, noop );
+                            if ( fv == null ) {
+                                log.warn( String.format( "No FactorValue with ID %d.", fvId ) );
+                                return Collections.emptyList();
+                            }
+                            // we need to skip characteristics flagged as already migrated because they might have
+                            // already been covered by a curator-supplied migration
+                            List<MigrationResult> results = performMigrationOfRemainingOldStyleCharacteristics( fv, null, true, noop );
+                            if ( !results.isEmpty() && !fv.getNeedsAttention() ) {
+                                String note = String.format( "Marked as needs attention because %d of its old-style characteristics were automatically migrated to subject-only statements.", results.size() );
+                                if ( !noop ) {
+                                    factorValueService.markAsNeedsAttention( fv, note );
+                                }
+                                log.warn( "FactorValue #" + fv.getId() + ": " + note );
+                            }
+                            return results;
+                        } ) );
             } else {
                 // 2 or more old-style characteristics, those should have been in the migration file
                 log.debug( String.format( "FactorValue #%d has %d old-style characteristics and was missing from the migration file.",
@@ -217,15 +247,21 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
      * @param migratedOldStyleCharacteristicIds a set of already migrated old-style characteristics to be ignored, a
      *                                          warning is produced if an old-style characteristic is marked as migrated
      *                                          to statement and not present in that set, or null to ignore
+     * @param skipAlreadyMigrated               skip characteristics that are flagged as already migrated to statement
+     *                                          as per {@link Characteristic#isMigratedToStatement()}
      * @param noop                              noop mode: the factor value and characteristics are loaded in read-only
      *                                          mode and no changes are persisted
      * @return the result of the migration of each old-style characteristic
      */
-    private List<MigrationResult> performMigrationOfRemainingOldStyleCharacteristics( FactorValue fv, @Nullable Set<Long> migratedOldStyleCharacteristicIds, boolean noop ) {
+    private List<MigrationResult> performMigrationOfRemainingOldStyleCharacteristics( FactorValue fv, @Nullable Set<Long> migratedOldStyleCharacteristicIds, boolean skipAlreadyMigrated, boolean noop ) {
         List<MigrationResult> result = new ArrayList<>();
         for ( Characteristic c : fv.getOldStyleCharacteristics() ) {
+            if ( skipAlreadyMigrated && c.isMigratedToStatement() ) {
+                log.debug( "FactorValue #" + fv.getId() + ": Ignoring " + c + " as it was already migrated to a statement." );
+                continue;
+            }
             if ( migratedOldStyleCharacteristicIds != null && migratedOldStyleCharacteristicIds.contains( c.getId() ) ) {
-                log.info( "FactorValue #" + fv.getId() + ": Ignoring " + c + " as it was already migrated to a statement." );
+                log.debug( "FactorValue #" + fv.getId() + ": Ignoring " + c + " as it was already migrated to a statement." );
                 continue;
             }
             if ( migratedOldStyleCharacteristicIds != null && c.isMigratedToStatement() ) {
@@ -240,11 +276,9 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             log.debug( "FactorValue #" + fv.getId() + ": " + ( isTransient ? "Created" : "Updated" ) + statement );
             result.add( new MigrationResult( fv.getId(), noop ? statement : factorValueService.saveStatementIgnoreAcl( fv, statement ), isTransient ) );
         }
-
         if ( result.isEmpty() ) {
-            log.info( "FactorValue #" + fv.getId() + ": No old-style characteristics to migrate." );
+            log.debug( "FactorValue #" + fv.getId() + ": No old-style characteristics to migrate." );
         }
-
         return result;
     }
 

@@ -11,10 +11,8 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.model.expression.experiment.StatementValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -26,6 +24,7 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -106,6 +105,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Autowired
     private FactorValueService factorValueService;
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     /* fixtures */
     private FactorValue fv;
 
@@ -178,5 +180,51 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
                 .hasMessageContaining( "The predicate and object must be either both present or absent." );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testMarkAsNeedsAttention() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        when( expressionExperimentService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "" );
+        verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).update( fv );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( FactorValueNeedsAttentionEvent.class ), any() );
+    }
+
+    @Test
+    public void testMarkAsNeedsAttentionWhenFactorValueIsAlreadyMarked() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setNeedsAttention( true );
+        when( expressionExperimentService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        assertThatThrownBy( () -> {
+            experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "" );
+        } ).isInstanceOf( IllegalArgumentException.class );
+        verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verifyNoMoreInteractions( factorValueService );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    public void testNeedsAttentionIsResetWhenFVIsSaved() {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setNeedsAttention( true );
+        FactorValueValueObject fvvo = new FactorValueValueObject();
+        fvvo.setId( fv.getId() );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+        assertThat( fv.getNeedsAttention() ).isFalse();
+        verify( factorValueService ).update( fv );
     }
 }

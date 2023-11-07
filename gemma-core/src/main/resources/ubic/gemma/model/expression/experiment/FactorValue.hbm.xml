@@ -17,6 +17,9 @@
       <property name="isBaseline" type="java.lang.Boolean">
          <column name="IS_BASELINE" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
+      <property name="needsAttention" type="java.lang.Boolean">
+         <column name="NEEDS_ATTENTION" not-null="true" default="false" unique="false" sql-type="TINYINT"/>
+      </property>
       <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactor"
                    cascade="none" lazy="proxy" fetch="select">
          <column name="EXPERIMENTAL_FACTOR_FK" not-null="true" sql-type="BIGINT"/>
@@ -37,7 +40,8 @@
       </set>
       <!-- non-migrated characteristics -->
       <!-- remove this mapping once all old-style characteristics have been migrated (see https://github.com/PavlidisLab/Gemma/issues/929 for details) -->
-      <set name="oldStyleCharacteristics" lazy="true" fetch="select" where="class is null" mutable="false" cascade="evict,delete">
+      <set name="oldStyleCharacteristics" lazy="true" fetch="select" where="class is null" mutable="false"
+           cascade="evict,delete">
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
          </key>

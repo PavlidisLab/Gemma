@@ -61,6 +61,14 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
 
     /**
+     * Indicate if this factor value needs attention.
+     * <p>
+     * If this is the case, there might be a {@link ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent}
+     * event attached to the owning {@link ExpressionExperiment} with additional details.
+     */
+    private boolean needsAttention;
+
+    /**
      * No-arg constructor added to satisfy javabean contract
      *
      * @author Paul
@@ -193,19 +201,24 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     /**
-     * @deprecated use {@link #getCharacteristics()} instead.
+     * @deprecated use {@link #getMeasurement()} or {@link #getCharacteristics()} to retrieve the value.
      */
     @Deprecated
     public String getValue() {
         return this.value;
     }
 
-    /**
-     * @deprecated use {@link #setCharacteristics(Set)} ()} instead.
-     */
     @Deprecated
     public void setValue( String value ) {
         this.value = value;
+    }
+
+    public boolean getNeedsAttention() {
+        return needsAttention;
+    }
+
+    public void setNeedsAttention( boolean troubled ) {
+        this.needsAttention = troubled;
     }
 
     private boolean checkGuts( FactorValue that ) {

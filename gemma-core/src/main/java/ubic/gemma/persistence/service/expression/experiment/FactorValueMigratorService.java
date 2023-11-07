@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.Builder;
 import lombok.Value;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.Statement;
 
 import javax.annotation.Nullable;
@@ -29,21 +30,30 @@ public interface FactorValueMigratorService {
     List<MigrationResult> performMultipleMigrations( List<Migration> migrations, boolean noop ) throws MigrationFailedException;
 
     /**
-     * Mark the given old-style characteristics for removal by setting their remove flag.
-     *
-     * @param fvId
-     * @param migratedOldStyleCharacteristicIds
-     * @param noop
+     * Migrate all the old-style characteristics of a given factor value to subject-only statements.
+     * <p>
+     * The FV will be marked as troubled.
+     * @param fvId                              ID of the factor value to migrate
+     * @param migratedOldStyleCharacteristicIds a set of already migrated old-style characteristic IDs, if null the
+     *                                          {@link Characteristic#isMigratedToStatement()} flag will be used to
+     *                                          determine if a characteristic has already been migrated
+     * @param noop                              if true, do not save the resulting statements
      * @return list of created or updated statements from the given factor value
      */
     List<MigrationResult> performMigrationOfRemainingOldStyleCharacteristics( Long fvId, Set<Long> migratedOldStyleCharacteristicIds, boolean noop );
 
     /**
      * Migrate all remaining factor values that have not been migrated yet.
-     * @param fvIds IDs of already migrated FVs
+     * <p>
+     * All the FVs with zero or one characteristics will be migrated automatically unless migratedToSubjectOnly is set,
+     * in which case all the old-style characteristics will be migrated to subject-only statements.
+     * @param fvIds                  IDs of already migrated FVs
+     * @param migrateNonTrivialCases allow migration to subject-only statements for FVs with more than one old-style
+     *                               characteristics; those FVs will be marked as troubled.
+     * @param noop                   if true, do not save the resulting statements
      * @return created of updated statements organized by factor value ID
      */
-    Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> fvIds, boolean noop );
+    Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> fvIds, boolean migrateNonTrivialCases, boolean noop );
 
     @Value
     @Builder

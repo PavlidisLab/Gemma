@@ -8,7 +8,6 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.util.TestComponent;
@@ -61,7 +60,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
 
     @Test
     public void test() {
-        assertEquals( AbstractCLI.SUCCESS, findObsoleteTermsCli.executeCommand( new String[] {} ) );
+        assertEquals( 0, findObsoleteTermsCli.executeCommand() );
         verify( ontology1 ).setSearchEnabled( false );
         verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );

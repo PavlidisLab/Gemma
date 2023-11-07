@@ -135,4 +135,8 @@ public interface ExperimentalDesignController {
      */
     void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos );
 
+    /**
+     * Mark the given {@link FactorValue} as needs attention.
+     */
+    void markFactorValueAsNeedsAttention( EntityDelegator<ExpressionExperiment> ee, EntityDelegator<FactorValue> fv, String note );
 }

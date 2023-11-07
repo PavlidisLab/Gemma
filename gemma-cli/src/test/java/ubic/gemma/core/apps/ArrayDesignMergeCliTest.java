@@ -12,7 +12,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -91,8 +90,8 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
         when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
-        assertThat( arrayDesignMergeCli.executeCommand( new String[] { "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" } ) )
-                .isEqualTo( AbstractCLI.SUCCESS );
+        assertThat( arrayDesignMergeCli.executeCommand( "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" ) )
+                .isEqualTo( 0 );
         verify( arrayDesignMergeService ).merge( a, otherPlatforms, "four is better than one", "4", false );
     }
 }
