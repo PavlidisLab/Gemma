@@ -7,8 +7,6 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
 import java.io.IOException;
 
-import static ubic.gemma.core.ontology.FactorValueOntologyUtils.getUri;
-
 public class FactorValueBasicValueObjectSerializer extends AbstractFactorValueValueObjectSerializer<FactorValueBasicValueObject> {
 
     public FactorValueBasicValueObjectSerializer() {
@@ -29,7 +27,6 @@ public class FactorValueBasicValueObjectSerializer extends AbstractFactorValueVa
         writeStatements( factorValueBasicValueObject.getId(), factorValueBasicValueObject.getStatements(), jsonGenerator );
         //noinspection deprecation
         jsonGenerator.writeStringField( "value", factorValueBasicValueObject.getValue() );
-        //noinspection deprecation
         jsonGenerator.writeStringField( "summary", factorValueBasicValueObject.getSummary() );
         jsonGenerator.writeEndObject();
     }

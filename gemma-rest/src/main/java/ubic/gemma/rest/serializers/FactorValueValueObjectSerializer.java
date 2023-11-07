@@ -7,8 +7,6 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 import java.io.IOException;
 
-import static ubic.gemma.core.ontology.FactorValueOntologyUtils.getUri;
-
 public class FactorValueValueObjectSerializer extends AbstractFactorValueValueObjectSerializer<FactorValueValueObject> {
 
     public FactorValueValueObjectSerializer() {

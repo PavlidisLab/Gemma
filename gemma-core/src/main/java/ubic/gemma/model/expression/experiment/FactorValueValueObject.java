@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -39,6 +40,12 @@ import java.util.stream.Collectors;
 public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> {
 
     private static final long serialVersionUID = 3378801249808036785L;
+
+    /**
+     * A unique ontology identifier (i.e. IRI) for this factor value.
+     */
+    @GemmaRestOnly
+    private String ontologyId;
 
     /**
      * ID of the experimental factor this FV belongs to.
