@@ -94,24 +94,31 @@
     <!-- ==================================================== -->
     <!-- Exception handler. -->
     <!-- ==================================================== -->
-    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
-        <property name="defaultErrorView" value="error/500"/>
-        <property name="statusCodes">
-            <props>
-                <prop key="error/400">400</prop>
-                <prop key="error/403">403</prop>
-                <prop key="error/404">404</prop>
-                <prop key="error/500">500</prop>
-                <prop key="error/503">503</prop>
-            </props>
-        </property>
-        <property name="exceptionMappings">
-            <props>
-                <prop key="org.springframework.security.access.AccessDeniedException">error/403</prop>
-                <prop key="ubic.gemma.web.util.EntityNotFoundException">error/404</prop>
-                <prop key="ubic.gemma.web.util.ServiceUnavailableException">error/503</prop>
-                <prop key="java.lang.IllegalArgumentException">error/400</prop>
-            </props>
+    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.HandlerExceptionResolverComposite">
+        <property name="exceptionResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+                    <property name="statusCodes">
+                        <props>
+                            <prop key="error/400">400</prop>
+                            <prop key="error/403">403</prop>
+                            <prop key="error/404">404</prop>
+                            <prop key="error/503">503</prop>
+                        </props>
+                    </property>
+                    <property name="exceptionMappings">
+                        <props>
+                            <prop key="org.springframework.security.access.AccessDeniedException">error/403</prop>
+                            <prop key="ubic.gemma.web.util.EntityNotFoundException">error/404</prop>
+                            <prop key="ubic.gemma.web.util.ServiceUnavailableException">error/503</prop>
+                            <prop key="java.lang.IllegalArgumentException">error/400</prop>
+                        </props>
+                    </property>
+                </bean>
+                <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
+                    <property name="errorView" value="error/500"/>
+                </bean>
+            </list>
         </property>
     </bean>
 

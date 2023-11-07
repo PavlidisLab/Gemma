@@ -35,7 +35,8 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 public class ExceptionTag extends TagSupport {
 
     private static final long serialVersionUID = 4323477499674966726L;
-    protected static Log log = LogFactory.getLog( ExceptionTag.class.getName() );
+    private static final Log log = LogFactory.getLog( ExceptionTag.class.getName() );
+
     private Exception exception;
     private Boolean showStackTrace = true;
 
@@ -46,26 +47,25 @@ public class ExceptionTag extends TagSupport {
             if ( this.exception == null ) {
                 buf.append( "Error was not recovered" );
             } else {
-
                 if ( showStackTrace ) {
                     buf.append( "<div id=\"stacktrace\" class=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
-                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ));
+                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ) );
                     } else {
                         buf.append( "There was no stack trace!" );
                     }
                     buf.append( "</div>" );
                 }
-                // To make sure error doesn't get swallowed.
-                ExceptionTag.log.error( this.exception, this.exception );
             }
-
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             /*
              * Avoid stack overflow...
              */
-            ExceptionTag.log.error( "Exception tag threw an exception: " + ex.getMessage(), ex );
+            ExceptionTag.log.error( "Exception tag threw an exception: " + ExceptionUtils.getRootCauseMessage( ex ), ex );
+            if ( this.exception != null ) {
+                ExceptionTag.log.error( "The original exception was: " + ExceptionUtils.getRootCauseMessage( ex ), exception );
+            }
         }
         return Tag.SKIP_BODY;
     }

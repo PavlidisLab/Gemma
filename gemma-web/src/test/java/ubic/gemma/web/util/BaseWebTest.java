@@ -11,10 +11,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.SpringProfiles;
 
+import java.util.Arrays;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
@@ -46,7 +48,9 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
             mappings.setProperty( ServiceUnavailableException.class.getName(), "error/503" );
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
-            return resolver;
+            HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
+            compositeResolver.setExceptionResolvers( Arrays.asList( resolver, new UnhandledExceptionResolver() ) );
+            return compositeResolver;
         }
 
         @Bean
