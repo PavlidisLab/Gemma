@@ -47,13 +47,13 @@ public interface FactorValueMigratorService {
      * <p>
      * All the FVs with zero or one characteristics will be migrated automatically unless migratedToSubjectOnly is set,
      * in which case all the old-style characteristics will be migrated to subject-only statements.
-     * @param fvIds                  IDs of already migrated FVs
+     * @param migratedFactorValueIds IDs of already migrated FVs
      * @param migrateNonTrivialCases allow migration to subject-only statements for FVs with more than one old-style
      *                               characteristics; those FVs will be marked as troubled.
      * @param noop                   if true, do not save the resulting statements
      * @return created of updated statements organized by factor value ID
      */
-    Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> fvIds, boolean migrateNonTrivialCases, boolean noop );
+    Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> migratedFactorValueIds, boolean migrateNonTrivialCases, boolean noop );
 
     @Value
     @Builder

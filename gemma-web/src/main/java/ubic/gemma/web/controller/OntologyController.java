@@ -1,7 +1,5 @@
 package ubic.gemma.web.controller;
 
-import com.hp.hpl.jena.ontology.*;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -88,7 +86,9 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
-            return writeRdfModel( oi );
+            StringWriter sw = new StringWriter();
+            factorValueOntologyService.writeToRdf( iri, sw );
+            return sw.toString();
         }
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>FactorValue #%d: %s</title>", factorValueId, escapeHtml4( oi.getLabel() ) ) );
@@ -98,8 +98,11 @@ public class OntologyController {
         if ( oi.getInstanceOf() != null ) {
             s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
         }
-        for ( OntologyIndividual relatedOi : factorValueOntologyService.getRelatedIndividuals( iri ) ) {
-            s.append( "<li>has part " ).append( renderOntologyResource( relatedOi ) ).append( "</li>" );
+        for ( OntologyIndividual relatedOi : factorValueOntologyService.getFactorValueAnnotations( iri ) ) {
+            s.append( "<li>has annotation " ).append( renderOntologyResource( relatedOi ) ).append( "</li>" );
+        }
+        for ( FactorValueOntologyService.OntologyStatement st : factorValueOntologyService.getFactorValueStatements( iri ) ) {
+            s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
         }
         s.append( "</ul>" );
         s.append( "</div>" );
@@ -120,7 +123,9 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
-            return writeRdfModel( oi );
+            StringWriter sw = new StringWriter();
+            factorValueOntologyService.writeToRdf( iri, sw );
+            return sw.toString();
         }
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>Annotation #%d of FactorValue #%d: %s</title>", annotationId, factorValueId, oi.getLabel() ) );
@@ -132,51 +137,11 @@ public class OntologyController {
         }
         OntologyIndividual factorValueOi = factorValueOntologyService.getIndividual( TGFVO_URI_PREFIX + factorValueId );
         if ( factorValueOi != null ) {
-            s.append( "<li>part of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
+            s.append( "<li>annotation of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
         }
         s.append( "</ul>" );
         s.append( "</div>" );
         return s.toString();
-    }
-
-    /**
-     * Write a small RDF model for a given factor value.
-     */
-    private String writeRdfModel( OntologyIndividual fv ) {
-        OntModel ontModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
-        ObjectProperty partOf = ontModel.createObjectProperty( "http://purl.obolibrary.org/obo/BFO_0000050" );
-        partOf.setLabel( "part of", null );
-        ObjectProperty hasPart = ontModel.createObjectProperty( "http://purl.obolibrary.org/obo/BFO_0000051" );
-        hasPart.setLabel( "has part", null );
-        Individual fvI = createIndividual( ontModel, fv );
-        for ( OntologyIndividual oi : factorValueOntologyService.getRelatedIndividuals( fv.getUri() ) ) {
-            Individual annot = createIndividual( ontModel, oi );
-            ontModel.add( annot, partOf, fvI );
-            ontModel.add( fvI, hasPart, annot );
-        }
-        for ( FactorValueOntologyService.OntologyStatement os : factorValueOntologyService.getRelatedStatements( fv.getUri() ) ) {
-            Individual subject = createIndividual( ontModel, os.getSubject() );
-            Individual object = createIndividual( ontModel, os.getObject() );
-            ObjectProperty predicate = ontModel.createObjectProperty( os.getPredicate().getUri() );
-            predicate.setLabel( os.getPredicate().getLabel(), null );
-            ontModel.add( subject, predicate, object );
-        }
-        StringWriter sw = new StringWriter();
-        ontModel.write( sw, "RDF/XML" );
-        return sw.toString();
-    }
-
-    private Individual createIndividual( OntModel ontModel, OntologyIndividual ind ) {
-        OntClass ontClass;
-        if ( ind.getInstanceOf() != null ) {
-            ontClass = ontModel.createClass( ind.getInstanceOf().getUri() );
-            ontClass.setLabel( ind.getInstanceOf().getLabel(), null );
-        } else {
-            ontClass = null;
-        }
-        Individual indI = ontModel.createIndividual( ind.getUri(), ontClass );
-        indI.setLabel( ind.getLabel(), null );
-        return indI;
     }
 
     private String renderOntologyResource( OntologyResource oi ) {

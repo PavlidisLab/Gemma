@@ -5,6 +5,7 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyProperty;
 
 import javax.annotation.Nullable;
+import java.io.Writer;
 import java.util.Set;
 
 /**
@@ -26,11 +27,9 @@ public interface FactorValueOntologyService {
     OntologyIndividual getIndividual( String uri );
 
     /**
-     * Obtain individuals related to the given URI.
-     * <p>
-     * In general, this is used to retrieve annotations for a factor value.
+     * Obtain annotations belonging to the given URI representing a factor value.
      */
-    Set<OntologyIndividual> getRelatedIndividuals( String uri );
+    Set<OntologyIndividual> getFactorValueAnnotations( String uri );
 
     /**
      * Represents an ontology statement.
@@ -44,7 +43,9 @@ public interface FactorValueOntologyService {
     }
 
     /**
-     * Obtain statements related to the given URI.
+     * Obtain statements related to the given URI representing a factor value.
      */
-    Set<OntologyStatement> getRelatedStatements( String uri );
+    Set<OntologyStatement> getFactorValueStatements( String uri );
+
+    void writeToRdf( String iri, Writer writer );
 }

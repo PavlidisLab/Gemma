@@ -1,6 +1,5 @@
 package ubic.gemma.web.controller;
 
-import org.assertj.core.util.Sets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,14 +13,11 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.OntologyIndividualSimple;
-import ubic.gemma.core.ontology.OntologyPropertySimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.util.EntityNotFoundException;
-
-import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -76,8 +72,7 @@ public class OntologyControllerTest extends BaseWebTest {
 
     @After
     public void tearDown() {
-        reset( gemmaOntology );
-        reset( factorValueOntologyService );
+        reset( gemmaOntology, factorValueOntologyService );
     }
 
     @Test
@@ -122,7 +117,7 @@ public class OntologyControllerTest extends BaseWebTest {
                 .andExpect( content().string( containsString( "TGEMO_0000001" ) ) )
                 .andExpect( content().string( containsString( "bar" ) ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
-        verify( factorValueOntologyService ).getRelatedIndividuals( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
+        verify( factorValueOntologyService ).getFactorValueAnnotations( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
     }
 
     @Test
@@ -131,22 +126,11 @@ public class OntologyControllerTest extends BaseWebTest {
         OntologyIndividual oi = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1", "foo", fvClass );
         when( factorValueOntologyService.getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) )
                 .thenReturn( oi );
-        OntologyIndividual oi1 = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1/1", "foo", fvClass );
-        OntologyIndividual oi2 = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1/2", "bar", fvClass );
-        when( factorValueOntologyService.getRelatedIndividuals( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) )
-                .thenReturn( Sets.set( oi1, oi2 ) );
-        when( factorValueOntologyService.getRelatedStatements( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) )
-                .thenReturn( Collections.singleton( new FactorValueOntologyService.OntologyStatement( oi1, new OntologyPropertySimple( "http://purl.obolibrary.org/obo/RO_0002573", "has modifier" ), oi2 ) ) );
         mvc.perform( get( "/ont/TGFVO/1" ).accept( MediaType.parseMediaType( "application/rdf+xml" ) ) )
                 .andExpect( status().isOk() )
-                .andExpect( content().contentTypeCompatibleWith( "application/rdf+xml" ) )
-                .andExpect( content().string( containsString( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) )
-                .andExpect( content().string( containsString( "http://gemma.msl.ubc.ca/ont/TGFVO/1/1" ) ) )
-                .andExpect( content().string( containsString( "http://gemma.msl.ubc.ca/ont/TGFVO/1/2" ) ) )
-                .andExpect( content().string( containsString( "part of" ) ) )
-                .andExpect( content().string( containsString( "has part" ) ) );
+                .andExpect( content().contentTypeCompatibleWith( "application/rdf+xml" ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
-        verify( factorValueOntologyService ).getRelatedIndividuals( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
-        verify( factorValueOntologyService ).getRelatedStatements( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
+        verify( factorValueOntologyService ).writeToRdf( eq( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ), any() );
+        verifyNoMoreInteractions( factorValueOntologyService );
     }
 }

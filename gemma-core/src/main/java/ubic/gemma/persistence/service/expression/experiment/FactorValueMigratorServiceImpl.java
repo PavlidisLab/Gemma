@@ -162,15 +162,15 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
 
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> migratedFactorValues, boolean migrateNonTrivialCases, boolean noop ) {
+    public Map<Long, List<MigrationResult>> performMigrationOfRemainingFactorValues( Set<Long> migratedFactorValueIds, boolean migrateNonTrivialCases, boolean noop ) {
         Map<Long, List<MigrationResult>> result = new HashMap<>();
         long total = factorValueService.countAll();
         // this way we avoid loading old-style characteristics unless we need to;
         if ( total > 0 ) {
             log.info( String.format( "Loading %d factor values that haven't been migrated yet...",
-                    total - migratedFactorValues.size() ) );
+                    total - migratedFactorValueIds.size() ) );
         }
-        Map<Long, Integer> fvs = factorValueService.loadIdsWithNumberOfOldStyleCharacteristics( migratedFactorValues );
+        Map<Long, Integer> fvs = factorValueService.loadIdsWithNumberOfOldStyleCharacteristics( migratedFactorValueIds );
         if ( fvs.isEmpty() ) {
             log.info( "There are no more factor values to migrate." );
             return result;
