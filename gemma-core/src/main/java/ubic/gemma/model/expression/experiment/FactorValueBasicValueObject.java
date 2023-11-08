@@ -11,14 +11,12 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.annotations.GemmaRestOnly;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,23 +32,57 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     private static final long serialVersionUID = 3378801249808036785L;
 
+    /**
+     * A unique ontology identifier (i.e. IRI) for this factor value.
+     */
+    @GemmaRestOnly
+    private String ontologyId;
+
+    /**
+     * The ID of the experimental factor this factor value belongs to.
+     */
     private Long experimentalFactorId;
-    private CharacteristicBasicValueObject experimentalFactorCategory;
+
+    /**
+     * The experiment factor category.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private CharacteristicValueObject experimentalFactorCategory;
+
+    /**
+     * Indicate if this factor value is a measurement.
+     * <p>
+     * Note that measurements can have characteristics as optional annotations.
+     * @deprecated simply check if {@link #getMeasurement()} is non-null instead
+     */
+    @Deprecated
+    private boolean isMeasurement;
+
+    /**
+     * The measurement associated with this factor value.
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MeasurementValueObject measurement;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<CharacteristicBasicValueObject> characteristics;
-    private boolean isMeasurement;
+
+    /**
+     * The characteristics associated with this factor value.
+     */
+    private List<CharacteristicValueObject> characteristics;
+
+    /**
+     * The statements associated with this factor value.
+     */
+    private List<StatementValueObject> statements;
 
     /**
      * @deprecated use either {@link #characteristics} or {@link #measurement}
      */
     @Deprecated
     private String value;
+
     /**
-     * @deprecated define your own logic for summarizing a factor value
+     * Human-readable summary of the factor value.
      */
-    @Deprecated
     private String summary;
 
     /**
@@ -68,8 +100,10 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         super( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
 
-        if ( fv.getExperimentalFactor().getCategory() != null ) {
-            this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
+        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+            if ( fv.getExperimentalFactor().getCategory() != null ) {
+                this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );
+            }
         }
 
         if ( fv.getMeasurement() != null ) {
@@ -78,41 +112,21 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         }
 
         this.characteristics = fv.getCharacteristics().stream()
-                .map( CharacteristicBasicValueObject::new )
-                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
-                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .sorted()
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toList() );
+
+        this.statements = fv.getCharacteristics().stream()
+                .sorted()
+                .map( StatementValueObject::new )
                 .collect( Collectors.toList() );
 
         this.value = fv.getValue();
-        this.summary = getSummaryString( fv );
+        this.summary = FactorValueUtils.getSummaryString( fv );
     }
 
     @Override
     public String toString() {
         return "FactorValueValueObject [factor=" + summary + ", value=" + value + "]";
-    }
-
-    // causes a conflict with getMeasurement...
-//    public Boolean isMeasurement() {
-//        return this.measurement != null;
-//    }
-
-    static String getSummaryString( FactorValue fv ) {
-        StringBuilder buf = new StringBuilder();
-        if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() )
-                    buf.append( ", " );
-            }
-        } else if ( fv.getMeasurement() != null ) {
-            buf.append( fv.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-            buf.append( fv.getValue() );
-        } else {
-            buf.append( "?" );
-        }
-        return buf.toString();
     }
 }

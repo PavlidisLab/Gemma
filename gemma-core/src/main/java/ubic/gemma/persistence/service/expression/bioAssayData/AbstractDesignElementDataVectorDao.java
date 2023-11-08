@@ -97,7 +97,8 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
                                     + "left join fetch ba.sampleUsed bm "
                                     + "left join fetch ba.originalPlatform "
                                     + "left join fetch ba.arrayDesignUsed "
-                                    + "left join fetch bm.factorValues "
+                                    + "left join fetch bm.factorValues fv "
+                                    + "left join fetch fv.experimentalFactor "
                                     + "fetch all properties "
                                     + "where bad in :dims" )
                     .setParameterList( "dims", dims )

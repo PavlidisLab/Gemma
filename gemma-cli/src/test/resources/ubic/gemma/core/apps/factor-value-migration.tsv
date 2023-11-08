@@ -1,0 +1,9 @@
+FactorValueID	SubjectID	ObjectID	SecondObjectID	SubjectURI	Subject	Predicate	PredicateURI	Object	ObjectURI	SecondPredicate	SecondPredicateURI	SecondObject	SecondObjectURI	Category	CategoryURI
+1	1	2	3		Pax6	has_modifier				has_modifier			""	""	""
+2	""	""	""		Pax6	""				""			""	Gene	""
+3	4	""	""			""				""			""	""	""
+4	5	6	""			has_modifier				""			""	""	""
+5	7	8	9			has_modifier				has_modifier			""	""	""
+6	10	""	11			has_dose		5mg		has_modifier			""	""	""
+7	""	12	13		Pax7	has_modifier				has_modifier			""	genotype	""
+8	14	15	15			has_modifier				has_modifier					""

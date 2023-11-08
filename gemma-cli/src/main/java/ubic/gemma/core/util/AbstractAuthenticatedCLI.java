@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
@@ -41,7 +40,10 @@ import java.util.stream.Collectors;
 /**
  * Subclass this to create command line interface (CLI) tools that need authentication.
  * <p>
- * A standard set of CLI options are provided to manage authentication.
+ * Credentials may be supplied via the environment using the {@code $GEMMMA_USERNAME} and {@code $GEMMA_PASSWORD}
+ * variables. A more secure {@code $GEMMA_PASSWORD_CMD} variable can be used to specify a command that produces the
+ * password. If no environment variables are supplied, they will be prompted if the standard input is attached to a
+ * console (i.e tty).
  * @author pavlidis
  */
 public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
@@ -71,7 +73,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
 
     /**
      * Indicate if the command requires authentication.
-     *
+     * <p>
      * Override this to return true to make authentication required.
      *
      * @return true if login is required, otherwise false

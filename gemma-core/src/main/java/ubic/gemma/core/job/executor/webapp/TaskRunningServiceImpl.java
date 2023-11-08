@@ -18,14 +18,12 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -37,10 +35,7 @@ import ubic.gemma.core.tasks.Task;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.concurrent.*;
 
 /**
  * Handles the execution of tasks in threads that can be checked by clients later.
@@ -51,8 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
-    private final ListeningExecutorService executorService = MoreExecutors
-            .listeningDecorator( Executors.newFixedThreadPool( 20 ) );
+    private final ExecutorService executorService = Executors.newFixedThreadPool( 20 );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Autowired
@@ -116,7 +110,14 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             }
         } );
 
-        ListenableFuture<TaskResult> future = executorService.submit( new DelegatingSecurityContextCallable<>( executingTask, taskCommand.getSecurityContext() ) );
+        Callable<TaskResult> callable = new DelegatingSecurityContextCallable<>( executingTask, taskCommand.getSecurityContext() );
+        CompletableFuture<TaskResult> future = CompletableFuture.supplyAsync( () -> {
+            try {
+                return callable.call();
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            }
+        }, executorService );
         submittedTask.setFuture( future );
 
         // Adding post-processing steps, they will run on future completion.
@@ -140,10 +141,10 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     private void checkTask( Task<?> task ) {
-        checkNotNull( task, "Must provide a task." );
+        Assert.notNull( task, "Must provide a task." );
     }
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
-        checkNotNull( taskCommand.getTaskId(), "Must have taskId." );
+        Assert.notNull( taskCommand.getTaskId(), "Must have taskId." );
     }
 }

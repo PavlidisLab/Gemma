@@ -28,6 +28,22 @@ import java.nio.file.Path;
 public interface TableMaintenanceUtil {
 
     /**
+     * Query space used by the GENE2CS table.
+     * <p>
+     * You may also want to synchronize to {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign},
+     * {@link ubic.gemma.model.expression.designElement.CompositeSequence} and {@link ubic.gemma.model.genome.Gene}
+     * since entries in the GENE2CS table are removed in cascade.
+     */
+    String GENE2CS_QUERY_SPACE = "GENE2CS";
+    /**
+     * Query space used by the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.
+     * <p>
+     * You may also want to synchronized to {@link ubic.gemma.model.common.description.Characteristic} since entries in
+     * the EE2C table are removed in cascade.
+     */
+    String EE2C_QUERY_SPACE = "EXPRESSION_EXPERIMENT2CHARACTERISTIC";
+
+    /**
      * If necessary, update the GENE2CS table.
      */
     @Secured({ "GROUP_AGENT" })

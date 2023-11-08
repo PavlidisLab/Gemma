@@ -22,10 +22,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.util.*;
@@ -231,23 +228,6 @@ public class ExperimentalDesignUtils {
 
     public static String nameForR( FactorValue fv, boolean isBaseline ) {
         return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
-    }
-
-    public static String prettyString( FactorValue fv ) {
-
-        if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getCharacteristics().isEmpty() ) {
-            return fv.getValue();
-        }
-        StringBuilder buf = new StringBuilder();
-        for ( Characteristic c : fv.getCharacteristics() ) {
-            buf.append( c.getValue() );
-            if ( fv.getCharacteristics().size() > 1 )
-                buf.append( " | " );
-        }
-        return buf.toString();
-
     }
 
     /**

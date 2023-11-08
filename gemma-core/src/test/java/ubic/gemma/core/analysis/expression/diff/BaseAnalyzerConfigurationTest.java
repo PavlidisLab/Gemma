@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +31,6 @@ import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -147,9 +145,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setId( 1001L );
         factorValueA1.setValue( "cerebellum" );
-        Characteristic characteristicA1 = Characteristic.Factory.newInstance();
+        Statement characteristicA1 = Statement.Factory.newInstance();
         characteristicA1.setValue( factorValueA1.getValue() );
-        Set<Characteristic> characteristicsA1 = new HashSet<>();
+        Set<Statement> characteristicsA1 = new HashSet<>();
         characteristicsA1.add( characteristicA1 );
         factorValueA1.setCharacteristics( characteristicsA1 );
         factorValueA1.setExperimentalFactor( experimentalFactorA_Area );
@@ -158,9 +156,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA2.setIsBaseline( true );
         factorValueA2.setValue( "amygdala" );
         factorValueA2.setId( 1002L );
-        Characteristic characteristicA2 = Characteristic.Factory.newInstance();
+        Statement characteristicA2 = Statement.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
-        Set<Characteristic> characteristicsA2 = new HashSet<>();
+        Set<Statement> characteristicsA2 = new HashSet<>();
         characteristicsA2.add( characteristicA2 );
         factorValueA2.setCharacteristics( characteristicsA2 );
         factorValueA2.setExperimentalFactor( experimentalFactorA_Area );
@@ -180,9 +178,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "pcp" );
         factorValueB1.setId( 1003L );
-        Characteristic characteristicB1 = Characteristic.Factory.newInstance();
+        Statement characteristicB1 = Statement.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
-        Set<Characteristic> characteristicsB1 = new HashSet<>();
+        Set<Statement> characteristicsB1 = new HashSet<>();
         characteristicsB1.add( characteristicB1 );
         factorValueB1.setCharacteristics( characteristicsB1 );
         factorValueB1.setExperimentalFactor( experimentalFactorB );
@@ -190,9 +188,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB2 = FactorValue.Factory.newInstance();
         factorValueB2.setValue( "control_group" );
         factorValueB2.setId( 1004L );
-        Characteristic characteristicB2 = Characteristic.Factory.newInstance();
+        Statement characteristicB2 = Statement.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
-        Set<Characteristic> characteristicsB2 = new HashSet<>();
+        Set<Statement> characteristicsB2 = new HashSet<>();
         characteristicsB2.add( characteristicB2 );
         factorValueB2.setCharacteristics( characteristicsB2 );
         factorValueB2.setExperimentalFactor( experimentalFactorB );

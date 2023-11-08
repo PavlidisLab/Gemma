@@ -19,6 +19,7 @@
 package ubic.gemma.core.ontology;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -27,7 +28,8 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -73,6 +75,7 @@ public class OntologyServiceIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSubstantiaNigraInUberon() throws InterruptedException {
         assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
         assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );

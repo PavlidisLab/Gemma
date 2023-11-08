@@ -769,7 +769,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return ontologyTermsFound.stream()
-                .map( t -> new CharacteristicValueObject( -1L, t.getLabel().toLowerCase(), t.getUri() ) )
+                .map( t -> new CharacteristicValueObject( t.getLabel().toLowerCase(), t.getUri() ) )
                 .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
                 .collect( Collectors.toCollection( TreeSet::new ) );
     }
@@ -824,7 +824,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .loadAllNeurocartaPhenotypes();
             for ( PhenotypeValueObject pvo : allNeurocartaPhenotypes ) {
 
-                CharacteristicValueObject cha = new CharacteristicValueObject( -1L, pvo.getValue(), pvo.getValueUri() );
+                CharacteristicValueObject cha = new CharacteristicValueObject( pvo.getValue(), pvo.getValueUri() );
                 // set flag for UI, flag if the phenotype is on the Gene or if in the database
                 cha.setAlreadyPresentOnGene( true );
                 cha.setAlreadyPresentInDatabase( true );
@@ -1752,7 +1752,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        return new TreeCharacteristicValueObject( -1L, ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
+        return new TreeCharacteristicValueObject( ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
     }
 
     private void countPrivateGeneForEachNode( TreeCharacteristicValueObject tc, Map<String, Set<Integer>> phenotypesGenesAssociations, Set<String> visited ) {
@@ -2021,7 +2021,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 if ( alreadyOnTree != null ) {
                     alreadyOnTree.getChildren().add( tc );
                 } else {
-                    TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( -1L, onTerm.getLabel(),
+                    TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( onTerm.getLabel(),
                             onTerm.getUri() );
 
                     // add children to the parent

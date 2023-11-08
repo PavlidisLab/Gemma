@@ -2,7 +2,7 @@
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="test">
-
+    <!-- test ontologies are always loaded on-demand, so we never set autoLoad to true -->
     <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
         <property name="processImports" value="false"/>

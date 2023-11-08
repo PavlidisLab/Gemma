@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp" %>
 
 <title><fmt:message key="errorPage.title"/></title>
-<input type="hidden" id="reloadOnLogin" value="true"/>
 
 <style>
     ul {
@@ -20,26 +19,27 @@
     <hr class="normal">
 
     <p>Possible next steps:</p>
+
     <ul>
         <li>Go back and try what you were doing again</li>
         <li>Do you need to log in?</li>
         <c:choose>
-            <c:when test="${not empty param.exception}">
-                <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(param.exception.message)}">Email
-                    us</a> about
-                    the problem.
+            <c:when test="${not empty requestScope['exception']}">
+                <li>
+                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['exception'].message)}">Email
+                        us</a>about the problem.
                 </li>
             </c:when>
             <c:when test="${not empty requestScope['javax.servlet.error.exception']}">
                 <li>
-                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.exception'])}">Email
+                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.exception'].message)}">Email
                         us</a> about the problem.
                 </li>
             </c:when>
-            <c:when test="${not empty requestScope['exception']}">
-                <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['exception'])}">Email
-                    us</a>
-                    about the problem.
+            <c:when test="${not empty requestScope['javax.servlet.error.message']}">
+                <li>
+                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.message'])}">Email
+                        us</a> about the problem.
                 </li>
             </c:when>
             <c:otherwise>
@@ -50,35 +50,5 @@
         </c:choose>
     </ul>
 
-    <hr class="normal">
-
-    <c:choose>
-        <c:when test="${not empty param.exception}">
-            <p><c:out value="${fn:escapeXml(param.exception.message)}"/></p>
-            <security:authorize access="hasAuthority('GROUP_ADMIN')">
-                <Gemma:exception exception="${exception}"/>
-            </security:authorize>
-        </c:when>
-
-        <c:when test="${not empty requestScope['javax.servlet.error.exception']}">
-            <p><c:out value="${fn:escapeXml(requestScope['javax.servlet.error.exception'].message)}"/></p>
-            <security:authorize access="hasAuthority('GROUP_ADMIN')">
-                <%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
-                <Gemma:exception exception="${requestScope['javax.servlet.error.exception']}"/>
-            </security:authorize>
-        </c:when>
-
-        <c:when test="${not empty requestScope['exception']}">
-            <p><c:out value="${fn:escapeXml(requestScope['exception'].message)}"/></p>
-            <security:authorize access="hasAuthority('GROUP_ADMIN')">
-                <Gemma:exception exception="${requestScope['exception']}"/>
-            </security:authorize>
-        </c:when>
-
-        <c:otherwise>
-            <p><fmt:message key="errorPage.info.missing"/></p>
-        </c:otherwise>
-
-    </c:choose>
-
+    <%@ include file="/common/exception.jsp" %>
 </div>

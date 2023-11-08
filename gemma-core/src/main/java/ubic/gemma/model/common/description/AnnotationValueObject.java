@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 
 /**
  * @author luke

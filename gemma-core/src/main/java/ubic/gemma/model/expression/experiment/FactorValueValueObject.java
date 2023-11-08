@@ -12,13 +12,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaRestOnly;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,24 +41,77 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    private String category;
-    private String categoryUri;
-    private String description;
-    private String factorValue;
-    private String value;
-    private String valueUri;
     /**
-     * It could be the id of the measurement if there is no characteristic.
+     * A unique ontology identifier (i.e. IRI) for this factor value.
      */
-    private Long charId;
+    @GemmaRestOnly
+    private String ontologyId;
+
+    /**
+     * ID of the experimental factor this FV belongs to.
+     */
     private Long factorId;
+
+    /**
+     * Indicate if this FactorValue is a measurement.
+     * @deprecated simply check if {@link #getMeasurementObject()} is non-null instead
+     */
+    @Deprecated
+    @JsonProperty("isMeasurement")
+    private boolean measurement;
+
+    /**
+     * Measurement object if this FactorValue is a measurement.
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("measurement")
     private MeasurementValueObject measurementObject;
-    @JsonProperty("isMeasurement")
-    private boolean measurement = false;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<CharacteristicBasicValueObject> characteristics;
+
+    /**
+     * Characteristics.
+     */
+    private List<CharacteristicValueObject> characteristics;
+
+    /**
+     * Statements
+     */
+    private List<StatementValueObject> statements;
+
+    // fields of the characteristic being focused on
+    // this is used by the FV editor to model each individual characteristic with its FV
+    /**
+     * It could be the id of the measurement if there is no characteristic.
+     */
+    @GemmaWebOnly
+    private Long charId;
+    @GemmaWebOnly
+    private String category;
+    @GemmaWebOnly
+    private String categoryUri;
+    @GemmaWebOnly
+    private String description;
+    @GemmaWebOnly
+    private String factorValue;
+    @GemmaWebOnly
+    private String value;
+    @GemmaWebOnly
+    private String valueUri;
+    @GemmaWebOnly
+    private String predicate;
+    @GemmaWebOnly
+    private String predicateUri;
+    @GemmaWebOnly
+    private String object;
+    @GemmaWebOnly
+    private String objectUri;
+    @GemmaWebOnly
+    private String secondPredicate;
+    @GemmaWebOnly
+    private String secondPredicateUri;
+    @GemmaWebOnly
+    private String secondObject;
+    @GemmaWebOnly
+    private String secondObjectUri;
 
     /**
      * Required when using the class as a spring bean.
@@ -70,54 +125,82 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     /**
-     * @param      c     - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
-     *                   FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this
-     *                   just
-     *                   confuses things.
-     *                   If c is null, the plain "value" is used.
-     * @param      value value
+     * Create a FactorValue VO focusing on a specific statement.
+     * <p>
+     * Prefer {@link #FactorValueValueObject(FactorValue, Statement)} since this should never hold a "plain"
+     * characteristic, but always a statement of the factor value.
+     *
+     * @param value value
+     * @param c     specific characteristic we're focusing on (yes, this is confusing). This is necessary if the factor
+     *              value has multiple characteristics. DO NOT pass in the experimental factor category, this just
+     *              confuses things. If c is null, the plain "value" is used.
      */
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value );
-        this.factorValue = FactorValueBasicValueObject.getSummaryString( value );
+        this.factorValue = FactorValueUtils.getSummaryString( value );
         this.factorId = value.getExperimentalFactor().getId();
 
+        // make sure we fill in the category for this if no characteristic is being *focused* on
+        if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
+            Characteristic factorCategory = value.getExperimentalFactor().getCategory();
+            if ( factorCategory != null ) {
+                this.category = factorCategory.getCategory();
+                this.categoryUri = factorCategory.getCategoryUri();
+            }
+        }
+
         if ( value.getMeasurement() != null ) {
-            this.setMeasurement( true );
-            this.value = value.getMeasurement().getValue();
-            this.charId = value.getMeasurement().getId();
+            this.measurement = true;
             this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
-        } else if ( c != null && c.getId() != null ) {
-            this.charId = c.getId();
-        } else {
-            this.value = value.getValue();
-        }
-
-        if ( c != null ) {
-            this.category = c.getCategory();
-            this.value = c.getValue(); // clobbers if we set it already
-            this.categoryUri = c.getCategoryUri();
-            this.valueUri = c.getValueUri();
-        }
-
-        /*
-         * Make sure we fill in the Category for this.
-         */
-        Characteristic factorCategory = value.getExperimentalFactor().getCategory();
-        if ( this.category == null && factorCategory != null ) {
-            this.category = factorCategory.getCategory();
-            this.categoryUri = factorCategory.getCategoryUri();
+            if ( c == null ) {
+                this.value = value.getMeasurement().getValue();
+                this.charId = value.getMeasurement().getId();
+            }
         }
 
         this.characteristics = value.getCharacteristics().stream()
-                .map( CharacteristicBasicValueObject::new )
-                .sorted( Comparator.comparing( CharacteristicBasicValueObject::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
-                        .thenComparing( CharacteristicBasicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .sorted()
+                .map( CharacteristicValueObject::new )
                 .collect( Collectors.toList() );
+
+        this.statements = value.getCharacteristics().stream()
+                .sorted()
+                .map( StatementValueObject::new )
+                .collect( Collectors.toList() );
+
+        // fill in the details of the *focused* characteristic
+        if ( c != null ) {
+            this.charId = c.getId();
+            this.category = c.getCategory();
+            this.categoryUri = c.getCategoryUri();
+            this.value = c.getValue(); // clobbers if we set it already
+            this.valueUri = c.getValueUri();
+        }
     }
 
+    /**
+     * Create a FactorValue VO focusing on a specific statement.
+     */
+    public FactorValueValueObject( FactorValue fv, @Nullable Statement c ) {
+        this( fv, ( Characteristic ) c );
+        if ( c != null ) {
+            this.predicate = c.getPredicate();
+            this.predicateUri = c.getPredicateUri();
+            this.object = c.getObject();
+            this.objectUri = c.getObjectUri();
+            this.secondPredicate = c.getSecondPredicate();
+            this.secondPredicateUri = c.getSecondPredicateUri();
+            this.secondObject = c.getSecondObject();
+            this.secondObjectUri = c.getSecondObjectUri();
+        }
+    }
+
+    /**
+     * Create a FactorValue VO, the statement being focused on is automatically picked.
+     */
+    @Deprecated
     public FactorValueValueObject( FactorValue fv ) {
-        this( fv, pickCharacteristic( fv ) );
+        this( fv, pickStatement( fv ) );
     }
 
     @Override
@@ -128,8 +211,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     /**
      * Pick an arbitrary characteristic from the factor value to represent it.
      */
-    private static Characteristic pickCharacteristic( FactorValue fv ) {
-        Characteristic c;
+    private static Statement pickStatement( FactorValue fv ) {
+        Statement c;
         if ( fv.getCharacteristics().size() == 1 ) {
             c = fv.getCharacteristics().iterator().next();
         } else if ( fv.getCharacteristics().size() > 1 ) {

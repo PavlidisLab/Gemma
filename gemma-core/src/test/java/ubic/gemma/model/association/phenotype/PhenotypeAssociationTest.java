@@ -35,6 +35,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -323,7 +324,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L, uri );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( "", uri );
 
         phenotypes.add( characteristicValueObject );
 

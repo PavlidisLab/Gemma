@@ -33,11 +33,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -50,13 +49,13 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -124,12 +123,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
+    private Set<OntologyPropertySimple> relationTerms = null;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
-        if ( ontologyServiceFactories != null ) {
+        if ( ontologyServiceFactories != null && autoLoadOntologies ) {
             List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
-                    .filter( OntologyServiceFactory::isAutoLoaded )
                     .map( factory -> {
                         try {
                             return factory.getObject();
@@ -143,13 +143,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
-            } else if ( autoLoadOntologies ) {
+            } else {
                 log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
             }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
         initializeCategoryTerms();
+        initializeRelationTerms();
     }
 
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
@@ -436,6 +437,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .collect( Collectors.toSet() );
     }
 
+
+    @Override
+    public Collection<OntologyProperty> getRelationTerms() {
+        // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
+        return relationTerms.stream()
+                .map( term -> {
+                    return term;
+                } )
+                .collect( Collectors.toSet() );
+    }
+
     @Override
     public String getDefinition( String uri ) {
         if ( uri == null ) return null;
@@ -701,7 +713,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     private CharacteristicValueObject characteristicToValueObject( Characteristic characteristic ) {
-        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
+        CharacteristicValueObject vo = new CharacteristicValueObject( characteristic.getValue(), characteristic.getValueUri() );
         vo.setCategory( null );
         vo.setCategoryUri( null ); // to avoid us counting separately by category.
         vo.setAlreadyPresentInDatabase( true );
@@ -732,8 +744,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( OntologyTerm ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
-                            ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
                     characteristicsFromOntology.add( phenotype );
                 }
             }
@@ -783,6 +794,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( autoLoadOntologies && !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
+        }
+    }
+
+
+    private void initializeRelationTerms() throws IOException {
+        Set<OntologyPropertySimple> relationTerms = new HashSet<>();
+        Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+            String line;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
+                    continue;
+                String[] f = StringUtils.split( line, '\t' );
+                if ( f.length < 2 ) {
+                    continue;
+                }
+                relationTerms.add( new OntologyPropertySimple( f[0], f[1] ) );
+            }
+            this.relationTerms = Collections.unmodifiableSet( relationTerms );
         }
     }
 

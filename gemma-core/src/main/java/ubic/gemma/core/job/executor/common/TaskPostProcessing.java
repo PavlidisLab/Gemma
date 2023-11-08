@@ -18,10 +18,10 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import ubic.gemma.core.job.EmailNotificationContext;
 import ubic.gemma.core.job.TaskResult;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
@@ -29,5 +29,5 @@ import java.util.concurrent.Executor;
  * date: 10/02/13
  */
 public interface TaskPostProcessing {
-    void addEmailNotification( ListenableFuture<TaskResult> future, EmailNotificationContext context, Executor executor );
+    void addEmailNotification( CompletableFuture<? extends TaskResult> future, EmailNotificationContext context, Executor executor );
 }

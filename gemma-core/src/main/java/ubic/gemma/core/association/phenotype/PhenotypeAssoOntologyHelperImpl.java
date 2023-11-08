@@ -28,7 +28,7 @@ import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.*;
 
@@ -169,13 +169,9 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
      */
     private Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
             Collection<OntologyTerm> ontologyTerms ) {
-
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<>();
-
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
-                    ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
-            characteristicsVO.add( phenotype );
+            characteristicsVO.add( new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() ) );
         }
         return characteristicsVO;
     }

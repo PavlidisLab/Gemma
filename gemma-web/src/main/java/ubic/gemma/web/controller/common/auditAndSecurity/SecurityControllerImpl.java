@@ -272,7 +272,7 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Override
     // @Transactional(readOnly = true)
-    public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
+    public SecurityInfoValueObject getSecurityInfo( EntityDelegator<? extends Securable> ed ) {
 
         // TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from
         // SecurityManager.js (Bug 3941)
@@ -304,42 +304,42 @@ public class SecurityControllerImpl implements SecurityController {
     }
 
     @Override
-    public boolean makeGroupReadable( EntityDelegator ed, String groupName ) {
+    public boolean makeGroupReadable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
         securityService.makeReadableByGroup( s, groupName );
         return true;
     }
 
     @Override
-    public boolean makeGroupWriteable( EntityDelegator ed, String groupName ) {
+    public boolean makeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
         securityService.makeWriteableByGroup( s, groupName );
         return true;
     }
 
     @Override
-    public boolean makePrivate( EntityDelegator ed ) {
+    public boolean makePrivate( EntityDelegator<? extends Securable> ed ) {
         Securable s = this.getSecurable( ed );
         securityService.makePrivate( s );
         return true;
     }
 
     @Override
-    public boolean makePublic( EntityDelegator ed ) {
+    public boolean makePublic( EntityDelegator<? extends Securable> ed ) {
         Securable s = this.getSecurable( ed );
         securityService.makePublic( s );
         return true;
     }
 
     @Override
-    public boolean removeGroupReadable( EntityDelegator ed, String groupName ) {
+    public boolean removeGroupReadable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
         securityService.makeUnreadableByGroup( s, groupName );
         return true;
     }
 
     @Override
-    public boolean removeGroupWriteable( EntityDelegator ed, String groupName ) {
+    public boolean removeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
         securityService.makeUnwriteableByGroup( s, groupName );
         return true;
@@ -361,7 +361,7 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Override
     public SecurityInfoValueObject updatePermission( SecurityInfoValueObject settings ) {
-        EntityDelegator sd = new EntityDelegator();
+        EntityDelegator<? extends Securable> sd = new EntityDelegator<>();
         sd.setId( settings.getEntityId() );
         sd.setClassDelegatingFor( settings.getEntityClazz() );
         Securable s = this.getSecurable( sd );
@@ -517,34 +517,24 @@ public class SecurityControllerImpl implements SecurityController {
      * @return securable
      * @throws IllegalArgumentException if the Securable cannot be loaded
      */
-    private Securable getSecurable( EntityDelegator ed ) {
-        String classDelegatingFor = ed.getClassDelegatingFor();
-
-        Class<?> clazz;
+    private Securable getSecurable( EntityDelegator<? extends Securable> ed ) {
         Securable s;
-        try {
-            clazz = Class.forName( classDelegatingFor );
-        } catch ( ClassNotFoundException e1 ) {
-            throw new RuntimeException( e1 );
-        }
-        if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
+        if ( ed.holds( ExpressionExperiment.class ) ) {
             s = expressionExperimentService.load( ed.getId() );
-        } else if ( GeneSet.class.isAssignableFrom( clazz ) ) {
+        } else if ( ed.holds( GeneSet.class ) ) {
             s = geneSetService.load( ed.getId() );
-        } else if ( ExpressionExperimentSet.class.isAssignableFrom( clazz ) ) {
+        } else if ( ed.holds( ExpressionExperimentSet.class ) ) {
             s = expressionExperimentSetService.load( ed.getId() );
-        } else if ( PhenotypeAssociation.class.isAssignableFrom( clazz ) ) {
+        } else if ( ed.holds( PhenotypeAssociation.class ) ) {
             s = phenotypeAssociationService.load( ed.getId() );
-        } else if ( GeneDifferentialExpressionMetaAnalysis.class.isAssignableFrom( clazz ) ) {
+        } else if ( ed.holds( GeneDifferentialExpressionMetaAnalysis.class ) ) {
             s = geneDiffExMetaAnalysisService.load( ed.getId() );
         } else {
-            throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
+            throw new IllegalArgumentException( "Delegating " + ed.getClassDelegatingFor() + " is not supported by security controller yet." );
         }
-
         if ( s == null ) {
-            throw new EntityNotFoundException( clazz.getSimpleName() + " with ID " + ed.getId() + " does not exist or user does not have access." );
+            throw new EntityNotFoundException( "Entity does not exist or user does not have access." );
         }
-
         return s;
     }
 

@@ -218,7 +218,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * @param  experimentalDesign     experimental design
      * @param  factorValueLines       Lines from file containing factor values and biomaterial ids
      * @param  headerFields           header fields
-     * @return                        Collection of biomaterials associated with this experiment, this is returned as
+     * @return Collection of biomaterials associated with this experiment, this is returned as
      *                                the biomaterial is in a
      *                                bioassay (first one retrieved)
      */
@@ -366,7 +366,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( factorType.equalsIgnoreCase( "CATEGORICAL" ) ) {
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
-                Characteristic newVc = Characteristic.Factory.newInstance();
+                Statement newVc = Statement.Factory.newInstance();
                 if ( category != null ) {
                     String category2 = category.getCategory();
                     assert category2 != null;
@@ -414,7 +414,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * @param  experimentalDesign         Existing experimental design.
      * @param  experimentalFactorFromFile The experimental factor in the file
-     * @return                            Check that experimental design does not already contain the experimental
+     * @return Check that experimental design does not already contain the experimental
      *                                    factor.
      */
     private boolean checkForDuplicateExperimentalFactorOnExperimentalDesign( ExperimentalDesign experimentalDesign,
@@ -435,7 +435,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * @param  bioMaterial bio material
      * @param  factorValue factor value
-     * @return             This method checks that the biomaterial does not already have a value for the factor.
+     * @return This method checks that the biomaterial does not already have a value for the factor.
      */
     private boolean checkForDuplicateFactorOnBioMaterial( BioMaterial bioMaterial, FactorValue factorValue ) {
         boolean foundMatch = false;
@@ -463,7 +463,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * @param  externalId              - the external id stored in the file, which might not be available (so this can
      *                                 be null or
      *                                 blank)
-     * @return                         The biomaterial in the expression experiment set matching the biosource name
+     * @return The biomaterial in the expression experiment set matching the biosource name
      *                                 given in the first column of
      *                                 the factor value line.
      */
@@ -501,7 +501,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      *
      * @param  headerFields     header fields
      * @param  factorValueLines factor value lines
-     * @return                  map of experimental factor values keyed on experimental factor
+     * @return map of experimental factor values keyed on experimental factor
      */
     private Map<String, Set<String>> getMapFactorSampleValues( String[] headerFields, List<String> factorValueLines ) {
         Map<String, Set<String>> factorSampleValues = new HashMap<>();
@@ -530,7 +530,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
     /**
      * @param  bioMaterials bio materials
-     * @return              a map of various strings that we might find in a design importing file to the biomaterials.
+     * @return a map of various strings that we might find in a design importing file to the biomaterials.
      */
     private Map<String, BioMaterial> mapBioMaterialsToNamePossibilities( Collection<BioMaterial> bioMaterials ) {
         Map<String, BioMaterial> biomaterialsInExpressionExperiment = new HashMap<>();
@@ -575,7 +575,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * Does a lookup for the Ontology term to match the category.
      *
      * @param  category category
-     * @return          vocab characteristic
+     * @return vocab characteristic
      */
     private Characteristic termForCategoryLookup( String category, Collection<OntologyTerm> terms ) {
 

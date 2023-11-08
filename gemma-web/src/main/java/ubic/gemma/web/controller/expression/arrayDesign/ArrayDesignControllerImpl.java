@@ -301,7 +301,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator<ArrayDesign> ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         return this.getDesignSummaries( arrayDesign );
     }
@@ -398,7 +398,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public Map<String, String> getReportHtml( EntityDelegator ed ) {
+    public Map<String, String> getReportHtml( EntityDelegator<ArrayDesign> ed ) {
         assert ed.getId() != null;
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
         Map<String, String> result = new HashMap<>();
@@ -453,7 +453,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public String remove( EntityDelegator ed ) {
+    public String remove( EntityDelegator<ArrayDesign> ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( ed.getId() + " not found" );
@@ -540,7 +540,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public String updateReport( EntityDelegator ed ) {
+    public String updateReport( EntityDelegator<ArrayDesign> ed ) {
         GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( ed.getId() ) );
         return taskRunningService.submitTask( job );
     }

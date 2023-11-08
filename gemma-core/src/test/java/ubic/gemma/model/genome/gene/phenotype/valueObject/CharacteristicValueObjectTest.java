@@ -19,9 +19,10 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import com.google.common.collect.Lists;
 import junit.framework.TestCase;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +33,13 @@ public class CharacteristicValueObjectTest extends TestCase {
 
     private CharacteristicValueObject a;
     private CharacteristicValueObject b;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        a = new CharacteristicValueObject();
+        b = new CharacteristicValueObject();
+    }
 
     public void testEqualsA() {
         TestCase.assertTrue( a.equals( b ) );
@@ -85,7 +93,7 @@ public class CharacteristicValueObjectTest extends TestCase {
     public void testCompareToCategory() {
         a.setCategory( "aaa" );
         TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) > 0 );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
 
         b.setCategory( "aaa" );
         TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
@@ -113,7 +121,7 @@ public class CharacteristicValueObjectTest extends TestCase {
     public void testCompareToValue() {
         a.setValue( "aaa" );
         TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) > 0 );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
 
         b.setValue( "aaa" );
         TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
@@ -173,20 +181,11 @@ public class CharacteristicValueObjectTest extends TestCase {
         TestCase.assertTrue( d.compareTo( e ) < 0 );
 
         // sorting
-        List<CharacteristicValueObject> toSort = Lists.newArrayList( e, d, c, b, a );
+        List<CharacteristicValueObject> toSort = Arrays.asList( e, d, c, b, a );
+        List<CharacteristicValueObject> expectedOrder = Arrays.asList( a, b, c, d, e );
         Collections.sort( toSort );
-
-        Long i = 1L;
-        for ( CharacteristicValueObject cvo : toSort ) {
-            TestCase.assertEquals( i, cvo.getId() );
-            i++;
+        for ( int i = 0; i < toSort.size(); i++ ) {
+            TestCase.assertSame( expectedOrder.get( i ), toSort.get( i ) );
         }
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        a = new CharacteristicValueObject( 1L );
-        b = new CharacteristicValueObject( 2L );
     }
 }

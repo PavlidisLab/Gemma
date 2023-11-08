@@ -15,8 +15,5 @@
             </fmt:param>
         </fmt:message>
     </p>
-
-    <hr class="normal">
-
-    <p><c:out value="${exception.message}"/></p>
+    <%@ include file="/common/exception.jsp" %>
 </div>

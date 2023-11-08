@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -894,7 +894,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        return Strings.emptyToNull( result.toString() );
+        return StringUtils.stripToNull( result.toString() );
     }
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {

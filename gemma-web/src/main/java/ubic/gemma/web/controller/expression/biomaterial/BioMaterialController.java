@@ -78,10 +78,10 @@ public class BioMaterialController {
      *                      biomaterials
      *                      will remove the previous one and add the new one.
      */
-    public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator factorValueId ) {
+    public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator<FactorValue> factorValueId ) {
 
         Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
-        FactorValue factorVToAdd = factorValueService.loadOrFail( factorValueId.getId() );
+        FactorValue factorVToAdd = factorValueService.loadWithExperimentalFactorOrFail( factorValueId.getId() );
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
         for ( BioMaterial material : bms ) {
@@ -121,7 +121,7 @@ public class BioMaterialController {
         return mav;
     }
 
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator bm ) {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) {
         if ( bm == null || bm.getId() == null )
             return null;
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
@@ -169,7 +169,7 @@ public class BioMaterialController {
         return bioMaterials;
     }
 
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator bm ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<BioMaterial> bm ) {
 
         if ( bm == null || bm.getId() == null )
             return null;

@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -101,14 +100,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      */
     private Taxon taxon = null;
     protected boolean force = false;
-
-    /**
-     * The event type to look for the lack of, when using auto-seek.
-     */
-    protected Class<? extends AuditEventType> autoSeekEventType = null;
-
-    protected ExpressionExperimentManipulatingCLI() {
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -206,12 +197,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         if ( !force && !expressionExperiments.isEmpty() ) {
 
             if ( isAutoSeek() ) {
-                if ( this.autoSeekEventType == null ) {
+                if ( this.getAutoSeekEventType() == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
                 }
-                AbstractCLI.log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName()
+                AbstractCLI.log.info( "Filtering for experiments lacking a " + this.getAutoSeekEventType().getSimpleName()
                         + " event" );
-                auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
+                auditEventService.retainLackingEvent( this.expressionExperiments, this.getAutoSeekEventType() );
             }
 
             Set<BioAssaySet> troubledExpressionExperiments = this.getTroubledExpressionExperiments();

@@ -20,7 +20,6 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
@@ -28,6 +27,7 @@ import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -44,29 +44,49 @@ import java.util.Objects;
  * @author Paul
  */
 @Indexed
-public class Characteristic extends AbstractDescribable implements Serializable {
+public class Characteristic extends AbstractDescribable implements Serializable, Comparable<Characteristic> {
 
     private static final long serialVersionUID = -7242166109264718620L;
+
+    private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
+
+    private static final Comparator<Characteristic> BY_CATEGORY_AND_VALUE_COMPARATOR = BY_CATEGORY_COMPARATOR
+            .thenComparing( c -> c, ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.value, c1.valueUri, c2.value, c2.valueUri ) );
+
+    private static final Comparator<Characteristic> COMPARATOR = BY_CATEGORY_AND_VALUE_COMPARATOR
+            .thenComparing( Characteristic::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
+
+    /**
+     * Obtain a full comparator for characteristics that fallbacks on the ID if everything else is equal.
+     * <p>
+     * The following fields are compared: category, value, ID.
+     */
+    public static Comparator<Characteristic> getComparator() {
+        return COMPARATOR;
+    }
 
 
     /**
      * Obtain a comparator to compare terms by category URI (or category if null) in a case-insensitive manner.
+     * <p>
+     * Two terms that are equal in terms of category will be collapsed if using a {@link java.util.TreeSet}.
+     * <p>
+     * Use this if you want to get a summary of the categories used by a collection of terms irrespective of their IDs.
      */
     public static Comparator<Characteristic> getByCategoryComparator() {
-        return Comparator
-                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+        return BY_CATEGORY_COMPARATOR;
     }
 
     /**
      * Obtain a comparator to order terms by value URI (or value if null) in a case-insensitive manner.
+     * <p>
+     * Two terms that are equal in terms of category and value (i.e. sharing the same ID) will be collapsed if using a
+     * {@link java.util.TreeSet}.
+     * <p>
+     * Use this if you want to get a summary of the annotations used by a collection of terms irrespective of their IDs.
      */
     public static Comparator<Characteristic> getByCategoryAndValueComparator() {
-        return Comparator
-                .comparing( Characteristic::getCategoryUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-                .thenComparing( Characteristic::getCategory, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-                .thenComparing( Characteristic::getValueUri, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
-                .thenComparing( Characteristic::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ); // there should be no null, but we better be safe than sorry
+        return BY_CATEGORY_AND_VALUE_COMPARATOR;
     }
 
     private String category;
@@ -80,6 +100,14 @@ public class Characteristic extends AbstractDescribable implements Serializable 
     private String value;
     @Nullable
     private String valueUri;
+    /**
+     * Indicate if this "old-style" characteristic has been migrated to a {@link ubic.gemma.model.expression.experiment.Statement}.
+     * This is only meaningful for {@link ubic.gemma.model.expression.experiment.FactorValue} characteristics.
+     * @deprecated do not rely on this field, it will be removed once the migration is completed.
+     */
+    @Deprecated
+    private boolean migratedToStatement;
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -176,13 +204,23 @@ public class Characteristic extends AbstractDescribable implements Serializable 
         this.valueUri = uri;
     }
 
+    @Deprecated
+    public boolean isMigratedToStatement() {
+        return migratedToStatement;
+    }
+
+    @Deprecated
+    public void setMigratedToStatement( boolean migratedToStatement ) {
+        this.migratedToStatement = migratedToStatement;
+    }
+
     @Override
     public int hashCode() {
-
-        if ( this.getId() != null ) return this.getId().hashCode();
-
-        return new HashCodeBuilder( 17, 1 ).append( this.getCategory() )
-                .append( this.getValue() ).toHashCode();
+        if ( this.getId() != null ) {
+            return super.hashCode();
+        }
+        return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
+                StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
     }
 
     @Override
@@ -195,19 +233,20 @@ public class Characteristic extends AbstractDescribable implements Serializable 
             return false;
         Characteristic that = ( Characteristic ) object;
         if ( this.getId() != null && that.getId() != null )
-            return this.getId().equals( that.getId() );
+            return super.equals( object );
 
         /*
          * at this point, we know we have two Characteristics, at least one of which is transient, so we have to look at
          * the fields; we can't just compare the hashcodes because they also look at the id, so comparing one transient
          * and one persistent would always fail...
          */
-        return Objects.equals( this.getCategory(), that.getCategory() ) && Objects
-                .equals( this.getValue(), that.getValue() );
+        return CharacteristicUtils.equals( category, categoryUri, that.category, that.categoryUri )
+                && CharacteristicUtils.equals( value, valueUri, that.value, that.valueUri );
+    }
 
-        /*
-         * FIXME add uris
-         */
+    @Override
+    public int compareTo( @Nonnull Characteristic characteristic ) {
+        return COMPARATOR.compare( this, characteristic );
     }
 
     @Override
@@ -219,7 +258,7 @@ public class Characteristic extends AbstractDescribable implements Serializable 
                 b.append( " [" ).append( categoryUri ).append( "]" );
             }
         } else if ( categoryUri != null ) {
-            b.append( " Value URI=" ).append( categoryUri );
+            b.append( " Category URI=" ).append( categoryUri );
         } else {
             b.append( " [No Category]" );
         }
