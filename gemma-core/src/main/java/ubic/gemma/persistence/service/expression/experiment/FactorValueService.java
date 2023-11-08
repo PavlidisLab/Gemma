@@ -82,13 +82,6 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     void remove( FactorValue factorValue );
 
     /**
-     * Load a given statement by ID.
-     */
-    @Nullable
-    @Secured({ "GROUP_USER" })
-    Statement loadStatement( Long statementId );
-
-    /**
      * Create a given statement and add it to the given factor value.
      * @param factorValue the factor value to add the statement to
      * @param statement   the statement to be created and added to the factor value

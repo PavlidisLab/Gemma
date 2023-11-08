@@ -257,22 +257,26 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Override
     public void deleteFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
-        for ( FactorValueValueObject fvvo : fvvos ) {
-            FactorValue fv = factorValueService.load( fvvo.getId() );
-
-            if ( fv == null ) {
-                log.warn( "No factorvalue with ID=" + fvvo.getId() );
-                continue;
+        FactorValue[] fvs = new FactorValue[fvvos.length];
+        Statement[] statements = new Statement[fvvos.length];
+        for ( int i = 0; i < fvvos.length; i++ ) {
+            FactorValueValueObject fvvo = fvvos[i];
+            if ( fvvo.getId() == null ) {
+                throw new IllegalArgumentException( "A factor value ID must be supplied." );
             }
-
-            Statement c = factorValueService.loadStatement( fvvo.getCharId() );
-
-            if ( c == null ) {
-                log.warn( "Characteristic ID is null for FactorValueValueObject with id=" + fvvo.getId() );
-                continue;
+            if ( fvvo.getCharId() == null ) {
+                throw new IllegalArgumentException( "A characteristic ID must be supplied." );
             }
-
-            factorValueService.removeStatement( fv, c );
+            FactorValue fv = factorValueService.loadOrFail( fvvo.getId() );
+            Statement c = fv.getCharacteristics().stream()
+                    .filter( s -> s.getId().equals( fvvo.getCharId() ) )
+                    .findFirst()
+                    .orElseThrow( () -> new EntityNotFoundException( String.format( "No statement with ID %d in FactorVlaue with ID %d", fvvo.getCharId(), fvvo.getId() ) ) );
+            fvs[i] = fv;
+            statements[i] = c;
+        }
+        for ( int i = 0; i < fvvos.length; i++ ) {
+            factorValueService.removeStatement( fvs[i], statements[i] );
         }
     }
 
@@ -681,25 +685,17 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Statement[] statements = new Statement[fvvos.length];
         for ( int i = 0; i < fvvos.length; i++ ) {
             FactorValueValueObject fvvo = fvvos[i];
-            Long fvID = fvvo.getId();
-            if ( fvID == null ) {
-                throw new IllegalArgumentException( "Factor value id must be supplied" );
+            if ( fvvo.getId() == null ) {
+                throw new IllegalArgumentException( "Factor value ID must be supplied" );
             }
-            FactorValue fv = this.factorValueService.loadOrFail( fvID, EntityNotFoundException::new, "Could not load factorvalue with id=" + fvID );
+            FactorValue fv = this.factorValueService.loadOrFail( fvvo.getId(), EntityNotFoundException::new, "Could not load factorvalue with id=" + fvvo.getId() );
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
             if ( charId != null ) {
-                c = factorValueService.loadStatement( charId );
-                if ( c == null ) {
-                    /*
-                     * This shouldn't happen but just in case...
-                     */
-                    throw new EntityNotFoundException( "No characteristic with id " + charId );
-                }
-                if ( !fv.getCharacteristics().contains( c ) ) {
-                    throw new IllegalArgumentException(
-                            "Characteristic with id=" + charId + " does not belong to FactorValue with id=" + fvID );
-                }
+                c = fv.getCharacteristics().stream()
+                        .filter( s -> s.getId().equals( charId ) )
+                        .findFirst()
+                        .orElseThrow( () -> new EntityNotFoundException( String.format( "No characteristic with ID %d in FactorValue with ID %d", charId, fvvo.getId() ) ) );
             } else {
                 c = Statement.Factory.newInstance();
             }

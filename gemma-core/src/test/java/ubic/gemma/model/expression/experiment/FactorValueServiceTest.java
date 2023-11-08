@@ -115,6 +115,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         Statement s1;
         s1 = Statement.Factory.newInstance();
         s1.setObject( "test" );
+        sessionFactory.getCurrentSession().persist( s1 );
         fv.getCharacteristics().add( s1 );
         sessionFactory.getCurrentSession().persist( fv );
         sessionFactory.getCurrentSession().flush();

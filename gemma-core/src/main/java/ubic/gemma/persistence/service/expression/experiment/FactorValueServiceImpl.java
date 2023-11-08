@@ -31,8 +31,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * <p>
  * Spring Service base class for <code>FactorValueService</code>, provides access
@@ -102,24 +100,12 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     @Override
     @Transactional
-    public void remove( FactorValue entity ) {
-        super.remove( ensureInSession( entity ) );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Statement loadStatement( Long statementId ) {
-        return statementDao.load( statementId );
-    }
-
-    @Override
-    @Transactional
     public Statement createStatement( FactorValue factorValue, Statement statement ) {
         Assert.notNull( factorValue.getId(), "The factor value must be persistent." );
         Assert.isNull( statement.getId(), "The statement to be added must not be persistent." );
-        statement = this.statementDao.create( statement );
         // note here that once the statement is persisted, it is compared by ID, so it won't clash with any other
         // identical statement
+        statement = this.statementDao.create( statement );
         factorValue.getCharacteristics().add( statement );
         factorValueDao.update( factorValue );
         return statement;
@@ -132,9 +118,11 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         if ( statement.getId() != null && !fv.getCharacteristics().contains( statement ) ) {
             throw new IllegalArgumentException( "The given persistent statement is not associated with the factor value." );
         }
-        statement = statementDao.save( statement );
         // same for createStatement() not applies here and in addition, if the statement already belongs to the FV, this
         // is a noop
+        if ( statement.getId() == null ) {
+            statement = statementDao.create( statement );
+        }
         fv.getCharacteristics().add( statement );
         factorValueDao.update( fv );
         return statement;
@@ -147,9 +135,11 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         if ( statement.getId() != null && !fv.getCharacteristics().contains( statement ) ) {
             throw new IllegalArgumentException( "The given persistent statement is not associated with the factor value." );
         }
-        statement = statementDao.save( statement );
         // same for createStatement() not applies here and in addition, if the statement already belongs to the FV, this
         // is a noop
+        if ( statement.getId() == null ) {
+            statement = statementDao.create( statement );
+        }
         fv.getCharacteristics().add( statement );
         // careful here!
         factorValueDao.updateIgnoreAcl( fv );
@@ -161,17 +151,17 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     public void removeStatement( FactorValue fv, Statement statement ) {
         Assert.notNull( fv.getId(), "The factor value must be persistent." );
         Assert.notNull( statement.getId(), "The statement to be removed must be persistent." );
-
-        // necessary for dealing with detached fvs/statements, noop if already in session
-        fv = ensureInSession( fv );
-        statement = requireNonNull( statementDao.load( statement.getId() ), "The given statement does not exist." );
-
         if ( !fv.getCharacteristics().remove( statement ) ) {
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
         }
-
         // now we can safely delete it
         this.statementDao.remove( statement );
+    }
+
+    @Override
+    @Transactional
+    public void remove( FactorValue entity ) {
+        super.remove( ensureInSession( entity ) );
     }
 
     @Override
