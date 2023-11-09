@@ -1814,21 +1814,6 @@ public class ExpressionExperimentDaoImpl
             getSessionFactory().getCurrentSession().delete( bm );
         }
 
-        // remove any attached statements since those are not mapped in the collection
-        // remove this in the 1.31 since it will become unnecessary (see https://github.com/PavlidisLab/Gemma/issues/909)
-        int removedStatements = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from CHARACTERISTIC where class = 'Statement' "
-                        + "and FACTOR_VALUE_FK in (select FACTOR_VALUE.ID from FACTOR_VALUE "
-                        + "join EXPERIMENTAL_FACTOR on FACTOR_VALUE.EXPERIMENTAL_FACTOR_FK = EXPERIMENTAL_FACTOR.ID "
-                        + "join EXPERIMENTAL_DESIGN on EXPERIMENTAL_FACTOR.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
-                        + "join INVESTIGATION on EXPERIMENTAL_DESIGN.ID = INVESTIGATION.EXPERIMENTAL_DESIGN_FK "
-                        + "where INVESTIGATION.ID = :eeId)" )
-                .setParameter( "eeId", ee.getId() )
-                .executeUpdate();
-        if ( removedStatements > 0 ) {
-            log.info( String.format( "Removed %d statements from %s", removedStatements, ee ) );
-        }
-
         super.remove( ee );
     }
 
