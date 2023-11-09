@@ -2089,14 +2089,16 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
-        configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
         configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
         configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
 
         // this is not useful, unless we add an alias to the alternate names
         configurer.unregisterProperties( p -> p.endsWith( "alternateNames.size" ) );
