@@ -78,20 +78,17 @@ public class FactorValueOntologyUtils {
     /**
      * Visit the characteristics of a FactorValue and generate their annotation IDs.
      * <p>
-     * Characteristics are represented by subject-only statements (i.e. null object and second object).
+     * Characteristics also include subject-only statements.
      */
     public static <E extends Throwable> void visitCharacteristics( Long factorValueId, Collection<StatementValueObject> statements, StatementVisitor<String, E> visitor ) throws E {
         long nextAvailableId = 1L;
         for ( StatementValueObject svo : new TreeSet<>( statements ) ) {
-            String valueId = getAnnotationId( factorValueId, nextAvailableId++ );
+            visitor.accept( svo, getAnnotationId( factorValueId, nextAvailableId++ ) );
             if ( svo.getObject() != null ) {
                 nextAvailableId++;
             }
             if ( svo.getSecondObject() != null ) {
                 nextAvailableId++;
-            }
-            if ( svo.getObject() == null && svo.getSecondObject() == null ) {
-                visitor.accept( svo, valueId );
             }
         }
     }
