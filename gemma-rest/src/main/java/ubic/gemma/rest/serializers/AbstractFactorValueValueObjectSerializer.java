@@ -25,7 +25,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSer
     protected void writeCharacteristics( Long factorValueId, Collection<StatementValueObject> cvos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "characteristics" );
         visitCharacteristics( factorValueId, cvos, ( cvo, valueId ) -> {
-            writeCharacteristic( cvo.getId(), cvo.getCategory(), cvo.getCategoryUri(), valueId, cvo.getValue(), cvo.getValueUri(), jsonGenerator );
+            writeCharacteristic( cvo.getId(), cvo.getCategory(), cvo.getCategoryUri(), valueId, cvo.getSubject(), cvo.getSubjectUri(), jsonGenerator );
         } );
         jsonGenerator.writeEndArray();
     }

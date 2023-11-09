@@ -1,7 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -34,7 +33,7 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
      */
     private static final Comparator<StatementValueObject> COMPARATOR = Comparator
             .comparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getCategory(), c1.getCategoryUri(), c2.getCategory(), c2.getCategoryUri() ) )
-            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getValue(), c1.getValueUri(), c2.getValue(), c2.getValueUri() ) )
+            .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getSubject(), c1.getSubjectUri(), c2.getSubject(), c2.getSubjectUri() ) )
             .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getPredicate(), c1.getPredicateUri(), c2.getPredicate(), c2.getPredicateUri() ) )
             .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getObject(), c1.getObjectUri(), c2.getObject(), c2.getObjectUri() ) )
             .thenComparing( ( StatementValueObject c ) -> c, ( c1, c2 ) -> compareTerm( c1.getSecondPredicate(), c1.getSecondPredicateUri(), c2.getSecondPredicate(), c2.getSecondPredicateUri() ) )
@@ -98,24 +97,6 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
         this.secondPredicateUri = s.getSecondPredicateUri();
         this.secondObject = s.getSecondObject();
         this.secondObjectUri = s.getSecondObjectUri();
-    }
-
-    // for backward-compatibility because FactorValueBasicValueObject characteristics used to be CharacteristicBasicValueObject
-
-    public String getValue() {
-        return subject;
-    }
-
-    public void setValue( String value ) {
-        this.subject = value;
-    }
-
-    public String getValueUri() {
-        return subjectUri;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.subjectUri = valueUri;
     }
 
     @Override
