@@ -188,6 +188,13 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
          hidden : true
       } ];
 
+      if ( this.editable ) {
+         this.columns.push( {
+            header : "Factor Value ID",
+            dataIndex : "id"
+         } );
+      }
+
       this.experimentalDesign = {
          id : this.edId,
          classDelegatingFor : "ExperimentalDesign"

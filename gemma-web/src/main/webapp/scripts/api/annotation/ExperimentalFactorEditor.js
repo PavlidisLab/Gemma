@@ -65,7 +65,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
         if (Ext.get("hasAdmin").getValue() === 'true') {
             cols.push({
-                header: "ID",
+                header: "Factor ID",
                 dataIndex: 'id'
             })
         }
