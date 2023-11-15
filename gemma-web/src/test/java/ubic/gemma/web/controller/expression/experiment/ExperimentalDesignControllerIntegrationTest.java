@@ -23,19 +23,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
-import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Kiran Keshav
@@ -66,25 +66,40 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
     }
 
     @Test
-    public void testShowExperimentalDesign() {
-        MockHttpServletRequest req = super.newGet( "/experimentalDesign/showExperimentalDesign.html" );
-
+    public void testShowExperimentalDesign() throws Exception {
         ExperimentalDesign ed = ee.getExperimentalDesign();
+        assertNotNull( ed );
+        assertNotNull( ed.getId() );
+        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+                        .param( "edid", ed.getId().toString() ) )
+                .andExpect( status().isOk() )
+                .andExpect( request().attribute( "id", ed.getId() ) )
+                .andExpect( view().name( "experimentalDesign.detail" ) )
+                .andExpect( model().attribute( "needsAttention", equalTo( false ) ) )
+                .andExpect( model().attribute( "randomExperimentalDesignThatNeedsAttention", nullValue() ) );
+    }
 
+    @Test
+    public void testShowExperimentalDesignByExperimentId() throws Exception {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
         assertTrue( ed != null && ee.getId() != null );
+        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+                        .param( "eeid", ee.getId().toString() ) )
+                .andExpect( status().isOk() )
+                .andExpect( request().attribute( "id", ed.getId() ) )
+                .andExpect( view().name( "experimentalDesign.detail" ) );
+    }
 
-        req.addParameter( "name", "Experimental Design 0" );
-
-        req.addParameter( "eeid", String.valueOf( ee.getId() ) );
-
-        req.setRequestURI( "/experimentalDesign/showExperimentalDesign.html" );
-
-        ModelAndView mav = experimentalDesignController.show( req, ( HttpServletResponse ) null );
-
-        Map<String, Object> m = mav.getModel();
-        assertNotNull( m.get( "expressionExperiment" ) );
-
-        assertEquals( mav.getViewName(), "experimentalDesign.detail" );
+    @Test
+    public void testShowExperimentalDesignByExperimentShortName() throws Exception {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        assertNotNull( ee.getShortName() );
+        assertTrue( ed != null && ee.getId() != null );
+        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+                        .param( "shortName", ee.getShortName() ) )
+                .andExpect( status().isOk() )
+                .andExpect( request().attribute( "shortName", ee.getShortName() ) )
+                .andExpect( view().name( "experimentalDesign.detail" ) );
     }
 
     @Test

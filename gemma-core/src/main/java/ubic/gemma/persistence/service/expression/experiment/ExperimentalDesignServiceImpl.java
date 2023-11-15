@@ -18,13 +18,14 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
+
+import javax.annotation.Nullable;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
@@ -58,4 +59,10 @@ public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalD
         return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludedDesign ) {
+        return experimentalDesignDao.getRandomExperimentalDesignThatNeedsAttention( excludedDesign );
+    }
 }

@@ -97,6 +97,17 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Nonnull
     @Override
+    public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        BioAssaySet bas;
+        bas = expressionExperimentService.load( id );
+        if ( bas != null ) {
+            return bas;
+        }
+        return expressionExperimentSubSetService.loadOrFail( id, exceptionSupplier );
+    }
+
+    @Nonnull
+    @Override
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );

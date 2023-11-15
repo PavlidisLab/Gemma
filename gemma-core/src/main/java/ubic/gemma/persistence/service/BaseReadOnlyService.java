@@ -63,9 +63,24 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     @Nonnull
     O loadOrFail( Long id ) throws NullPointerException;
 
+    /**
+     * Load an entity or fail with the supplied exception.
+     * @throws T if the entity does not exist in the persistent storage
+     */
     @Nonnull
     <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T;
 
+    /**
+     * Load an entity or fail with the supplied exception; the message is generated automatically.
+     * @throws T if the entity does not exist in the persistent storage
+     */
+    @Nonnull
+    <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
+
+    /**
+     * Load an entity or fail with the supplied exception and message.
+     * @throws T if the entity does not exist in the persistent storage
+     */
     @Nonnull
     <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 

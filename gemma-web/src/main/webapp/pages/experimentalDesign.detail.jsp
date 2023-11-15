@@ -4,7 +4,7 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperiment" />
 <head>
-<title><fmt:message key="experimentalDesign.details" /></title>
+<title>${expressionExperiment.shortName} | <fmt:message key="experimentalDesign.details" /></title>
 
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/eeDataFetch.js' />
@@ -146,6 +146,18 @@ $(document).ready(function () {
 			</div>
 		</c:if>
 	</security:accesscontrollist>
+
+	<security:authorize access="hasAuthority('GROUP_ADMIN')">
+		<c:if test="${needsAttention}">
+			<p>This experimental design needs attention, check in the tables below for more details.</p>
+		</c:if>
+		<c:if test="${randomExperimentalDesignThatNeedsAttention != null}">
+			<p>
+				Here's another experimental design that needs attention:
+				<a href="${pageContext.servletContext.contextPath}/experimentalDesign/showExperimentalDesign.html?edid=${randomExperimentalDesignThatNeedsAttention.id}">${expressionExperiment.shortName}</a>
+			</p>
+		</c:if>
+	</security:authorize>
 
 	<!-- Experimental Factors -->
 

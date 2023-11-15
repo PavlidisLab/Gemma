@@ -62,4 +62,14 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+
+    /**
+     * Obtain a random experimental design that needs attention.
+     * <p>
+     * This operation is reserved to administrators.
+     * @see ExperimentalDesignDao#getRandomExperimentalDesignThatNeedsAttention(ExperimentalDesign)
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN" })
+    ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludeDesign );
 }

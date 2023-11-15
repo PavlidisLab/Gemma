@@ -433,7 +433,7 @@
 
 
     <bean id="experimentalDesignController"
-          class="ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerImpl">
+          class="ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController">
         <dwr:remote javascript="ExperimentalDesignController">
             <dwr:include method="createDesignFromFile"/>
             <dwr:include method="getExperimentalFactors"/>

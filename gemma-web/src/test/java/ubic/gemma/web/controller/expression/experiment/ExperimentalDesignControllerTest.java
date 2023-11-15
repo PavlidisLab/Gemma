@@ -37,7 +37,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
 
         @Bean
         public ExperimentalDesignController experimentalDesignController() {
-            return new ExperimentalDesignControllerImpl();
+            return new ExperimentalDesignController();
         }
 
         @Bean

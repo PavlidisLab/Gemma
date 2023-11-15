@@ -116,6 +116,17 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Nonnull
     @Override
     @Transactional(readOnly = true)
+    public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        O entity = mainDao.load( id );
+        if ( entity == null ) {
+            throw exceptionSupplier.apply( String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+        }
+        return entity;
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         O entity = mainDao.load( id );
         if ( entity == null ) {
