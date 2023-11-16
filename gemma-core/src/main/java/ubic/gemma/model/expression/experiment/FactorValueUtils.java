@@ -18,7 +18,11 @@ public class FactorValueUtils {
 
     public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
         StringBuilder buf = new StringBuilder();
-        if ( fv.getMeasurement() != null && StringUtils.isNotBlank( fv.getMeasurement().getValue() ) ) {
+        if ( fv.getMeasurement() != null ) {
+            if ( fv.getExperimentalFactor().getCategory() != null ) {
+                buf.append( defaultIfBlank( fv.getExperimentalFactor().getCategory().getCategory(), "?" ) )
+                        .append( ": " );
+            }
             Measurement measurement = fv.getMeasurement();
             buf.append( defaultIfBlank( measurement.getValue(), "?" ) );
             if ( fv.getMeasurement().getUnit() != null ) {

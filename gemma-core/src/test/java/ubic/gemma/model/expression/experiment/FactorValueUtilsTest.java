@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.junit.Test;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.measurement.Unit;
@@ -30,10 +31,25 @@ public class FactorValueUtilsTest {
     @Test
     public void testMeasurement() {
         FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( new ExperimentalFactor() );
         Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
         m.setUnit( Unit.Factory.newInstance( "mg" ) );
         fv.setMeasurement( m );
         assertEquals( "5.0 mg", FactorValueUtils.getSummaryString( fv ) );
+    }
+
+    @Test
+    public void testMeasurementWithCategory() {
+        ExperimentalFactor age = new ExperimentalFactor();
+        Characteristic ageC = new Characteristic();
+        ageC.setCategory( "age" );
+        age.setCategory( ageC );
+        FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( age );
+        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
+        m.setUnit( Unit.Factory.newInstance( "years" ) );
+        fv.setMeasurement( m );
+        assertEquals( "age: 5.0 years", FactorValueUtils.getSummaryString( fv ) );
     }
 
     private Statement createStatement( String subject, String predicate, String object, String secondPredicate, String secondObject ) {
