@@ -10,6 +10,7 @@ package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
@@ -47,50 +48,49 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     @GemmaRestOnly
     private String ontologyId;
 
-    /**
-     * ID of the experimental factor this FV belongs to.
-     */
-    private Long factorId;
+    @GemmaRestOnly
+    private Long experimentalFactorId;
 
-    /**
-     * Indicate if this FactorValue is a measurement.
-     * @deprecated simply check if {@link #getMeasurementObject()} is non-null instead
-     */
-    @Deprecated
-    @JsonProperty("isMeasurement")
-    private boolean measurement;
+    @GemmaRestOnly
+    private CharacteristicValueObject experimentalFactorCategory;
 
     /**
      * Measurement object if this FactorValue is a measurement.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property exists only if a measurement")
     @JsonProperty("measurement")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private MeasurementValueObject measurementObject;
 
-    /**
-     * Characteristics.
-     */
     private List<CharacteristicValueObject> characteristics;
 
-    /**
-     * Statements
-     */
     private List<StatementValueObject> statements;
+
+    /**
+     * Human-readable summary of the factor value.
+     */
+    private String summary;
 
     // fields of the characteristic being focused on
     // this is used by the FV editor to model each individual characteristic with its FV
     /**
+     * ID of the experimental factor this FV belongs to.
+     */
+    @Schema(description = "Use `experimentalFactorId` instead.", deprecated = true)
+    private Long factorId;
+    /**
      * It could be the id of the measurement if there is no characteristic.
      */
-    @GemmaWebOnly
+    @Schema(description = "", deprecated = true)
     private Long charId;
-    @GemmaWebOnly
+    @Schema(description = "Use experimentalFactorCategory.category instead.", deprecated = true)
     private String category;
-    @GemmaWebOnly
+    @Schema(description = "Use experimentalFactorCategory.categoryUri instead.", deprecated = true)
     private String categoryUri;
-    @GemmaWebOnly
+    @Deprecated
+    @Schema(description = "This property is never filled nor used; use `summary` if you need a human-readable representation of this factor value.", deprecated = true)
     private String description;
-    @GemmaWebOnly
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     private String factorValue;
     @GemmaWebOnly
     private String value;
@@ -140,24 +140,27 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value );
         this.factorValue = FactorValueUtils.getSummaryString( value );
+        this.experimentalFactorId = value.getExperimentalFactor().getId();
         this.factorId = value.getExperimentalFactor().getId();
 
         // make sure we fill in the category for this if no characteristic is being *focused* on
         if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
             Characteristic factorCategory = value.getExperimentalFactor().getCategory();
             if ( factorCategory != null ) {
+                this.experimentalFactorCategory = new CharacteristicValueObject( factorCategory );
                 this.category = factorCategory.getCategory();
                 this.categoryUri = factorCategory.getCategoryUri();
             }
         }
 
         if ( value.getMeasurement() != null ) {
-            this.measurement = true;
             this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
             if ( c == null ) {
                 this.value = value.getMeasurement().getValue();
                 this.charId = value.getMeasurement().getId();
             }
+        } else {
+            this.measurementObject = null;
         }
 
         this.characteristics = value.getCharacteristics().stream()
@@ -169,6 +172,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
                 .sorted()
                 .map( StatementValueObject::new )
                 .collect( Collectors.toList() );
+
+        this.summary = FactorValueUtils.getSummaryString( value );
 
         // fill in the details of the *focused* characteristic
         if ( c != null ) {
@@ -205,6 +210,15 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     @Deprecated
     public FactorValueValueObject( FactorValue fv ) {
         this( fv, pickStatement( fv ) );
+    }
+
+    /**
+     * Indicate if this FactorValue is a measurement.
+     */
+    @Schema(description = "Check if a `measurement` key exists instead.", deprecated = true)
+    @JsonProperty("isMeasurement")
+    public boolean isMeasurement() {
+        return this.measurementObject != null;
     }
 
     @Override

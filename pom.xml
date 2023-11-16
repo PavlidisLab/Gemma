@@ -354,6 +354,13 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
+		<!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+
 		<!-- XML, XSLT and XPath -->
 		<dependency>
 			<groupId>xml-apis</groupId>

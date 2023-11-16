@@ -17,7 +17,7 @@ public class FactorValueBasicValueObjectSerializer extends AbstractFactorValueVa
     public void serialize( FactorValueBasicValueObject factorValueBasicValueObject, JsonGenerator jsonGenerator, SerializerProvider serializerProvider ) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", factorValueBasicValueObject.getId() );
-        jsonGenerator.writeObjectField( "ontologyId", FactorValueOntologyUtils.getUri( factorValueBasicValueObject.getId() ) );
+        jsonGenerator.writeStringField( "ontologyId", FactorValueOntologyUtils.getUri( factorValueBasicValueObject.getId() ) );
         jsonGenerator.writeObjectField( "experimentalFactorId", factorValueBasicValueObject.getExperimentalFactorId() );
         jsonGenerator.writeObjectField( "experimentalFactorCategory", factorValueBasicValueObject.getExperimentalFactorCategory() );
         if ( factorValueBasicValueObject.getMeasurement() != null ) {

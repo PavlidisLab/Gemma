@@ -9,6 +9,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
@@ -50,15 +51,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     private CharacteristicValueObject experimentalFactorCategory;
 
     /**
-     * Indicate if this factor value is a measurement.
-     * <p>
-     * Note that measurements can have characteristics as optional annotations.
-     * @deprecated simply check if {@link #getMeasurement()} is non-null instead
-     */
-    @Deprecated
-    private boolean isMeasurement;
-
-    /**
      * The measurement associated with this factor value.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -78,6 +70,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
      * @deprecated use either {@link #characteristics} or {@link #measurement}
      */
     @Deprecated
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     private String value;
 
     /**
@@ -108,7 +101,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
         if ( fv.getMeasurement() != null ) {
             this.measurement = new MeasurementValueObject( fv.getMeasurement() );
-            this.isMeasurement = true;
         }
 
         this.characteristics = fv.getCharacteristics().stream()
