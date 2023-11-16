@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.biomaterial;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +92,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /**
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
+    @Deprecated
+    @Schema(description = "This is deprecated, use the `factorValues` collection instead.", deprecated = true)
     private Map<String, String> factors;
 
     @GemmaWebOnly
@@ -169,6 +173,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     @JsonProperty("factorValues")
+    @ArraySchema(schema = @Schema(implementation = FactorValueBasicValueObject.class))
     public Collection<? extends IdentifiableValueObject> getFactorValues() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
@@ -178,6 +183,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     @Deprecated
     @JsonProperty("factorValueObjects")
+    @ArraySchema(
+            arraySchema = @Schema(description = "This property is redundant, use `factorValues` instead.", deprecated = true),
+            schema = @Schema(implementation = FactorValueBasicValueObject.class))
     public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
