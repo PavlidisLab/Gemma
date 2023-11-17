@@ -26,7 +26,6 @@ import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -52,13 +51,23 @@ import java.util.*;
  */
 public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
+    @Autowired
     private AnnotationAssociationService annotationAssociationService;
+    @Autowired
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    @Autowired
     private ArrayDesignReportService arrayDesignReportService;
+    @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     private String platformShortName = null;
     private String geneListFileName = null;
@@ -146,7 +155,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
             gene = geneService.thaw( gene );
 
-            Collection<GeneProduct> products = gene.getProducts();
+            Collection<GeneProduct> products = gene.getProducts(); // this will not include any dummy products.
 
             log.debug( "> Processing: " + gene.getOfficialSymbol() );
 
@@ -249,16 +258,9 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        geneService = this.getBean( GeneService.class );
-        arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
-        TaxonService taxonService = this.getBean( TaxonService.class );
-        bioSequenceService = this.getBean( BioSequenceService.class );
-        arrayDesignService = this.getBean( ArrayDesignService.class );
-        compositeSequenceService = this.getBean( CompositeSequenceService.class );
-        annotationAssociationService = this.getBean( AnnotationAssociationService.class );
-        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
+
         this.platformShortName = commandLine.getOptionValue( "a" );
-        this.taxon = taxonService.findByCommonName( commandLine.getOptionValue( "t" ) );
+        this.taxon = this.taxonService.findByCommonName( commandLine.getOptionValue( "t" ) );
     }
 
 
