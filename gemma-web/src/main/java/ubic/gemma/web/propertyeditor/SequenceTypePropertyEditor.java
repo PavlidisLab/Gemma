@@ -62,6 +62,8 @@ public class SequenceTypePropertyEditor extends PropertyEditorSupport {
             return "Other";
         } else if ( type.equals( SequenceType.ORF ) ) {
             return "ORF";
+        } else if (type.equals( SequenceType.DUMMY )) {
+            return "DUMMY";
         } else {
             return "[Unknown]";
         }

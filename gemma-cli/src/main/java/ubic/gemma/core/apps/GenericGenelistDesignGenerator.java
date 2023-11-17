@@ -17,19 +17,17 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.common.util.Hash;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -38,7 +36,7 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -52,7 +50,7 @@ import java.util.*;
  *
  * @author paul
  */
-public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
+public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
     private AnnotationAssociationService annotationAssociationService;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
@@ -65,6 +63,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private String platformShortName = null;
     private String geneListFileName = null;
     private Taxon taxon = null;
+
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -80,6 +82,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "t" ).longOpt( "taxon" ).desc( "Taxon of the genes" ).argName( "taxon" ).required().hasArg().build() );
+
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "shortName" )
                 .desc( "Platform short name (existing or new to add)" ).required().longOpt( "platform" ).build();
         options.addOption( arrayDesignOption );
@@ -96,7 +99,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         ArrayDesign platform = arrayDesignService.findByShortName( this.platformShortName );
         platform = arrayDesignService.thaw( platform );
 
-        Set<String> ncbiIds = new HashSet<String>( AbstractCLIContextCLI.readListFileToStrings( this.geneListFileName ) );
+        Set<String> ncbiIds = new HashSet<String>( FileUtils.readListFileToStrings( this.geneListFileName ) );
         AbstractCLI.log.info( "File had " + ncbiIds.size() + " gene ids" );
 
         // this would be good for cases where the identifier we are using has changed.
@@ -107,14 +110,15 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         int count = 0;
         int numWithNoTranscript = 0;
-        // int hasGeneAlready = 0;
+        int hasGeneAlready = 0;
         // int numNewGenes = 0;
+        int geneNotFound = 0;
         int numNewElements = 0;
         int numUpdatedElements = 0;
         for ( String ncbiId : ncbiIds ) {
 
-
             if ( existingSymbolMap.containsKey( ncbiId ) ) {
+                hasGeneAlready++;
                 continue;
             }
 
@@ -126,6 +130,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             }
             if ( gene == null ) {
                 AbstractCLI.log.warn( "No gene for " + ncbiId );
+                geneNotFound++;
                 continue;
             }
 
@@ -139,92 +144,68 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             if ( products.isEmpty() ) {
                 numWithNoTranscript++;
                 AbstractCLI.log.info( "No transcript for " + gene + ", skipping" );
+                /*
+                 * If a gene has no transcript, there is no reason to add a 'dummy' element for it.
+                 */
                 continue;
             }
 
-            count++;
+//            GeneProduct geneProduct = null;
+//            BioSequence bioSequence = null;
+            AnnotationAssociation aa = null;
 
-            CompositeSequence csForGene = null;
+            Collection<AnnotationAssociation> aas = annotationAssociationService.find( gene );
+            for ( AnnotationAssociation aae : aas ) {
+                if ( aae.getBioSequence().getType().equals( SequenceType.DUMMY ) && aae.getGeneProduct().isDummy() ) {
+//                    bioSequence = aae.getBioSequence();
+//                    geneProduct = aae.getGeneProduct();
 
-            /*
-             * We arbitrarily link the "probe" to one of the gene's RNA transcripts. We could consider other strategies
-             * to pick the representative, but it generally doesn't matter.
-             */
-            for ( GeneProduct geneProduct : products ) {
-
-                /*
-                 * Name is usually the genbank or ensembl accession
-                 */
-                String name = geneProduct.getName();
-
-                Collection<DatabaseEntry> accessions = geneProduct.getAccessions();
-                if ( accessions.isEmpty() ) {
-                    throw new IllegalStateException( "Gene product has no biosequence accessions: " + geneProduct );
+                    if ( aa != null ) { // this is a sanity check, if we are sure this isn't an issue we can just break here.
+                        throw new IllegalStateException( "More than one dummy annotation association for " + gene );
+                    }
+                    aa = aae;
                 }
-
-                BioSequence bioSequence = BioSequence.Factory.newInstance();
-                bioSequence.setName( name );
-                bioSequence.setTaxon( this.taxon );
-                bioSequence.setPolymerType( PolymerType.RNA );
-                bioSequence.setType( SequenceType.mRNA );
-                BioSequence existing = null;
-
-                for(DatabaseEntry accession : accessions) {
-
-                    existing = bioSequenceService.findByAccession( accessions.iterator().next() );
-
-                    if (existing == null ||  existing.getSequenceDatabaseEntry() == null ) {
-                        continue; // looping over geneproducts
-                    }
-
-
-                    // FIXME It is possible that this sequence will have been aligned to the genome, which is a bit
-                    // confusing. So it will map to a gene. Worse case: it maps to more than one gene ...
-                    if ( existing == null ) {
-                        // create a copy, each biosequence must own their database entry
-                        DatabaseEntry databaseEntry = accessions.iterator().next();
-                        DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
-                        clone.setAccession( databaseEntry.getAccession() );
-                        clone.setAccessionVersion( databaseEntry.getAccessionVersion() );
-                        clone.setUri( databaseEntry.getUri() );
-                        clone.setExternalDatabase( databaseEntry.getExternalDatabase() );
-                        bioSequence.setSequenceDatabaseEntry( clone );
-                    }
-
-                    if ( existing == null ) {
-                        bioSequence = ( BioSequence ) this.getPersisterHelper().persist( bioSequence );
-                    } else {
-                        bioSequence = existing;
-                    }
-                }
-
-
-
-                log.info( "New element " + " with sequence used:" + bioSequence.getName() + " for " + gene.getOfficialSymbol() );
-                csForGene = CompositeSequence.Factory.newInstance();
-
-                csForGene.setName( gene.getNcbiGeneId().toString() );
-
-                csForGene.setArrayDesign( platform );
-                csForGene.setBiologicalCharacteristic( bioSequence );
-                csForGene.setDescription( "Generic expression element for " + gene );
-                csForGene = compositeSequenceService.create( csForGene );
-                assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
-                platform.getCompositeSequences().add( csForGene );
-                numNewElements++;
-
-                assert bioSequence.getId() != null;
-                assert geneProduct.getId() != null;
-                assert csForGene.getBiologicalCharacteristic() != null
-                        && csForGene.getBiologicalCharacteristic().getId() != null;
-
-                AnnotationAssociation aa = AnnotationAssociation.Factory.newInstance();
-                aa.setGeneProduct( geneProduct );
-                aa.setBioSequence( bioSequence );
-                annotationAssociationService.create( aa );
-                break;
             }
 
+            if ( aa == null ) {
+                /* create a dummy gene Product and sequence for the gene. */
+                /* NOTE I am not checking here to see if there is already a dummy gene product for this gene. */
+                GeneProduct geneProduct = GeneProduct.Factory.newInstance();
+                geneProduct.setGene( gene );
+                geneProduct.setDummy( true );
+                geneProduct.setName( gene.getOfficialSymbol() + " generic element placeholder" );
+                BioSequence bioSequence = BioSequence.Factory.newInstance();
+                bioSequence.setName( gene.getOfficialSymbol() + " generic sequence placeholder" );
+                bioSequence.setTaxon( this.taxon );
+                bioSequence.setPolymerType( PolymerType.RNA );
+                bioSequence.setType( SequenceType.DUMMY );
+
+                bioSequence = bioSequenceService.create( bioSequence );
+                aa = AnnotationAssociation.Factory.newInstance();
+                aa.setGeneProduct( geneProduct );
+                aa.setBioSequence( bioSequence );
+                aa = annotationAssociationService.create( aa );
+
+                assert bioSequence.getId() != null;
+            }
+
+
+            CompositeSequence csForGene = null;
+            log.info( "New element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+            csForGene = CompositeSequence.Factory.newInstance();
+            csForGene.setName( gene.getNcbiGeneId().toString() ); // IMPORTANT that this be just the NCBI ID.
+            csForGene.setArrayDesign( platform );
+            csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
+            csForGene.setDescription( "Generic expression element for " + gene );
+            csForGene = compositeSequenceService.create( csForGene );
+            assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
+            platform.getCompositeSequences().add( csForGene );
+            numNewElements++;
+            
+            assert csForGene.getBiologicalCharacteristic() != null
+                    && csForGene.getBiologicalCharacteristic().getId() != null;
+
+            count++;
             if ( count % 100 == 0 )
                 AbstractCLI.log
                         .info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
@@ -264,7 +245,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         annotationAssociationService = this.getBean( AnnotationAssociationService.class );
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
         this.platformShortName = commandLine.getOptionValue( "a" );
-        this.taxon = this.setTaxonByName( commandLine, taxonService );
+        this.taxon = taxonService.findByCommonName( commandLine.getOptionValue( "t" ) );
     }
 
 
