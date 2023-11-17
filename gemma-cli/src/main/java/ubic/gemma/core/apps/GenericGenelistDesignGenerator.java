@@ -115,11 +115,21 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         int geneNotFound = 0;
         int numNewElements = 0;
         int numUpdatedElements = 0;
+        int needsDummyElement = 0;
         for ( String ncbiId : ncbiIds ) {
-
+            CompositeSequence csForGene = null;
             if ( existingSymbolMap.containsKey( ncbiId ) ) {
-                hasGeneAlready++;
-                continue;
+                /*
+                Work out if the existing association is to a dummy sequence or not; if not, we have to make a new one.
+                 */
+                csForGene = existingSymbolMap.get( ncbiId );
+                if ( csForGene.getBiologicalCharacteristic().getType().equals( SequenceType.DUMMY ) ) {
+                    hasGeneAlready++;
+                    continue;
+                } else {
+                    needsDummyElement++;
+                    AbstractCLI.log.info( "Gene " + ncbiId + " already has an element [" + csForGene + "], but it is not a dummy, will update" );
+                }
             }
 
             Gene gene = null;
@@ -133,7 +143,6 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 geneNotFound++;
                 continue;
             }
-
 
             gene = geneService.thaw( gene );
 
@@ -150,16 +159,11 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 continue;
             }
 
-//            GeneProduct geneProduct = null;
-//            BioSequence bioSequence = null;
             AnnotationAssociation aa = null;
 
             Collection<AnnotationAssociation> aas = annotationAssociationService.find( gene );
             for ( AnnotationAssociation aae : aas ) {
                 if ( aae.getBioSequence().getType().equals( SequenceType.DUMMY ) && aae.getGeneProduct().isDummy() ) {
-//                    bioSequence = aae.getBioSequence();
-//                    geneProduct = aae.getGeneProduct();
-
                     if ( aa != null ) { // this is a sanity check, if we are sure this isn't an issue we can just break here.
                         throw new IllegalStateException( "More than one dummy annotation association for " + gene );
                     }
@@ -189,24 +193,29 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 assert bioSequence.getId() != null;
             }
 
+            if ( csForGene == null ) {
+                log.info( "New element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                csForGene = CompositeSequence.Factory.newInstance();
+                csForGene.setName( gene.getNcbiGeneId().toString() ); // IMPORTANT that this be just the NCBI ID.
+                csForGene.setArrayDesign( platform );
+                csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
+                csForGene.setDescription( "Generic expression element for " + gene );
+                csForGene = compositeSequenceService.create( csForGene );
 
-            CompositeSequence csForGene = null;
-            log.info( "New element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
-            csForGene = CompositeSequence.Factory.newInstance();
-            csForGene.setName( gene.getNcbiGeneId().toString() ); // IMPORTANT that this be just the NCBI ID.
-            csForGene.setArrayDesign( platform );
-            csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
-            csForGene.setDescription( "Generic expression element for " + gene );
-            csForGene = compositeSequenceService.create( csForGene );
-            assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
-            platform.getCompositeSequences().add( csForGene );
-            numNewElements++;
-            
+                platform.getCompositeSequences().add( csForGene );
+                numNewElements++;
+            } else {
+                log.info( "Updating element to use dummy sfor " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
+                compositeSequenceService.update( csForGene );
+                numUpdatedElements++;
+            }
+
             assert csForGene.getBiologicalCharacteristic() != null
                     && csForGene.getBiologicalCharacteristic().getId() != null;
 
             count++;
-            if ( count % 100 == 0 )
+            if ( count % 200 == 0 )
                 AbstractCLI.log
                         .info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                                 + " updated elements; " + numWithNoTranscript
