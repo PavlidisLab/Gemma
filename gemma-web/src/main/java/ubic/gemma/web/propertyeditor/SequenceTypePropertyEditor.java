@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,7 +62,7 @@ public class SequenceTypePropertyEditor extends PropertyEditorSupport {
             return "Other";
         } else if ( type.equals( SequenceType.ORF ) ) {
             return "ORF";
-        } else if (type.equals( SequenceType.DUMMY )) {
+        } else if ( type.equals( SequenceType.DUMMY ) ) {
             return "DUMMY";
         } else {
             return "[Unknown]";

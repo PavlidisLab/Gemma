@@ -46,7 +46,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.*;
 
 /**
- * Create (or update) an array design based on a list of NCBI gene IDs corresponding to
+ * Create (or update) an array design based on a list of NCBI gene IDs desired to be on the platform.
  *
  * @author paul
  */
@@ -236,6 +236,10 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         arrayDesignAnnotationService.deleteExistingFiles( platform );
 
         AbstractCLI.log.info( "Don't forget to update the annotation files" );
+
+        /*
+        TODO possibly: delete elements for the platform that are not on the input list.
+         */
     }
 
     @Override
