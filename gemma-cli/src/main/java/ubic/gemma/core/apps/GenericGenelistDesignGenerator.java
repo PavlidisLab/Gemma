@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -65,6 +66,9 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private GeneProductService geneProductService;
 
     @Autowired
     private TaxonService taxonService;
@@ -186,14 +190,16 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 GeneProduct geneProduct = GeneProduct.Factory.newInstance();
                 geneProduct.setGene( gene );
                 geneProduct.setDummy( true );
-                geneProduct.setName( gene.getOfficialSymbol() + " generic element placeholder" );
+                geneProduct.setName( gene.getOfficialSymbol() + " [NCBI=" + gene.getNcbiGeneId() + "] generic element placeholder" );
+                geneProduct = geneProductService.create( geneProduct );
+
                 BioSequence bioSequence = BioSequence.Factory.newInstance();
-                bioSequence.setName( gene.getOfficialSymbol() + " generic sequence placeholder" );
+                bioSequence.setName( gene.getOfficialSymbol() + " [NCBI=" + gene.getNcbiGeneId() + "] generic sequence placeholder" );
                 bioSequence.setTaxon( this.taxon );
                 bioSequence.setPolymerType( PolymerType.RNA );
                 bioSequence.setType( SequenceType.DUMMY );
-
                 bioSequence = bioSequenceService.create( bioSequence );
+
                 aa = AnnotationAssociation.Factory.newInstance();
                 aa.setGeneProduct( geneProduct );
                 aa.setBioSequence( bioSequence );
