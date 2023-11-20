@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.core.loader.expression.geo.GeoConverter;
@@ -31,15 +32,22 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
@@ -63,17 +71,32 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
     private final TaxonService taxonService;
 
+    private final CharacteristicService characteristicService;
+
+    private final BioMaterialService bioMaterialService;
+    private BibliographicReferenceService bibliographicReferenceService;
+
+    private AuditTrailService auditTrailService;
+
+
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
             ExpressionExperimentReportService expressionExperimentReportService,
             ExpressionExperimentService expressionExperimentService,
-            ExpressionExperimentPrePersistService expressionExperimentPrePersistService, TaxonService taxonService ) {
+            ExpressionExperimentPrePersistService expressionExperimentPrePersistService,
+            TaxonService taxonService,
+            CharacteristicService characteristicService,
+            BioMaterialService bioMaterialSerivce, BibliographicReferenceService bibliographicReferenceService, AuditTrailService auditTrailService ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.bioAssayService = bioAssayService;
         this.expressionExperimentReportService = expressionExperimentReportService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
+        this.characteristicService = characteristicService;
+        this.bioMaterialService = bioMaterialSerivce;
+        this.bibliographicReferenceService = bibliographicReferenceService;
         this.taxonService = taxonService;
+        this.auditTrailService = auditTrailService;
     }
 
     @Override
@@ -264,6 +287,91 @@ public class GeoServiceImpl extends AbstractGeoService {
         return persistedResult;
     }
 
+    @Override
+    @Transactional
+    public void updateFromGEO( String geoAccession ) {
+        // load the experiment locally and complain if it doesn't exist. Note: might be split into parts in Gemma, in which case we do all.
+        Collection<ExpressionExperiment> ees = this.expressionExperimentService.findByAccession( geoAccession );
+
+        if ( ees.isEmpty() ) {
+            throw new IllegalArgumentException( "No experiment with accession " + geoAccession + " found in Gemma" );
+        }
+
+        // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
+
+        // fetch the experiment from GEO
+        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+
+        if ( this.geoDomainObjectGenerator == null ) {
+            this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        } else {
+            this.geoDomainObjectGenerator.initialize();
+        }
+
+        Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
+        Object obj = parseResult.iterator().next();
+        GeoSeries series = ( GeoSeries ) obj;
+        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
+        this.getPubMedInfo( result );
+
+        /*
+         * We're never splitting by platform, so we should have only one result.
+         */
+        assert result.size() == 1;
+
+        ExpressionExperiment freshFromGEO = result.iterator().next();
+
+        // make map of characteristics by GSM ID for biassays
+        Map<String, Collection<Characteristic>> characteristicsByGSM = new HashMap<>();
+        for ( BioAssay ba : freshFromGEO.getBioAssays() ) {
+            String acc = ba.getAccession().getAccession();
+            characteristicsByGSM.put( acc, ba.getSampleUsed().getCharacteristics() );
+        }
+
+        BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
+
+        // update the experiment in Gemma:
+        // 1) publication
+        // 2) BioMaterial Characteristics
+        for ( ExpressionExperiment ee : ees ) { // because it could be a split
+            ee = expressionExperimentService.thawLite( ee );
+
+            if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
+                log.info( "Found new primarily publication for " + geoAccession + ": " + primaryPublication );
+                primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
+                ee.setPrimaryPublication( primaryPublication ); // persist first?
+            }
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                String gsmID = ba.getAccession().getAccession();
+
+                if ( !characteristicsByGSM.containsKey( gsmID ) ) { // sanity check ...
+                    log.warn( "GEO didn't have " + gsmID + " associated with " + ee );
+                }
+
+                /*
+                 delete the old characteristics and start over. Trying to match them up will often fail, and adding them instead of deleting them just creats a mess.
+                 */
+                Set<Characteristic> bmchars = bm.getCharacteristics();
+                int numOldChars = bmchars.size();
+                characteristicService.remove( bmchars );
+                bmchars.clear();
+                Collection<Characteristic> freshCharacteristics = characteristicsByGSM.get( gsmID );
+                log.info( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
+                bmchars.addAll( freshCharacteristics );
+                bioMaterialService.update( bm );
+            }
+
+            expressionExperimentService.update( ee );
+            log.info( ee.getShortName() + " Updated from GEO" );
+            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, "Updated from GEO" );
+
+        }
+
+
+    }
+
     private void check( Collection<ExpressionExperiment> result ) {
         for ( ExpressionExperiment expressionExperiment : result ) {
             this.check( expressionExperiment );
@@ -399,7 +507,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                            .join( toSkip, "," ) );
+                    .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -420,7 +528,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     /**
      * @param  datasets all of which must use the same platform.
-     * @return          one data set, which contains all the samples and subsets.
+     * @return one data set, which contains all the samples and subsets.
      */
     private GeoDataset combineDatasets( Collection<GeoDataset> datasets ) {
         if ( datasets.size() == 1 )
@@ -685,7 +793,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             String seriesSummary = superSeries.getSummaries();
             seriesSummary = seriesSummary + ( StringUtils.isBlank( seriesSummary ) ? "" : "\n" ) + "Summary from subseries "
                     + subSeries.getGeoAccession() + ": " + subSeries
-                            .getSummaries();
+                    .getSummaries();
             superSeries.setSummaries( seriesSummary );
         }
     }

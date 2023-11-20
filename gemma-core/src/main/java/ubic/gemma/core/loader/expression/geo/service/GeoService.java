@@ -58,6 +58,13 @@ public interface GeoService {
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
+
+    /**
+     * Refetch and reprocess the GEO series, updating select information. Currently only implemented for experiments (GSEs)
+     * @param geoAccession
+     */
+    void updateFromGEO( String geoAccession );
+
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.
      * @return generator
