@@ -571,19 +571,10 @@ public interface ExpressionExperimentService
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.
      *
+     * @param ee the experiment to add the characteristics to.
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
      */
-    void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
-    /**
-     * Will add all the vocab characteristics to the expression experiment and persist the changes.
-     *
-     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
-     */
-    void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
+    void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

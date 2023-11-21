@@ -47,17 +47,14 @@ import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -86,8 +83,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             PARENTS_CACHE_NAME = "OntologyService.parents",
             CHILDREN_CACHE_NAME = "OntologyService.children";
 
-    @Autowired
-    private BioMaterialService bioMaterialService;
     @Autowired
     private CharacteristicService characteristicService;
     @Autowired
@@ -520,61 +515,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             throw new IllegalArgumentException( "No characteristic with id=" + characterId + " was foundF" );
         bm.getCharacteristics().remove( vc );
         characteristicService.remove( characterId );
-    }
-
-    @Override
-    public void saveBioMaterialStatement( Characteristic vc, BioMaterial bm ) {
-
-        OntologyServiceImpl.log.debug( "Vocab Characteristic: " + vc );
-
-        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<>();
-        chars.add( vc );
-
-        Set<Characteristic> current = bm.getCharacteristics();
-        if ( current == null )
-            current = new HashSet<>( chars );
-        else
-            current.addAll( chars );
-
-        for ( Characteristic characteristic : chars ) {
-            OntologyServiceImpl.log.info( "Adding characteristic to " + bm + " : " + characteristic );
-        }
-
-        bm.setCharacteristics( current );
-        bioMaterialService.update( bm );
-
-    }
-
-    @Override
-    public void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        if ( vc == null ) {
-            throw new IllegalArgumentException( "Null characteristic" );
-        }
-        if ( StringUtils.isBlank( vc.getCategory() ) ) {
-            throw new IllegalArgumentException( "Must provide a category" );
-        }
-
-        if ( StringUtils.isBlank( vc.getValue() ) ) {
-            throw new IllegalArgumentException( "Must provide a value" );
-        }
-
-        if ( vc.getEvidenceCode() == null ) {
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
-        }
-
-        if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
-            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
-        }
-
-        if ( ee == null )
-            throw new IllegalArgumentException( "Experiment cannot be null" );
-
-        OntologyServiceImpl.log
-                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
-                        + ") : " + vc );
-
-        ee.getCharacteristics().add( vc );
     }
 
     /**

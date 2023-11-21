@@ -29,6 +29,7 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
@@ -43,6 +44,7 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -1296,30 +1298,28 @@ public class ExpressionExperimentServiceImpl
     /**
      * Will add the characteristic to the expression experiment and persist the changes.
      *
+     * @param ee the experiment to add the characteristics to.
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
      */
     @Override
     @Transactional
-    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        ee = this.thawLite( requireNonNull( this.load( ee.getId() ) ) ); // Necessary to make sure we have the persistent version of the given ee.
-        ontologyService.addExpressionExperimentStatement( vc, ee );
-        this.update( ee );
-    }
+    public void addCharacteristic( ExpressionExperiment ee, Characteristic vc ) {
+        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
 
-    /**
-     * Will add all the vocab characteristics to the expression experiment and persist the changes.
-     *
-     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
-     */
-    @Override
-    @Transactional
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
-        for ( Characteristic characteristic : vc ) {
-            this.saveExpressionExperimentStatement( characteristic, ee );
+        ee = ensureInSession( ee );
+
+        if ( vc.getEvidenceCode() == null ) {
+            log.debug( String.format( "No evidence code set for %s, defaulting to %s.", vc, GOEvidenceCode.IC ) );
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
         }
+
+        ExpressionExperimentServiceImpl.log
+                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
+                        + ") : " + vc );
+
+        ee.getCharacteristics().add( vc );
+        this.update( ee );
     }
 
     @Override

@@ -18,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -169,6 +171,29 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
         }
         return buf.toString().replaceAll( ",$", "" );
 
+    }
+
+    @Override
+    @Transactional
+    public void addCharacteristic( BioMaterial bm, Characteristic vc ) {
+        BioMaterialServiceImpl.log.debug( "Vocab Characteristic: " + vc );
+
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        Set<Characteristic> chars = new HashSet<>();
+        chars.add( vc );
+
+        Set<Characteristic> current = bm.getCharacteristics();
+        if ( current == null )
+            current = new HashSet<>( chars );
+        else
+            current.addAll( chars );
+
+        for ( Characteristic characteristic : chars ) {
+            BioMaterialServiceImpl.log.info( "Adding characteristic to " + bm + " : " + characteristic );
+        }
+
+        bm.setCharacteristics( current );
+        update( bm );
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {

@@ -35,15 +35,6 @@ import java.util.Set;
 public interface OntologyService {
 
     /**
-     * Will add the give vocab characteristic to the expression experiment.
-     * Does NOT handle persisting of the experiment afterwards.
-     *
-     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee ee
-     */
-    void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
-    /**
      * <p>
      * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
      * </p>
@@ -145,14 +136,6 @@ public interface OntologyService {
     void reinitializeAndReindexAllOntologies();
 
     void removeBioMaterialStatement( Long characterId, BioMaterial bm );
-
-    /**
-     * Will persist the give vocab characteristic to the given biomaterial
-     *
-     * @param bm bm
-     * @param vc vc
-     */
-    void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
     Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
 }

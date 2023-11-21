@@ -19,11 +19,11 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
@@ -111,4 +111,9 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
 
     String getBioMaterialIdList( Collection<BioMaterial> bioMaterials );
 
+    /**
+     * Will persist the give vocab characteristic to the given biomaterial
+     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#addCharacteristic(ExpressionExperiment, Characteristic)
+     */
+    void addCharacteristic( BioMaterial bm, Characteristic vc );
 }
