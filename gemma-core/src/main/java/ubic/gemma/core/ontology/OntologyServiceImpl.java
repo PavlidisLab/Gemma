@@ -50,7 +50,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -508,20 +507,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    @Override
-    public void removeBioMaterialStatement( Long characterId, BioMaterial bm ) {
-        Characteristic vc = characteristicService.load( characterId );
-        if ( vc == null )
-            throw new IllegalArgumentException( "No characteristic with id=" + characterId + " was foundF" );
-        bm.getCharacteristics().remove( vc );
-        characteristicService.remove( characterId );
-    }
-
     /**
      * Convert raw ontology resources into Characteristics.
      */
-    @Override
-    public Collection<Characteristic> termsToCharacteristics( final Collection<OntologyTerm> terms ) {
+    private Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms ) {
 
         Collection<Characteristic> results = new HashSet<>();
 
@@ -542,6 +531,27 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         OntologyServiceImpl.log.debug( "returning " + results.size() + " terms after filter" );
 
         return results;
+    }
+
+
+    private Characteristic termToCharacteristic( OntologyTerm res ) {
+        if ( res.isObsolete() ) {
+            OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + res.getLabel() + " / " + res.getUri() );
+            return null;
+        }
+
+        Characteristic vc = Characteristic.Factory.newInstance();
+        vc.setValue( res.getLabel() );
+        vc.setValueUri( res.getUri() );
+        vc.setDescription( res.getComment() );
+
+        if ( vc.getValue() == null ) {
+            OntologyServiceImpl.log
+                    .warn( "Skipping a characteristic with no value: " + res.getLabel() + " / " + res.getUri() );
+            return null;
+        }
+
+        return vc;
     }
 
     @Override
@@ -601,26 +611,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + vos.size() );
 
         return vos;
-    }
-
-    private Characteristic termToCharacteristic( OntologyTerm res ) {
-        if ( res.isObsolete() ) {
-            OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + res.getLabel() + " / " + res.getUri() );
-            return null;
-        }
-
-        Characteristic vc = Characteristic.Factory.newInstance();
-        vc.setValue( res.getLabel() );
-        vc.setValueUri( res.getUri() );
-        vc.setDescription( res.getComment() );
-
-        if ( vc.getValue() == null ) {
-            OntologyServiceImpl.log
-                    .warn( "Skipping a characteristic with no value: " + res.getLabel() + " / " + res.getUri() );
-            return null;
-        }
-
-        return vc;
     }
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {

@@ -157,7 +157,7 @@ public class AnnotationController {
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.loadOrFail( id, EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
-        ontologyService.removeBioMaterialStatement( vc.getId(), bm );
+        bioMaterialService.removeCharacteristic( bm, vc );
     }
 
     public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {

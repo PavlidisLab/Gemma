@@ -134,8 +134,4 @@ public interface OntologyService {
      * admin-only.
      */
     void reinitializeAndReindexAllOntologies();
-
-    void removeBioMaterialStatement( Long characterId, BioMaterial bm );
-
-    Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
 }

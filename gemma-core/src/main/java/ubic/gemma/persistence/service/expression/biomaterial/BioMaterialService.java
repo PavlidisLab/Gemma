@@ -116,4 +116,11 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
      * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#addCharacteristic(ExpressionExperiment, Characteristic)
      */
     void addCharacteristic( BioMaterial bm, Characteristic vc );
+
+
+    /**
+     * Remove the given characteristic from the given biomaterial
+     * @throws IllegalArgumentException if the characteristic does not belong to the biomaterial
+     */
+    void removeCharacteristic( BioMaterial bm, Characteristic vc );
 }
