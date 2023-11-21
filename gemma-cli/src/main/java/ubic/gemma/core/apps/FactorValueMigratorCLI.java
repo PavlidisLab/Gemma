@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 
+import javax.annotation.CheckReturnValue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -188,7 +189,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
                     addErrorObject( "FactorValue #" + fvId,
                             "The following migration failed:\n\t" + summary + "\n\t" + ExceptionUtils.getRootCauseMessage( e ) );
                 } catch ( Exception e ) {
-                    interruptMigrationProcess( m, e );
+                    throw interruptMigrationProcess( m, e );
                 }
             } else {
                 try {
@@ -219,7 +220,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
                         addErrorObject( "FactorValue #" + fvId,
                                 "One or more of the following migrations failed:\n\t" + summary + "\n\t" + ExceptionUtils.getRootCauseMessage( e ) );
                     } else {
-                        interruptMigrationProcess( ms.get( successfulMigrationsToSkip ), e );
+                        throw interruptMigrationProcess( ms.get( successfulMigrationsToSkip ), e );
                     }
                 }
             }
@@ -261,9 +262,10 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         }
     }
 
-    private void interruptMigrationProcess( MigrationWithLineNumber m, Exception e ) throws Exception {
-        log.fatal( "A " + e.getClass().getName() + " exception occurred, the migration process will not continue." );
+    @CheckReturnValue
+    private Exception interruptMigrationProcess( MigrationWithLineNumber m, Exception cause ) {
+        log.fatal( "A " + cause.getClass().getName() + " exception occurred, the migration process will not continue." );
         String summary = String.format( "[%d] %s", m.getLineNumber(), m.getMigration() );
-        throw new Exception( "The following migration failed:\n\t" + summary, e );
+        return new Exception( "The following migration failed:\n\t" + summary, cause );
     }
 }
