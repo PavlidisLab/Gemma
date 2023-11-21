@@ -124,7 +124,7 @@ public class CharacteristicBrowserController {
     }
 
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
-        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true, false );
+        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true, false, null );
     }
 
     /**
@@ -133,7 +133,7 @@ public class CharacteristicBrowserController {
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String queryString, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs,
-            boolean searchCategories ) {
+            boolean searchCategories, String categoryConstraint ) {
 
         List<AnnotationValueObject> results = new ArrayList<>();
         if ( StringUtils.isBlank( queryString ) ) {
@@ -176,6 +176,11 @@ public class CharacteristicBrowserController {
             if ( parent != null ) {
                 populateParentInformation( avo, parent );
             }
+
+            if ( StringUtils.isNotBlank( categoryConstraint ) && ( c.getCategory() == null || !c.getCategory().equalsIgnoreCase( categoryConstraint ) ) ) {
+                continue;
+            }
+
             results.add( avo );
         }
 

@@ -54,8 +54,9 @@ Ext.onReady( function() {
       var searchNos = noCheckBox.getValue();
       var searchCats = catsCheckBox.getValue();
       var searchFactorsValueValues = fvvCheckBox.getValue();
+      var categoryConstraint = categoryCombo.getValue();
       browsergrid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs, searchPAs, searchFactorsValueValues,
-                            searchCats ] );
+         searchCats, constrainToCategoryCheck.getValue() ? categoryConstraint : '' ] );
    };
 
    var searchButton = new Ext.Toolbar.Button( {
@@ -105,7 +106,7 @@ Ext.onReady( function() {
              * edits that are in progress...
              */
             var selected = browsergrid.getSelectionModel().getSelections();
-            for (var i = 0; i < selected.length; ++i) {
+            for ( var i = 0; i < selected.length; ++i ) {
                browsergrid.getStore().remove( selected[i] );
             }
             browsergrid.getView().refresh();
@@ -129,7 +130,7 @@ Ext.onReady( function() {
       disabled : true,
       handler : function() {
          var selected = browsergrid.getSelectionModel().getSelections();
-         for (var i = 0; i < selected.length; ++i) {
+         for ( var i = 0; i < selected.length; ++i ) {
             var record = selected[i];
             record.reject();
          }
@@ -139,7 +140,7 @@ Ext.onReady( function() {
    browsergrid.getSelectionModel().on( "selectionchange", function( model ) {
       var selected = model.getSelections();
       revertButton.disable();
-      for (var i = 0; i < selected.length; ++i) {
+      for ( var i = 0; i < selected.length; ++i ) {
          if ( selected[i].dirty ) {
             revertButton.enable();
             break;
@@ -153,7 +154,7 @@ Ext.onReady( function() {
    var savedCharacteristic = null;
    var copyHandler = function() {
       var selected = browsergrid.getSelectionModel().getSelections();
-      for (var i = 0; i < selected.length; ++i) {
+      for ( var i = 0; i < selected.length; ++i ) {
          var record = selected[i];
          savedCharacteristic = record.data;
          break;
@@ -181,7 +182,7 @@ Ext.onReady( function() {
 
    var pasteHandler = function() {
       var selected = browsergrid.getSelectionModel().getSelections();
-      for (var i = 0; i < selected.length; ++i) {
+      for ( var i = 0; i < selected.length; ++i ) {
          var record = selected[i];
          record.set( "classUri", savedCharacteristic.classUri );
          record.set( "className", savedCharacteristic.className );
@@ -194,7 +195,7 @@ Ext.onReady( function() {
 
    var pasteCategoryHandler = function() {
       var selected = browsergrid.getSelectionModel().getSelections();
-      for (var i = 0; i < selected.length; ++i) {
+      for ( var i = 0; i < selected.length; ++i ) {
          var record = selected[i];
          record.set( "classUri", savedCharacteristic.classUri );
          record.set( "className", savedCharacteristic.className );
@@ -205,7 +206,7 @@ Ext.onReady( function() {
 
    var pasteValueHandler = function() {
       var selected = browsergrid.getSelectionModel().getSelections();
-      for (var i = 0; i < selected.length; ++i) {
+      for ( var i = 0; i < selected.length; ++i ) {
          var record = selected[i];
          record.set( "termUri", savedCharacteristic.termUri );
          record.set( "termName", savedCharacteristic.termName );
@@ -234,6 +235,15 @@ Ext.onReady( function() {
       disabled : true,
       handler : pasteValueHandler
    } );
+
+   var constrainToCategoryCheck = new Ext.form.Checkbox( {
+      boxLabel : "Constrain to selected category",
+      name : "constrainToCategoryCheck",
+      width : 'auto',
+      disabled : false
+   });
+
+   var categoryCombo = new Gemma.CategoryCombo( {} );
 
    browsergrid.on( "keypress", function( e ) {
       if ( e.ctrlKey ) {
@@ -264,6 +274,10 @@ Ext.onReady( function() {
    toolbar.addField( pasteCategoryButton );
    toolbar.addSeparator();
    toolbar.addField( pasteValueButton );
+   toolbar.addSeparator();
+   toolbar.addField( categoryCombo );
+   toolbar.addSeparator();
+   toolbar.addField(constrainToCategoryCheck);
    toolbar.addFill();
 
    /*
