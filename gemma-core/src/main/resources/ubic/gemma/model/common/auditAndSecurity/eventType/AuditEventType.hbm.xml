@@ -139,6 +139,8 @@
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent"/>
                 <subclass abstract="false" discriminator-value="FailedSampleCorrelationAnalysisEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent"/>
+                <subclass abstract="false" discriminator-value="FactorValueNeedsAttentionEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent"/>
             </subclass>
             <subclass abstract="false" discriminator-value="CurationNoteUpdateEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent"/>
