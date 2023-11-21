@@ -337,7 +337,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             ee = expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
-                log.info( "Found new primarily publication for " + geoAccession + ": " + primaryPublication );
+                log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication );
                 primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
                 ee.setPrimaryPublication( primaryPublication ); // persist first?
             }
