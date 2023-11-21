@@ -334,12 +334,16 @@ public class GeoServiceImpl extends AbstractGeoService {
         // 1) publication
         // 2) BioMaterial Characteristics
         for ( ExpressionExperiment ee : ees ) { // because it could be a split
+            int numNewCharacteristics = 0;
+            boolean pubUpdate = false;
+
             ee = expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
                 log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
                 primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
                 ee.setPrimaryPublication( primaryPublication ); // persist first?
+                pubUpdate = true;
             }
 
             for ( BioAssay ba : ee.getBioAssays() ) {
@@ -358,14 +362,17 @@ public class GeoServiceImpl extends AbstractGeoService {
                 characteristicService.remove( bmchars );
                 bmchars.clear();
                 Collection<Characteristic> freshCharacteristics = characteristicsByGSM.get( gsmID );
-                log.info( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
                 bmchars.addAll( freshCharacteristics );
+                numNewCharacteristics += freshCharacteristics.size();
                 bioMaterialService.update( bm );
             }
 
             expressionExperimentService.update( ee );
-            log.info( ee.getShortName() + " Updated from GEO" );
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, "Updated from GEO" );
+            String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
+            log.info( ee.getShortName() + message );
+            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
 
         }
 
