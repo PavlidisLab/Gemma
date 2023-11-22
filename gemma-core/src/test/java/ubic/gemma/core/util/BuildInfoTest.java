@@ -14,6 +14,7 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 @ContextConfiguration
 public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
@@ -42,14 +43,16 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
     public void test() {
         assertEquals( "1.0.0", buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
-        assertEquals( "1234", buildInfo.getVersion() );
+        assertEquals( "1234", buildInfo.getGitHash() );
     }
 
     @Test
     public void testFromSettings() {
+        assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
+                getClass().getResource( "/ubic/gemma/version.properties" ) != null );
         buildInfo = BuildInfo.fromSettings();
-        assertEquals( "1.0.0", buildInfo.getVersion() );
+        assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
-        assertEquals( "1234", buildInfo.getVersion() );
+        assertNotNull( buildInfo.getGitHash() );
     }
 }

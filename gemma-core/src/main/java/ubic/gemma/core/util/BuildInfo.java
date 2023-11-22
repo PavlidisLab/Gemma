@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.format.datetime.DateFormatter;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 
@@ -51,18 +53,33 @@ public class BuildInfo implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        timestamp = new DateFormatter( MAVEN_DATETIME_PATTERN ).parse( timestampAsString, Locale.getDefault() );
+        if ( timestampAsString != null ) {
+            timestamp = new DateFormatter( MAVEN_DATETIME_PATTERN )
+                    .parse( timestampAsString, Locale.getDefault() );
+        }
     }
 
+    @Nullable
     public String getVersion() {
         return version;
     }
 
+    @Nullable
     public Date getTimestamp() {
         return timestamp;
     }
 
+    @Nullable
     public String getGitHash() {
         return gitHash;
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "%s%s%s%s",
+                version != null ? version : "?",
+                timestamp != null || gitHash != null ? " built" : "",
+                timestamp != null ? " on " + DateFormat.getDateTimeInstance().format( timestamp ) : "",
+                gitHash != null ? " from " + gitHash : "" );
     }
 }

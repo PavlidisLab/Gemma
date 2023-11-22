@@ -27,7 +27,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import ubic.gemma.core.util.BuildInfo;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,11 +105,9 @@ public class SpringContextUtil {
             }
         }
         BuildInfo buildInfo = BuildInfo.fromSettings();
-        SpringContextUtil.log.info( String.format( "Loading Gemma %s (built on %s from %s%s), hold on!",
-                buildInfo.getVersion(),
-                DateFormat.getDateTimeInstance().format( buildInfo.getTimestamp() ),
-                buildInfo.getGitHash(),
+        SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
+                buildInfo,
                 context.getEnvironment().getActiveProfiles().length > 0 ?
-                        ", active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) : "" ) );
+                        " (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + ")" : "" ) );
     }
 }

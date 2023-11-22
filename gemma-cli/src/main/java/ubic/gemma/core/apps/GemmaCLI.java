@@ -35,7 +35,6 @@ import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
-import java.text.DateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,10 +100,7 @@ public class GemmaCLI {
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromSettings();
-            System.err.printf( "Gemma version %s (built on %s from %s)%n",
-                    buildInfo.getVersion(),
-                    DateFormat.getDateTimeInstance().format( buildInfo.getTimestamp() ),
-                    buildInfo.getGitHash() );
+            System.err.printf( "Gemma version %s%n", buildInfo );
             System.exit( 0 );
             return;
         }

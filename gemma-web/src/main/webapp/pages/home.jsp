@@ -86,9 +86,18 @@
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
         <div>
-            Gemma ${appConfig["gemma.version"]} built on ${appConfig["gemma.build.timestamp"]}
+            Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
             <security:authorize access="hasAuthority('GROUP_ADMIN')">
-                from ${appConfig["gemma.build.gitHash"]}
+                <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+                    built
+                </c:if>
+                <c:if test="${appConfig['gemma.build.timestamp'] != null}">
+                    on ${appConfig["gemma.build.timestamp"]}
+                </c:if>
+                <c:if test="${appConfig['gemma.build.gitHash'] != null}">
+                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
+                            target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+                </c:if>
             </security:authorize>
         </div>
         <div style="margin-left: 10px;">Copyright &copy; 2007-2023</div>

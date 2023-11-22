@@ -39,7 +39,17 @@
 
 	<h2>System Stats</h2>
 	<security:authorize access="hasAuthority('GROUP_ADMIN')">
-		Gemma version ${appConfig['gemma.version']} built on ${appConfig['gemma.build.timestamp']} from ${appConfig['gemma.build.gitHash']}&nbsp;<br>
+        Gemma version ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
+        <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+            built
+        </c:if>
+        <c:if test="${appConfig['gemma.build.timestamp'] != null}">
+            on ${appConfig["gemma.build.timestamp"]}
+        </c:if>
+        <c:if test="${appConfig['gemma.build.gitHash'] != null}">
+            from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
+                    target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+        </c:if>
 		<script type="text/javascript">
          document.writeln( "Page Loaded: " + document.lastModified );
       </script>
