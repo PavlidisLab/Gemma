@@ -68,7 +68,7 @@
                 new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
-            <a href="${pageContext.request.contextPath}/browse" style="align-self: center;">
+            <a href="${appConfig['gemma.gemBrow.url']}" style="align-self: center;">
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A snapshot of the new Gemma Browser."
