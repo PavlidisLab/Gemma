@@ -25,7 +25,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import ubic.gemma.core.util.BuildInfo;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -103,17 +105,12 @@ public class SpringContextUtil {
                 cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
             }
         }
-        SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
-                getApplicationVersion(),
+        BuildInfo buildInfo = BuildInfo.fromSettings();
+        SpringContextUtil.log.info( String.format( "Loading Gemma %s (built on %s from %s%s), hold on!",
+                buildInfo.getVersion(),
+                DateFormat.getDateTimeInstance().format( buildInfo.getTimestamp() ),
+                buildInfo.getGitHash(),
                 context.getEnvironment().getActiveProfiles().length > 0 ?
-                        " (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + ")" : "" ) );
-    }
-
-    /**
-     * Return the current Gemma version.
-     */
-    public static String getApplicationVersion() {
-        String appVersion = Settings.getAppVersion();
-        return appVersion != null ? appVersion : "?";
+                        ", active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) : "" ) );
     }
 }

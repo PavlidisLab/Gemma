@@ -39,7 +39,7 @@
 
 	<h2>System Stats</h2>
 	<security:authorize access="hasAuthority('GROUP_ADMIN')">
-		Gemma version ${appConfig['version']}&nbsp;<br>
+		Gemma version ${appConfig['gemma.version']} built on ${appConfig['gemma.build.timestamp']} from ${appConfig['gemma.build.gitHash']}&nbsp;<br>
 		<script type="text/javascript">
          document.writeln( "Page Loaded: " + document.lastModified );
       </script>

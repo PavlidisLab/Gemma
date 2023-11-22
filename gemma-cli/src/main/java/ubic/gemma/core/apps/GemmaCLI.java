@@ -27,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SpringContextUtil;
@@ -34,11 +35,10 @@ import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static ubic.gemma.persistence.util.SpringContextUtil.getApplicationVersion;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -100,7 +100,11 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
-            System.err.printf( "Gemma version %s%n", getApplicationVersion() );
+            BuildInfo buildInfo = BuildInfo.fromSettings();
+            System.err.printf( "Gemma version %s (built on %s from %s)%n",
+                    buildInfo.getVersion(),
+                    DateFormat.getDateTimeInstance().format( buildInfo.getTimestamp() ),
+                    buildInfo.getGitHash() );
             System.exit( 0 );
             return;
         }
