@@ -110,6 +110,8 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
             try ( CSVParser parser = CSVParser.parse( migrationFile, StandardCharsets.UTF_8, CSVFormat.TDF.withFirstRecordAsHeader() ) ) {
                 boolean hasSecondObjectColumns = CollectionUtils.containsAny( parser.getHeaderNames(),
                         "SecondObjectID", "SecondObjectURI", "SecondObject" );
+                boolean hasThirdObjectColumns = CollectionUtils.containsAny( parser.getHeaderNames(),
+                        "ThirdObjectID", "ThirdObjectURI", "ThirdObject" );
                 for ( CSVRecord row : parser ) {
                     FactorValueMigratorService.Migration migration;
                     try {
@@ -127,6 +129,9 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
                                     .secondPredicate( stripToNull( row.get( "SecondPredicate" ) ) ).secondPredicateUri( stripToNull( row.get( "SecondPredicateURI" ) ) )
                                     .oldStyleCharacteristicIdUsedAsSecondObject( parseLongIfNonBlank( row.get( "SecondObjectID" ) ) )
                                     .secondObject( stripToNull( row.get( "SecondObject" ) ) ).secondObjectUri( stripToNull( row.get( "SecondObjectURI" ) ) );
+                        }
+                        if ( hasThirdObjectColumns && ( StringUtils.isNotBlank( row.get( "ThirdObjectID" ) ) || StringUtils.isNotBlank( row.get( "ThirdObjectURI" ) ) || StringUtils.isNotBlank( row.get( "ThirdObject" ) ) ) ) {
+                            throw new IllegalArgumentException( "Statements do not support a third object, make sure that any of the columns related to a third object are left blank." );
                         }
                         migration = migrationBuilder.build();
                     } catch ( Exception e ) {
