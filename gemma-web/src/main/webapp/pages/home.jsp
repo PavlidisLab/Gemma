@@ -104,5 +104,3 @@
         </a>
     </div>
 </div>
-<jsp:include page="/common/analytics.jsp"/>
-
