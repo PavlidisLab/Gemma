@@ -1,3 +1,11 @@
+def testdbName;
+def gemmaVersion = pom.version;
+def baseCodeVersion;
+def siteDir = '/space/web/maven-sites';
+def dataDir = '/space/gemmaData';
+def deployDir = '/var/local/tomcat/gemma';
+def cliDir = '/space/grp/gemma-cli'
+
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -24,15 +32,14 @@ pipeline {
                 checkout scm
                 script {
                     def pom = readMavenPom();
-                    def testdbName = pom.properties['gemma.testdb.name'];
-                    def gemmaVersion = pom.version;
+                    testdbName = pom.properties['gemma.testdb.name'];
+                    gemmaVersion = pom.version;
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.");
                     }
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.");
                     }
-                    def baseCodeVersion;
                     for (dep in pom.dependencies) {
                         if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
                             baseCodeVersion = dep.version;
@@ -42,15 +49,12 @@ pipeline {
                     if (baseCodeVersion == null) {
                         error("The baseCode dependency was not found in pom.xml.");
                     }
-                    def siteDir = '/space/web/maven-sites';
-                    def dataDir = '/space/gemmaData';
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData';
                     }
                     if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
                         dataDir = '/space/staginggemmaData';
                     }
-                    def deployDir = '/var/local/tomcat/gemma';
                     if (env.BRANCH_NAME == 'master') {
                         deployDir = 'moe:' + deployDir;
                     } else {
@@ -59,7 +63,6 @@ pipeline {
                     if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
                         deployDir += '-staging';
                     }
-                    def cliDir = '/space/grp/gemma-cli'
                     if (env.BRANCH_NAME != 'master') {
                         cliDir += '-' + gemmaVersion;
                     }
