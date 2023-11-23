@@ -73,10 +73,20 @@ pipeline {
             steps {
                 sh 'mvn -B package -DskipTests'
             }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+                }
+            }
         }
         stage('Run quick unit tests') {
             steps {
                 sh 'mvn -B test -DexcludedGroups=SlowTest'
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml'
+                }
             }
         }
         stage('Run slow unit tests and integration tests') {
@@ -89,6 +99,12 @@ pipeline {
                 sh 'mvn -B test -Dgroups=SlowTest'
                 lock('test-database/' + testdbName) {
                     sh 'mvn -B verify -DskipUnitTests'
+                }
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml'
+                    junit testResults: '**/target/failsafe-reports/*.xml'
                 }
             }
         }
@@ -138,11 +154,6 @@ pipeline {
         }
     }
     post {
-        always {
-            archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
-            junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
-            junit testResults: '**/target/failsafe-reports/*.xml', allowEmptyResults: true
-        }
         fixed {
             sendSlack color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
         }
