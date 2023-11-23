@@ -11,7 +11,6 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -24,7 +23,6 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -150,8 +148,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
         StatementValueObject cvo = new StatementValueObject();
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "The category cannot be blank" );
+            .isInstanceOf( IllegalArgumentException.class )
+            .hasMessageContaining( "The category cannot be blank" );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -162,8 +160,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "The value cannot be blank" );
+            .isInstanceOf( IllegalArgumentException.class )
+            .hasMessageContaining( "The value cannot be blank" );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -176,8 +174,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         cvo.setSubject( "test" );
         cvo.setPredicate( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "The predicate and object must be either both present or absent." );
+            .isInstanceOf( IllegalArgumentException.class )
+            .hasMessageContaining( "The predicate and object must be either both present or absent." );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -190,11 +188,10 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         fv.setId( 1L );
         when( expressionExperimentService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-        experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "" );
+        experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "foo" );
         verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
         verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
-        verify( factorValueService ).update( fv );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( FactorValueNeedsAttentionEvent.class ), any() );
+        verify( factorValueService ).markAsNeedsAttention( fv, "foo" );
     }
 
     @Test
@@ -212,7 +209,6 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
         verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
         verifyNoMoreInteractions( factorValueService );
-        verifyNoInteractions( auditTrailService );
     }
 
     @Test
@@ -224,7 +220,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         fvvo.setId( fv.getId() );
         when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
         experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
-        assertThat( fv.getNeedsAttention() ).isFalse();
-        verify( factorValueService ).update( fv );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).saveStatement( eq( fv ), any() );
+        verify( factorValueService ).clearNeedsAttentionFlag( fv );
+        verifyNoMoreInteractions( factorValueService );
     }
 }
