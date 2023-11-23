@@ -261,6 +261,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 sortable: true,
                 hidden: this.showParent? true : false,
                 tooltip: Gemma.HelpText.WidgetDefaults.AnnotationGrid.objectClassDescription
+            }, {
+                header: "ID",
+                dataIndex: "id",
+                hidden: true
             }]
 
         });

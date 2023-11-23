@@ -50,12 +50,11 @@ Ext.onReady( function() {
       var searchEEs = eeCheckBox.getValue();
       var searchBMs = bmCheckBox.getValue();
       var searchFVs = fvCheckBox.getValue();
-      var searchPAs = paCheckBox.getValue();
       var searchNos = noCheckBox.getValue();
       var searchCats = catsCheckBox.getValue();
       var searchFactorsValueValues = fvvCheckBox.getValue();
       var categoryConstraint = categoryCombo.getValue();
-      browsergrid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs, searchPAs, searchFactorsValueValues,
+      browsergrid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues,
          searchCats, constrainToCategoryCheck.getValue() ? categoryConstraint : '' ] );
    };
 
@@ -303,12 +302,12 @@ Ext.onReady( function() {
       width : 'auto'
    } );
 
-   var paCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Phenotype Associations',
-      checked : true,
-      name : 'searchPAs',
-      width : 'auto'
-   } );
+   // var paCheckBox = new Ext.form.Checkbox( {
+   //    boxLabel : 'Phenotype Associations',
+   //    checked : true,
+   //    name : 'searchPAs',
+   //    width : 'auto'
+   // } );
 
    var fvvCheckBox = new Ext.form.Checkbox( {
       boxLabel : 'Uncharacterized factor Values',
@@ -345,8 +344,8 @@ Ext.onReady( function() {
    secondToolbar.addSpacer();
    secondToolbar.addField( fvCheckBox );
    secondToolbar.addSpacer();
-   secondToolbar.addField( paCheckBox );
-   secondToolbar.addSpacer();
+   // secondToolbar.addField( paCheckBox );
+   // secondToolbar.addSpacer();
    secondToolbar.addField( noCheckBox );
    secondToolbar.addSpacer();
    secondToolbar.addField( fvvCheckBox );
