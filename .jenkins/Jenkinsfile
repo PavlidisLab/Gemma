@@ -1,4 +1,4 @@
-def testdbName;
+def testdbUrl;
 def gemmaVersion = pom.version;
 def baseCodeVersion;
 def siteDir = '/space/web/maven-sites';
@@ -32,7 +32,7 @@ pipeline {
                 checkout scm
                 script {
                     def pom = readMavenPom();
-                    testdbName = pom.properties['gemma.testdb.name'];
+                    testdbUrl = pom.properties['gemma.testdb.build.url'];
                     gemmaVersion = pom.version;
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.");
@@ -97,7 +97,7 @@ pipeline {
             }
             steps {
                 sh 'mvn -B test -Dgroups=SlowTest'
-                lock('test-database/' + testdbName) {
+                lock('database/' + testdbUrl) {
                     sh 'mvn -B verify -DskipUnitTests'
                 }
             }
