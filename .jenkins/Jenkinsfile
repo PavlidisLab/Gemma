@@ -140,6 +140,9 @@ pipeline {
             junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
             junit testResults: '**/target/failsafe-reports/*.xml', allowEmptyResults: true
         }
+        fixed {
+            sendSlack color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
+        }
         failure {
             setBuildStatus 'The build failed due to an error.', 'ERROR'
         }
@@ -148,6 +151,7 @@ pipeline {
         }
         unstable {
             setBuildStatus 'The build is unstable: some tests might have failed.', 'UNSTABLE'
+            sendSlack color: 'danger', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)'
         }
     }
 }
