@@ -1,5 +1,5 @@
 def testdbUrl;
-def gemmaVersion = pom.version;
+def gemmaVersion;
 def baseCodeVersion;
 def siteDir = '/space/web/maven-sites';
 def dataDir = '/space/gemmaData';
