@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage('Set build status on GitHub') {
             steps {
-                setBuildStatus 'The build has started...', 'PENDING'
+                setBuildStatus 'Build #${env.BUILD_NUMBER} has started...', 'PENDING'
             }
         }
         stage('Checkout scm') {
@@ -144,13 +144,13 @@ pipeline {
             sendSlack color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
         }
         failure {
-            setBuildStatus 'The build failed due to an error.', 'ERROR'
+            setBuildStatus 'Build #${env.BUILD_NUMBER} failed due to an error.', 'ERROR'
         }
         success {
-            setBuildStatus 'The build succeeded.', 'SUCCESS'
+            setBuildStatus 'Build #${env.BUILD_NUMBER} succeeded.', 'SUCCESS'
         }
         unstable {
-            setBuildStatus 'The build is unstable: some tests might have failed.', 'UNSTABLE'
+            setBuildStatus 'Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.', 'UNSTABLE'
             sendSlack color: 'danger', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)'
         }
     }
