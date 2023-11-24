@@ -24,7 +24,7 @@ pipeline {
     stages {
         stage('Set build status on GitHub') {
             steps {
-                setBuildStatus 'Build #${env.BUILD_NUMBER} has started...', 'PENDING'
+                setBuildStatus "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
             }
         }
         stage('Checkout scm') {
@@ -47,7 +47,7 @@ pipeline {
                         }
                     }
                     if (baseCodeVersion == null) {
-                        error("The baseCode dependency was not found in pom.xml.")
+                        error('The baseCode dependency was not found in pom.xml.')
                     }
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData'
@@ -136,10 +136,10 @@ pipeline {
                 branch 'development'
             }
             steps {
-                sh 'rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties'
-                sh 'rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war'
-                sh 'ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite'
-                sh 'ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site'
+                sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
+                sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
+                sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+                sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
             }
         }
         stage ('Deploy CLI') {
@@ -149,23 +149,23 @@ pipeline {
                 branch 'release-*'
             }
             steps {
-                sh 'rsync -adv gemma-cli/target/appassembler ${cliDir}'
+                sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
             }
         }
     }
     post {
         fixed {
-            slackSend color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
+            slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
         failure {
-            setBuildStatus 'Build #${env.BUILD_NUMBER} failed due to an error.', 'ERROR'
+            setBuildStatus "Build #${env.BUILD_NUMBER} failed due to an error.", 'ERROR'
         }
         success {
-            setBuildStatus 'Build #${env.BUILD_NUMBER} succeeded.', 'SUCCESS'
+            setBuildStatus "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
         }
         unstable {
-            setBuildStatus 'Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.', 'UNSTABLE'
-            slackSend color: 'danger', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)'
+            setBuildStatus "Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.", 'UNSTABLE'
+            slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }
 }
