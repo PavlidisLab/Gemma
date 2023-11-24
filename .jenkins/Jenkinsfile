@@ -72,7 +72,7 @@ pipeline {
             post {
                 success {
                     archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'SUCCESS'
+                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
                 failure {
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
