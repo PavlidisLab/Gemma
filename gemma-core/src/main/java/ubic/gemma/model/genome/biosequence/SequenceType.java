@@ -30,5 +30,10 @@ public enum SequenceType {
     /**
      * Represents a (synthetic) oligonucleotide.
      */
-    OLIGO;
+    OLIGO,
+
+    /**
+     * A placeholder element used for annotation associations for RNA-seq
+     */
+    DUMMY;
 }
