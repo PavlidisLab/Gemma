@@ -91,6 +91,9 @@ pipeline {
                 always {
                     junit testResults: '**/target/surefire-reports/*.xml'
                 }
+                success {
+                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                }
                 failure {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
                 }
@@ -128,6 +131,9 @@ pipeline {
                         always {
                             junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
+                        }
+                        success {
+                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
                         failure {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
