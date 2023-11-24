@@ -6,11 +6,11 @@ def dataDir = '/space/gemmaData'
 def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
 
-void setBuildStatus(String message, String state) {
+void setBuildStatus(String context, String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
       reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
-      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "Jenkins"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ])
@@ -22,11 +22,6 @@ pipeline {
         maven 'Maven 3.8.1'
     }
     stages {
-        stage('Set build status on GitHub') {
-            steps {
-                setBuildStatus "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-            }
-        }
         stage('Checkout scm') {
             steps {
                 checkout scm
@@ -71,21 +66,36 @@ pipeline {
         }
         stage('Build') {
             steps {
+                setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
                 sh 'mvn -B package -DskipTests'
             }
             post {
                 success {
                     archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'SUCCESS'
+                }
+                failure {
+                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                }
+                unstable {
+                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
         }
         stage('Run quick unit tests') {
             steps {
+                setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                 sh 'mvn -B test -DexcludedGroups=SlowTest'
             }
             post {
                 always {
                     junit testResults: '**/target/surefire-reports/*.xml'
+                }
+                failure {
+                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                }
+                unstable {
+                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
         }
@@ -108,6 +118,7 @@ pipeline {
                         }
                     }
                     steps {
+                        setBuildStatus "Integration tests", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
@@ -117,6 +128,12 @@ pipeline {
                         always {
                             junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
+                        }
+                        failure {
+                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                        }
+                        unstable {
+                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
                 }
@@ -167,14 +184,7 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        failure {
-            setBuildStatus "Build #${env.BUILD_NUMBER} failed due to an error.", 'ERROR'
-        }
-        success {
-            setBuildStatus "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
-        }
         unstable {
-            setBuildStatus "Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.", 'UNSTABLE'
             slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }
