@@ -238,8 +238,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         try {
             results = comBat.run( true ); // false: NONPARAMETRIC
-        } catch (ComBatException e ) {
-            throw new IllegalStateException("ComBat failed likely due to confounds between batching and other factors: " + e.getMessage(), e );
+        } catch ( ComBatException e ) {
+            throw new IllegalStateException( "ComBat failed likely due to confounds between batching and other factors: " + e.getMessage(), e );
         }
 
         // note these plots always reflect the parametric setup.
@@ -303,11 +303,11 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * @return true if the factor should be used in the model for batch correction
      */
     private boolean retainForBatchCorrection( ExperimentalFactor ef ) {
-        if ( ef.getCategory().getCategoryUri().equals( COLLECTION_OF_MATERIAL_URI ) ) {
+        if ( ef.getCategory().getCategoryUri() != null && ef.getCategory().getCategoryUri().equals( COLLECTION_OF_MATERIAL_URI ) ) {
             for ( FactorValue fv : ef.getFactorValues() ) {
                 for ( Characteristic c : fv.getCharacteristics() ) {
-                    if ( c.getValueUri().equals( DE_EXCLUDE_URI ) || c.getValueUri().equals( DE_INCLUDE_URI ) ) {
-                        log.info("Dropping factor " + ef.getName() + " from batch correction model because it is for DE_Exclude/Include");
+                    if ( c.getValueUri() != null && ( c.getValueUri().equals( DE_EXCLUDE_URI ) || c.getValueUri().equals( DE_INCLUDE_URI ) ) ) {
+                        log.info( "Dropping factor " + ef.getName() + " from batch correction model because it is for DE_Exclude/Include" );
                         return false;
                     }
                 }

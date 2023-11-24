@@ -68,7 +68,7 @@
                 new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
-            <a href="${pageContext.request.contextPath}/browse" style="align-self: center;">
+            <a href="${appConfig['gemma.gemBrow.url']}" style="align-self: center;">
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A snapshot of the new Gemma Browser."
@@ -85,7 +85,21 @@
 <div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
-        <div>Gemma ${appConfig["version"]}</div>
+        <div>
+            Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
+            <security:authorize access="hasAuthority('GROUP_ADMIN')">
+                <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+                    built
+                </c:if>
+                <c:if test="${appConfig['gemma.build.timestamp'] != null}">
+                    on ${appConfig["gemma.build.timestamp"]}
+                </c:if>
+                <c:if test="${appConfig['gemma.build.gitHash'] != null}">
+                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
+                            target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+                </c:if>
+            </security:authorize>
+        </div>
         <div style="margin-left: 10px;">Copyright &copy; 2007-2023</div>
         <div style="margin-left: 10px;">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
@@ -99,5 +113,3 @@
         </a>
     </div>
 </div>
-<jsp:include page="/common/analytics.jsp"/>
-

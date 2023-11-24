@@ -64,7 +64,7 @@
             <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
 
-        <!-- NEVER USED -->
+        <!-- NEVER USED, deprecated -->
         <set name="annotations" lazy="true" fetch="select" cascade="all">
             <cache usage="read-write"/>
             <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">

@@ -185,13 +185,6 @@ public class Settings {
         return Settings.getString( Settings.ANALYTICS_TRACKER_PROPERTY );
     }
 
-    /**
-     * @return Attempt to get the version information about the application.
-     */
-    public static String getAppVersion() {
-        return Settings.getString( "gemma.version" );
-    }
-
     public static BigDecimal getBigDecimal( String key ) {
         return Settings.config.getBigDecimal( key );
     }

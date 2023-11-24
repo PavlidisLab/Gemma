@@ -52,6 +52,8 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private ExperimentalFactor experimentalFactor;
     private Measurement measurement;
     private Set<Characteristic> characteristics = new java.util.HashSet<>();
+    @Deprecated
+    private Set<Characteristic> statements = new java.util.HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -199,6 +201,16 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     @Deprecated
     public void setValue( String value ) {
         this.value = value;
+    }
+
+    @Deprecated
+    public Set<Characteristic> getStatements() {
+        return statements;
+    }
+
+    @Deprecated
+    public void setStatements( Set<Characteristic> statements ) {
+        this.statements = statements;
     }
 
     /**

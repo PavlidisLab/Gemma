@@ -141,7 +141,7 @@ Gemma.PlatformDetails = Ext
                                 + platformDetails.numProbeSequences
                                 + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with sequences)</span>',
                                 style: platformDetails.numProbeSequences == null
-                                || platformDetails.technologyType == "SEQUENCING" ? 'display:none' : ''
+                                || platformDetails.technologyType == "SEQUENCING" || platformDetails.technologyType == 'GENELIST' ? 'display:none' : ''
                             },
                             {
                                 tag: 'li',
@@ -149,14 +149,14 @@ Gemma.PlatformDetails = Ext
                                 + platformDetails.numProbeAlignments
                                 + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with at least one genome alignment)</span>',
                                 style: platformDetails.numProbeAlignments == null
-                                || platformDetails.technologyType == "SEQUENCING" ? 'display:none' : ''
+                                || platformDetails.technologyType == "SEQUENCING" || platformDetails.technologyType == 'GENELIST' ? 'display:none' : ''
                             },
                             {
                                 tag: 'li',
                                 html: 'Mapped to genes: '
                                 + platformDetails.numProbesToGenes
                                 + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements mapped to at least one gene)</span>',
-                                style: platformDetails.numProbesToGenes === null ? 'display:none' : ''
+                                style: platformDetails.numProbesToGenes === null || platformDetails.technologyType == 'GENELIST' ? 'display:none' : ''
                             },
                             {
                                 tag: 'li',

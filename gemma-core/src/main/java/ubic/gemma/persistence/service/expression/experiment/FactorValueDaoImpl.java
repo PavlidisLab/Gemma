@@ -94,7 +94,9 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                 .createSQLQuery( "delete from CHARACTERISTIC where class = 'Statement' and FACTOR_VALUE_FK = :fvId" )
                 .setParameter( "fvId", factorValue.getId() )
                 .executeUpdate();
-        log.info( String.format( "Removed %d statements from %s", removedStatements, factorValue ) );
+        if ( removedStatements > 0 ) {
+            log.info( String.format( "Removed %d statements from %s", removedStatements, factorValue ) );
+        }
 
         super.remove( factorValue );
     }

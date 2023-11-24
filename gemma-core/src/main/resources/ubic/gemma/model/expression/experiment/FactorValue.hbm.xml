@@ -36,5 +36,13 @@
          </key>
          <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
+      <!-- this is mapped only so that statements can be removed in cascade -->
+      <!-- revert this in the 1.31 (see https://github.com/PavlidisLab/Gemma/issues/909) -->
+      <set name="statements" lazy="true" fetch="select" mutable="false" cascade="delete" where="class = 'Statement'">
+         <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
+            <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+      </set>
    </class>
 </hibernate-mapping>

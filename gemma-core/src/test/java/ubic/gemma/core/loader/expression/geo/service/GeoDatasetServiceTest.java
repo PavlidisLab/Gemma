@@ -37,6 +37,7 @@ import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -358,6 +359,21 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             fail( "Should not have any data vectors for exon arrays on first loading" );
         } catch ( Exception e ) {
             // OK
+        }
+
+
+        // Test the update mechanism
+        ee.setPrimaryPublication( null );
+        eeService.update( ee );
+        geoService.updateFromGEO( "GSE30521" );
+        ee = eeService.load( ee.getId() );
+        ee = this.eeService.thawLite( ee );
+        assertNotNull(ee.getPrimaryPublication());
+        for(BioAssay ba : ee.getBioAssays()) {
+            assertTrue(!ba.getSampleUsed().getCharacteristics().isEmpty());
+            for( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
+                assertNotNull( c.getCategory() );
+            }
         }
 
     }
