@@ -345,7 +345,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();
-        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
+        List<String> idlist = FileUtils.readListFileToStrings( fileName );
+        log.info( "Found " + idlist.size() + " experiment identifiers in file " + fileName );
+        int count = 0;
+        for ( String eeName : idlist ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -353,18 +356,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                     Long id = Long.parseLong( eeName );
                     ee = eeService.load( id );
                     if ( ee == null ) {
-                        AbstractCLI.log.error( "No experiment " + eeName + " found" );
+                        log.error( "No experiment " + eeName + " found" );
                         continue;
                     }
                 } catch ( NumberFormatException e ) {
-                    AbstractCLI.log.error( "No experiment " + eeName + " found" );
+                    log.error( "No experiment " + eeName + " found" );
                     continue;
 
                 }
 
             }
+
+            count++;
             ees.add( ee );
+
+            if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
+                AbstractCLI.log.info( "Loaded " + count + " experiments ..." );
+            }
         }
+        log.info( "Loaded " + ees.size() + " experiments for processing");
         return ees;
     }
 

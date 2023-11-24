@@ -21,11 +21,15 @@ package ubic.gemma.core.loader.expression.geo.service;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.fileupload.util.LimitedInputStream;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
@@ -37,7 +41,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Settings;
 
-import javax.xml.parsers.DocumentBuilder;
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
@@ -64,6 +68,11 @@ import java.util.stream.Collectors;
  * @author pavlidis
  */
 public class GeoBrowser {
+
+    /**
+     * Maximum number of retries when retrieving a document.
+     */
+    private static final int MAX_RETRIES = 3;
 
     /**
      * Maximum size of a MINiML record in bytes.
@@ -153,7 +162,7 @@ public class GeoBrowser {
         //https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=GSE[ETYP]+AND+(GSE100[accn]+OR+GSE101[accn])&retmax=5000&usehistory=y
 
         for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
-            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( GeoBrowser::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
+            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( this::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
             if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
                 searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
             }
@@ -164,15 +173,8 @@ public class GeoBrowser {
     }
 
     private void getGeoBasicRecords( List<GeoRecord> records, String searchUrlString ) throws IOException {
-        Document searchDocument;
         URL searchUrl = new URL( searchUrlString );
-
-        try ( InputStream is = searchUrl.openStream() ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            searchDocument = builder.parse( is );
-        } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
-        }
+        Document searchDocument = parseMiniMLDocument( searchUrl );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -198,11 +200,9 @@ public class GeoBrowser {
         StopWatch t = new StopWatch();
         t.start();
 
-        Document summaryDocument;
         NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
-        try ( InputStream is = openUrlWithMaxSize( fetchUrl, MAX_MINIML_RECORD_SIZE ) ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            summaryDocument = builder.parse( is );
+        Document summaryDocument = parseMiniMLDocument( fetchUrl );
+        try {
             accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
@@ -212,7 +212,7 @@ public class GeoBrowser {
             summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
             typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
             pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( XPathExpressionException | ParserConfigurationException | SAXException e ) {
+        } catch ( XPathExpressionException e ) {
             throw new RuntimeException( String.format( "Failed to parse XML for %s", fetchUrl ), e );
         }
 
@@ -282,14 +282,7 @@ public class GeoBrowser {
         }
 
         URL searchUrl = new URL( searchUrlString );
-
-        Document searchDocument;
-        try ( InputStream is = searchUrl.openStream() ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            searchDocument = builder.parse( is );
-        } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
-        }
+        Document searchDocument = parseMiniMLDocument( searchUrl );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -316,18 +309,16 @@ public class GeoBrowser {
         StopWatch t = new StopWatch();
         t.start();
 
-        Document summaryDocument;
+        Document summaryDocument = parseMiniMLDocument( fetchUrl );
         NodeList accNodes, titleNodes, dateNodes, orgnNodes, summaryNodes, techNodes;
-        try ( InputStream is = openUrlWithMaxSize( fetchUrl, MAX_MINIML_RECORD_SIZE ) ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            summaryDocument = builder.parse( is );
+        try {
             accNodes = ( NodeList ) xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
             techNodes = ( NodeList ) xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
             orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
             dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( ParserConfigurationException | XPathExpressionException | SAXException | DOMException e ) {
+        } catch ( XPathExpressionException e ) {
             log.error( "Could not parse data: " + searchUrl, e );
             return Collections.emptyList();
         }
@@ -401,14 +392,7 @@ public class GeoBrowser {
         }
 
         URL searchUrl = new URL( searchUrlString );
-
-        Document searchDocument;
-        try ( InputStream is = searchUrl.openStream() ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            searchDocument = builder.parse( is );
-        } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
-        }
+        Document searchDocument = parseMiniMLDocument( searchUrl );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -438,11 +422,9 @@ public class GeoBrowser {
         t.start();
         int rawRecords = 0;
 
-        Document summaryDocument;
+        Document summaryDocument = parseMiniMLDocument( fetchUrl );
         NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
-        try ( InputStream is = fetchUrl.openStream() ) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            summaryDocument = builder.parse( is );
+        try {
             accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
@@ -453,7 +435,7 @@ public class GeoBrowser {
             typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
             pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
             // NodeList sampleLists = ( NodeList ) xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( ParserConfigurationException | XPathExpressionException | SAXException e ) {
+        } catch ( XPathExpressionException e ) {
             throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
         }
 
@@ -628,17 +610,14 @@ public class GeoBrowser {
      * exposed for testing
      *
      */
-    void parseMINiML( GeoRecord record, InputStream is ) throws IOException {
+    void parseMINiML( GeoRecord record, Document detailsDocument ) throws IOException {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-        Document detailsDocument;
         NodeList relTypeNodes;
         String overallDesign;
         try {
-            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder();
-            detailsDocument = builderD.parse( is );
             relTypeNodes = ( NodeList ) xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
             overallDesign = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
-        } catch ( ParserConfigurationException | XPathExpressionException | SAXException e ) {
+        } catch ( XPathExpressionException e ) {
             throw new RuntimeException( "Failed to parse MINiML", e );
         }
 
@@ -661,11 +640,8 @@ public class GeoBrowser {
      * exposed for testing
      *
      */
-    void parseSampleMiNIML( GeoRecord record, InputStream isd )
-            throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    void parseSampleMiNIML( GeoRecord record, Document detailsDocument ) throws XPathExpressionException {
         // Source, Characteristics
-        DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
-        Document detailsDocument = builder.parse( isd );
         NodeList channelNodes = ( NodeList ) xChannel.evaluate( detailsDocument, XPathConstants.NODESET );
         Set<String> props = new HashSet<>(); // expect duplicate terms
 
@@ -728,8 +704,8 @@ public class GeoBrowser {
              * subseries
              * status is impossible without another query. I don't think batch queries for MiniML is possible.
              */
-            try ( InputStream isd = openUrlWithMaxSize( miniMLURL, MAX_MINIML_RECORD_SIZE ) ) {
-                parseMINiML( record, isd );
+            try {
+                parseMINiML( record, parseMiniMLDocument( miniMLURL ) );
             } catch ( IOException e ) {
                 log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                         + ", subseries status will not be determined." );
@@ -738,7 +714,7 @@ public class GeoBrowser {
 
         try {
             getSampleDetails( record );
-        } catch ( IOException e ) {
+        } catch ( EmptyMinimlDocumentException | IOException e ) {
             log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                     + ", sample details will not be obtained" );
         }
@@ -790,25 +766,12 @@ public class GeoBrowser {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
         URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
         log.debug( String.format( "Obtaining sample details for %s from %s...", record.getGeoAccession(), sampleMINIMLURL ) );
-        try ( InputStream isd = openUrlWithMaxSize( sampleMINIMLURL, MAX_MINIML_RECORD_SIZE ) ) {
-            parseSampleMiNIML( record, isd );
-        } catch ( XPathExpressionException | ParserConfigurationException | SAXException e ) {
-            if ( isLikelyCausedByAPrivateGeoRecord( e ) ) {
-                throw new LikelyNonPublicGeoRecordException( record.getGeoAccession(), e );
-            } else {
-                throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", sampleMINIMLURL ), e );
-            }
+        try {
+            parseSampleMiNIML( record, parseMiniMLDocument( sampleMINIMLURL ) );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", sampleMINIMLURL ), e );
         }
     }
-
-    /**
-     * GEO delivers an HTML document for non-public datasets
-     * it's possible for this specific case because we're not querying a dataset in particular
-     */
-    private boolean isLikelyCausedByAPrivateGeoRecord( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId" );
-    }
-
 
     /**
      * Extracts taxon names from input string; returns a collection of taxon names
@@ -828,7 +791,7 @@ public class GeoBrowser {
         return taxa;
     }
 
-    private static String urlEncode( String s ) {
+    private String urlEncode( String s ) {
         try {
             return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
         } catch ( UnsupportedEncodingException e ) {
@@ -837,17 +800,74 @@ public class GeoBrowser {
     }
 
     /**
+     *
+     * @param url an URL from which the document should be parsed
+     * @return a parsed MINiML document
+     * @throws IOException if there is a problem while manipulating the file or if the number of records in the document
+     * exceeds {@link #MAX_MINIML_RECORD_SIZE}
+     */
+    Document parseMiniMLDocument( URL url ) throws IOException {
+        return parseMiniMLDocument( url, MAX_RETRIES, null );
+    }
+
+    private Document parseMiniMLDocument( URL url, int maxRetries, @Nullable IOExceptionWithRetry errorFromPreviousAttempt ) throws IOException {
+        try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
+            return GeoBrowser.docFactory.newDocumentBuilder().parse( is );
+        } catch ( ParserConfigurationException | SAXException e ) {
+            if ( isCausedByAnEmptyMinimlDocument( e ) ) {
+                throw new EmptyMinimlDocumentException( e );
+            } else if ( isLikelyCausedByAPrivateGeoRecord( e ) ) {
+                throw new LikelyNonPublicGeoRecordException( e );
+            } else {
+                throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", url ), e );
+            }
+        } catch ( IOException ioe ) {
+            if ( maxRetries > 0 && isEligibleForRetry( ioe ) ) {
+                // exponential backoff?
+                log.warn( String.format( "Failed to retrieve MINiML from URL %s, there are %d attempts left.", url, maxRetries - 1 ), ioe );
+                try {
+                    Thread.sleep( 1000 );
+                } catch ( InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw ioe; // give up and just raise the exception
+                }
+                return parseMiniMLDocument( url, maxRetries - 1, new IOExceptionWithRetry( ioe, errorFromPreviousAttempt ) );
+            } else if ( errorFromPreviousAttempt != null ) {
+                throw new IOExceptionWithRetry( ioe, errorFromPreviousAttempt );
+            } else {
+                throw ioe;
+            }
+        }
+    }
+
+    private boolean isEligibleForRetry( IOException e ) {
+        return !ExceptionUtils.hasCause( e, MinimlDocumentTooLargeException.class );
+    }
+
+    private boolean isCausedByAnEmptyMinimlDocument( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "Premature end of file." );
+    }
+
+    /**
+     * GEO delivers an HTML document for non-public datasets
+     * it's possible for this specific case because we're not querying a dataset in particular
+     */
+    private boolean isLikelyCausedByAPrivateGeoRecord( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId" );
+    }
+
+    /**
      * Open an URL with a maximum size, raising an {@link IOException} if exceeded.
      * <p>
      * This is trick we use to read from GEO MINiML because the HTTP payload does not advertise its size via a
      * {@code Content-Length} header.
      */
-    private static InputStream openUrlWithMaxSize( URL url, long maxSize ) throws IOException {
+    private InputStream openUrlWithMaxSize( URL url, long maxSize ) throws IOException {
         InputStream inputStream = url.openStream();
         return new LimitedInputStream( inputStream, maxSize ) {
             @Override
             protected void raiseError( long pSizeMax, long pCount ) throws IOException {
-                throw new IOException( String.format( "Document exceeds %d B.", maxSize ) );
+                throw new MinimlDocumentTooLargeException( String.format( "Document exceeds %d B.", maxSize ) );
             }
         };
     }

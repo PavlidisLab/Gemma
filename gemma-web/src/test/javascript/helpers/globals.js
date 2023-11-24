@@ -24,3 +24,4 @@
  */
 ctxBasePath="";
 recaptchaPublicKey="";
+gemBrowUrl="";

@@ -39,27 +39,20 @@
 
 	<h2>System Stats</h2>
 	<security:authorize access="hasAuthority('GROUP_ADMIN')">
-		Gemma version ${appConfig['version']}&nbsp;<br>
+        Gemma version ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
+        <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+            built
+        </c:if>
+        <c:if test="${appConfig['gemma.build.timestamp'] != null}">
+            on ${appConfig["gemma.build.timestamp"]}
+        </c:if>
+        <c:if test="${appConfig['gemma.build.gitHash'] != null}">
+            from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
+                    target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+        </c:if>
 		<script type="text/javascript">
          document.writeln( "Page Loaded: " + document.lastModified );
       </script>
 
 	</security:authorize>
-	<%-- Security fields used in Java script calls to hide or display information on pages: MOVED TO default.jsp --%>
-
-	<c:if test='${ appConfig["ga.tracker"] != null}'>
-		<script type="text/javascript">
-         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-         document.write( unescape( "%3Cscript src='" + gaJsHost
-            + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E" ) );
-      </script>
-		<script type="text/javascript">
-         try {
-            var pageTracker = _gat._getTracker( '${appConfig["ga.tracker"]}' );
-            pageTracker._trackPageview();
-         } catch (err) {
-         }
-      </script>
-	</c:if>
-
 </div>

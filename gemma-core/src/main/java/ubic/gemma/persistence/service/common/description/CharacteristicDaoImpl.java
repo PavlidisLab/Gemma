@@ -288,8 +288,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         Set<Long> characteristicIds = characteristics.stream().map( Characteristic::getId ).collect( Collectors.toSet() );
-        Class<?>[] classes = { BioMaterial.class, BibliographicReference.class, ExpressionExperiment.class, ExperimentalDesign.class, ExperimentalFactor.class, PhenotypeAssociation.class, FactorValue.class, GeneSet.class };
-        String[] foreignKeys = { "BIO_MATERIAL_FK", "BIBLIOGRAPHIC_REFERENCE_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "EXPERIMENTAL_FACTOR_FK", "PHENOTYPE_ASSOCIATION_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
+        Class<?>[] classes = { BioMaterial.class, ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, GeneSet.class };
+        String[] foreignKeys = { "BIO_MATERIAL_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
 
         // ensure that at least one of the parentClass-associated column is non-null
         Set<String> foreignKeyToRestrictOn = null;
@@ -303,7 +303,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
         }
 
-        boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
+      //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
+        boolean efOK = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( ExperimentalFactor.class ) );
 
         String extraClause;
         if ( foreignKeyToRestrictOn != null ) {
@@ -321,7 +322,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select C.ID, C.BIO_MATERIAL_FK, C.BIBLIOGRAPHIC_REFERENCE_FK, C.INVESTIGATION_FK, C.EXPERIMENTAL_DESIGN_FK, C.EXPERIMENTAL_FACTOR_FK, C.PHENOTYPE_ASSOCIATION_FK, C.FACTOR_VALUE_FK, C.GENE_SET_FK from CHARACTERISTIC C "
+                .createSQLQuery( "select C.ID, C.BIO_MATERIAL_FK, C.INVESTIGATION_FK, C.EXPERIMENTAL_DESIGN_FK, C.FACTOR_VALUE_FK, C.GENE_SET_FK from CHARACTERISTIC C "
                         + "left join INVESTIGATION I on C.INVESTIGATION_FK = I.ID "
                         + "where C.ID in :ids "
                         + "and (I.class is NULL or I.class = 'ExpressionExperiment') " // for investigations, only retrieve EEs
@@ -341,7 +342,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             boolean found = false;
             for ( int i = 0; i < classes.length; i++ ) {
                 if ( row[i + 1] != null ) {
-                    charToParent.put( c, ( Identifiable ) getSessionFactory().getCurrentSession().load( classes[i], ( ( BigInteger ) row[i + 1] ).longValue() ) );
+                    Identifiable parentObject = ( Identifiable ) getSessionFactory().getCurrentSession().load( classes[i], ( ( BigInteger ) row[i + 1] ).longValue() );
+                    charToParent.put( c, parentObject );
                     found = true;
                     break;
                 }
@@ -355,15 +357,29 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         // batch-load all the proxies
         charToParent.forEach( ( c, parent ) -> Hibernate.initialize( parent ) );
 
-        if ( !characteristicsNotFound.isEmpty() && gene2GoOk ) {
+        if ( !characteristicsNotFound.isEmpty() ) {
             //noinspection unchecked
-            List<Object[]> g2gResults = getSessionFactory().getCurrentSession()
-                    .createQuery( "select g2g, g2g.ontologyEntry from Gene2GOAssociation g2g where g2g.ontologyEntry in :characteristics" )
-                    .setParameterList( "characteristics", characteristicsNotFound )
-                    .list();
-            for ( Object[] row : g2gResults ) {
-                charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
-                characteristicsNotFound.remove( ( Characteristic ) row[1] );
+// GO Terms doesn't have a use case
+//            if (gene2GoOk) {
+//                List<Object[]> g2gResults = getSessionFactory().getCurrentSession()
+//                        .createQuery( "select g2g, g2g.ontologyEntry from Gene2GOAssociation g2g where g2g.ontologyEntry in :characteristics" )
+//                        .setParameterList( "characteristics", characteristicsNotFound )
+//                        .list();
+//                for ( Object[] row : g2gResults ) {
+//                    charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
+//                    characteristicsNotFound.remove( ( Characteristic ) row[1] );
+//                }
+//            }
+
+            if ( efOK ) {
+                List<Object[]> efResults = getSessionFactory().getCurrentSession()
+                        .createQuery( "select ef, ef.category from ExperimentalFactor ef where ef.category in :characteristics" )
+                        .setParameterList( "characteristics", characteristicsNotFound ).list();
+
+                for ( Object[] row : efResults ) {
+                    charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
+                    characteristicsNotFound.remove( ( Characteristic ) row[1] );
+                }
             }
         }
 

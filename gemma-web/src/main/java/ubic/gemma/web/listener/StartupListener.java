@@ -101,8 +101,6 @@ public class StartupListener extends ContextLoaderListener {
 
         this.loadTheme( servletContext, config );
 
-        this.loadVersionInformation( config );
-
         this.loadTrackerInformation( config );
 
         this.lintConfiguration();
@@ -191,10 +189,5 @@ public class StartupListener extends ContextLoaderListener {
             config.put( "ga.tracker", gaTrackerKey );
             StartupListener.log.info( "Enabled Google analytics tracking with key " + gaTrackerKey );
         }
-    }
-
-    private void loadVersionInformation( Map<String, Object> config ) {
-        StartupListener.log.debug( "Version is " + Settings.getAppVersion() );
-        config.put( "version", Settings.getAppVersion() );
     }
 }

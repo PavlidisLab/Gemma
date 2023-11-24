@@ -24,8 +24,12 @@
                         </goals>
                         <configuration>
                             <target>
+                                <exec executable="git" outputproperty="gemma.hash" logError="true">
+                                    <arg value="rev-parse"/>
+                                    <arg value="HEAD"/>
+                                </exec>
                                 <echo append="false" file="${project.build.directory}/classes/ubic/gemma/version.properties">
-                                    gemma.version=${project.version} built ${maven.build.timestamp}
+                                    gemma.version=${project.version}${line.separator}gemma.build.timestamp=${maven.build.timestamp}${line.separator}gemma.build.gitHash=${gemma.hash}
                                 </echo>
                             </target>
                         </configuration>

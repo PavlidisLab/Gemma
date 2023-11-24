@@ -19,6 +19,7 @@
 
 <c:set var="ctxPath" value="${pageContext.request.contextPath}" scope="request"/>
 <c:set var="recaptchaPublicKey" value="${appConfig['gemma.recaptcha.publicKey']}" scope="request"/>
+<c:set var="gemBrowUrl" value="${appConfig['gemma.gemBrow.url']}" scope="request"/>
 
 
 
@@ -33,5 +34,6 @@
 <script>
     var ctxBasePath = '${ctxPath}';
     var recaptchaPublicKey = '${recaptchaPublicKey}';
+    var gemBrowUrl = '${gemBrowUrl}';
 </script>
 

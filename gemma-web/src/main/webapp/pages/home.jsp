@@ -1,10 +1,10 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
-    <title>Home</title>
+<title>Home</title>
 
-    <jwr:script src='/scripts/api/ext/data/DwrProxy.js'/>
-    <%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
-    <jwr:script src='/scripts/scriptsnonjawr/arbor.js'/>
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
+<jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
 
 </head>
 <%@ include file="/pages/frontPageSlideShowShowOff.jsp" %>
@@ -14,27 +14,27 @@
 </div>
 
 <script type="text/javascript">
-   Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
-   Ext.onReady( function() {
+Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
+Ext.onReady( function() {
 
-      Ext.QuickTips.init();
+    Ext.QuickTips.init();
 
-      Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
-      // Apply a set of config properties to the singleton
-      /*Ext.apply(Ext.QuickTips.getQuickTip(), {
-      	maxWidth : 200,
-      	minWidth : 100,
-      	showDelay : 0,
-      	//trackMouse: true,
-      	dismissDelay : 0,
-      	hideDelay : 0
-      });*/
+    Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+    // Apply a set of config properties to the singleton
+    /*Ext.apply(Ext.QuickTips.getQuickTip(), {
+        maxWidth : 200,
+        minWidth : 100,
+        showDelay : 0,
+        //trackMouse: true,
+        dismissDelay : 0,
+        hideDelay : 0
+    });*/
 
-      var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
-      generalSearchPanel.render( "generalSearchSimple-div" );
+    var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
+    generalSearchPanel.render( "generalSearchSimple-div" );
 
 
-   } );
+} );
 </script>
 
 
@@ -55,14 +55,14 @@
                 </p>
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
                     <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
-                         alt="Bioconductor Logo"
-                         width="175"
-                         style="margin-right: 15px;"/>
+                        alt="Bioconductor Logo"
+                        width="200"
+                        style="margin-right: 15px;" />
                 </a>
                 <a href="https://pypi.org/project/gemmapy/">
                     <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
-                         alt="PyPi Logo"
-                         width="75"/>
+                        alt="PyPi Logo"
+                        width="100" />
                 </a>
             </div>
             <div style="display:flex; justify-content: space-between; margin-bottom: 40px;">
@@ -73,11 +73,11 @@
                     new interface for exploring and searching Gemma's data holdings. It's still in beta,
                     and more features and improvements are planned, but we'd love to hear your feedback.
                 </p>
-                <a href="${pageContext.request.contextPath}/browse" style="align-self: center;">
+                <a href="${appConfig['gemma.gemBrow.url']}" style="align-self: center;">
                     <img
-                            src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
-                            alt="A screenshot of the new Gemma Browser."
-                            width="300"/>
+                        src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
+                        alt="A snapshot of the new Gemma Browser."
+                        width="350" />
                 </a>
             </div>
 
@@ -91,7 +91,21 @@
 <div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
-        <div>Gemma ${appConfig["version"]}</div>
+        <div>
+            Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
+            <security:authorize access="hasAuthority('GROUP_ADMIN')">
+                <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+                    built
+                </c:if>
+                <c:if test="${appConfig['gemma.build.timestamp'] != null}">
+                    on ${appConfig["gemma.build.timestamp"]}
+                </c:if>
+                <c:if test="${appConfig['gemma.build.gitHash'] != null}">
+                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
+                    target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+                </c:if>
+            </security:authorize>
+        </div>
         <div style="margin-left: 10px;">Copyright &copy; 2007-2023</div>
         <div style="margin-left: 10px;">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
@@ -101,9 +115,7 @@
         <div style="flex-grow: 1"></div>
         <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" style="align-self: center;">
             <img alt="Creative Commons License"
-                 src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" width="80" height="15"/>
+                src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" width="80" height="15" />
         </a>
     </div>
 </div>
-<jsp:include page="/common/analytics.jsp"/>
-

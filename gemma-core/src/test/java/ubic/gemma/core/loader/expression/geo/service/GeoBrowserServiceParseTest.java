@@ -15,7 +15,6 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
-
 import org.junit.experimental.categories.Category;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -24,14 +23,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
@@ -221,44 +219,23 @@ public class GeoBrowserServiceParseTest {
 
     @Test
     public void testMINiMLParse() throws Exception {
-        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/GSE180363.miniml.xml" ).getInputStream();
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
-
-            String l;
-            StringBuilder buf = new StringBuilder();
-            while ( ( l = r.readLine() ) != null ) {
-                buf.append( l );
-            }
-            String response = buf.toString();
-            GeoBrowser serv = new GeoBrowser();
-            GeoRecord rec = new GeoRecord();
-            serv.parseMINiML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) );
-            assertTrue( rec.isSubSeries() );
-        }
-
+        ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE180363.miniml.xml" );
+        GeoBrowser serv = new GeoBrowser();
+        GeoRecord rec = new GeoRecord();
+        serv.parseMINiML( rec, serv.parseMiniMLDocument( resource.getURL() ) );
+        assertTrue( rec.isSubSeries() );
     }
 
     @Test
     public void testSampleMINiMLParse() throws Exception {
+        ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );
+        GeoBrowser serv = new GeoBrowser();
+        GeoRecord rec = new GeoRecord();
+        serv.parseSampleMiNIML( rec, serv.parseMiniMLDocument( resource.getURL() ) );
 
-        try ( InputStream is = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" ).getInputStream();
-                BufferedReader r = new BufferedReader( new InputStreamReader( is ) ) ) {
-
-            String l;
-            StringBuilder buf = new StringBuilder();
-            while ( ( l = r.readLine() ) != null ) {
-                buf.append( l );
-            }
-            String response = buf.toString();
-            GeoBrowser serv = new GeoBrowser();
-            GeoRecord rec = new GeoRecord();
-            serv.parseSampleMiNIML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) );
-
-            assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
-            assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
-            assertEquals( "RNA-Seq", rec.getLibraryStrategy() );
-        }
-
+        assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
+        assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
+        assertEquals( "RNA-Seq", rec.getLibraryStrategy() );
     }
 
 }

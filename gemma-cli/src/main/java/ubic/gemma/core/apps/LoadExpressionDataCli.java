@@ -23,6 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -60,10 +61,13 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     private boolean allowSubSeriesLoad = false;
     private boolean allowSuperSeriesLoad = false;
     // Service Beans
+    @Autowired
     private ExpressionExperimentService eeService;
+    @Autowired
     private PreprocessorService preprocessorService;
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
+    private boolean updateOnly = false;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -108,11 +112,9 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                 .longOpt( "force" ).build();
         options.addOption( forceOption );
 
-        // Option arrayDesign = Option.builder().hasArg().argName( "array design name" )
-        // .desc( "Specify the name or short name of the platform the experiment uses (AE only)" )
-        // .longOpt( "array" ).build( 'a' );
-
-        // addOption( arrayDesign );
+        Option updateOnly = Option.builder( "update" ).desc( "Update existing experiment in Gemma; overrides all other options except those choosing experiments" )
+                .longOpt( "update" ).build();
+        options.addOption( updateOnly );
 
         options.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
 
@@ -195,6 +197,10 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
             accessions = commandLine.getOptionValue( 'e' );
         }
 
+        if ( commandLine.hasOption( "update" ) ) {
+            this.updateOnly = true;
+        }
+
         if ( commandLine.hasOption( 'y' ) ) {
             platformOnly = true;
         }
@@ -216,13 +222,16 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
         this.suppressPostProcessing = commandLine.hasOption( "nopost" );
 
-        this.eeService = this.getBean( ExpressionExperimentService.class );
-        this.preprocessorService = this.getBean( PreprocessorService.class );
-
     }
 
     private void processAccession( GeoService geoService, String accession ) {
         try {
+
+            if ( updateOnly ) {
+                geoService.updateFromGEO( accession );
+                addSuccessObject( accession, "Updated" );
+                return;
+            }
 
             if ( force ) {
                 this.removeIfExists( accession );

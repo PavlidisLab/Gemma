@@ -51,14 +51,14 @@ Gemma.AnnotationDataView = Ext
             }, {
                 name: "termUri"
             }, {
+                name: "termUriEsc",
+                mapping: "termUri",
+                convert: function (v) {
+                    return encodeURIComponent(v);
+                }
+            }, {
                 name: "termName"
             }, {
-				name: "termNameEsc",
-				mapping : "termName",
-				convert : function(v, rec) {
-					return encodeURI(v);
-				}
-			}, {
                 name: "evidenceCode"
             }, {
                 name: "objectClass"
@@ -77,21 +77,22 @@ Gemma.AnnotationDataView = Ext
              */
             tpl: new Ext.XTemplate(
                 '<tpl for=".">',
-                    '<span class="ann-wrap" ext:qtip="{className}" >',
-                    '<tpl if="objectClass == \'BioMaterial\'">',
-                        '<span class="fromBioMaterial">',
-                    '</tpl>',
-                    '<tpl if="objectClass == \'FactorValue\'">',
-                        '<span class="fromFactorValue">',
-                    '</tpl>',
-                    '<tpl if="objectClass == \'ExperimentTag\'">',
-                        '<span class="fromExperimentTag">',
-                    '</tpl>',
-                    '<a ext:qtip="{className} : {termUri} via {objectClass} " href="' + ctxBasePath +
-                    '/searcher.html?query={termNameEsc}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">' +
-                    '{termName}</a></span></span>&nbsp;&nbsp;',
+                '<span class="ann-wrap" ext:qtip="{className}" >',
+                '<tpl if="objectClass == \'BioMaterial\'">',
+                '<span class="fromBioMaterial">',
+                '</tpl>',
+                '<tpl if="objectClass == \'FactorValue\'">',
+                '<span class="fromFactorValue">',
+                '</tpl>',
+                '<tpl if="objectClass == \'ExperimentTag\'">',
+                '<span class="fromExperimentTag">',
+                '</tpl>',
+                '<a ext:qtip="{className} : {termUri} via {objectClass}" href="' + gemBrowUrl + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
+                '{termName}',
+                '</a>',
+                '</span>',
+                '</span>&nbsp;&nbsp;',
                 '</tpl>'),
-
 
 
             itemSelector: 'ann-wrap',
@@ -260,6 +261,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 sortable: true,
                 hidden: this.showParent? true : false,
                 tooltip: Gemma.HelpText.WidgetDefaults.AnnotationGrid.objectClassDescription
+            }, {
+                header: "ID",
+                dataIndex: "id",
+                hidden: true
             }]
 
         });

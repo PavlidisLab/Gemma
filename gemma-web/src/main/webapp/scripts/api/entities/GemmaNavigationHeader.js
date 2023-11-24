@@ -173,7 +173,7 @@ Gemma.GemmaNavigationHeader = Ext
                    */
                   {
                      text : 'Browse Datasets',
-                     href : ctxBasePath + "/browse",
+                     href : gemBrowUrl,
                      tooltip : "View the list of Gemma's expression data sets"
                   },
                   {

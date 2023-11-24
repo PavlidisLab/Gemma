@@ -165,6 +165,8 @@
         <subclass abstract="false" discriminator-value="GeeqEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent">
         </subclass>
+        <subclass abstract="false" discriminator-value="ExpressionExperimentUpdateFromGEOEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent"/>
 
         <subclass abstract="true" discriminator-value="AnalysisSuitabilityEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.AnalysisSuitabilityEvent">

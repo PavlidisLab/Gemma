@@ -29,6 +29,7 @@ import ubic.gemma.core.loader.expression.geo.service.LikelyNonPublicGeoRecordExc
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -144,6 +145,15 @@ public class GeoBrowserTest {
             log.info( "Pubmed: " + record.getPubMedIds() );
             assertTrue( record.getOrganisms().contains( "Homo sapiens" ) );
         }
+    }
+
+    /**
+     * GEO returns an empty document when retrieving the samples for this document.
+     */
+    @Test
+    public void testGeoEmptyMINiML() throws IOException {
+        GeoBrowser b = new GeoBrowser();
+        b.getGeoRecordsBySearchTerm( "GSE127242", 0, 10, true, null, null );
     }
 
 
