@@ -93,9 +93,11 @@ pipeline {
             parallel {
                 stage('Run slow unit tests and integration tests') {
                     when {
-                        branch 'hotfix-*'
-                        branch 'release-*'
-                        branch 'development'
+                        anyOf {
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                            branch 'development'
+                        }
                     }
                     steps {
                         sh 'mvn -B test -Dgroups=SlowTest'
@@ -112,8 +114,10 @@ pipeline {
                 }
                 stage('Deploy artifacts') {
                     when {
-                        branch 'master'
-                        branch 'development'
+                        anyOf {
+                            branch 'master'
+                            branch 'development'
+                        }
                     }
                     steps {
                         sh 'mvn -B deploy -DskipTests'
@@ -121,10 +125,12 @@ pipeline {
                 }
                 stage ('Deploy Gemma Web') {
                     when {
-                        branch 'master'
-                        branch 'hotfix-*'
-                        branch 'release-*'
-                        branch 'development'
+                        anyOf {
+                            branch 'master'
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                            branch 'development'
+                        }
                     }
                     steps {
                         sh 'mvn -B site-deploy'
@@ -136,9 +142,11 @@ pipeline {
                 }
                 stage ('Deploy Gemma CLI') {
                     when {
-                        branch 'master'
-                        branch 'hotfix-*'
-                        branch 'release-*'
+                        anyOf {
+                            branch 'master'
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                        }
                     }
                     steps {
                         sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
