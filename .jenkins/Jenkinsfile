@@ -1,9 +1,9 @@
-def testdbUrl;
-def gemmaVersion;
-def baseCodeVersion;
-def siteDir = '/space/web/maven-sites';
-def dataDir = '/space/gemmaData';
-def deployDir = '/var/local/tomcat/gemma';
+def testdbUrl
+def gemmaVersion
+def baseCodeVersion
+def siteDir = '/space/web/maven-sites'
+def dataDir = '/space/gemmaData'
+def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
 
 void setBuildStatus(String message, String state) {
@@ -13,7 +13,7 @@ void setBuildStatus(String message, String state) {
       contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "Jenkins"],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-  ]);
+  ])
 }
 
 pipeline {
@@ -31,40 +31,40 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    def pom = readMavenPom();
-                    testdbUrl = pom.properties['gemma.testdb.build.url'];
-                    gemmaVersion = pom.version;
+                    def pom = readMavenPom()
+                    testdbUrl = pom.properties['gemma.testdb.build.url']
+                    gemmaVersion = pom.version
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
-                        error("A production build must not have a -SNAPSHOT suffix.");
+                        error("A production build must not have a -SNAPSHOT suffix.")
                     }
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
-                        error("A development build must have a -SNAPSHOT suffix.");
+                        error("A development build must have a -SNAPSHOT suffix.")
                     }
                     for (dep in pom.dependencies) {
                         if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
-                            baseCodeVersion = dep.version;
-                            break;
+                            baseCodeVersion = dep.version
+                            break
                         }
                     }
                     if (baseCodeVersion == null) {
-                        error("The baseCode dependency was not found in pom.xml.");
+                        error("The baseCode dependency was not found in pom.xml.")
                     }
                     if (env.BRANCH_NAME == 'development') {
-                        dataDir = '/space/sandboxgemmaData';
+                        dataDir = '/space/sandboxgemmaData'
                     }
                     if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        dataDir = '/space/staginggemmaData';
+                        dataDir = '/space/staginggemmaData'
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        deployDir = 'moe:' + deployDir;
+                        deployDir = 'moe:' + deployDir
                     } else {
-                        deployDir = 'chalmers:' + deployDir;
+                        deployDir = 'chalmers:' + deployDir
                     }
                     if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        deployDir += '-staging';
+                        deployDir += '-staging'
                     }
                     if (env.BRANCH_NAME != 'master') {
-                        cliDir += '-' + gemmaVersion;
+                        cliDir += '-' + gemmaVersion
                     }
                 }
             }
@@ -91,8 +91,8 @@ pipeline {
         }
         stage('Run slow unit tests and integration tests') {
             when {
-                branch 'hotfix-*';
-                branch 'release-*';
+                branch 'hotfix-*'
+                branch 'release-*'
                 branch 'development'
             }
             steps {
@@ -110,7 +110,7 @@ pipeline {
         }
         stage('Deploy artifacts') {
             when {
-                branch 'master';
+                branch 'master'
                 branch 'development'
             }
             steps {
@@ -119,33 +119,33 @@ pipeline {
         }
         stage('Deploy Maven website') {
             when {
-                branch 'master';
-                branch 'hotfix-*';
-                branch 'release-*';
+                branch 'master'
+                branch 'hotfix-*'
+                branch 'release-*'
                 branch 'development'
             }
             steps {
-                sh 'mvn -B site-deploy';
+                sh 'mvn -B site-deploy'
             }
         }
         stage ('Deploy WAR') {
             when {
                 branch 'master'
-                branch 'hotfix-*';
+                branch 'hotfix-*'
                 branch 'release-*'
                 branch 'development'
             }
             steps {
-                sh 'rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties';
-                sh 'rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war';
+                sh 'rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties'
+                sh 'rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war'
                 sh 'ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite'
-                sh 'ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site';
+                sh 'ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site'
             }
         }
         stage ('Deploy CLI') {
             when {
                 branch 'master'
-                branch 'hotfix-*';
+                branch 'hotfix-*'
                 branch 'release-*'
             }
             steps {
