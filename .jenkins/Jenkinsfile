@@ -1,0 +1,171 @@
+def testdbUrl
+def gemmaVersion
+def baseCodeVersion
+def siteDir = '/space/web/maven-sites'
+def dataDir = '/space/gemmaData'
+def deployDir = '/var/local/tomcat/gemma'
+def cliDir = '/space/grp/gemma-cli'
+
+void setBuildStatus(String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "Jenkins"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ])
+}
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven 3.8.1'
+    }
+    stages {
+        stage('Set build status on GitHub') {
+            steps {
+                setBuildStatus "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
+            }
+        }
+        stage('Checkout scm') {
+            steps {
+                checkout scm
+                script {
+                    def pom = readMavenPom()
+                    testdbUrl = pom.properties['gemma.testdb.build.url']
+                    gemmaVersion = pom.version
+                    if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
+                        error("A production build must not have a -SNAPSHOT suffix.")
+                    }
+                    if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
+                        error("A development build must have a -SNAPSHOT suffix.")
+                    }
+                    for (dep in pom.dependencies) {
+                        if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
+                            baseCodeVersion = dep.version
+                            break
+                        }
+                    }
+                    if (baseCodeVersion == null) {
+                        error('The baseCode dependency was not found in pom.xml.')
+                    }
+                    if (env.BRANCH_NAME == 'development') {
+                        dataDir = '/space/sandboxgemmaData'
+                    }
+                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        dataDir = '/space/staginggemmaData'
+                    }
+                    if (env.BRANCH_NAME == 'master') {
+                        deployDir = 'moe:' + deployDir
+                    } else {
+                        deployDir = 'chalmers:' + deployDir
+                    }
+                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        deployDir += '-staging'
+                    }
+                    if (env.BRANCH_NAME != 'master') {
+                        cliDir += '-' + gemmaVersion
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn -B package -DskipTests'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+                }
+            }
+        }
+        stage('Run quick unit tests') {
+            steps {
+                sh 'mvn -B test -DexcludedGroups=SlowTest'
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Run slow unit tests and integration tests') {
+            when {
+                branch 'hotfix-*'
+                branch 'release-*'
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B test -Dgroups=SlowTest'
+                lock('database/' + testdbUrl) {
+                    sh 'mvn -B verify -DskipUnitTests'
+                }
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml'
+                    junit testResults: '**/target/failsafe-reports/*.xml'
+                }
+            }
+        }
+        stage('Deploy artifacts') {
+            when {
+                branch 'master'
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B deploy -DskipTests'
+            }
+        }
+        stage('Deploy Maven website') {
+            when {
+                branch 'master'
+                branch 'hotfix-*'
+                branch 'release-*'
+                branch 'development'
+            }
+            steps {
+                sh 'mvn -B site-deploy'
+            }
+        }
+        stage ('Deploy WAR') {
+            when {
+                branch 'master'
+                branch 'hotfix-*'
+                branch 'release-*'
+                branch 'development'
+            }
+            steps {
+                sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
+                sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
+                sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+                sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
+            }
+        }
+        stage ('Deploy CLI') {
+            when {
+                branch 'master'
+                branch 'hotfix-*'
+                branch 'release-*'
+            }
+            steps {
+                sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
+            }
+        }
+    }
+    post {
+        fixed {
+            slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
+        }
+        failure {
+            setBuildStatus "Build #${env.BUILD_NUMBER} failed due to an error.", 'ERROR'
+        }
+        success {
+            setBuildStatus "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
+        }
+        unstable {
+            setBuildStatus "Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.", 'UNSTABLE'
+            slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
+        }
+    }
+}
