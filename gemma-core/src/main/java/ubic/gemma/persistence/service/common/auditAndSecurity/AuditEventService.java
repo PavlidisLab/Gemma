@@ -23,6 +23,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -36,8 +37,13 @@ public interface AuditEventService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<AuditEvent> getEvents( Auditable auditable );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
 
     /**
      * Fast method to retrieve auditEventTypes of multiple classes.
@@ -49,7 +55,7 @@ public interface AuditEventService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * @param date date

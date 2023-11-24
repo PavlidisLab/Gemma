@@ -449,6 +449,8 @@
             <dwr:include method="updateFactorValueCharacteristics"/>
             <dwr:include method="getBioMaterials"/>
             <dwr:include method="updateBioMaterials"/>
+            <dwr:include method="markFactorValuesAsNeedsAttention"/>
+            <dwr:include method="clearFactorValuesNeedsAttention"/>
         </dwr:remote>
     </bean>
 

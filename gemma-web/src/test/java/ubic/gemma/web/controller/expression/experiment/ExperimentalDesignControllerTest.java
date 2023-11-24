@@ -103,9 +103,6 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Autowired
     private FactorValueService factorValueService;
 
-    @Autowired
-    private AuditTrailService auditTrailService;
-
     /* fixtures */
     private FactorValue fv;
 
@@ -148,8 +145,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
         StatementValueObject cvo = new StatementValueObject();
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-            .isInstanceOf( IllegalArgumentException.class )
-            .hasMessageContaining( "The category cannot be blank" );
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "The category cannot be blank" );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -160,8 +157,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         StatementValueObject cvo = new StatementValueObject();
         cvo.setCategory( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-            .isInstanceOf( IllegalArgumentException.class )
-            .hasMessageContaining( "The value cannot be blank" );
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "The value cannot be blank" );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -174,8 +171,8 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         cvo.setSubject( "test" );
         cvo.setPredicate( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-            .isInstanceOf( IllegalArgumentException.class )
-            .hasMessageContaining( "The predicate and object must be either both present or absent." );
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "The predicate and object must be either both present or absent." );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }
@@ -186,10 +183,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         ee.setId( 1L );
         FactorValue fv = new FactorValue();
         fv.setId( 1L );
-        when( expressionExperimentService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-        experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "foo" );
-        verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
+
+        experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "foo" );
         verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
         verify( factorValueService ).markAsNeedsAttention( fv, "foo" );
     }
@@ -201,13 +197,25 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         FactorValue fv = new FactorValue();
         fv.setId( 1L );
         fv.setNeedsAttention( true );
-        when( expressionExperimentService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
         assertThatThrownBy( () -> {
-            experimentalDesignController.markFactorValueAsNeedsAttention( new EntityDelegator<>( ee ), new EntityDelegator<>( fv ), "" );
+            experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "" );
         } ).isInstanceOf( IllegalArgumentException.class );
-        verify( expressionExperimentService ).loadOrFail( eq( 1L ), any(), any() );
         verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testClearNeedsAttention() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setNeedsAttention( true );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        experimentalDesignController.clearFactorValuesNeedsAttention( new Long[] { fv.getId() }, "" );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).clearNeedsAttentionFlag( fv, "" );
         verifyNoMoreInteractions( factorValueService );
     }
 
@@ -215,14 +223,15 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     public void testNeedsAttentionIsResetWhenFVIsSaved() {
         FactorValue fv = new FactorValue();
         fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
         fv.setNeedsAttention( true );
         FactorValueValueObject fvvo = new FactorValueValueObject();
         fvvo.setId( fv.getId() );
         when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { new FactorValueValueObject( fv ) } );
         verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
         verify( factorValueService ).saveStatement( eq( fv ), any() );
-        verify( factorValueService ).clearNeedsAttentionFlag( fv );
+        verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
         verifyNoMoreInteractions( factorValueService );
     }
 }

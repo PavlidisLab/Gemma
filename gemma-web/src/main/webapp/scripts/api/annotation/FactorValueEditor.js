@@ -52,8 +52,8 @@ Gemma.FactorValueRecord = Ext.data.Record.create( [ {
    name : "factorValue",
    type : "string"
 }, {
-   name:"needsAttention",
-   type: "boolean"
+   name : "needsAttention",
+   type : "boolean"
 } ] );
 
 Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
@@ -114,7 +114,6 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
    },
 
    secondObjectStyler : function( value, metadata, record ) {
-      console.log( value, metadata, record.data );
       if ( value ) {
          return Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.secondObjectUri );
       } else {
@@ -381,8 +380,12 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
             var cb = el.dom.getElementsByTagName( 'input' )[0];
             if ( cb.checked ) {
                this.deleteFactorValueButton.enable();
+               this.markAsNeedsAttentionButton.enable()
+               this.clearNeedsAttentionButton.enable();
             } else {
                this.deleteFactorValueButton.disable();
+               this.markAsNeedsAttentionButton.disable();
+               this.clearNeedsAttentionButton.disable();
             }
          }, this.getTopToolbar() );
 
@@ -458,6 +461,20 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
          }, this );
 
          this.getTopToolbar().on( "undo", this.revertSelected.createDelegate( this ), this );
+
+         var that = this;
+         this.getTopToolbar().on( "markAsNeedsAttention", function() {
+            var selected = that.getSelectedFactorValues();
+            ExperimentalDesignController.markFactorValuesAsNeedsAttention( selected, "Flags were set from the UI", function() {
+               that.factorValuesChanged( selected );
+            } );
+         } );
+         this.getTopToolbar().on( "clearNeedsAttention", function() {
+            var selected = that.getSelectedFactorValues();
+            ExperimentalDesignController.clearFactorValuesNeedsAttention( selected, "Flags were cleared from the UI", function() {
+               that.factorValuesChanged( selected );
+            } );
+         } );
 
          this.getTopToolbar().on( "refresh", function() {
             this.getStore().reload();
@@ -617,7 +634,8 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
     */
    initComponent : function() {
       Gemma.FactorValueToolbar.superclass.initComponent.call( this );
-      this.addEvents( "create", "save", "delete", "undo", "refresh", "toggleExpand", "toggleCollapse" );
+      this.addEvents( "create", "save", "delete", "undo", "markAsNeedsAttention", "clearNeedsAttention", "refresh", "toggleExpand", "toggleCollapse" );
+
    },
 
    onRender : function( c, p ) {
@@ -677,6 +695,26 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
          scope : this
       } );
 
+      this.markAsNeedsAttentionButton = new Ext.Toolbar.Button( {
+         text : 'Mark as needs attention',
+         tooltip : 'Mark selected factor values as needs attention',
+         disabled : true,
+         handler : function() {
+            this.fireEvent( "markAsNeedsAttention" )
+         },
+         scope : this
+      } )
+
+      this.clearNeedsAttentionButton = new Ext.Toolbar.Button( {
+         text : 'Unmark as needs attention',
+         tooltip : 'Unmark selected factor values as needs attention',
+         disabled : true,
+         handler : function() {
+            this.fireEvent( "clearNeedsAttention" )
+         },
+         scope : this
+      } )
+
       if ( this.editable ) {
          this.addButton( this.createFactorValueButton );
          this.addSeparator();
@@ -685,6 +723,10 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
          this.addButton( this.saveButton );
          this.addSpacer();
          this.addButton( this.revertButton );
+         this.addSpacer();
+         this.addButton( this.markAsNeedsAttentionButton )
+         this.addSpacer();
+         this.addButton( this.clearNeedsAttentionButton )
          this.addSpacer();
          this.addButton( this.refreshButton );
       }

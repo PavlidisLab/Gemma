@@ -739,7 +739,8 @@ public class ExperimentalDesignController extends BaseController {
             log.debug( String.format( "Saved %s", c ) );
 
             if ( fv.getNeedsAttention() ) {
-                factorValueService.clearNeedsAttentionFlag( fv );
+                factorValueService.clearNeedsAttentionFlag( fv,
+                        "The dataset does not need attention and all of its factor values were fixed." );
                 log.info( "Reverted needs attention flag for " + fv );
             }
         }
@@ -750,16 +751,46 @@ public class ExperimentalDesignController extends BaseController {
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
-    public void markFactorValueAsNeedsAttention( EntityDelegator<ExpressionExperiment> ee, EntityDelegator<FactorValue> fv, String note ) {
-        ExpressionExperiment e = expressionExperimentService.loadOrFail( ee.getId(), EntityNotFoundException::new,
-                String.format( "No ExpressionExperiment with ID %d", ee.getId() ) );
-        FactorValue fvs = factorValueService.loadOrFail( fv.getId(), EntityNotFoundException::new,
-                String.format( "No FactorValue with ID %d", fv.getId() ) );
-        if ( fvs.getNeedsAttention() ) {
-            throw new IllegalArgumentException( String.format( "%s is already marked as needs attention, save it to reset the status.", fvs ) );
+    public void markFactorValuesAsNeedsAttention( Long[] fvvos, String note ) {
+        Set<FactorValue> fvs = new HashSet<>( fvvos.length );
+        int i = 0;
+        for ( Long fvo : fvvos ) {
+            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new,
+                    String.format( "No FactorValue with ID %d", fvo ) );
+            if ( fv.getNeedsAttention() ) {
+                if ( fvvos.length == 1 ) {
+                    throw new IllegalArgumentException( String.format( "%s is already marked as needs attention.", fv ) );
+                } else {
+                    continue; // skip
+                }
+            }
+            fvs.add( fv );
         }
-        factorValueService.markAsNeedsAttention( fvs, note );
-        log.info( String.format( "Marked %s as needs attention: %s", fvs, note ) );
+        for ( FactorValue fv : fvs ) {
+            factorValueService.markAsNeedsAttention( fv, note );
+        }
+        log.info( String.format( "Marked %d factor values as needs attention: %s", fvs.size(), note ) );
+    }
+
+    public void clearFactorValuesNeedsAttention( Long[] fvvos, String note ) {
+        Set<FactorValue> fvs = new HashSet<>( fvvos.length );
+        int i = 0;
+        for ( Long fvo : fvvos ) {
+            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new,
+                    String.format( "No FactorValue with ID %d", fvo ) );
+            if ( !fv.getNeedsAttention() ) {
+                if ( fvvos.length == 1 ) {
+                    throw new IllegalArgumentException( String.format( "%s does not need attention.", fv ) );
+                } else {
+                    continue; // skip
+                }
+            }
+            fvs.add( fv );
+        }
+        for ( FactorValue fv : fvs ) {
+            factorValueService.clearNeedsAttentionFlag( fv, note );
+        }
+        log.info( String.format( "Cleared %d factor values' needs attention flags: %s", fvs.size(), note ) );
     }
 
     private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
