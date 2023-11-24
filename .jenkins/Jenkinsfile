@@ -155,7 +155,7 @@ pipeline {
     }
     post {
         fixed {
-            sendSlack color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
+            slackSend color: 'good', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)'
         }
         failure {
             setBuildStatus 'Build #${env.BUILD_NUMBER} failed due to an error.', 'ERROR'
@@ -165,7 +165,7 @@ pipeline {
         }
         unstable {
             setBuildStatus 'Build #${env.BUILD_NUMBER} is unstable: some tests might have failed.', 'UNSTABLE'
-            sendSlack color: 'danger', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)'
+            slackSend color: 'danger', message: '${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)'
         }
     }
 }
