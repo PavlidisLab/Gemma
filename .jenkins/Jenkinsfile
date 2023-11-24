@@ -89,67 +89,61 @@ pipeline {
                 }
             }
         }
-        stage('Run slow unit tests and integration tests') {
-            when {
-                branch 'hotfix-*'
-                branch 'release-*'
-                branch 'development'
-            }
-            steps {
-                sh 'mvn -B test -Dgroups=SlowTest'
-                lock('database/' + testdbUrl) {
-                    sh 'mvn -B verify -DskipUnitTests'
+        stage('Run integration tests and perform deployment in parallel') {
+            parallel {
+                stage('Run slow unit tests and integration tests') {
+                    when {
+                        branch 'hotfix-*'
+                        branch 'release-*'
+                        branch 'development'
+                    }
+                    steps {
+                        sh 'mvn -B test -Dgroups=SlowTest'
+                        lock('database/' + testdbUrl) {
+                            sh 'mvn -B verify -DskipUnitTests'
+                        }
+                    }
+                    post {
+                        always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
+                            junit testResults: '**/target/failsafe-reports/*.xml'
+                        }
+                    }
                 }
-            }
-            post {
-                always {
-                    junit testResults: '**/target/surefire-reports/*.xml'
-                    junit testResults: '**/target/failsafe-reports/*.xml'
+                stage('Deploy artifacts') {
+                    when {
+                        branch 'master'
+                        branch 'development'
+                    }
+                    steps {
+                        sh 'mvn -B deploy -DskipTests'
+                    }
                 }
-            }
-        }
-        stage('Deploy artifacts') {
-            when {
-                branch 'master'
-                branch 'development'
-            }
-            steps {
-                sh 'mvn -B deploy -DskipTests'
-            }
-        }
-        stage('Deploy Maven website') {
-            when {
-                branch 'master'
-                branch 'hotfix-*'
-                branch 'release-*'
-                branch 'development'
-            }
-            steps {
-                sh 'mvn -B site-deploy'
-            }
-        }
-        stage ('Deploy WAR') {
-            when {
-                branch 'master'
-                branch 'hotfix-*'
-                branch 'release-*'
-                branch 'development'
-            }
-            steps {
-                sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
-                sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
-                sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
-            }
-        }
-        stage ('Deploy CLI') {
-            when {
-                branch 'master'
-                branch 'hotfix-*'
-                branch 'release-*'
-            }
-            steps {
-                sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
+                stage ('Deploy Gemma Web') {
+                    when {
+                        branch 'master'
+                        branch 'hotfix-*'
+                        branch 'release-*'
+                        branch 'development'
+                    }
+                    steps {
+                        sh 'mvn -B site-deploy'
+                        sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
+                        sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
+                        sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+                        sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
+                    }
+                }
+                stage ('Deploy Gemma CLI') {
+                    when {
+                        branch 'master'
+                        branch 'hotfix-*'
+                        branch 'release-*'
+                    }
+                    steps {
+                        sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
+                    }
+                }
             }
         }
     }
