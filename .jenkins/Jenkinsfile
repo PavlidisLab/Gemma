@@ -90,6 +90,14 @@ pipeline {
             }
         }
         stage('Run integration tests and perform deployment in parallel') {
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'hotfix-*'
+                    branch 'release-*'
+                    branch 'development'
+                }
+            }
             parallel {
                 stage('Run slow unit tests and integration tests') {
                     when {
