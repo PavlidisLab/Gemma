@@ -8,6 +8,7 @@ def stagingDeployDir = 'chalmers:/var/local/tomcat/gemma-staging'
 def stagingDataDir = '/space/staginggemmaData'
 def productionCliDir = '/space/grp/gemma-cli'
 
+def gemmaVersion
 def testdbUrl
 def dataDir
 def gemmaSiteDir
@@ -37,7 +38,7 @@ pipeline {
                 script {
                     def pom = readMavenPom()
                     testdbUrl = pom.properties['gemma.testdb.build.url']
-                    def gemmaVersion = pom.version
+                    gemmaVersion = pom.version
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
@@ -110,6 +111,14 @@ pipeline {
                 unstable {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
+            }
+        }
+        stage('Notify a new release is out') {
+            when {
+                branch 'master'
+            }
+            steps {
+                slackSend color: 'good', channel: '#gemma', message: "Gemma ${gemmaVersion} has been released! It will be deployed shortly..."
             }
         }
         stage('Run remaining tests and perform deployment in parallel') {
@@ -235,6 +244,13 @@ pipeline {
         }
     }
     post {
+        success {
+            script {
+                if (env.BRANCH_NAME == "master") {
+                    slackSend color: 'good', message: "Gemma ${gemmaVersion} has been deployed! Enjoy it while it's still warm!"
+                }
+            }
+        }
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
