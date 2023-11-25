@@ -1,10 +1,19 @@
-def testdbUrl
-def gemmaVersion
-def baseCodeVersion
+// TODO: move those into environment variables supplied by Jenkins
 def siteDir = '/space/web/maven-sites'
-def dataDir = '/space/gemmaData'
-def deployDir = '/var/local/tomcat/gemma'
-def cliDir = '/space/grp/gemma-cli'
+def productionDeployDir = 'moe:/var/local/tomcat/gemma'
+def productionDataDir = '/space/gemmaData'
+def developmentDeployDir = 'chalmers:/var/local/tomcat/gemma'
+def developmentDataDir = '/space/sandboxgemmaData'
+def stagingDeployDir = 'chalmers:/var/local/tomcat/gemma-staging'
+def stagingDataDir = '/space/staginggemmaData'
+def productionCliDir = '/space/grp/gemma-cli'
+
+def testdbUrl
+def dataDir
+def gemmaSiteDir
+def baseCodeSiteDir
+def deployDir
+def cliDir
 
 void setBuildStatus(String context, String message, String state) {
   step([
@@ -28,13 +37,14 @@ pipeline {
                 script {
                     def pom = readMavenPom()
                     testdbUrl = pom.properties['gemma.testdb.build.url']
-                    gemmaVersion = pom.version
+                    def gemmaVersion = pom.version
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
                     }
+                    def baseCodeVersion
                     for (dep in pom.dependencies) {
                         if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
                             baseCodeVersion = dep.version
@@ -44,22 +54,22 @@ pipeline {
                     if (baseCodeVersion == null) {
                         error('The baseCode dependency was not found in pom.xml.')
                     }
-                    if (env.BRANCH_NAME == 'development') {
-                        dataDir = '/space/sandboxgemmaData'
-                    }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        dataDir = '/space/staginggemmaData'
-                    }
+                    gemmaSiteDir = siteDir + '/gemma/gemma-' + gemmaVersion
+                    baseCodeSiteDir = siteDir + '/baseCode/baseCode-' + baseCodeVersion
                     if (env.BRANCH_NAME == 'master') {
-                        deployDir = 'moe:' + deployDir
+                        dataDir = productionDataDir
+                        deployDir = productionDeployDir
+                        cliDir = productionCliDir
+                    } else if (env.BRANCH_NAME == 'development') {
+                        dataDir = developmentDataDir
+                        deployDir = developmentDeployDir
+                        // no CLI should be deployed
+                    } else if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        dataDir = stagingDataDir
+                        deployDir = stagingDeployDir
+                        cliDir = productionCliDir + '-' + gemmaVersion
                     } else {
-                        deployDir = 'chalmers:' + deployDir
-                    }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        deployDir += '-staging'
-                    }
-                    if (env.BRANCH_NAME != 'master') {
-                        cliDir += '-' + gemmaVersion
+                        // no deployment should occur
                     }
                 }
             }
@@ -165,8 +175,8 @@ pipeline {
                     }
                     steps {
                         sh 'mvn -B site-deploy'
-                        sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                        sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
+                        sh "ln -sf ${gemmaSiteDir} ${dataDir}/gemma-devsite"
+                        sh "ln -sf ${baseCodeSiteDir} ${dataDir}/basecode-site"
                     }
                 }
                 stage ('Deploy Gemma Web') {
