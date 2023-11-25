@@ -112,7 +112,7 @@ pipeline {
                 }
             }
         }
-        stage('Run integration tests and perform deployment in parallel') {
+        stage('Run remaining tests and perform deployment in parallel') {
             when {
                 anyOf {
                     branch 'master'
