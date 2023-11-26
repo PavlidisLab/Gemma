@@ -174,7 +174,12 @@ public class GeoBrowser {
 
     private void getGeoBasicRecords( List<GeoRecord> records, String searchUrlString ) throws IOException {
         URL searchUrl = new URL( searchUrlString );
-        Document searchDocument = parseMiniMLDocument( searchUrl );
+        Document searchDocument;
+        try {
+            searchDocument = parseMiniMLDocument( searchUrl );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Empty MINiML document for " + searchUrl, e );
+        }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -201,8 +206,8 @@ public class GeoBrowser {
         t.start();
 
         NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
-        Document summaryDocument = parseMiniMLDocument( fetchUrl );
         try {
+            Document summaryDocument = parseMiniMLDocument( fetchUrl );
             accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
@@ -212,6 +217,8 @@ public class GeoBrowser {
             summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
             typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
             pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Empty MINiML document for " + fetchUrl, e );
         } catch ( XPathExpressionException e ) {
             throw new RuntimeException( String.format( "Failed to parse XML for %s", fetchUrl ), e );
         }
@@ -282,7 +289,12 @@ public class GeoBrowser {
         }
 
         URL searchUrl = new URL( searchUrlString );
-        Document searchDocument = parseMiniMLDocument( searchUrl );
+        Document searchDocument;
+        try {
+            searchDocument = parseMiniMLDocument( searchUrl );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Got an empty MINiML document for " + searchUrl, e );
+        }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -309,18 +321,19 @@ public class GeoBrowser {
         StopWatch t = new StopWatch();
         t.start();
 
-        Document summaryDocument = parseMiniMLDocument( fetchUrl );
         NodeList accNodes, titleNodes, dateNodes, orgnNodes, summaryNodes, techNodes;
         try {
+            Document summaryDocument = parseMiniMLDocument( fetchUrl );
             accNodes = ( NodeList ) xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
             techNodes = ( NodeList ) xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
             orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
             dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Got an empty MINiML document for " + fetchUrl, e );
         } catch ( XPathExpressionException e ) {
-            log.error( "Could not parse data: " + searchUrl, e );
-            return Collections.emptyList();
+            throw new RuntimeException( "Could not parse data for " + searchUrl, e );
         }
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
@@ -352,8 +365,8 @@ public class GeoBrowser {
 
     /**
      * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
-     * searchTerms (search terms can be ommitted). Returns at most pageSize records. Does some screening of results for
-     * expression studies, and (optionally) taxa. This is used for identifying data sets for loading
+     * searchTerms (search terms can be omitted). Returns at most pageSize records. Does some screening of results for
+     * expression studies, and (optionally) taxa. This is used for identifying data sets for loading.
      *
      * @param  start          start an offset to retrieve batches
      * @param  pageSize       page size how many to retrive
@@ -392,7 +405,12 @@ public class GeoBrowser {
         }
 
         URL searchUrl = new URL( searchUrlString );
-        Document searchDocument = parseMiniMLDocument( searchUrl );
+        Document searchDocument;
+        try {
+            searchDocument = parseMiniMLDocument( searchUrl );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Got an empty MINiML document for " + searchUrl, e );
+        }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -422,9 +440,9 @@ public class GeoBrowser {
         t.start();
         int rawRecords = 0;
 
-        Document summaryDocument = parseMiniMLDocument( fetchUrl );
         NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
         try {
+            Document summaryDocument = parseMiniMLDocument( fetchUrl );
             accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
             titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
             sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
@@ -435,6 +453,8 @@ public class GeoBrowser {
             typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
             pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
             // NodeList sampleLists = ( NodeList ) xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
+        } catch ( EmptyXmlDocumentException e ) {
+            throw new RuntimeException( "Got an empty MINiML document for " + fetchUrl, e );
         } catch ( XPathExpressionException e ) {
             throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
         }
@@ -610,7 +630,7 @@ public class GeoBrowser {
      * exposed for testing
      *
      */
-    void parseMINiML( GeoRecord record, Document detailsDocument ) throws IOException {
+    void parseMINiML( GeoRecord record, Document detailsDocument ) {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
         NodeList relTypeNodes;
         String overallDesign;
@@ -706,7 +726,7 @@ public class GeoBrowser {
              */
             try {
                 parseMINiML( record, parseMiniMLDocument( miniMLURL ) );
-            } catch ( IOException e ) {
+            } catch ( EmptyXmlDocumentException | IOException e ) {
                 log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                         + ", subseries status will not be determined." );
             }
@@ -714,7 +734,7 @@ public class GeoBrowser {
 
         try {
             getSampleDetails( record );
-        } catch ( EmptyMinimlDocumentException | IOException e ) {
+        } catch ( EmptyXmlDocumentException | IOException e ) {
             log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                     + ", sample details will not be obtained" );
         }
@@ -761,7 +781,7 @@ public class GeoBrowser {
      * Fetch and parse MINiML for samples.
      *
      */
-    private void getSampleDetails( GeoRecord record ) throws IOException {
+    private void getSampleDetails( GeoRecord record ) throws EmptyXmlDocumentException, IOException {
         // Fetch miniML for the samples.
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
         URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
@@ -806,18 +826,16 @@ public class GeoBrowser {
      * @throws IOException if there is a problem while manipulating the file or if the number of records in the document
      * exceeds {@link #MAX_MINIML_RECORD_SIZE}
      */
-    Document parseMiniMLDocument( URL url ) throws IOException {
+    Document parseMiniMLDocument( URL url ) throws EmptyXmlDocumentException, IOException {
         return parseMiniMLDocument( url, MAX_RETRIES, null );
     }
 
-    private Document parseMiniMLDocument( URL url, int maxRetries, @Nullable IOExceptionWithRetry errorFromPreviousAttempt ) throws IOException {
+    private Document parseMiniMLDocument( URL url, int maxRetries, @Nullable IOExceptionWithRetry errorFromPreviousAttempt ) throws EmptyXmlDocumentException, IOException {
         try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
             return GeoBrowser.docFactory.newDocumentBuilder().parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
-            if ( isCausedByAnEmptyMinimlDocument( e ) ) {
-                throw new EmptyMinimlDocumentException( e );
-            } else if ( isLikelyCausedByAPrivateGeoRecord( e ) ) {
-                throw new LikelyNonPublicGeoRecordException( e );
+            if ( isCausedByAnEmptyXmlDocument( e ) ) {
+                throw new EmptyXmlDocumentException( e );
             } else {
                 throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", url ), e );
             }
@@ -840,20 +858,20 @@ public class GeoBrowser {
         }
     }
 
+    /**
+     * Check if the given exception is eligible for being retried.
+     * <p>
+     * For now, just exclude inputs that are too large from being reattempted.
+     */
     private boolean isEligibleForRetry( IOException e ) {
-        return !ExceptionUtils.hasCause( e, MinimlDocumentTooLargeException.class );
-    }
-
-    private boolean isCausedByAnEmptyMinimlDocument( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "Premature end of file." );
+        return !ExceptionUtils.hasCause( e, InputTooLargeException.class );
     }
 
     /**
-     * GEO delivers an HTML document for non-public datasets
-     * it's possible for this specific case because we're not querying a dataset in particular
+     * Check if an excpetion is caused by an empty MINiML document.
      */
-    private boolean isLikelyCausedByAPrivateGeoRecord( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId" );
+    private boolean isCausedByAnEmptyXmlDocument( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "Premature end of file." );
     }
 
     /**
@@ -867,8 +885,23 @@ public class GeoBrowser {
         return new LimitedInputStream( inputStream, maxSize ) {
             @Override
             protected void raiseError( long pSizeMax, long pCount ) throws IOException {
-                throw new MinimlDocumentTooLargeException( String.format( "Document exceeds %d B.", maxSize ) );
+                throw new InputTooLargeException( String.format( "Document exceeds %d B.", maxSize ) );
             }
         };
+    }
+
+    private static class InputTooLargeException extends IOException {
+        public InputTooLargeException( String message ) {
+            super( message );
+        }
+    }
+
+    /**
+     * Exception raised when an empty XML document is encountered.
+     */
+    private static class EmptyXmlDocumentException extends Exception {
+        public EmptyXmlDocumentException( Throwable cause ) {
+            super( "The XML document was empty", cause );
+        }
     }
 }

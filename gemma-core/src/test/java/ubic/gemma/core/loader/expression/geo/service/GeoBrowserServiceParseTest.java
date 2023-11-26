@@ -35,10 +35,10 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 /**
  * @author paul
  */
-@Category(SlowTest.class)
 public class GeoBrowserServiceParseTest {
 
     @Test
+    @Category(SlowTest.class)
     public void testParse() throws Exception {
         assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         String response = "<?xml version=\"1.0\"?>\n<!DOCTYPE eSummaryResult PUBLIC \"-//NLM//DTD eSummaryResult, 29 October 2004//EN\" \"http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd\">\n"
@@ -227,6 +227,7 @@ public class GeoBrowserServiceParseTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSampleMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );
         GeoBrowser serv = new GeoBrowser();
