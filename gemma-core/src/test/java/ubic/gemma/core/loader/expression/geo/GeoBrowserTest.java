@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.core.loader.expression.geo.service.LikelyNonPublicGeoRecordException;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -42,7 +41,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 /**
  * @author pavlidis
  */
-@Category({ GeoTest.class, SlowTest.class })
+@Category(GeoTest.class)
 public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
@@ -60,13 +59,13 @@ public class GeoBrowserTest {
     }
 
     @Test
-    public void testGetGeoRecordsBySearchTerm() throws Exception {
+    public void testGetGeoRecordsBySearchTerm() {
         GeoBrowser b = new GeoBrowser();
 
         Collection<GeoRecord> res;
         try {
             res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false, null, null );
-        } catch ( LikelyNonPublicGeoRecordException e ) {
+        } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
@@ -91,12 +90,12 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testGetGeoRecords() throws Exception {
+    public void testGetGeoRecords() {
         GeoBrowser b = new GeoBrowser();
         Collection<GeoRecord> res;
         try {
             res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null, null );
-        } catch ( LikelyNonPublicGeoRecordException e ) {
+        } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
@@ -115,20 +114,26 @@ public class GeoBrowserTest {
 
 
     @Test
-    public void testGetGeoRecordsB() throws Exception {
+    public void testGetGeoRecordsB() {
         GeoBrowser b = new GeoBrowser();
-        Collection<GeoRecord> geoRecords = b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ) );
+        Collection<GeoRecord> geoRecords;
+        try {
+            geoRecords = b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ) );
+        } catch ( IOException e ) {
+            assumeNoException( e );
+            return;
+        }
         assertEquals( 3, geoRecords.size() );
     }
 
     @Test
-    public void testGetGeoRecordGSE93825() throws Exception {
+    public void testGetGeoRecordGSE93825() {
         GeoBrowser b = new GeoBrowser();
 
         Collection<GeoRecord> res;
         try {
             res = b.getGeoRecordsBySearchTerm( "GSE93825[acc]", 0, 10, false, null, null );
-        } catch ( LikelyNonPublicGeoRecordException e ) {
+        } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
@@ -151,6 +156,7 @@ public class GeoBrowserTest {
      * GEO returns an empty document when retrieving the samples for this document.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGeoEmptyMINiML() throws IOException {
         GeoBrowser b = new GeoBrowser();
         b.getGeoRecordsBySearchTerm( "GSE127242", 0, 10, true, null, null );
