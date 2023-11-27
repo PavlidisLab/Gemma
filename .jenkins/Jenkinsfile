@@ -1,10 +1,20 @@
-def testdbUrl
-def gemmaVersion
-def baseCodeVersion
+// TODO: move those into environment variables supplied by Jenkins
 def siteDir = '/space/web/maven-sites'
-def dataDir = '/space/gemmaData'
-def deployDir = '/var/local/tomcat/gemma'
-def cliDir = '/space/grp/gemma-cli'
+def productionDeployDir = 'moe:/var/local/tomcat/gemma'
+def productionDataDir = '/space/gemmaData'
+def developmentDeployDir = 'chalmers:/var/local/tomcat/gemma'
+def developmentDataDir = '/space/sandboxgemmaData'
+def stagingDeployDir = 'chalmers:/var/local/tomcat/gemma-staging'
+def stagingDataDir = '/space/staginggemmaData'
+def productionCliDir = '/space/grp/gemma-cli'
+
+def gemmaVersion
+def testdbUrl
+def dataDir
+def gemmaSiteDir
+def baseCodeSiteDir
+def deployDir
+def cliDir
 
 void setBuildStatus(String context, String message, String state) {
   step([
@@ -35,6 +45,7 @@ pipeline {
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
                     }
+                    def baseCodeVersion
                     for (dep in pom.dependencies) {
                         if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
                             baseCodeVersion = dep.version
@@ -44,22 +55,22 @@ pipeline {
                     if (baseCodeVersion == null) {
                         error('The baseCode dependency was not found in pom.xml.')
                     }
-                    if (env.BRANCH_NAME == 'development') {
-                        dataDir = '/space/sandboxgemmaData'
-                    }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        dataDir = '/space/staginggemmaData'
-                    }
+                    gemmaSiteDir = siteDir + '/gemma/gemma-' + gemmaVersion
+                    baseCodeSiteDir = siteDir + '/baseCode/baseCode-' + baseCodeVersion
                     if (env.BRANCH_NAME == 'master') {
-                        deployDir = 'moe:' + deployDir
+                        dataDir = productionDataDir
+                        deployDir = productionDeployDir
+                        cliDir = productionCliDir
+                    } else if (env.BRANCH_NAME == 'development') {
+                        dataDir = developmentDataDir
+                        deployDir = developmentDeployDir
+                        // no CLI should be deployed
+                    } else if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        dataDir = stagingDataDir
+                        deployDir = stagingDeployDir
+                        cliDir = productionCliDir + '-' + gemmaVersion
                     } else {
-                        deployDir = 'chalmers:' + deployDir
-                    }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        deployDir += '-staging'
-                    }
-                    if (env.BRANCH_NAME != 'master') {
-                        cliDir += '-' + gemmaVersion
+                        // no deployment should occur
                     }
                 }
             }
@@ -102,7 +113,15 @@ pipeline {
                 }
             }
         }
-        stage('Run integration tests and perform deployment in parallel') {
+        stage('Notify a new release is out') {
+            when {
+                branch 'master'
+            }
+            steps {
+                slackSend color: 'good', channel: '#gemma', message: "Gemma ${gemmaVersion} has been released! It will be deployed shortly..."
+            }
+        }
+        stage('Run remaining tests and perform deployment in parallel') {
             when {
                 anyOf {
                     branch 'master'
@@ -112,7 +131,7 @@ pipeline {
                 }
             }
             parallel {
-                stage('Run slow unit tests and integration tests') {
+                stage('Run slow unit tests') {
                     when {
                         anyOf {
                             branch 'hotfix-*'
@@ -121,7 +140,34 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        sh 'mvn -B test -Dgroups=SlowTest'
+                    }
+                    post {
+                        always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
+                        }
+                        success {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        failure {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                        }
+                        unstable {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
+                }
+                stage('Run integration tests') {
+                    when {
+                        anyOf {
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                            branch 'development'
+                        }
+                    }
+                    steps {
+                        setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
@@ -129,7 +175,6 @@ pipeline {
                     }
                     post {
                         always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
@@ -165,8 +210,8 @@ pipeline {
                     }
                     steps {
                         sh 'mvn -B site-deploy'
-                        sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                        sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
+                        sh "ln -sf ${gemmaSiteDir} ${dataDir}/gemma-devsite"
+                        sh "ln -sf ${baseCodeSiteDir} ${dataDir}/basecode-site"
                     }
                 }
                 stage ('Deploy Gemma Web') {
@@ -199,6 +244,13 @@ pipeline {
         }
     }
     post {
+        success {
+            script {
+                if (env.BRANCH_NAME == "master") {
+                    slackSend color: 'good', message: "Gemma ${gemmaVersion} has been deployed! Enjoy it while it's still warm!"
+                }
+            }
+        }
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
