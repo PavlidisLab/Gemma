@@ -170,6 +170,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
             log.debug( aRow );
         }
 
+        assertEquals(2, expressionDataDoubleMatrix.getRows( Arrays.asList( new Integer[]{1,2} )).length );
+
         Double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrix();
         assertEquals( dMatrix.length, 200 );
         assertEquals( dMatrix[0].length, 59 );

@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
@@ -127,6 +128,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
         return b;
 
+    }
+
+    @Override
+    public Collection<Integer> findRowsByName( String name ) {
+        return rowElementMap.entrySet().stream()
+                .filter( entry -> entry.getKey().getName().equals( name ) )
+                .map( entry -> entry.getValue() )
+                .collect( Collectors.toList() );
     }
 
     @Override
