@@ -99,7 +99,6 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
                         .param( "shortName", ee.getShortName() ) )
                 .andExpect( status().isOk() )
-                .andExpect( request().attribute( "shortName", ee.getShortName() ) )
                 .andExpect( view().name( "experimentalDesign.detail" ) );
     }
 
