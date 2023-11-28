@@ -161,6 +161,7 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         if ( !fv.getCharacteristics().remove( statement ) ) {
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
         }
+        this.factorValueDao.update( fv );
         // now we can safely delete it
         this.statementDao.remove( statement );
     }
