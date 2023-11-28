@@ -6,7 +6,7 @@
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.description.Characteristic" table="CHARACTERISTIC"
            discriminator-value="null">
-        <cache usage="nonstrict-read-write"/>
+        <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
