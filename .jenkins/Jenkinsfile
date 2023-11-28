@@ -192,7 +192,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "rsync -adv gemma-cli/target/appassembler ${cliDir}"
+                        sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
                     }
                 }
             }
