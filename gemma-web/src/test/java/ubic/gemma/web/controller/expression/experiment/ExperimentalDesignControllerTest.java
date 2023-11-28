@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -123,18 +124,14 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueCharacteristic() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        StatementValueObject cvo = new StatementValueObject();
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
         cvo.setCategory( "test" );
-        cvo.setSubject( "test2" );
-        cvo.setPredicate( "has" );
-        cvo.setObject( "test3" );
+        cvo.setValue( "test2" );
         experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
         verify( factorValueService ).load( 1L );
         Statement stmt = new Statement();
         stmt.setCategory( "test" );
         stmt.setSubject( "test2" );
-        stmt.setPredicate( "has" );
-        stmt.setObject( "test3" );
         verify( factorValueService ).load( 1L );
         verify( factorValueService ).createStatement( fv, stmt );
         verifyNoMoreInteractions( factorValueService );
@@ -143,7 +140,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueWithBlankCategory() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        StatementValueObject cvo = new StatementValueObject();
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The category cannot be blank" );
@@ -154,25 +151,11 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testCreateFactorValueWithBlankValue() {
         EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        StatementValueObject cvo = new StatementValueObject();
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
         cvo.setCategory( "test" );
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The value cannot be blank" );
-        verify( factorValueService ).load( 1L );
-        verifyNoMoreInteractions( factorValueService );
-    }
-
-    @Test
-    public void testCreateFactorValueWithMissingObject() {
-        EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
-        StatementValueObject cvo = new StatementValueObject();
-        cvo.setCategory( "test" );
-        cvo.setSubject( "test" );
-        cvo.setPredicate( "test" );
-        assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "The predicate and object must be either both present or absent." );
         verify( factorValueService ).load( 1L );
         verifyNoMoreInteractions( factorValueService );
     }

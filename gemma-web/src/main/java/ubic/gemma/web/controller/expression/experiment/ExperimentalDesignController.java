@@ -186,7 +186,7 @@ public class ExperimentalDesignController extends BaseController {
         expressionExperimentService.addFactorValue( ee, fv );
     }
 
-    public void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, StatementValueObject cvo ) {
+    public void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, CharacteristicValueObject cvo ) {
         if ( e == null || e.getId() == null )
             return;
         FactorValue fv = factorValueService.load( e.getId() );
@@ -209,36 +209,18 @@ public class ExperimentalDesignController extends BaseController {
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
-    private Statement statementFromVo( StatementValueObject vo ) {
+    private Statement statementFromVo( CharacteristicValueObject vo ) {
         if ( StringUtils.isBlank( vo.getCategory() ) ) {
             throw new IllegalArgumentException( "The category cannot be blank for " + vo );
         }
-        if ( StringUtils.isBlank( vo.getSubject() ) ) {
+        if ( StringUtils.isBlank( vo.getValue() ) ) {
             throw new IllegalArgumentException( "The value cannot be blank for " + vo );
-        }
-        if ( StringUtils.isBlank( vo.getPredicate() ) ^ StringUtils.isBlank( vo.getObject() ) ) {
-            throw new IllegalArgumentException( "The predicate and object must be either both present or absent." );
-        }
-        if ( StringUtils.isBlank( vo.getSecondPredicate() ) ^ StringUtils.isBlank( vo.getSecondObject() ) ) {
-            throw new IllegalArgumentException( "The second predicate and second object must be either both present or absent." );
         }
         Statement c = new Statement();
         c.setCategory( vo.getCategory() );
         c.setCategoryUri( StringUtils.stripToNull( vo.getCategoryUri() ) );
-        c.setSubject( vo.getSubject() );
-        c.setSubjectUri( StringUtils.stripToNull( vo.getSubjectUri() ) );
-        if ( !StringUtils.isBlank( vo.getObject() ) ) {
-            c.setPredicate( vo.getPredicate() );
-            c.setPredicateUri( StringUtils.stripToNull( vo.getPredicateUri() ) );
-            c.setObject( vo.getObject() );
-            c.setObjectUri( StringUtils.stripToNull( vo.getObjectUri() ) );
-        }
-        if ( !StringUtils.isBlank( vo.getSecondObject() ) ) {
-            c.setSecondPredicate( vo.getSecondPredicate() );
-            c.setSecondPredicateUri( StringUtils.stripToNull( vo.getSecondPredicateUri() ) );
-            c.setSecondObject( vo.getSecondObject() );
-            c.setSecondObjectUri( StringUtils.stripToNull( vo.getSecondObjectUri() ) );
-        }
+        c.setSubject( vo.getValue() );
+        c.setSubjectUri( StringUtils.stripToNull( vo.getValueUri() ) );
         return c;
     }
 
