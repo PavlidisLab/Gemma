@@ -64,6 +64,8 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
+    ExpressionExperiment findByDesign( ExperimentalDesign ed );
+
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
 
     ExpressionExperiment findByFactorValue( FactorValue fv );

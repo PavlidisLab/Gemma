@@ -190,6 +190,9 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findByDesign( ExperimentalDesign ed );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactor( ExperimentalFactor factor );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

@@ -154,7 +154,7 @@ $(document).ready(function () {
 		<c:if test="${randomExperimentalDesignThatNeedsAttention != null}">
 			<p>
 				Here's another experimental design that needs attention:
-				<a href="${pageContext.servletContext.contextPath}/experimentalDesign/showExperimentalDesign.html?edid=${randomExperimentalDesignThatNeedsAttention.id}">${expressionExperiment.shortName}</a>
+				<a href="${pageContext.servletContext.contextPath}/experimentalDesign/showExperimentalDesign.html?edid=${randomExperimentalDesignThatNeedsAttention.id}">${randomExperimentalDesignThatNeedsAttentionShortName}</a>
 			</p>
 		</c:if>
 	</security:authorize>

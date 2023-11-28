@@ -391,6 +391,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByExpressedGene( gene, rank );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
+        return this.expressionExperimentDao.findByDesign( ed );
+    }
+
     /**
      * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
      */

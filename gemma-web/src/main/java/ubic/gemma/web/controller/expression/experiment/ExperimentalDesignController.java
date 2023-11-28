@@ -541,6 +541,15 @@ public class ExperimentalDesignController extends BaseController {
         try {
             ExperimentalDesign randomEd = experimentalDesignService.getRandomExperimentalDesignThatNeedsAttention( ee.getExperimentalDesign() );
             result.put( "randomExperimentalDesignThatNeedsAttention", randomEd );
+            if ( randomEd != null ) {
+                ExpressionExperiment randomEe = expressionExperimentService.findByDesign( randomEd );
+                if ( randomEe != null ) {
+                    result.put( "randomExperimentalDesignThatNeedsAttentionShortName", randomEe.getShortName() );
+                } else {
+                    log.warn( String.format( "%s does not belong to any experiment.", randomEd ) );
+                    result.put( "randomExperimentalDesignThatNeedsAttentionShortName", "<detached>" );
+                }
+            }
         } catch ( AccessDeniedException ignored ) {
         }
         return result;

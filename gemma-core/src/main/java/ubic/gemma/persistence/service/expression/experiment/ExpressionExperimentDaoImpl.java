@@ -312,6 +312,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
+        return ( ExpressionExperiment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee where ee.experimentalDesign = :ed" )
+                .setParameter( "ed", ed )
+                .uniqueResult();
+    }
+
+    @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
         final String queryString =
