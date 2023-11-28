@@ -186,7 +186,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         factorValueService.clearNeedsAttentionFlag( fv, "foo" );
         verify( auditEventService ).getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) );
         verify( auditEventService ).getLastEvent( ee, DoesNotNeedAttentionEvent.class );
-        verify( auditTrailService ).addUpdateEvent( ee, DoesNotNeedAttentionEvent.class, "The dataset does not need attention and all of its factor values were fixed." );
+        verify( auditTrailService ).addUpdateEvent( ee, DoesNotNeedAttentionEvent.class, "foo" );
     }
 
     @Test
