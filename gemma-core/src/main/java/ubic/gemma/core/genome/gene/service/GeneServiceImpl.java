@@ -307,6 +307,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
+        // FIXME: this is redundant as aliases are setup by the converter
         Collection<GeneAlias> aliasObjects = gene.getAliases();
         SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {

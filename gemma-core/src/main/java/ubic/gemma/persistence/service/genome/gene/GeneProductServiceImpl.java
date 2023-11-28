@@ -129,6 +129,12 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Collection<GeneProduct> findByGene( Gene gene ) {
+        return this.geneProductDao.findByGene( gene );
+    }
+
+    @Override
     public void remove( Long id ) {
         throw new UnsupportedOperationException( "Removing a gene product by ID is not supported." );
     }

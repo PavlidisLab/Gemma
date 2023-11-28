@@ -126,7 +126,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         AbstractCLI.log.info( "File had " + ncbiIds.size() + " gene ids" );
 
         Map<String, CompositeSequence> existingSymbolMap = this.nameMap( platform );
-        Collection<AnnotationAssociation> associationsToRemove = new HashSet<>();
+
         int count = 0;
         int numWithNoTranscript = 0;
         int hasGeneAlready = 0;
@@ -136,6 +136,9 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         int numUpdatedElements = 0;
         int needsDummyElement = 0;
         for ( String ncbiId : ncbiIds ) {
+
+            log.debug( "> Processing element for NCBI ID = " + ncbiId );
+
             CompositeSequence csForGene = null;
             if ( existingSymbolMap.containsKey( ncbiId ) ) {
                 /*
@@ -144,111 +147,148 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 csForGene = existingSymbolMap.get( ncbiId );
 
                 if ( csForGene.getBiologicalCharacteristic().getType() == null ) {
-                    log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but sequence type of " + csForGene.getBiologicalCharacteristic()
-                            + " is null, will replace with dummy" );
+//                    log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but sequence type of " + csForGene.getBiologicalCharacteristic()
+//                            + " is null, will replace with dummy" ); // rare case
                     needsDummyElement++;
                 } else if ( csForGene.getBiologicalCharacteristic().getType().equals( SequenceType.DUMMY ) ) {
-                    hasGeneAlready++;
-                    log.info( "Gene NCBI ID=" + ncbiId + " already has a usable element, nothing to be done" ); // rather verbose
+                    log.debug( "Gene NCBI ID=" + ncbiId + " already has a usable element, nothing to be done" ); // FOR NOW. This could be a dangling sequence if the gene didn't exist.
                     continue;
                 } else {
                     needsDummyElement++;
-                    AbstractCLI.log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but it is not a dummy, will update" );
+                    //  AbstractCLI.log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but it is not a dummy, will update" );
                 }
+            } else {
+                AbstractCLI.log.info( "Gene NCBI ID=" + ncbiId + " not on platform, may add" );
             }
 
             Gene gene = null;
             try {
                 gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
             } catch ( NumberFormatException e ) {
+                // shouldn't happen but just in case
                 AbstractCLI.log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
             }
-            if ( gene == null ) {
-                AbstractCLI.log.warn( "No gene for NCBI ID = " + ncbiId );
+
+            boolean geneExists = gene != null;
+            if ( !geneExists ) {
+                AbstractCLI.log.warn( "No gene for NCBI ID = " + ncbiId + " but adding dummy sequence anyway (no gene product association wil be made)" );
                 geneNotFound++;
-                continue;
+                // continue;
+                // but still make sure there is an element on the platform for it.
+            } else {
+                gene = geneService.thawLite( gene );
             }
 
-            gene = geneService.thaw( gene );
-
-            Collection<GeneProduct> products = gene.getProducts(); // this will not include any dummy products.
-
-            log.debug( "> Processing: " + gene.getOfficialSymbol() );
-
-            if ( products.isEmpty() ) {
+            if ( gene != null && gene.getProducts().isEmpty() ) {
                 numWithNoTranscript++;
-                AbstractCLI.log.info( "No transcript for " + gene + ", skipping" );
-                /*
-                 * If a gene has no transcript, there is no reason to add a 'dummy' element for it.
-                 */
-                continue;
+                AbstractCLI.log.info( "No transcripts for " + gene + ", adding element anyway" );
             }
 
             AnnotationAssociation aa = null;
-
+            Collection<AnnotationAssociation> associationsToRemove = new HashSet<>();
             /*
             This block is to try to re-use existing usable dummy elements for the gene, but for the first time run it mostly just finds one that we want to remove.
             Such re-use makes sense if we have multiple "generations" of the same platform but if we have just one, this really isn't necessary (and it's going to be slow because of the thaws)
              */
-            Collection<AnnotationAssociation> aas = annotationAssociationService.find( gene ); // making fetching eager would help avoid thaws below, but not a big deal.
-            for ( AnnotationAssociation aae : aas ) {
-                GeneProduct gp = geneProductService.thaw( aae.getGeneProduct() );
-                BioSequence bp = bioSequenceService.thaw( aae.getBioSequence() );
-                if ( gp == null || bp == null ) {
-                    log.warn( "Invalid association of gp=" + gp + " and bp=" + bp + " for " + gene + ", marking for removal" );
-                    associationsToRemove.add( aae );
-                } else if ( bp.getType().equals( SequenceType.DUMMY ) && gp.isDummy() ) {
-                    if ( aa != null ) { // this is a sanity check, if we are sure this isn't an issue we can just break here.
-                        throw new IllegalStateException( "More than one dummy annotation association for " + gene );
+            if ( gene != null && !gene.getProducts().isEmpty() ) {
+                Collection<AnnotationAssociation> aas = annotationAssociationService.find( gene ); // making fetching eager would help avoid thaws below, but not a big deal.
+                for ( AnnotationAssociation aae : aas ) {
+                    GeneProduct gp = geneProductService.thaw( aae.getGeneProduct() );
+                    BioSequence bp = bioSequenceService.thaw( aae.getBioSequence() );
+                    if ( gp == null || bp == null ) {
+                        log.warn( "Invalid association of gp=" + gp + " and bp=" + bp + " for " + gene + ", marking for removal" );
+                        associationsToRemove.add( aae );
+                    } else if ( bp.getType() != null && bp.getType().equals( SequenceType.DUMMY ) && gp.isDummy() ) {
+                        if ( aa != null ) { // this is a sanity check, if we are sure this isn't an issue we can just break here.
+                            throw new IllegalStateException( "More than one dummy annotation association for " + gene );
+                        }
+                        log.info( "Re-using dummy association for " + gene );
+                        aa = aae;
+                    } else {
+                        // otherwise, we're going to want to delete these old AnnotationAssociations assuming they aren't used for anything.
+                        associationsToRemove.add( aae );
                     }
-                    log.info( "Re-using dummy assocaition for " + gene );
-                    aa = aae;
-                } else {
-                    // otherwise, we're going to want to delete these old AnnotationAssociations assuming they aren't used for anything.
-                    associationsToRemove.add( aae );
                 }
             }
 
+            BioSequence bioSequence = null;
             if ( aa == null ) {
                 /* create a dummy gene Product and sequence for the gene. */
-                /* NOTE I am not checking here to see if there is already a dummy gene product for this gene. */
-                GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-                geneProduct.setGene( gene );
-                geneProduct.setDummy( true );
-                geneProduct.setName( gene.getOfficialSymbol() + " [NCBI ID=" + gene.getNcbiGeneId() + "] generic element placeholder" );
-                if ( !noDB ) geneProduct = geneProductService.create( geneProduct );
 
-                BioSequence bioSequence = BioSequence.Factory.newInstance();
-                bioSequence.setName( gene.getOfficialSymbol() + " [NCBI ID=" + gene.getNcbiGeneId() + "] generic sequence placeholder" );
-                bioSequence.setTaxon( this.taxon );
-                bioSequence.setPolymerType( PolymerType.RNA );
-                bioSequence.setType( SequenceType.DUMMY );
-                if ( !noDB ) bioSequence = bioSequenceService.create( bioSequence );
+                bioSequence = csForGene == null ? null : csForGene.getBiologicalCharacteristic();
+                if ( bioSequence != null && bioSequence.getType() != null && bioSequence.getType().equals( SequenceType.DUMMY ) ) {
+                    log.debug( "Existing dummy sequence for element, will reuse" );
+                } else {
+                    bioSequence = BioSequence.Factory.newInstance();
 
-                aa = AnnotationAssociation.Factory.newInstance();
-                aa.setGeneProduct( geneProduct );
-                aa.setBioSequence( bioSequence );
-                if ( !noDB ) aa = annotationAssociationService.create( aa );
+                    if ( gene == null ) {
+                        bioSequence.setName( "NCBI ID=" + ncbiId + " generic sequence placeholder" );
+                    } else {
+                        bioSequence.setName( gene.getOfficialSymbol() + " [NCBI ID=" + gene.getNcbiGeneId() + "] generic sequence placeholder" );
+                    }
+                    bioSequence.setTaxon( this.taxon );
+                    bioSequence.setPolymerType( PolymerType.RNA );
+                    bioSequence.setType( SequenceType.DUMMY );
+                    if ( !noDB ) bioSequence = bioSequenceService.create( bioSequence );
+                }
 
-                assert noDB || bioSequence.getId() != null;
+                if ( geneExists ) { // we only create the Biosequence side if the gene doesn't exist. But we make this dummy gene product even if the gene has no transcripts in Gemma.
+                    GeneProduct geneProduct = GeneProduct.Factory.newInstance();
+                    geneProduct.setGene( gene );
+                    geneProduct.setDummy( true );
+                    geneProduct.setName( gene.getOfficialSymbol() + " [NCBI ID=" + gene.getNcbiGeneId() + "] generic element placeholder" );
+                    if ( !noDB ) geneProduct = geneProductService.create( geneProduct );
+
+                    aa = AnnotationAssociation.Factory.newInstance();
+                    aa.setGeneProduct( geneProduct );
+                    aa.setBioSequence( bioSequence );
+                    if ( !noDB ) aa = annotationAssociationService.create( aa );
+
+                    assert noDB || bioSequence.getId() != null;
+                } else {
+                    log.info( "Gene does not exist, will not create dummy gene product or annotation association" );
+                }
             }
 
             if ( csForGene == null ) {
-                log.info( "New element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                if ( gene == null ) {
+                    log.info( "New platform element for NCBI=" + ncbiId + " (" + this.taxon.getCommonName() + ") - but no corresponding gene exists in Gemma" );
+                } else {
+                    log.info( "New platform element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                }
                 csForGene = CompositeSequence.Factory.newInstance();
-                csForGene.setName( gene.getNcbiGeneId().toString() ); // IMPORTANT that this be just the NCBI ID.
+                csForGene.setName( ncbiId ); // IMPORTANT that this be just the NCBI ID.
                 csForGene.setArrayDesign( platform );
-                csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
-                csForGene.setDescription( "Generic expression element for " + gene );
+                csForGene.setBiologicalCharacteristic( bioSequence );
+                if ( gene == null ) {
+                    csForGene.setDescription( "Generic expression element for NCBI ID = " + ncbiId );
+                } else {
+                    csForGene.setDescription( "Generic expression element for " + gene );
+                }
                 if ( !noDB ) csForGene = compositeSequenceService.create( csForGene );
 
                 platform.getCompositeSequences().add( csForGene );
                 numNewElements++;
             } else {
-                log.info( "Updating element to use dummy for " + gene.getOfficialSymbol() + ": NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                if ( gene == null ) { // this shouldn't happen.
+                    log.info( "Updating element to use dummy for NCBI=" + ncbiId + " (" + taxon.getCommonName() + ")" );
+                } else {
+                    log.info( "Updating element to use dummy for " + gene.getOfficialSymbol() + ": NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
+                }
                 csForGene.setBiologicalCharacteristic( aa.getBioSequence() );
                 if ( !noDB ) compositeSequenceService.update( csForGene );
                 numUpdatedElements++;
+            }
+
+            if ( !associationsToRemove.isEmpty() ) {
+                log.info( associationsToRemove.size() + " old 'non-dummy' annotation associations to remove" );
+                if ( !noDB ) {
+                    try {
+                        annotationAssociationService.remove( associationsToRemove ); // may fail if there are other associations.
+                    } catch ( Exception e ) {
+                        log.warn( "Could not delete old annotation associations for " + gene + ": " + e.getMessage() );
+                    }
+                }
             }
 
             assert noDB || ( csForGene.getBiologicalCharacteristic() != null
@@ -256,9 +296,9 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
             count++;
             if ( count % 200 == 0 )
-               log.info( " >>>>>>>>> " + count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                                + " updated elements; " + numWithNoTranscript
-                                + " genes had no transcript and were skipped." );
+                log.info( " >>>>>>>>> " + count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                        + " updated elements; " + numWithNoTranscript
+                        + " genes had no transcript." );
         }
 
         AbstractCLI.log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( platform )
@@ -267,7 +307,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         if ( !noDB ) arrayDesignReportService.generateArrayDesignReport( platform.getId() );
 
         String auditMessage = count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped; " + geneNotFound + " genes from the file could not be found";
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found";
         log.info( auditMessage );
 
         if ( !noDB ) auditTrailService.addUpdateEvent( platform, AnnotationBasedGeneMappingEvent.class, auditMessage );
@@ -275,28 +315,22 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         AbstractCLI.log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
         if ( !noDB ) arrayDesignAnnotationService.deleteExistingFiles( platform );
 
-        if ( !associationsToRemove.isEmpty() ) {
-            log.info( associationsToRemove.size() + " old 'non-dummy' annotation associations to remove" );
-            if ( !noDB )
-                annotationAssociationService.remove( associationsToRemove ); // may fail if there are other associations.
-        }
-
         /*
-        Delete elements for the platform that are not on the input list. This should probably not be kept here.
+        Delete elements for the platform that are not on the input list. This should probably not be kept here; we'll do it offline.
          */
-        for ( String geneID : existingSymbolMap.keySet() ) {
-            if ( !ncbiIds.contains( geneID ) ) {
-                log.info( "Gene " + geneID + " is not in the input list, will remove element from platform if possible (" + existingSymbolMap.get( geneID ) + ")" );
-                if ( !noDB ) {
-                    try {
-                        compositeSequenceService.remove( existingSymbolMap.get( geneID ) );
-                    } catch ( Exception e ) {
-                        // if there is data associated with it, this will fail.
-                        log.warn( "Could not remove unneeded platform element for geneID=" + geneID + ": " + existingSymbolMap.get( geneID ) + ": " + e.getMessage() );
-                    }
-                }
-            }
-        }
+//        for ( String geneID : existingSymbolMap.keySet() ) {
+//            if ( !ncbiIds.contains( geneID ) ) {
+//                log.info( "Gene " + geneID + " is not in the input list, will remove element from platform if possible (" + existingSymbolMap.get( geneID ) + ")" );
+//                if ( !noDB ) {
+//                    try {
+//                        // compositeSequenceService.remove( existingSymbolMap.get( geneID ) );
+//                    } catch ( Exception e ) {
+//                        // if there is data associated with it, this will fail. We would need to delete DEA results at least.
+//                        log.warn( "Could not remove unneeded platform element for geneID=" + geneID + ": " + existingSymbolMap.get( geneID ) + ": " + e.getMessage() );
+//                    }
+//                }
+//            }
+//        }
     }
 
     @Override
