@@ -38,8 +38,12 @@ public interface GeoConverter extends Converter<GeoData, Object> {
     @Override
     Collection<Object> convert( Collection<? extends GeoData> geoObjects );
 
+    Collection<Object> convert( Collection<? extends GeoData> geoObjects, boolean skipDataVectors );
+
     @Override
     Object convert( GeoData geoObject );
+
+    Object convert(GeoData geoObject, boolean skipDataVectors);
 
     /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
