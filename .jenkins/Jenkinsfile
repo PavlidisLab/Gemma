@@ -18,6 +18,10 @@ void setBuildStatus(String context, String message, String state) {
 
 pipeline {
     agent any
+    parameters {
+        booleanParam(name: 'DEPLOY_CLI', defaultValue: false, description: "Deploy Gemma CLI (only applicable to `master`, `hotfix-*` and `release-*` branches)")
+        booleanParam(name: 'DEPLOY_WEB', defaultValue: false, description: "Deploy Gemma Web (only applicable to `master`, `hotfix-*` and `release-*` and `development` branches)")
+    }
     tools {
         maven 'Maven 3.8.1'
     }
@@ -171,6 +175,7 @@ pipeline {
                 }
                 stage ('Deploy Gemma Web') {
                     when {
+                        environment name: 'DEPLOY_WEB', value: 'true'
                         anyOf {
                             branch 'master'
                             branch 'hotfix-*'
@@ -185,6 +190,7 @@ pipeline {
                 }
                 stage ('Deploy Gemma CLI') {
                     when {
+                        environment name: 'DEPLOY_CLI', value: 'true'
                         anyOf {
                             branch 'master'
                             branch 'hotfix-*'
