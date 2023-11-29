@@ -74,6 +74,11 @@ pipeline {
             }
         }
         stage('Run quick unit tests') {
+            when {
+                not {
+                    branch 'add-sonarqube-to-jenkinsfile'
+                }
+            }
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
                 sh 'mvn -B test -DexcludedGroups=SlowTest'
@@ -100,6 +105,7 @@ pipeline {
                     branch 'hotfix-*'
                     branch 'release-*'
                     branch 'development'
+                    branch 'add-sonarqube-to-jenkinsfile'
                 }
             }
             parallel {
@@ -109,6 +115,7 @@ pipeline {
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            branch 'add-sonarqube-to-jenkinsfile'
                         }
                     }
                     steps {
