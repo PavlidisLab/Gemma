@@ -1,6 +1,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.Field;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
@@ -152,6 +154,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field
     public String getObject() {
         return object;
     }
@@ -161,6 +164,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getObjectUri() {
         return objectUri;
     }
@@ -188,6 +192,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field
     public String getSecondObject() {
         return secondObject;
     }
@@ -197,6 +202,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getSecondObjectUri() {
         return secondObjectUri;
     }

@@ -66,7 +66,12 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             "experimentalDesign.experimentalFactors.category.categoryUri",
             "experimentalDesign.experimentalFactors.category.category",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.value",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" };
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.object",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri"
+    };
 
     private static final String[] GENE_FIELDS = {
             "name", "accessions.accession", "aliases.alias",
