@@ -134,6 +134,31 @@ pipeline {
                         }
                     }
                 }
+                stage('SonarQube') {
+                    steps {
+                        setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                        withSonarQubeEnv('UBC SonarQube') {
+                            sh 'mvn sonar:sonar'
+                            script {
+                                def qg = waitForQualityGate()
+                                if (qg.status != 'OK') {
+                                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        success {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        failure {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                        }
+                        unstable {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
+                }
                 stage('Deploy artifacts') {
                     when {
                         anyOf {
