@@ -5,6 +5,7 @@ def siteDir = '/space/web/maven-sites'
 def dataDir = '/space/gemmaData'
 def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
+def sonarProjectKey = 'mslg'
 
 void setBuildStatus(String context, String message, String state) {
   step([
@@ -142,10 +143,17 @@ pipeline {
                     }
                 }
                 stage('SonarQube') {
+                    when {
+                        anyOf {
+                            branch 'master'
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                        }
+                    }
                     steps {
                         setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                         withSonarQubeEnv('UBC SonarQube') {
-                            sh 'mvn sonar:sonar -Dsonar.projectKey=mslg'
+                            sh "mvn sonar:sonar -Dsonar.projectKey=${sonarProjectKey}"
                             script {
                                 def qg = waitForQualityGate()
                                 if (qg.status != 'OK') {
