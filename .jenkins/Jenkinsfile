@@ -165,8 +165,8 @@ pipeline {
                     }
                     steps {
                         sh 'mvn -B site-deploy'
-                        sh "ln -sf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                        sh "ln -sf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/basecode-site"
+                        sh "ln -Tsf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+                        sh "ln -Tsf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
                     }
                 }
                 stage ('Deploy Gemma Web') {
