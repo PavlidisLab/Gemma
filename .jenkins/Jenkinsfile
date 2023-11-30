@@ -116,7 +116,6 @@ pipeline {
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
-                            branch 'add-sonarqube-to-jenkinsfile'
                         }
                     }
                     steps {
@@ -148,6 +147,7 @@ pipeline {
                             branch 'master'
                             branch 'hotfix-*'
                             branch 'release-*'
+                            branch 'add-sonarqube-to-jenkinsfile'
                         }
                     }
                     steps {
