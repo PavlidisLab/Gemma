@@ -139,7 +139,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value );
-        this.factorValue = FactorValueUtils.getSummaryString( value );
         this.experimentalFactorId = value.getExperimentalFactor().getId();
         this.factorId = value.getExperimentalFactor().getId();
 
@@ -154,13 +153,18 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         }
 
         if ( value.getMeasurement() != null ) {
+            this.charId = value.getMeasurement().getId();
+            this.value = value.getMeasurement().getValue();
+            this.factorValue = value.getMeasurement().getValue();
             this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
-            if ( c == null ) {
-                this.value = value.getMeasurement().getValue();
-                this.charId = value.getMeasurement().getId();
-            }
-        } else {
-            this.measurementObject = null;
+        } else if ( c != null ) {
+            // fill in the details of the *focused* characteristic
+            this.charId = c.getId();
+            this.category = c.getCategory();
+            this.categoryUri = c.getCategoryUri();
+            this.value = c.getValue(); // clobbers if we set it already
+            this.valueUri = c.getValueUri();
+            this.factorValue = FactorValueUtils.getSummaryString( value );
         }
 
         this.characteristics = value.getCharacteristics().stream()
@@ -174,15 +178,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
                 .collect( Collectors.toList() );
 
         this.summary = FactorValueUtils.getSummaryString( value );
-
-        // fill in the details of the *focused* characteristic
-        if ( c != null ) {
-            this.charId = c.getId();
-            this.category = c.getCategory();
-            this.categoryUri = c.getCategoryUri();
-            this.value = c.getValue(); // clobbers if we set it already
-            this.valueUri = c.getValueUri();
-        }
 
         this.needsAttention = value.getNeedsAttention();
     }
