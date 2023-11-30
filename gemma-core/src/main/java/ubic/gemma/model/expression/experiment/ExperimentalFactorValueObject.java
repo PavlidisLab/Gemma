@@ -25,7 +25,6 @@ import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
-import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -118,12 +117,11 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
         this.factorValues = factorValuesAsString.toString();
 
-        Characteristic c = factor.getCategory();
         /*
          * NOTE this replaces code that previously made no sense. PP
          */
         for ( FactorValue value : factor.getFactorValues() ) {
-            vals.add( new FactorValueValueObject( value, c ) );
+            vals.add( new FactorValueValueObject( value ) );
         }
 
         this.values = vals;

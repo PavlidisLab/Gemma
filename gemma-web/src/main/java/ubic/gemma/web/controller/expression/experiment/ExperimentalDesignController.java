@@ -440,12 +440,7 @@ public class ExperimentalDesignController extends BaseController {
 
         Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue value : ef.getFactorValues() ) {
-            Characteristic efCategory = value.getExperimentalFactor().getCategory();
-            if ( efCategory == null ) {
-                efCategory = Characteristic.Factory.newInstance();
-                efCategory.setValue( value.getExperimentalFactor().getName() );
-            }
-            result.add( new FactorValueValueObject( value, efCategory ) );
+            result.add( new FactorValueValueObject( value ) );
         }
         return result;
     }
@@ -466,12 +461,6 @@ public class ExperimentalDesignController extends BaseController {
                     result.add( new FactorValueValueObject( value, c ) );
                 }
             } else {
-                // We just use the experimental factor's characteristic.
-                Characteristic category = value.getExperimentalFactor().getCategory();
-                if ( category == null ) {
-                    category = Characteristic.Factory.newInstance();
-                    category.setValue( value.getExperimentalFactor().getName() );
-                }
                 result.add( new FactorValueValueObject( value ) );
             }
         }

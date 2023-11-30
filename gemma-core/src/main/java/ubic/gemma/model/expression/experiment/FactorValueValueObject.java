@@ -21,7 +21,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,7 +80,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
-    @Schema(description = "", deprecated = true)
+    @Schema(description = "Use `measurement.id` or `characteristics.id` instead.", deprecated = true)
     private Long charId;
     @Schema(description = "Use experimentalFactorCategory.category instead.", deprecated = true)
     private String category;
@@ -127,18 +126,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     /**
-     * Create a FactorValue VO focusing on a specific statement.
-     * <p>
-     * Prefer {@link #FactorValueValueObject(FactorValue, Statement)} since this should never hold a "plain"
-     * characteristic, but always a statement of the factor value.
-     *
-     * @param value value
-     * @param c     specific characteristic we're focusing on (yes, this is confusing). This is necessary if the factor
-     *              value has multiple characteristics. DO NOT pass in the experimental factor category, this just
-     *              confuses things. If c is null, the plain "value" is used.
+     * Create a FactorValue VO.
      */
-    public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
+    public FactorValueValueObject( FactorValue value ) {
         super( value );
+
         this.experimentalFactorId = value.getExperimentalFactor().getId();
         this.factorId = value.getExperimentalFactor().getId();
 
@@ -157,13 +149,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
             this.value = value.getMeasurement().getValue();
             this.factorValue = value.getMeasurement().getValue();
             this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
-        } else if ( c != null ) {
-            // fill in the details of the *focused* characteristic
-            this.charId = c.getId();
-            this.category = c.getCategory();
-            this.categoryUri = c.getCategoryUri();
-            this.value = c.getValue(); // clobbers if we set it already
-            this.valueUri = c.getValueUri();
+        } else {
             this.factorValue = FactorValueUtils.getSummaryString( value );
         }
 
@@ -184,27 +170,44 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
     /**
      * Create a FactorValue VO focusing on a specific statement.
+     * <p>
+     * Prefer {@link #FactorValueValueObject(FactorValue, Statement)} since this should never hold a "plain"
+     * characteristic, but always a statement of the factor value.
+     *
+     * @param value value
+     * @param c     specific characteristic we're focusing on (yes, this is confusing). This is necessary if the factor
+     *              value has multiple characteristics. DO NOT pass in the experimental factor category, this just
+     *              confuses things. If c is null, the plain "value" is used.
      */
-    public FactorValueValueObject( FactorValue fv, @Nullable Statement c ) {
-        this( fv, ( Characteristic ) c );
-        if ( c != null ) {
-            this.predicate = c.getPredicate();
-            this.predicateUri = c.getPredicateUri();
-            this.object = c.getObject();
-            this.objectUri = c.getObjectUri();
-            this.secondPredicate = c.getSecondPredicate();
-            this.secondPredicateUri = c.getSecondPredicateUri();
-            this.secondObject = c.getSecondObject();
-            this.secondObjectUri = c.getSecondObjectUri();
+    public FactorValueValueObject( FactorValue value, Characteristic c ) {
+        this( value );
+        if ( !value.getCharacteristics().contains( c ) ) {
+            throw new IllegalArgumentException( "The focused characteristic does not belong to the factor value." );
         }
+        if ( value.getMeasurement() != null ) {
+            throw new IllegalArgumentException( "Continuous factor values cannot have a focused characteristic." );
+        }
+        // fill in the details of the *focused* characteristic
+        this.charId = c.getId();
+        this.category = c.getCategory();
+        this.categoryUri = c.getCategoryUri();
+        this.value = c.getValue(); // clobbers if we set it already
+        this.valueUri = c.getValueUri();
     }
 
     /**
-     * Create a FactorValue VO, the statement being focused on is automatically picked.
+     * Create a FactorValue VO focusing on a specific statement.
      */
-    @Deprecated
-    public FactorValueValueObject( FactorValue fv ) {
-        this( fv, pickStatement( fv ) );
+    public FactorValueValueObject( FactorValue fv, Statement c ) {
+        this( fv, ( Characteristic ) c );
+        this.predicate = c.getPredicate();
+        this.predicateUri = c.getPredicateUri();
+        this.object = c.getObject();
+        this.objectUri = c.getObjectUri();
+        this.secondPredicate = c.getSecondPredicate();
+        this.secondPredicateUri = c.getSecondPredicateUri();
+        this.secondObject = c.getSecondObject();
+        this.secondObjectUri = c.getSecondObjectUri();
     }
 
     /**
@@ -219,23 +222,5 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     @Override
     public String toString() {
         return "FactorValueValueObject [factor=" + factorValue + ", value=" + value + "]";
-    }
-
-    /**
-     * Pick an arbitrary characteristic from the factor value to represent it.
-     */
-    private static Statement pickStatement( FactorValue fv ) {
-        Statement c;
-        if ( fv.getCharacteristics().size() == 1 ) {
-            c = fv.getCharacteristics().iterator().next();
-        } else if ( fv.getCharacteristics().size() > 1 ) {
-            /*
-             * Inadequate! Want to capture them all - use FactorValueBasicValueObject!
-             */
-            c = fv.getCharacteristics().iterator().next();
-        } else {
-            c = null;
-        }
-        return c;
     }
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,8 +63,8 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
-                        + "join bm.factorValues fv where es=:es and fv.experimentalFactor = :ef " )
+                        "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
+                                + "join bm.factorValues fv where es=:es and fv.experimentalFactor = :ef " )
                 .setParameter( "es", entity ).setParameter( "ef", factor ).list();
     }
 
@@ -72,8 +72,8 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
         List<FactorValue> list = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
-                        + "join bm.factorValues fv where es.id=:es and fv.experimentalFactor.id = :ef " )
+                        "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
+                                + "join bm.factorValues fv where es.id=:es and fv.experimentalFactor.id = :ef " )
                 .setParameter( "es", subSetId ).setParameter( "ef", experimentalFactor ).list();
         Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue fv : list ) {

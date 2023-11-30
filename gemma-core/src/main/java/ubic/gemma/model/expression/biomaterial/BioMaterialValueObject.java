@@ -133,22 +133,20 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             } else {
                 this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             }
-
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
             if ( Hibernate.isInitialized( factor ) ) {
                 this.factors.put( factorId, factor.getName() );
             }
-            this.factorValues.put( factorValueId, FactorValueUtils.getSummaryString( fv, BioMaterialValueObject.CHARACTERISTIC_DELIMITER ) );
-
-            if ( fv.getMeasurement() == null ) {
-                this.factorIdToFactorValueId.put( factorId, factorValueId );
+            if ( fv.getMeasurement() != null ) {
+                String value = fv.getMeasurement().getValue();
+                this.factorValues.put( factorValueId, value );
+                // for measurement, use the actual value, not the FV ID
+                this.factorIdToFactorValueId.put( factorId, value );
             } else {
-                /*
-                 * use the actual value, not the factorvalue id.
-                 */
-                this.factorIdToFactorValueId.put( factorId, factorValues.get( factorValueId ) );
+                this.factorValues.put( factorValueId, FactorValueUtils.getSummaryString( fv, BioMaterialValueObject.CHARACTERISTIC_DELIMITER ) );
+                this.factorIdToFactorValueId.put( factorId, factorValueId );
             }
         }
 
