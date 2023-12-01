@@ -146,7 +146,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
         if ( value.getMeasurement() != null ) {
             this.charId = value.getMeasurement().getId();
-            this.value = value.getMeasurement().getValue();
             this.factorValue = value.getMeasurement().getValue();
             this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
         } else {

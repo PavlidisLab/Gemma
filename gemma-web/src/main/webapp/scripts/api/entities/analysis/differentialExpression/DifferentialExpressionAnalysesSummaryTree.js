@@ -284,8 +284,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     var subsetFactorValue = analysis.subsetFactorValue;
                     subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
                         + subsetFactor.category + " (" + subsetFactor.description
-                        + ") and selecting samples where the value was \'" + subsetFactorValue.value + '\'">'
-                        + " using a subset of the data (" + subsetFactor.category + " = " + analysis.subsetFactorValue.value
+                        + ") and selecting samples where the value was \'" + subsetFactorValue.factorValue + '\'">'
+                        + " using a subset of the data (" + subsetFactor.category + " = " + analysis.subsetFactorValue.factorValue
                         + ')</span>';
                 }
                 return subsetText;
@@ -373,10 +373,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     return '';
                 var base = '';
                 if (resultSet.baselineGroup) {
-                    base = (resultSet.baselineGroup.value !== null) ? ' with baseline&nbsp;=&nbsp;'
-                        + resultSet.baselineGroup.value
-                        : (resultSet.baselineGroup.factorValue !== null) ? ' with baseline&nbsp;=&nbsp;'
-                            + resultSet.baselineGroup.factorValue : '';
+                    base = ' with baseline&nbsp;=&nbsp;' + resultSet.baselineGroup.factorValue;
                 }
                 return base;
             },
@@ -554,14 +551,14 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         if (m > 0 && m < fvu.length) {
                             text = text + "&semi;&nbsp;";
                         }
-                        text = text + Ext.util.Format.ellipsis(fvu[m].value, abrLen, true);
+                        text = text + Ext.util.Format.ellipsis(fvu[m].factorValue, abrLen, true);
                     }
 
                 } else {
                     // for continuous, show range like "(0 - 10)"
                     var vals = [];
                     for (var m = 0; m < fvu.length; m++) {
-                        vals[m] = fvu[m].value;
+                        vals[m] = fvu[m].factorValue;
                     }
                     if (vals.length > 1) {
                         // assume numeric, fall back on string.
