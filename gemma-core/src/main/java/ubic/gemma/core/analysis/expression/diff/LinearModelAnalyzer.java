@@ -471,7 +471,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                  */
                 ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance();
                 eeSubSet.setSourceExperiment( expressionExperiment );
-                eeSubSet.setName( "Subset for " + subsetFactorValue );
+                eeSubSet.setName( "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue ) );
                 Collection<BioAssay> bioAssays = new HashSet<>();
                 for ( BioMaterial bm : bioMaterials ) {
                     bioAssays.addAll( bm.getBioAssaysUsedIn() );
