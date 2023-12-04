@@ -19,7 +19,7 @@ public class FactorValueUtils {
     public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
         StringBuilder buf = new StringBuilder();
         if ( fv.getMeasurement() != null ) {
-            if ( fv.getExperimentalFactor().getCategory() != null ) {
+            if ( fv.getExperimentalFactor() != null && fv.getExperimentalFactor().getCategory() != null ) {
                 buf.append( defaultIfBlank( fv.getExperimentalFactor().getCategory().getCategory(), "?" ) )
                         .append( ": " );
             }

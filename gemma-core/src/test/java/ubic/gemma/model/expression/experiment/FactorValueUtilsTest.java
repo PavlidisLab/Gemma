@@ -38,6 +38,16 @@ public class FactorValueUtilsTest {
         assertEquals( "5.0 mg", FactorValueUtils.getSummaryString( fv ) );
     }
 
+
+    @Test
+    public void testMeasurementWithoutCategory() {
+        FactorValue fv = new FactorValue();
+        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
+        m.setUnit( Unit.Factory.newInstance( "years" ) );
+        fv.setMeasurement( m );
+        assertEquals( "5.0 years", FactorValueUtils.getSummaryString( fv ) );
+    }
+
     @Test
     public void testMeasurementWithCategory() {
         ExperimentalFactor age = new ExperimentalFactor();
