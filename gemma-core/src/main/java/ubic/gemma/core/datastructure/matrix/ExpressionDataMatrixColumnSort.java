@@ -118,7 +118,7 @@ public class ExpressionDataMatrixColumnSort {
                     }
 
                     if ( BaselineSelection.isForcedBaseline( fv ) ) {
-                        ExpressionDataMatrixColumnSort.log.info( "Baseline chosen: " + fv );
+                        ExpressionDataMatrixColumnSort.log.debug( "Baseline chosen: " + fv );
                         result.put( factor, fv );
                         break;
                     }
@@ -129,7 +129,7 @@ public class ExpressionDataMatrixColumnSort {
                                     .warn( "A second potential baseline was found for " + factor + ": " + fv );
                             continue;
                         }
-                        ExpressionDataMatrixColumnSort.log.info( "Baseline chosen: " + fv );
+                        ExpressionDataMatrixColumnSort.log.debug( "Baseline chosen: " + fv );
                         result.put( factor, fv );
                     }
                 }
@@ -497,7 +497,7 @@ public class ExpressionDataMatrixColumnSort {
                 ei.remove();
             }
         }
-        log.info( usedFactorValues.size() + " factors retained " );
+        log.debug( usedFactorValues.size() + " factors retained " );
         return usedFactorValues.keySet();
     }
 
