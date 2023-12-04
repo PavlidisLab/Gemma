@@ -112,6 +112,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         fv = new FactorValue();
         fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
         when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
         when( factorValueService.load( fv.getId() ) ).thenReturn( fv );
     }
@@ -157,6 +158,22 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The value cannot be blank" );
         verify( factorValueService ).load( 1L );
+        verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testUpdateFactorValueCharacteristic() {
+        Statement s1 = new Statement();
+        s1.setSubject( "foo" );
+        Statement s2 = new Statement();
+        s2.setSubject( "bar" );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] {
+                new FactorValueValueObject( fv, s1 ),
+                new FactorValueValueObject( fv, s2 ) } );
+        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).saveStatement( fv, s1 );
+        verify( factorValueService ).saveStatement( fv, s2 );
         verifyNoMoreInteractions( factorValueService );
     }
 
