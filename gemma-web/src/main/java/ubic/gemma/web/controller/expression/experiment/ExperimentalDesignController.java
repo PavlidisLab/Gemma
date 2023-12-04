@@ -647,7 +647,16 @@ public class ExperimentalDesignController extends BaseController {
             if ( fvvo.getId() == null ) {
                 throw new IllegalArgumentException( "Factor value ID must be supplied" );
             }
-            FactorValue fv = this.factorValueService.loadOrFail( fvvo.getId(), EntityNotFoundException::new, "Could not load factorvalue with id=" + fvvo.getId() );
+            FactorValue fv = null;
+            // reuse a previous FV, otherwise changes may be overwritten
+            for ( int j = 0; j < i; j++ ) {
+                if ( fvvo.getId().equals( fvs[j].getId() ) ) {
+                    fv = fvs[j];
+                }
+            }
+            if ( fv == null ) {
+                fv = this.factorValueService.loadOrFail( fvvo.getId(), EntityNotFoundException::new, "Could not load factorvalue with id=" + fvvo.getId() );
+            }
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
             if ( charId != null ) {
