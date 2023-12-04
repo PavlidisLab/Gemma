@@ -604,6 +604,14 @@ public class ExpressionExperimentDaoImpl
             }
 
             results.add( new AnnotationValueObject( c, FactorValue.class ) );
+
+            if ( c.getObject() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
+            }
+
+            if ( c.getSecondObject() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
+            }
         }
 
         return results;
