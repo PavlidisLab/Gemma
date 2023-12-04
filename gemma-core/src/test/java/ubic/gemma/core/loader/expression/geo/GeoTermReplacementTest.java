@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * Test replacements for GEO terms.
@@ -101,7 +103,14 @@ public class GeoTermReplacementTest {
         Set<String> seen = new HashSet<>();
         int failures = 0;
         for ( int i = 0; i < ontologies.size(); i++ ) {
-            OntologyService os = cs.take().get();
+            OntologyService os;
+            try {
+                os = cs.take().get();
+            } catch ( ExecutionException e ) {
+                // skip the test if ontologies cannot be loaded
+                assumeNoException( e );
+                return;
+            }
             log.info( "Looking up terms in " + os );
             for ( Rec rec : records ) {
                 // skip undeclared terms
