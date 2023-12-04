@@ -112,7 +112,7 @@ pipeline {
                 }
             }
             parallel {
-                stage('Run slow unit tests and integration tests') {
+                stage('Run slow unit tests') {
                     when {
                         anyOf {
                             branch 'hotfix-*'
@@ -121,15 +121,40 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        setBuildStatus "Slow tests", "Slow tests for #${env.BUILD_NUMBER} have started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
+                    }
+                    post {
+                        always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
+                        }
+                        success {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        failure {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                        }
+                        unstable {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
+                }
+                stage('Run integration tests') {
+                    when {
+                        anyOf {
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                            branch 'development'
+                        }
+                    }
+                    steps {
+                        setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
                         }
                     }
                     post {
                         always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
