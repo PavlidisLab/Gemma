@@ -116,6 +116,8 @@
                     </property>
                 </bean>
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
+                    <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
+                    <property name="statusCode" value="500"/>
                     <property name="errorView" value="error/500"/>
                 </bean>
             </list>

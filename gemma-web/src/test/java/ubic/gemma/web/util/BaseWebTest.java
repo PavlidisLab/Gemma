@@ -49,8 +49,16 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
             HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
-            compositeResolver.setExceptionResolvers( Arrays.asList( resolver, new UnhandledExceptionResolver() ) );
+            compositeResolver.setExceptionResolvers( Arrays.asList( resolver, unhandledExceptionResolver() ) );
             return compositeResolver;
+        }
+
+        private UnhandledExceptionResolver unhandledExceptionResolver() {
+            UnhandledExceptionResolver resolver = new UnhandledExceptionResolver();
+            resolver.setErrorCategory( "ubic.gemma.web.loggers.UnhandledException" );
+            resolver.setStatusCode( 500 );
+            resolver.setErrorView( "error/500" );
+            return resolver;
         }
 
         @Bean
