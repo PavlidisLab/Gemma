@@ -24,6 +24,8 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
+import java.util.function.Function;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -164,14 +166,16 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Test
     public void testUpdateFactorValueCharacteristic() {
         Statement s1 = new Statement();
+        s1.setCategory( "bar" );
         s1.setSubject( "foo" );
         Statement s2 = new Statement();
+        s2.setCategory( "bar" );
         s2.setSubject( "bar" );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
         experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] {
                 new FactorValueValueObject( fv, s1 ),
                 new FactorValueValueObject( fv, s2 ) } );
-        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any( Function.class ) );
         verify( factorValueService ).saveStatement( fv, s1 );
         verify( factorValueService ).saveStatement( fv, s2 );
         verifyNoMoreInteractions( factorValueService );
@@ -225,11 +229,12 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         fv.setId( 1L );
         fv.setExperimentalFactor( new ExperimentalFactor() );
         fv.setNeedsAttention( true );
-        FactorValueValueObject fvvo = new FactorValueValueObject();
-        fvvo.setId( fv.getId() );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { new FactorValueValueObject( fv ) } );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        FactorValueValueObject fvvo = new FactorValueValueObject( fv );
+        fvvo.setCategory( "test" );
+        fvvo.setValue( "test" );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         verify( factorValueService ).saveStatement( eq( fv ), any() );
         verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
         verifyNoMoreInteractions( factorValueService );

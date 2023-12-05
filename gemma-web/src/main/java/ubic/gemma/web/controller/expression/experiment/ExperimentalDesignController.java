@@ -647,6 +647,18 @@ public class ExperimentalDesignController extends BaseController {
             if ( fvvo.getId() == null ) {
                 throw new IllegalArgumentException( "Factor value ID must be supplied" );
             }
+            if ( StringUtils.isBlank( fvvo.getCategory() ) ) {
+                throw new IllegalArgumentException( "A statement must have a category" );
+            }
+            if ( StringUtils.isBlank( fvvo.getValue() ) ) {
+                throw new IllegalArgumentException( "A statement must have a subject." );
+            }
+            if ( StringUtils.isBlank( fvvo.getPredicate() ) ^ StringUtils.isBlank( fvvo.getObject() ) ) {
+                throw new IllegalArgumentException( "Either provide both predicate and object or neither." );
+            }
+            if ( StringUtils.isBlank( fvvo.getSecondPredicate() ) ^ StringUtils.isBlank( fvvo.getSecondObject() ) ) {
+                throw new IllegalArgumentException( "Either provide both second predicate and second object or neither." );
+            }
             FactorValue fv = null;
             // reuse a previous FV, otherwise changes may be overwritten
             for ( int j = 0; j < i; j++ ) {
@@ -655,7 +667,7 @@ public class ExperimentalDesignController extends BaseController {
                 }
             }
             if ( fv == null ) {
-                fv = this.factorValueService.loadOrFail( fvvo.getId(), EntityNotFoundException::new, "Could not load factorvalue with id=" + fvvo.getId() );
+                fv = this.factorValueService.loadOrFail( fvvo.getId(), EntityNotFoundException::new );
             }
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
@@ -667,16 +679,6 @@ public class ExperimentalDesignController extends BaseController {
             } else {
                 c = Statement.Factory.newInstance();
             }
-            fvs[i] = fv;
-            statements[i] = c;
-        }
-
-        // now update
-        for ( int i = 0; i < fvvos.length; i++ ) {
-            // first time.
-            FactorValueValueObject fvvo = fvvos[i];
-            FactorValue fv = fvs[i];
-            Statement c = statements[i];
 
             // For related code see CharacteristicUpdateTaskImpl
 
@@ -715,13 +717,17 @@ public class ExperimentalDesignController extends BaseController {
                 c.setSecondObjectUri( null );
             }
 
-            c = factorValueService.saveStatement( fv, c );
-            log.debug( String.format( "Saved %s", c ) );
+            fvs[i] = fv;
+            statements[i] = c;
+        }
 
-            if ( fv.getNeedsAttention() ) {
-                factorValueService.clearNeedsAttentionFlag( fv,
+        // now save!
+        for ( int i = 0; i < fvs.length; i++ ) {
+            statements[i] = factorValueService.saveStatement( fvs[i], statements[i] );
+            if ( fvs[i].getNeedsAttention() ) {
+                factorValueService.clearNeedsAttentionFlag( fvs[i],
                         "The dataset does not need attention and all of its factor values were fixed." );
-                log.info( "Reverted needs attention flag for " + fv );
+                log.info( "Reverted needs attention flag for " + fvs[i] );
             }
         }
 
