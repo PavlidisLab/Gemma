@@ -22,7 +22,6 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
@@ -532,7 +531,7 @@ public class ExpressionExperimentDaoImpl
          * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
          * work to do.
          */
-        List raw = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Characteristic> raw = this.getSessionFactory().getCurrentSession().createQuery(
                 "select c from ExpressionExperiment e " + "join e.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
 
@@ -540,20 +539,20 @@ public class ExpressionExperimentDaoImpl
         /*
          * TODO we need to filter these better; some criteria could be included in the query
          */
-        for ( Object o : raw ) {
-            Characteristic c = ( Characteristic ) o;
+        for ( Characteristic c : raw ) {
 
             // filter. Could include this in the query if it isn't too complicated.
-            if ( StringUtils.isBlank( c.getCategoryUri() ) ) {
+            if ( c.getCategoryUri() == null ) {
                 continue;
             }
 
-            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+            if ( c.getValueUri() == null ) {
                 continue;
             }
 
-            if ( c.getCategory().equals( "MaterialType" ) || c.getCategory().equals( "molecular entity" )
-                    || c.getCategory().equals( "LabelCompound" ) ) {
+            if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
+                    || "molecular entity".equalsIgnoreCase( c.getCategory() )
+                    || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
                 continue;
             }
 
@@ -567,7 +566,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
+    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         //noinspection unchecked
         List<Statement> raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
                 + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
@@ -578,38 +577,38 @@ public class ExpressionExperimentDaoImpl
          */
         Collection<AnnotationValueObject> results = new HashSet<>();
         for ( Statement c : raw ) {
+            // ignore baseline conditions
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
+                continue;
+            }
+
+            // ignore batch factors
+            if ( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( c.getCategory() )
+                    || ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI.equals( c.getCategoryUri() ) ) {
+                continue;
+            }
+
+            // ignore timepoints
+            if ( "http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() ) ) {
+                continue;
+            }
+
+            // DE_include/exclude
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
+                continue;
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
+                continue;
+
             // ignore free text values
-            if ( StringUtils.isBlank( c.getSubjectUri() ) ) {
-                continue;
+            if ( c.getSubjectUri() != null ) {
+                results.add( new AnnotationValueObject( c, FactorValue.class ) );
             }
 
-            // ignore baseline and batch factorvalues (could include in the query)
-            if ( BaselineSelection.isBaselineCondition( c ) || ( StringUtils.isNotBlank( c.getCategory() )
-                    && c.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) ) {
-                continue;
-            }
-
-            // ignore timepoint.
-            if ( StringUtils.isNotBlank( c.getCategoryUri() ) && c.getCategoryUri()
-                    .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" ) ) {
-                continue;
-            }
-
-            if ( StringUtils.isNotBlank( c.getSubjectUri() ) ) {
-                // DE_include/exclude
-                if ( c.getSubjectUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
-                    continue;
-                if ( c.getSubjectUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
-                    continue;
-            }
-
-            results.add( new AnnotationValueObject( c, FactorValue.class ) );
-
-            if ( c.getObject() != null ) {
+            if ( c.getObject() != null && c.getObjectUri() != null ) {
                 results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
             }
 
-            if ( c.getSecondObject() != null ) {
+            if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
                 results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
             }
         }

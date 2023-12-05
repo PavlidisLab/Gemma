@@ -498,25 +498,13 @@ public class ExpressionExperimentServiceImpl
     public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
-
         Collection<String> seenTerms = new HashSet<>();
+
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
-
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
-
-            annotations.add( annotationValue );
-            seenTerms.add( annotationValue.getTermName() );
-        }
-
-        /*
-         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
-         * biomaterials? (non-redundant with tags)
-         */
-        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
-            if ( !seenTerms.contains( v.getTermName() ) ) {
-                annotations.add( v );
+            if ( seenTerms.add( annotationValue.getTermName() ) ) {
+                annotations.add( annotationValue );
             }
-            seenTerms.add( v.getTermName() );
         }
 
         /*
@@ -524,10 +512,19 @@ public class ExpressionExperimentServiceImpl
          * non-batch, non-redundant with tags). This is tricky because they are so specific...
          */
         for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
-            if ( !seenTerms.contains( v.getTermName() ) ) {
+            if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
             }
-            seenTerms.add( v.getTermName() );
+        }
+
+        /*
+         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
+         * biomaterials? (non-redundant with tags)
+         */
+        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
+            if ( seenTerms.add( v.getTermName() ) ) {
+                annotations.add( v );
+            }
         }
 
         return annotations;
@@ -1434,7 +1431,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
+        return this.expressionExperimentDao.getAnnotationsByFactorValues( eeId );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
