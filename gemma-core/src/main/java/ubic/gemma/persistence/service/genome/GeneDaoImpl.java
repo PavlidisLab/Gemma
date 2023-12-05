@@ -412,7 +412,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Gene thawLite( final Gene gene ) {
-        return this.thaw( gene );
+        if ( gene.getId() == null )
+            return gene;
+
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g from Gene g left join fetch g.taxon left join fetch g.products where g.id=:gid" )
+                .setParameter( "gid", gene.getId() )
+                .uniqueResult();
     }
 
     @Override
