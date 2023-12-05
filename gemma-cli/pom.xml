@@ -29,7 +29,7 @@
                         </program>
                     </programs>
                     <!-- this allows Log4j 2 to lookup for Log4j 1.2 configuration -->
-                    <extraJvmArguments>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Djava.awt.headless=true</extraJvmArguments>
+                    <extraJvmArguments>${extraJvmArgs}</extraJvmArguments>
                     <!-- Gemma CLI extensions can be dropped in that folder -->
                     <endorsedDir>contrib</endorsedDir>
                 </configuration>
