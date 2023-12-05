@@ -556,6 +556,10 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
+                continue;
+            }
+
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
             results.add( annotationValue );
