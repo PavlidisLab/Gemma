@@ -3,63 +3,118 @@ package ubic.gemma.web.logging;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
+import com.slack.api.methods.request.chat.ChatPostMessageRequest;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.ErrorHandler;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.util.Objects;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class SlackAppenderTest {
 
-    private static final Log log = LogFactory.getLog( SlackAppenderTest.class );
+    @Rule
+    public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+    @Mock
     private Slack mockedSlack;
+
+    @Mock
+    private MethodsClient mockedMethodClient;
+
+    @Mock
+    private ErrorHandler errorHandler;
+
+    private SlackAppender appender;
+    private String slackToken = "1234";
+    private String slackChannel = "#gemma";
 
     @Before
     public void setUp() {
-        String slackToken = System.getProperty( "gemma.slack.token" );
-        String slackChannel = System.getProperty( "gemma.slack.channel" );
-        mockedSlack = mock( Slack.class );
-        MethodsClient mockedMethodClient = mock( MethodsClient.class );
         when( mockedSlack.methods( any( String.class ) ) ).thenReturn( mockedMethodClient );
-        assumeTrue( "This test must be run with -Dlog4j1.compatibility=true.",
-                Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
-        assumeTrue( "Both -Dgemma.slack.token and -Dgemma.slack.channel must be set for this test.",
-                slackToken != null && slackChannel != null );
-    }
-
-    @After
-    public void tearDown() {
-        reset( mockedSlack );
+        appender = new SlackAppender( mockedSlack );
+        appender.setErrorHandler( errorHandler );
+        appender.setToken( slackToken );
+        appender.setChannel( slackChannel );
+        appender.setThreshold( Level.ERROR );
+        appender.setLayout( new org.apache.log4j.PatternLayout( "%m" ) );
     }
 
     @Test
-    public void test() throws SlackApiException, IOException {
-        try {
-            raiseStackTrace();
-            fail( "This should not be reached." );
-        } catch ( IllegalArgumentException e ) {
-            log.error( "This is just a test for the Log4j Slack appender.", e );
-        }
-        // TODO: verify( mockedSlack ).methods( slackToken );
-        // TODO: verify( mockedSlack.methods( slackToken ) ).chatPostMessage( any( ChatPostMessageRequest.class ) );
+    public void test() throws Exception {
+        LoggingEvent event = mock();
+        when( event.getRenderedMessage() ).thenReturn( "test" );
+        when( event.getLevel() ).thenReturn( Level.ERROR );
+        appender.doAppend( event );
+        appender.close();
+        verify( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
+        ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
+        verify( mockedMethodClient ).chatPostMessage( captor.capture() );
+        assertThat( captor.getValue() ).satisfies( m -> {
+            assertThat( m.getText() ).isEqualTo( "test" );
+        } );
+        verify( mockedSlack ).close();
+    }
+
+    @Test
+    public void testWithStacktrace() throws SlackApiException, IOException {
+        LoggingEvent event = mock();
+        when( event.getRenderedMessage() ).thenReturn( "test" );
+        when( event.getLevel() ).thenReturn( Level.ERROR );
+        ThrowableInformation ti = mock();
+        when( ti.getThrowable() ).thenReturn( new RuntimeException( "foo", new RuntimeException( "bar" ) ) );
+        when( event.getThrowableInformation() ).thenReturn( ti );
+        appender.doAppend( event );
+        ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
+        verify( mockedMethodClient ).chatPostMessage( captor.capture() );
+        assertThat( captor.getValue() ).satisfies( m -> {
+            assertThat( m.getText() ).isEqualTo( "test" );
+            assertThat( m.getAttachments() )
+                    .hasSize( 1 )
+                    .first()
+                    .satisfies( att -> {
+                        assertThat( att )
+                                .hasFieldOrPropertyWithValue( "title", "RuntimeException: foo" )
+                                .hasFieldOrPropertyWithValue( "fallback", "This attachment normally contains an error stacktrace." );
+                        assertThat( att.getText() ).contains( "Caused by: java.lang.RuntimeException: bar" );
+                    } );
+        } );
     }
 
     @Test
     public void testWarnLogsShouldNotBeAppended() {
-        log.warn( "This should not be captured by the Slack appender." );
-        // TODO: verifyNoInteractions( mockedSlack );
+        LoggingEvent event = mock();
+        when( event.getLevel() ).thenReturn( Level.WARN );
+        appender.doAppend( event );
+        verifyNoInteractions( mockedSlack );
     }
 
-    private void raiseStackTrace() {
-        throw new IllegalArgumentException( "This is the cause of the error which should be part of an attachment." );
+    @Test
+    public void testWhenSlackApiRaisesException() throws SlackApiException, IOException {
+        SlackApiException e = new SlackApiException( mock(), "test" );
+        doThrow( e ).when( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
+        LoggingEvent event = mock();
+        when( event.getLevel() ).thenReturn( Level.ERROR );
+        appender.doAppend( event );
+        verify( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
+        verify( errorHandler ).error( "Failed to send logging event to Slack channel #gemma.", e, 1000, event );
     }
 
+    @Test
+    public void testWhenSlackFailsToClose() throws Exception {
+        SlackApiException e = new SlackApiException( mock(), "test" );
+        doThrow( e ).when( mockedSlack ).close();
+        appender.close();
+        verify( errorHandler ).error( "Failed to close the Slack instance.", e, 1001 );
+    }
 }
