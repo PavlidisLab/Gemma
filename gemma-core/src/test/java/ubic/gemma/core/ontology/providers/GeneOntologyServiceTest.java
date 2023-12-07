@@ -20,8 +20,8 @@ package ubic.gemma.core.ontology.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -33,7 +33,6 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.TestComponent;
@@ -50,7 +49,7 @@ import static org.mockito.Mockito.mock;
  * @author Paul
  */
 @ContextConfiguration
-public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
+public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     @Configuration
@@ -86,15 +85,17 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private GeneOntologyService gos;
 
-    @Before
-    public void setUp() throws InterruptedException, IOException {
-        /*
-         * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
-         */
-        InputStream is = new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        // we must force indexing to get consistent test results
-        OntologyTestUtils.initialize( gos, is );
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if ( !gos.isOntologyLoaded() ) {
+            /*
+             * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
+             */
+            InputStream is = new GZIPInputStream(
+                    new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
+            // we must force indexing to get consistent test results
+            gos.initialize( is, true );
+        }
     }
 
     @Test
