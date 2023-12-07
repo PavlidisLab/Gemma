@@ -2,15 +2,19 @@ package ubic.gemma.core.util.test;
 
 import lombok.extern.apachecommons.CommonsLog;
 import net.sf.ehcache.Cache;
+import org.apache.commons.io.file.PathUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
@@ -20,6 +24,9 @@ import ubic.gemma.persistence.util.EhcacheConfig;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -28,10 +35,27 @@ import static org.junit.Assert.*;
 @ContextConfiguration
 public class HibernateConfigTest extends BaseDatabaseTest {
 
+    private static Path cacheDir;
+
+    @BeforeClass
+    public static void createCacheDirectory() throws IOException {
+        cacheDir = Files.createTempDirectory( "gemma-cache" );
+    }
+
+    @AfterClass
+    public static void removeCacheDirectory() throws IOException {
+        PathUtils.deleteDirectory( cacheDir );
+    }
+
     @Import(EhcacheConfig.class)
     @Configuration
     @TestComponent
     static class HibernateConfigTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.cache.dir=" + cacheDir );
+        }
 
         @Override
         @DependsOn("ehcache")
