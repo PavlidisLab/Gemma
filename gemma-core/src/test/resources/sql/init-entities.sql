@@ -29,17 +29,18 @@ alter table GENE2CS
 drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
-    ID                       bigint,
-    NAME                     varchar(255),
-    DESCRIPTION              text,
-    CATEGORY                 varchar(255),
-    CATEGORY_URI             varchar(255),
-    `VALUE`                  varchar(255),
-    VALUE_URI                varchar(255),
-    ORIGINAL_VALUE           varchar(255),
-    EVIDENCE_CODE            varchar(255),
-    EXPRESSION_EXPERIMENT_FK bigint,
-    LEVEL                    varchar(255),
+    ID                                    bigint,
+    NAME                                  varchar(255),
+    DESCRIPTION                           text,
+    CATEGORY                              varchar(255),
+    CATEGORY_URI                          varchar(255),
+    `VALUE`                               varchar(255),
+    VALUE_URI                             varchar(255),
+    ORIGINAL_VALUE                        varchar(255),
+    EVIDENCE_CODE                         varchar(255),
+    EXPRESSION_EXPERIMENT_FK              bigint,
+    ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int not null default 0,
+    LEVEL                                 varchar(255),
     primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
 );
 
