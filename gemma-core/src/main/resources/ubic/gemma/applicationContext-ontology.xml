@@ -12,6 +12,8 @@
         <constructor-arg value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
         <property name="autoLoad" value="${load.ontologies}"/>
         <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+        <!-- TODO: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged -->
+        <property name="processImports" value="false"/>
     </bean>
     <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg
