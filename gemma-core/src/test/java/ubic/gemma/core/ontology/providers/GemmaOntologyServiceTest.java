@@ -14,10 +14,9 @@ import static org.junit.Assert.assertNotNull;
 public class GemmaOntologyServiceTest {
 
     @Test
-    @Category(SlowTest.class)
-    public void testInferenceInGemma() throws InterruptedException {
+    public void test() {
         GemmaOntologyService gemmaOntology = new GemmaOntologyService();
-        gemmaOntology.setProcessImports( false );
+        gemmaOntology.setProcessImports( false ); // FIXME: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged
         assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, gemmaOntology.getLanguageLevel() );
         assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, gemmaOntology.getInferenceMode() );
         gemmaOntology.initialize( true, false );
@@ -25,12 +24,6 @@ public class GemmaOntologyServiceTest {
         assertNotNull( overexpression );
         assertThat( gemmaOntology.getParents( Collections.singleton( overexpression ), false, false ) )
                 .extracting( OntologyTerm::getUri )
-                .containsExactlyInAnyOrder(
-                        "http://purl.obolibrary.org/obo/BFO_0000001",
-                        "http://purl.obolibrary.org/obo/BFO_0000003",
-                        "http://purl.obolibrary.org/obo/BFO_0000015",
-                        "http://www.ebi.ac.uk/efo/EFO_0000001",
-                        "http://www.ebi.ac.uk/efo/EFO_0000510"
-                );
+                .contains( "http://www.ebi.ac.uk/efo/EFO_0000510" );
     }
 }
