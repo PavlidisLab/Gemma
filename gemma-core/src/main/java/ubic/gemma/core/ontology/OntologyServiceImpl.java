@@ -388,32 +388,31 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> ontologyCache.getParents( os, terms, direct, includeAdditionalProperties ) );
+        Set<OntologyTerm> toQuery = new HashSet<>( terms );
+        Set<OntologyTerm> results = new HashSet<>();
+        while ( !toQuery.isEmpty() ) {
+            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties ) );
+            results.addAll( newResults );
+            // toQuery = newResults - toQuery
+            newResults.removeAll( toQuery );
+            toQuery.clear();
+            toQuery.addAll( newResults );
+        }
+        return results;
     }
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        StopWatch timer = StopWatch.createStarted();
-        try {
-            return combineInThreads( os -> {
-                StopWatch timer2 = StopWatch.createStarted();
-                try {
-                    return ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties );
-                } finally {
-                    if ( timer2.getTime() > 1000 ) {
-                        log.warn( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
-                    } else {
-                        log.trace( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
-                    }
-                }
-            } );
-        } finally {
-            if ( timer.getTime() > 1000 ) {
-                log.warn( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
-            } else {
-                log.debug( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
-            }
+        Set<OntologyTerm> toQuery = new HashSet<>( terms );
+        Set<OntologyTerm> results = new HashSet<>();
+        while ( !toQuery.isEmpty() ) {
+            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties ) );
+            results.addAll( newResults );
+            newResults.removeAll( toQuery );
+            toQuery.clear();
+            toQuery.addAll( newResults );
         }
+        return results;
     }
 
     @Override
