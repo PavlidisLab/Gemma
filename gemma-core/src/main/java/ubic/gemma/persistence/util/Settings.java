@@ -175,10 +175,10 @@ public class Settings {
             }
         }
 
-        if ( Settings.log.isDebugEnabled() ) {
-            Settings.log.debug( "********** Configuration details ***********" );
+        if ( Settings.log.isTraceEnabled() ) {
+            Settings.log.trace( "********** Configuration details ***********" );
             ConfigurationUtils.dump( Settings.config, System.err );
-            Settings.log.debug( "********** End of configuration details ***********" );
+            Settings.log.trace( "********** End of configuration details ***********" );
         }
 
     }
