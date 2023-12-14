@@ -5,12 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,20 +41,34 @@ public class SettingsConfig {
         MutablePropertySources result = new MutablePropertySources();
         boolean userConfigLoaded = false;
 
+        log.debug( "Loading configuration from system properties." );
+        result.addLast( new PropertiesPropertySource( "system", System.getProperties() ) );
+
+        String gemmaConfig = System.getProperty( "gemma.config" );
+        if ( gemmaConfig != null ) {
+            Path p = Paths.get( gemmaConfig );
+            log.debug( "Loading configuration from " + p.toAbsolutePath() + " since -Dgemma.config is defined." );
+            FileSystemResource r = new FileSystemResource( p.toFile() );
+            if ( !r.exists() ) {
+                throw new RuntimeException( p + " could not be loaded." );
+            }
+            warnIfReadableByGroupOrOthers( p );
+            result.addLast( new ResourcePropertySource( r ) );
+            userConfigLoaded = true;
+        }
+
         // load configuration from $CATALINA_BASE
         // TODO: move this in Gemma Web
         String catalinaBase = System.getenv( "CATALINA_BASE" );
         if ( catalinaBase != null ) {
             Path p = Paths.get( catalinaBase, "Gemma.properties" );
-            File f = p.toFile();
-            log.debug( "Loading configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
-            FileSystemResource r = new FileSystemResource( f );
-            if ( !r.exists() ) {
-                throw new RuntimeException( f.getAbsolutePath() + " could not be loaded." );
+            FileSystemResource r = new FileSystemResource( p.toFile() );
+            if ( r.exists() ) {
+                log.debug( "Loading configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
+                warnIfReadableByGroupOrOthers( p );
+                result.addLast( new ResourcePropertySource( r ) );
+                userConfigLoaded = true;
             }
-            warnIfReadableByGroupOrOthers( p );
-            result.addLast( new ResourcePropertySource( r ) );
-            userConfigLoaded = true;
         }
 
         // load configuration from the home directory
@@ -61,6 +76,7 @@ public class SettingsConfig {
         Path p = Paths.get( System.getProperty( "user.home" ), "Gemma.properties" );
         FileSystemResource r = new FileSystemResource( p.toFile() );
         if ( r.exists() ) {
+            log.debug( "Loading configuration from " + p.toAbsolutePath() + "." );
             warnIfReadableByGroupOrOthers( p );
             result.addLast( new ResourcePropertySource( r ) );
             userConfigLoaded = true;
@@ -71,9 +87,19 @@ public class SettingsConfig {
             throw new RuntimeException( "Gemma.properties could not be loaded and no other user configuration were supplied." );
         }
 
+        log.debug( "Loading default configuration files from classpath." );
         result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
         result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
-        // FIXME: local local.properties from ${gemma.appdata.home}
+        for ( PropertySource<?> ps : result ) {
+            String appDataHome = ( String ) ps.getProperty( "gemma.appdata.home" );
+            if ( appDataHome != null ) {
+                // FIXME: handle placeholder substitution in gemma.appdata.home
+                Path p2 = Paths.get( appDataHome, "local.properties" );
+                log.debug( "Loading configuration from " + p2.toAbsolutePath() + "." );
+                result.addLast( new ResourcePropertySource( new FileSystemResource( p2.toFile() ) ) );
+                break;
+            }
+        }
         result.addLast( new ResourcePropertySource( new ClassPathResource( "ubic/gemma/version.properties" ) ) );
 
         return result;
