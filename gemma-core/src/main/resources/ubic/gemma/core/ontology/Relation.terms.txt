@@ -21,7 +21,7 @@ http://www.ebi.ac.uk/efo/EFO_0000784	has_disease_location
 http://gemma.msl.ubc.ca/ont/TGEMO_00167	delivered for duration
 http://gemma.msl.ubc.ca/ont/TGEMO_00166	delivered at dose
 http://gemma.msl.ubc.ca/ont/TGEMO_00168	has developmental stage
-http://gemma.msl.ubc.ca/ont/TGEMO:00169	positive for product of gene
-http://gemma.msl.ubc.ca/ont/TGEMO:00170	negative for product of gene
-http://gemma.msl.ubc.ca/ont/TGEMO:00171	induced by
+http://gemma.msl.ubc.ca/ont/TGEMO_00169	positive for product of gene
+http://gemma.msl.ubc.ca/ont/TGEMO_00170	negative for product of gene
+http://gemma.msl.ubc.ca/ont/TGEMO_00171	induced by
 http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to
