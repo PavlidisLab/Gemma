@@ -148,6 +148,7 @@ public class Settings {
         if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
             File f2 = Paths.get( gemmaAppDataHome, "local.properties" ).toFile();
             try {
+                log.debug( "Loading configuration from " + f2.getAbsolutePath() + "." );
                 Settings.config.addConfiguration( ConfigUtils.loadConfig( f2 ) );
             } catch ( ConfigurationException e ) {
                 throw new RuntimeException( "Local configuration could not be loaded from " + f2.getAbsolutePath() + ".", e );
