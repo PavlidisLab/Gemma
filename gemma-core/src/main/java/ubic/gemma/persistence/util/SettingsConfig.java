@@ -39,15 +39,15 @@ public class SettingsConfig {
 
     private static PropertySources propertySources() throws IOException {
         MutablePropertySources result = new MutablePropertySources();
-        boolean userConfigLoaded = false;
 
-        log.debug( "Loading configuration from system properties." );
         result.addLast( new PropertiesPropertySource( "system", System.getProperties() ) );
+
+        boolean userConfigLoaded = false;
 
         String gemmaConfig = System.getProperty( "gemma.config" );
         if ( gemmaConfig != null ) {
             Path p = Paths.get( gemmaConfig );
-            log.debug( "Loading configuration from " + p.toAbsolutePath() + " since -Dgemma.config is defined." );
+            log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since -Dgemma.config is defined." );
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( !r.exists() ) {
                 throw new RuntimeException( p + " could not be loaded." );
@@ -59,12 +59,12 @@ public class SettingsConfig {
 
         // load configuration from $CATALINA_BASE
         // TODO: move this in Gemma Web
-        String catalinaBase = System.getenv( "CATALINA_BASE" );
-        if ( catalinaBase != null ) {
+        String catalinaBase;
+        if ( !userConfigLoaded && ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
             Path p = Paths.get( catalinaBase, "Gemma.properties" );
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( r.exists() ) {
-                log.debug( "Loading configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
+                log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
                 warnIfReadableByGroupOrOthers( p );
                 result.addLast( new ResourcePropertySource( r ) );
                 userConfigLoaded = true;
@@ -75,8 +75,8 @@ public class SettingsConfig {
         // TODO: move this in Gemma CLI
         Path p = Paths.get( System.getProperty( "user.home" ), "Gemma.properties" );
         FileSystemResource r = new FileSystemResource( p.toFile() );
-        if ( r.exists() ) {
-            log.debug( "Loading configuration from " + p.toAbsolutePath() + "." );
+        if ( !userConfigLoaded && r.exists() ) {
+            log.debug( "Loading user configuration from " + p.toAbsolutePath() + "." );
             warnIfReadableByGroupOrOthers( p );
             result.addLast( new ResourcePropertySource( r ) );
             userConfigLoaded = true;

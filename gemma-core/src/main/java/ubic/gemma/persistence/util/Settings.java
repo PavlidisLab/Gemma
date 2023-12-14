@@ -74,8 +74,8 @@ public class Settings {
     private static final Log log = LogFactory.getLog( Settings.class.getName() );
 
     static {
-
         config = new CompositeConfiguration();
+
         Settings.config.addConfiguration( new SystemConfiguration() );
 
         /*
@@ -92,7 +92,7 @@ public class Settings {
         if ( gemmaConfig != null ) {
             File f = Paths.get( gemmaConfig ).toFile();
             try {
-                log.debug( "Loading configuration from " + f.getAbsolutePath() + " since -Dgemma.config is defined." );
+                log.debug( "Loading user configuration from " + f.getAbsolutePath() + " since -Dgemma.config is defined." );
                 Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
                 userConfigLoaded = true;
             } catch ( ConfigurationException e ) {
@@ -101,11 +101,11 @@ public class Settings {
         }
 
         String catalinaBase;
-        if ( ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
+        if ( !userConfigLoaded && ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
             File f = Paths.get( catalinaBase, Settings.USER_CONFIGURATION ).toFile();
             if ( f.exists() ) {
                 try {
-                    log.debug( "Loading configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
+                    log.debug( "Loading user configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
                     Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
                     userConfigLoaded = true;
                 } catch ( ConfigurationException e ) {
@@ -115,9 +115,9 @@ public class Settings {
         }
 
         File f = Paths.get( System.getProperty( "user.home" ), Settings.USER_CONFIGURATION ).toFile();
-        if ( f.exists() ) {
+        if ( !userConfigLoaded && f.exists() ) {
             try {
-                log.debug( "Loading configuration from " + f.getAbsolutePath() + "." );
+                log.debug( "Loading user configuration from " + f.getAbsolutePath() + "." );
                 Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
                 userConfigLoaded = true;
             } catch ( ConfigurationException e ) {
