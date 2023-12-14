@@ -498,7 +498,7 @@ public class ExpressionExperimentServiceImpl
     public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
-        Collection<String> seenTerms = new HashSet<>();
+        Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
