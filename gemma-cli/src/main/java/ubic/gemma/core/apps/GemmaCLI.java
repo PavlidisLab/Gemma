@@ -110,6 +110,7 @@ public class GemmaCLI {
             } catch ( ParseException | IllegalArgumentException e ) {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
+                GemmaCLI.printHelp( options, null );
                 System.exit( 1 );
                 return;
             }
@@ -126,9 +127,10 @@ public class GemmaCLI {
                 try {
                     loggingConfigurer.configureLogger( loggerName, Integer.parseInt( vals[1] ) );
                 } catch ( IllegalArgumentException e ) {
-                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", VERBOSITY_OPTION,
+                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION,
                             loggerName,
                             ExceptionUtils.getRootCauseMessage( e ) );
+                    GemmaCLI.printHelp( options, null );
                     System.exit( 1 );
                     return;
                 }
