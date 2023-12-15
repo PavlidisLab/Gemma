@@ -115,7 +115,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             }
 
             if ( layout == null || layout.isEmpty() ) {
-                log.error( "Did not find cached layout for " + vec.getId() );
+                log.warn( "Did not find cached layout for " + vec.getId() );
                 continue;
             }
 
