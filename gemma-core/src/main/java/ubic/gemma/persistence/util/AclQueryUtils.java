@@ -9,6 +9,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.util.Assert;
 
 import java.util.Arrays;
 
@@ -49,13 +50,13 @@ public class AclQueryUtils {
      * Select all the SIDs that belong to a given user (specified by a :userName parameter).
      */
     //language=HQL
-    static final String CURRENT_USER_SIDS_HQL =
+    private static final String CURRENT_USER_SIDS_HQL =
             "select sid from UserGroup as ug join ug.authorities as ga, AclGrantedAuthoritySid sid "
                     + "where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
                     + "and ug.name in (select ug.name from UserGroup ug join ug.groupMembers memb where memb.userName = :" + USER_NAME_PARAM + ")";
 
     //language=HQL
-    static final String ANONYMOUS_SID_HQL = "select sid from AclGrantedAuthoritySid sid where sid.grantedAuthority = 'IS_AUTHENTICATED_ANONYMOUSLY'";
+    private static final String ANONYMOUS_SID_HQL = "select sid from AclGrantedAuthoritySid sid where sid.grantedAuthority = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
      * Native SQL version of {@link #CURRENT_USER_SIDS_HQL}.
@@ -73,21 +74,32 @@ public class AclQueryUtils {
     static final String ANONYMOUS_SID_SQL = "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
+     * Create a HQL restriction clause with the {@link BasePermission#READ} permission.
+     * @see #formAclRestrictionClause(String, int)
+     */
+    public static String formAclRestrictionClause( String aoiIdColumn ) {
+        return formAclRestrictionClause( aoiIdColumn, BasePermission.READ.getMask() );
+    }
+
+    /**
      * Create an HQL join clause for {@link gemma.gsec.acl.domain.AclObjectIdentity}, {@link gemma.gsec.acl.domain.AclGrantedAuthoritySid}
-     * and a restriction clause to limit the result only to objects the currently logged user can access.
+     * and a restriction clause to limit the result only to objects the current user can access.
      * <p>
      * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.
      * <p>
      * FIXME: this ACL jointure is really annoying because it is one-to-many, maybe handling everything in a sub-query
-     * would be preferable?
+     *        would be preferable?
      *
-     * @param aoiIdColumn column for the identifier e.g. "ee.id"
+     * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
+     *                    {@link #addAclParameters(Query, Class)} afterward
+     * @param mask        a mask with requested permissions
      * @return clause to add to the query after any jointure
      */
-    public static String formAclRestrictionClause( String aoiIdColumn ) {
+    public static String formAclRestrictionClause( String aoiIdColumn, int mask ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
+        Assert.isTrue( mask > 0, "The mask must have at least one bit set." );
         //language=HQL
         String q = ", AclObjectIdentity as " + AOI_ALIAS + " join " + AOI_ALIAS + ".ownerSid " + SID_ALIAS;
         // for non-admin, we have to include aoi.entries
@@ -101,16 +113,16 @@ public class AclQueryUtils {
             if ( SecurityUtil.isUserAnonymous() ) {
                 // For anonymous users, only pick publicly readable data
                 //language=HQL
-                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + BasePermission.READ.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
+                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
             } else {
                 // For non-admin users, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
                 q += " and ("
                         // user own the object
                         + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
                         // specific rights to the object
-                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + ( BasePermission.READ.getMask() | BasePermission.WRITE.getMask() ) + ") <> 0) "
+                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0) "
                         // publicly available
-                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + BasePermission.READ.getMask() + ") <> 0)"
+                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0)"
                         + ")";
             }
         }
@@ -122,6 +134,8 @@ public class AclQueryUtils {
      * <p>
      * Note: unlike the HQL version, this query uses {@code on} to restrict the jointure, so you can define the
      * {@code where} clause yourself.
+     * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
+     *                    {@link #addAclParameters(Query, Class)} afterward
      *
      * @see #formAclRestrictionClause(String)
      */
@@ -142,22 +156,31 @@ public class AclQueryUtils {
     }
 
     /**
-     * Native flavour of the ACL restriction clause.
-     *
-     * @see #formAclRestrictionClause(String)
+     * Native flavour of the ACL restriction clause with a {@link BasePermission#READ} permission.
+     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, int)
      */
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor ) {
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, BasePermission.READ.getMask() );
+    }
+
+    /**
+     * Native flavour of the ACL restriction clause.
+     * @param sessionFactoryImplementor a session factory implementor that will be used to adjust the SQL generated
+     *                                  based on the dialect
+     * @param mask                      a mask with requested permissions
+     * @see #formAclRestrictionClause(String, int)
+     */
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, int mask ) {
         SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-        String read = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", BasePermission.READ.getMask() ), sessionFactoryImplementor );
-        String readOrWrite = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", BasePermission.READ.getMask() | BasePermission.WRITE.getMask() ), sessionFactoryImplementor );
+        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", mask ), sessionFactoryImplementor );
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
-            return " and (" + read + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
+            return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
         } else if ( !SecurityUtil.isUserAdmin() ) {
             return " and ("
                     + SID_ALIAS + ".PRINCIPAL = :" + USER_NAME_PARAM + " "
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + readOrWrite + " <> 0) "
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + read + " <> 0)"
+                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + renderedMask + " <> 0) "
+                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + renderedMask + " <> 0)"
                     + ")";
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
@@ -177,13 +200,15 @@ public class AclQueryUtils {
      * @throws QueryParameterException if any defined parameters are missing, which is typically due to a missing prior
      *                                 {@link #formAclRestrictionClause(String)}.
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public static void addAclParameters( Query query, Class<? extends Securable> aoiType ) throws QueryParameterException {
         query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
         if ( SecurityUtil.isUserAnonymous() ) {
-            // sid 4 = IS_AUTHENTICATED_ANONYMOUSLY
+            // a constant is used directly in ANONYMOUS_SID_SQL, so no binding is necessary
         } else if ( !SecurityUtil.isUserAdmin() ) {
             query.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
+        } else {
+            // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
         }
-        // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
     }
 }
