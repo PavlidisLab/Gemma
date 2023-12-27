@@ -136,6 +136,7 @@ public class GeoConverterImpl implements GeoConverter {
     private ExternalDatabase genbank;
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
+    private boolean skipDataVectors = false;
 
     @Override
     public void clear() {
@@ -146,8 +147,17 @@ public class GeoConverterImpl implements GeoConverter {
         taxonScientificNameMap.clear();
     }
 
+
     @Override
     public Collection<Object> convert( Collection<? extends GeoData> geoObjects ) {
+        return convert( geoObjects, false );
+    }
+
+    @Override
+    public Collection<Object> convert( Collection<? extends GeoData> geoObjects, boolean skipDataVectors ) {
+
+        this.skipDataVectors = skipDataVectors;
+
         for ( Object geoObject : geoObjects ) {
             Object convertedObject = this.convert( ( GeoData ) geoObject );
             if ( convertedObject != null ) {
@@ -166,6 +176,14 @@ public class GeoConverterImpl implements GeoConverter {
 
     @Override
     public Object convert( GeoData geoObject ) {
+        return convert( geoObject, false );
+    }
+
+    @Override
+    public Object convert( GeoData geoObject, boolean skipDataVectors ) {
+
+        this.skipDataVectors = skipDataVectors;
+
         if ( geoObject == null ) {
             GeoConverterImpl.log.warn( "Null object" );
             return null;
@@ -979,7 +997,8 @@ public class GeoConverterImpl implements GeoConverter {
         ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: " + platform
                 .getLastUpdateDate() );
 
-        this.convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
+        if ( !skipDataVectors )
+            this.convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
 
         this.convertSubsetAssociations( expExp, geoDataset );
 
@@ -2036,7 +2055,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( dataSets.size() == 0 ) {
             // we miss extra description and the subset information.
-            if ( series.getValues().hasData() ) {
+            if ( series.getValues().hasData() && !this.skipDataVectors ) {
                 this.convertSeriesDataVectors( series, expExp );
             }
         } else {

@@ -311,7 +311,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         Object obj = parseResult.iterator().next();
         GeoSeries series = ( GeoSeries ) obj;
-        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
+        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series, true );
         this.getPubMedInfo( result );
 
         /*
