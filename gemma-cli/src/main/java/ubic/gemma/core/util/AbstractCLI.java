@@ -567,11 +567,11 @@ public abstract class AbstractCLI implements CLI {
             StringBuilder buf = new StringBuilder();
             buf.append( source != null ? source : "Unknown object" );
             if ( message != null ) {
-                buf.append( ":\n\t" )
-                        .append( message.replace( "\n", "\n\t" ) );
+                buf.append( "\t" )
+                        .append( message.replace( "\n", "\n\t" ) ); // FIXME We don't want newlines here at all, but I'm not sure what condition this is meant to fix exactly.
             }
             if ( throwable != null ) {
-                buf.append( "\n\t" )
+                buf.append( "\t" )
                         .append( "Reason: " )
                         .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }
