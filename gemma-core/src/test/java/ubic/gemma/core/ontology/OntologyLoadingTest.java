@@ -10,11 +10,12 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
-import ubic.basecode.ontology.providers.CellLineOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.time.Duration;
@@ -52,6 +53,12 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private GemmaOntologyService tgemo;
 
+    @Autowired
+    private MammalianPhenotypeOntologyService mp;
+
+    @Autowired
+    private MondoOntologyService mondo;
+
     @Test
     public void testThatChebiDoesNotHaveInferenceEnabled() {
         assertThat( chebi.getInferenceMode() ).isEqualTo( OntologyService.InferenceMode.NONE );
@@ -66,7 +73,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Category(SlowTest.class)
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
-        List<AbstractOntologyMemoryBackedService> ignoredOntologies = Arrays.asList( efo, chebi );
+        List<AbstractOntologyMemoryBackedService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo );
         List<OntologyService> services = new ArrayList<>();
         List<Future<?>> futures = new ArrayList<>();
         for ( OntologyService os : ontologyServices ) {
