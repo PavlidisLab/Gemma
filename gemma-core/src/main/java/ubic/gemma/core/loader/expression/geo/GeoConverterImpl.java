@@ -569,10 +569,9 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
 
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ncRNA-Seq" )
-                            || sample.getLibStrategy().equals( "miRNA-Seq" ) || sample.getLibStrategy()
+                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
                             .equals( "ssRNA-seq" ) ||  sample.getLibStrategy().equalsIgnoreCase( "Other" )) {
-                        // I've added "other" to be allowed just to avoid being too strict.
+                        // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
                 }
