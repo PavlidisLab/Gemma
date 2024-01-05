@@ -571,7 +571,8 @@ public class GeoConverterImpl implements GeoConverter {
                     // have to drill down.
                     if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ncRNA-Seq" )
                             || sample.getLibStrategy().equals( "miRNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) ) {
+                            .equals( "ssRNA-seq" ) ||  sample.getLibStrategy().equalsIgnoreCase( "Other" )) {
+                        // I've added "other" to be allowed just to avoid being too strict.
                         continue;
                     }
                 }
