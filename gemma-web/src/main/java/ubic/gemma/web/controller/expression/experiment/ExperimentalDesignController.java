@@ -313,7 +313,7 @@ public class ExperimentalDesignController extends BaseController {
                 String value = ch.getValue();
                 if ( StringUtils.isBlank( category ) ) {
                     /*
-                    Experimental: split on ":" or "=", use first part as the category.
+                    Experimental: split on ":" or "=", use first part as the category. This should no longer be necessary
                      */
                     if ( StringUtils.isNotBlank( value ) && value.matches( ".+[:=].+" ) ) { // note: GEO only allows ":" now but we have "=" in the db for older entries.
                         String[] split = value.split( "[:=]", 2 );
@@ -331,13 +331,13 @@ public class ExperimentalDesignController extends BaseController {
         }
 
         /*
-        find ones that don't have a value for each sample, or which have more values than samples, or which are constants
+        find ones that don't meet criteria for display e.g are constant across all samples
          */
         Collection<String> toremove = new HashSet<>();
         for ( String category : map.keySet() ) {
             //log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
-                toremove.add( category );
+              //  toremove.add( category ); // this isn't really worth it and hides useful information.
                 continue;
             }
 
@@ -357,7 +357,7 @@ public class ExperimentalDesignController extends BaseController {
                     String mappedCategory = ch.getCategory();
                     String mappedValue = ch.getValue();
 
-                    if ( StringUtils.isBlank( mappedCategory ) ) {
+                    if ( StringUtils.isBlank( mappedCategory ) ) { // this should no longer be needed
                         // redo split (will refactor later)
                         if ( StringUtils.isNotBlank( mappedValue ) && mappedValue.matches( ".+[:=].+" ) ) {
                             String[] split = mappedValue.split( "[:=]", 2 );

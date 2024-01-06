@@ -41,7 +41,6 @@ Asthma	asthma	http://purl.obolibrary.org/obo/MONDO_0004979	disease	http://www.eb
 astrocyte	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 astrocytes	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 autism	autism spectrum disorder	http://purl.obolibrary.org/obo/MONDO_0005258	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-Autism	autism	http://purl.obolibrary.org/obo/MONDO_0005260	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 B cell	B cell	http://purl.obolibrary.org/obo/CL_0000236	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 B cells	B cell	http://purl.obolibrary.org/obo/CL_0000236	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 B-cell lymphoma	B-cell neoplasm	http://purl.obolibrary.org/obo/MONDO_0004095	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -97,7 +96,6 @@ C57/B6	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/
 C57/BL6	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57B6	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-c57bl/6	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL/6	C57BL/6	http://www.ebi.ac.uk/efo/EFO_0022397	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL/6J	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0000606	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 C57BL/6J mouse	C57BL/6J	http://www.ebi.ac.uk/efo/EFO_0000606	strain	http://www.ebi.ac.uk/efo/EFO_0005135
@@ -246,7 +244,6 @@ frozen tissue of ovarian tumors	ovarian cancer	http://purl.obolibrary.org/obo/MO
 frozen tissue of primary breast tumors	breast cancer	http://purl.obolibrary.org/obo/MONDO_0007254	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 full-thickness colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 fvb	FVB	http://www.ebi.ac.uk/efo/EFO_0022483	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-FVB	FVB	http://www.ebi.ac.uk/efo/EFO_0022483	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 fvb/n	FVB/N	http://www.ebi.ac.uk/efo/EFO_0022467	strain	http://www.ebi.ac.uk/efo/EFO_0005137
 fvb/nj	FVB/NJ	http://www.ebi.ac.uk/efo/EFO_0007728	strain	http://www.ebi.ac.uk/efo/EFO_0005136
 gactrocnemius muscle	gastrocnemius	http://purl.obolibrary.org/obo/UBERON_0001388	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -403,7 +400,6 @@ midbrain	midbrain	http://purl.obolibrary.org/obo/UBERON_0001891	organism part	ht
 middle ear	middle ear	http://purl.obolibrary.org/obo/UBERON_0001756	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 MKN45	RCB1001 cell	http://purl.obolibrary.org/obo/CLO_0050797	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 mock infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-Mock Infected	control	http://www.ebi.ac.uk/efo/EFO_0001461	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 moderate-to-severe psoriasis	psoriasis	http://purl.obolibrary.org/obo/MONDO_0005083	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 molecule subtype: total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
 monocyte	monocyte	http://purl.obolibrary.org/obo/CL_0000576	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -532,7 +528,6 @@ PTCL	mature T-cell and NK-cell non-Hodgkin lymphoma	http://purl.obolibrary.org/o
 pulmonary epithelial cells	epithelial cell of lung	http://purl.obolibrary.org/obo/CL_0000082	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Purkinje Cells	Purkinje cell	http://purl.obolibrary.org/obo/CL_0000121	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 putamen	putamen	http://purl.obolibrary.org/obo/UBERON_0001874	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-putamen	putamen	http://purl.obolibrary.org/obo/UBERON_0001874	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 pyramidal neuron cell	pyramidal neuron	http://purl.obolibrary.org/obo/CL_0000598	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Quadriceps	quadriceps femoris	http://purl.obolibrary.org/obo/UBERON_0001377	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 quadriceps muscle	quadriceps femoris	http://purl.obolibrary.org/obo/UBERON_0001377	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -626,7 +621,6 @@ TK6	TK6 cell	http://purl.obolibrary.org/obo/CLO_0009357	cell line	http://purl.ob
 total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://purl.obolibrary.org/obo/CL_0000233
 trabecular bone	trabecular bone tissue	http://purl.obolibrary.org/obo/UBERON_0002483	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 trachea	trachea	http://purl.obolibrary.org/obo/UBERON_0003126	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-triple-negative breast cancer	triple-negative breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0005494	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 triple-negative breast cancer	triple-negative breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0005494	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Tuberculosis	tuberculosis	http://purl.obolibrary.org/obo/MONDO_0018076	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 U2OS	U-2 OS cell	http://purl.obolibrary.org/obo/CLO_0009454	cell line	http://purl.obolibrary.org/obo/CLO_0000031
