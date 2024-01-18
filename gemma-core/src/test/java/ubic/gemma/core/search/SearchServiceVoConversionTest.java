@@ -14,7 +14,6 @@ import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -90,7 +89,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     private ExpressionExperiment ee;
     private ExpressionExperimentValueObject eevo;
     private GeneSet gs;
-    private CharacteristicValueObject phenotypeAssociation;
+
 
     @Before
     public void setUp() {
@@ -106,7 +105,6 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         eevo.setId( 12L );
         gs = new GeneSet();
         gs.setId( 13L );
-        phenotypeAssociation = new CharacteristicValueObject( 14L );
         when( arrayDesignService.loadValueObject( any( ArrayDesign.class ) ) ).thenAnswer( a -> new ArrayDesignValueObject( a.getArgument( 0, ArrayDesign.class ) ) );
         //noinspection unchecked
         when( arrayDesignService.loadValueObjects( anyCollection() ) ).thenAnswer( a -> ( ( Collection<ArrayDesign> ) a.getArgument( 0, Collection.class ) )
@@ -171,17 +169,6 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     public void testConvertExpressionExperiment() {
         searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
-    }
-
-    @Test
-    public void testConvertPhenotypeAssociation() {
-        // this is a complicated one because the result type does not match the entity
-        assertThat( searchService.loadValueObject( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, 1.0, "test object" ) ) )
-                .extracting( "resultObject" )
-                .isSameAs( phenotypeAssociation );
-        assertThat( searchService.loadValueObjects( Collections.singleton( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, 1.0, "test object" ) ) ) )
-                .extracting( "resultObject" )
-                .containsExactly( phenotypeAssociation );
     }
 
     @Test

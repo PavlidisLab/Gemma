@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -30,8 +29,6 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
@@ -60,7 +57,6 @@ public class TaxaWebService {
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
     private TaxonService taxonService;
     private ExpressionExperimentService expressionExperimentService;
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     private TaxonArgService taxonArgService;
     private DatasetArgService datasetArgService;
     private GeneArgService geneArgService;
@@ -75,12 +71,10 @@ public class TaxaWebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService, TaxonArgService taxonArgService,
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, TaxonArgService taxonArgService,
             DatasetArgService datasetArgService, GeneArgService geneArgService ) {
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
-        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
         this.taxonArgService = taxonArgService;
         this.datasetArgService = datasetArgService;
         this.geneArgService = geneArgService;
@@ -173,31 +167,6 @@ public class TaxaWebService {
     }
 
     /**
-     * Retrieves gene evidence for the gene on the given taxon.
-     *
-     * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name. It is recommended to use the ID for efficiency.
-     * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     */
-    @GET
-    @Path("/{taxon}/genes/{gene}/evidence")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve evidences for a given gene and taxon", hidden = true)
-    @Deprecated
-    public ResponseDataObject<List<GeneEvidenceValueObject>> getGenesEvidenceInTaxon( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("gene") GeneArg<?> geneArg // Required
-    ) {
-        Taxon taxon = taxonArgService.getEntity( taxonArg );
-        try {
-            return Responder.respond( geneArgService.getGeneEvidence( geneArg, taxon ) );
-        } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
-        }
-    }
-
-    /**
      * Retrieves gene location for the gene on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
@@ -242,62 +211,5 @@ public class TaxaWebService {
                 taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
-    /**
-     * Loads all phenotypes for the given taxon. Unfortunately, pagination is not possible as the
-     * phenotypes are loaded in a tree structure.
-     * <p>
-     * TODO: We need to split this in two methods because otherwise we cannot infer the type this endpoint is producing
-     *       and provide a backward compatible switch.
-     *
-     * @param taxonArg     the taxon to list the phenotypes for.
-     * @param editableOnly whether to only list editable phenotypes.
-     * @param tree         whether the returned structure should be an actual tree (nested JSON objects). Default is
-     *                     false - the tree is flattened and the edges of the tree are stored in
-     *                     the values of the value object.
-     * @return a list of Simple Tree value objects allowing a reconstruction of a tree, or an actual tree structure of
-     * TreeCharacteristicValueObjects, if the
-     */
-    @GET
-    @Path("/{taxon}/phenotypes")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the phenotypes for a given taxon", hidden = true)
-    public ResponseDataObject<Collection<?>> getTaxonPhenotypes( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly, // Optional, default false
-            @QueryParam("tree") @DefaultValue("false") Boolean tree // Optional, default false
-    ) {
-        Taxon taxon = taxonArgService.getEntity( taxonArg );
-        if ( tree ) {
-            return Responder.respond( phenotypeAssociationManagerService
-                    .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
-        }
-        return Responder.respond( phenotypeAssociationManagerService
-                .loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
-    }
-
-    /**
-     * Given a set of phenotypes, return all genes associated with them.
-     *
-     * @param taxonArg     the taxon to list the genes for.
-     * @param editableOnly whether to only list editable genes.
-     * @param phenotypes   phenotype value URIs separated by commas.
-     * @return a list of genes associated with given phenotypes.
-     */
-    @GET
-    @Path("/{taxon}/phenotypes/candidates")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon", hidden = true)
-    @Deprecated
-    public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
-            @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly // Optional, default false
-    ) {
-        Set<GeneEvidenceValueObject> response;
-        response = this.phenotypeAssociationManagerService.findCandidateGenes(
-                new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ),
-                new HashSet<>( phenotypes.getValue() ) );
-        return Responder.respond( response );
-    }
 
 }

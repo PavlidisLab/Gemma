@@ -104,6 +104,5 @@ public interface GeneSetSearch {
     // Possible external use
     Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws SearchException;
 
-    Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws SearchException;
 
 }

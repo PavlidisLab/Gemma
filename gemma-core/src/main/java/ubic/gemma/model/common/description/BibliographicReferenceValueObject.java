@@ -22,7 +22,6 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 
 import java.util.*;
 
@@ -49,7 +48,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private String volume;
     private Collection<String> meshTerms;
     private Collection<String> chemicalsTerms;
-    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
     private boolean retracted = false;
 
     /**
@@ -166,13 +164,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.authorList = authorList;
     }
 
-    public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
-        return this.bibliographicPhenotypes;
-    }
-
-    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
-        this.bibliographicPhenotypes = bibliographicPhenotypes;
-    }
 
     /**
      * @return the chemicalsTerms

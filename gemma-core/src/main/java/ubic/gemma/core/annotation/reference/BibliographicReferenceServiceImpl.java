@@ -22,7 +22,6 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -30,15 +29,12 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
-import java.util.function.Supplier;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -60,8 +56,6 @@ public class BibliographicReferenceServiceImpl
     @Autowired
     private SearchService searchService;
 
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -130,7 +124,6 @@ public class BibliographicReferenceServiceImpl
                 return null;
             }
             BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
-            this.populateBibliographicPhenotypes( bibrefVO );
             this.populateRelatedExperiments( bibref, bibrefVO );
             return bibrefVO;
         } catch ( Throwable th ) {
@@ -249,12 +242,6 @@ public class BibliographicReferenceServiceImpl
                 continue; // might be a compass hit that is no longer valid
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
 
-            if ( settings.getSearchPhenotypes() || settings.getSearchBibrefs() ) {
-                this.populateBibliographicPhenotypes( vo );
-                if ( !vo.getBibliographicPhenotypes().isEmpty() || settings.getSearchBibrefs() ) {
-                    results.add( vo );
-                }
-            }
 
             if ( settings.getSearchExperiments() || settings.getSearchBibrefs() ) {
                 this.populateRelatedExperiments( entity, vo );
@@ -263,7 +250,7 @@ public class BibliographicReferenceServiceImpl
                 }
             }
 
-            if ( settings.getSearchBibrefs() && !settings.getSearchPhenotypes() && !settings.getSearchExperiments() ) {
+            if ( settings.getSearchBibrefs() && !settings.getSearchExperiments() ) {
                 results.add( vo );
             }
 
@@ -285,7 +272,6 @@ public class BibliographicReferenceServiceImpl
                 continue;
             }
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
-            this.populateBibliographicPhenotypes( vo );
             this.populateRelatedExperiments( entity, vo );
             results.add( vo );
         }
@@ -319,25 +305,8 @@ public class BibliographicReferenceServiceImpl
         }
 
         this.populateRelatedExperiments( bibRefs, idToBibRefVO );
-        this.populateBibliographicPhenotypes( idToBibRefVO );
 
         return new ArrayList<>( idToBibRefVO.values() );
-    }
-
-    private void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
-
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
-                .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-        bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
-    }
-
-    private void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idToBibRefVO ) {
-
-        for ( BibliographicReferenceValueObject vo : idToBibRefVO.values() ) {
-            this.populateBibliographicPhenotypes( vo );
-        }
     }
 
     private void populateRelatedExperiments( BibliographicReference bibRef,

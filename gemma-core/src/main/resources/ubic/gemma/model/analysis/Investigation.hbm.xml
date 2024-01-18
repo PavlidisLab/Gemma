@@ -182,8 +182,5 @@
 				</set>
 			</subclass>
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericExperiment"
-				  discriminator-value="GenericExperiment" abstract="false">
-		</subclass>
 	</class>
 </hibernate-mapping>

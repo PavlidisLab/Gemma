@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchException;
@@ -58,11 +57,6 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public GeneProductService geneProductService() {
             return mock( GeneProductService.class );
-        }
-
-        @Bean
-        public PhenotypeAssociationManagerService phenotypeAssociationManagerService() {
-            return mock( PhenotypeAssociationManagerService.class );
         }
 
         @Bean

@@ -25,16 +25,13 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -61,8 +58,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
     private Persister persisterHelper;
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -113,15 +109,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
             }
             valueObjects.add( vo );
-
-            // adding phenotype information to the Bibliographic Reference
-
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
-                    .findPhenotypesForBibliographicReference( vo.getPubAccession() );
-
-            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-            vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
         }
 

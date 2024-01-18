@@ -32,7 +32,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -337,14 +336,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setHomologues( homologues );
 
-        Collection<PhenotypeAssociation> pas = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cVos = new HashSet<>();
-        for ( PhenotypeAssociation pa : pas ) {
-            cVos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
-        }
-
-        gvo.setPhenotypes( cVos );
-
         if ( gvo.getNcbiId() != null ) {
             SearchSettings s = SearchSettings.builder()
                     .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
@@ -374,38 +365,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         }
 
         return gvo;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneValueObject loadGenePhenotypes( Long geneId ) {
-        Gene gene = this.loadOrFail( geneId );
-        gene = this.thaw( gene );
-        GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
-        GeneValueObject details = new GeneValueObject( initialResult );
-
-        Collection<GeneAlias> aliasObjects = gene.getAliases();
-        SortedSet<String> aliasStrings = new TreeSet<>();
-        for ( GeneAlias ga : aliasObjects ) {
-            aliasStrings.add( ga.getAlias() );
-        }
-        details.setAliases( aliasStrings );
-
-        Long compositeSequenceCount = this.getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
-
-        Collection<GeneSet> geneSets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
-        //noinspection CollectionAddAllCanBeReplacedWithConstructor // Constructor can't handle subclasses
-        gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
-        details.setGeneSets( gsVos );
-
-        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
-        geneHomologues = this.thawLite( geneHomologues );
-        Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
-        details.setHomologues( homologues );
-
-        return details;
     }
 
     @Override

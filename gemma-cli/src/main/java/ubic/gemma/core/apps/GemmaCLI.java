@@ -247,6 +247,6 @@ public class GemmaCLI {
 
     // order here is significant.
     public enum CommandGroup {
-        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
+        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, SYSTEM, MISC, DEPRECATED
     }
 }

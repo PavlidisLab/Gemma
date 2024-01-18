@@ -162,8 +162,6 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
      */
     GeneValueObject loadFullyPopulatedValueObject( Long id );
 
-    GeneValueObject loadGenePhenotypes( Long geneId );
-
     /**
      * @param taxon taxon
      * @return all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching

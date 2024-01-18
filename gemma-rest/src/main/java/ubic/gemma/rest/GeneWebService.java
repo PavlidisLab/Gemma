@@ -26,7 +26,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
@@ -95,27 +94,6 @@ public class GeneWebService {
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
         return Responder.respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
-    }
-
-    /**
-     * Retrieves gene evidence for the given gene.
-     *
-     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     */
-    @GET
-    @Path("/{gene}/evidence")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
-    @Deprecated
-    public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
-    ) {
-        try {
-            return Responder.respond( geneArgService.getGeneEvidence( geneArg, null ) );
-        } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
-        }
     }
 
     /**

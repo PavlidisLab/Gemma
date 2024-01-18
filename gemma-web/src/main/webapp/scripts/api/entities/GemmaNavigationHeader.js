@@ -180,12 +180,7 @@ Gemma.GemmaNavigationHeader = Ext
                      text : 'Browse Datasets (legacy)',
                      href : ctxBasePath + "/expressionExperiment/showAllExpressionExperiments.html",
                      tooltip : "View the list of Gemma's expression data sets"
-                  },
-                     /*{
-                     text : 'Browse Phenotype Associations',
-                     href : ctxBasePath + "/phenotypes.html",
-                     tooltip : "View the list of Gemma's phenotype-gene associations"
-                  }, */{
+                  },{
                      text : 'Browse Platforms',
                      href : ctxBasePath + "/arrays/showAllArrayDesigns.html",
                      tooltip : "View the list of Gemma's platforms"
@@ -234,17 +229,7 @@ Gemma.GemmaNavigationHeader = Ext
                      text : 'Dataset manager',
                      href : ctxBasePath + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
                      tooltip : "Curate your data"
-                  }
-                  /*, {
-                     text : 'My Phenotype Associations',
-                     href : ctxBasePath + "/phenotypeAssociationManager.html",
-                     tooltip : "Modify your phenotype-gene associations"
-                  }
-                     , '-', {
-                     text : 'User Groups',
-                     href : ctxBasePath + "/manageGroups.html",
-                     tooltip : "Manage your user groups"
-                  }*/, {
+                  }, {
                      text : 'Gene Groups',
                      href : ctxBasePath + "/geneGroupManager.html",
                      tooltip : "Manage your gene groups"
@@ -541,19 +526,6 @@ Gemma.GemmaNavigationHeader = Ext
                             href : ctxBasePath + '/home.html',
                             cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
                          }
-                      },
-                      {
-                         xtype : 'box',
-                         autoEl : {
-                            tag : 'img',
-                            src : ctxBasePath + '/images/logo/phenocarta-45p.png',
-                            style : 'padding-left:10px',
-                            title : 'Previously known as Neurocarta',
-                            alt : 'Phenocarta'
-                         },
-                         hidden : window.location.pathname.indexOf( ctxBasePath + '/phenotypes.html' ) < 0
-                            && window.location.pathname.indexOf( ctxBasePath + '/phenotypeAssociationManager.html' ) < 0
-                            && window.location.pathname.indexOf( ctxBasePath + '/neurocartaStatistics.html' ) < 0
                       }, '->', {
                          ref : 'navToolbar',
                          xtype : 'toolbar',

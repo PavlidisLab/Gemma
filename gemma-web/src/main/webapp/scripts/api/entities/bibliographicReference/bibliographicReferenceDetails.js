@@ -8,7 +8,6 @@ Gemma.BibliographicReference.DetailsPanel = Ext
    .extend(
       Ext.Panel,
       {
-         genePhenotypeSeparator : '<span style="font-size:22px; line-height:14px;">&harr;</span>',
          layout : 'form',
          title : 'Bibliographic Reference Details',
          autoScroll : true, // Use overflow:'auto' to show scroll bars automatically
@@ -30,7 +29,6 @@ Gemma.BibliographicReference.DetailsPanel = Ext
          clear : function() {
             this.citation.hide();
             this.detailsFieldset.hide();
-            this.annotationsFieldset.hide();
             this.tagsFieldset.hide();
          },
 
@@ -64,40 +62,12 @@ Gemma.BibliographicReference.DetailsPanel = Ext
          },
 
          initComponent : function() {
-            var currentBibliographicPhenotypes = null;
-            var currentEvidenceId = null;
 
             var getPudmedAnchor = function( pubmedUrl ) {
                return (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply( {
                   pubmedURL : pubmedUrl
                } );
             };
-
-            var getGenePhenotypeRow = function( bibliographicPhenotype ) {
-               var genePhenotypeRow = '';
-
-               if ( bibliographicPhenotype.evidenceId == currentEvidenceId ) {
-                  genePhenotypeRow += '<b>';
-               }
-               genePhenotypeRow += '<a target="_blank" href="' + Gemma.LinkRoots.genePageNCBI
-                  + bibliographicPhenotype.geneNCBI + '">' + bibliographicPhenotype.geneName + '</a> '
-                  + this.genePhenotypeSeparator + ' ';
-
-               for (var i = 0; i < bibliographicPhenotype.phenotypesValues.length; i++) {
-                  genePhenotypeRow += bibliographicPhenotype.phenotypesValues[i].value;
-
-                  if ( i < bibliographicPhenotype.phenotypesValues.length - 1 ) {
-                     genePhenotypeRow += '; ';
-                  }
-               }
-
-               if ( bibliographicPhenotype.evidenceId == currentEvidenceId ) {
-                  genePhenotypeRow += '</b>'
-                     + ' <img height="12" src="' + ctxBasePath + '/images/icons/asterisk_black.png" ext:qtip="This is the annotation you are editing." /> ';
-               }
-
-               return genePhenotypeRow;
-            }.createDelegate( this );
 
             Ext.apply( this, {
                // evidenceId is optional.
@@ -127,7 +97,7 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                   var allExperiments = '';
                   var i;
                   var ee;
-                  for (i = 0; i < bibRefRecord.get( 'experiments' ).length; i++) {
+                  for ( i = 0; i < bibRefRecord.get( 'experiments' ).length; i++ ) {
                      ee = bibRefRecord.get( 'experiments' )[i];
                      allExperiments += '<a href="' + Gemma.LinkRoots.expressionExperimentPage + ee.id
                         + '" target="_blank" >' + ee.shortName + '</a>' + " : ";
@@ -137,39 +107,32 @@ Gemma.BibliographicReference.DetailsPanel = Ext
 
                   var allMeshTerms = "";
 
-                  for (i = 0; i < bibRefRecord.get( 'meshTerms' ).length; i++) {
-                     allMeshTerms += bibRefRecord.get( 'meshTerms' )[i];
+                  if ( bibRefRecord.get( 'meshTerms' ) != null ) {
+                     for ( i = 0; i < bibRefRecord.get( 'meshTerms' ).length; i++ ) {
+                        allMeshTerms += bibRefRecord.get( 'meshTerms' )[i];
 
-                     if ( i < bibRefRecord.get( 'meshTerms' ).length - 1 ) {
-                        allMeshTerms += "; ";
+                        if ( i < bibRefRecord.get( 'meshTerms' ).length - 1 ) {
+                           allMeshTerms += "; ";
+                        }
                      }
                   }
                   this.pubmed.setValue( bibRefRecord.get( 'pubAccession' ) );
                   this.mesh.setValue( allMeshTerms );
 
                   var allChemicalsTerms = "";
-                  for (i = 0; i < bibRefRecord.get( 'chemicalsTerms' ).length; i++) {
-                     allChemicalsTerms += bibRefRecord.get( 'chemicalsTerms' )[i];
+                  if ( bibRefRecord.get( 'chemicalsTerms' ) != null ) {
+                     for ( i = 0; i < bibRefRecord.get( 'chemicalsTerms' ).length; i++ ) {
+                        allChemicalsTerms += bibRefRecord.get( 'chemicalsTerms' )[i];
 
-                     if ( i < bibRefRecord.get( 'chemicalsTerms' ).length - 1 ) {
-                        allChemicalsTerms += "; ";
+                        if ( i < bibRefRecord.get( 'chemicalsTerms' ).length - 1 ) {
+                           allChemicalsTerms += "; ";
+                        }
                      }
                   }
                   this.chemicals.setValue( allChemicalsTerms );
 
                   this.tagsFieldset.setVisible( (allMeshTerms.length > 0 && allChemicalsTerms.length > 0) );
 
-                  currentBibliographicPhenotypes = bibRefRecord.get( 'bibliographicPhenotypes' );
-                  currentEvidenceId = evidenceId;
-
-                  var allGenePhenotypeAssociations = "";
-                  if ( currentBibliographicPhenotypes != null ) {
-                     for (i = 0; i < currentBibliographicPhenotypes.length; i++) {
-                        allGenePhenotypeAssociations += getGenePhenotypeRow( currentBibliographicPhenotypes[i] )
-                           + '<br />';
-                     }
-                  }
-                  this.genePhenotypeAssociation.setValue( allGenePhenotypeAssociations );
 
                   this.detailsFieldset.items.each( function( field ) {
                      if ( field.getValue() == "" ) {
@@ -179,46 +142,6 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                      }
                   } );
 
-                  if ( this.experiments.getValue() == "" && this.genePhenotypeAssociation.getValue() == "" ) {
-                     this.annotationsFieldset.hide();
-                  } else {
-                     this.annotationsFieldset.show();
-                  }
-
-                  this.annotationsFieldset.items.each( function( field ) {
-                     if ( field.getValue() == "" ) {
-                        field.hide();
-                     } else {
-                        field.show();
-                     }
-                  } );
-
-               },
-
-               showAnnotationError : function( errorEvidenceIds, errorColor ) {
-                  var allGenePhenotypeAssociations = "";
-                  if ( currentBibliographicPhenotypes != null ) {
-                     for (var i = 0; i < currentBibliographicPhenotypes.length; i++) {
-                        var hasError = false;
-                        for (var j = 0; !hasError && j < errorEvidenceIds.length; j++) {
-                           hasError = (currentBibliographicPhenotypes[i].evidenceId == errorEvidenceIds[j]);
-                        }
-
-                        if ( hasError && errorColor != null ) {
-                           allGenePhenotypeAssociations += '<span style="color: ' + errorColor + ';">';
-                        }
-
-                        allGenePhenotypeAssociations += getGenePhenotypeRow( currentBibliographicPhenotypes[i] );
-
-                        if ( hasError && errorColor != null ) {
-                           allGenePhenotypeAssociations += '</span>';
-                        }
-
-                        allGenePhenotypeAssociations += '<br />';
-                     }
-                  }
-
-                  this.genePhenotypeAssociation.setValue( allGenePhenotypeAssociations );
                }
             } );
 
@@ -272,21 +195,6 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                fieldLabel : 'Experiments'
             } );
 
-            this.genePhenotypeAssociation = new Ext.form.DisplayField( {
-               fieldLabel : 'Gene ' + this.genePhenotypeSeparator + ' Phenotype'
-            } );
-
-            this.annotationsFieldset = new Ext.form.FieldSet( {
-               defaults : {
-                  labelStyle : 'padding-top: 1px;'
-               },
-               cls : 'no-collapsed-border',
-               anchor : '100%',
-               title : 'Associations',
-               collapsible : true,
-               style : "margin-bottom: 3px;",
-               items : [ this.experiments, this.genePhenotypeAssociation ]
-            } );
 
             this.tagsFieldset = new Ext.form.FieldSet( {
                collapsed : this.collapseByDefault,
@@ -300,7 +208,8 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                style : "margin-bottom: 3px;",
                items : [ this.mesh, this.chemicals ]
             } );
-            this.add( this.citation, this.detailsFieldset, this.annotationsFieldset, this.tagsFieldset );
+
+            this.add( this.citation, this.detailsFieldset, this.tagsFieldset );
 
             var isAdmin = Ext.get( "hasAdmin" ).getValue() === 'true';
             if ( isAdmin ) {

@@ -26,22 +26,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -69,8 +65,6 @@ public class GeneController extends BaseController {
     private TaxonService taxonService;
     @Autowired
     private GeneSetService geneSetService;
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @SuppressWarnings("WeakerAccess") // Frontend ajax access
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
@@ -107,17 +101,7 @@ public class GeneController extends BaseController {
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
-        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
-                .findEvidenceByGeneId( geneId, new HashSet<String>(),
-                        new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-        Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
-        Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
-        while ( iterator.hasNext() ) {
-            EvidenceValueObject<? extends PhenotypeAssociation> evo = iterator.next();
-            if ( !evo.isHomologueEvidence() )
-                collFilteredDVO.addAll( evo.getPhenotypes() );
-        }
-        gvo.setPhenotypes( collFilteredDVO );
+
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
 
         return gvo;
@@ -126,25 +110,6 @@ public class GeneController extends BaseController {
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public String getGeneABALink( Long geneId ) {
         return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
-    }
-
-    ;
-
-    /**
-     * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
-     */
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId,
-            boolean showOnlyEditable, Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
-                        new HashSet<String>() :
-                        new HashSet<>( Arrays.asList( phenotypeValueUris ) ),
-                new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
-    }
-
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public GeneValueObject loadGenePhenotypes( Long geneId ) {
-        return geneService.loadGenePhenotypes( geneId );
     }
 
     @SuppressWarnings("unused") // Required

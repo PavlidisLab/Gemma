@@ -17,7 +17,6 @@ Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
    "ExpressionExperimentSet" : {title : "Experiment group", sortBy : "name"},
    "Gene" : {title : "Gene", sortBy : "name"},
    "GeneSet" : {title : "Gene group", sortBy : "name"},
-   "PhenotypeAssociation" : {title : "Phenotype"},
    "BlacklistedEntity" : {title : "Blacklisted entity"}
 };
 
@@ -124,7 +123,6 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       var searchPlatforms = Ext.getCmp( 'search-ars-chkbx' ).getValue();
       var searchSequences = Ext.getCmp( 'search-seqs-chkbx' ).getValue();
       var searchGeneSets = Ext.getCmp( 'search-genesets-chkbx' ).getValue();
-      var searchPhenotypes = Ext.getCmp( 'search-forPhenotypes-chkbx' ).getValue();
       var searchEESets = Ext.getCmp( 'search-eesets-chkbx' ).getValue();
       var searchPapers = Ext.getCmp( 'search-papers-chkbx' ).getValue();
 
@@ -132,13 +130,11 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       var searchIndices = true;
       var searchCharacteristics = true;
       var searchGO = false;
-      // var searchUsingPhenotypes = false;
       if ( Ext.get( "hasUser" ) !== null && Ext.get( "hasUser" ).getValue() ) {
          searchDatabase = Ext.getCmp( 'search-database-chkbx' ).getValue();
          searchIndices = Ext.getCmp( 'search-indices-chkbx' ).getValue();
          searchCharacteristics = Ext.getCmp( 'search-characteristics-chkbx' ).getValue();
          searchGO = Ext.getCmp( 'search-go-chkbx' ).getValue();
-         // searchUsingPhenotypes = Ext.getCmp('search-usingPhenotypes-chkbx').getValue();
       }
 
       var scopes = "&scope=";
@@ -162,9 +158,6 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       if ( searchGeneSets ) {
          scopes = scopes + "M";
       }
-      if ( searchPhenotypes ) {
-         scopes = scopes + "H";
-      }
       if ( searchEESets ) {
          scopes = scopes + "N";
       }
@@ -185,8 +178,7 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
          useIndices : searchIndices,
          useCharacteristics : searchCharacteristics,
          useGo : searchGO,
-         searchBibrefs : searchPapers,
-         searchPhenotypes : searchPhenotypes
+         searchBibrefs : searchPapers
       } ];
       return {
          params : params,
@@ -295,11 +287,6 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
             } else {
                Ext.getCmp( 'search-papers-chkbx' ).setValue( false );
             }
-            if ( params.scope.indexOf( 'H' ) > -1 ) {
-               Ext.getCmp( 'search-forPhenotypes-chkbx' ).setValue( true );
-            } else {
-               Ext.getCmp( 'search-forPhenotypes-chkbx' ).setValue( false );
-            }
          }
       } else {
          return false;
@@ -401,21 +388,6 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
                id : 'search-ars-chkbx',
                name : "searchArrays",
                boxLabel : "Platforms",
-               stateful : true,
-               stateEvents : [ 'check' ],
-               getState : function() {
-                  return {
-                     value : this.getValue()
-                  };
-               },
-               applyState : function( state ) {
-                  this.setValue( state.value );
-               },
-               hideLabel : true
-            }, {
-               id : 'search-forPhenotypes-chkbx',
-               name : "searchForPhenotypes",
-               boxLabel : "Phenotypes",
                stateful : true,
                stateEvents : [ 'check' ],
                getState : function() {

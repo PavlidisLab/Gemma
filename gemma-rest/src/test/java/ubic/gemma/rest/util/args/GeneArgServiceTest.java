@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
@@ -27,7 +26,7 @@ public class GeneArgServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public GeneArgService geneArgService( GeneService geneService ) {
-            return new GeneArgService( geneService, mock( PhenotypeAssociationManagerService.class ), mock( GeneOntologyService.class ) );
+            return new GeneArgService( geneService, mock( GeneOntologyService.class ) );
         }
 
         @Bean

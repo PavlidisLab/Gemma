@@ -6,7 +6,6 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
@@ -105,11 +104,6 @@ class SearchServiceTestContextConfiguration {
     @Bean
     public OntologyService ontologyService() {
         return mock( OntologyService.class );
-    }
-
-    @Bean
-    public PhenotypeAssociationManagerService phenotypeAssociationManagerService() {
-        return mock( PhenotypeAssociationManagerService.class );
     }
 
     @Bean

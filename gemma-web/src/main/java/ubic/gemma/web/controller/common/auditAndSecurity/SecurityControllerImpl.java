@@ -37,14 +37,11 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.MailEngine;
@@ -72,8 +69,7 @@ public class SecurityControllerImpl implements SecurityController {
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
     @Autowired
     private GeneSetService geneSetService;
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
+
     @Autowired
     private MailEngine mailEngine;
     @Autowired
@@ -461,18 +457,6 @@ public class SecurityControllerImpl implements SecurityController {
             }
         }
 
-        // special case for Phenocarta, changing the meta analysis, changes the permissions of all evidence linked
-        if ( s instanceof GeneDifferentialExpressionMetaAnalysis ) {
-
-            Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenotypeAssociationService
-                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( s.getId(), -1 );
-            for ( DifferentialExpressionEvidence d : differentialExpressionEvidence ) {
-                settings.setEntityId( d.getId() );
-                settings.setEntityClazz( d.getClass().getName() );
-                this.updatePermission( settings );
-            }
-        }
-
         SecurityControllerImpl.log.info( "Updated permissions on " + s );
         return this.securable2VO( s );
     }
@@ -525,8 +509,6 @@ public class SecurityControllerImpl implements SecurityController {
             s = geneSetService.load( ed.getId() );
         } else if ( ed.holds( ExpressionExperimentSet.class ) ) {
             s = expressionExperimentSetService.load( ed.getId() );
-        } else if ( ed.holds( PhenotypeAssociation.class ) ) {
-            s = phenotypeAssociationService.load( ed.getId() );
         } else if ( ed.holds( GeneDifferentialExpressionMetaAnalysis.class ) ) {
             s = geneDiffExMetaAnalysisService.load( ed.getId() );
         } else {

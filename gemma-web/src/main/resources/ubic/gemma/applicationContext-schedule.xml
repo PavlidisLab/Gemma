@@ -122,8 +122,7 @@
 
     <bean id="expressionExperimentReportService"
           class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
-    <bean id="phenotypeAssociationManagerService"
-          class="ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl"/>
+
     <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
     <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
     <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>

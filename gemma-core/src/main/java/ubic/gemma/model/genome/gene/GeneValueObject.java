@@ -95,8 +95,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Integer numGoTerms = 0;
     private String officialName;
     private String officialSymbol;
-    @JsonIgnore
-    private Collection<CharacteristicValueObject> phenotypes;
+
     @JsonIgnore
     private Integer platformCount;
     @JsonIgnore

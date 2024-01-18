@@ -20,7 +20,6 @@ package ubic.gemma.model.common.search;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -50,7 +49,6 @@ public class SearchSettingsValueObject implements Serializable {
     private Boolean searchExperimentSets = Boolean.TRUE;
     private Boolean searchGenes = Boolean.TRUE;
     private Boolean searchGeneSets = Boolean.TRUE;
-    private Boolean searchPhenotypes = Boolean.TRUE;
     private Boolean searchPlatforms = Boolean.TRUE;
     private Boolean searchProbes = Boolean.TRUE;
     private Taxon taxon;
@@ -133,14 +131,6 @@ public class SearchSettingsValueObject implements Serializable {
 
     public void setSearchGeneSets( Boolean searchGeneSets ) {
         this.searchGeneSets = searchGeneSets;
-    }
-
-    public Boolean getSearchPhenotypes() {
-        return this.searchPhenotypes;
-    }
-
-    public void setSearchPhenotypes( Boolean searchPhenotypes ) {
-        this.searchPhenotypes = searchPhenotypes;
     }
 
     public Boolean getSearchPlatforms() {

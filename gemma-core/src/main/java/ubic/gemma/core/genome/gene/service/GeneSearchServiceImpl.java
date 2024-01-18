@@ -261,8 +261,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             GeneSearchServiceImpl.log.info( "getting Summary results for " + query );
 
             List<SearchResultDisplayObject> summaries = this
-                    .addEntryForAllResults( query, genes, geneSets, new ArrayList<SearchResultDisplayObject>(),
-                            new ArrayList<SearchResultDisplayObject>() );
+                    .addEntryForAllResults( query, genes, geneSets, new ArrayList<SearchResultDisplayObject>() );
             displayResults.addAll( summaries );
             displayResults.addAll( genes );
             displayResults.addAll( geneSets );
@@ -273,28 +272,16 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         GeneSearchServiceImpl.log.debug( "Getting GO group results for " + query );
         List<SearchResultDisplayObject> srDos = this.getGOGroupResults( query, taxon );
 
-        List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();
-
-        // only do phenotype search if there is no results at all
-        // if ( ( genes.size() < 1 ) ) {
-
-        if ( !query.toUpperCase().startsWith( "GO" ) ) {
-            GeneSearchServiceImpl.log.info( "getting Phenotype Association results for " + query );
-            phenotypeSrDos = this.getPhenotypeAssociationSearchResults( query, taxon );
-        }
-
-        // }
 
         // get summary results
         GeneSearchServiceImpl.log.debug( "Getting Summary results for " + query );
         List<SearchResultDisplayObject> summaryEntries = this
-                .addEntryForAllResults( query, genes, geneSets, srDos, phenotypeSrDos );
+                .addEntryForAllResults( query, genes, geneSets, srDos );
 
         // add all results, keeping order of result types
         displayResults.addAll( summaryEntries );
         displayResults.addAll( geneSets );
         displayResults.addAll( srDos );
-        displayResults.addAll( phenotypeSrDos );
         displayResults.addAll( genes );
 
         if ( displayResults.isEmpty() ) {
@@ -543,42 +530,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return taxonToGeneSetMap.values();
     }
 
-    /**
-     * updates goSets & srDos with GO results
-     *
-     * @param query query
-     * @param taxon taxon
-     * @return list of search result display objects
-     */
-    private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) throws SearchException {
-
-        List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();
-        // if taxon==null then it grabs results for all taxons
-        Collection<GeneSetValueObject> geneSets = geneSetSearch.findByPhenotypeName( query, taxon );
-        for ( GeneSetValueObject geneSet : geneSets ) {
-            // don't bother adding empty groups
-            // (should probably do this check elsewhere in case it speeds things up)
-            if ( geneSet.getGeneIds() != null && geneSet.getGeneIds().size() != 0 ) {
-                SearchResultDisplayObject sdo = this.makePhenotypeAssociationGroupSearchResult( geneSet, query, taxon );
-                phenotypeSrDos.add( sdo );
-                // phenotypeSets.add( geneSet );
-            }
-        }
-
-        Collections.sort( phenotypeSrDos );
-        return phenotypeSrDos;
-    }
-
     private SearchResultDisplayObject makeGoGroupSearchResult( GeneSet goSet, String goId, String query,
             Taxon taxonForGo ) {
         GOGroupValueObject ggVo = geneSetValueObjectHelper.convertToGOValueObject( goSet, goId, query );
         return this.getSearchResultForSessionBoundGroupValueObject( taxonForGo, ggVo );
-    }
-
-    private SearchResultDisplayObject makePhenotypeAssociationGroupSearchResult( GeneSetValueObject geneSet,
-            String query, Taxon taxonForGS ) {
-        PhenotypeGroupValueObject pgVo = PhenotypeGroupValueObject.convertFromGeneSetValueObject( geneSet, query );
-        return this.getSearchResultForSessionBoundGroupValueObject( taxonForGS, pgVo );
     }
 
     private SearchResultDisplayObject getSearchResultForSessionBoundGroupValueObject( Taxon taxonForGS,
@@ -603,13 +558,12 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * @param query          query
      * @param genes          genes
      * @param geneSets       gene sets
-     * @param phenotypeSrDos phenotype display objects
      * @param srDos          display objects
      * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,
             Collection<SearchResultDisplayObject> genes, Collection<SearchResultDisplayObject> geneSets,
-            List<SearchResultDisplayObject> srDos, List<SearchResultDisplayObject> phenotypeSrDos ) {
+            List<SearchResultDisplayObject> srDos ) {
 
         List<SearchResultDisplayObject> summaryResultEntries = new ArrayList<>();
 
@@ -639,7 +593,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // if there's a group, get the number of members
             this.updateGeneIdsByTaxonId( geneSets, geneIdsByTaxonId );
             this.updateGeneIdsByTaxonId( srDos, geneIdsByTaxonId );
-            this.updateGeneIdsByTaxonId( phenotypeSrDos, geneIdsByTaxonId );
 
             // make an entry for each taxon
             Long taxonId;

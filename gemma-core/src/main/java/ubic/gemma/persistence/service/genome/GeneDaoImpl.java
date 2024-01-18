@@ -368,7 +368,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                                 + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                                 + " left join fetch g.taxon t left join fetch t.externalDatabase "
-                                + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
                                 + " where g.id=:gid" )
                 .setParameter( "gid", gene.getId() )
                 .uniqueResult();

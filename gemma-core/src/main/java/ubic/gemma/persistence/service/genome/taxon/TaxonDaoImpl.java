@@ -83,14 +83,6 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    public Collection<Taxon> findTaxonUsedInEvidence() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
-                .list();
-    }
-
-    @Override
     public Taxon findByNcbiId( Integer ncbiId ) {
         return this.findOneByProperty( "ncbiId", ncbiId );
     }
