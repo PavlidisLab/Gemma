@@ -823,14 +823,6 @@ GeneController.loadGeneDetails = function (p0, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadGeneDetails");
     dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneDetails', p0, callback);
 };
-GeneController.loadAllenBrainImages = function (p0, callback) {
-    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadAllenBrainImages");
-    dwr.engine._execute(GeneController._path, 'GeneController', 'loadAllenBrainImages', p0, callback);
-};
-GeneController.getGeneABALink = function (p0, callback) {
-    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/getGeneABALink");
-    dwr.engine._execute(GeneController._path, 'GeneController', 'getGeneABALink', p0, callback);
-};
 // ====================================================================================
 if (typeof GenePickerController === 'undefined') {
     var GenePickerController = {};

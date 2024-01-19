@@ -28,16 +28,12 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.core.image.aba.AllenBrainAtlasService;
-import ubic.gemma.core.image.aba.Image;
-import ubic.gemma.core.image.aba.ImageSeries;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -45,7 +41,6 @@ import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -57,8 +52,6 @@ import java.util.*;
 @RequestMapping(value = { "/gene", "/g" })
 public class GeneController extends BaseController {
 
-    @Autowired
-    private AllenBrainAtlasService allenBrainAtlasService;
     @Autowired
     private GeneService geneService;
     @Autowired
@@ -78,25 +71,7 @@ public class GeneController extends BaseController {
         return geneService.getProducts( geneId );
     }
 
-    /**
-     * AJAX NOTE: this method updates the value object passed in
-     */
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public Collection<Image> loadAllenBrainImages( Long geneId ) {
-        Collection<Image> images = new ArrayList<>();
-        Gene gene = geneService.load( geneId );
 
-        if ( gene != null ) {
-
-            try {
-                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getSagittalImageSeries( gene );
-                return allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-            } catch ( IOException e ) {
-                log.warn( "Could not get ABA data: " + e );
-            }
-        }
-        return images;
-    }
 
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
@@ -105,11 +80,6 @@ public class GeneController extends BaseController {
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
 
         return gvo;
-    }
-
-    @SuppressWarnings("unused") // Frontend ajax use, gene page
-    public String getGeneABALink( Long geneId ) {
-        return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
     }
 
     @SuppressWarnings("unused") // Required

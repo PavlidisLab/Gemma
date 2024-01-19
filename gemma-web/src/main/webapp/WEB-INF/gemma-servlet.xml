@@ -309,8 +309,6 @@
             <dwr:include method="getProducts"/>
             <dwr:include method="loadGeneDetails"/>
             <dwr:include method="loadGeneEvidence"/>
-            <dwr:include method="loadAllenBrainImages"/>
-            <dwr:include method="getGeneABALink"/>
         </dwr:remote>
     </bean>
 
