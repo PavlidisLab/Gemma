@@ -31,12 +31,17 @@ import java.util.Arrays;
 public class AclQueryUtils {
 
     /**
-     * Alias used.
+     * Alias used by {@link #formAclRestrictionClause(String, int)} and {@link #formNativeAclJoinClause(String)} for the
+     * object identity {@link gemma.gsec.acl.domain.AclObjectIdentity} and the owner identity {@link gemma.gsec.acl.domain.AclSid}.
      */
     public static final String
             AOI_ALIAS = "aoi",
-            SID_ALIAS = "sid",
-            ACE_ALIAS = "ace";
+            SID_ALIAS = "sid";
+
+    /**
+     * Do not refer to ACEs in your code, it might not be present in the query.
+     */
+    private static final String ACE_ALIAS = "ace";
 
     /**
      * Parameter name prefix to avoid clashes with user-defined parameters.
@@ -87,6 +92,9 @@ public class AclQueryUtils {
      * <p>
      * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.
      * <p>
+     * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
+     * entities with multiple ACL entries will be duplicated in the results.
+     * <p>
      * FIXME: this ACL jointure is really annoying because it is one-to-many, maybe handling everything in a sub-query
      *        would be preferable?
      *
@@ -111,11 +119,9 @@ public class AclQueryUtils {
         // add ACL restrictions
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( SecurityUtil.isUserAnonymous() ) {
-                // For anonymous users, only pick publicly readable data
                 //language=HQL
                 q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
             } else {
-                // For non-admin users, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
                 q += " and ("
                         // user own the object
                         + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
@@ -134,6 +140,9 @@ public class AclQueryUtils {
      * <p>
      * Note: unlike the HQL version, this query uses {@code on} to restrict the jointure, so you can define the
      * {@code where} clause yourself.
+     * <p>
+     * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
+     * entities with multiple ACL entries will be duplicated in the results.
      * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
      *                    {@link #addAclParameters(Query, Class)} afterward
      *
@@ -178,8 +187,11 @@ public class AclQueryUtils {
             return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
         } else if ( !SecurityUtil.isUserAdmin() ) {
             return " and ("
+                    // user owns the object
                     + SID_ALIAS + ".PRINCIPAL = :" + USER_NAME_PARAM + " "
+                    // specific rights to the object
                     + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + renderedMask + " <> 0) "
+                    // publicly available
                     + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + renderedMask + " <> 0)"
                     + ")";
         } else {
