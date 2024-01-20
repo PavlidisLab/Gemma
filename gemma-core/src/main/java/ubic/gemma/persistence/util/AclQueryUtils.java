@@ -144,8 +144,8 @@ public class AclQueryUtils {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
         //language=SQL
-        String q = " left join ACLOBJECTIDENTITY " + AOI_ALIAS + " on (" + AOI_ALIAS + ".OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + AOI_ALIAS + ".OBJECT_ID = " + aoiIdColumn + ") "
-                + "left join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
+        String q = " join ACLOBJECTIDENTITY " + AOI_ALIAS + " on (" + AOI_ALIAS + ".OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + AOI_ALIAS + ".OBJECT_ID = " + aoiIdColumn + ") "
+                + "join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
 
         // for non-admin, we have to include aoi.entries
         // if aoi.entries is empty, the user might still be the owner, so we use a left join
