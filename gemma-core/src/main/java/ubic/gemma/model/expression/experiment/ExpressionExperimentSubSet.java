@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -37,7 +36,7 @@ import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
  *
  * @author Paul
  */
-public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
+public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild<ExpressionExperiment> {
 
     /**
      * Maximum length of the name of a subset.
@@ -56,19 +55,18 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
      */
     public ExpressionExperimentSubSet() {
     }
-
-    @Transient
-    @Override
-    public Securable getSecurityOwner() {
-        return sourceExperiment;
-    }
-
     public ExpressionExperiment getSourceExperiment() {
         return this.sourceExperiment;
     }
 
     public void setSourceExperiment( ExpressionExperiment sourceExperiment ) {
         this.sourceExperiment = sourceExperiment;
+    }
+
+    @Transient
+    @Override
+    public ExpressionExperiment getSecurityOwner() {
+        return sourceExperiment;
     }
 
     @Override

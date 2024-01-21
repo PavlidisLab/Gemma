@@ -22,7 +22,6 @@ package ubic.gemma.model.expression.experiment;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -40,7 +39,7 @@ import java.util.Set;
  * @author Paul
  */
 @Indexed
-public class ExperimentalFactor extends AbstractDescribable implements SecuredChild {
+public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
             .thenComparing( ExperimentalFactor::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
@@ -81,7 +80,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
 
     @Transient
     @Override
-    public Securable getSecurityOwner() {
+    public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;
     }
 
