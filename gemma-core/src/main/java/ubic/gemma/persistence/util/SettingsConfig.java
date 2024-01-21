@@ -100,7 +100,13 @@ public class SettingsConfig {
                 break;
             }
         }
-        result.addLast( new ResourcePropertySource( new ClassPathResource( "ubic/gemma/version.properties" ) ) );
+
+        ClassPathResource versionResource = new ClassPathResource( "ubic/gemma/version.properties" );
+        if ( versionResource.exists() ) {
+            result.addLast( new ResourcePropertySource( versionResource ) );
+        } else {
+            log.warn( "The ubic/gemma/version.properties resource was not found; run `mvn generate-resources -pl gemma-core` to generate it." );
+        }
 
         return result;
     }

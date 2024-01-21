@@ -159,7 +159,7 @@ public class Settings {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "ubic/gemma/version.properties" );
             Settings.config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "version.properties not found", e );
+            log.warn( "The ubic/gemma/version.properties resource was not found; run `mvn generate-resources -pl gemma-core` to generate it.", e );
         }
 
         // step through the result and do a final round of variable substitution.
