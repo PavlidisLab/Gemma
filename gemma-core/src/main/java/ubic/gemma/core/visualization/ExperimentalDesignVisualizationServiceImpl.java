@@ -466,13 +466,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
              * Then we are looking at a subset, so associate it with the original experiment.
              */
             if ( !vec.getClass().isInstance( ExpressionExperimentSubsetValueObject.class ) ) {
-                log.error( "Vector is sliced, but the experiment is not a subset!" );
+                log.warn( "Vector is sliced, but the experiment is not a subset!" );
             }
             ExpressionExperimentSubsetValueObject eesvo = ( ExpressionExperimentSubsetValueObject ) vec
                     .getExpressionExperiment();
 
             if ( eesvo.getSourceExperiment() == null ) {
-                log.error( "Vector is sliced, but the source experiment is null!" );
+                log.warn( "Vector is sliced, but the source experiment is null!" );
             }
 
             actualEe = expressionExperimentService.loadOrFail( eesvo.getSourceExperiment() );
