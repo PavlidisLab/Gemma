@@ -96,10 +96,13 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
                 log.info( String.format( "Initializing %s took %d s.", os, timer.getTime( TimeUnit.SECONDS ) ) );
             } ) );
         }
+        long totalTimeMs = 60 * 1000L; // 1 minute
+        long initialTimeMs = System.currentTimeMillis();
         assertThat( futures ).zipSatisfy( services, ( future, os ) -> {
+            long elapsedTimeMs = System.currentTimeMillis() - initialTimeMs;
             assertThat( future )
                     .describedAs( os.toString() )
-                    .succeedsWithin( Duration.ofSeconds( 60 ) );
+                    .succeedsWithin( Duration.ofMillis( Math.max( totalTimeMs - elapsedTimeMs, 0 ) ) );
         } );
     }
 }

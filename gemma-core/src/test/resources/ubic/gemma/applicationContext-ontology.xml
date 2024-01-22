@@ -4,9 +4,7 @@
        profile="test">
 
     <!-- executor used for loading ontologies in background -->
-    <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-        <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
-    </bean>
+    <bean id="ontologyTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor"/>
 
     <!-- test ontologies are always loaded on-demand, so we never set autoLoad to true -->
     <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
