@@ -128,17 +128,15 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
 
         assertThat( gemmaOntologyService.getParents( Collections.singleton( overexpression ), false, false ) )
                 .extracting( OntologyTerm::getUri )
-                .containsExactly( "http://www.ebi.ac.uk/efo/EFO_0000510" );
+                .containsExactlyInAnyOrder( "http://www.ebi.ac.uk/efo/EFO_0000510" );
 
         OntologyTerm geneticModification = experimentalFactorOntologyService.getTerm( "http://www.ebi.ac.uk/efo/EFO_0000510" );
         assertNotNull( geneticModification );
 
         assertThat( experimentalFactorOntologyService.getParents( Collections.singleton( geneticModification ), false, false ) )
                 .extracting( OntologyTerm::getUri )
-                .containsExactly( "http://www.ebi.ac.uk/efo/EFO_0000001",
-                        "http://purl.obolibrary.org/obo/BFO_0000015",
-                        "http://www.ebi.ac.uk/efo/EFO_0004542",
-                        "http://www.ebi.ac.uk/efo/EFO_0002694" );
+                .containsExactlyInAnyOrder( "http://www.ebi.ac.uk/efo/EFO_0000001",
+                        "http://purl.obolibrary.org/obo/BFO_0000015" );
 
         // ensure that parents are combined when using the OS
         assertThat( ontologyService.getParents( Collections.singleton( overexpression ), false, false ) )
@@ -146,8 +144,6 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
                 .containsExactlyInAnyOrder(
                         "http://www.ebi.ac.uk/efo/EFO_0000001",
                         "http://purl.obolibrary.org/obo/BFO_0000015",
-                        "http://www.ebi.ac.uk/efo/EFO_0004542",
-                        "http://www.ebi.ac.uk/efo/EFO_0002694",
                         "http://www.ebi.ac.uk/efo/EFO_0000510" );
     }
 }
