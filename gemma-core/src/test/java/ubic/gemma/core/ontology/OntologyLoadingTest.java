@@ -9,11 +9,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
-import ubic.basecode.ontology.providers.ChebiOntologyService;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.OntologyService;
+import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -59,6 +56,18 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private MondoOntologyService mondo;
 
+    @Autowired
+    private CellLineOntologyService clo;
+
+    @Autowired
+    private CellTypeOntologyService cl;
+
+    @Autowired
+    private HumanPhenotypeOntologyService hpo;
+
+    @Autowired
+    private UberonOntologyService uberon;
+
     @Test
     public void testThatChebiDoesNotHaveInferenceEnabled() {
         assertThat( chebi.getInferenceMode() ).isEqualTo( OntologyService.InferenceMode.NONE );
@@ -73,7 +82,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Category(SlowTest.class)
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
-        List<AbstractOntologyMemoryBackedService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo );
+        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon );
         List<OntologyService> services = new ArrayList<>();
         List<Future<?>> futures = new ArrayList<>();
         for ( OntologyService os : ontologyServices ) {
@@ -84,7 +93,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
             futures.add( taskExecutor.submit( () -> {
                 StopWatch timer = StopWatch.createStarted();
                 os.initialize( true, true );
-                log.info( String.format( "Initializing " + os + " took %d s.", timer.getTime( TimeUnit.SECONDS ) ) );
+                log.info( String.format( "Initializing %s took %d s.", os, timer.getTime( TimeUnit.SECONDS ) ) );
             } ) );
         }
         assertThat( futures ).zipSatisfy( services, ( future, os ) -> {
