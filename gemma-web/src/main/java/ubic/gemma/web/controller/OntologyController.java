@@ -2,6 +2,7 @@ package ubic.gemma.web.controller;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -43,6 +44,9 @@ public class OntologyController {
 
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
+
+    @Value("${gemma.hosturl}")
+    private String hostUrl;
 
     @RequestMapping(value = "/ont/TGEMO.OWL", method = RequestMethod.GET)
     public RedirectView getOntology() {
@@ -105,6 +109,8 @@ public class OntologyController {
             s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
         }
         s.append( "</ul>" );
+        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
         s.append( "</div>" );
         return s.toString();
     }
@@ -140,6 +146,8 @@ public class OntologyController {
             s.append( "<li>annotation of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
         }
         s.append( "</ul>" );
+        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d/%d</pre>", hostUrl, factorValueId, annotationId ) );
         s.append( "</div>" );
         return s.toString();
     }
