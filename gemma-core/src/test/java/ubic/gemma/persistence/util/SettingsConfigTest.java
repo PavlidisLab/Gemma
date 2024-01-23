@@ -37,7 +37,6 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
             MutablePropertySources result = new MutablePropertySources();
             result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
             result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
-            // FIXME: local local.properties from ${gemma.appdata.home}
             result.addLast( new ResourcePropertySource( new ClassPathResource( "ubic/gemma/version.properties" ) ) );
             return result;
         }
