@@ -1,5 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclService;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.Hibernate;
@@ -9,14 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
@@ -29,6 +35,7 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Configuration
@@ -44,11 +51,26 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
+    @Autowired
+    private AclService aclService;
+
+    @Test
+    public void testGetFilterableProperties() {
+        Assertions.assertThat( expressionExperimentDao.getFilterableProperties() )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
+                // those are hidden for now (see https://github.com/PavlidisLab/Gemma/pull/789)
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.object." ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject." ) );
+    }
+
     @Test
     public void testThawTransientEntity() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         BioAssay ba = new BioAssay();
+        ba.setSampleUsed( new BioMaterial() );
         ba.setArrayDesignUsed( new ArrayDesign() );
         ee.setBioAssays( Collections.singleton( ba ) );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );
@@ -173,7 +195,8 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyExcludingFreeTextTerms() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null ) )
+        Map<Characteristic, Long> cs = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null );
+        Assertions.assertThat( cs )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 );
     }
@@ -217,6 +240,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
         ExpressionExperiment ee = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
         Characteristic c = new Characteristic();
         c.setCategory( category );
         c.setCategoryUri( categoryUri );
@@ -328,33 +352,38 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testRemoveWithStatement() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ExperimentalFactor ef = new ExperimentalFactor();
-        ef.setType( FactorType.CATEGORICAL );
-        Characteristic c = new Characteristic();
-        FactorValue fv = new FactorValue();
-        fv.getCharacteristics().add( c );
-        fv.setExperimentalFactor( ef );
-        ef.getFactorValues().add( fv );
-        ExperimentalDesign ed = new ExperimentalDesign();
-        ef.setExperimentalDesign( ed );
-        ed.getExperimentalFactors().add( ef );
-        ed.getExperimentalFactors().add( new ExperimentalFactor() );
-        ee.setExperimentalDesign( ed );
-        // convert the characteristic to a statement
-        sessionFactory.getCurrentSession().persist( ee );
-        sessionFactory.getCurrentSession()
-                .createSQLQuery( "update CHARACTERISTIC set class = 'Statement' where ID = :id" )
-                .setParameter( "id", c.getId() )
-                .executeUpdate();
+    public void testRemoveExperimentWithSharedBioMaterial() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba1 = new BioAssay();
+        ba1.setArrayDesignUsed( arrayDesign );
+        ba1.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba1 );
+        BioAssay ba2 = new BioAssay();
+        ba2.setArrayDesignUsed( arrayDesign );
+        ba2.setSampleUsed( bm );
+        ExpressionExperiment ee1 = new ExpressionExperiment();
+        ee1.getBioAssays().add( ba1 );
+        ExpressionExperiment ee2 = new ExpressionExperiment();
+        ee2.getBioAssays().add( ba2 );
+        sessionFactory.getCurrentSession().persist( ee1 );
+        sessionFactory.getCurrentSession().persist( ee2 );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
-        ee = expressionExperimentDao.load( ee.getId() );
-        assertNotNull( ee );
-        assertTrue( ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().iterator().next().getCharacteristics().isEmpty() );
-        expressionExperimentDao.remove( ee );
-        sessionFactory.getCurrentSession().flush();
+        ee1 = expressionExperimentDao.load( ee1.getId() );
+        assertNotNull( ee1 );
+        expressionExperimentDao.remove( ee1 );
+        // verify that the sample still exists and is still attached to ee2
+        bm = ( BioMaterial ) sessionFactory.getCurrentSession().get( BioMaterial.class, bm.getId() );
+        assertNotNull( bm );
+        assertFalse( bm.getBioAssaysUsedIn().contains( ba1 ) );
+        assertTrue( bm.getBioAssaysUsedIn().contains( ba2 ) );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {

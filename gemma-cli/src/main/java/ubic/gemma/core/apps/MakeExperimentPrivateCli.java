@@ -2,11 +2,9 @@ package ubic.gemma.core.apps;
 
 import gemma.gsec.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
-@Component
 public class MakeExperimentPrivateCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.util;
 
-import org.junit.Before;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,6 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 /**
  * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing
@@ -52,6 +52,7 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
     protected MockMvc mvc;
 
     @Override
+    @OverridingMethodsMustInvokeSuper
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         mvc = MockMvcBuilders.webAppContextSetup( applicationContext ).build();

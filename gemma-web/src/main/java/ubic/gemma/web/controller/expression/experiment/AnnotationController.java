@@ -24,15 +24,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -78,11 +79,15 @@ public class AnnotationController {
         return ontologyService.getCategoryTerms();
     }
 
+    public Collection<OntologyProperty> getRelationTerms() {
+        return ontologyService.getRelationTerms();
+    }
+
     public void createBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.loadOrFail( id,
                 EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
-        ontologyService.saveBioMaterialStatement( vc, bm );
+        bioMaterialService.addCharacteristic( bm, vc );
     }
 
     /**
@@ -94,8 +99,13 @@ public class AnnotationController {
     public void createExperimentTag( Characteristic vc, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "No such experiment with id=" + id );
-        ontologyService.addExpressionExperimentStatement( vc, ee );
-        expressionExperimentService.update( ee );
+        if ( vc == null ) {
+            throw new IllegalArgumentException( "Null characteristic" );
+        }
+        if ( ontologyService.isObsolete( vc.getValueUri() ) ) {
+            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
+        }
+        expressionExperimentService.addCharacteristic( ee, vc );
     }
 
     /**
@@ -141,13 +151,13 @@ public class AnnotationController {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
             return;
         }
-        ontologyService.reinitializeAllOntologies();
+        ontologyService.reinitializeAndReindexAllOntologies();
     }
 
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.loadOrFail( id, EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
-        ontologyService.removeBioMaterialStatement( vc.getId(), bm );
+        bioMaterialService.removeCharacteristic( bm, vc );
     }
 
     public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {

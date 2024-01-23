@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.common.description.CharacteristicValueObject;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,14 +50,14 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         super();
     }
 
-    public TreeCharacteristicValueObject( Long id, String value, String valueUri ) {
-        super( id, value, "", valueUri, "" );
+    public TreeCharacteristicValueObject( String value, String valueUri ) {
+        super( value, valueUri, "", "" );
         this._id = this.getUrlId();
     }
 
-    public TreeCharacteristicValueObject( Long id, String value, String valueUri,
+    public TreeCharacteristicValueObject( String value, String valueUri,
             TreeSet<TreeCharacteristicValueObject> children ) {
-        super( id, value, "", valueUri, "" );
+        super( value, valueUri, "", "" );
         this.children = children;
         this._id = this.getUrlId();
     }

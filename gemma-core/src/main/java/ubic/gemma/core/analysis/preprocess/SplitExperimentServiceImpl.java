@@ -40,14 +40,12 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.util.*;
 
@@ -86,6 +84,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private FactorValueService factorValueService;
 
     /*
      * (non-Javadoc)
@@ -324,7 +325,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         ExpressionExperimentSet g = ExpressionExperimentSet.Factory.newInstance();
         g.setDescription( "Parts of " + toSplit.getShortName() + " that were split on " + splitOn.getName() );
         g.setName( toSplit.getShortName() + " splits" );
-        g.setTaxon( toSplit.getBioAssays().iterator().next().getSampleUsed().getSourceTaxon() );
+        g.setTaxon( toSplit.getTaxon() );
         g.getExperiments().addAll( result );
         g = this.expressionExperimentSetService.create( g );
 
@@ -344,7 +345,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
         String template = "Split part %d of: %s [%s = %s]";
         String originalName = StringUtils.strip( toSplit.getName() );
-        String factorValueString = splitValue.getDescriptiveString();
+        String factorValueString = FactorValueUtils.getSummaryString( splitValue );
         String newFullName = String.format( template, splitNumber, originalName,
                 StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
                         splitValue.getExperimentalFactor().getCategory().getValue() :
@@ -397,6 +398,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<ExperimentalFactor> result = new HashSet<>();
         for ( ExperimentalFactor ef : experimentalFactors ) {
             ExperimentalFactor clone = ExperimentalFactor.Factory.newInstance();
+            //noinspection deprecation
             clone.setAnnotations( this.cloneCharacteristics( ef.getAnnotations() ) );
             if ( ef.getCategory() != null ) {
                 clone.setCategory( this.cloneCharacteristic( ef.getCategory() ) );
@@ -418,8 +420,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
-            clone.setCharacteristics( this.cloneCharacteristics( fv.getCharacteristics() ) );
+            clone.setCharacteristics( cloneStatements( fv ) );
             clone.setIsBaseline( fv.getIsBaseline() );
+            //noinspection deprecation
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
             result.add( clone );
@@ -428,6 +431,37 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         }
 
         return result;
+    }
+
+    private Set<Statement> cloneStatements( FactorValue fv ) {
+        Collection<Statement> ch = fv.getCharacteristics();
+        // pair of original -> clone
+        List<Statement> result = new ArrayList<>( ch.size() );
+        for ( Statement s : ch ) {
+            result.add( cloneStatement( s ) );
+        }
+        return new HashSet<>( result );
+    }
+
+    private Statement cloneStatement( Statement s ) {
+        Statement clone = Statement.Factory.newInstance();
+        clone.setName( s.getName() );
+        clone.setDescription( s.getDescription() );
+        clone.setOriginalValue( s.getOriginalValue() );
+        clone.setSubject( s.getSubject() );
+        clone.setSubjectUri( s.getSubjectUri() );
+        clone.setCategory( s.getCategory() );
+        clone.setCategoryUri( s.getCategoryUri() );
+        clone.setEvidenceCode( s.getEvidenceCode() );
+        clone.setPredicate( s.getPredicate() );
+        clone.setPredicateUri( s.getPredicateUri() );
+        clone.setObject( s.getObject() );
+        clone.setObjectUri( s.getObjectUri() );
+        clone.setSecondPredicate( s.getSecondPredicate() );
+        clone.setSecondPredicateUri( s.getSecondPredicateUri() );
+        clone.setSecondObject( s.getSecondObject() );
+        clone.setSecondObjectUri( s.getSecondObjectUri() );
+        return clone;
     }
 
     private Measurement cloneMeasurement( Measurement measurement ) {
@@ -451,6 +485,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setIsBackground( qt.getIsBackground() );
         clone.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
         clone.setIsBatchCorrected( qt.getIsBatchCorrected() );
+        //noinspection deprecation
         clone.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
         clone.setIsNormalized( qt.getIsNormalized() );
         clone.setIsPreferred( qt.getIsPreferred() );
@@ -473,8 +508,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     private Characteristic cloneCharacteristic( Characteristic c ) {
-        return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
-                c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
+        Characteristic clone = Characteristic.Factory.newInstance();
+        clone.setName( c.getName() );
+        clone.setDescription( c.getDescription() );
+        clone.setCategory( c.getCategory() );
+        clone.setCategoryUri( c.getCategoryUri() );
+        clone.setValue( c.getValue() );
+        clone.setValueUri( c.getValueUri() );
+        clone.setOriginalValue( c.getOriginalValue() );
+        clone.setEvidenceCode( c.getEvidenceCode() );
+        return clone;
     }
 
     private BioAssay cloneBioAssay( BioAssay ba ) {
@@ -500,8 +543,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
         if ( de == null ) return null;
-        return DatabaseEntry.Factory.newInstance( de.getAccession(), de.getAccessionVersion(), de.getUri(),
-                de.getExternalDatabase() );
+        DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
+        clone.setAccession( de.getAccession() );
+        clone.setAccessionVersion( de.getAccessionVersion() );
+        //noinspection deprecation
+        clone.setUri( de.getUri() );
+        clone.setExternalDatabase( de.getExternalDatabase() );
+        ;
+        return clone;
     }
 
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {

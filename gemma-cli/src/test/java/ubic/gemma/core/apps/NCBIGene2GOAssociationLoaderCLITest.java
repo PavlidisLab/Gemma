@@ -1,17 +1,22 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
@@ -21,11 +26,12 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 
 @Category(SlowTest.class)
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class NCBIGene2GOAssociationLoaderCLITestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class NCBIGene2GOAssociationLoaderCLITestContextConfiguration {
 
         @Bean
         public NCBIGene2GOAssociationLoaderCLI ncbiGene2GOAssociationLoaderCLI() {
@@ -45,6 +51,21 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
         @Bean
         public ExternalDatabaseService externalDatabaseService() {
             return mock( ExternalDatabaseService.class );
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public PersisterHelper persisterHelper() {
+            return mock();
         }
     }
 

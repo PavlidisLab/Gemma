@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.DataUpdater;
@@ -18,6 +21,9 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -30,11 +36,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class RNASeqDataAddCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class RNASeqDataAddCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class RNASeqDataAddCliTestContextConfiguration {
 
         @Bean
         @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -73,7 +80,27 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         }
 
         @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
         public ExpressionExperimentSetService expressionExperimentSetService() {
+            return mock();
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
             return mock();
         }
     }
@@ -98,7 +125,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
-        rpkmFile = new ClassPathResource( "test.rpkm.txt" ).getFile().getAbsolutePath();
+        rpkmFile = new ClassPathResource( "ubic/gemma/core/apps/test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
         when( expressionExperimentService.thawLite( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( arrayDesignService.findByShortName( "test" ) ).thenReturn( ad );

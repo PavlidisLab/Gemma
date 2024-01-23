@@ -22,7 +22,6 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
@@ -51,11 +50,6 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public ChebiOntologyService chebiOntologyService() {
             return mock( ChebiOntologyService.class );
-        }
-
-        @Bean
-        public BioMaterialService bioMaterialService() {
-            return mock();
         }
 
         @Bean

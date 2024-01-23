@@ -907,10 +907,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
-                Set<Characteristic> chars = new HashSet<>();
-                Characteristic c = Characteristic.Factory.newInstance();
+                Set<Statement> chars = new HashSet<>();
+                Statement c = Statement.Factory.newInstance();
                 c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
-                c.setValue( batchId );
+                c.setSubject( batchId );
                 c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
                 c.setEvidenceCode( GOEvidenceCode.IIA );
 

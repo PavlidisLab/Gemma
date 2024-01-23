@@ -21,8 +21,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -61,7 +61,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         this.delete = commandLine.hasOption( "delete" );
     }

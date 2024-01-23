@@ -204,7 +204,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             REPRESENTATIONS = Arrays.stream( PrimitiveType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() );
 
     @Override
-    protected Map referenceData( HttpServletRequest request ) {
+    protected Map<Object, Object> referenceData( HttpServletRequest request ) {
         Map<Object, Object> referenceData = new HashMap<>();
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
 

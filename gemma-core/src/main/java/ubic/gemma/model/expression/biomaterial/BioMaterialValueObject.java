@@ -20,21 +20,20 @@ package ubic.gemma.model.expression.biomaterial;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.expression.experiment.*;
 
-import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -93,6 +92,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /**
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
+    @Deprecated
+    @Schema(description = "This is deprecated, use the `factorValues` collection instead.", deprecated = true)
     private Map<String, String> factors;
 
     @GemmaWebOnly
@@ -132,20 +133,20 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             } else {
                 this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             }
-
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
-            this.factors.put( factorId, factor.getName() );
-            this.factorValues.put( factorValueId, this.getFactorValueString( fv ) );
-
-            if ( fv.getMeasurement() == null ) {
-                this.factorIdToFactorValueId.put( factorId, factorValueId );
+            if ( Hibernate.isInitialized( factor ) ) {
+                this.factors.put( factorId, factor.getName() );
+            }
+            if ( fv.getMeasurement() != null ) {
+                String value = fv.getMeasurement().getValue();
+                this.factorValues.put( factorValueId, value );
+                // for measurement, use the actual value, not the FV ID
+                this.factorIdToFactorValueId.put( factorId, value );
             } else {
-                /*
-                 * use the actual value, not the factorvalue id.
-                 */
-                this.factorIdToFactorValueId.put( factorId, factorValues.get( factorValueId ) );
+                this.factorValues.put( factorValueId, FactorValueUtils.getSummaryString( fv, BioMaterialValueObject.CHARACTERISTIC_DELIMITER ) );
+                this.factorIdToFactorValueId.put( factorId, factorValueId );
             }
         }
 
@@ -170,6 +171,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     @JsonProperty("factorValues")
+    @ArraySchema(schema = @Schema(implementation = FactorValueBasicValueObject.class))
     public Collection<? extends IdentifiableValueObject> getFactorValues() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
@@ -179,21 +181,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     @Deprecated
     @JsonProperty("factorValueObjects")
+    @ArraySchema(
+            arraySchema = @Schema(description = "This property is redundant, use `factorValues` instead.", deprecated = true),
+            schema = @Schema(implementation = FactorValueBasicValueObject.class))
     public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
-    }
-
-    /**
-     * Format the value as a string, either using the characteristic, value or measurement.
-     */
-    private String getFactorValueString( FactorValue value ) {
-        if ( !value.getCharacteristics().isEmpty() ) {
-            return StringUtils.join( value.getCharacteristics(), BioMaterialValueObject.CHARACTERISTIC_DELIMITER );
-        } else if ( value.getMeasurement() != null ) {
-            return value.getMeasurement().getValue();
-        } else {
-            return value.getValue();
-        }
     }
 
     @Override

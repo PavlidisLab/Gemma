@@ -61,6 +61,14 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( id );
     }
 
+    public AnnotationValueObject( String classUri, String className, String termUri, String termName, Class<?> objectClass ) {
+        this.classUri = classUri;
+        this.className = className;
+        this.termUri = termUri;
+        this.termName = termName;
+        this.objectClass = formatObjectClass( objectClass );
+    }
+
     public AnnotationValueObject( Characteristic c ) {
         super( c );
         classUri = c.getCategoryUri();
@@ -73,10 +81,14 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {
         this( c );
+        this.objectClass = formatObjectClass( objectClass );
+    }
+
+    private static String formatObjectClass( Class<?> objectClass ) {
         if ( ExpressionExperiment.class.isAssignableFrom( objectClass ) ) {
-            this.objectClass = "ExperimentTag";
+            return "ExperimentTag";
         } else {
-            this.objectClass = objectClass.getSimpleName();
+            return objectClass.getSimpleName();
         }
     }
 

@@ -18,6 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -29,6 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
@@ -48,6 +52,8 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final FactorValueDao factorValueDao;
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
+    @Autowired
+    private CharacteristicService characteristicService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
@@ -93,7 +99,9 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        return this.bioMaterialDao.thaw( bioMaterials );
+        bioMaterials = ensureInSession( bioMaterials );
+        bioMaterials.forEach( this.bioMaterialDao::thaw );
+        return bioMaterials;
     }
 
     @Override
@@ -167,6 +175,38 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
         }
         return buf.toString().replaceAll( ",$", "" );
 
+    }
+
+    @Override
+    @Transactional
+    public void addCharacteristic( BioMaterial bm, Characteristic vc ) {
+        BioMaterialServiceImpl.log.debug( "Vocab Characteristic: " + vc );
+
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        Set<Characteristic> chars = new HashSet<>();
+        chars.add( vc );
+
+        Set<Characteristic> current = bm.getCharacteristics();
+        if ( current == null )
+            current = new HashSet<>( chars );
+        else
+            current.addAll( chars );
+
+        for ( Characteristic characteristic : chars ) {
+            BioMaterialServiceImpl.log.info( "Adding characteristic to " + bm + " : " + characteristic );
+        }
+
+        bm.setCharacteristics( current );
+        update( bm );
+    }
+
+    @Override
+    public void removeCharacteristic( BioMaterial bm, Characteristic characterId ) {
+        Assert.notNull( characterId.getId(), "The characteristic must be persistent." );
+        if ( !bm.getCharacteristics().remove( characterId ) ) {
+            throw new IllegalArgumentException( String.format( "%s does not belong to %s", characterId, bm ) );
+        }
+        characteristicService.remove( characterId );
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {

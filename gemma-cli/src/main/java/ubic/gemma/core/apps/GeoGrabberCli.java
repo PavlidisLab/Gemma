@@ -22,8 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -45,10 +45,10 @@ import java.util.*;
  *
  * @author paul
  */
-public class GeoGrabberCli extends AbstractCLIContextCLI {
+public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
     private static final int NCBI_CHUNK_SIZE = 100;
-    private static final int MAX_RETRIES = 3; // on failures
+    private static final int MAX_RETRIES = 5; // on failures
     private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 20; // stop condition when we stop seeing useful records
     private Date dateLimit;
     private String gseLimit;
@@ -98,7 +98,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
         if ( !commandLine.hasOption( "output" ) ) {
             throw new IllegalArgumentException( "You must provide an output file name" );
@@ -253,7 +253,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     retries++;
                     if ( retries <= MAX_RETRIES ) {
                         log.warn( "Failure while fetching records, retrying " + e.getMessage() );
-                        Thread.sleep( 500 );
+                        Thread.sleep( 500 * retries );
                         continue;
                     }
                     throw new IOException( "Too many failures: " + e.getMessage() );

@@ -3,7 +3,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.AbstractSpringAwareCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
-public class ExternalDatabaseOverviewCli extends AbstractSpringAwareCLI {
+public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -41,7 +41,7 @@ public class ExternalDatabaseOverviewCli extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

@@ -82,17 +82,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         if ( c == null )
             return false;
 
-        boolean isBatchFactor = false;
-
-        boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-
-        if ( c.getCategory() != null && c.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
-            isBatchFactor = true;
-        } else if ( looksLikeBatch ) {
-            isBatchFactor = true;
-        }
-
-        return isBatchFactor;
+        return ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( c.getCategory() )
+                || ExperimentalDesignUtils.BATCH_FACTOR_NAME.equals( ef.getName() );
     }
 
     @Autowired

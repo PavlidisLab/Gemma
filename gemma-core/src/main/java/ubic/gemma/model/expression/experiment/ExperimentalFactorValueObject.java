@@ -18,13 +18,14 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
-import ubic.gemma.model.common.description.Characteristic;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -45,6 +46,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     private String description;
 
+    @Deprecated
+    @Schema(description = "This is deprecated, use `values` directly instead.", deprecated = true)
     private String factorValues;
 
     private String name;
@@ -114,12 +117,11 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
         this.factorValues = factorValuesAsString.toString();
 
-        Characteristic c = factor.getCategory();
         /*
          * NOTE this replaces code that previously made no sense. PP
          */
         for ( FactorValue value : factor.getFactorValues() ) {
-            vals.add( new FactorValueValueObject( value, c ) );
+            vals.add( new FactorValueValueObject( value ) );
         }
 
         this.values = vals;

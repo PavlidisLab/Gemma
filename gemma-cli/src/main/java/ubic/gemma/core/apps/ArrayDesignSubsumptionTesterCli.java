@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -61,7 +62,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         allToCompare.add( arrayDesign );
 
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
-            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, getArrayDesignService() );
+            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName );
 
             if ( otherArrayDesign == null ) {
                 throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
@@ -138,7 +139,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'o' ) ) {
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );

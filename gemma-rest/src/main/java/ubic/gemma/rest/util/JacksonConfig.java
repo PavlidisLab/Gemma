@@ -1,11 +1,14 @@
 package ubic.gemma.rest.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.core.util.Json;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import ubic.gemma.rest.serializers.FactorValueBasicValueObjectSerializer;
+import ubic.gemma.rest.serializers.FactorValueValueObjectSerializer;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 
 /**
@@ -25,6 +28,9 @@ public class JacksonConfig {
     @Primary
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
+                // handle special serialization of statements
+                .registerModule( new SimpleModule().addSerializer( new FactorValueValueObjectSerializer() ) )
+                .registerModule( new SimpleModule().addSerializer( new FactorValueBasicValueObjectSerializer() ) )
                 // parse and render date as ISO 9601
                 .setDateFormat( new StdDateFormat() );
     }

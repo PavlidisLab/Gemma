@@ -22,6 +22,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
  */
@@ -30,4 +32,12 @@ public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
     ExperimentalDesign loadWithExperimentalFactors( Long id );
 
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+
+    /**
+     * Pick a random experimental design that needs attention.
+     * @param excludedDesign an excluded design from sampling
+     * @return a random experimental design that needs attention or null if none are found
+     */
+    @Nullable
+    ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludedDesign );
 }

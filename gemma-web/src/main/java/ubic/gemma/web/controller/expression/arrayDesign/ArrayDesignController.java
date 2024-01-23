@@ -75,14 +75,14 @@ public interface ArrayDesignController {
     /**
      * Exposed for AJAX calls.
      */
-    Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed );
+    Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator<ArrayDesign> ed );
 
     Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign );
 
     /**
      * @return the HTML to display.
      */
-    Map<String, String> getReportHtml( EntityDelegator ed );
+    Map<String, String> getReportHtml( EntityDelegator<ArrayDesign> ed );
 
     String getSummaryForArrayDesign( Long id );
 
@@ -90,7 +90,7 @@ public interface ArrayDesignController {
 
     ArrayDesignValueObject loadArrayDesignsSummary();
 
-    String remove( EntityDelegator ed );
+    String remove( EntityDelegator<ArrayDesign> ed );
 
     /**
      * Show all array designs, or according to a list of IDs passed in.
@@ -118,7 +118,7 @@ public interface ArrayDesignController {
     @RequestMapping("/showExpressionExperiments.html")
     ModelAndView showExpressionExperiments( @RequestParam("id") Long id );
 
-    String updateReport( EntityDelegator ed );
+    String updateReport( EntityDelegator<ArrayDesign> ed );
 
     String updateReportById( Long id );
 

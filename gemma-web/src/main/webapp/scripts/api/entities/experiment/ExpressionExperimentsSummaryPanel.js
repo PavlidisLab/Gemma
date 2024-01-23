@@ -8,36 +8,18 @@ Ext.namespace( 'Gemma' );
  */
 Gemma.ExpressionExperimentsSummaryPanel = Ext.extend( Ext.Panel,
    {
-      title : 'Summary & updates in the past week',
-      collapsible : true,
-      titleCollapse : true,
+      title : "Summary and updates this week",
+      collapsible : false,
+      titleCollapse : false,
       animCollapse : false,
 
       listeners : {
          render : function() {
-            if ( !this.collapsed ) {
-               this.loadCounts();
-            }
-         },
-         expand : function() {
-            if ( !this.countsLoaded ) {
-               this.loadCounts();
-            }
+
+            this.loadCounts();
+
          }
       },
-
-      stateful : true,
-      stateId : 'showAllExpressionExperimentsSummaryGridState',
-
-      // what describes the state of this panel - in this case it is the "collapsed" field
-      getState : function() {
-         return {
-            collapsed : this.collapsed
-         };
-      },
-
-      // specify when the state should be saved - in this case after panel was collapsed or expanded
-      stateEvents : [ 'collapse', 'expand' ],
 
       constructor : function( config ) {
          Gemma.ExpressionExperimentsSummaryPanel.superclass.constructor.call( this, config );

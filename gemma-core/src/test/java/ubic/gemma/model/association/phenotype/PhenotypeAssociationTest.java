@@ -22,19 +22,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
-import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -46,6 +46,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 
+import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -83,11 +84,14 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        OntologyTestUtils.initialize( diseaseOntologyService,
-                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-        OntologyUtils.ensureInitialized( humanPhenotypeOntologyService );
-        OntologyUtils.ensureInitialized( mammalianPhenotypeOntologyService );
-
+        // this part dirties the context
+        if ( !diseaseOntologyService.isOntologyLoaded() ) {
+            try ( InputStream stream = new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream() ) {
+                diseaseOntologyService.initialize( stream, false );
+            }
+            humanPhenotypeOntologyService.initialize( true, false );
+            mammalianPhenotypeOntologyService.initialize( true, false );
+        }
         // create what will be needed for tests
         this.createGene();
         this.createExternalDatabase();
@@ -174,7 +178,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testLoadAllPhenotypeUris() {
         Set<String> uris = this.phenotypeAssociationService.loadAllUsedPhenotypeUris();
         assertTrue( !uris.isEmpty() );
@@ -323,7 +326,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L, uri );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( "", uri );
 
         phenotypes.add( characteristicValueObject );
 

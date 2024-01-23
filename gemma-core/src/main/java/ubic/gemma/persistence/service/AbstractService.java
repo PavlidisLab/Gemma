@@ -116,6 +116,17 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Nonnull
     @Override
     @Transactional(readOnly = true)
+    public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        O entity = mainDao.load( id );
+        if ( entity == null ) {
+            throw exceptionSupplier.apply( String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
+        }
+        return entity;
+    }
+
+    @Nonnull
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         O entity = mainDao.load( id );
         if ( entity == null ) {
@@ -171,8 +182,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     /**
      * Ensure that a given entity is in the current session.
      * <p>
-     * If not found in the current session, it will be retrieved from the DAO.
+     * If not found in the current session, it will be retrieved from the persistent storage.
+     * @deprecated avoid using this if possible and ensure that all operations are properly enclosed by a single
+     *             Hibernate session
      */
+    @Deprecated
     @CheckReturnValue
     protected O ensureInSession( O entity ) {
         Long id = entity.getId();
@@ -187,9 +201,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
      * <p>
      * Implementation note: if all entities are already in the session - or are transient, this call is very fast and
      * does not involve any database interaction, otherwise the persistent entities are fetched in bulk.
-     *
      * @see #ensureInSession(Identifiable)
+     * @deprecated avoid using this if possible and ensure that all operations are properly enclosed by a single
+     *             Hibernate session
      */
+    @Deprecated
     @CheckReturnValue
     protected Collection<O> ensureInSession( Collection<O> entities ) {
         boolean allEntitiesAlreadyInSession = true;
@@ -202,8 +218,11 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         }
 
         // no need to sort or fetch anything, just return the input
-        if ( allEntitiesAlreadyInSession )
+        if ( allEntitiesAlreadyInSession ) {
+            log.debug( String.format( "All %d %s entities were already in the session; returning early.",
+                    entities.size(), getElementClass().getName() ) );
             return entities;
+        }
 
         // bulk load the remaining persistent entities (if any)
         Set<Long> ids = new HashSet<>( entities.size() );
@@ -216,6 +235,8 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
             }
         }
         if ( !ids.isEmpty() ) {
+            log.debug( String.format( "%d %s entities will be loaded from persistent storage.",
+                    ids.size(), getElementClass().getName() ) );
             result.addAll( mainDao.load( ids ) );
         }
 

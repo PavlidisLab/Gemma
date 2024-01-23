@@ -1,10 +1,23 @@
 root = true
 
+[Jenkinsfile]
+indent_style=space
+indent_size=4
+
+[init-indices.sql]
+indent_size=2
+
 [/pom.xml]
 indent_style=tab
 
 [/gemma-web/pom.xml]
 indent_style=tab
+
+[BioMaterial.hbm.xml]
+indent_size=3
+
+[BioAssay.hbm.xml]
+indent_size=3
 
 [Investigation.hbm.xml]
 indent_style=tab
@@ -26,3 +39,6 @@ indent_style=tab
 
 [gemma-web/**/applicationContext-security.xml]
 indent_style=tab
+
+[dwrServices.js]
+indent_size=4

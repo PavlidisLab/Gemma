@@ -11,7 +11,7 @@ import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -80,6 +80,47 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
                     assertThat( result.getHighlights() )
                             .containsEntry( "description", "<b>hello</b> world!" )
                             .containsEntry( "primaryPublication.title", "The greatest <b>hello</b> world!" );
+                } );
+    }
+
+    @Test
+    public void testSearchExpressionExperimentByStatementObject() throws HibernateSearchException {
+        FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
+        Taxon taxon = new Taxon();
+        fts.persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExperimentalDesign ed = new ExperimentalDesign();
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setExperimentalDesign( ed );
+        FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( ef );
+        Statement s = new Statement();
+        s.setSubject( "BRCA1" );
+        s.setObject( "Overexpression" );
+        fv.getCharacteristics().add( s );
+        ef.getFactorValues().add( fv );
+        ed.getExperimentalFactors().add( ef );
+        ee.setExperimentalDesign( ed );
+        fts.persist( ee );
+        fts.flushToIndexes();
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
+                .query( "BRCA1" )
+                .build() ) )
+                .anySatisfy( r -> {
+                    assertThat( r.getResultObject() ).isEqualTo( ee );
+                } );
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
+                .query( "Overexpression" )
+                .build() ) )
+                .anySatisfy( r -> {
+                    assertThat( r.getResultObject() ).isEqualTo( ee );
+                } );
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
+                .query( "BRCA1 Overexpression" )
+                .build() ) )
+                .anySatisfy( r -> {
+                    assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
     }
 }

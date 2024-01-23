@@ -22,6 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -69,7 +70,7 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         affyProbeFileName = commandLine.getOptionValue( "affyProbeFile" );
     }

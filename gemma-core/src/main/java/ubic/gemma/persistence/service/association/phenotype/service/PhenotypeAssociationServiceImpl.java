@@ -22,7 +22,7 @@ import ubic.gemma.model.association.phenotype.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;

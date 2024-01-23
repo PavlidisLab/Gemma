@@ -17,6 +17,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -55,7 +56,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
 
         this.file = commandLine.getOptionValue( "file" );

@@ -113,7 +113,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 if ( useSubquery ) {
                     filterablePropertiesViaSubquery.add( propertyName );
                 }
-                log.debug( String.format( "Registered property %s.", propertyName ) );
+                log.trace( String.format( "Registered property %s.", propertyName ) );
             } else {
                 throw new IllegalArgumentException( String.format( "Filterable property %s is already registered.",
                         propertyName ) );
@@ -138,7 +138,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                         props.stream().filter( filterableProperties::contains ).collect( Collectors.joining( ", " ) ) ) );
             }
             filterableProperties.addAll( props );
-            log.debug( String.format( "Registered properties: %s.", String.join( ", ", propertyNames ) ) );
+            log.trace( String.format( "Registered properties: %s.", String.join( ", ", propertyNames ) ) );
         }
 
         /**
@@ -146,7 +146,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          */
         public void unregisterProperty( String propertyName ) {
             if ( filterableProperties.remove( propertyName ) ) {
-                log.debug( String.format( "Unregistered property %s.", propertyName ) );
+                log.trace( String.format( "Unregistered property %s.", propertyName ) );
             } else {
                 throw new IllegalArgumentException( String.format( "No such filterable properties %s.", propertyName ) );
             }
@@ -159,7 +159,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         public void unregisterProperties( Predicate<? super String> predicate ) throws IllegalArgumentException {
             int sizeBefore = filterableProperties.size();
             if ( filterableProperties.removeIf( predicate ) ) {
-                log.debug( String.format( "Unregistered %d properties using a predicate.", sizeBefore - filterableProperties.size() ) );
+                log.trace( String.format( "Unregistered %d properties using a predicate.", sizeBefore - filterableProperties.size() ) );
             } else {
                 throw new IllegalArgumentException( "No filterable properties matched the supplied predicate." );
             }
@@ -212,13 +212,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     if ( maxDepth > 1 ) {
                         registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
                     } else {
-                        log.debug( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
+                        log.trace( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
                 } else if ( propertyType.isCollectionType() ) {
                     // special case for collection size, regardless of its type
                     registerProperty( prefix + propertyName + ".size", useSubquery );
                 } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
-                    log.debug( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
+                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
                             prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
                     registerProperty( prefix + propertyName, useSubquery );
@@ -227,7 +227,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                             prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );
                 }
             }
-            log.debug( String.format( "Registered entity %s %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
+            log.trace( String.format( "Registered entity %s %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
         }
 
         /**
@@ -252,7 +252,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     log.warn( String.format( "While unregistering %s %s, no properties were removed. Is it possible that a parent prefix was already removed?",
                             entityClass.getName(), summarizePrefix( prefix ) ) );
                 }
-                log.debug( String.format( "Registered entity %s under %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
+                log.trace( String.format( "Registered entity %s under %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
             } else {
                 throw new IllegalArgumentException( String.format( "No entity of type %s is registered %s.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
@@ -276,7 +276,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
             filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor ) );
             registerEntity( prefix, propertyType, maxDepth, useSubquery );
-            log.debug( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
+            log.trace( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
         }
 
         private String summarizePrefix( String prefix ) {

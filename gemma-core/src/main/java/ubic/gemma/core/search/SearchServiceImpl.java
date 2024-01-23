@@ -19,18 +19,15 @@
 
 package ubic.gemma.core.search;
 
-import com.google.common.collect.Sets;
 import gemma.gsec.util.SecurityUtil;
-import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.Cache;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -65,7 +62,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
@@ -193,7 +190,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
         if ( !supportedResultTypes.keySet().containsAll( settings.getResultTypes() ) ) {
-            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
+            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + SetUtils.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
         }
 
         StopWatch timer = StopWatch.createStarted();

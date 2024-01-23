@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.30.6</version>
+	<version>1.31.0</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.10</version>
+		<version>1.2.11-SNAPSHOT</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
-			<version>1.9.19</version>
+			<version>1.9.20.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -276,11 +276,6 @@
 			<artifactId>colt</artifactId>
 			<version>1.2.0</version>
 		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>32.0.1-jre</version>
-		</dependency>
 		<!-- needed for Java 11 -->
 		<dependency>
 			<groupId>javax.resource</groupId>
@@ -357,6 +352,13 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
+		</dependency>
+
+		<!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>${swagger.version}</version>
 		</dependency>
 
 		<!-- XML, XSLT and XPath -->
@@ -441,7 +443,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>2.1.214</version>
+			<version>2.2.220</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -493,10 +495,10 @@
 				<configuration>
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
-					<excludes>
-						<exclude>**/*Tests.java</exclude>
-					</excludes>
-					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -511,7 +513,7 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
+					<groups>ubic.gemma.core.util.test.category.IntegrationTest</groups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -563,7 +565,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>8.3.1</version>
+				<version>8.4.3</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -599,6 +601,16 @@
 					<url>file:///space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
+		</profile>
+		<profile>
+			<!-- Target Java 8 bytecode on Java 9+ -->
+			<id>java8</id>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<properties>
+				<maven.compiler.release>8</maven.compiler.release>
+			</properties>
 		</profile>
 	</profiles>
 	<distributionManagement>
@@ -640,12 +652,13 @@
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<tomcat.version>9.0.80</tomcat.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.15.2</jackson.version>
+		<jackson.version>2.15.3</jackson.version>
 		<swagger.version>2.2.11</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.29.2</slack.version>
 		<micrometer.version>1.11.0</micrometer.version>
+		<tomcat.version>9.0.80</tomcat.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>

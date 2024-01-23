@@ -33,6 +33,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -85,23 +86,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
         super.setTaskCommand( command );
     }
 
-    private void addToParent( Characteristic c, Object parent ) {
-        if ( parent instanceof ExpressionExperiment ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            ee = expressionExperimentService.thawLite( ee );
-            ee.getCharacteristics().add( c );
-            expressionExperimentService.update( ee );
-        } else if ( parent instanceof BioMaterial ) {
-            BioMaterial bm = ( BioMaterial ) parent;
-            bm.getCharacteristics().add( c );
-            bioMaterialService.update( bm );
-        } else if ( parent instanceof FactorValue ) {
-            FactorValue fv = ( FactorValue ) parent;
-            fv.getCharacteristics().add( c );
-            factorValueService.update( fv );
-        }
-    }
-
     private Characteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setId( avo.getId() );
@@ -109,6 +93,18 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
         vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
         vc.setValue( avo.getTermName() );
         vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
+        if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
+            vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
+        return vc;
+    }
+
+    private Statement convertAvo2Statement( AnnotationValueObject avo ) {
+        Statement vc = Statement.Factory.newInstance();
+        vc.setId( avo.getId() );
+        vc.setCategory( avo.getClassName() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
+        vc.setSubject( avo.getTermName() );
+        vc.setSubjectUri( StringUtils.stripToNull( avo.getTermUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
             vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
         return vc;
@@ -162,17 +158,16 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
                         "Don't use the annotator to update factor values that already have characteristics" );
             }
 
-            Characteristic vc = convertAvo2Characteristic( avo );
+            Statement vc = convertAvo2Statement( avo );
             vc.setId( null );
 
             if ( vc.getEvidenceCode() == null ) {
                 vc.setEvidenceCode( GOEvidenceCode.IC );
             }
 
-            vc = characteristicService.create( vc );
+            vc = factorValueService.createStatement( fv, vc );
 
-            fv.setValue( vc.getValue() );
-            fv.getCharacteristics().add( vc );
+            fv.setValue( vc.getSubject() );
 
             result.add( fv );
 
@@ -186,7 +181,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
 
         Collection<Characteristic> asChars = convertToCharacteristic( chars );
 
-        if ( asChars.size() == 0 ) {
+        if ( asChars.isEmpty() ) {
             log.info( "No characteristic objects were received" );
             return new TaskResult( taskCommand, false );
         }
@@ -213,7 +208,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
      */
     private TaskResult doUpdate() {
         Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();
-        if ( avos.size() == 0 )
+        if ( avos.isEmpty() )
             return new TaskResult( taskCommand, false );
         log.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
         StopWatch timer = new StopWatch();
@@ -222,7 +217,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
         Collection<Characteristic> asChars = convertToCharacteristic( avos );
         Collection<FactorValue> factorValues = convertToFactorValuesWithCharacteristics( avos );
 
-        if ( asChars.size() == 0 && factorValues.size() == 0 ) {
+        if ( asChars.isEmpty() && factorValues.isEmpty() ) {
             log.info( "Nothing to update" );
             return new TaskResult( taskCommand, false );
         }
@@ -231,7 +226,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             factorValueService.update( factorValue );
         }
 
-        if ( asChars.size() == 0 )
+        if ( asChars.isEmpty() )
             return new TaskResult( taskCommand, true );
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
@@ -257,8 +252,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
                     .isEditable( ( Securable ) parent ) ) {
                 throw new AccessDeniedException( "Access is denied" );
             }
-
-            assert cFromDatabase != null;
 
             // preserve original data (which might have been entered by us, but may be from GEO)
             if ( StringUtils.isBlank( cFromDatabase.getOriginalValue() ) ) {
@@ -317,8 +310,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             bioMaterialService.update( bm );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
-            fv.getCharacteristics().remove( c );
-            factorValueService.update( fv );
+            factorValueService.removeStatement( fv, ( Statement ) c );
         }
     }
 }

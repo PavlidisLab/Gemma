@@ -412,7 +412,13 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Gene thawLite( final Gene gene ) {
-        return this.thaw( gene );
+        if ( gene.getId() == null )
+            return gene;
+
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g from Gene g left join fetch g.taxon left join fetch g.products where g.id=:gid" )
+                .setParameter( "gid", gene.getId() )
+                .uniqueResult();
     }
 
     @Override
@@ -505,6 +511,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .executeUpdate();
         this.getSessionFactory().getCurrentSession()
                 .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene = :g" )
+                .setParameter( "g", gene )
+                .executeUpdate();
+        // those genes are not visible from the products collection
+        int removedDummyProducts = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from GeneProduct where gene = :g and dummy = true" )
                 .setParameter( "g", gene )
                 .executeUpdate();
         super.remove( gene );

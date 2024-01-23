@@ -62,6 +62,11 @@ public interface CuratableService<C extends Curatable, VO extends AbstractCurata
     @Nonnull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
+
+    @Nonnull
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     @Override

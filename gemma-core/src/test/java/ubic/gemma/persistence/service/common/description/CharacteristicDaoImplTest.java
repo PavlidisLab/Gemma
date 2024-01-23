@@ -21,7 +21,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -42,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class CharacteristicDaoImplTest extends BaseDatabaseTest {
 
     @Configuration
@@ -207,6 +210,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         ee.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
@@ -216,8 +220,21 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testGetParents() {
+    public void testDiscriminator() {
         Characteristic c = createCharacteristic( "test", "test" );
+        sessionFactory.getCurrentSession().persist( c );
+        List<String> clazz = ( List<String> ) sessionFactory.getCurrentSession()
+                .createSQLQuery( "select C.class from CHARACTERISTIC C where C.ID = :id" )
+                .setParameter( "id", c.getId() )
+                .list();
+        assertThat( clazz )
+                .hasSize( 1 )
+                .allSatisfy( s -> assertThat( s ).isNull() );
+    }
+
+    @Test
+    public void testGetParents() {
+        Statement c = createStatement( "test", "test" );
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         sessionFactory.getCurrentSession().persist( ed );
         ExperimentalFactor ef = new ExperimentalFactor();
@@ -246,4 +263,10 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         return c;
     }
 
+    private Statement createStatement( @Nullable String valueUri, String value ) {
+        Statement c = new Statement();
+        c.setValueUri( valueUri );
+        c.setValue( value );
+        return c;
+    }
 }

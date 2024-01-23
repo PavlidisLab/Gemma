@@ -70,7 +70,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 

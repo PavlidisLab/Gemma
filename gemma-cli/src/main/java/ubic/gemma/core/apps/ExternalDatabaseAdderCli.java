@@ -23,8 +23,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
  *
  * @author paul
  */
-public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
+public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -63,7 +63,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws Exception {
+    protected void processOptions( CommandLine commandLine ) {
         this.name = commandLine.getOptionValue( "n" );
         this.type = DatabaseType.valueOf( commandLine.getOptionValue( "t" ).toUpperCase() );
     }

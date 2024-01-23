@@ -20,10 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.Query;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -37,6 +34,8 @@ import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -49,6 +48,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 
 /**
  * @author Paul
@@ -192,13 +193,21 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // use the characteristics instead
         configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.isBaseline" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.needsAttention" );
+        configurer.unregisterProperty( "analysis.subsetFactorValue.oldStyleCharacteristics.size" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
 
-        // baseline is always baseline
-        configurer.unregisterProperty( "baselineGroup.isBaseline" );
         configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
+        configurer.unregisterProperty( "baselineGroup.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
+        configurer.unregisterProperty( "baselineGroup.experimentalFactor.annotations.size" );
+        configurer.unregisterProperty( "baselineGroup.experimentalFactor.factorValues.size" );
+        configurer.unregisterProperty( "baselineGroup.isBaseline" );
+        configurer.unregisterProperty( "baselineGroup.needsAttention" );
+        configurer.unregisterProperty( "baselineGroup.oldStyleCharacteristics.size" );
         configurer.unregisterProperty( "baselineGroup.value" );
 
         // not relevant
@@ -228,10 +237,15 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                         + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
                         + "where result.RESULT_SET_FK = :rsid" )
-                .addSynchronizedQuerySpace( "GENE2CS" )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 .setParameter( "rsid", resultSet.getId() )
+                // analysis results are immutable and the GENE2CS is generated, so flushing is pointless
+                .setFlushMode( FlushMode.MANUAL )
                 .setCacheable( true );
 
         //noinspection unchecked

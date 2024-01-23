@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.CacheUtils;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -400,8 +401,8 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public void initialize( boolean forceLoad, boolean forceIndexing ) {
-        super.initialize( forceLoad, forceIndexing );
+    public void initialize( InputStream stream, boolean forceIndexing ) {
+        super.initialize( stream, forceIndexing );
         clearCaches();
     }
 

@@ -24,20 +24,22 @@ import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +50,6 @@ import static org.junit.Assert.*;
 /**
  * @author klc
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class GeneSetServiceTest extends BaseSpringContextTest {
 
     static private final String GOTERM_INDB = "GO_0000310";
@@ -72,13 +73,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        InputStream is = new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
-        OntologyTestUtils.initialize( geneOntologyService, is );
-
         g = this.getTestPersistentGene();
         g3 = this.getTestPersistentGene();
-
     }
 
     @After
@@ -134,7 +130,11 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByGoId() {
+    @DirtiesContext
+    public void testFindByGoId() throws IOException {
+        InputStream is = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
+        geneOntologyService.initialize( is, false );
 
         Characteristic oe = Characteristic.Factory.newInstance();
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );

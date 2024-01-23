@@ -31,9 +31,11 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
@@ -93,6 +95,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
+    @Autowired
+    private BioMaterialService bioMaterialService;
+
     @Test
     public void testCascadingCreateOnUpdate() {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
@@ -104,10 +109,15 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         // should have create only
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setSourceTaxon( ee.getTaxon() );
+        bm = bioMaterialService.create( bm );
+
         BioAssay ba = BioAssay.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 );
         ba.setName( name );
         ba.setArrayDesignUsed( ee.getBioAssays().iterator().next().getArrayDesignUsed() );
+        ba.setSampleUsed( bm );
         ee.getBioAssays().add( ba );
 
         this.expressionExperimentService.update( ee );

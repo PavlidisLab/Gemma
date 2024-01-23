@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,12 +21,12 @@ package ubic.gemma.web.controller.expression.experiment;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.persistence.util.FactorValueVector;
 
 import java.io.Serializable;
@@ -130,35 +130,15 @@ public class DesignMatrixRowValueObject implements Serializable {
         StringBuilder buf = new StringBuilder();
         for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
             FactorValue fv = i.next();
-            buf.append( getFactorValueString( fv ) );
+            if ( fv != null ) {
+                if ( fv.getMeasurement() != null ) {
+                    buf.append( fv.getMeasurement().getValue() );
+                } else {
+                    buf.append( FactorValueUtils.getSummaryString( fv ) );
+                }
+            }
             if ( i.hasNext() )
                 buf.append( ", " );
-        }
-        return buf.toString();
-    }
-
-    private String getFactorValueString( FactorValue factorValue ) {
-
-        // missing data.
-        if ( factorValue == null )
-            return "";
-
-        StringBuilder buf = new StringBuilder();
-        if ( !factorValue.getCharacteristics().isEmpty() ) {
-            for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
-                Characteristic characteristic = i.next();
-
-                /*
-                 * Note we don't use toString here because it includes the category, uri, etc.
-                 */
-                buf.append( characteristic.getValue() );
-                if ( i.hasNext() )
-                    buf.append( " " );
-            }
-        } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
-            buf.append( factorValue.getValue() );
-        } else if ( factorValue.getMeasurement() != null ) {
-            buf.append( factorValue.getMeasurement().getValue() );
         }
         return buf.toString();
     }

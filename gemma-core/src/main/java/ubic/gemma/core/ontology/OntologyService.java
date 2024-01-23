@@ -14,13 +14,14 @@
  */
 package ubic.gemma.core.ontology;
 
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -34,15 +35,17 @@ import java.util.Set;
 public interface OntologyService {
 
     /**
-     * Will add the give vocab characteristic to the expression experiment.
-     * Does NOT handle persisting of the experiment afterwards.
+     * <p>
+     * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
+     * </p>
+     * <p>
+     *     Will also find terms that are no longer in an ontology we use.
+     * </p>
      *
-     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee ee
+     * @return map of value URI to a representative characteristic using the term. The latter will contain a count
+     * of how many ocurrences there were.
      */
-    void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
-    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
+    Map<String, CharacteristicValueObject> findObsoleteTermUsage();
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -84,6 +87,12 @@ public interface OntologyService {
     Collection<OntologyTerm> getCategoryTerms();
 
     /**
+     *
+     * @return terms allowed for the predicate (relationship) in a Characteristic
+     */
+    Collection<OntologyProperty> getRelationTerms();
+
+    /**
      * Obtain the parents of a collection of terms.
      * @see OntologyTerm#getParents(boolean, boolean)
      */
@@ -121,20 +130,8 @@ public interface OntologyService {
     void reindexAllOntologies();
 
     /**
-     * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
+     * Reinitialize (and reindex) all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
      */
-    void reinitializeAllOntologies();
-
-    void removeBioMaterialStatement( Long characterId, BioMaterial bm );
-
-    /**
-     * Will persist the give vocab characteristic to the given biomaterial
-     *
-     * @param bm bm
-     * @param vc vc
-     */
-    void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
-
-    Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms );
+    void reinitializeAndReindexAllOntologies();
 }

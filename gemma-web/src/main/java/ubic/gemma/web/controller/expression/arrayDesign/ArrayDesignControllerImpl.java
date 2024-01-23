@@ -160,13 +160,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @RequestMapping(value = "/downloadAnnotationFile.html", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse response ) throws IOException {
-        if ( fileType == null ) {
+        if ( fileType == null || fileType.equalsIgnoreCase( "allParents" ) ) {
             fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         } else if ( fileType.equalsIgnoreCase( "noParents" ) ) {
             fileType = ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        } else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
+        } else if ( fileType.equalsIgnoreCase( "bioProcess" ) ) {
             fileType = ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        else {
+        } else {
             throw new IllegalArgumentException( "Unknown file type for the 'fileType' query parameter." );
         }
         ArrayDesign arrayDesign = arrayDesignService.load( arrayDesignId );
@@ -301,7 +301,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator<ArrayDesign> ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         return this.getDesignSummaries( arrayDesign );
     }
@@ -398,7 +398,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public Map<String, String> getReportHtml( EntityDelegator ed ) {
+    public Map<String, String> getReportHtml( EntityDelegator<ArrayDesign> ed ) {
         assert ed.getId() != null;
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
         Map<String, String> result = new HashMap<>();
@@ -453,7 +453,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public String remove( EntityDelegator ed ) {
+    public String remove( EntityDelegator<ArrayDesign> ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( ed.getId() + " not found" );
@@ -540,7 +540,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    public String updateReport( EntityDelegator ed ) {
+    public String updateReport( EntityDelegator<ArrayDesign> ed ) {
         GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( ed.getId() ) );
         return taskRunningService.submitTask( job );
     }

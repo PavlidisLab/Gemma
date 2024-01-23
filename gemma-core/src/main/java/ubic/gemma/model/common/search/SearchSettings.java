@@ -25,7 +25,6 @@ import lombok.With;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.springframework.context.MessageSourceResolvable;
 import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;

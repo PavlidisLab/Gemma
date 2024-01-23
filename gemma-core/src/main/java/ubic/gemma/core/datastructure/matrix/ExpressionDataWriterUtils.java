@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,17 +21,18 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.util.Settings;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -107,33 +108,33 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
+     * Produce a value for representing a factor value.
+     * <p>
+     * In the context of the design file, this is focusing on the value (i.e. subjects or measurement value) itself and
+     * not its metadata which are instead exposed in the file header.
+     * <p>
      * Replaces spaces and hyphens with underscores.
-     *
      * @param factorValue FV
      * @return replaced string
      */
     public static String constructFactorValueName( FactorValue factorValue ) {
-
-        StringBuilder buf = new StringBuilder();
-
-        if ( factorValue.getCharacteristics().size() > 0 ) {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                buf.append( StringUtils.strip( c.getValue() ) );
-                if ( factorValue.getCharacteristics().size() > 1 )
-                    buf.append( " | " );
+        String v;
+        if ( factorValue.getMeasurement() != null ) {
+            v = factorValue.getMeasurement().getValue();
+        } else {
+            String valueFromStatements = factorValue.getCharacteristics().stream()
+                    .map( Statement::getSubject )
+                    .collect( Collectors.joining( " | " ) );
+            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
+                v = valueFromStatements;
+            } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
+                v = factorValue.getValue();
+            } else {
+                v = ""; // this is treated as NaN in most scenarios
             }
-        } else if ( factorValue.getMeasurement() != null ) {
-            buf.append( factorValue.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
-            buf.append( StringUtils.strip( factorValue.getValue() ) );
         }
-
-        String matchedFactorValue = buf.toString();
-
-        matchedFactorValue = matchedFactorValue.trim();
-        matchedFactorValue = matchedFactorValue.replaceAll( "-", "_" );
-        matchedFactorValue = matchedFactorValue.replaceAll( "\\s", "_" );
-        return matchedFactorValue;
+        return v.replace( '-', '_' )
+                .replaceAll( "\\s+", "_" );
     }
 
     /**

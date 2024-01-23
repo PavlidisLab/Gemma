@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.expression.experiment.service;
 
-import com.google.common.collect.Sets;
 import gemma.gsec.SecurityService;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -116,7 +116,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
             current = new HashSet<>( this.searchExpressionExperiments( s ) );
 
-            all = Sets.intersection( all, current );
+            all = SetUtils.intersection( all, current );
         }
         return all;
     }

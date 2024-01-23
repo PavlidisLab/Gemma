@@ -29,9 +29,8 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,7 +50,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-public class LoadExpressionDataCli extends AbstractCLIContextCLI {
+public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
     // Command line Options
     private String accessionFile = null;
@@ -228,6 +227,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     private void processAccession( GeoService geoService, String accession ) {
         try {
 
+            log.info(" ***** Starting processing of " + accession + " *****");
             if ( updateOnly ) {
                 geoService.updateFromGEO( accession );
                 addSuccessObject( accession, "Updated" );

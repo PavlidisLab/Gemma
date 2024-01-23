@@ -1,0 +1,4 @@
+#!/bin/bash
+JENKINS_URL=https://jenkins.pavlab.msl.ubc.ca
+JENKINS_CRUMB=`curl "$JENKINS_URL/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)"`
+curl -X POST -H $JENKINS_CRUMB -F "jenkinsfile=<$(dirname "${BASH_SOURCE[0]}")/Jenkinsfile" $JENKINS_URL/pipeline-model-converter/validate

@@ -10,20 +10,16 @@ http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
 http://www.ebi.ac.uk/efo/EFO_0000408	disease
 http://gemma.msl.ubc.ca/ont/TGEMO_00101	disease model
 http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
-http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
-http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
 http://www.ebi.ac.uk/efo/EFO_0000513	genotype
 http://www.ebi.ac.uk/efo/EFO_0000523	growth condition
 http://www.ebi.ac.uk/efo/EFO_0000635	organism part
 http://www.ebi.ac.uk/efo/EFO_0000651	phenotype
 http://purl.obolibrary.org/obo/PATO_0000047	biological sex
 http://www.ebi.ac.uk/efo/EFO_0000727	treatment
-http://www.ebi.ac.uk/efo/EFO_0001702	temperature
 http://www.ebi.ac.uk/efo/EFO_0004444	environmental history
 http://www.ebi.ac.uk/efo/EFO_0005135	strain
 http://www.ebi.ac.uk/efo/EFO_0002755	diet
 http://purl.obolibrary.org/obo/GO_0007610	behavior
-http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure
 # OK for EFC and EFV but not EEtag
 http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0000246	age
@@ -39,6 +35,11 @@ http://purl.obolibrary.org/obo/GO_0008150	biological process
 http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
 # OK for EEtag only
 http://www.ebi.ac.uk/efo/EFO_0001426	study design
+# too rarely used to be useful
+#http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure
+#http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
+#http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
+#http://www.ebi.ac.uk/efo/EFO_0001702	temperature
 # Never to use any more for ee tags, factors, factor values.
 # But can be used for biomaterial characteristics
 #http://www.ebi.ac.uk/efo/EFO_0000562	labelling

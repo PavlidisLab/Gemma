@@ -68,8 +68,8 @@ Ext.onReady(function () {
             maxLength: 20,
             inputType: 'password',
             allowBlank: false,
-            id: 'oldpassword',
-            name: 'oldpassword'
+            id: 'oldPassword',
+            name: 'oldPassword'
         }, {
             fieldLabel: 'New password',
             id: 'password',

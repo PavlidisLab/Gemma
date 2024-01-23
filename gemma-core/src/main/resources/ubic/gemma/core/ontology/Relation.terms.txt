@@ -1,0 +1,27 @@
+# Terms usable for relations among concepts.
+http://purl.obolibrary.org/obo/RO_0000087	has role
+http://purl.obolibrary.org/obo/RO_0001000	derives from
+http://purl.obolibrary.org/obo/RO_0000053	has characteristic
+http://purl.obolibrary.org/obo/ENVO_01003004	derives from part of
+http://purl.obolibrary.org/obo/RO_0002260	has biological role
+http://purl.obolibrary.org/obo/RO_0000086	has quality
+http://purl.obolibrary.org/obo/RO_0002573	has modifier
+http://purl.obolibrary.org/obo/RO_0016002	has disease
+http://purl.obolibrary.org/obo/RO_0002200	has phenotype
+http://purl.obolibrary.org/obo/RO_0001025	located in
+http://purl.obolibrary.org/obo/GENO_0000222	has_genotype
+http://purl.obolibrary.org/obo/GENO_0000413	has_allele
+http://purl.obolibrary.org/obo/GENO_0000447	is_gene_target_of
+http://purl.obolibrary.org/obo/CLO_0037209	derived from cell
+http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
+http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
+http://purl.obolibrary.org/obo/RO_0002220	adjacent to
+http://purl.obolibrary.org/obo/RO_0002503	toward
+http://www.ebi.ac.uk/efo/EFO_0000784	has_disease_location
+http://gemma.msl.ubc.ca/ont/TGEMO_00167	delivered for duration
+http://gemma.msl.ubc.ca/ont/TGEMO_00166	delivered at dose
+http://gemma.msl.ubc.ca/ont/TGEMO_00168	has developmental stage
+http://gemma.msl.ubc.ca/ont/TGEMO_00169	positive for product of gene
+http://gemma.msl.ubc.ca/ont/TGEMO_00170	negative for product of gene
+http://gemma.msl.ubc.ca/ont/TGEMO_00171	induced by
+http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to

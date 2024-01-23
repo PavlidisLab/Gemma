@@ -27,8 +27,6 @@ import org.springframework.security.acls.domain.DefaultPermissionGrantingStrateg
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -43,7 +41,6 @@ import java.util.Properties;
  *
  * @author poirigui
  */
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     protected abstract static class BaseDatabaseTestContextConfiguration {

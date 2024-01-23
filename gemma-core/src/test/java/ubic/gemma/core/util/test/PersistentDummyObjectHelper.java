@@ -862,7 +862,7 @@ public class PersistentDummyObjectHelper {
             fv.setValue( "Factor value " + RandomStringUtils
                     .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             fv.setExperimentalFactor( ef );
-            fv.setCharacteristics( Collections.singleton( getTestCharacteristic( "name" + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
+            fv.setCharacteristics( Collections.singleton( getTestStatement( "name" + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
             fvCol.add( fv );
         }
 
@@ -873,6 +873,13 @@ public class PersistentDummyObjectHelper {
 
     protected Characteristic getTestCharacteristic( String name, String value ) {
         return Characteristic.Factory.newInstance( name, null, value, null, null, null, null );
+    }
+
+    protected Statement getTestStatement( String name, String value ) {
+        Statement s = Statement.Factory.newInstance();
+        s.setName( name );
+        s.setValue( value );
+        return s;
     }
 
     private Set<QuantitationType> addQuantitationTypes( Set<QuantitationType> quantitationTypes ) {

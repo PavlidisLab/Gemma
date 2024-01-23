@@ -1,5 +1,6 @@
 package ubic.gemma.core.apps;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -7,12 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -23,11 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
-    static class ExternalDatabaseUpdaterCliTestContextConfiguration extends BaseCliTestContextConfiguration {
+    static class ExternalDatabaseUpdaterCliTestContextConfiguration {
 
         @Bean
         public ExternalDatabaseUpdaterCli externalDatabaseUpdaterCli() {
@@ -42,6 +47,16 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         @Bean
         public UserManager userManager() {
             return mock( UserManager.class );
+        }
+
+        @Bean
+        public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
         }
     }
 

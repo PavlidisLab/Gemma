@@ -33,6 +33,9 @@ AnnotationController.createBioMaterialTag = function (p0, p1, callback) {
 AnnotationController.getCategoryTerms = function (callback) {
     dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getCategoryTerms', callback);
 };
+AnnotationController.getRelationTerms = function (callback) {
+    dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getRelationTerms', callback);
+};
 AnnotationController.removeBioMaterialTag = function (p0, p1, callback) {
     dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
 };
@@ -434,6 +437,14 @@ ExperimentalDesignController.updateFactorValueCharacteristics = function (p0, ca
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/updateFactorValueCharacteristics");
     dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
         'updateFactorValueCharacteristics', p0, callback);
+};
+ExperimentalDesignController.markFactorValuesAsNeedsAttention = function( p0, p1, callback ) {
+    dwr.engine._execute( ExperimentalDesignController._path, 'ExperimentalDesignController', 'markFactorValuesAsNeedsAttention',
+        p0, p1, callback );
+};
+ExperimentalDesignController.clearFactorValuesNeedsAttention = function( p0, p1, callback ) {
+    dwr.engine._execute( ExperimentalDesignController._path, 'ExperimentalDesignController', 'clearFactorValuesNeedsAttention',
+        p0, p1, callback );
 };
 // ====================================================================================
 if (typeof ExpressionDataFileUploadController === 'undefined') {
@@ -857,7 +868,7 @@ GenePickerController.searchGenesWithNCBIId = function (p0, p1, callback) {
 };
 GenePickerController.getTaxa = function (callback) {
     dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxa', callback);
-}; 
+};
 GenePickerController.getTaxaWithGenes = function (callback) {
     dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithGenes', callback);
 };

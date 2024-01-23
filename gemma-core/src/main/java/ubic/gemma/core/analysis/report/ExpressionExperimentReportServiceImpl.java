@@ -35,6 +35,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -406,21 +407,25 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
+        BatchEffectType effect = expressionExperimentService.getBatchEffect( ee );
+        String effectStatistics = expressionExperimentService.getBatchEffectStatistics( ee );
+        String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
         String confound = expressionExperimentService.getBatchConfound( ee );
-        String effect = expressionExperimentService.getBatchEffect( ee );
+        String confoundSummary = confound != null ? confound : "<no confound>";
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound != null ? confound : "<no confound>" );
-            log.info( "New batch confound for " + ee + ": " + ( confound != null ? confound : "<no confound>" ) );
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
+            log.info( "New batch confound for " + ee + ": " + confoundSummary );
         }
 
-        if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
+        if ( !Objects.equals( effect, ee.getBatchEffect() ) || !Objects.equals( effectStatistics, ee.getBatchEffectStatistics() ) ) {
             ee.setBatchEffect( effect );
-            log.info( "New batch effect for " + ee + ": " + effect );
+            ee.setBatchEffectStatistics( effectStatistics );
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
+            log.info( "New batch effect for " + ee + ": " + effectSummary );
         }
     }
 

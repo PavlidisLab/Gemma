@@ -26,8 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -48,7 +48,7 @@ import java.util.HashSet;
  *
  * @author xiangwan
  */
-public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
+public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     private final static String SPLIT_CHAR = "\t";
     private final static int NAME_I = 0;
     private final static int SHORT_NAME_I = LoadSimpleExpressionDataCli.NAME_I + 1;

@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
@@ -50,6 +51,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 
 /**
  * @author pavlidis
@@ -726,6 +729,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
                         "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                 + "where g2cs.AD = :arrayDesignId" )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
                 .setParameter( "arrayDesignId", arrayDesign.getId() )
                 .uniqueResult() ).longValue();
     }

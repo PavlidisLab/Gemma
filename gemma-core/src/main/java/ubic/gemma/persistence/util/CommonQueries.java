@@ -31,6 +31,8 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+
 /**
  * Contains methods to perform 'common' queries that are needed across DAOs.
  *
@@ -241,7 +243,10 @@ public class CommonQueries {
         queryObject.setParameterList( "ads", arrayDesigns );
         queryObject.setParameterList( "geneIds", genes );
         queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
+        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
+        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
+        queryObject.addSynchronizedEntityClass( Gene.class );
 
         CommonQueries.addGeneIds( cs2genes, queryObject );
 
@@ -337,7 +342,10 @@ public class CommonQueries {
         queryObject.addScalar( "geneId", LongType.INSTANCE );
         queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
         queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
+        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
+        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
+        queryObject.addSynchronizedEntityClass( Gene.class );
 
         CommonQueries.addGeneIds( cs2genes, queryObject );
 
@@ -353,6 +361,10 @@ public class CommonQueries {
         queryObject.addScalar( "csid", LongType.INSTANCE );
         queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
         queryObject.setParameterList( "adids", arrayDesignIds, LongType.INSTANCE );
+        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
+        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
+        queryObject.addSynchronizedEntityClass( Gene.class );
         //noinspection unchecked
         return queryObject.list();
     }

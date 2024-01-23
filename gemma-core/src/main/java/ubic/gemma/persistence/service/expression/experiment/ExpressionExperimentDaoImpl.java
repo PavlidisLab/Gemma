@@ -22,7 +22,6 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
@@ -66,6 +65,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 
 /**
  * @author pavlidis
@@ -311,6 +311,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
+        return ( ExpressionExperiment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee where ee.experimentalDesign = :ed" )
+                .setParameter( "ed", ed )
+                .uniqueResult();
+    }
+
+    @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
         final String queryString =
@@ -523,7 +531,7 @@ public class ExpressionExperimentDaoImpl
          * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
          * work to do.
          */
-        List raw = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Characteristic> raw = this.getSessionFactory().getCurrentSession().createQuery(
                 "select c from ExpressionExperiment e " + "join e.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
 
@@ -531,20 +539,24 @@ public class ExpressionExperimentDaoImpl
         /*
          * TODO we need to filter these better; some criteria could be included in the query
          */
-        for ( Object o : raw ) {
-            Characteristic c = ( Characteristic ) o;
+        for ( Characteristic c : raw ) {
 
             // filter. Could include this in the query if it isn't too complicated.
-            if ( StringUtils.isBlank( c.getCategoryUri() ) ) {
+            if ( c.getCategoryUri() == null ) {
                 continue;
             }
 
-            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+            if ( c.getValueUri() == null ) {
                 continue;
             }
 
-            if ( c.getCategory().equals( "MaterialType" ) || c.getCategory().equals( "molecular entity" )
-                    || c.getCategory().equals( "LabelCompound" ) ) {
+            if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
+                    || "molecular entity".equalsIgnoreCase( c.getCategory() )
+                    || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
+                continue;
+            }
+
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
                 continue;
             }
 
@@ -558,8 +570,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
-        List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
+    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
+        //noinspection unchecked
+        List<Statement> raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
                 + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
                 + "join fv.characteristics c where e.id= :eeid " ).setParameter( "eeid", eeId ).list();
 
@@ -567,35 +580,41 @@ public class ExpressionExperimentDaoImpl
          * FIXME filtering here is going to have to be more elaborate for this to be useful.
          */
         Collection<AnnotationValueObject> results = new HashSet<>();
-        for ( Object o : raw ) {
-            Characteristic c = ( Characteristic ) o;
+        for ( Statement c : raw ) {
+            // ignore baseline conditions
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
+                continue;
+            }
+
+            // ignore batch factors
+            if ( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( c.getCategory() )
+                    || ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI.equals( c.getCategoryUri() ) ) {
+                continue;
+            }
+
+            // ignore timepoints
+            if ( "http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() ) ) {
+                continue;
+            }
+
+            // DE_include/exclude
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
+                continue;
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
+                continue;
 
             // ignore free text values
-            if ( StringUtils.isBlank( c.getValueUri() ) ) {
-                continue;
+            if ( c.getSubjectUri() != null ) {
+                results.add( new AnnotationValueObject( c, FactorValue.class ) );
             }
 
-            // ignore baseline and batch factorvalues (could include in the query)
-            if ( BaselineSelection.isBaselineCondition( c ) || ( StringUtils.isNotBlank( c.getCategory() )
-                    && c.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) ) {
-                continue;
+            if ( c.getObject() != null && c.getObjectUri() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
             }
 
-            // ignore timepoint.
-            if ( StringUtils.isNotBlank( c.getCategoryUri() ) && c.getCategoryUri()
-                    .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" ) ) {
-                continue;
+            if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
             }
-
-            if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
-                // DE_include/exclude
-                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00013" ) )
-                    continue;
-                if ( c.getValueUri().equals( "http://gemma.msl.ubc.ca/ont/TGEMO_00014" ) )
-                    continue;
-            }
-
-            results.add( new AnnotationValueObject( c, FactorValue.class ) );
         }
 
         return results;
@@ -683,7 +702,7 @@ public class ExpressionExperimentDaoImpl
                 .addScalar( "CATEGORY", StandardBasicTypes.STRING )
                 .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
-                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .addSynchronizedEntityClass( Characteristic.class )
                 .setCacheable( true );
         if ( eeIds != null ) {
@@ -1780,41 +1799,41 @@ public class ExpressionExperimentDaoImpl
         ee.getCurationDetails().setLastNoteUpdateEvent( null );
         ee.getCurationDetails().setLastTroubledEvent( null );
 
-        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-
         // dissociate this EE from other parts
         for ( ExpressionExperiment e : ee.getOtherParts() ) {
             e.getOtherParts().remove( ee );
         }
         ee.getOtherParts().clear();
 
+        // detach from BA dimensions
+        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
         for ( BioAssayDimension dim : dims ) {
             dim.getBioAssays().clear();
         }
 
-        // we don't want to remove a biomaterial twice if it is attached to multiple BAs
-        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        for ( BioAssay ba : bioAssays ) {
-            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
-            BioMaterial biomaterial = ba.getSampleUsed();
-            if ( biomaterial == null ) {
-                log.warn( "BioAssay " + ba + " has no associated BioMaterial when attempting to remove its parent ExpressionExperiment. It will be skipped for now." );
-                continue;
-            }
-            bioMaterialsToDelete.add( biomaterial );
-            ba.setSampleUsed( null );
+        // first pass, detach BAs from the samples
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
         }
 
-        // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
-        for ( BioMaterial bm : bioMaterialsToDelete ) {
-            bm.getFactorValues().clear();
-            bm.getBioAssaysUsedIn().clear();
-            getSessionFactory().getCurrentSession().delete( bm );
+        // second pass, delete samples that are no longer attached to BAs
+        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() ) {
+                samplesToRemove.add( ba.getSampleUsed() );
+            } else {
+                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the sample will not be deleted.", ba.getSampleUsed() ) );
+            }
         }
 
         super.remove( ee );
+
+        // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
+        // cascading and that is not allowed in the data model
+        log.debug( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
+        for ( BioMaterial bm : samplesToRemove ) {
+            getSessionFactory().getCurrentSession().delete( bm );
+        }
     }
 
     @Override
@@ -1849,6 +1868,9 @@ public class ExpressionExperimentDaoImpl
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
                 Hibernate.initialize( bm.getFactorValues() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
                 Hibernate.initialize( bm.getTreatments() );
             }
         }
@@ -1863,6 +1885,9 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
+            for ( FactorValue fv : ba.getSampleUsed().getFactorValues() ) {
+                Hibernate.initialize( fv.getExperimentalFactor() );
+            }
             Hibernate.initialize( ba.getOriginalPlatform() );
         }
     }
@@ -1897,6 +1922,12 @@ public class ExpressionExperimentDaoImpl
         if ( expressionExperiment.getExperimentalDesign() != null ) {
             Hibernate.initialize( expressionExperiment.getExperimentalDesign() );
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+            for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+                Hibernate.initialize( ef );
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() ); // is it even necessary?
+                }
+            }
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }
 
@@ -2072,15 +2103,21 @@ public class ExpressionExperimentDaoImpl
         // attached terms
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
+        configurer.unregisterProperty( "characteristics.migratedToStatement" );
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
         configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
+        configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
         configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
+        configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
 
         // this is not useful, unless we add an alias to the alternate names
         configurer.unregisterProperties( p -> p.endsWith( "alternateNames.size" ) );

@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -66,7 +67,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         this.fileName = commandLine.getOptionValue( FILE_OPT );
     }

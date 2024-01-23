@@ -23,14 +23,14 @@
 
     <beans profile="test">
         <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
-            <property name="driverClassName" value="${gemma.db.driver}"/>
+            <property name="driverClassName" value="${gemma.testdb.driver}"/>
             <property name="username" value="${gemma.testdb.user}"/>
             <property name="password" value="${gemma.testdb.password}"/>
             <property name="jdbcUrl" value="${gemma.testdb.url}"/>
             <property name="dataSourceProperties">
                 <props>
-                    <prop key="connectionTimeZone">${gemma.db.timezone}</prop>
-                    <prop key="sessionVariables">sql_mode='${gemma.db.sqlMode}'</prop>
+                    <prop key="connectionTimeZone">${gemma.testdb.timezone}</prop>
+                    <prop key="sessionVariables">sql_mode='${gemma.testdb.sqlMode}'</prop>
                 </props>
             </property>
         </bean>

@@ -64,6 +64,8 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
+    ExpressionExperiment findByDesign( ExperimentalDesign ed );
+
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
 
     ExpressionExperiment findByFactorValue( FactorValue fv );
@@ -250,7 +252,7 @@ public interface ExpressionExperimentDao
 
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
-    Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
+    Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId );
 
     /**
      * Obtain all annotations, grouped by applicable level.

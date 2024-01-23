@@ -25,7 +25,7 @@ import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyUtils;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -35,7 +35,7 @@ import java.io.*;
  * @author Paul
  * @see ExperimentalDesignImporter
  */
-public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
+public class ExperimentalDesignImportCli extends AbstractAuthenticatedCLI {
 
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;

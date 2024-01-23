@@ -162,20 +162,14 @@ public class SignupController extends BaseController implements InitializingBean
         if ( reCaptcha.isPrivateKeySet() ) {
 
             if ( !reCaptcha.validateRequest( request ).isValid() ) {
-                JSONObject json = new JSONObject();
-                json.put( "success", false );
-                json.put( "message", "Captcha was not entered correctly." );
-                JsonUtil.writeToResponse( json, response );
+                JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Captcha was not entered correctly.", response );
                 return;
             }
 
         }
 
         if ( password.length() < UserFormMultiActionController.MIN_PASSWORD_LENGTH || !password.equals( cPass ) ) {
-            JSONObject json = new JSONObject();
-            json.put( "success", false );
-            json.put( "message", "Password was not valid or didn't match" );
-            JsonUtil.writeToResponse( json, response );
+            JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Password was not valid or didn't match", response );
             return;
         }
 
@@ -187,10 +181,7 @@ public class SignupController extends BaseController implements InitializingBean
          */
         if ( !email.matches( "^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$" ) || !email
                 .equals( cEmail ) ) {
-            JSONObject json = new JSONObject();
-            json.put( "success", false );
-            json.put( "message", "Email was not valid or didn't match" );
-            JsonUtil.writeToResponse( json, response );
+            JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Email was not valid or didn't match", response );
             return;
         }
 

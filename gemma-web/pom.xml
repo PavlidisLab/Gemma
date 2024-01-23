@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.30.6</version>
+		<version>1.31.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -101,7 +101,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.2</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<directory>${project.basedir}/../gemma-rest/src/main/resources/restapidocs</directory>
+							<targetPath>resources/restapidocs</targetPath>
+						</resource>
+					</webResources>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -182,7 +189,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20230227</version>
+			<version>20231013</version>
 		</dependency>
 
 		<!-- AJAX -->

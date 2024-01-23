@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -87,7 +88,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         }
 
         FactorValue fv = ef.getFactorValues().iterator().next();
-        fv.setCharacteristics( this.getTestPersistentCharacteristics( 1 ) );
+        fv.setCharacteristics( this.getTestPersistentStatements( 1 ) );
         fvService.update( fv );
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
@@ -150,6 +151,19 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         Set<Characteristic> chars = new HashSet<>();
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
+            c.setCategory( "test" );
+            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
+            characteristicService.create( c );
+            chars.add( c );
+        }
+        return chars;
+    }
+
+    private Set<Statement> getTestPersistentStatements( int n ) {
+        Set<Statement> chars = new HashSet<>();
+        for ( int i = 0; i < n; ++i ) {
+            Statement c = Statement.Factory.newInstance();
             c.setCategory( "test" );
             c.setValue( RandomStringUtils.randomNumeric( 10 ) );
             c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );

@@ -30,7 +30,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -46,6 +45,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -87,8 +88,11 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     @Before
     public void setUp() throws Exception {
-        OntologyTestUtils.initialize( goService, new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ) );
+        // force-load specific terms to get consistent results, this dirites the context
+        try ( InputStream stream = new GZIPInputStream(
+                new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() ) ) {
+            goService.initialize( stream, false );
+        }
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),

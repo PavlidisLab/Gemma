@@ -23,12 +23,14 @@ import cern.colt.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -45,6 +47,9 @@ import java.util.Map;
  * @author paul
  */
 public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManipulatingCLI {
+
+    @Autowired
+    private PersisterHelper persisterHelper;
 
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
@@ -78,7 +83,6 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     protected void doWork() throws Exception {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
-        Persister ph = this.getPersisterHelper();
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
         // collect some statistics
@@ -131,7 +135,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
             try {
                 log.info( "Found pubAccession " + ref.getPubAccession().getAccession() + " for " + experiment );
-                ref = ( BibliographicReference ) ph.persist( ref );
+                ref = ( BibliographicReference ) persisterHelper.persist( ref );
                 experiment.setPrimaryPublication( ref );
                 ees.update( experiment );
             } catch ( Exception e ) {
@@ -155,7 +159,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( "pmidFile" ) ) {
             this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );

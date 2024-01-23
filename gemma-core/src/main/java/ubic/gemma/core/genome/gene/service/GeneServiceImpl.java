@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -307,6 +307,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
+        // FIXME: this is redundant as aliases are setup by the converter
         Collection<GeneAlias> aliasObjects = gene.getAliases();
         SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {

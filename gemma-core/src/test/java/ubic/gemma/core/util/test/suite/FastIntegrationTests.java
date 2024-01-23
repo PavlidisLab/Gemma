@@ -6,7 +6,8 @@ import org.junit.runners.Suite;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 @RunWith(Categories.class)
+@Categories.IncludeCategory(IntegrationTests.class)
 @Categories.ExcludeCategory(SlowTest.class)
-@Suite.SuiteClasses({ IntegrationTests.class })
+@Suite.SuiteClasses(AllTests.class)
 public class FastIntegrationTests {
 }

@@ -35,6 +35,9 @@
                 <column name="NCBI_GI" not-null="false" unique="false"
                         sql-type="VARCHAR(255)"/>
             </property>
+            <property name="dummy" type="java.lang.Boolean">
+                <column name="DUMMY" not-null="false" sql-type="TINYINT"/>
+            </property>
             <!--  having cascade-all here is a problem since the same entry can be associated with a biosequence as well -->
             <set name="accessions" lazy="true" fetch="select" cascade="all">
                 <cache usage="read-write"/>
@@ -64,7 +67,8 @@
                 <column name="ENSEMBL_ID" not-null="false" unique="false"
                         sql-type="VARCHAR(255)"/>
             </property>
-            <set name="products" lazy="true" fetch="select" inverse="true" cascade="all">
+            <!-- dummy gene products are not visible in this collection, use BioSequence2GeneProduct instead -->
+            <set name="products" lazy="true" fetch="select" inverse="true" cascade="all" where="DUMMY = 0">
                 <cache usage="read-write"/>
                 <key foreign-key="GENE_PRODUCT_GENE_FKC">
                     <column name="GENE_FK" sql-type="BIGINT"/>

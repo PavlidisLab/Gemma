@@ -221,7 +221,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 header: category + " (raw characteristic)",
                 dataIndex: "char" + category.hashCode(),
                 width: 120,
-                tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
+                tooltip: category + ": A non-constant Biomaterial characteristic displayed for reference purposes.",
                 sortable: true
             });
         }
@@ -574,18 +574,17 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
         this.getTopToolbar().factorValueCombo.store.reload();
     },
 
-    createValueRenderer: function () {
-
-        return function (value, metadata, record, row, col, ds) {
-
-            if (!value) {
-                return "-";
+    createValueRenderer : function( ) {
+        return function( value ) {
+            if ( value === null || value === "" ) {
+                return "<i>unassigned</i>";
             }
-
-            var k = this.fvMap[value];
-            return k ? k : value;
-
-        }.createDelegate(this);
+            if ( value in this.fvMap ) {
+                return this.fvMap[value];
+            } else {
+                return value;
+            }
+        }.createDelegate( this );
     },
 
     rowExpander: new Ext.grid.RowExpander(

@@ -57,8 +57,14 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes ) {
+        return auditEventDao.getLastEvent( auditable, type, excludedTypes );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         return this.auditEventDao.getLastEventsByType( auditables, types );
     }
 

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
    <class name="ubic.gemma.model.expression.biomaterial.BioMaterial" table="BIO_MATERIAL">
-      <cache usage="read-write" />
+      <cache usage="read-write"/>
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
          <generator class="native">
@@ -17,40 +17,42 @@
       <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
-      <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
+      <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
          <column name="SOURCE_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="factorValues" table="BIO_MATERIAL_FACTOR_VALUES" lazy="false" fetch="select">
-         <cache usage="read-write" />
+         <cache usage="read-write"/>
          <key foreign-key="FACTOR_VALUE_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
-         <many-to-many class="ubic.gemma.model.expression.experiment.FactorValue" >
+         <many-to-many class="ubic.gemma.model.expression.experiment.FactorValue">
             <column name="FACTOR_VALUES_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>
       <set name="bioAssaysUsedIn" lazy="false" fetch="select" inverse="true">
-         <cache usage="read-write" />
+         <cache usage="read-write"/>
          <key foreign-key="BIO_ASSAY_SAMPLE_USED_FKC">
             <column name="SAMPLE_USED_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
       </set>
       <set name="treatments" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
+         <cache usage="read-write"/>
          <key foreign-key="TREATMENT_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.expression.biomaterial.Treatment"/>
       </set>
       <set name="characteristics" lazy="false" fetch="select" cascade="all">
-         <cache usage="read-write" />
+         <cache usage="read-write"/>
          <key foreign-key="CHARACTERISTIC_BIO_MATERIAL_FKC">
             <column name="BIO_MATERIAL_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
-      <many-to-one name="externalAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="join">
+      <many-to-one name="externalAccession" class="ubic.gemma.model.common.description.DatabaseEntry"
+                   cascade="all"
+                   lazy="false" fetch="join">
          <column name="EXTERNAL_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
    </class>

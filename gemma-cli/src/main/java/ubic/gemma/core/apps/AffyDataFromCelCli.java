@@ -22,6 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
@@ -182,7 +183,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
             this.aptFile = commandLine.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );

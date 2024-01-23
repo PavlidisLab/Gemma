@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -83,7 +83,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
                 vectors = processed;
             }
 
-            if ( vectors.size() > 1 && !Strings.isNullOrEmpty( mode ) ) { // Consolidation requested
+            if ( vectors.size() > 1 && !StringUtils.isEmpty( mode ) ) { // Consolidation requested
                 switch ( mode ) {
                     case ( OPT_PICK_MAX ):
                         elements.add( this.pickMax( vectors ) );

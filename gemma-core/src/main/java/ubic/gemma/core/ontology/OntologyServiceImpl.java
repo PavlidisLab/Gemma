@@ -33,11 +33,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -48,17 +47,13 @@ import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -88,8 +83,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             CHILDREN_CACHE_NAME = "OntologyService.children";
 
     @Autowired
-    private BioMaterialService bioMaterialService;
-    @Autowired
     private CharacteristicService characteristicService;
     @Autowired
     private SearchService searchService;
@@ -102,12 +95,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
-    @Deprecated
-    @Autowired
-    private FMAOntologyService fmaOntologyService;
-    @Deprecated
-    @Autowired
-    private NIFSTDOntologyService nifstdOntologyService;
     @Autowired
     private ObiService obiService;
 
@@ -130,12 +117,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private OntologyCache ontologyCache;
     private Set<OntologyTermSimple> categoryTerms = null;
 
+    private Set<OntologyPropertySimple> relationTerms = null;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
-        if ( ontologyServiceFactories != null ) {
+        if ( ontologyServiceFactories != null && autoLoadOntologies ) {
             List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
-                    .filter( OntologyServiceFactory::isAutoLoaded )
                     .map( factory -> {
                         try {
                             return factory.getObject();
@@ -149,13 +137,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
                         .map( ubic.basecode.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
-            } else if ( autoLoadOntologies ) {
+            } else {
                 log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
             }
         }
         // remove GeneOntologyService, it was originally not included in the list before bean injection was used
         ontologyServices.remove( geneOntologyService );
         initializeCategoryTerms();
+        initializeRelationTerms();
     }
 
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
@@ -399,32 +388,31 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return combineInThreads( os -> ontologyCache.getParents( os, terms, direct, includeAdditionalProperties ) );
+        Set<OntologyTerm> toQuery = new HashSet<>( terms );
+        Set<OntologyTerm> results = new HashSet<>();
+        while ( !toQuery.isEmpty() ) {
+            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties ) );
+            results.addAll( newResults );
+            // toQuery = newResults - toQuery
+            newResults.removeAll( toQuery );
+            toQuery.clear();
+            toQuery.addAll( newResults );
+        }
+        return results;
     }
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        StopWatch timer = StopWatch.createStarted();
-        try {
-            return combineInThreads( os -> {
-                StopWatch timer2 = StopWatch.createStarted();
-                try {
-                    return ontologyCache.getChildren( os, terms, direct, includeAdditionalProperties );
-                } finally {
-                    if ( timer2.getTime() > 1000 ) {
-                        log.warn( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
-                    } else {
-                        log.trace( String.format( "Gathering children of %d terms from %s took %d ms", terms.size(), os, timer2.getTime() ) );
-                    }
-                }
-            } );
-        } finally {
-            if ( timer.getTime() > 1000 ) {
-                log.warn( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
-            } else {
-                log.debug( String.format( "Gathering children of %d terms took %d ms", terms.size(), timer.getTime() ) );
-            }
+        Set<OntologyTerm> toQuery = new HashSet<>( terms );
+        Set<OntologyTerm> results = new HashSet<>();
+        while ( !toQuery.isEmpty() ) {
+            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties ) );
+            results.addAll( newResults );
+            newResults.removeAll( toQuery );
+            toQuery.clear();
+            toQuery.addAll( newResults );
         }
+        return results;
     }
 
     @Override
@@ -437,6 +425,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             return efoTerm;
                         }
                     }
+                    return term;
+                } )
+                .collect( Collectors.toSet() );
+    }
+
+
+    @Override
+    public Collection<OntologyProperty> getRelationTerms() {
+        // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
+        return relationTerms.stream()
+                .map( term -> {
                     return term;
                 } )
                 .collect( Collectors.toSet() );
@@ -498,7 +497,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public void reinitializeAllOntologies() {
+    public void reinitializeAndReindexAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
             ontologyTaskExecutor.execute( () -> {
                 serv.initialize( true, true );
@@ -507,75 +506,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    @Override
-    public void removeBioMaterialStatement( Long characterId, BioMaterial bm ) {
-        Characteristic vc = characteristicService.load( characterId );
-        if ( vc == null )
-            throw new IllegalArgumentException( "No characteristic with id=" + characterId + " was foundF" );
-        bm.getCharacteristics().remove( vc );
-        characteristicService.remove( characterId );
-    }
-
-    @Override
-    public void saveBioMaterialStatement( Characteristic vc, BioMaterial bm ) {
-
-        OntologyServiceImpl.log.debug( "Vocab Characteristic: " + vc );
-
-        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<>();
-        chars.add( vc );
-
-        Set<Characteristic> current = bm.getCharacteristics();
-        if ( current == null )
-            current = new HashSet<>( chars );
-        else
-            current.addAll( chars );
-
-        for ( Characteristic characteristic : chars ) {
-            OntologyServiceImpl.log.info( "Adding characteristic to " + bm + " : " + characteristic );
-        }
-
-        bm.setCharacteristics( current );
-        bioMaterialService.update( bm );
-
-    }
-
-    @Override
-    public void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        if ( vc == null ) {
-            throw new IllegalArgumentException( "Null characteristic" );
-        }
-        if ( StringUtils.isBlank( vc.getCategory() ) ) {
-            throw new IllegalArgumentException( "Must provide a category" );
-        }
-
-        if ( StringUtils.isBlank( vc.getValue() ) ) {
-            throw new IllegalArgumentException( "Must provide a value" );
-        }
-
-        if ( vc.getEvidenceCode() == null ) {
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
-        }
-
-        if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
-            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
-        }
-
-        if ( ee == null )
-            throw new IllegalArgumentException( "Experiment cannot be null" );
-
-        OntologyServiceImpl.log
-                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
-                        + ") : " + vc );
-
-        ee.getCharacteristics().add( vc );
-    }
-
     /**
      * Convert raw ontology resources into Characteristics.
      */
-    @Override
-    public Collection<Characteristic> termsToCharacteristics( final Collection<OntologyTerm> terms ) {
+    private Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms ) {
 
         Collection<Characteristic> results = new HashSet<>();
 
@@ -598,62 +532,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return results;
     }
 
-    @Override
-    public Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step ) {
-        Map<String, CharacteristicValueObject> vos = new HashMap<>();
-
-        int minId = start;
-        int maxId = step;
-
-        int nullCnt = 0;
-        int obsoleteCnt = 0;
-
-        // Loading all characteristics in steps
-        while ( maxId < stop ) {
-
-            OntologyServiceImpl.log.info( "Checking characteristics with IDs between " + minId + " and " + maxId );
-
-            List<Long> ids = new ArrayList<>( step );
-            for ( int i = minId; i < maxId + 1; i++ ) {
-                ids.add( ( long ) i );
-            }
-
-            minId = maxId + 1;
-            maxId += step;
-
-            Collection<Characteristic> chars = characteristicService.load( ids );
-
-            if ( chars == null || chars.isEmpty() ) {
-                OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
-                continue;
-            }
-            OntologyServiceImpl.log.info( "Found " + chars.size()
-                    + " characteristics in the current ID range, checking for obsoletes." );
-
-            // Detect obsoletes
-            for ( Characteristic ch : chars ) {
-                if ( StringUtils.isBlank( ch.getValueUri() ) ) {
-                    nullCnt++;
-                } else if ( this.isObsolete( ch.getValueUri() ) ) {
-                    String key = this.foundValueKey( ch );
-                    if ( !vos.containsKey( key ) ) {
-                        vos.put( key, new CharacteristicValueObject( ch ) );
-                    }
-                    vos.get( key ).incrementOccurrenceCount();
-                    obsoleteCnt++;
-                    OntologyServiceImpl.log.info( "Found obsolete term: " + ch.getValue() + " / " + ch.getValueUri() );
-                }
-            }
-
-            ids.clear();
-            chars.clear();
-        }
-
-        OntologyServiceImpl.log.info( "Terms with empty uri: " + nullCnt );
-        OntologyServiceImpl.log.info( "Obsolete terms found: " + obsoleteCnt );
-
-        return vos;
-    }
 
     private Characteristic termToCharacteristic( OntologyTerm res ) {
         if ( res.isObsolete() ) {
@@ -673,6 +551,65 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
 
         return vc;
+    }
+
+    @Override
+    public Map<String, CharacteristicValueObject> findObsoleteTermUsage() {
+        Map<String, CharacteristicValueObject> vos = new HashMap<>();
+
+        int start = 0;
+        int step = 5000;
+
+        int prevObsoleteCnt = 0;
+        int checked = 0;
+        CharacteristicValueObject lastObsolete = null;
+
+        while ( true ) {
+
+            Collection<Characteristic> chars = characteristicService.browse( start, step );
+            start += step;
+
+            if ( chars == null || chars.isEmpty() ) {
+                break;
+            }
+
+            for ( Characteristic ch : chars ) {
+                String valueUri = ch.getValueUri();
+                if ( StringUtils.isBlank( valueUri ) ) {
+                    continue;
+                }
+
+                checked++;
+
+                if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
+
+                    if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
+                        // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
+                        continue;
+                    }
+
+
+                    if ( !vos.containsKey( valueUri ) ) {
+                        vos.put( valueUri, new CharacteristicValueObject( ch ) );
+                    }
+                    vos.get( valueUri ).incrementOccurrenceCount();
+                    if ( log.isDebugEnabled() )
+                        OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
+                    lastObsolete = vos.get( valueUri );
+                }
+            }
+
+            if ( vos.size() > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete or missing terms so far, tested " + checked + " characteristics" );
+                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
+            }
+
+            prevObsoleteCnt = vos.size();
+        }
+
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + vos.size() );
+
+        return vos;
     }
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
@@ -705,7 +642,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     private CharacteristicValueObject characteristicToValueObject( Characteristic characteristic ) {
-        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
+        CharacteristicValueObject vo = new CharacteristicValueObject( characteristic.getValue(), characteristic.getValueUri() );
         vo.setCategory( null );
         vo.setCategoryUri( null ); // to avoid us counting separately by category.
         vo.setAlreadyPresentInDatabase( true );
@@ -723,8 +660,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
         if ( useNeuroCartaOntology ) {
             ontologyServicesToUse = Arrays.asList(
-                    nifstdOntologyService,
-                    fmaOntologyService,
+//                    nifstdOntologyService,
+//                    fmaOntologyService,
                     obiService );
         } else {
             ontologyServicesToUse = this.ontologyServices;
@@ -736,8 +673,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( OntologyTerm ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
-                            ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
                     characteristicsFromOntology.add( phenotype );
                 }
             }
@@ -787,6 +723,25 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( autoLoadOntologies && !experimentalFactorOntologyService.isEnabled() ) {
             OntologyServiceImpl.log.warn( String.format( "%s is not enabled; using light-weight placeholder for categories.",
                     experimentalFactorOntologyService ) );
+        }
+    }
+
+
+    private void initializeRelationTerms() throws IOException {
+        Set<OntologyPropertySimple> relationTerms = new HashSet<>();
+        Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+            String line;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
+                    continue;
+                String[] f = StringUtils.split( line, '\t' );
+                if ( f.length < 2 ) {
+                    continue;
+                }
+                relationTerms.add( new OntologyPropertySimple( f[0], f[1] ) );
+            }
+            this.relationTerms = Collections.unmodifiableSet( relationTerms );
         }
     }
 

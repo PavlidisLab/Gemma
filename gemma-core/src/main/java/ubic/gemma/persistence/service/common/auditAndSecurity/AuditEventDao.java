@@ -20,10 +20,8 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseDao;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -49,8 +47,13 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      */
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
+    /**
+     * Obtain the latest {@link AuditEvent} of a specified type, excluding a certain number of types.
+     */
+    AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
+
     Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEventsByType(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * Get auditables that have been Created since the given date

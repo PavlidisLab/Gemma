@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
+import org.apache.commons.lang3.RandomUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -64,5 +65,22 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed " )
                 .setParameter( "ed", experimentalDesign ).uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludedDesign ) {
+        Long numThatNeedsAttention = ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct ed) from ExperimentalDesign ed join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
+                .setParameter( "edId", excludedDesign.getId() )
+                .uniqueResult();
+        return ( ExperimentalDesign ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ed from ExperimentalDesign ed join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
+                .setParameter( "edId", excludedDesign.getId() )
+                .setFirstResult( RandomUtils.nextInt( 0, numThatNeedsAttention.intValue() ) )
+                .setMaxResults( 1 )
+                .uniqueResult();
     }
 }

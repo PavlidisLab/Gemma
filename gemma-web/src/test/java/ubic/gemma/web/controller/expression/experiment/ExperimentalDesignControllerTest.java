@@ -1,143 +1,242 @@
-/*
- * The Gemma project
- *
- * Copyright (c) 2006 University of British Columbia
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.web.controller.expression.experiment;
 
+import gemma.gsec.SecurityService;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
-
-import ubic.gemma.model.common.description.Characteristic;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.expression.experiment.FactorValueDeletion;
+import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.web.util.BaseWebTest;
 
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.Map;
+import java.util.function.Function;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
-/**
- * @author Kiran Keshav
- */
-public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
+@ContextConfiguration
+public class ExperimentalDesignControllerTest extends BaseWebTest {
+
+    @Configuration
+    @TestComponent
+    static class ExperimentalDesignControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
+
+        @Bean
+        public ExperimentalDesignController experimentalDesignController() {
+            return new ExperimentalDesignController();
+        }
+
+        @Bean
+        public FactorValueService factorValueService() {
+            return mock();
+        }
+
+        @Bean
+        public BioMaterialService bioMaterialService() {
+            return mock();
+        }
+
+        @Bean
+        public CharacteristicService characteristicService() {
+            return mock();
+        }
+
+        @Bean
+        public ExperimentalDesignImporter experimentalDesignImporter() {
+            return mock();
+        }
+
+        @Bean
+        public ExperimentalDesignService experimentalDesignService() {
+            return mock();
+        }
+
+        @Bean
+        public ExperimentalFactorService experimentalFactorService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentReportService experimentReportService() {
+            return mock();
+        }
+
+        @Bean
+        public FactorValueDeletion factorValueDeletion() {
+            return mock();
+        }
+
+        @Bean
+        public SecurityService securityService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private ExperimentalDesignController experimentalDesignController;
 
     @Autowired
-    private ExperimentalFactorService experimentalFactorService;
+    private FactorValueService factorValueService;
 
-    @Autowired
-    private ExpressionExperimentService eeService;
+    /* fixtures */
+    private FactorValue fv;
 
-    @Test
-    public void testShowExperimentalDesign() throws Exception {
+    @Before
+    public void setUp() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
+        when( factorValueService.load( fv.getId() ) ).thenReturn( fv );
+    }
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
-
-        MockHttpServletRequest req = super.newGet( "/experimentalDesign/showExperimentalDesign.html" );
-
-        ExperimentalDesign ed = ee.getExperimentalDesign();
-
-        assertTrue( ed != null && ee.getId() != null );
-
-        req.addParameter( "name", "Experimental Design 0" );
-
-        req.addParameter( "eeid", String.valueOf( ee.getId() ) );
-
-        req.setRequestURI( "/experimentalDesign/showExperimentalDesign.html" );
-
-        ModelAndView mav = experimentalDesignController.show( req, ( HttpServletResponse ) null );
-
-        Map<String, Object> m = mav.getModel();
-        assertNotNull( m.get( "expressionExperiment" ) );
-
-        assertEquals( mav.getViewName(), "experimentalDesign.detail" );
+    @After
+    public void tearDown() {
+        reset( factorValueService, expressionExperimentService );
     }
 
     @Test
-    public void testGetExperimentalFactors() throws Exception {
-
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly.
-
-        Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
-                .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
-        assertTrue( !experimentalFactors.isEmpty() );
+    public void testCreateFactorValueCharacteristic() {
+        EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
+        cvo.setCategory( "test" );
+        cvo.setValue( "test2" );
+        experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
+        verify( factorValueService ).load( 1L );
+        Statement stmt = new Statement();
+        stmt.setCategory( "test" );
+        stmt.setSubject( "test2" );
+        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).createStatement( fv, stmt );
+        verifyNoMoreInteractions( factorValueService );
     }
 
     @Test
-    public void testGetExperimentalFactorValues() throws Exception {
-
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
-
-        ee = this.eeService.thawLite( ee );
-
-        Collection<FactorValueValueObject> fvs = experimentalDesignController.getFactorValuesWithCharacteristics(
-                new EntityDelegator( ee.getExperimentalDesign().getExperimentalFactors().iterator().next() ) );
-        assertTrue( !fvs.isEmpty() );
+    public void testCreateFactorValueWithBlankCategory() {
+        EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
+        assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "The category cannot be blank" );
+        verify( factorValueService ).load( 1L );
+        verifyNoMoreInteractions( factorValueService );
     }
 
     @Test
-    public void testCreateExperimentalFactor() throws Exception {
-
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
-
-        ee = this.eeService.thawLite( ee );
-
-        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject( -1L );
-        evvo.setCategory( "foo" );
-        experimentalDesignController
-                .createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
-
+    public void testCreateFactorValueWithBlankValue() {
+        EntityDelegator<FactorValue> fvDelegate = new EntityDelegator<>( fv );
+        CharacteristicValueObject cvo = new CharacteristicValueObject();
+        cvo.setCategory( "test" );
+        assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "The value cannot be blank" );
+        verify( factorValueService ).load( 1L );
+        verifyNoMoreInteractions( factorValueService );
     }
 
     @Test
-    public void testAddCharacteristicToFactorValue() throws Exception {
-
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
-
-        ee = this.eeService.thawLite( ee );
-
-        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
-        assertNotNull( ef );
-        EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
-
-        Characteristic vc = Characteristic.Factory.newInstance();
-        vc.setValue( "foo" );
-        vc.setCategory( "bar" );
-        vc.setCategoryUri( "bar" );
-        vc.setValueUri( "foo" );
-        experimentalDesignController.createFactorValueCharacteristic( e, vc );
-        assertEquals( 2, ef.getFactorValues().size() );
-
-        // new empty
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
-        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
-
-        ef = experimentalFactorService.load( ef.getId() );
-        assertNotNull( ef );
-        assertEquals( 5, ef.getFactorValues().size() );
+    public void testUpdateFactorValueCharacteristic() {
+        Statement s1 = new Statement();
+        s1.setCategory( "bar" );
+        s1.setSubject( "foo" );
+        Statement s2 = new Statement();
+        s2.setCategory( "bar" );
+        s2.setSubject( "bar" );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] {
+                new FactorValueValueObject( fv, s1 ),
+                new FactorValueValueObject( fv, s2 ) } );
+        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any( Function.class ) );
+        verify( factorValueService ).saveStatement( fv, s1 );
+        verify( factorValueService ).saveStatement( fv, s2 );
+        verifyNoMoreInteractions( factorValueService );
     }
 
+    @Test
+    public void testMarkAsNeedsAttention() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+
+        experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "foo" );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).markAsNeedsAttention( fv, "foo" );
+    }
+
+    @Test
+    public void testMarkAsNeedsAttentionWhenFactorValueIsAlreadyMarked() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setNeedsAttention( true );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        assertThatThrownBy( () -> {
+            experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "" );
+        } ).isInstanceOf( IllegalArgumentException.class );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testClearNeedsAttention() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setNeedsAttention( true );
+        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        experimentalDesignController.clearFactorValuesNeedsAttention( new Long[] { fv.getId() }, "" );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).clearNeedsAttentionFlag( fv, "" );
+        verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testNeedsAttentionIsResetWhenFVIsSaved() {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        fv.setNeedsAttention( true );
+        FactorValueValueObject fvvo = new FactorValueValueObject( fv );
+        fvvo.setCategory( "test" );
+        fvvo.setValue( "test" );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
+        verify( factorValueService ).saveStatement( eq( fv ), any() );
+        verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
+        verifyNoMoreInteractions( factorValueService );
+    }
 }

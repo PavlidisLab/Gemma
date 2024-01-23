@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +29,7 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
@@ -43,6 +44,7 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -79,6 +81,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.SubqueryUtils.guessAliases;
 
 /**
@@ -154,7 +157,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
         assert fv.getExperimentalFactor() != null;
-        ExpressionExperiment experiment = Objects.requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         fv = this.factorValueService.create( fv );
@@ -388,6 +391,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByExpressedGene( gene, rank );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
+        return this.expressionExperimentDao.findByDesign( ed );
+    }
+
     /**
      * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
      */
@@ -487,27 +496,15 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
-        ExpressionExperiment expressionExperiment = Objects.requireNonNull( this.load( eeId ) );
+        ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
         Set<AnnotationValueObject> annotations = new HashSet<>();
+        Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 
-        Collection<String> seenTerms = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
-
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
-
-            annotations.add( annotationValue );
-            seenTerms.add( annotationValue.getTermName() );
-        }
-
-        /*
-         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
-         * biomaterials? (non-redundant with tags)
-         */
-        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
-            if ( !seenTerms.contains( v.getTermName() ) ) {
-                annotations.add( v );
+            if ( seenTerms.add( annotationValue.getTermName() ) ) {
+                annotations.add( annotationValue );
             }
-            seenTerms.add( v.getTermName() );
         }
 
         /*
@@ -515,10 +512,19 @@ public class ExpressionExperimentServiceImpl
          * non-batch, non-redundant with tags). This is tricky because they are so specific...
          */
         for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
-            if ( !seenTerms.contains( v.getTermName() ) ) {
+            if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
             }
-            seenTerms.add( v.getTermName() );
+        }
+
+        /*
+         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
+         * biomaterials? (non-redundant with tags)
+         */
+        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
+            if ( seenTerms.add( v.getTermName() ) ) {
+                annotations.add( v );
+            }
         }
 
         return annotations;
@@ -893,7 +899,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        return Strings.emptyToNull( result.toString() );
+        return StringUtils.stripToNull( result.toString() );
     }
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
@@ -920,25 +926,30 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
-        if ( !details.hasBatchInformation() || details.isSingleBatch() || details.isFailedToGetBatchInformation()
-                || details.getHadUninformativeHeaders() || details.getHadSingletonBatches() ) {
+        // if missing or failed, we can't compute a P-value
+        if ( !details.hasBatchInformation() || details.hasProblematicBatchInformation() ) {
+            return details;
+        }
+
+        // we can't compute a P-value for a single batch
+        if ( details.isSingleBatch() ) {
             return details;
         }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null )
+                if ( svd == null ) {
+                    log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
                     break;
+                }
                 double minP = 1.0;
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
                     Double pVal = cmpEffects.get( ef.getId() );
 
                     if ( pVal != null && pVal < minP ) {
-                        details.setPvalue( pVal );
-                        details.setComponent( component + 1 );
-                        details.setComponentVarianceProportion( svd.getVariances()[component] );
+                        details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                         minP = pVal;
                     }
 
@@ -946,6 +957,9 @@ public class ExpressionExperimentServiceImpl
                 return details;
             }
         }
+
+        log.warn( String.format( "No suitable batch factor was found for %s to obtain batch effect statistics.", ee ) );
+
         return details;
     }
 
@@ -954,31 +968,42 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public String getBatchEffect( ExpressionExperiment ee ) {
+    public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
-
-        String result;
         if ( !beDetails.hasBatchInformation() ) {
-            result = "NO_BATCH_INFO";
-        } else if ( beDetails.getHadSingletonBatches() ) {
-            result = "SINGLETON_BATCHES_FAILURE";
-        } else if ( beDetails.getHadUninformativeHeaders() ) {
-            result = "UNINFORMATIVE_HEADERS_FAILURE";
+            return BatchEffectType.NO_BATCH_INFO;
+        } else if ( beDetails.getHasSingletonBatches() ) {
+            return BatchEffectType.SINGLETON_BATCHES_FAILURE;
+        } else if ( beDetails.getHasUninformativeBatchInformation() ) {
+            return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
-            result = "SINGLE_BATCH_SUCCESS";
+            return BatchEffectType.SINGLE_BATCH_SUCCESS;
         } else if ( beDetails.getDataWasBatchCorrected() ) {
-            result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-        } else if ( beDetails.isFailedToGetBatchInformation() ) {
-            result = "NO_BATCH_INFO"; // sort of generic
-        } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-            result = String.format( "This data set may have a batch artifact%s, p=%.5g",
-                    beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "",
-                    beDetails.getPvalue() );
+            // Checked for in ExpressionExperimentDetails.js::renderStatus()
+            return BatchEffectType.BATCH_CORRECTED_SUCCESS;
+        } else if ( beDetails.hasProblematicBatchInformation() ) {
+            // sort of generic
+            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
+        } else if ( beDetails.getBatchEffectStatistics() == null ) {
+            return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
+        } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
-            result = "NO_BATCH_EFFECT_SUCCESS";
+            return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
         }
+    }
 
-        return result;
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public String getBatchEffectStatistics( ExpressionExperiment ee ) {
+        BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
+        if ( beDetails.getBatchEffectStatistics() != null ) {
+            return String.format( "This data set may have a batch artifact (PC %d), p=%.5g",
+                    beDetails.getBatchEffectStatistics().getComponent(),
+                    beDetails.getBatchEffectStatistics().getPvalue() );
+        }
+        return null;
     }
 
     @Override
@@ -1276,30 +1301,28 @@ public class ExpressionExperimentServiceImpl
     /**
      * Will add the characteristic to the expression experiment and persist the changes.
      *
+     * @param ee the experiment to add the characteristics to.
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
      */
     @Override
     @Transactional
-    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        ee = this.thawLite( Objects.requireNonNull( this.load( ee.getId() ) ) ); // Necessary to make sure we have the persistent version of the given ee.
-        ontologyService.addExpressionExperimentStatement( vc, ee );
-        this.update( ee );
-    }
+    public void addCharacteristic( ExpressionExperiment ee, Characteristic vc ) {
+        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
 
-    /**
-     * Will add all the vocab characteristics to the expression experiment and persist the changes.
-     *
-     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
-     */
-    @Override
-    @Transactional
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
-        for ( Characteristic characteristic : vc ) {
-            this.saveExpressionExperimentStatement( characteristic, ee );
+        ee = ensureInSession( ee );
+
+        if ( vc.getEvidenceCode() == null ) {
+            log.debug( String.format( "No evidence code set for %s, defaulting to %s.", vc, GOEvidenceCode.IC ) );
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
         }
+
+        ExpressionExperimentServiceImpl.log
+                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
+                        + ") : " + vc );
+
+        ee.getCharacteristics().add( vc );
+        this.update( ee );
     }
 
     @Override
@@ -1408,7 +1431,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
+        return this.expressionExperimentDao.getAnnotationsByFactorValues( eeId );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {

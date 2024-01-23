@@ -3,33 +3,46 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="test">
 
+    <!-- executor used for loading ontologies in background -->
+    <bean id="ontologyTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor"/>
+
+    <!-- test ontologies are always loaded on-demand, so we never set autoLoad to true -->
     <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
         <property name="processImports" value="false"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.ExperimentalFactorOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="mondoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.gemma.core.ontology.providers.MondoOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="humanPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.HumanPhenotypeOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
         <property name="processImports" value="false"/>
     </bean>
     <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
     <bean id="uberonOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
         <constructor-arg value="ubic.basecode.ontology.providers.UberonOntologyService"/>
+        <property name="taskExecutor" ref="ontologyTaskExecutor"/>
     </bean>
 </beans>

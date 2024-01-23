@@ -249,6 +249,8 @@ public class GeoDataset extends GeoData {
                 return ValueType.logERatio;
             case "transformed count":
                 return ValueType.transformedCount;
+            case "Z-score":
+                return ValueType.Zscore;
             default:
                 throw new IllegalArgumentException( "Unknown value type " + string );
         }
@@ -536,7 +538,7 @@ public class GeoDataset extends GeoData {
     }
 
     public enum ValueType {
-        count, logRatio, log2Ratio, log10ratio, logERatio, transformedCount
+        count, logRatio, log2Ratio, log10ratio, logERatio, transformedCount, Zscore
     }
 
 }

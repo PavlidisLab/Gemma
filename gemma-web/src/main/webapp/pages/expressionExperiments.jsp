@@ -31,14 +31,7 @@ Display table of expression experiments.
          }
       }
 
-      var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
-         height : 220,
-         flex : '0',
-         listeners : {
-            expand : onExpandCollapse,
-            collapse : onExpandCollapse
-         }
-      } );
+
 
       var eeGrid = new Gemma.ExperimentPagingGrid( {
          flex : 1,
@@ -48,12 +41,6 @@ Display table of expression experiments.
          }
       } );
 
-      summaryPanel.on( 'showExperimentsByIds', function( ids ) {
-         eeGrid.loadExperimentsById( ids );
-      } );
-      summaryPanel.on( 'showExperimentsByTaxon', function( ids ) {
-         eeGrid.loadExperimentsByTaxon( ids );
-      } );
 
       var mainPanel = new Ext.Panel( {
          layout : 'vbox',
@@ -61,7 +48,7 @@ Display table of expression experiments.
             align : 'stretch'
          },
          align : 'stretch',
-         items : [ summaryPanel, eeGrid ]
+         items : [ eeGrid ]
       } );
 
       var viewPort = new Gemma.GemmaViewPort( {

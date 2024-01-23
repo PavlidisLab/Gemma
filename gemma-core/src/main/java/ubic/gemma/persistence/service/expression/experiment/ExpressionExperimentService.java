@@ -190,6 +190,9 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findByDesign( ExperimentalDesign ed );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactor( ExperimentalFactor factor );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -337,6 +340,7 @@ public interface ExpressionExperimentService
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
+     * Obtain the full batch effect details of a given experiment.
      * @param ee experiment
      * @return details for the principal component most associated with batches (even if it isn't "significant"). Note
      * that we don't look at every component, just the first few.
@@ -344,12 +348,17 @@ public interface ExpressionExperimentService
     BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
 
     /**
-     * Composes a string describing the batch effect state of the given experiment.
-     *
+     * Obtain a {@link BatchEffectType} describing the batch effect state of the given experiment.
      * @param ee the experiment to get the batch effect for.
-     * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
-    String getBatchEffect( ExpressionExperiment ee );
+    BatchEffectType getBatchEffect( ExpressionExperiment ee );
+
+    /**
+     * Obtain a string describing the summary statistics of a batch effect is present in the given experiment.
+     * @return summary statistics or null if there is no batch effect
+     */
+    @Nullable
+    String getBatchEffectStatistics( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment
@@ -565,19 +574,10 @@ public interface ExpressionExperimentService
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.
      *
+     * @param ee the experiment to add the characteristics to.
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
      */
-    void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
-    /**
-     * Will add all the vocab characteristics to the expression experiment and persist the changes.
-     *
-     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
-     * @param ee the experiment to add the characteristics to.
-     */
-    void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
+    void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
