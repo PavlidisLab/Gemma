@@ -13,7 +13,7 @@ A549	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.
 A549 cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 A549 epithelial cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 abdominal subcutaneous adipose tissue	subcutaneous abdominal adipose tissue	http://purl.obolibrary.org/obo/UBERON_0014455	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-ActD	actinomycin D	http://purl.obolibrary.org/obo/CHEBI_27666	treatment	http://www.ebi.ac.uk/efo/EFO_0000408
+ActD	actinomycin D	http://purl.obolibrary.org/obo/CHEBI_27666	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 active tuberculosis	tuberculosis	http://purl.obolibrary.org/obo/MONDO_0018076	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Acute hippocampal slice	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Acute Lymphoblastic Leukemia (ALL)	acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/MONDO_0004967	disease	http://www.ebi.ac.uk/efo/EFO_0000408
