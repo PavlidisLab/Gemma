@@ -304,6 +304,8 @@ public class ExperimentalDesignController extends BaseController {
 
         int c = result.size();
 
+        Collection<String> toremove = new HashSet<>();
+
         // build map of categories to bmos. No category: can't use.
         Map<String, Collection<BioMaterialValueObject>> map = new HashMap<>();
         for ( BioMaterialValueObject bmo : result ) {
@@ -326,6 +328,13 @@ public class ExperimentalDesignController extends BaseController {
                 if ( !map.containsKey( category ) ) {
                     map.put( category, new HashSet<BioMaterialValueObject>() );
                 }
+
+                if ( map.get( category ).contains( bmo ) ) {
+                    // See issue 999. We have to hide these duplicated categories entirely, as they can't be reliably "lined up" across samples.
+                    toremove.add( category );
+                    continue;
+                }
+
                 map.get( category ).add( bmo );
             }
         }
@@ -333,11 +342,11 @@ public class ExperimentalDesignController extends BaseController {
         /*
         find ones that don't meet criteria for display e.g are constant across all samples
          */
-        Collection<String> toremove = new HashSet<>();
+
         for ( String category : map.keySet() ) {
             //log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
-              //  toremove.add( category ); // this isn't really worth it and hides useful information.
+                //  toremove.add( category ); // this isn't really worth it and hides useful information.
                 continue;
             }
 
@@ -380,13 +389,6 @@ public class ExperimentalDesignController extends BaseController {
                         bm.getCharacteristicValues().put( mappedCategory, mappedValue );
                     }
                 }
-
-                //                if ( vals.size() > 1 ) {
-                //                    if ( log.isDebugEnabled() )
-                //                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
-                //
-                //                    keeper = true;
-                //                }
             }
 
             if ( vals.size() < 2 ) { // constant
