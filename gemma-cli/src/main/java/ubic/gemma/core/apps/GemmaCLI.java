@@ -92,14 +92,14 @@ public class GemmaCLI {
 
         // quick help without loading the context
         if ( commandLine.hasOption( HELP_OPTION ) ) {
-            GemmaCLI.printHelp( options, null );
+            GemmaCLI.printHelp( options, null, new PrintWriter( System.out, true ) );
             System.exit( 0 );
             return;
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromSettings();
-            System.err.printf( "Gemma version %s%n", buildInfo );
+            System.out.printf( "Gemma version %s%n", buildInfo );
             System.exit( 0 );
             return;
         }
@@ -110,6 +110,7 @@ public class GemmaCLI {
             } catch ( ParseException | IllegalArgumentException e ) {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
+                GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
                 System.exit( 1 );
                 return;
             }
@@ -126,9 +127,10 @@ public class GemmaCLI {
                 try {
                     loggingConfigurer.configureLogger( loggerName, Integer.parseInt( vals[1] ) );
                 } catch ( IllegalArgumentException e ) {
-                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", VERBOSITY_OPTION,
+                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION,
                             loggerName,
                             ExceptionUtils.getRootCauseMessage( e ) );
+                    GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
                     System.exit( 1 );
                     return;
                 }
@@ -175,7 +177,7 @@ public class GemmaCLI {
         // no command is passed
         if ( commandLine.getArgList().isEmpty() ) {
             System.err.println( "No command was supplied." );
-            GemmaCLI.printHelp( options, commandGroups );
+            GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
             System.exit( 1 );
         }
 
@@ -187,7 +189,7 @@ public class GemmaCLI {
         int statusCode;
         if ( !commandsByName.containsKey( commandRequested ) ) {
             System.err.println( "Unrecognized command: " + commandRequested );
-            GemmaCLI.printHelp( options, commandGroups );
+            GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
             statusCode = 1;
         } else {
             try {
@@ -218,8 +220,8 @@ public class GemmaCLI {
         return matcher.replaceAll( "$1 XXXXXX" );
     }
 
-    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands ) {
-        System.err.println( "============ Gemma CLI tools ============" );
+    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands, PrintWriter writer ) {
+        writer.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
         if ( commands != null ) {
@@ -241,7 +243,7 @@ public class GemmaCLI {
         footer.append( '\n' );
         footer.append( AbstractCLI.FOOTER );
 
-        new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150, "gemma-cli <commandName> [options]",
+        new HelpFormatter().printHelp( writer, 150, "gemma-cli <commandName> [options]",
                 AbstractCLI.HEADER, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
     }
 

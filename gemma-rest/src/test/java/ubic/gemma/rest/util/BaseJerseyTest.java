@@ -47,7 +47,7 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
     }
 
     @Override
-    public final void afterPropertiesSet() throws Exception {
+    public final void afterPropertiesSet() {
         application.property( "contextConfig", applicationContext );
     }
 

@@ -317,7 +317,11 @@ public class GeoServiceImpl extends AbstractGeoService {
         /*
          * We're never splitting by platform, so we should have only one result.
          */
-        assert result.size() == 1;
+        if ( result.isEmpty() ) {
+            throw new IllegalStateException( "No result from fetching and coversion of " + geoAccession );
+        } else if (result.size() > 1) {
+            throw new IllegalStateException( "Got more than one result from fetching and coversion of " + geoAccession );
+        }
 
         ExpressionExperiment freshFromGEO = result.iterator().next();
 

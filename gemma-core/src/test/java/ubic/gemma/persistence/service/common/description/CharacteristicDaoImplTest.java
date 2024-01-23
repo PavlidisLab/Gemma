@@ -210,6 +210,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         ee.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();

@@ -14,9 +14,9 @@
  */
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -27,7 +27,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -50,7 +49,7 @@ import static org.mockito.Mockito.mock;
  */
 @Category(SlowTest.class)
 @ContextConfiguration
-public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
+public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
     @Configuration
     @TestComponent
@@ -85,11 +84,13 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests {
     @Autowired
     private GeneOntologyService gos;
 
-    @Before
-    public void setUp() throws InterruptedException, IOException {
-        InputStream is = new GZIPInputStream(
-                new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
-        OntologyTestUtils.initialize( gos, is );
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if ( !gos.isOntologyLoaded() ) {
+            InputStream is = new GZIPInputStream(
+                    new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
+            gos.initialize( is, false );
+        }
     }
 
     @Test

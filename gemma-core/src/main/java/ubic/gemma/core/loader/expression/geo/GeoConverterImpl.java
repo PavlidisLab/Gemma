@@ -221,8 +221,8 @@ public class GeoConverterImpl implements GeoConverter {
         Characteristic term = Characteristic.Factory.newInstance();
         this.convertVariableType( term, geoSubSet.getType() );
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
-        term.setValue( term.getCategory() );// for experimentalfactor.category we just copy the characteristic category
-        term.setValueUri( term.getCategoryUri() );  // for experimentalfactor.categoryUri we just copy the characteristic categoryUri
+        term.setValue( term.getCategory() );// for experimentalfactor.category we just copy the rawGEOString category
+        term.setValueUri( term.getCategoryUri() );  // for experimentalfactor.categoryUri we just copy the rawGEOString categoryUri
         experimentalFactor.setCategory( term );
 
         experimentalFactor.setType( FactorType.CATEGORICAL );
@@ -569,9 +569,9 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
 
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ncRNA-Seq" )
-                            || sample.getLibStrategy().equals( "miRNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) ) {
+                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
+                            .equals( "ssRNA-seq" ) ||  sample.getLibStrategy().equalsIgnoreCase( "Other" )) {
+                        // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
                 }
@@ -779,15 +779,21 @@ public class GeoConverterImpl implements GeoConverter {
      * and the mappings are created manually, so many strings will not be matched.
      * Because characteristics on biomaterials are not mission-critical, it's not worth too much effort.
      *
-     * @param characteristic string to be parsed
+     * @param rawGEOString string to be parsed
      * @param bioMaterial    to which characteristics will be added
      */
-    void parseGEOSampleCharacteristicString( String characteristic, BioMaterial bioMaterial ) {
+    void parseGEOSampleCharacteristicString( String rawGEOString, BioMaterial bioMaterial ) {
         /*
          * Sometimes strings are like Age :8 weeks; Sex: M so we should first split on ";" - sometimes "," is used.
+         * However, "," or ";" can occur in other situations. So we first have to check whether there are multiple ":".
+         * Checking for "=" here is not going to work, as the example I have is "lithium use (non-user=0, user = 1):0", so there is still a rare possibility of parsing errors.
          */
-        //log.info( characteristic );
-        String[] topFields = characteristic.split( "[;,]" );
+        String[] topFields = null;
+        if ( StringUtils.countMatches( rawGEOString, ":" ) > 1 ) {
+            topFields = rawGEOString.split( "[;,]" );
+        } else {
+            topFields = new String[] { rawGEOString };
+        }
 
         for ( String field : topFields ) {
 
@@ -798,7 +804,7 @@ public class GeoConverterImpl implements GeoConverter {
             if ( fields.length != 2 ) {
                 fields = field.split( "=", 2 ); // this shouldn't occur, but is present in some old GEO records apparently
             }
-            String defaultDescription = "GEO Sample characteristic";
+            String defaultDescription = "GEO Sample rawGEOString";
             if ( fields.length == 2 ) {
 
                 String category = fields[0].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
@@ -812,7 +818,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                 VariableType vartype = GeoVariable.convertStringToType( category );
                 if ( vartype == null || vartype.equals( VariableType.other ) ) {
-                    log.debug( "Could not parse into VariableType: " + category + " (in: " + characteristic + ")" );
+                    log.debug( "Could not parse into VariableType: " + category + " (in: " + rawGEOString + ")" );
                     gemmaChar.setCategory( category ); // This is not one of our "standard" categories, but it's okay
                     gemmaChar.setValue( value );
                     gemmaChar.setDescription( defaultDescription );
@@ -838,7 +844,7 @@ public class GeoConverterImpl implements GeoConverter {
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back. (not sure why this would happen so adding logging)
-                    log.warn( "Could not convert " + field + " to characteristic ", e );
+                    log.warn( "Could not convert " + field + " to rawGEOString ", e );
                     this.doFallback( bioMaterial, value, defaultDescription );
                 }
 
@@ -1279,7 +1285,8 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private boolean convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
             Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb,
-            List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon ) {
+            List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon
+            primaryTaxon ) {
 
         /*
          * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
@@ -1366,7 +1373,8 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     private int processId( GeoPlatform platform, ArrayDesign arrayDesign, String probeOrganismColumn,
-            ExternalDatabase externalDb, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon,
+            ExternalDatabase externalDb, List<String> sequences, List<String> probeOrganism, Taxon
+            primaryTaxon,
             List<String> cloneIdentifiers, List<List<String>> externalRefs, Iterator<String> descIter,
             Pattern refSeqAccessionPattern, boolean strictSelection, List<String> skipped,
             Collection<CompositeSequence> compositeSequences, int i, String id ) {
@@ -1468,12 +1476,12 @@ public class GeoConverterImpl implements GeoConverter {
         if ( StringUtils.isBlank( externalAccession ) && StringUtils.isBlank( cloneIdentifier ) ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
                 GeoConverterImpl.log.debug( "Blank external reference and clone id for " + cs + " on " + arrayDesign
-                        + ", no biological characteristic can be added." );
+                        + ", no biological rawGEOString can be added." );
             }
         } else if ( probeTaxon == null ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
                 GeoConverterImpl.log.debug( "No valid taxon identified for " + cs + " on " + arrayDesign
-                        + ", no biological characteristic can be added." );
+                        + ", no biological rawGEOString can be added." );
             }
         } else if ( probeTaxon.getId() != null ) {
             // IF there is no taxon given for probe do not create a biosequence otherwise bombs as there is no taxon
@@ -1703,7 +1711,8 @@ public class GeoConverterImpl implements GeoConverter {
      * @param  experimentalDesign experimental design
      * @return BA
      */
-    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign experimentalDesign ) {
+    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign
+            experimentalDesign ) {
         if ( sample == null ) {
             GeoConverterImpl.log.warn( "Null sample" );
             return null;
@@ -1766,17 +1775,19 @@ public class GeoConverterImpl implements GeoConverter {
 
         // Taxon lastTaxon = null;
 
-        for ( GeoPlatform platform : sample.getPlatforms() ) {
-            ArrayDesign arrayDesign;
-            if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
-                arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
-            } else {
-                // platform not exist yet
-                arrayDesign = this.convertPlatform( platform );
+        if ( !this.skipDataVectors ) {
+            for ( GeoPlatform platform : sample.getPlatforms() ) {
+                ArrayDesign arrayDesign;
+                if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
+                    arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
+                } else {
+                    // platform not exist yet
+                    arrayDesign = this.convertPlatform( platform );
+                }
+
+                bioAssay.setArrayDesignUsed( arrayDesign );
+
             }
-
-            bioAssay.setArrayDesignUsed( arrayDesign );
-
         }
 
         return bioAssay;

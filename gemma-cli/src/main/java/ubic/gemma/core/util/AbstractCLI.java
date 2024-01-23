@@ -167,7 +167,7 @@ public abstract class AbstractCLI implements CLI {
             CommandLine commandLine = parser.parse( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( HELP_OPTION ) ) {
-                printHelp( options );
+                printHelp( options, new PrintWriter( System.out, true ) );
                 return SUCCESS;
             }
             if ( commandLine.hasOption( TESTING_OPTION ) ) {
@@ -182,7 +182,7 @@ public abstract class AbstractCLI implements CLI {
             if ( e instanceof MissingOptionException ) {
                 // check if -h/--help was passed alongside a required argument
                 if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
-                    printHelp( options );
+                    printHelp( options, new PrintWriter( System.out, true ) );
                     return SUCCESS;
                 }
                 System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
@@ -195,7 +195,7 @@ public abstract class AbstractCLI implements CLI {
             } else {
                 System.err.println( e.getMessage() );
             }
-            printHelp( options );
+            printHelp( options, new PrintWriter( System.err, true ) );
             return FAILURE;
         }
         StopWatch watch = StopWatch.createStarted();
@@ -215,8 +215,8 @@ public abstract class AbstractCLI implements CLI {
         }
     }
 
-    private void printHelp( Options options ) {
-        new HelpFormatter().printHelp( new PrintWriter( System.err, true ), 150,
+    private void printHelp( Options options, PrintWriter writer ) {
+        new HelpFormatter().printHelp( writer, 150,
                 this.getCommandName() + " [options]",
                 this.getShortDesc() + "\n" + AbstractCLI.HEADER,
                 options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
@@ -567,11 +567,11 @@ public abstract class AbstractCLI implements CLI {
             StringBuilder buf = new StringBuilder();
             buf.append( source != null ? source : "Unknown object" );
             if ( message != null ) {
-                buf.append( ":\n\t" )
-                        .append( message.replace( "\n", "\n\t" ) );
+                buf.append( "\t" )
+                        .append( message.replace( "\n", "\n\t" ) ); // FIXME We don't want newlines here at all, but I'm not sure what condition this is meant to fix exactly.
             }
             if ( throwable != null ) {
-                buf.append( "\n\t" )
+                buf.append( "\t" )
                         .append( "Reason: " )
                         .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }

@@ -221,7 +221,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 header: category + " (raw characteristic)",
                 dataIndex: "char" + category.hashCode(),
                 width: 120,
-                tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
+                tooltip: category + ": A non-constant Biomaterial characteristic displayed for reference purposes.",
                 sortable: true
             });
         }

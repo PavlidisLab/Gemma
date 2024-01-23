@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
@@ -111,6 +112,14 @@ public class BaselineSelection {
                 || ( c.getSubjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getSubject() ) ) )
                 || ( c.getObjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getObject() ) ) )
                 || ( c.getSecondObjectUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getSecondObject() ) ) );
+    }
+
+    /**
+     * Check if a given characteristic indicate a baseline condition.
+     */
+    public static boolean isBaselineCondition( Characteristic c ) {
+        return BaselineSelection.controlGroupUris.contains( c.getValueUri() )
+                || ( c.getValueUri() == null && BaselineSelection.controlGroupTerms.contains( normalizeTerm( c.getValue() ) ) );
     }
 
     private static String normalizeTerm( String term ) {

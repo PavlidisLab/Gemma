@@ -131,7 +131,11 @@ public class DesignMatrixRowValueObject implements Serializable {
         for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
             FactorValue fv = i.next();
             if ( fv != null ) {
-                buf.append( FactorValueUtils.getSummaryString( fv ) );
+                if ( fv.getMeasurement() != null ) {
+                    buf.append( fv.getMeasurement().getValue() );
+                } else {
+                    buf.append( FactorValueUtils.getSummaryString( fv ) );
+                }
             }
             if ( i.hasNext() )
                 buf.append( ", " );

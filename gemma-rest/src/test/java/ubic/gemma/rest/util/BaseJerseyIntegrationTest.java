@@ -6,17 +6,16 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
-import ubic.gemma.core.util.test.category.SpringContextTest;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 
 /**
  * Base class for Jersey-based integration tests.
  *
  * @author poirigui
  */
-@Category(SpringContextTest.class)
+@Category(IntegrationTest.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
 public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
 

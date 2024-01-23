@@ -40,7 +40,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
-import ubic.gemma.core.util.test.category.SpringContextTest;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -77,7 +77,7 @@ import java.util.Set;
  * @author pavlidis
  */
 @ActiveProfiles(SpringProfiles.TEST)
-@Category(SpringContextTest.class)
+@Category(IntegrationTest.class)
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {

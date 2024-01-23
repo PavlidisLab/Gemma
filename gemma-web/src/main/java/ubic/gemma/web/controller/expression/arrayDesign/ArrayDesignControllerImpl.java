@@ -160,13 +160,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @RequestMapping(value = "/downloadAnnotationFile.html", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse response ) throws IOException {
-        if ( fileType == null ) {
+        if ( fileType == null || fileType.equalsIgnoreCase( "allParents" ) ) {
             fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         } else if ( fileType.equalsIgnoreCase( "noParents" ) ) {
             fileType = ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        } else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
+        } else if ( fileType.equalsIgnoreCase( "bioProcess" ) ) {
             fileType = ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        else {
+        } else {
             throw new IllegalArgumentException( "Unknown file type for the 'fileType' query parameter." );
         }
         ArrayDesign arrayDesign = arrayDesignService.load( arrayDesignId );

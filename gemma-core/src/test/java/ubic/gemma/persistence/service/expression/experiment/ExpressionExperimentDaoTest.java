@@ -1,5 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclService;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.Hibernate;
@@ -19,7 +21,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
@@ -47,6 +50,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private AclService aclService;
 
     @Test
     public void testGetFilterableProperties() {
@@ -234,6 +240,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
         ExpressionExperiment ee = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
         Characteristic c = new Characteristic();
         c.setCategory( category );
         c.setCategoryUri( categoryUri );

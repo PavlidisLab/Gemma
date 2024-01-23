@@ -129,8 +129,8 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         // is a noop
         if ( statement.getId() == null ) {
             statement = statementDao.create( statement );
+            fv.getCharacteristics().add( statement );
         }
-        fv.getCharacteristics().add( statement );
         factorValueDao.update( fv );
         return statement;
     }
@@ -146,8 +146,8 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         // is a noop
         if ( statement.getId() == null ) {
             statement = statementDao.create( statement );
+            fv.getCharacteristics().add( statement );
         }
-        fv.getCharacteristics().add( statement );
         // careful here!
         factorValueDao.updateIgnoreAcl( fv );
         return statement;

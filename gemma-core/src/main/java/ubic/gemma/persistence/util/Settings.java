@@ -74,8 +74,8 @@ public class Settings {
     private static final Log log = LogFactory.getLog( Settings.class.getName() );
 
     static {
-
         config = new CompositeConfiguration();
+
         Settings.config.addConfiguration( new SystemConfiguration() );
 
         /*
@@ -88,11 +88,11 @@ public class Settings {
 
         boolean userConfigLoaded = false;
 
-        String catalinaBase;
-        if ( ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
-            File f = Paths.get( catalinaBase, Settings.USER_CONFIGURATION ).toFile();
-            log.debug( "Loading configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
+        String gemmaConfig = System.getProperty( "gemma.config" );
+        if ( gemmaConfig != null ) {
+            File f = Paths.get( gemmaConfig ).toFile();
             try {
+                log.debug( "Loading user configuration from " + f.getAbsolutePath() + " since -Dgemma.config is defined." );
                 Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
                 userConfigLoaded = true;
             } catch ( ConfigurationException e ) {
@@ -100,48 +100,66 @@ public class Settings {
             }
         }
 
-        try {
-            Settings.config.addConfiguration( ConfigUtils.loadConfig( Settings.USER_CONFIGURATION ) );
-        } catch ( ConfigurationException e ) {
-            if ( !userConfigLoaded ) {
-                throw new RuntimeException( Settings.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied.", e );
+        String catalinaBase;
+        if ( !userConfigLoaded && ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
+            File f = Paths.get( catalinaBase, Settings.USER_CONFIGURATION ).toFile();
+            if ( f.exists() ) {
+                try {
+                    log.debug( "Loading user configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
+                    Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
+                    userConfigLoaded = true;
+                } catch ( ConfigurationException e ) {
+                    throw new RuntimeException( f.getAbsolutePath() + " could not be loaded.", e );
+                }
             }
         }
+
+        File f = Paths.get( System.getProperty( "user.home" ), Settings.USER_CONFIGURATION ).toFile();
+        if ( !userConfigLoaded && f.exists() ) {
+            try {
+                log.debug( "Loading user configuration from " + f.getAbsolutePath() + "." );
+                Settings.config.addConfiguration( ConfigUtils.loadConfig( f ) );
+                userConfigLoaded = true;
+            } catch ( ConfigurationException e ) {
+                throw new RuntimeException( f.getAbsolutePath() + " could not be loaded.", e );
+            }
+        }
+
+        if ( !userConfigLoaded ) {
+            throw new RuntimeException( Settings.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied." );
+        }
+
+        log.debug( "Loading default configurations from classpath." );
 
         try {
             // Default comes first.
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( Settings.DEFAULT_CONFIGURATION );
-            // ConfigurationUtils.dump( pc, System.err );
-            Settings.config.addConfiguration( pc );
+            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( Settings.DEFAULT_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Default configuration could not be loaded: " + e.getMessage(), e );
+            throw new RuntimeException( "Default configuration could not be loaded.", e );
         }
 
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( Settings.BUILTIN_CONFIGURATION );
-            Settings.config.addConfiguration( pc );
+            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( Settings.BUILTIN_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Extra built-in configuration could not be loaded: " + e.getMessage(), e );
+            throw new RuntimeException( "Extra built-in configuration could not be loaded.", e );
         }
 
-        try {
-            String gemmaAppDataHome = Settings.config.getString( "gemma.appdata.home" );
-            if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
-                PropertiesConfiguration pc = ConfigUtils
-                        .loadConfig( gemmaAppDataHome + File.separatorChar + "local.properties" );
-                Settings.config.addConfiguration( pc );
-
+        String gemmaAppDataHome = Settings.config.getString( "gemma.appdata.home" );
+        if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
+            File f2 = Paths.get( gemmaAppDataHome, "local.properties" ).toFile();
+            try {
+                log.debug( "Loading configuration from " + f2.getAbsolutePath() + "." );
+                Settings.config.addConfiguration( ConfigUtils.loadConfig( f2 ) );
+            } catch ( ConfigurationException e ) {
+                throw new RuntimeException( "Local configuration could not be loaded from " + f2.getAbsolutePath() + ".", e );
             }
-        } catch ( ConfigurationException e ) {
-            // that's okay
         }
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "ubic/gemma/version.properties" );
-
             Settings.config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            Settings.log.debug( "version.properties not found" );
+            log.warn( "The ubic/gemma/version.properties resource was not found; run `mvn generate-resources -pl gemma-core` to generate it.", e );
         }
 
         // step through the result and do a final round of variable substitution.
@@ -157,10 +175,10 @@ public class Settings {
             }
         }
 
-        if ( Settings.log.isDebugEnabled() ) {
-            Settings.log.debug( "********** Configuration details ***********" );
+        if ( Settings.log.isTraceEnabled() ) {
+            Settings.log.trace( "********** Configuration details ***********" );
             ConfigurationUtils.dump( Settings.config, System.err );
-            Settings.log.debug( "********** End of configuration details ***********" );
+            Settings.log.trace( "********** End of configuration details ***********" );
         }
 
     }

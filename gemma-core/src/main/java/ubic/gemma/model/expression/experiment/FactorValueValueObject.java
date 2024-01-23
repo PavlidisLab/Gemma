@@ -167,23 +167,21 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.needsAttention = value.getNeedsAttention();
     }
 
+
     /**
      * Create a FactorValue VO focusing on a specific statement.
-     * <p>
-     * Prefer {@link #FactorValueValueObject(FactorValue, Statement)} since this should never hold a "plain"
-     * characteristic, but always a statement of the factor value.
      *
-     * @param value value
-     * @param c     specific characteristic we're focusing on (yes, this is confusing). This is necessary if the factor
-     *              value has multiple characteristics. DO NOT pass in the experimental factor category, this just
-     *              confuses things. If c is null, the plain "value" is used.
+     * @param fv a factor value
+     * @param c  specific statement we're focusing on (yes, this is confusing). This is necessary if the factor
+     *           value has multiple characteristics. DO NOT pass in the experimental factor category, this just
+     *           confuses things. If c is null, the plain "value" is used.
      */
-    public FactorValueValueObject( FactorValue value, Characteristic c ) {
-        this( value );
-        if ( !value.getCharacteristics().contains( c ) ) {
+    public FactorValueValueObject( FactorValue fv, Statement c ) {
+        this( fv );
+        if ( c.getId() != null && !fv.getCharacteristics().contains( c ) ) {
             throw new IllegalArgumentException( "The focused characteristic does not belong to the factor value." );
         }
-        if ( value.getMeasurement() != null ) {
+        if ( fv.getMeasurement() != null ) {
             throw new IllegalArgumentException( "Continuous factor values cannot have a focused characteristic." );
         }
         // fill in the details of the *focused* characteristic
@@ -192,13 +190,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.categoryUri = c.getCategoryUri();
         this.value = c.getValue(); // clobbers if we set it already
         this.valueUri = c.getValueUri();
-    }
-
-    /**
-     * Create a FactorValue VO focusing on a specific statement.
-     */
-    public FactorValueValueObject( FactorValue fv, Statement c ) {
-        this( fv, ( Characteristic ) c );
         this.predicate = c.getPredicate();
         this.predicateUri = c.getPredicateUri();
         this.object = c.getObject();

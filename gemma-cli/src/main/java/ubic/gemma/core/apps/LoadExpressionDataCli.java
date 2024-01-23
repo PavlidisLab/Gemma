@@ -227,6 +227,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     private void processAccession( GeoService geoService, String accession ) {
         try {
 
+            log.info(" ***** Starting processing of " + accession + " *****");
             if ( updateOnly ) {
                 geoService.updateFromGEO( accession );
                 addSuccessObject( accession, "Updated" );

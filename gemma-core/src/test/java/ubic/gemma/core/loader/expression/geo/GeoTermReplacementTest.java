@@ -5,6 +5,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.basecode.ontology.model.AnnotationProperty;
@@ -20,11 +21,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * Test replacements for GEO terms.
@@ -98,11 +100,19 @@ public class GeoTermReplacementTest {
             }
         }
 
+        SoftAssertions assertions = new SoftAssertions();
+
         Set<String> seen = new HashSet<>();
         int failures = 0;
         for ( int i = 0; i < ontologies.size(); i++ ) {
-            OntologyService os = cs.take().get();
-            log.info( "Looking up terms in " + os );
+            OntologyService os;
+            try {
+                os = cs.take().get();
+            } catch ( ExecutionException e ) {
+                // skip the test if ontologies cannot be loaded
+                assumeNoException( e );
+                return;
+            }
             for ( Rec rec : records ) {
                 // skip undeclared terms
                 OntologyTerm term = os.getTerm( rec.valueUri );
@@ -114,24 +124,25 @@ public class GeoTermReplacementTest {
                     continue;
                 }
                 // CLO has a typo, ignore it
-                if ( "neuronal stem cell".equals( term.getLabel() ) ) {
+                if ( "http://purl.obolibrary.org/obo/CL_0000047".equals( term.getUri() ) && "neuronal stem cell".equals( term.getLabel() ) ) {
+                    continue;
+                }
+                if ( "http://purl.obolibrary.org/obo/CL_0000136".equals( term.getUri() ) && "adipocyte".equals( term.getLabel() ) ) {
                     continue;
                 }
                 seen.add( rec.synonym );
-                if ( !term.getLabel().equals( rec.value ) ) {
-                    log.warn( String.format( "%s: Replace '%s' with '%s' %s", rec.synonym, rec.value, term.getLabel(), term.getUri() ) );
-                    failures++;
-                }
+                assertions.assertThat( rec.value )
+                        .withFailMessage( "%s: Replace '%s' with '%s' %s", rec.synonym, rec.value, term.getLabel(), term.getUri() )
+                        .isEqualTo( term.getLabel() );
             }
         }
 
         for ( Rec rec : records ) {
-            if ( !seen.contains( rec.synonym ) ) {
-                log.warn( String.format( "%s: No term found for %s in any ontology", rec.synonym, rec.valueUri ) );
-                failures++;
-            }
+            assertions.assertThat( seen )
+                    .withFailMessage( "%s: No term found for %s in any ontology", rec.synonym, rec.valueUri )
+                    .contains( rec.synonym );
         }
 
-        assertEquals( 0, failures );
+        assertions.assertAll();
     }
 }
