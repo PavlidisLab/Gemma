@@ -465,7 +465,7 @@ parietal cortex	parietal cortex	http://purl.obolibrary.org/obo/UBERON_0016530	or
 Parkinson's Disease	Parkinson disease	http://purl.obolibrary.org/obo/MONDO_0005180	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Patient Primary Pancreatic Tumor	malignant pancreatic neoplasm	http://purl.obolibrary.org/obo/MONDO_0009831	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Patient-matched nontumor control	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-PBMC	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000635
+PBMC	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PBMCs	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PBMCs from peripheral blood	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PDAC	pancreatic ductal adenocarcinoma	http://purl.obolibrary.org/obo/MONDO_0005184	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -618,7 +618,7 @@ thymus	thymus	http://purl.obolibrary.org/obo/UBERON_0002370	organism part	http:/
 thyroid	thyroid gland	http://purl.obolibrary.org/obo/UBERON_0002046	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Tibialis anterior muscle	tibialis anterior	http://purl.obolibrary.org/obo/UBERON_0001385	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 TK6	TK6 cell	http://purl.obolibrary.org/obo/CLO_0009357	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://purl.obolibrary.org/obo/CL_0000233
+total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
 trabecular bone	trabecular bone tissue	http://purl.obolibrary.org/obo/UBERON_0002483	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 trachea	trachea	http://purl.obolibrary.org/obo/UBERON_0003126	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 triple-negative breast cancer	triple-negative breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0005494	disease	http://www.ebi.ac.uk/efo/EFO_0000408
