@@ -625,7 +625,7 @@ public class ExpressionExperimentDaoImpl
     public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment ) {
         //noinspection unchecked
         List<Object[]> result = ( ( List<Object[]> ) getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*}, {T}.LEVEL as LEVEL from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
+                        "select {T.*}, {T}.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
                                 + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
                 .addEntity( "T", Characteristic.class )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
@@ -650,7 +650,7 @@ public class ExpressionExperimentDaoImpl
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*} from gemd.EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
+                        "select {T.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
                                 + "where {T}.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
                 .addEntity( "T", Characteristic.class )
                 .setParameter( "level", level )
