@@ -169,7 +169,7 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     ORIGINAL_VALUE                        varchar(255),
     EVIDENCE_CODE                         varchar(255),
     EXPRESSION_EXPERIMENT_FK              bigint,
-    ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int,
+    ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int not null default 0,
     LEVEL                                 varchar(255),
     primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
 );
