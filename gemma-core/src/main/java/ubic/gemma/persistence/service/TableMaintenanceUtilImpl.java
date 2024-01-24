@@ -77,23 +77,37 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
 
     /**
+     * Select the bitmask of permissions that applies to the {@code IS_AUTHENTICATED_ANONYMOUSLY} granted authority. If
+     * more than one ACL entry are present, they are combined with a bitwise OR.
+     * <p>
+     * If no ACL entries exist for the anonymous SID, 0 is returned which effectively grants no permission at all.
+     */
+    private static final String SELECT_ANONYMOUS_MASK =
+            "coalesce((select BIT_OR(ACE.MASK) "
+                    + "from ACLOBJECTIDENTITY AOI "
+                    + "join ACLENTRY ACE on ACE.OBJECTIDENTITY_FK = AOI.ID "
+                    + "where AOI.OBJECT_CLASS = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
+                    + "and AOI.OBJECT_ID = I.ID "
+                    + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
+                    + "group by AOI.ID), 0)";
+    /**
      * Query used to repopulate the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.
      */
     private static final String E2C_QUERY =
-            "replace into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, LEVEL) "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:eeClass as char(255)) "
+            "replace into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:eeClass as char(256)) "
                     + "from INVESTIGATION I "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
                     + "union "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:bmClass as char(255)) "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:bmClass as char(255)) "
                     + "from INVESTIGATION I "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
                     + "join CHARACTERISTIC C on BM.ID = C.BIO_MATERIAL_FK "
                     + "where I.class = 'ExpressionExperiment' "
                     + "union "
-                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, cast(:edClass as char(255)) "
+                    + "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:edClass as char(255)) "
                     + "from INVESTIGATION I "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
                     + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "

@@ -30,10 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -44,7 +41,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.AclQueryUtils;
+import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -153,10 +150,10 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel ) {
         String qs = "select T.`LEVEL`, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
                 + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
-                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
-                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() )
+                + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
@@ -180,7 +177,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             query.setParameter( "taxonId", taxon.getId() );
         }
 
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
         query.setCacheable( true );
 
@@ -303,7 +300,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
         }
 
-      //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
+        //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
         boolean efOK = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( ExperimentalFactor.class ) );
 
         String extraClause;
