@@ -570,7 +570,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                     // have to drill down.
                     if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) ||  sample.getLibStrategy().equalsIgnoreCase( "Other" )) {
+                            .equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
@@ -839,7 +839,6 @@ public class GeoConverterImpl implements GeoConverter {
                         gemmaChar.setCategoryUri( StringUtils.stripToNull( mappedValueTerm.getCategoryUri() ) );
                     } else {
                         gemmaChar.setValue( value );
-                        // There may not be a category, but that's okay.
                     }
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
