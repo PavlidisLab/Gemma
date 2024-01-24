@@ -13,6 +13,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
+import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.SpringProfiles;
 
@@ -49,7 +50,7 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
             HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
-            compositeResolver.setExceptionResolvers( Arrays.asList( resolver, unhandledExceptionResolver() ) );
+            compositeResolver.setExceptionResolvers( Arrays.asList( new DefaultHandlerExceptionResolver(), resolver, unhandledExceptionResolver() ) );
             return compositeResolver;
         }
 

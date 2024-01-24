@@ -97,6 +97,9 @@
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.HandlerExceptionResolverComposite">
         <property name="exceptionResolvers">
             <list>
+                <!-- handle all Spring MVC built-in exceptions -->
+                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver"/>
+                <!-- handles Gemma-specific exceptions -->
                 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
                     <property name="statusCodes">
                         <props>
@@ -115,6 +118,7 @@
                         </props>
                     </property>
                 </bean>
+                <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
                     <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
                     <property name="statusCode" value="500"/>
