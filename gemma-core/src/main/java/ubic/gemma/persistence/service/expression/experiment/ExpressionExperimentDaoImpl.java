@@ -671,7 +671,7 @@ public class ExpressionExperimentDaoImpl
         boolean excludeFreeTextCategories = false;
         boolean excludeUncategorized = false;
         if ( excludedCategoryUris != null ) {
-            if ( excludedCategoryUris.contains( null ) ) {
+            if ( excludedCategoryUris.contains( FREE_TEXT ) ) {
                 excludeFreeTextCategories = true;
                 excludedCategoryUris = excludedCategoryUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
@@ -745,7 +745,7 @@ public class ExpressionExperimentDaoImpl
         boolean excludeFreeTextCategories = false;
         boolean excludeUncategorized = false;
         if ( excludedCategoryUris != null ) {
-            if ( excludedCategoryUris.contains( null ) ) {
+            if ( excludedCategoryUris.contains( FREE_TEXT ) ) {
                 excludeFreeTextCategories = true;
                 excludedCategoryUris = excludedCategoryUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
