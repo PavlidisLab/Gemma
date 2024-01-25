@@ -115,6 +115,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
                     // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
                     + "where I.class = 'ExpressionExperiment' and C.class = 'Statement'";
+
+    private static final String EE2AD_QUERY = "replace into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
+            + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
+            + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+            + "join ARRAY_DESIGN AD on BA.ARRAY_DESIGN_USED_FK = AD.ID "
+            + "group by I.ID, AD.ID "
+            + "union "
+            + "select I.ID, AD.ID, TRUE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
+            + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+            + "join ARRAY_DESIGN AD on BA.ORIGINAL_PLATFORM_FK = AD.ID "
+            + "group by I.ID, AD.ID ";
     private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
@@ -211,6 +222,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 .setParameter( "edClass", ExperimentalDesign.class )
                 .executeUpdate();
         log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated.", updated ) );
+        return updated;
+    }
+
+    @Override
+    @Transactional
+    public int updateExpressionExperiment2ArrayDesignEntries() {
+        log.info( "Updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table..." );
+        int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                .executeUpdate();
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table; %d entries were updated.", updated ) );
         return updated;
     }
 

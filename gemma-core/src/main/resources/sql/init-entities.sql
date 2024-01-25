@@ -184,3 +184,19 @@ alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     add index EE2C_VALUE_URI_VALUE (VALUE_URI(100), VALUE),
     add index EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
     add index EE2C_LEVEL (LEVEL);
+
+drop table if exists EXPRESSION_EXPERIMENT2ARRAY_DESIGN;
+create table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
+(
+    EXPRESSION_EXPERIMENT_FK              bigint  not null,
+    ARRAY_DESIGN_FK                       bigint  not null,
+    -- indicate if the platform is original (see BioAssay.originalPlatform)
+    IS_ORIGINAL_PLATFORM                  tinyint not null,
+    -- the permission mask of the EE for the anonymous SID
+    ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int     not null default 0,
+    primary key (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM)
+);
+
+alter table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
+    add constraint EE2AD_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade,
+    add constraint EE2AD_ARRAY_DESIGN_FKC foreign key (ARRAY_DESIGN_FK) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
