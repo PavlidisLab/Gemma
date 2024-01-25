@@ -43,6 +43,8 @@ public interface TableMaintenanceUtil {
      */
     String EE2C_QUERY_SPACE = "EXPRESSION_EXPERIMENT2CHARACTERISTIC";
 
+    String EE2AD_QUERY_SPACE = "EXPRESSION_EXPERIMENT2_ARRAY_DESIGN";
+
     /**
      * If necessary, update the GENE2CS table.
      */
@@ -51,6 +53,13 @@ public interface TableMaintenanceUtil {
 
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2CharacteristicEntries();
+
+    /**
+     * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
+     * @return the number of records that were created or updated
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateExpressionExperiment2ArrayDesignEntries();
 
     @Secured({ "GROUP_ADMIN" })
     void setGene2CsInfoPath( Path gene2CsInfoPath );
