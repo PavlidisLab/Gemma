@@ -65,6 +65,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 
 /**
@@ -977,88 +978,58 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults ) {
-        Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed a "
-                        + AclQueryUtils.formAclRestrictionClause( "ee.id" )
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a"
-                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = query
-                .setCacheable( true )
-                .setMaxResults( maxResults )
-                .list();
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+        return getPlatformsUsageFrequency( null, false, maxResults );
     }
 
     @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
-        if ( eeIds.isEmpty() ) {
-            return Collections.emptyMap();
-        }
-        Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed a "
-                        + "where ee.id in :ids "
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a"
-                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) )
-                .setParameterList( "ids", eeIds )
-                .setMaxResults( maxResults );
-        //noinspection unchecked
-        List<Object[]> result = query.setCacheable( true ).list();
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+        return getPlatformsUsageFrequency( eeIds, false, maxResults );
     }
 
     @Override
     public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults ) {
-        Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.originalPlatform a "
-                        + "left join ba.arrayDesignUsed au "
-                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
-                        + "and a <> au "   // ignore noop switch
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a"
-                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = query
-                .setCacheable( true )
-                .setMaxResults( maxResults )
-                .list();
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+        return getPlatformsUsageFrequency( null, true, maxResults );
     }
 
     @Override
     public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults ) {
-        if ( eeIds.isEmpty() ) {
+        return getPlatformsUsageFrequency( eeIds, true, maxResults );
+    }
+
+    private Map<ArrayDesign, Long> getPlatformsUsageFrequency( @Nullable Collection<Long> eeIds, boolean original, int maxResults ) {
+        if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select a, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.originalPlatform a "
-                        + "left join ba.arrayDesignUsed au "
-                        + "where ee.id in :ids "
-                        + "and a <> au "   // ignore noop switch
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a"
-                        + ( maxResults > 0 ? " order by count(distinct ee) desc" : "" ) );
+                .createSQLQuery( "select ad.*, count(distinct i.ID) EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + "join INVESTIGATION i on i.ID = ee2ad.EXPRESSION_EXPERIMENT_FK "
+                        + "join CURATION_DETAILS eecd on eecd.ID = i.CURATION_DETAILS_FK "
+                        + "join ARRAY_DESIGN ad on ee2ad.ARRAY_DESIGN_FK = ad.ID "
+                        + "join CURATION_DETAILS adcd on adcd.ID = ad.CURATION_DETAILS_FK "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where not eecd.TROUBLED and not adcd.TROUBLED "
+                        + "and ee2ad.IS_ORIGINAL_PLATFORM = :original "
+                        + ( eeIds != null ? "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
+                        + "group by ad.ID "
+                        + "order by EE_COUNT desc" )
+                .addEntity( ArrayDesign.class )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class );
+        query.setParameter( "original", original );
+        if ( eeIds != null ) {
+            query.setParameterList( "ids", eeIds );
+        }
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = query
-                .setMaxResults( maxResults )
-                .setParameterList( "ids", eeIds )
                 .setCacheable( true )
+                .setMaxResults( maxResults )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }

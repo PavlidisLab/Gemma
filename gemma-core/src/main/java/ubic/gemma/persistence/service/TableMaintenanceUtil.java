@@ -43,6 +43,13 @@ public interface TableMaintenanceUtil {
      */
     String EE2C_QUERY_SPACE = "EXPRESSION_EXPERIMENT2CHARACTERISTIC";
 
+    /**
+     * Query space used by the {@code EXPRESSION_EXPERIMENT2ARRAY_DESIGN} table.
+     * <p>
+     * You may also want to synchronize to {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and
+     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign} since entries in the EE2AD table are removed in
+     * cascade.
+     */
     String EE2AD_QUERY_SPACE = "EXPRESSION_EXPERIMENT2_ARRAY_DESIGN";
 
     /**
