@@ -1012,7 +1012,7 @@ public class ExpressionExperimentDaoImpl
                         + "where not eecd.TROUBLED and not adcd.TROUBLED "
                         + "and ee2ad.IS_ORIGINAL_PLATFORM = :original "
                         // exclude noop switch
-                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK <> (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
+                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
                         + ( eeIds != null ? "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                         + "group by ad.ID "
