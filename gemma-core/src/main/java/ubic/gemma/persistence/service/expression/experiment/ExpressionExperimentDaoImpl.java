@@ -704,6 +704,7 @@ public class ExpressionExperimentDaoImpl
                 .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( Characteristic.class )
                 .setCacheable( true );
         if ( eeIds != null ) {
@@ -795,7 +796,8 @@ public class ExpressionExperimentDaoImpl
                 // FIXME: use an EnumType for converting
                 .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
-                .addSynchronizedQuerySpace( "EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
                 .setCacheable( true )
                 .setMaxResults( maxResults );
