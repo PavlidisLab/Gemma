@@ -31,7 +31,6 @@ import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.*;
@@ -204,19 +203,14 @@ public class GemmaCLI {
                 return;
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
-            try {
-                completionGenerator.generateCompletion( options, completionWriter );
-                for ( CLI cli : commandBeans.values() ) {
-                    if ( StringUtils.isBlank( cli.getCommandName() ) ) {
-                        continue;
-                    }
-                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
+            completionGenerator.generateCompletion( options, completionWriter );
+            for ( CLI cli : commandBeans.values() ) {
+                if ( StringUtils.isBlank( cli.getCommandName() ) ) {
+                    continue;
                 }
-                completionWriter.flush();
-            } catch ( IOException ioe ) {
-                System.exit( 1 );
-                return;
+                completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
             }
+            completionWriter.flush();
             System.exit( 0 );
             return;
         }

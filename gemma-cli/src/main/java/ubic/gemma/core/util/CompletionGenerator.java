@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 
 public interface CompletionGenerator {
 
-    void generateCompletion( Options options, PrintWriter writer ) throws IOException;
+    void generateCompletion( Options options, PrintWriter writer );
 
-    void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) throws IOException;
+    void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer );
 }
