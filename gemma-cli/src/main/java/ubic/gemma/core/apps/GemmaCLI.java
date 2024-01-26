@@ -26,13 +26,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
-import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.util.*;
 import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -51,6 +50,7 @@ public class GemmaCLI {
     private static final String
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
+            COMPLETION_OPTION = "completion",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -78,6 +78,7 @@ public class GemmaCLI {
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
+                .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -172,6 +173,26 @@ public class GemmaCLI {
                 commandGroups.put( g, new TreeMap<>() );
             }
             commandGroups.get( g ).put( commandName, cliInstance );
+        }
+
+        if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
+            CompletionGenerator completionGenerator = new FishCompletionGenerator( commandsByName.keySet() );
+            PrintWriter completionWriter = new PrintWriter( System.out );
+            try {
+                completionGenerator.generateCompletion( options, completionWriter );
+                for ( CLI cli : commandBeans.values() ) {
+                    if ( StringUtils.isBlank( cli.getCommandName() ) ) {
+                        continue;
+                    }
+                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
+                }
+                completionWriter.flush();
+            } catch ( IOException ioe ) {
+                System.exit( 1 );
+                return;
+            }
+            System.exit( 0 );
+            return;
         }
 
         // no command is passed
