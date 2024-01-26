@@ -194,7 +194,7 @@ public class GemmaCLI {
                 }
             }
             if ( shellName.equals( "bash" ) ) {
-                completionGenerator = new BashCompletionGenerator();
+                completionGenerator = new BashCompletionGenerator( commandsByName.keySet() );
             } else if ( shellName.equals( "fish" ) ) {
                 completionGenerator = new FishCompletionGenerator( commandsByName.keySet() );
             } else {
@@ -203,12 +203,14 @@ public class GemmaCLI {
                 return;
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
+            completionGenerator.beforeCompletion( completionWriter );
             completionGenerator.generateCompletion( options, completionWriter );
             for ( SortedMap<String, CLI> group : commandGroups.values() ) {
                 for ( CLI cli : group.values() ) {
                     completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
                 }
             }
+            completionGenerator.afterCompletion( completionWriter );
             completionWriter.flush();
             System.exit( 0 );
             return;
