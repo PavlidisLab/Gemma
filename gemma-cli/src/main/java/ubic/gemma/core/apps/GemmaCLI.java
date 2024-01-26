@@ -33,6 +33,7 @@ import ubic.gemma.persistence.util.SpringProfiles;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +51,8 @@ public class GemmaCLI {
     private static final String
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
-            COMPLETION_OPTION = "completion",
+            COMPLETION_OPTION = "c",
+            COMPLETION_SHELL_OPTION = "cs",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -79,6 +81,7 @@ public class GemmaCLI {
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
+                .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -176,7 +179,30 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
-            CompletionGenerator completionGenerator = new FishCompletionGenerator( commandsByName.keySet() );
+            CompletionGenerator completionGenerator;
+            String shellName;
+            if ( commandLine.hasOption( COMPLETION_SHELL_OPTION ) ) {
+                shellName = commandLine.getOptionValue( COMPLETION_SHELL_OPTION );
+            } else {
+                // attempt to guess the intended shell from $SHELL
+                String shell = System.getenv( "SHELL" );
+                if ( StringUtils.isNotBlank( shell ) ) {
+                    shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
+                } else {
+                    System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
+                    System.exit( 1 );
+                    return;
+                }
+            }
+            if ( shellName.equals( "bash" ) ) {
+                completionGenerator = new BashCompletionGenerator();
+            } else if ( shellName.equals( "fish" ) ) {
+                completionGenerator = new FishCompletionGenerator( commandsByName.keySet() );
+            } else {
+                System.err.printf( "Completion is not support for %s.%n", shellName );
+                System.exit( 1 );
+                return;
+            }
             PrintWriter completionWriter = new PrintWriter( System.out );
             try {
                 completionGenerator.generateCompletion( options, completionWriter );
