@@ -204,11 +204,10 @@ public class GemmaCLI {
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
             completionGenerator.generateCompletion( options, completionWriter );
-            for ( CLI cli : commandBeans.values() ) {
-                if ( StringUtils.isBlank( cli.getCommandName() ) ) {
-                    continue;
+            for ( SortedMap<String, CLI> group : commandGroups.values() ) {
+                for ( CLI cli : group.values() ) {
+                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
                 }
-                completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
             }
             completionWriter.flush();
             System.exit( 0 );
