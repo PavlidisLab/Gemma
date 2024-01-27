@@ -128,7 +128,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
     public void afterCompletion( PrintWriter writer ) {
         popIndent();
         writer.println( "}" );
-        writer.println( "complete -o filenames -F __gemma_cli_complete gemma-cli" );
+        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli" );
     }
 
     private String quoteRegex( String s ) {
