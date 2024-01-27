@@ -2,7 +2,6 @@ package ubic.gemma.web.controller;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -14,6 +13,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 
@@ -39,14 +39,18 @@ public class OntologyController {
 
     private static final MediaType RDF_XML = MediaType.parseMediaType( "application/rdf+xml" );
 
+    /**
+     * FIXME: use {@link org.springframework.beans.factory.annotation.Value} for injecting this, but I think injection
+     *        is broken in controllers. See <a href="https://github.com/PavlidisLab/Gemma/issues/1001">#1001</a> for
+     *        details.
+     */
+    private static final String hostUrl = Settings.getHostUrl();
+
     @Autowired
     private GemmaOntologyService gemmaOntologyService;
 
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
-
-    @Value("${gemma.hosturl}")
-    private String hostUrl;
 
     @RequestMapping(value = "/ont/TGEMO.OWL", method = RequestMethod.GET)
     public RedirectView getOntology() {

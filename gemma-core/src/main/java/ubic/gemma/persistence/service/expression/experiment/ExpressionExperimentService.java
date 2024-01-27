@@ -275,6 +275,12 @@ public interface ExpressionExperimentService
     }
 
     /**
+     * Special indicator for free-text terms.
+     * @see ExpressionExperimentDao#FREE_TEXT
+     */
+    String FREE_TEXT = ExpressionExperimentDao.FREE_TEXT;
+
+    /**
      * Special indicator for uncategorized terms.
      * @see ExpressionExperimentDao#UNCATEGORIZED
      */

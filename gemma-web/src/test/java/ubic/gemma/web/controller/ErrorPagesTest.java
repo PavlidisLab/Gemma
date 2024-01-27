@@ -51,6 +51,8 @@ public class ErrorPagesTest extends BaseSpringWebTest {
                 .andExpect( status().isNotFound() )
                 .andExpect( view().name( "error/404" ) )
                 .andExpect( model().attribute( "exception", instanceOf( EntityNotFoundException.class ) ) );
+        mvc.perform( get( "/test/error/404/built_in_spring_mvc_error" ) )
+                .andExpect( status().isNotFound() );
         mvc.perform( get( "/test/error/500" ) )
                 .andExpect( status().isInternalServerError() )
                 .andExpect( view().name( "error/500" ) )

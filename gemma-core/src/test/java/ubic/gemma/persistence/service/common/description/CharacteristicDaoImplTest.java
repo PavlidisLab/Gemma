@@ -171,13 +171,12 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( ee );
-        sessionFactory.getCurrentSession().flush();
-
         // add ACLs and read permission to everyone
         MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee ) );
         acl.insertAce( 0, BasePermission.READ, new AclGrantedAuthoritySid(
                 new SimpleGrantedAuthority( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), false );
         aclService.updateAcl( acl );
+        sessionFactory.getCurrentSession().flush();
 
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
         assertThat( updated ).isEqualTo( 1 );
