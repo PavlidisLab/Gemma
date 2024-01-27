@@ -89,7 +89,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
         if ( !fileOptions.isEmpty() ) {
             writer.append( indent ).printf( "if [[ \"${COMP_WORDS[$COMP_CWORD-1]}\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
             pushIndent();
-            writer.append( indent ).println( "mapfile -t -O ${#COMPREPLY[@]} COMPREPLY < <(compgen -f -- \"$2\")" );
+            writer.append( indent ).println( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -f -- \"$2\")" );
             popIndent();
             writer.append( indent ).println( "fi" );
         }
@@ -102,7 +102,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
     }
 
     private void generateWordsFromStrings( Collection<String> strings, PrintWriter writer ) {
-        writer.append( indent ).append( "mapfile -t -O ${#COMPREPLY[@]} COMPREPLY < <(compgen -W \"" );
+        writer.append( indent ).append( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -W \"" );
         boolean first = true;
         for ( String string : strings ) {
             if ( first ) {
