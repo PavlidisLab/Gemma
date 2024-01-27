@@ -5,6 +5,8 @@ import org.apache.commons.cli.Options;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,7 +16,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
     private static final String INDENT = "    ";
     private final Set<String> subcommands;
 
-    private String indent;
+    private String indent = "";
 
     public BashCompletionGenerator( Set<String> subcommands ) {
         this.subcommands = subcommands;
@@ -22,55 +24,71 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
     @Override
     public void beforeCompletion( PrintWriter writer ) {
-        writer.printf( "function __gemma_cli_complete() {%n" );
-        indent = INDENT;
-        writer.append( indent ).printf( "COMPREPLY=()%n" );
+        writer.println( "function __gemma_cli_complete() {" );
+        pushIndent();
+        writer.append( indent ).println( "COMPREPLY=()" );
     }
 
     @Override
     public void generateCompletion( Options options, PrintWriter writer ) {
-        writer.append( indent ).printf( "if ! [[ \" ${COMP_WORDS[*]} \" =~ %s ]]; then%n", " (" + quoteRegex( subcommands.stream().map( String::trim ).collect( Collectors.joining( "|" ) ) ) + ")" );
-        indent += INDENT;
-        writer.append( indent ).printf( "COMPREPLY+=(" );
+        writer.append( indent )
+                .printf( "if ! [[ \" ${COMP_WORDS[*]} \" =~ ' ('%s') ' ]]; then%n",
+                        quoteRegex( subcommands.stream().map( String::trim ).collect( Collectors.joining( "|" ) ) ) );
+        pushIndent();
         generateWordsFromOptions( options, writer );
-        writer.printf( ")%n" );
-        writer.append( indent ).printf( "COMPREPLY+=(%s)%n", subcommands.stream().map( this::quoteIfNecessary ).collect( Collectors.joining( " " ) ) );
-        indent = indent.substring( 0, indent.length() - INDENT.length() );
-        writer.append( indent ).printf( "fi%n" );
+        generateWordsFromStrings( subcommands, writer );
+        popIndent();
+        writer.append( indent ).println( "fi" );
     }
 
     @Override
     public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         writer.append( indent ).printf( "if [[ \" ${COMP_WORDS[*]} \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
-        indent += INDENT;
-        writer.append( indent ).printf( "COMPREPLY+=(" );
+        pushIndent();
         generateWordsFromOptions( subcommandOptions, writer );
-        writer.printf( ")%n" );
-        indent = indent.substring( 0, indent.length() - INDENT.length() );
-        writer.append( indent ).printf( "fi%n" );
+        popIndent();
+        writer.append( indent ).println( "fi" );
     }
 
     private void generateWordsFromOptions( Options subcommandOptions, PrintWriter writer ) {
-        boolean first = true;
+        Set<String> strings = new HashSet<>();
         for ( Option option : subcommandOptions.getOptions() ) {
+            strings.add( "-" + option.getOpt() );
+            if ( option.getLongOpt() != null ) {
+                strings.add( "--" + option.getLongOpt() );
+            }
+        }
+        generateWordsFromStrings( strings, writer );
+    }
+
+    private void generateWordsFromStrings( Collection<String> strings, PrintWriter writer ) {
+        writer.append( indent ).append( "COMPREPLY+=( $(compgen -W \"" );
+        boolean first = true;
+        for ( String string : strings ) {
             if ( first ) {
                 first = false;
             } else {
                 writer.append( " " );
             }
-            writer.printf( quoteIfNecessary( "-" + option.getOpt() ) );
-            if ( option.getLongOpt() != null ) {
-                writer.append( " " );
-                writer.printf( quoteIfNecessary( "--" + option.getLongOpt() ) );
-            }
+            writer.append( quoteIfNecessary( string ) );
         }
+        writer.append( '"' );
+        writer.println( " -- \"$2\" ) )" );
+    }
+
+    private void pushIndent() {
+        indent += INDENT;
+    }
+
+    private void popIndent() {
+        indent = indent.substring( 0, indent.length() - INDENT.length() );
     }
 
     @Override
     public void afterCompletion( PrintWriter writer ) {
-        indent = "";
-        writer.printf( "}%n" );
-        writer.printf( "complete -F __gemma_cli_complete gemma-cli%n" );
+        popIndent();
+        writer.println( "}" );
+        writer.println( "complete -F __gemma_cli_complete gemma-cli" );
     }
 
     private String quoteRegex( String s ) {
