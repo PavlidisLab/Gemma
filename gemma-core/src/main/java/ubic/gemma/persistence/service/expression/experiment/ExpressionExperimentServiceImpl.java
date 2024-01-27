@@ -155,7 +155,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
+    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
@@ -168,7 +168,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
         expressionExperimentDao.update( experiment );
-
+        return fv;
     }
 
     @Override

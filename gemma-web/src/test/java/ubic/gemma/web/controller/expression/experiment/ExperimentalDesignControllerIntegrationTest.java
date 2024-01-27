@@ -118,7 +118,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
 
     @Test
     public void testCreateExperimentalFactor() {
-        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject( -1L );
+        ExperimentalFactorValueWebUIObject evvo = new ExperimentalFactorValueWebUIObject( -1L );
         evvo.setCategory( "foo" );
         experimentalDesignController
                 .createExperimentalFactor( new EntityDelegator<>( ee.getExperimentalDesign() ), evvo );

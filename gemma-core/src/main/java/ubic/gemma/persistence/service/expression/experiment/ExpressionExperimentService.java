@@ -66,7 +66,7 @@ public interface ExpressionExperimentService
      * @param fv must already have the experimental factor filled in.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addFactorValue( ExpressionExperiment ee, FactorValue fv );
+    FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.

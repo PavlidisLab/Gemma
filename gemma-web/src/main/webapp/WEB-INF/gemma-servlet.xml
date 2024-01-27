@@ -442,6 +442,7 @@
             <dwr:include method="createExperimentalFactor"/>
             <dwr:include method="deleteExperimentalFactors"/>
             <dwr:include method="updateExperimentalFactors"/>
+            <dwr:include method="getBioMaterialCharacteristicCategories"/>
             <dwr:include method="getFactorValues"/>
             <dwr:include method="createFactorValue"/>
             <dwr:include method="deleteFactorValues"/>

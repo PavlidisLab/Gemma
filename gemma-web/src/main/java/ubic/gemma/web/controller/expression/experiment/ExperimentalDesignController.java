@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -121,10 +122,18 @@ public class ExperimentalDesignController extends BaseController {
 
     }
 
-    public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueObject efvo ) {
+    /**
+     *
+     *
+     * @param e experimentalDesign to add the factor to
+     * @param efvo non-null if we are pre-populating the factor values based on an existing set of BioMaterialCharacteristic,
+     *             see https://github.com/PavlidisLab/Gemma/issues/987
+     */
+    public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueWebUIObject efvo ) {
         if ( e == null || e.getId() == null )
             return;
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.valueOf( efvo.getType() ) );
@@ -134,19 +143,62 @@ public class ExperimentalDesignController extends BaseController {
         ef.setCategory( this.createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
 
         /*
-         * Note: this call should not be needed because of cascade behaviour.
+         * Note: this call should not be needed because of cascade behaviour when we call update.
          */
         // experimentalFactorService.create( ef );
+
         if ( ed.getExperimentalFactors() == null )
             ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         ed.getExperimentalFactors().add( ef );
 
         experimentalDesignService.update( ed );
 
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        if ( StringUtils.isNotBlank( efvo.getBioMaterialCharacteristicCategoryToUse() ) ) {
 
-        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-        // "ExperimentalFactor added: " + efvo.getName(), efvo.toString() );
+            log.info( "Creating factor values based on existing BioMaterial Characteristics: "
+                    + efvo.getBioMaterialCharacteristicCategoryToUse() + " in " + ee.getShortName() );
+
+            /*
+             * get the biomaterials, pull the relevant characteristic keeping track of which biomaterial had which value, then create a factor value for each unique value. Then associate the factor values with the biomaterial according to the value it had for the characteristic.
+             */
+            Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( experimentalDesignService.getExpressionExperiment( ed ) );
+
+            Map<CharacteristicValueObject, Collection<BioMaterial>> map = new HashMap<>();
+            for ( BioMaterialValueObject bmo : bmvos ) {
+                BioMaterial bm = bioMaterialService.load( bmo.getId() );
+
+                for ( CharacteristicValueObject cvo : bmo.getCharacteristics() ) {
+                    cvo.setId( null ); // we just want to compare the values, not the IDs.
+                    if ( cvo.getCategory().equals( efvo.getBioMaterialCharacteristicCategoryToUse() ) ) {
+                        if ( !map.containsKey( cvo ) ) {
+                            map.put( cvo, new HashSet<>() );
+                        }
+                        map.get( cvo ).add( bm );
+                    }
+                }
+            }
+
+            log.info( "Found " + map.size() + " unique values for " +
+                    efvo.getBioMaterialCharacteristicCategoryToUse() + " in " + bmvos.size() + " biomaterials" );
+
+            for ( CharacteristicValueObject cvo : map.keySet() ) {
+                FactorValue fv = FactorValue.Factory.newInstance();
+                fv.setExperimentalFactor( ef );
+
+                Statement s = Statement.Factory.newInstance();
+                s.setCategory( ef.getCategory().getCategory() );
+                s.setCategoryUri( ef.getCategory().getCategoryUri() );
+                s.setSubject( cvo.getValue() );
+                s.setSubjectUri( cvo.getValueUri() ); // can be null
+                fv.getCharacteristics().add( s );
+                fv = expressionExperimentService.addFactorValue( ee, fv );
+
+                for ( BioMaterial bm : map.get( cvo ) ) {
+                    bm.getFactorValues().add( fv );
+                    bioMaterialService.update( bm ); // this might be kind of slow
+                }
+            }
+        }
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
@@ -282,6 +334,16 @@ public class ExperimentalDesignController extends BaseController {
         if ( e == null || e.getId() == null )
             return null;
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( e.getId() );
+        return getBioMaterialValueObjects( ee );
+    }
+
+    @NotNull
+    /**
+     * This filters the characteristics through filterCharacteristics()
+     *
+     * @param ee experiment to get biomaterials for
+     */
+    private Collection<BioMaterialValueObject> getBioMaterialValueObjects( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -294,6 +356,30 @@ public class ExperimentalDesignController extends BaseController {
         filterCharacteristics( result );
 
         return result;
+    }
+
+    /**
+     * Extract just the categories from the biomaterial's characteristics.
+     * @param experimentalDesignID
+     * @return Collection of CharacteristicValueObjects but all we care about is the category
+     */
+    public Collection<CharacteristicValueObject> getBioMaterialCharacteristicCategories( Long experimentalDesignID ) {
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesignService.loadOrFail( experimentalDesignID ) );
+
+        Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( ee );
+        if ( bmvos == null || bmvos.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        Set<CharacteristicValueObject> categories = new HashSet<>();
+        for ( BioMaterialValueObject bmvo : bmvos ) {
+            for ( String cvo : bmvo.getCharacteristicValues().keySet() ) {
+                //  if ( StringUtils.isNotBlank( cvo.getCategory() ) ) { // this shouldn't happen; also duplicates are already filtered out
+                categories.add( new CharacteristicValueObject( null, null, cvo, null ) );
+                //  }
+            }
+        }
+        return categories;
     }
 
     /**
@@ -544,6 +630,7 @@ public class ExperimentalDesignController extends BaseController {
             throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
 
         ee = expressionExperimentService.thawLite( ee );
+
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
