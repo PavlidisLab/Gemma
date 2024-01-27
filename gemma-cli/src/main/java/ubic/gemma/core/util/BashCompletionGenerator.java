@@ -4,18 +4,23 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BashCompletionGenerator implements CompletionGenerator {
 
     private static final String INDENT = "    ";
+
+    /**
+     * A list of all possible subcommands.
+     */
     private final Set<String> subcommands;
 
+    /**
+     * Current indentation level.
+     */
     private String indent = "";
 
     public BashCompletionGenerator( Set<String> subcommands ) {
@@ -32,8 +37,8 @@ public class BashCompletionGenerator implements CompletionGenerator {
     @Override
     public void generateCompletion( Options options, PrintWriter writer ) {
         writer.append( indent )
-                .printf( "if ! [[ \" ${COMP_WORDS[*]} \" =~ ' ('%s') ' ]]; then%n",
-                        quoteRegex( subcommands.stream().map( String::trim ).collect( Collectors.joining( "|" ) ) ) );
+                .printf( "if ! [[ \" ${COMP_WORDS[*]} \" =~ ' '(%s)' ' ]]; then%n",
+                        subcommands.stream().map( String::trim ).map( this::quoteRegex ).collect( Collectors.joining( "|" ) ) );
         pushIndent();
         generateWordsFromOptions( options, writer );
         generateWordsFromStrings( subcommands, writer );
@@ -50,19 +55,54 @@ public class BashCompletionGenerator implements CompletionGenerator {
         writer.append( indent ).println( "fi" );
     }
 
-    private void generateWordsFromOptions( Options subcommandOptions, PrintWriter writer ) {
+    private void generateWordsFromOptions( Options options, PrintWriter writer ) {
+        Set<String> optionsThatRequireArg = new HashSet<>();
+        Set<String> fileOptions = new HashSet<>();
         Set<String> strings = new HashSet<>();
-        for ( Option option : subcommandOptions.getOptions() ) {
-            strings.add( "-" + option.getOpt() );
+        for ( Option option : options.getOptions() ) {
+            List<String> words = new ArrayList<>( 2 );
+            words.add( "-" + option.getOpt() );
             if ( option.getLongOpt() != null ) {
-                strings.add( "--" + option.getLongOpt() );
+                words.add( "--" + option.getLongOpt() );
+            }
+            strings.addAll( words );
+            if ( isFileOption( option ) ) {
+                fileOptions.addAll( words );
+            }
+            if ( option.hasArg() ) {
+                optionsThatRequireArg.addAll( words );
             }
         }
-        generateWordsFromStrings( strings, writer );
+
+        // TODO: omit options if the current option to complete requires an argument
+        if ( !optionsThatRequireArg.isEmpty() ) {
+            writer.append( indent ).printf( "if ! [[ \"${COMP_WORDS[$COMP_CWORD-1]}\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
+            pushIndent();
+            generateWordsFromStrings( strings, writer );
+            popIndent();
+            writer.append( indent ).println( "fi" );
+        } else {
+            generateWordsFromStrings( strings, writer );
+        }
+
+        // suggest files if the before-last word is an option that takes a file
+        if ( !fileOptions.isEmpty() ) {
+            writer.append( indent ).printf( "if [[ \"${COMP_WORDS[$COMP_CWORD-1]}\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
+            pushIndent();
+            writer.append( indent ).println( "mapfile -t -O ${#COMPREPLY[@]} COMPREPLY < <(compgen -f -- \"$2\")" );
+            popIndent();
+            writer.append( indent ).println( "fi" );
+        }
+    }
+
+    private boolean isFileOption( Option option ) {
+        return option.getType().equals( File.class )
+                || option.getOpt().toLowerCase().contains( "file" )
+                || ( option.getLongOpt() != null && option.getLongOpt().toLowerCase().contains( "file" ) );
     }
 
     private void generateWordsFromStrings( Collection<String> strings, PrintWriter writer ) {
-        writer.append( indent ).append( "COMPREPLY+=( $(compgen -W \"" );
+        writer.append( indent ).append( "mapfile -t -O ${#COMPREPLY[@]} COMPREPLY < <(compgen -W \"" );
         boolean first = true;
         for ( String string : strings ) {
             if ( first ) {
@@ -73,7 +113,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
             writer.append( quoteIfNecessary( string ) );
         }
         writer.append( '"' );
-        writer.println( " -- \"$2\" ) )" );
+        writer.println( " -- \"$2\")" );
     }
 
     private void pushIndent() {
@@ -88,11 +128,12 @@ public class BashCompletionGenerator implements CompletionGenerator {
     public void afterCompletion( PrintWriter writer ) {
         popIndent();
         writer.println( "}" );
-        writer.println( "complete -F __gemma_cli_complete gemma-cli" );
+        writer.println( "complete -o filenames -F __gemma_cli_complete gemma-cli" );
     }
 
     private String quoteRegex( String s ) {
-        return Pattern.quote( s );
+        // FIXME: properly escape regex characters in command name
+        return s;
     }
 
     private String quoteIfNecessary( String s ) {
