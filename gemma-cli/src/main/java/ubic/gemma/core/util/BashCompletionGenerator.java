@@ -32,12 +32,15 @@ public class BashCompletionGenerator implements CompletionGenerator {
         writer.println( "function __gemma_cli_complete() {" );
         pushIndent();
         writer.append( indent ).println( "COMPREPLY=()" );
+        writer.append( indent ).println( "words=\"${COMP_WORDS[*]}\"" );
+        writer.append( indent ).println( "current_option=\"${COMP_WORDS[$COMP_CWORD-1]}\"" );
+
     }
 
     @Override
     public void generateCompletion( Options options, PrintWriter writer ) {
         writer.append( indent )
-                .printf( "if ! [[ \" ${COMP_WORDS[*]} \" =~ ' '(%s)' ' ]]; then%n",
+                .printf( "if ! [[ \" $words \" =~ ' '(%s)' ' ]]; then%n",
                         subcommands.stream().map( String::trim ).map( this::quoteRegex ).collect( Collectors.joining( "|" ) ) );
         pushIndent();
         generateWordsFromOptions( options, writer );
@@ -48,7 +51,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
     @Override
     public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
-        writer.append( indent ).printf( "if [[ \" ${COMP_WORDS[*]} \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
+        writer.append( indent ).printf( "if [[ \" $words \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
         pushIndent();
         generateWordsFromOptions( subcommandOptions, writer );
         popIndent();
@@ -76,7 +79,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
         // TODO: omit options if the current option to complete requires an argument
         if ( !optionsThatRequireArg.isEmpty() ) {
-            writer.append( indent ).printf( "if ! [[ \"${COMP_WORDS[$COMP_CWORD-1]}\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
+            writer.append( indent ).printf( "if ! [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
             pushIndent();
             generateWordsFromStrings( strings, writer );
             popIndent();
@@ -87,7 +90,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
         // suggest files if the before-last word is an option that takes a file
         if ( !fileOptions.isEmpty() ) {
-            writer.append( indent ).printf( "if [[ \"${COMP_WORDS[$COMP_CWORD-1]}\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
+            writer.append( indent ).printf( "if [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
             pushIndent();
             writer.append( indent ).println( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -f -- \"$2\")" );
             popIndent();
