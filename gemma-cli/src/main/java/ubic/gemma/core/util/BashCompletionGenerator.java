@@ -77,7 +77,6 @@ public class BashCompletionGenerator implements CompletionGenerator {
             }
         }
 
-        // TODO: omit options if the current option to complete requires an argument
         if ( !optionsThatRequireArg.isEmpty() ) {
             writer.append( indent ).printf( "if ! [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
             pushIndent();
