@@ -148,6 +148,19 @@ public abstract class AbstractCLI implements CLI {
         return ctx.getBean( clz );
     }
 
+    @Override
+    public Options getOptions() {
+        Options options = new Options();
+        buildStandardOptions( options );
+        buildOptions( options );
+        return options;
+    }
+
+    @Override
+    public boolean allowPositionalArguments() {
+        return allowPositionalArguments;
+    }
+
     /**
      * {@inheritDoc}
      * <p>
@@ -159,9 +172,7 @@ public abstract class AbstractCLI implements CLI {
      */
     @Override
     public int executeCommand( String... args ) {
-        Options options = new Options();
-        buildStandardOptions( options );
-        buildOptions( options );
+        Options options = getOptions();
         try {
             DefaultParser parser = new DefaultParser();
             CommandLine commandLine = parser.parse( options, args );

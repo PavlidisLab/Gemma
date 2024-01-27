@@ -3,6 +3,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="test">
 
+    <!--
+    This file contains configuration for the ontology services used in tests, but also if the -testing flag is supplied
+    to the CLI.
+
+    By default, no ontology are loaded in tests and no limit is applied to the number of ontologies that can be loaded
+    concurrently.
+    -->
+
     <!-- executor used for loading ontologies in background -->
     <bean id="ontologyTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor"/>
 
