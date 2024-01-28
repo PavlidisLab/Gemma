@@ -66,6 +66,6 @@ public class FishCompletionGenerator implements CompletionGenerator {
     }
 
     private String quoteIfNecessary( String s ) {
-        return "'" + s.replaceAll( "'", "\\\\'" ).replaceAll( "\n", "\\\\n" ) + "'";
+        return "'" + s.replaceAll( "'", "'\"'\"'" ).replaceAll( "\n", "\\\\n" ) + "'";
     }
 }
