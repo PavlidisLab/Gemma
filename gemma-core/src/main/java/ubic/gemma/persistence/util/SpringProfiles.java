@@ -10,4 +10,9 @@ public class SpringProfiles {
     public static final String PRODUCTION = "production",
             DEV = "dev",
             TEST = "test";
+
+    /**
+     * A special profile that indicates that no database connection should be used.
+     */
+    public static final String NODB = "nodb";
 }
