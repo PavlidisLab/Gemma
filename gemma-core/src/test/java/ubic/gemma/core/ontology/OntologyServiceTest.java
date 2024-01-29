@@ -1,5 +1,6 @@
 package ubic.gemma.core.ontology;
 
+import org.junit.After;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -26,8 +28,7 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
@@ -118,10 +119,18 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
     private ChebiOntologyService chebiOntologyService;
 
     @Autowired
+    private ObiService obiService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
     private CharacteristicService characteristicService;
+
+    @After
+    public void tearDown() {
+        reset( chebiOntologyService, obiService, searchService );
+    }
 
     @Test
     public void testFindTermInexact() throws OntologySearchException, SearchException {
@@ -139,5 +148,21 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         assertTrue( settings.isFillResults() );
         verify( chebiOntologyService ).isOntologyLoaded();
         verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
+    }
+
+    @Test
+    public void testTermLackingLabelIsIgnored() {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        when( chebiOntologyService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", null ) );
+        assertNull( ontologyService.getTerm( "http://test" ) );
+
+        // this is covering the case when baseCode defaults to the local name or URI when a term does not have a label
+        when( chebiOntologyService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "http://test" ) );
+        assertNull( ontologyService.getTerm( "http://test" ) );
+
+        when( obiService.isOntologyLoaded() ).thenReturn( true );
+        when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
+        assertNotNull( ontologyService.getTerm( "http://test" ) );
     }
 }
