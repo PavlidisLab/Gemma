@@ -12,7 +12,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNoException;
 
 public class CompletionGeneratorTest {
 
@@ -37,7 +39,13 @@ public class CompletionGeneratorTest {
 
     @Test
     public void testFish() throws InterruptedException, IOException {
-        Process process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
+        Process process;
+        try {
+            process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
+        } catch ( IOException e ) {
+            assumeNoException( "fish command was not found", e );
+            return;
+        }
         try ( PrintWriter writer = new PrintWriter( new OutputStreamWriter( process.getOutputStream() ) ) ) {
             writeCompletionScript( new FishCompletionGenerator( new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
         }
@@ -47,6 +55,18 @@ public class CompletionGeneratorTest {
 
     @Test
     public void testFishCompletions() throws IOException, InterruptedException {
+        Process process;
+        try {
+            process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
+        } catch ( IOException e ) {
+            assumeNoException( "fish command was not found", e );
+            return;
+        }
+        // not all fish versions supports 'complete -C' in non-interactive mode
+        try ( PrintWriter writer = new PrintWriter( process.getOutputStream() ) ) {
+            writer.println( "complete -C test" );
+        }
+        assumeThat( process.waitFor() ).isEqualTo( 0 );
         assertThat( getFishCompletions( "-" ) )
                 .isEqualTo( "-h\tShow help\n" );
         assertThat( getFishCompletions( "a -" ) )
