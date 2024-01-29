@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.providers.OntologyService;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @CommonsLog
+@ActiveProfiles("production")
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-ontology.xml", "classpath:ubic/gemma/core/ontology/OntologyLoadingTest-context.xml" })
 public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
 
