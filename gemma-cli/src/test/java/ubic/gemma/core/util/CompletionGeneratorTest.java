@@ -42,6 +42,8 @@ public class CompletionGeneratorTest {
         Process process;
         try {
             process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
+            process.getOutputStream().close();
+            assertThat( process.waitFor() ).isEqualTo( 0 );
         } catch ( IOException e ) {
             assumeNoException( "fish command was not found", e );
             return;
@@ -58,6 +60,8 @@ public class CompletionGeneratorTest {
         Process process;
         try {
             process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
+            process.getOutputStream().close();
+            assertThat( process.waitFor() ).isEqualTo( 0 );
         } catch ( IOException e ) {
             assumeNoException( "fish command was not found", e );
             return;
