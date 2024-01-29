@@ -53,8 +53,8 @@ public class FishCompletionGenerator implements CompletionGenerator {
                     ( o.getOpt().length() == 1 ? " -s " : " -o " ) + o.getOpt(),
                     o.getLongOpt() != null ? " -l " + o.getLongOpt() : "",
                     o.hasArg() ? " -r" : "",
-                    // specifying -F is necessary if the CLI does not allow positional arguments
-                    isFileOption( o ) ? " -F" : " -f",
+                    // TODO: add -F here, but this is not supported on our server
+                    isFileOption( o ) ? "" : " -f",
                     StringUtils.isNotBlank( o.getDescription() ) ? " --description " + quoteIfNecessary( o.getDescription() ) : "" );
         }
     }

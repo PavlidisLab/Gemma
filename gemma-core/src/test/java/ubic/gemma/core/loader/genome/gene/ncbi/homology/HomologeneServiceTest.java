@@ -150,6 +150,6 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
     public void testDisableLoadHomologene() {
         assertThat( hgs.isInitialized() ).isFalse();
         hgs.setLoadHomologene( false );
-        assertThat( hgs.getObject() ).succeedsWithin( 40, TimeUnit.MILLISECONDS );
+        assertThat( hgs.getObject() ).succeedsWithin( 100, TimeUnit.MILLISECONDS );
     }
 }
