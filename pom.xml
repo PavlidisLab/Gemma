@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.10</version>
+		<version>1.2.11</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -140,7 +140,6 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.19</version>
 		</dependency>
 
 		<dependency>
@@ -592,16 +591,6 @@
 				</site>
 			</distributionManagement>
 		</profile>
-		<profile>
-			<!-- Target Java 8 bytecode on Java 9+ -->
-			<id>java8</id>
-			<activation>
-				<jdk>[9,)</jdk>
-			</activation>
-			<properties>
-				<maven.compiler.release>8</maven.compiler.release>
-			</properties>
-		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
@@ -640,7 +629,6 @@
 		<gsec.version>0.0.15</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<tomcat.version>9.0.80</tomcat.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.15.3</jackson.version>
 		<swagger.version>2.2.11</swagger.version>
@@ -648,7 +636,6 @@
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.29.2</slack.version>
 		<micrometer.version>1.11.0</micrometer.version>
-		<tomcat.version>9.0.80</tomcat.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
