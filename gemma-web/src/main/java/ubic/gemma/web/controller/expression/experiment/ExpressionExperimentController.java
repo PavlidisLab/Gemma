@@ -502,11 +502,14 @@ public class ExpressionExperimentController {
 
         Locale locale = LocaleContextHolder.getLocale();
         NumberFormat integerFormat = NumberFormat.getIntegerInstance( locale );
+        List<Taxon> taxaInOrder = new ArrayList<>( eesPerTaxon.keySet() );
+        taxaInOrder.sort( Comparator.comparing( Taxon::getCommonName ) );
 
-        for ( Taxon t : eesPerTaxon.keySet() ) {
+        for ( Taxon t : taxaInOrder ) {
             Map<String, Object> taxLine = new HashMap<>();
             taxLine.put( "taxonId", t.getId() );
             taxLine.put( "taxonName", t.getScientificName() );
+            taxLine.put( "taxonCommonName", StringUtils.capitalize( t.getCommonName() ) );
             taxLine.put( "totalCount", integerFormat.format( eesPerTaxon.get( t ) ) );
             if ( newEEsPerTaxon.containsKey( t ) ) {
                 taxLine.put( "newCount", integerFormat.format( newEEsPerTaxon.get( t ).size() ) );
