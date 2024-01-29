@@ -57,7 +57,7 @@ Ext.onReady( function() {
 <input type="hidden" id="reloadOnLogout" value="false">
 
 
-<div style="display:flex;flex-direction:column;margin-left:100px">
+<div style="font-family:Avenir,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;margin-left:100px">
 
     <div style="margin:50px;display:flex;flex-direction:row;align-items: flex-start">
         <div style="margin-bottom: 10px;width:500px" id="generalSearchSimple-div"></div>
