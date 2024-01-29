@@ -7,15 +7,14 @@
 
 <div id="frontPageSlideShow" style="display: flex;flex-direction: row">
     <div style="font-family:Avenir,Helvetica,Arial,sans-serif;font-size:small;width:330px;min-width:250px;padding-left:130px;margin:10px;padding-top:40px">
-        Gemma provides expression data, experimental design annotations,
-        and differential expression analysis results for thousands of studies (microarrays and RNA-seq).
-        We acquire data from public sources (primarily NCBI <a href="http://www.ncbi.nlm.nih.gov/geo/">GEO</a>),
-        reanalyze raw
-        data, annotate experimental conditions, conduct quality control and compute differential expression using standardized procedures.
+        Gemma provides data, experimental design annotations,
+        and differential expression analysis results for thousands of microarray and RNA-seq experiments.
+        We re-analyze raw data from public sources (primarily NCBI <a href="http://www.ncbi.nlm.nih.gov/geo/">GEO</a>),
+        annotate experimental conditions, conduct quality control and compute differential expression using standardized procedures.
         We have especially good coverage of experiments relevant to the nervous system.
         See the <a href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information.
         Gemma was and developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/" target="_blank">Pavlidis group
-        at UBC</a>)
+        at UBC</a>.
     </div>
 
     <div style="padding-left:10px;margin:40px">
