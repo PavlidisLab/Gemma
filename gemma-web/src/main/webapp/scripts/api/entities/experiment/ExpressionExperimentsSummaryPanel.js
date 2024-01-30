@@ -60,9 +60,9 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend( Ext.Panel,
       // this is so long because it is lifted from the original version of the summary table
       tpl : new Ext.XTemplate(
          '<div id="dataSummaryTable">'
-         + '<div class="roundedcornr_box_777249" style="margin-bottom: 15px; padding: 20px; -moz-border-radius: 15px; border-radius: 15px;">'
-         + '<div class="roundedcornr_content_777249">'
-         + '<div id="dataSummary" style="margin-left: 15px; margin-right: 15px">'
+         + '<div style="margin-bottom: 15px; padding: 20px;">'
+         + '<div >'
+         + '<div id="dataSummary" style="margin-left: 0px; margin-right: 15px">'
          + '<table style="border-spacing: 10px 2px;">'
          + '<tr>'
          + '<td></td>'
