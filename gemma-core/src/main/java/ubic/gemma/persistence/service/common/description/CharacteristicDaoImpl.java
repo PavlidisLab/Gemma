@@ -354,7 +354,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         // batch-load all the proxies
-        charToParent.forEach( ( c, parent ) -> Hibernate.initialize( parent ) );
+        for ( Map.Entry<Characteristic, Identifiable> entry : charToParent.entrySet() ) {
+            Identifiable parent = entry.getValue();
+            Hibernate.initialize( parent );
+            if ( parent instanceof FactorValue ) {
+                Hibernate.initialize( ( ( FactorValue ) parent ).getExperimentalFactor() );
+            }
+        }
 
         if ( !characteristicsNotFound.isEmpty() ) {
             //noinspection unchecked
