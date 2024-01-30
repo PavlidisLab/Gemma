@@ -768,8 +768,10 @@ public class ExpressionDataMatrixColumnSort {
             @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
                 try {
-                    assert o1.getMeasurement() != null;
-                    assert o2.getMeasurement() != null;
+                    if ( o1 == null || o1.getMeasurement() == null || o1.getMeasurement().getValue() == null )
+                        return -1;
+                    if ( o2 == null || o2.getMeasurement() == null || o2.getMeasurement().getValue() == null )
+                        return 1;
 
                     double d1 = Double.parseDouble( o1.getMeasurement().getValue() );
                     double d2 = Double.parseDouble( o2.getMeasurement().getValue() );
