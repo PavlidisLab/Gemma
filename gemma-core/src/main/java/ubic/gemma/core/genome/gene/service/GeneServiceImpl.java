@@ -123,12 +123,14 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Override
     @Transactional(readOnly = true)
     public Gene findByNCBIId( Integer accession ) {
+        if ( accession == null ) return null;
         return this.geneDao.findByNcbiId( accession );
     }
 
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
+        if ( accession == null ) return null;
         Gene gene = this.findByNCBIId( accession );
         return new GeneValueObject( gene );
     }
