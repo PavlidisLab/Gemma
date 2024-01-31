@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -67,17 +68,6 @@ public interface ExpressionExperimentService
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addFactorValue( ExpressionExperiment ee, FactorValue fv );
-
-    /**
-     * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
-     *
-     * @param eeToUpdate experiment to be updated.
-     * @param newVectors vectors to be added.
-     * @return updated experiment.
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment addRawVectors( ExpressionExperiment eeToUpdate,
-            Collection<RawExpressionDataVector> newVectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
@@ -560,6 +550,17 @@ public interface ExpressionExperimentService
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
 
     /**
+     * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
+     *
+     * @param eeToUpdate experiment to be updated.
+     * @param newVectors vectors to be added.
+     * @return updated experiment.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    ExpressionExperiment addRawVectors( ExpressionExperiment eeToUpdate,
+            Collection<RawExpressionDataVector> newVectors );
+
+    /**
      * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
@@ -570,6 +571,26 @@ public interface ExpressionExperimentService
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment replaceRawVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Add single-cell data vectors.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+            Collection<SingleCellExpressionDataVector> vectors );
+
+    /**
+     * Replace existing single-cell data vectors for the given quantitation type.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+            Collection<SingleCellExpressionDataVector> vectors );
+
+    /**
+     * Remove single-cell data vectors for the given quantitation type.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.

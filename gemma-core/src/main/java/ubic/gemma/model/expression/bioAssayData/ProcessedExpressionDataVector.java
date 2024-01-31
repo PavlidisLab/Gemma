@@ -18,34 +18,22 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
-public class ProcessedExpressionDataVector extends DesignElementDataVector {
+public class ProcessedExpressionDataVector extends RawOrProcessedExpressionDataVector {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3948846630785289034L;
+
     private Double rankByMean;
     private Double rankByMax;
-    private ExpressionExperiment expressionExperiment;
 
     @Override
     public String toString() {
         return "ProcessedExpressionDataVector [ID=" + this.getId() + "]";
-    }
-
-    @Override
-    public ExpressionExperiment getExpressionExperiment() {
-        return this.expressionExperiment;
-    }
-
-    @Override
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 
     /**

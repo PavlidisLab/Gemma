@@ -23,7 +23,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -809,9 +808,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      *              details.
      */
     private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
-            Collection<? extends DesignElementDataVector> data ) {
+            Collection<? extends RawOrProcessedExpressionDataVector> data ) {
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = new HashMap<>();
-        for ( DesignElementDataVector v : data ) {
+        for ( RawOrProcessedExpressionDataVector v : data ) {
             BioAssayDimension bioAssayDimension = v.getBioAssayDimension();
             if ( !badVos.containsKey( bioAssayDimension ) ) {
                 badVos.put( bioAssayDimension, new BioAssayDimensionValueObject( bioAssayDimension ) );
@@ -1521,21 +1520,21 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     private Map<CompositeSequence, DoubleVectorValueObject> unpack(
-            Collection<? extends DesignElementDataVector> data ) {
+            Collection<? extends RawOrProcessedExpressionDataVector> data ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-        for ( DesignElementDataVector v : data ) {
+        for ( RawOrProcessedExpressionDataVector v : data ) {
             result.put( v.getDesignElement(),
                     new DoubleVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
         }
         return result;
     }
 
-    private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
+    private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<ProcessedExpressionDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-        for ( DesignElementDataVector v : data ) {
+        for ( ProcessedExpressionDataVector v : data ) {
             result.put( v.getDesignElement(),
                     new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement().getId() ),
                             badVos.get( v.getBioAssayDimension() ) ) );
@@ -1543,11 +1542,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return result;
     }
 
-    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
+    private Collection<DoubleVectorValueObject> unpack( Collection<ProcessedExpressionDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap, BioAssayDimension longestBad ) {
         Collection<DoubleVectorValueObject> result = new HashSet<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-        for ( DesignElementDataVector v : data ) {
+        for ( ProcessedExpressionDataVector v : data ) {
             result.add( new DoubleVectorValueObject( v, badVos.get( v.getBioAssayDimension() ),
                     cs2GeneMap.get( v.getDesignElement().getId() ), longestBad ) );
         }
@@ -1555,12 +1554,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     private Collection<DoubleVectorValueObject> unpack(
-            Map<? extends DesignElementDataVector, Collection<Long>> data ) {
+            Map<ProcessedExpressionDataVector, Collection<Long>> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this
                 .getBioAssayDimensionValueObjects( data.keySet() );
 
-        for ( DesignElementDataVector v : data.keySet() ) {
+        for ( ProcessedExpressionDataVector v : data.keySet() ) {
             result.add( new DoubleVectorValueObject( v, data.get( v ), badVos.get( v.getBioAssayDimension() ) ) );
         }
         return result;
@@ -1578,12 +1577,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return result;
     }
 
-    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
+    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends RawOrProcessedExpressionDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<>();
 
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
 
-        for ( DesignElementDataVector v : data ) {
+        for ( RawOrProcessedExpressionDataVector v : data ) {
             result.add( new BooleanVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
         }
         return result;

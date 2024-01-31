@@ -26,6 +26,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -38,7 +39,7 @@ import java.util.Set;
  * @author pavlidis
  * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
-public abstract class AbstractDesignElementDataVectorDao<T extends DesignElementDataVector> extends AbstractDao<T>
+public abstract class AbstractDesignElementDataVectorDao<T extends RawOrProcessedExpressionDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
 
     protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory ) {
@@ -75,7 +76,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
         // collect all the entities to thaw
         Set<ExpressionExperiment> ees = new HashSet<>( designElementDataVectors.size() );
         Set<BioAssayDimension> dims = new HashSet<>( designElementDataVectors.size() );
-        for ( DesignElementDataVector vector : designElementDataVectors ) {
+        for ( T vector : designElementDataVectors ) {
             dims.add( vector.getBioAssayDimension() );
             ees.add( vector.getExpressionExperiment() );
         }

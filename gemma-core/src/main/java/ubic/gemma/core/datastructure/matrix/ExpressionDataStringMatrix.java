@@ -25,7 +25,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -42,14 +42,14 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     private static final Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
     private StringMatrix<Integer, Integer> matrix;
 
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataStringMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
         this.init();
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }
 
     @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
+    public ExpressionDataStringMatrix( Collection<? extends RawOrProcessedExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
@@ -158,7 +158,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
@@ -168,7 +168,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         this.matrix = this.createMatrix( vectors, maxSize );
     }
 
-    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
+    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors,
             int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
@@ -187,7 +187,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         }
 
         ByteArrayConverter bac = new ByteArrayConverter();
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
 
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;

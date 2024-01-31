@@ -3,15 +3,15 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
 
 @Repository
-public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<DesignElementDataVector> implements RawAndProcessedExpressionDataVectorDao {
+public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<RawOrProcessedExpressionDataVector> implements RawAndProcessedExpressionDataVectorDao {
 
     @Autowired
     private RawExpressionDataVectorDao rawExpressionDataVectorDao;
@@ -21,21 +21,21 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
 
     @Autowired
     public RawAndProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
-        super( DesignElementDataVector.class, sessionFactory, sessionFactory.getClassMetadata( RawExpressionDataVector.class ) );
+        super( RawOrProcessedExpressionDataVector.class, sessionFactory, sessionFactory.getClassMetadata( RawExpressionDataVector.class ) );
     }
 
     @Override
-    public DesignElementDataVector load( Long id ) {
+    public RawOrProcessedExpressionDataVector load( Long id ) {
         throw new UnsupportedOperationException( "Use a specific expression vector DAO to load by ID." );
     }
 
     @Override
-    public Collection<DesignElementDataVector> load( Collection<Long> ids ) {
+    public Collection<RawOrProcessedExpressionDataVector> load( Collection<Long> ids ) {
         throw new UnsupportedOperationException( "Use a specific expression vector DAO to load by IDs." );
     }
 
     @Override
-    public DesignElementDataVector find( DesignElementDataVector entity ) {
+    public RawOrProcessedExpressionDataVector find( RawOrProcessedExpressionDataVector entity ) {
         if ( entity instanceof RawExpressionDataVector ) {
             return rawExpressionDataVectorDao.find( ( RawExpressionDataVector ) entity );
         } else if ( entity instanceof ProcessedExpressionDataVector ) {

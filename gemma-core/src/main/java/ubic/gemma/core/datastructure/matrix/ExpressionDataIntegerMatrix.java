@@ -9,6 +9,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -27,7 +28,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataIntegerMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
         this.init();
 
         for ( DesignElementDataVector dedv : vectors ) {
@@ -142,7 +143,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
@@ -158,7 +159,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * @return DoubleMatrixNamed
      */
     private IntegerMatrix<CompositeSequence, Integer> createMatrix(
-            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
+            Collection<? extends RawOrProcessedExpressionDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
@@ -177,7 +178,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
         ByteArrayConverter bac = new ByteArrayConverter();
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
 
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No design element for " + vector;

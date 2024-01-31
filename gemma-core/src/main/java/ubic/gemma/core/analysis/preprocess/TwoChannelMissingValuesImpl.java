@@ -31,10 +31,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -122,7 +119,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         timer.stop();
         this.logTimeInfo( timer, procVectors.size() + rawVectors.size() );
 
-        Collection<? extends DesignElementDataVector> builderVectors = new HashSet<>(
+        Collection<? extends RawOrProcessedExpressionDataVector> builderVectors = new HashSet<>(
                 rawVectors.isEmpty() ? procVectors : rawVectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( builderVectors );

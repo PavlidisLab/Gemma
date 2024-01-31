@@ -24,7 +24,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math3.analysis.function.Exp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +37,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -284,7 +283,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+            Collection<? extends RawOrProcessedExpressionDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             if ( vectors.isEmpty() ) {
                 vectors = processedExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             }

@@ -42,7 +42,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -368,10 +367,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         geoService.updateFromGEO( "GSE30521" );
         ee = eeService.load( ee.getId() );
         ee = this.eeService.thawLite( ee );
-        assertNotNull(ee.getPrimaryPublication());
-        for(BioAssay ba : ee.getBioAssays()) {
-            assertTrue(!ba.getSampleUsed().getCharacteristics().isEmpty());
-            for( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
+        assertNotNull( ee.getPrimaryPublication() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertTrue( !ba.getSampleUsed().getCharacteristics().isEmpty() );
+            for ( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
                 assertNotNull( c.getCategory() );
             }
         }
@@ -422,7 +421,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         BioAssay soughtBioAssay = null;
         Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
         vectors = rawExpressionDataVectorService.thaw( vectors );
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( RawExpressionDataVector vector : vectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {
                 soughtDesignElement = de;

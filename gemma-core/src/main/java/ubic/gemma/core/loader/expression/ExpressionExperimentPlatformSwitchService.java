@@ -18,18 +18,10 @@
  */
 package ubic.gemma.core.loader.expression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
@@ -39,8 +31,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,6 +44,8 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+
+import java.util.*;
 
 /**
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
@@ -596,7 +590,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param vector vector
      * @param bad    to be used as the replacement.
      */
-    private void vectorReWrite( DesignElementDataVector vector, BioAssayDimension bad ) {
+    private void vectorReWrite( RawOrProcessedExpressionDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
         List<BioAssay> currentOrder = vector.getBioAssayDimension().getBioAssays();
         if ( this.equivalent( currentOrder, desiredOrder ) ) {

@@ -57,9 +57,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -1296,6 +1294,101 @@ public class ExpressionExperimentServiceImpl
             ee = this.addRawVectors( eeToUpdate, vectors );
         }
         return ee;
+    }
+
+    @Override
+    @Transactional
+    public void addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+        Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
+                ee + " already have vectors for the quantitation type: " + quantitationType );
+        Assert.isTrue( !vectors.isEmpty(), "At least one single-cell vector has to be supplied." );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
+                "All vectors must have the quantitation type: " + quantitationType );
+        Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).distinct().count() == 1,
+                "All vectors must share the same dimension." );
+        validateSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+        ExpressionExperiment finalEe = ee;
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( finalEe ) ),
+                "Some of the vectors belong to other expression experiments." );
+        ee = ensureInSession( ee );
+        for ( SingleCellExpressionDataVector v : vectors ) {
+            v.setExpressionExperiment( ee );
+        }
+        ee.getSingleCellExpressionDataVectors().addAll( vectors );
+        // make all other single-cell QTs non-preferred
+        if ( quantitationType.getIsPreferred() ) {
+            ee.getQuantitationTypes().forEach( q -> q.setIsPreferred( false ) );
+        }
+        ee.getQuantitationTypes().add( quantitationType );
+        update( ee ); // will take care of creating vectors
+    }
+
+    @Override
+    @Transactional
+    public void replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+        Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
+                ee + " does not have the quantitation type: " + quantitationType );
+        Assert.isTrue( !vectors.isEmpty(), "At least one single-cell vector has to be supplied; use removeSingleCelLDataVectors() to remove vectors instead." );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
+                "All vectors must have the quantitation type: " + quantitationType );
+        Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).distinct().count() == 1,
+                "All vectors must share the same dimension." );
+        validateSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+        ExpressionExperiment finalEe = ee;
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( finalEe ) ),
+                "Some of the vectors belong to other expression experiments." );
+        ee = ensureInSession( ee );
+        ee.getSingleCellExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        for ( SingleCellExpressionDataVector v : vectors ) {
+            v.setExpressionExperiment( ee );
+        }
+        ee.getSingleCellExpressionDataVectors().addAll( vectors );
+        update( ee );
+    }
+
+    /**
+     * Validate single-cell dimension.
+     */
+    private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
+        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
+                "The number of cell IDs must match the number of cells." );
+        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
+        validateSparseRangeArray( "BioAssay", scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+        validateSparseRangeArray( "Cell type", scbad.getCellTypes(), scbad.getCellTypesOffset(), scbad.getNumberOfCells() );
+    }
+
+    /**
+     * Validate a sparse range array.
+     * @param messagePrefix a prefix to use for validation errors
+     * @param array         collection of elements applying for the ranges
+     * @param offsets       starting offsets of the ranges
+     * @param size          the size of the original array
+     */
+    private void validateSparseRangeArray( String messagePrefix, List<?> array, int[] offsets, int size ) {
+        Assert.isTrue( array.size() == offsets.length,
+                messagePrefix + " offsets are invalid: there must be as many offsets as entries in the corresponding array." );
+        int k = 0;
+        int lastI = -1;
+        Object lastObject = null;
+        for ( int i : offsets ) {
+            Assert.isTrue( i > lastI, messagePrefix + " offsets are invalid: indices must be monotonously increasing." );
+            Assert.isTrue( i < size, messagePrefix + " offsets are invalid: indices must not exceed the number of cells." );
+            Object o = array.get( k++ );
+            Assert.isTrue( k == 0 || !Objects.equals( array.get( i ), lastObject ),
+                    messagePrefix + " offsets are invalid: successive ranges cannot be of the same object." );
+            lastI = i;
+            lastObject = o;
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) );
+        ee = ensureInSession( ee );
+        ee.getSingleCellExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        ee.getQuantitationTypes().remove( quantitationType );
+        update( ee );
     }
 
     /**

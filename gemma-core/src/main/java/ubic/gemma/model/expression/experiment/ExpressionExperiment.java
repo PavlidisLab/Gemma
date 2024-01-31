@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
@@ -88,9 +89,11 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      * If this experiment was split off of a larger experiment, link to its relatives.
      */
     private Set<ExpressionExperiment> otherParts = new HashSet<>();
-    private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private Set<QuantitationType> quantitationTypes = new HashSet<>();
+
+    private Set<SingleCellExpressionDataVector> singleCellExpressionDataVectors = new HashSet<>();
     private Set<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
+    private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private String shortName;
 
     private String source;
@@ -217,6 +220,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.quantitationTypes;
     }
 
+    public Set<SingleCellExpressionDataVector> getSingleCellExpressionDataVectors() {
+        return singleCellExpressionDataVectors;
+    }
+
     public Set<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
     }
@@ -315,6 +322,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setQuantitationTypes( Set<QuantitationType> quantitationTypes ) {
         this.quantitationTypes = quantitationTypes;
+    }
+
+    public void setSingleCellExpressionDataVectors( Set<SingleCellExpressionDataVector> singleCellExpressionDataVectors ) {
+        this.singleCellExpressionDataVectors = singleCellExpressionDataVectors;
     }
 
     public void setRawExpressionDataVectors( Set<RawExpressionDataVector> rawExpressionDataVectors ) {
