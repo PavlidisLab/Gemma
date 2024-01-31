@@ -179,6 +179,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend( Gemma.GemmaGridPanel, {
             var errorHandler = function( er ) {
                this.loadMask.hide();
                this.loadMask.msg = oldmsg;
+               this.refresh();
                Ext.Msg.alert( "Error", er );
 
             }.createDelegate( this );

@@ -73,6 +73,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
@@ -103,6 +104,8 @@ public class ExpressionExperimentServiceImpl
     private AuditEventService auditEventService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
@@ -169,6 +172,39 @@ public class ExpressionExperimentServiceImpl
         }
         expressionExperimentDao.update( experiment );
         return fv;
+    }
+
+
+    @Override
+    @Transactional
+    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
+        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
+        Map<BioMaterial, FactorValue> result = new HashMap<>();
+        int count = 0;
+        for ( BioMaterial bm : fvs.keySet() ) {
+            FactorValue fv = fvs.get( bm );
+            fv.setSecurityOwner( experiment );
+            fv = this.factorValueService.create( fv );
+
+            for ( ExperimentalFactor ef : efs ) {
+                if ( fv.getExperimentalFactor().equals( ef ) ) {
+                    ef.getFactorValues().add( fv );
+                    break;
+                }
+            }
+            bm.getFactorValues().add( fv );
+            result.put( bm, fv );
+            ++count;
+            if ( count % 50 == 0 ) {
+                log.info( "Processed: " + count + " biomaterials for new factor values" );
+            }
+        }
+        log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
+      //  expressionExperimentDao.update( experiment );
+        bioMaterialService.update( result.keySet() );
+
+        return result;
     }
 
     @Override

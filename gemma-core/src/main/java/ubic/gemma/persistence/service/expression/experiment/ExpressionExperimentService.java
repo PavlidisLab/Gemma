@@ -69,6 +69,15 @@ public interface ExpressionExperimentService
     FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
     /**
+     * Intended with the case of a continuous factor being added.
+     * @param ee
+     * @param fvs
+     * @return
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+
+    /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      *
      * @param eeToUpdate experiment to be updated.

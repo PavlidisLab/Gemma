@@ -38,6 +38,9 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -160,9 +163,11 @@ public class ExperimentalDesignController extends BaseController {
             Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( experimentalDesignService.getExpressionExperiment( ed ) );
 
             Map<CharacteristicValueObject, Collection<BioMaterial>> map = new HashMap<>();
+
             for ( BioMaterialValueObject bmo : bmvos ) {
                 BioMaterial bm = bioMaterialService.load( bmo.getId() );
 
+                // biomaterials that are missing the characteristic will just be ignored. Curator would have to fill in.
                 for ( CharacteristicValueObject cvo : bmo.getCharacteristics() ) {
                     cvo.setId( null ); // we just want to compare the values, not the IDs.
                     if ( cvo.getCategory().equals( efvo.getBioMaterialCharacteristicCategoryToUse() ) ) {
@@ -174,33 +179,57 @@ public class ExperimentalDesignController extends BaseController {
                 }
             }
 
-            log.info( "Found " + map.size() + " unique values for " + efvo.getBioMaterialCharacteristicCategoryToUse() + " in " + bmvos.size() + " biomaterials" );
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                // we have to make an fv for each biomaterial, and we have to make a measurement for each biomaterial.
+                // We udpate the experiment in batch to try to speed this up.
+                Map<BioMaterial, FactorValue> bmToFv = new HashMap<>();
+                for ( CharacteristicValueObject cvo : map.keySet() ) {
+                    for ( BioMaterial bm : map.get( cvo ) ) {
+                        FactorValue fv = FactorValue.Factory.newInstance();
+                        fv.setExperimentalFactor( ef );
 
-            for ( CharacteristicValueObject cvo : map.keySet() ) {
-                FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setExperimentalFactor( ef );
-
-                Statement s = Statement.Factory.newInstance();
-                s.setCategory( ef.getCategory().getCategory() );
-                s.setCategoryUri( ef.getCategory().getCategoryUri() );
-
-                if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
-                    /// check it is a number ...
-                    try {
-                        Double.parseDouble( cvo.getValue() );
-                    } catch ( NumberFormatException err ) {
-                        throw new IllegalArgumentException( "Factor type is continuous but the value is not parseable as a number: " + cvo.getValue() );
+                        if ( cvo.getValue() == null || cvo.getValue().isEmpty() ) {
+                            cvo.setValue( null );
+                        } else {
+                            try {
+                                Double.parseDouble( cvo.getValue() );
+                            } catch ( NumberFormatException err ) {
+                                // try to handle missing data reasonably.
+                                if ( cvo.getValue().toUpperCase().equals( "NA" ) || cvo.getValue().toUpperCase().equals( "N/A" ) ) {
+                                    cvo.setValue( null );
+                                } else {
+                                    // clean up after ourselves.
+                                    experimentalFactorService.remove( ef );
+                                    throw new IllegalArgumentException( "Factor type is continuous but the value is not parseable as a number or missing data: " + cvo.getValue() );
+                                }
+                            }
+                        }
+                        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, cvo.getValue(), PrimitiveType.DOUBLE );
+                        fv.setMeasurement( m );
+                        bmToFv.put( bm, fv );
                     }
                 }
-                s.setSubject( cvo.getValue() );
-                s.setSubjectUri( cvo.getValueUri() ); // can be null
-                fv.getCharacteristics().add( s );
-                fv = expressionExperimentService.addFactorValue( ee, fv );
+                expressionExperimentService.addFactorValues( ee, bmToFv );
+            } else {
+                Collection<BioMaterial> toUpdate = new HashSet<>();
+                for ( CharacteristicValueObject cvo : map.keySet() ) {
+                    FactorValue fv = FactorValue.Factory.newInstance();
+                    fv.setExperimentalFactor( ef );
 
-                for ( BioMaterial bm : map.get( cvo ) ) { // this might be kind of slow to update each biomaterial individually.
-                    bm.getFactorValues().add( fv );
-                    bioMaterialService.update( bm );
+                    Statement s = Statement.Factory.newInstance();
+                    s.setCategory( ef.getCategory().getCategory() );
+                    s.setCategoryUri( ef.getCategory().getCategoryUri() );
+                    s.setSubject( cvo.getValue() );
+                    s.setSubjectUri( cvo.getValueUri() ); // can be null
+                    fv.getCharacteristics().add( s );
+                    fv = expressionExperimentService.addFactorValue( ee, fv );
+
+                    for ( BioMaterial bm : map.get( cvo ) ) {
+                        bm.getFactorValues().add( fv );
+                        toUpdate.add( bm );
+                    }
                 }
+                bioMaterialService.update( toUpdate );
             }
         }
         this.experimentReportService.evictFromCache( ee.getId() );
@@ -522,7 +551,8 @@ public class ExperimentalDesignController extends BaseController {
         return result;
     }
 
-    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator<ExperimentalFactor> e ) {
+    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics
+            ( EntityDelegator<ExperimentalFactor> e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) {
             return result;
