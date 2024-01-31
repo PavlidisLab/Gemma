@@ -55,14 +55,15 @@ public interface ArrayDesignAnnotationService {
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
     String STANDARD_FILE_SUFFIX = "";
-    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "microAnnots" + File.separatorChar;
+    String ANNOTATION_FILE_DIRECTORY_NAME = "microAnnots";
+    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + ANNOTATION_FILE_DIRECTORY_NAME + File.separatorChar;
 
     void deleteExistingFiles( ArrayDesign arrayDesign );
 
     /**
      * Create (or update) all the annotation files for the given platform. Side effect: any expression experiment data
      * files that use this platform will be deleted.
-     * 
+     *
      * Format details:
      * There is a one-line header. The columns are:
      * <ol>
@@ -70,15 +71,17 @@ public interface ArrayDesignAnnotationService {
      * <li>Gene symbol. Genes located at different genome locations are delimited by "|"; multiple genes at the same
      * location are delimited by ",". Both can happen simultaneously.
      * <li>Gene name, delimited as for the symbol except '$' is used instead of ','.
-     * <li>GO terms, delimited by '|'; multiple genes are not handled specially (for compatibility with ermineJ)
+     * <li>GO terms, delimited by '|'; multiple genes are not handled specially (for compatibility with ermineJ) -- unless useGO is false
      * <li>Gemma's gene ids, delimited by '|'
      * <li>NCBI gene ids, delimited by '|'
+     * <li>Ensembl gene ids, delimited by '|'</li>
      * </ol>
-     * 
+     *
      * @param  inputAd     platform to process
      * @param  overWrite   if true existing files will be clobbered
+     * @param useGO       if true, GO terms will be included
      */
-    void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException;
+    void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO ) throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
@@ -86,8 +89,9 @@ public interface ArrayDesignAnnotationService {
      *
      * @param  writer the writer
      * @param  genes  genes
-     * @return        code
+     * @param  useGO  if true, GO terms will be included
+     * @return code
      */
-    int generateAnnotationFile( Writer writer, Collection<Gene> genes );
+    int generateAnnotationFile( Writer writer, Collection<Gene> genes, Boolean useGO );
 
 }
