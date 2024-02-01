@@ -132,7 +132,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         if ( commandLine.hasOption( "nogo" ) ) {
-            AbstractCLI.log.info( "GO annotations will be ommitted (there will be a blank column)" );
+            AbstractCLI.log.info( "GO annotations will be ommitted (there will be a blank column) and only one annotation file will be generated instead of three." );
             this.useGO = false;
         }
 
@@ -200,7 +200,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
         } else {
             if ( this.getArrayDesignsToProcess().isEmpty() ) {
-                throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
+                throw new IllegalArgumentException( "You must specify a platform, a taxon, or batch." );
             }
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
