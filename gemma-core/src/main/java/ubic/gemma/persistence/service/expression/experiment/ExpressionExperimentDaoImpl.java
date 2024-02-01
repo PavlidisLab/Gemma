@@ -1285,26 +1285,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            @Nullable ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            return this.getQuantitationTypes( expressionExperiment );
-        }
-
-        //language=HQL
-        final String queryString =
-                "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                        + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ee", expressionExperiment ) // Set the EE
-                .setParameter( "ad", arrayDesign ) // Set the AD
-                .list();
-    }
-
-    @Override
     public QuantitationType getPreferredQuantitationType( ExpressionExperiment ee ) {
         return ( QuantitationType ) getSessionFactory().getCurrentSession()
                 .createQuery( "select qt from ExpressionExperiment ee "

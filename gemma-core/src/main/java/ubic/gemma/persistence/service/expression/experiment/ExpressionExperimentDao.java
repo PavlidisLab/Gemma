@@ -180,8 +180,6 @@ public interface ExpressionExperimentDao
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
-
     /**
      * Obtain the preferred quantitation type, if available.
      */

@@ -1148,12 +1148,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
-        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment ) {
         expressionExperiment = ensureInSession( expressionExperiment );
         return quantitationTypeService.loadValueObjectsWithExpressionExperiment( expressionExperiment.getQuantitationTypes(), expressionExperiment );
