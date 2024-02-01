@@ -19,22 +19,18 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,10 +45,14 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.TestComponent;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -143,6 +143,11 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         @Bean
         public SVDService svdService() {
             return mock( SVDService.class );
+        }
+
+        @Bean
+        public BioMaterialService bioMaterialService() {
+            return mock();
         }
 
         @Bean

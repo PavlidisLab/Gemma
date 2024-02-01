@@ -38,7 +38,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
@@ -155,6 +154,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
+                // if this is a subset, retrieve its source experiment
+                .createAlias( "analysis.experimentAnalyzed.sourceExperiment", "se", JoinType.LEFT_OUTER_JOIN )
                 // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
                 // these aliases are necessary to resolve filterable properties
                 .createAlias( "analysis.experimentAnalyzed.accession", "ea", JoinType.LEFT_OUTER_JOIN )
@@ -173,10 +174,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // apply filtering
         query.add( FilterCriteriaUtils.formRestrictionClause( filters ) );
 
-        // apply the ACL on the associated EE (or EE subset)
+        // apply the ACL on the associated EE (or source experiment for EE subset)
+        // FIXME: would be nice to use COALESCE(se.id, e.id) instead
         query.add( Restrictions.or(
                 AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperiment.class ),
-                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperimentSubSet.class ) ) );
+                AclCriteriaUtils.formAclRestrictionClause( "se.id", ExpressionExperiment.class ) ) );
 
         return query;
     }

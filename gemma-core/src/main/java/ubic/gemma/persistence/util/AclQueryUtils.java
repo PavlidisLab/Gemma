@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
@@ -214,6 +215,9 @@ public class AclQueryUtils {
      */
     @SuppressWarnings("StatementWithEmptyBody")
     public static void addAclParameters( Query query, Class<? extends Securable> aoiType ) throws QueryParameterException {
+        if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
+            throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
+        }
         query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_SQL, so no binding is necessary

@@ -21,6 +21,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -118,6 +119,11 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         @Bean
         public SVDService svdService() {
             return mock( SVDService.class );
+        }
+
+        @Bean
+        public BioMaterialService bioMaterialService() {
+            return mock();
         }
 
         @Bean
