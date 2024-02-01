@@ -9,6 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.criterion.*;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -24,11 +25,18 @@ import java.util.Arrays;
 public class AclCriteriaUtils {
 
     /**
-     * Form a restriction clause for ACL.
-     *
-     * @see AclQueryUtils#formAclRestrictionClause(String)
+     * Form a restriction clause for ACL using the read permission.
+     * @see #formAclRestrictionClause(String, Class, int)
      */
     public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType ) {
+        return formAclRestrictionClause( aoiIdColumn, aoiType, BasePermission.READ.getMask() );
+    }
+
+    /**
+     * Form a restriction clause for ACL.
+     * @see AclQueryUtils#formAclRestrictionClause(String, int)
+     */
+    public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType, int mask ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
@@ -43,17 +51,16 @@ public class AclCriteriaUtils {
         boolean hasAuthentication = SecurityContextHolder.getContext().getAuthentication() != null;
 
         if ( !hasAuthentication || !SecurityUtil.isUserAdmin() ) {
-            dc.createAlias( "aoi.entries", "ace" );
+            // using a left outer join because even if no entries are available, user might still be the owner
+            dc.createAlias( "aoi.entries", "ace", JoinType.LEFT_OUTER_JOIN );
         }
 
-        int readMask = BasePermission.READ.getMask();
-        int writeMask = BasePermission.WRITE.getMask();
         if ( !hasAuthentication || SecurityUtil.isUserAnonymous() ) {
             // the object is public
             dc.add( Restrictions.conjunction()
                     // FIXME: ace2_ is generated, but sqlRestriction can only replace the root alias
                     .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                    .add( new BitwiseAnd( "ace.mask", readMask ) ) );
+                    .add( new BitwiseAnd( "ace.mask", mask ) ) );
         } else if ( !SecurityUtil.isUserAdmin() ) {
             String userName = SecurityUtil.getCurrentUsername();
             dc.add( Restrictions.disjunction()
@@ -62,11 +69,11 @@ public class AclCriteriaUtils {
                     // user has specific rights to the object
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL.replace( ":" + AclQueryUtils.USER_NAME_PARAM, "?" ) + ")", new Object[] { userName }, new Type[] { StringType.INSTANCE } ) )
-                            .add( new BitwiseAnd( "ace.mask", readMask | writeMask ) ) )
+                            .add( new BitwiseAnd( "ace.mask", mask ) ) )
                     // the object is public
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                            .add( new BitwiseAnd( "ace.mask", readMask ) ) ) );
+                            .add( new BitwiseAnd( "ace.mask", mask ) ) ) );
         }
 
         return Subqueries.propertyIn( aoiIdColumn, dc );
