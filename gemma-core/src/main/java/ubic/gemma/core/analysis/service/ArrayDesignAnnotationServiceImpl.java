@@ -343,7 +343,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      * ArrayDesign, java.lang.Boolean)
      */
     @Override
-    public void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO, boolean deleteOtherFiles ) throws IOException {
+    public void create( ArrayDesign inputAd, Boolean useGO, boolean deleteOtherFiles ) throws IOException {
 
         if ( useGO && !goService.isOntologyLoaded() ) {
             throw new IllegalStateException( "GO was not loaded" );
@@ -362,11 +362,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         File af = ArrayDesignAnnotationServiceImpl.getFileName( allParFileBaseName );
-
-        if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
-            log.info( "Files exist already, will not overwrite (use overWrite option to override)" );
-            return;
-        }
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting getting probe specificity" );
@@ -390,40 +385,30 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return;
         }
 
-        if ( overWrite || !sf.exists() ) {
-            this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity, overWrite, useGO );
 
-            /*
-             * Delete the data files for experiments that used this platform, since they have the old annotations in
-             * them (or no annotations)
-             */
-            if ( deleteOtherFiles ) {
-                Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
-                if ( !ees.isEmpty() )
-                    log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
-                            + ", that may have outdated annotations" );
-                for ( ExpressionExperiment ee : ees ) {
-                    this.expressionDataFileService.deleteAllFiles( ee );
-                }
-            } else {
-                log.warn( "Not deleting data files for experiments that use " + ad.getShortName() + "; if annotations have changed please delete these files manually" );
+        this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity, useGO );
+
+        /*
+         * Delete the data files for experiments that used this platform, since they have the old annotations in
+         * them (or no annotations)
+         */
+        if ( deleteOtherFiles ) {
+            Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
+            if ( !ees.isEmpty() )
+                log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                        + ", that may have outdated annotations" );
+            for ( ExpressionExperiment ee : ees ) {
+                this.expressionDataFileService.deleteAllFiles( ee );
             }
-
         } else {
-            log.info( sf + " exists, will not overwrite" );
+            log.warn( "Not deleting data files for experiments that use " + ad.getShortName() + "; if annotations have changed please delete these files manually" );
         }
 
-        if ( overWrite || !bf.exists() ) {
-            this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity, overWrite, useGO );
-        } else {
-            log.info( bf + " exists, will not overwrite" );
-        }
 
-        if ( overWrite || !af.exists() ) {
-            this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity, overWrite, useGO );
-        } else {
-            log.info( af + " exists, will not overwrite" );
-        }
+        this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity, useGO );
+
+        this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity, useGO );
+
     }
 
     @Override
@@ -653,7 +638,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return results;
     }
 
-    private Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite, boolean useGO ) throws IOException {
+    private Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean useGO ) throws IOException {
 
         Writer writer;
         if ( StringUtils.isBlank( fileBaseName ) ) {
@@ -664,12 +649,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             File f = ArrayDesignAnnotationServiceImpl.getFileName( fileBaseName );
 
             if ( f.exists() ) {
-                if ( overWrite ) {
-                    ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
-                    EntityUtils.deleteFile( f );
-                } else {
-                    return null;
-                }
+                ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
+                EntityUtils.deleteFile( f );
             } else {
                 ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
             }
@@ -703,14 +684,14 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      *
      */
     private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
-            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, Boolean overWrite, Boolean useGO ) throws IOException {
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, Boolean useGO ) throws IOException {
 
         if ( genesWithSpecificity.size() == 0 ) {
             log.info( "No sequence information for " + arrayDesign + ", skipping" );
             return;
         }
 
-        try ( Writer writer = initOutputFile( arrayDesign, fileBaseName, overWrite, useGO ) ) {
+        try ( Writer writer = initOutputFile( arrayDesign, fileBaseName, useGO ) ) {
 
             // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
             if ( writer == null ) {

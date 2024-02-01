@@ -78,11 +78,10 @@ public interface ArrayDesignAnnotationService {
      * </ol>
      *  @param  inputAd     platform to process
      *
-     * @param overWrite        if true existing files will be clobbered
      * @param useGO            if true, GO terms will be included
-     * @param deleteOtherFiles
+     * @param deleteOtherFiles if true, other files conaining the annotations for this platform will be deleted, such as DEA results and data flat files.
      */
-    void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO, boolean deleteOtherFiles ) throws IOException;
+    void create( ArrayDesign inputAd,  Boolean useGO, boolean deleteOtherFiles ) throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if

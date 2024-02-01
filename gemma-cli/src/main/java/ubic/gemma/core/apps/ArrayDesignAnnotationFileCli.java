@@ -61,7 +61,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     // file info
     private String batchFileName;
 
-    private boolean overWrite = false;
+  //  private boolean overWrite = false;
     private boolean processAllADs = false;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
     // private String geneFileName;
@@ -93,16 +93,16 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Option taxonNameOption = Option.builder( "t" ).longOpt( "taxon" ).hasArg().argName( "taxon name" )
                 .desc( ArrayDesignAnnotationFileCli.TAXON_DESC ).build();
 
-        Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
+     //   Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
 
-        Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotation" ).build();
+        Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotations" ).build();
 
         Option dontDeleteOtherFilesOption = Option.builder( "k" ).longOpt( "dontDeleteOtherFiles" ).desc( "Keep other files associated" +
                 "with the platform such as data set flat files and DEA results. Use this option if the annotations haven't changed; default is to delete them" ).build();
 
         options.addOption( fileLoading );
         options.addOption( batchLoading );
-        options.addOption( overWriteOption );
+     //   options.addOption( overWriteOption );
         options.addOption( taxonNameOption );
         options.addOption( skipGOOption );
         options.addOption( dontDeleteOtherFilesOption );
@@ -160,8 +160,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             deleteOtherFiles = false;
         }
 
-        if ( commandLine.hasOption( 'o' ) )
-            this.overWrite = true;
+//        if ( commandLine.hasOption( 'o' ) )
+//            this.overWrite = true;
 
         super.processOptions( commandLine );
 
@@ -229,7 +229,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return;
         }
 
-        arrayDesignAnnotationService.create( arrayDesign, overWrite, useGO, deleteOtherFiles );
+        arrayDesignAnnotationService.create( arrayDesign, useGO, deleteOtherFiles );
 
     }
 
@@ -412,9 +412,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
-
-        this.arrayDesignAnnotationService.create( inputAd, overWrite, useGO, deleteOtherFiles );
-
+        this.arrayDesignAnnotationService.create( inputAd, useGO, deleteOtherFiles );
         addSuccessObject( inputAd );
 
     }
