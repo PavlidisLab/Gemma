@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
@@ -39,6 +40,9 @@ public class AclCriteriaUtils {
     public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType, int mask ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
+        }
+        if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
+            throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
         }
         DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
                 .createAlias( "aoi.ownerSid", "sid" )
