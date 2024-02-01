@@ -182,7 +182,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             // Experimental. Ideally make a background process. But usually these files should be available anyway...
             log.info( String.format( "Annotation file %s not found, creating for %s...", f.getPath(), arrayDesign ) );
             try {
-                annotationFileService.create( arrayDesign, true , true); // include GO by default ... but this might be changed.
+                annotationFileService.create( arrayDesign, true , true, deleteOtherFiles ); // include GO by default ... but this might be changed.
             } catch ( Exception e ) {
                 log.error( String.format( "Failed to create annotation file %s for %s.", f.getPath(), arrayDesign ), e );
             }

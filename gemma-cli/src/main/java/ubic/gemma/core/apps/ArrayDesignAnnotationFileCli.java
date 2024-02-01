@@ -38,7 +38,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
@@ -72,6 +71,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private TaxonService taxonService;
 
     private boolean useGO = true;
+    private boolean deleteOtherFiles = true; // should other files that incorporate the annotations be deleted?
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -97,11 +97,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotation" ).build();
 
+        Option dontDeleteOtherFilesOption = Option.builder( "k" ).longOpt( "dontDeleteOtherFiles" ).desc( "Keep other files associated" +
+                "with the platform such as data set flat files and DEA results. Use this option if the annotations haven't changed; default is to delete them" ).build();
+
         options.addOption( fileLoading );
         options.addOption( batchLoading );
         options.addOption( overWriteOption );
         options.addOption( taxonNameOption );
         options.addOption( skipGOOption );
+        options.addOption( dontDeleteOtherFilesOption );
         //    options.addOption( geneListFile );
 
     }
@@ -148,6 +152,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else {
                 AbstractCLI.log.info( "Will make generic file for all genes for " + this.taxonName );
             }
+        }
+
+        if ( commandLine.hasOption( "dontDeleteOtherFiles" ) ) {
+            log.warn( "Deletion of other files associated with the platform has been disabled, such as data files and DEA results files. " +
+                    "If the annotations have changed since the files were last generated, you will have to delete the file manually." );
+            deleteOtherFiles = false;
         }
 
         if ( commandLine.hasOption( 'o' ) )
@@ -219,7 +229,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return;
         }
 
-        arrayDesignAnnotationService.create( arrayDesign, overWrite, useGO );
+        arrayDesignAnnotationService.create( arrayDesign, overWrite, useGO, deleteOtherFiles );
 
     }
 
@@ -403,7 +413,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
 
-        this.arrayDesignAnnotationService.create( inputAd, overWrite, useGO );
+        this.arrayDesignAnnotationService.create( inputAd, overWrite, useGO, deleteOtherFiles );
 
         addSuccessObject( inputAd );
 

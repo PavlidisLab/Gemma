@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -628,7 +629,13 @@ public class ExperimentalDesignController extends BaseController {
 
         if ( bmvos == null || bmvos.length == 0 ) return;
 
+
+        StopWatch w = new StopWatch();
+        w.start();
+
         Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
+
+        log.info( String.format( "Updating biomaterials took %.2f seconds", w.getTime() / 1000 ) );
 
         if ( biomaterials.isEmpty() ) return;
 

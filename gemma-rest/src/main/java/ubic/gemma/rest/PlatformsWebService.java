@@ -285,7 +285,7 @@ public class PlatformsWebService {
         if ( !file.exists() ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
-                annotationFileService.create( arrayDesign, true, true    ); // include GO by default.
+                annotationFileService.create( arrayDesign, true, true, true ); // include GO by default.
                 file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
                 if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
             } catch ( IOException e ) {

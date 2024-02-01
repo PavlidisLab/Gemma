@@ -343,7 +343,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      * ArrayDesign, java.lang.Boolean)
      */
     @Override
-    public void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO ) throws IOException {
+    public void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO, boolean deleteOtherFiles ) throws IOException {
 
         if ( useGO && !goService.isOntologyLoaded() ) {
             throw new IllegalStateException( "GO was not loaded" );
@@ -397,12 +397,16 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
              * Delete the data files for experiments that used this platform, since they have the old annotations in
              * them (or no annotations)
              */
-            Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
-            if ( !ees.isEmpty() )
-                log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
-                        + ", that may have outdated annotations" );
-            for ( ExpressionExperiment ee : ees ) {
-                this.expressionDataFileService.deleteAllFiles( ee );
+            if ( deleteOtherFiles ) {
+                Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
+                if ( !ees.isEmpty() )
+                    log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                            + ", that may have outdated annotations" );
+                for ( ExpressionExperiment ee : ees ) {
+                    this.expressionDataFileService.deleteAllFiles( ee );
+                }
+            } else {
+                log.warn( "Not deleting data files for experiments that use " + ad.getShortName() + "; if annotations have changed please delete these files manually" );
             }
 
         } else {

@@ -76,12 +76,13 @@ public interface ArrayDesignAnnotationService {
      * <li>NCBI gene ids, delimited by '|'
      * <li>Ensembl gene ids, delimited by '|'</li>
      * </ol>
+     *  @param  inputAd     platform to process
      *
-     * @param  inputAd     platform to process
-     * @param  overWrite   if true existing files will be clobbered
-     * @param useGO       if true, GO terms will be included
+     * @param overWrite        if true existing files will be clobbered
+     * @param useGO            if true, GO terms will be included
+     * @param deleteOtherFiles
      */
-    void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO ) throws IOException;
+    void create( ArrayDesign inputAd, Boolean overWrite, Boolean useGO, boolean deleteOtherFiles ) throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
