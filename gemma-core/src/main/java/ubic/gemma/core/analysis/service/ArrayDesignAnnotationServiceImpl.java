@@ -385,8 +385,16 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return;
         }
 
+        // note change 2/2024: the first file generated has all the GO annotations, unless useGO is false, and the other files will not be generated.
+        // This means the only file generated will be the one with the ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX suffix.
+        this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity, useGO );
 
-        this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity, useGO );
+        if ( useGO ) {
+            this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity, useGO );
+            this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity, useGO );
+        } else {
+            log.info("Not generating GO-specialized annotation files since GO annotations are being skipped.");
+        }
 
         /*
          * Delete the data files for experiments that used this platform, since they have the old annotations in
@@ -403,12 +411,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         } else {
             log.warn( "Not deleting data files for experiments that use " + ad.getShortName() + "; if annotations have changed please delete these files manually" );
         }
-
-
-        this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity, useGO );
-
-        this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity, useGO );
-
     }
 
     @Override
@@ -500,7 +502,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
             Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
 
-            if ( ++compositeSequencesProcessed % 2000 == 0 && ArrayDesignAnnotationServiceImpl.log.isInfoEnabled() ) {
+            if ( ++compositeSequencesProcessed % 10000 == 0 && ArrayDesignAnnotationServiceImpl.log.isInfoEnabled() ) {
                 ArrayDesignAnnotationServiceImpl.log
                         .info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
                                 + " compositeSequences " + empty + " unmapped to gene; " + simple + " single-gene; " + complex
@@ -576,6 +578,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         }
         writer.close();
+
+        ArrayDesignAnnotationServiceImpl.log
+                .info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
+                        + " compositeSequences " + empty + " unmapped to gene; " + simple + " single-gene; " + complex
+                        + " multi-gene;" );
 
         return compositeSequencesProcessed;
     }
