@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.cli.util.OptionsUtils.isFileOption;
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
 /**
@@ -26,7 +27,7 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * @author poirigui
  */
 @CommonsLog
-public class FishCompletionGenerator extends AbstractCompletionGenerator {
+public class FishCompletionGenerator implements CompletionGenerator {
 
     private final String executableName;
     private final String allSubcommands;

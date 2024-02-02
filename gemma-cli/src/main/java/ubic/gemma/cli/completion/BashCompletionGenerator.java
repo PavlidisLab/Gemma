@@ -10,9 +10,10 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.cli.util.OptionsUtils.isFileOption;
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
-public class BashCompletionGenerator extends AbstractCompletionGenerator {
+public class BashCompletionGenerator implements CompletionGenerator {
 
     private static final String INDENT = "    ";
 

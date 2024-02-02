@@ -4,12 +4,15 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.basecode.util.DateUtil;
 
 import javax.annotation.Nullable;
+import java.io.File;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,6 +34,7 @@ public class OptionsUtils {
 
     /**
      * Add a date option with support for fuzzy dates (i.e. one month ago).
+     *
      * @see DateConverterImpl
      */
     public static void addDateOption( String name, @Nullable String longOpt, String desc, Options options ) {
@@ -49,6 +53,7 @@ public class OptionsUtils {
      *     <li>{@code +1d, -1m, -1h} as per {@link DateUtil#getRelativeDate(Date, String)}</li>
      *     <li>natural language (i.e. five hours ago, last week, etc. using {@link PrettyTimeParser}</li>
      * </ul>
+     *
      * @author poirigui
      */
     static class DateConverterImpl implements Converter<Date, ParseException> {
@@ -348,12 +353,27 @@ public class OptionsUtils {
                 .orElse( "-" + optionName );
     }
 
-    private static String formatOption( Option opt ) {
+    public static String formatOption( Option opt ) {
         return formatOption( opt.getOpt(), opt.getLongOpt() );
     }
 
     private static String formatOption( String opt, @Nullable String longOpt ) {
         return "-" + opt + ( longOpt != null ? ",--" + longOpt : "" );
+    }
+
+    /**
+     * List of keywords suggesting an option might allow a file as argument.
+     */
+    private static final String[] FILE_KEYWORDS = { "file", "directory", "folder" };
+
+    public static boolean isFileOption( Option o ) {
+        return File.class.equals( o.getType() )
+                || Path.class.equals( o.getType() )
+                // FIXME: remove all these heuristics, all options should be either File or Path
+                || ( String.class.equals( o.getType() ) && o.getConverter() == null && (
+                StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
+                        || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
+                        || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS ) ) );
     }
 
     private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w,
