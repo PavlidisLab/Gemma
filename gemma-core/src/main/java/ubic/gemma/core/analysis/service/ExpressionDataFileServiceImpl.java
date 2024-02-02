@@ -592,13 +592,8 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 // ncbi id, if we have it.
                 rowBuffer.append( annotationStrings[4] );
             }
-
-            if (annotationStrings.length > 5) {
-                // ensembl id, if we have it.
-                rowBuffer.append( "\t" ).append( annotationStrings[5] );
-            }
         } else {
-            rowBuffer.append( "\t\t\t\t" );
+            rowBuffer.append( "\t\t\t" );
         }
     }
 
@@ -1023,7 +1018,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             buf.append( "#\n# The gene annotations were not available\n" );
             // but leave the blank columns there to make parsing easier.
         }
-        buf.append( "Element_Name\tGene_Symbol\tGene_Name\tNCBI_ID\tEnsemblID" );// column information
+        buf.append( "Element_Name\tGene_Symbol\tGene_Name\tNCBI_ID" );// column information
 
         // Note we don't put a newline here, because the rest of the headers have to be added for the pvalue columns.
 
@@ -1096,7 +1091,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                     "# The platform annotation file is missing for this Experiment, gene annotation information is omitted\n#\n" );
             // but leave the blank columns there to make parsing easier.
         }
-        buf.append( "Element_Name\tGene_Symbol\tGene_Name\tNCBI_ID\tEnsemblID" );// column information
+        buf.append( "Element_Name\tGene_Symbol\tGene_Name\tNCBI_ID" );// column information
 
         // Note we don't put a newline here, because the rest of the headers have to be added for the pvalue columns.
         return buf.toString();
