@@ -39,11 +39,6 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
     }
 
     @Override
-    protected void generateCommandGroupSection( GemmaCLI.CommandGroup commandGroup, PrintWriter writer ) {
-        // TODO: check if fish supports grouping commands
-    }
-
-    @Override
     protected void generateSubcommandCompletion( String subcommand, Options subcommandOptions, String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         // -f prevents files from being suggested as subcommand
         // FIXME: add -k, but the order has to be reversed

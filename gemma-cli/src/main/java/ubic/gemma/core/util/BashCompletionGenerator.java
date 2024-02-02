@@ -55,11 +55,6 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     }
 
     @Override
-    protected void generateCommandGroupSection( GemmaCLI.CommandGroup commandGroup, PrintWriter writer ) {
-
-    }
-
-    @Override
     protected void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         writer.append( indent ).printf( "if [[ \" $words \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
         pushIndent();
