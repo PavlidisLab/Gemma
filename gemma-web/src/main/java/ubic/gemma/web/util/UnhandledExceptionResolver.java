@@ -3,6 +3,7 @@ package ubic.gemma.web.util;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.Ordered;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
@@ -19,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author poirigui
  * @see SimpleMappingExceptionResolver
  */
-public class UnhandledExceptionResolver implements HandlerExceptionResolver {
+public class UnhandledExceptionResolver implements HandlerExceptionResolver, Ordered {
 
     private final SimpleMappingExceptionResolver delegate = new SimpleMappingExceptionResolver() {{
         setDefaultStatusCode( 500 );
@@ -64,5 +65,14 @@ public class UnhandledExceptionResolver implements HandlerExceptionResolver {
      */
     public void setErrorView( String errorView ) {
         this.delegate.setDefaultErrorView( errorView );
+    }
+
+    @Override
+    public int getOrder() {
+        return this.delegate.getOrder();
+    }
+
+    public void setOrder( int order ) {
+        this.delegate.setOrder( order );
     }
 }

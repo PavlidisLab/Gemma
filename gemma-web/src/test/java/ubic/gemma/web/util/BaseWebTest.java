@@ -3,6 +3,7 @@ package ubic.gemma.web.util;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -11,13 +12,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.SpringProfiles;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
@@ -35,6 +34,13 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
     public abstract static class BaseWebTestContextConfiguration {
 
         @Bean
+        @Order(0)
+        public HandlerExceptionResolver springMvcExceptionResolver() {
+            return new DefaultHandlerExceptionResolver();
+        }
+
+        @Bean
+        @Order(10)
         public HandlerExceptionResolver exceptionResolver() {
             SimpleMappingExceptionResolver resolver = new SimpleMappingExceptionResolver();
             resolver.setDefaultErrorView( "error/500" );
@@ -49,12 +55,12 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
             mappings.setProperty( ServiceUnavailableException.class.getName(), "error/503" );
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
-            HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
-            compositeResolver.setExceptionResolvers( Arrays.asList( new DefaultHandlerExceptionResolver(), resolver, unhandledExceptionResolver() ) );
-            return compositeResolver;
+            return resolver;
         }
 
-        private UnhandledExceptionResolver unhandledExceptionResolver() {
+        @Bean
+        @Order(20)
+        public HandlerExceptionResolver unhandledExceptionResolver() {
             UnhandledExceptionResolver resolver = new UnhandledExceptionResolver();
             resolver.setErrorCategory( "ubic.gemma.web.loggers.UnhandledException" );
             resolver.setStatusCode( 500 );
