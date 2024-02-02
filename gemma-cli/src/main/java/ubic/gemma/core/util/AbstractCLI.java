@@ -278,6 +278,16 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
+     * Add the -batchFormat and -batchOutputFile options.
+     * <p>
+     * These options allow the user to control how and where batch processing results are summarized.
+     */
+    protected void addBatchOption( Options options ) {
+        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+    }
+
+    /**
      * Allow positional arguments to be specified. The default is false and an error will be produced if positional
      * arguments are supplied by the user.
      * <p>
@@ -312,8 +322,6 @@ public abstract class AbstractCLI implements CLI {
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
-        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
-        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
     }
 
     /**

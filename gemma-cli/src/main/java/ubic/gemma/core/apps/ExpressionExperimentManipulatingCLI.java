@@ -142,6 +142,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                 .longOpt( "expressionQuery" ).build();
         options.addOption( eeSearchOption );
 
+        addBatchOption( options );
     }
 
     @SuppressWarnings("unused") // Possible external use
@@ -374,7 +375,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                 AbstractCLI.log.info( "Loaded " + count + " experiments ..." );
             }
         }
-        log.info( "Loaded " + ees.size() + " experiments for processing");
+        log.info( "Loaded " + ees.size() + " experiments for processing" );
         return ees;
     }
 
