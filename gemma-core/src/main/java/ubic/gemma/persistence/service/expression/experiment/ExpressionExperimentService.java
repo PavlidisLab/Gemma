@@ -131,6 +131,13 @@ public interface ExpressionExperimentService
     <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     /**
+     * Load an experiment and thaw it as per {@link #thaw(ExpressionExperiment)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThaw( Long id );
+
+    /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
      * and message.
      */

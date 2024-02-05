@@ -186,19 +186,31 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             throw new RuntimeException( "No vectors were switched" );
         }
 
+        // a redundant check, but there have been problems.
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
+                throw new IllegalStateException( "A raw vector for QT =" + v.getQuantitationType()
+                        + " was not correctly switched to the target platform " + arrayDesign );
+            }
+        }
+
         String descriptionUpdate = "[Switched to use " + arrayDesign.getShortName() + " by Gemma]";
         if ( !ee.getDescription().contains( descriptionUpdate ) ) {
             ee.setDescription( ee.getDescription() + " " + descriptionUpdate );
         }
-
-        persist( ee, arrayDesign );
 
         if ( targetBioAssayDimension != null && !unusedBADs.isEmpty() ) {
             log.info( "Cleaning up unused BioAssays from previous platforms..." );
             this.cleanupUnused( ee, unusedBADs, targetBioAssayDimension );
         }
 
+        expressionExperimentService.update( ee );
+        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+                "Switch to use " + arrayDesign.getShortName() );
+        log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
+
         if ( hasData ) {
+            log.info( ee + " has data, regenerating processed data vectors..." );
             processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
         }
     }
@@ -246,30 +258,27 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     private void cleanupUnused( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs, BioAssayDimension maxBAD ) {
         ExpressionExperimentPlatformSwitchService.log.info( "Checking for unused BioAssays after merge" );
 
+        for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
+            bioAssayDimensionService.remove( bioAssayDimension );
+            log.info( "Removed unused BioAssayDimension: " + bioAssayDimension.getId() );
+        }
+
+        // remove any BioAssays that are not kept in the newly created dimension
         Collection<BioAssay> removed = new HashSet<>();
         for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
             List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
             for ( BioAssay ba : bioAssays ) {
                 if ( !maxBAD.getBioAssays().contains( ba ) && !removed.contains( ba ) ) {
-                    try {
-                        ExpressionExperimentPlatformSwitchService.log.info( "Deleting unused bioassay: " + ba );
-                        ee.getBioAssays().remove( ba );
-                        bioAssayService.remove( ba );
-                        removed.add( ba );
-                    } catch ( Exception e ) {
-                        log.error( "Failed to delete: " + ba, e );
-                    }
+                    ee.getBioAssays().remove( ba );
+                    ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
+                    bioAssayService.remove( ba );
+                    ExpressionExperimentPlatformSwitchService.log.info( "Removed unused BioAssay: " + ba );
+                    removed.add( ba );
                 }
             }
-            try {
-                bioAssayDimensionService.remove( bioAssayDimension );
-                log.info( "Removed unused bioAssayDimension ID=" + bioAssayDimension.getId() );
-            } catch ( Exception e ) {
-                log.warn( "Failed to clean up unused bioassaydimension with ID=" + bioAssayDimension.getId() + ": " + e
-                        .getMessage() );
-            }
         }
-        log.info( "Removed " + removed.size() + " usused bioassays" );
+
+        log.info( "Removed " + removed.size() + " unused bioassays" );
     }
 
     /**
@@ -641,24 +650,5 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         byte[] newDataAr = converter.toBytes( newData.toArray() );
         vector.setData( newDataAr );
         vector.setBioAssayDimension( bad );
-
     }
-
-    private void persist( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
-        expressionExperimentService.update( ee );
-
-        // a redundant check, but there have been problems.
-        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
-            if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
-                throw new IllegalStateException( "A raw vector for QT =" + v.getQuantitationType()
-                        + " was not correctly switched to the target platform " + arrayDesign );
-            }
-        }
-
-        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
-                "Switch to use " + arrayDesign.getShortName() );
-
-        log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
-    }
-
 }

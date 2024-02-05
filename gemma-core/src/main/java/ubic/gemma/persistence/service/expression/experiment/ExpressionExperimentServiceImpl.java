@@ -201,7 +201,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
         log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
-      //  expressionExperimentDao.update( experiment );
+        //  expressionExperimentDao.update( experiment );
         bioMaterialService.update( result.keySet() );
 
         return result;
@@ -675,6 +675,17 @@ public class ExpressionExperimentServiceImpl
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
         this.expressionExperimentDao.thawWithoutVectors( ee );
+        return ee;
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThaw( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thaw( ee );
+        }
         return ee;
     }
 
