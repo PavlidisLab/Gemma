@@ -21,6 +21,7 @@ package ubic.gemma.model.common.quantitationtype;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable implements Serializable {
 
@@ -213,6 +214,10 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             return false;
         }
         final QuantitationType that = ( QuantitationType ) object;
+
+        if ( that.getId() != null && this.getId() != null ) {
+            return Objects.equals( that.getId(), this.getId() );
+        }
 
         if ( that.getName() != null && this.getName() != null && !this.getName().equals( that.getName() ) ) {
             return false;

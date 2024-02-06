@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.hibernate;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -12,17 +13,16 @@ import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -82,11 +82,13 @@ public class CompressedStringListType implements UserType, ParameterizedType {
             List<String> s = ( List<String> ) value;
             Assert.isTrue( s.stream().noneMatch( k -> k.contains( delimiter ) ),
                     String.format( "The list of strings may not contain the delimiter %s.", delimiter ) );
-            try ( InputStream is = new GZIPInputStream( IOUtils.toInputStream( String.join( delimiter, s ), StandardCharsets.UTF_8 ) ) ) {
-                blob = IOUtils.toByteArray( is );
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try ( OutputStream out = new GZIPOutputStream( baos ) ) {
+                IOUtils.write( String.join( delimiter, s ), out, StandardCharsets.UTF_8 );
             } catch ( IOException e ) {
                 throw new HibernateException( e );
             }
+            blob = baos.toByteArray();
         } else {
             blob = null;
         }
@@ -95,27 +97,27 @@ public class CompressedStringListType implements UserType, ParameterizedType {
 
     @Override
     public Object deepCopy( Object value ) throws HibernateException {
-        return value;
+        return value != null ? new ArrayList<>( ( List<String> ) value ) : null;
     }
 
     @Override
     public boolean isMutable() {
-        return false;
+        return true;
     }
 
     @Override
     public Serializable disassemble( Object value ) throws HibernateException {
-        return ( String ) value;
+        return value != null ? String.join( delimiter, ( List<String> ) value ) : null;
     }
 
     @Override
     public Object assemble( Serializable cached, Object owner ) throws HibernateException {
-        return cached;
+        return cached != null ? Arrays.asList( StringUtils.split( ( String ) cached, delimiter ) ) : null;
     }
 
     @Override
     public Object replace( Object original, Object target, Object owner ) throws HibernateException {
-        return original;
+        return deepCopy( original );
     }
 
     @Override

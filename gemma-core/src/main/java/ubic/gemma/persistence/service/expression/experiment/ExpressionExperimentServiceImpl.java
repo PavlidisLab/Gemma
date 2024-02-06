@@ -24,6 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
@@ -59,6 +60,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -69,6 +71,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.util.*;
@@ -100,6 +103,8 @@ public class ExpressionExperimentServiceImpl
 
     @Autowired
     private AuditEventService auditEventService;
+    @Autowired
+    private AuditTrailService auditTrailService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
@@ -1300,51 +1305,93 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+        Assert.notNull( ee.getId() );
+        Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
-                ee + " already have vectors for the quantitation type: " + quantitationType );
-        Assert.isTrue( !vectors.isEmpty(), "At least one single-cell vector has to be supplied." );
-        Assert.isTrue( vectors.stream().allMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
-                "All vectors must have the quantitation type: " + quantitationType );
-        Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).distinct().count() == 1,
-                "All vectors must share the same dimension." );
-        validateSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
-        ExpressionExperiment finalEe = ee;
-        Assert.isTrue( vectors.stream().allMatch( v -> v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( finalEe ) ),
-                "Some of the vectors belong to other expression experiments." );
-        ee = ensureInSession( ee );
+                String.format( "%s already have vectors for the quantitation type: %s; use replaceSingleCellDataVectors() to replace existing vectors.",
+                        ee, quantitationType ) );
+        validateSingleCellDataVectors( ee, quantitationType, vectors );
+        if ( vectors.iterator().next().getSingleCellDimension().getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee );
+            expressionExperimentDao.createSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+        }
         for ( SingleCellExpressionDataVector v : vectors ) {
             v.setExpressionExperiment( ee );
         }
+        int previousSize = ee.getSingleCellExpressionDataVectors().size();
+        log.info( String.format( "Adding %d single-cell vectors to %s for %s", vectors.size(), ee, quantitationType ) );
         ee.getSingleCellExpressionDataVectors().addAll( vectors );
+        int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - previousSize;
         // make all other single-cell QTs non-preferred
         if ( quantitationType.getIsPreferred() ) {
-            ee.getQuantitationTypes().forEach( q -> q.setIsPreferred( false ) );
+            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                if ( qt.getIsPreferred() ) {
+                    log.info( "Setting " + qt + " to non-preferred since we're adding a new set of preferred vectors to " + ee );
+                    qt.setIsPreferred( false );
+                    break; // there is at most 1 set of preferred vectors
+                }
+            }
         }
         ee.getQuantitationTypes().add( quantitationType );
         update( ee ); // will take care of creating vectors
+        auditTrailService.addUpdateEvent( ee, DataAddedEvent.class,
+                String.format( "Added %d vectors for %s", numVectorsAdded, quantitationType ) );
     }
 
     @Override
     @Transactional
     public void replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+        Assert.notNull( ee.getId() );
+        Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
-                ee + " does not have the quantitation type: " + quantitationType );
-        Assert.isTrue( !vectors.isEmpty(), "At least one single-cell vector has to be supplied; use removeSingleCelLDataVectors() to remove vectors instead." );
-        Assert.isTrue( vectors.stream().allMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
-                "All vectors must have the quantitation type: " + quantitationType );
-        Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).distinct().count() == 1,
-                "All vectors must share the same dimension." );
-        validateSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
-        ExpressionExperiment finalEe = ee;
-        Assert.isTrue( vectors.stream().allMatch( v -> v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( finalEe ) ),
-                "Some of the vectors belong to other expression experiments." );
-        ee = ensureInSession( ee );
-        ee.getSingleCellExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+                String.format( "%s does not have the quantitation type: %s; use addSingleCellDataVectors() to add new vectors instead.",
+                        ee, quantitationType ) );
+        validateSingleCellDataVectors( ee, quantitationType, vectors );
+        boolean scdCreated = false;
+        if ( vectors.iterator().next().getSingleCellDimension().getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee );
+            expressionExperimentDao.createSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+            scdCreated = true;
+        }
+        Set<SingleCellExpressionDataVector> vectorsToBeReplaced = ee.getSingleCellExpressionDataVectors().stream()
+                .filter( v -> v.getQuantitationType().equals( quantitationType ) ).collect( Collectors.toSet() );
         for ( SingleCellExpressionDataVector v : vectors ) {
             v.setExpressionExperiment( ee );
         }
+        int previousSize = ee.getSingleCellExpressionDataVectors().size();
+        if ( !vectorsToBeReplaced.isEmpty() ) {
+            // if the SCD was created, we do not need to check additional vectors for removing the existing one
+            removeSingleCellVectorsAndDimensionIfNecessary( ee, vectorsToBeReplaced, scdCreated ? null : vectors );
+        } else {
+            log.warn( "No vectors with the quantitation type: " + quantitationType );
+        }
+        int numVectorsRemoved = ee.getSingleCellExpressionDataVectors().size() - previousSize;
+        log.info( String.format( "Adding %d single-cell vectors to %s for %s", vectors.size(), ee, quantitationType ) );
         ee.getSingleCellExpressionDataVectors().addAll( vectors );
+        int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - ( previousSize - numVectorsRemoved );
         update( ee );
+        auditTrailService.addUpdateEvent( ee, DataReplacedEvent.class,
+                String.format( "Replaced %d vectors with %d vectors for %s.", numVectorsRemoved, numVectorsAdded, quantitationType ) );
+    }
+
+    private void validateSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+        Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
+        Assert.isTrue( !vectors.isEmpty(), "At least one single-cell vector has to be supplied; use removeSingleCellDataVectors() to remove vectors instead." );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( ee ) ),
+                "Some of the vectors belong to other expression experiments." );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getQuantitationType() == quantitationType ),
+                "All vectors must have the same quantitation type: " + quantitationType );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getDesignElement() != null && v.getDesignElement().getId() != null ),
+                "All vectors must have a persistent design element." );
+        // TODO: allow vectors from multiple platforms
+        CompositeSequence element = vectors.iterator().next().getDesignElement();
+        ArrayDesign platform = element.getArrayDesign();
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getDesignElement().getArrayDesign().equals( platform ) ),
+                "All vectors must have a persistent design element from the same platform." );
+        SingleCellDimension singleCellDimension = vectors.iterator().next().getSingleCellDimension();
+        validateSingleCellDimension( ee, singleCellDimension );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getSingleCellDimension() == singleCellDimension ),
+                "All vectors must share the same dimension: " + singleCellDimension );
     }
 
     /**
@@ -1354,24 +1401,80 @@ public class ExpressionExperimentServiceImpl
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
                 "The number of cell IDs must match the number of cells." );
         if ( scbad.getCellTypes() != null ) {
-            Assert.notNull( scbad.getNumberOfCellTypes() );
-            Assert.isTrue( scbad.getCellTypes().stream().distinct().count() == scbad.getNumberOfCellTypes(),
-                    "The number of cell types must match the number of distinct values the cellTypes collection." );
+            Assert.notNull( scbad.getNumberOfCellTypeLabels() );
+            Assert.notNull( scbad.getCellTypeLabels() );
+            Assert.isTrue( scbad.getCellTypes().length == scbad.getCellIds().size(),
+                    "The number of cell types must match the number of cell IDs." );
+            Assert.isTrue( scbad.getCellTypeLabels().size() == scbad.getNumberOfCellTypeLabels(),
+                    "The number of cell types must match the number of values the cellTypeLabels collection." );
         } else {
-            Assert.isNull( scbad.getNumberOfCellTypes(), "There is no cell types assigned, the number of cell types must be null." );
+            Assert.isNull( scbad.getCellTypeLabels() );
+            Assert.isNull( scbad.getNumberOfCellTypeLabels(), "There is no cell types assigned, the number of cell types must be null." );
         }
         Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray(  scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
     }
 
     @Override
     @Transactional
     public void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        Assert.notNull( ee.getId() );
+        Assert.notNull( quantitationType.getId() );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) );
-        ee = ensureInSession( ee );
-        ee.getSingleCellExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        Set<SingleCellExpressionDataVector> vectors = ee.getSingleCellExpressionDataVectors().stream()
+                .filter( v -> v.getQuantitationType().equals( quantitationType ) ).collect( Collectors.toSet() );
+        if ( !vectors.isEmpty() ) {
+            removeSingleCellVectorsAndDimensionIfNecessary( ee, vectors, null );
+        } else {
+            log.warn( "No vectors with the quantitation type: " + quantitationType );
+        }
         ee.getQuantitationTypes().remove( quantitationType );
         update( ee );
+        auditTrailService.addUpdateEvent( ee, DataRemovedEvent.class,
+                String.format( "Removed %d vectors for %s.", vectors.size(), quantitationType ) );
+    }
+
+    /**
+     * @deprecated do not use this, it's only meant as a workaround for deleting single-cell vectors
+     */
+    @Autowired
+    @Deprecated
+    private SessionFactory sessionFactory;
+
+    /**
+     * Remove the given single-cell vectors and their corresponding single-cell dimension if necessary.
+     * @param ee the experiment to remove the vectors from.
+     * @param additionalVectors additional vectors to check if the single-cell dimension is still in use (i.e. vectors that are in the process of being added).
+     * @return true if the vectors were removed, false otherwise.
+     */
+    private void removeSingleCellVectorsAndDimensionIfNecessary( ExpressionExperiment ee,
+            Collection<SingleCellExpressionDataVector> vectors,
+            @Nullable Collection<SingleCellExpressionDataVector> additionalVectors ) {
+        log.info( String.format( "Removing %d single-cell vectors for %s...", vectors.size(), ee ) );
+        ee.getSingleCellExpressionDataVectors().removeAll( vectors );
+        // FIXME: flushing shouldn't be necessary here, but Hibernate does appear to cascade vectors removal prior to removing the SCD or QT...
+        sessionFactory.getCurrentSession().flush();
+        // check if SCD is still in use else remove it
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        boolean scdStillUsed = false;
+        for ( SingleCellExpressionDataVector v : ee.getSingleCellExpressionDataVectors() ) {
+            if ( v.getSingleCellDimension().equals( scd ) ) {
+                scdStillUsed = true;
+                break;
+            }
+        }
+        if ( !scdStillUsed && additionalVectors != null ) {
+            for ( SingleCellExpressionDataVector v : additionalVectors ) {
+                if ( v.getSingleCellDimension().equals( scd ) ) {
+                    scdStillUsed = true;
+                    break;
+                }
+            }
+        }
+        if ( !scdStillUsed ) {
+            log.info( "Removing unused single-cell dimension " + scd + " for " + ee );
+            expressionExperimentDao.deleteSingleCellDimension( ee, scd );
+        }
     }
 
     /**

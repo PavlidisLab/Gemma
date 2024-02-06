@@ -2,19 +2,18 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
-import ubic.gemma.persistence.hibernate.IntArrayType;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
+import static java.util.Collections.unmodifiableList;
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
 
 @Getter
@@ -30,7 +29,7 @@ public class SingleCellDimension implements Identifiable {
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
      */
-    private List<String> cellIds;
+    private List<String> cellIds = new ArrayList<>();
 
     /**
      * An internal collection for mapping cell IDs to their position in {@link #cellIds}.
@@ -44,25 +43,33 @@ public class SingleCellDimension implements Identifiable {
      * <p>
      * This should always be equal to the size of {@link #cellIds}.
      */
-    private Integer numberOfCells;
+    private int numberOfCells = 0;
 
     /**
-     * Cell types, or null if unknown.
+     * Cell types assignment to individual cells from the {@link #cellTypeLabels} collections.
+     * <p>
+     * If supplied, its size must be equal to that of {@link #cellIds}.
+     */
+    @Nullable
+    private int[] cellTypes;
+
+    /**
+     * Cell type labels, or null if unknown.
      * <p>
      * Those are user-supplied cell type identifiers. Its size must be equal to that of {@link #cellIds}.
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
      */
     @Nullable
-    private List<String> cellTypes;
+    private List<String> cellTypeLabels;
 
     /**
-     * Number of cell types.
+     * Number of distinct cell types.
      * <p>
      * This must always be equal to number of distinct elements of {@link #cellTypes}.
      */
     @Nullable
-    private Integer numberOfCellTypes;
+    private Integer numberOfCellTypeLabels;
 
     /**
      * List of bioassays that each cell belongs to.
@@ -70,16 +77,20 @@ public class SingleCellDimension implements Identifiable {
      * The {@link BioAssay} {@code bioAssays[i]} applies to all the cells in the interval {@code [bioAssaysOffset[i], bioAssaysOffset[i+1][}.
      * To find the bioassay type of a given cell, use {@link #getBioAssay(int)}.
      */
-    private List<BioAssay> bioAssays;
+    private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
      * Offsets of the bioassays.
      * <p>
      * This always contain {@code bioAssays.size()} elements.
      * <p>
-     * This is stored in the database using {@link IntArrayType}.
+     * This is stored in the database using {@link ByteArrayType}.
      */
-    private int[] bioAssaysOffset;
+    private int[] bioAssaysOffset = new int[0];
+
+    public List<String> getCellIds() {
+        return unmodifiableList( cellIds );
+    }
 
     public void setCellIds( List<String> cellIds ) {
         this.cellIds = cellIds;
@@ -98,6 +109,23 @@ public class SingleCellDimension implements Identifiable {
      * Obtain the {@link BioAssay} for a given cell ID.
      */
     public BioAssay getBioAssayByCellId( String cellId ) {
+        return getBioAssay( getCellIndex( cellId ) );
+    }
+
+    public String getCellTypeLabel( int index ) {
+        Assert.notNull( cellTypes, "No cell types have been assigned." );
+        Assert.notNull( cellTypeLabels, "No cell labels exist." );
+        return cellTypeLabels.get( cellTypes[index] );
+    }
+
+    /**
+     * Obtain a cell type label by cell ID.
+     */
+    public String getCellTypeLabelByCellId( String cellId ) {
+        return getCellTypeLabel( getCellIndex( cellId ) );
+    }
+
+    private int getCellIndex( String cellId ) {
         if ( cellIdToIndex == null ) {
             cellIdToIndex = ListUtils.indexOfElements( cellIds );
         }
@@ -105,7 +133,7 @@ public class SingleCellDimension implements Identifiable {
         if ( index == null ) {
             throw new IllegalArgumentException( "Cell ID not found: " + cellId );
         }
-        return getBioAssay( index );
+        return index;
     }
 
     @Override
@@ -114,7 +142,7 @@ public class SingleCellDimension implements Identifiable {
             return Objects.hash( id );
         }
         // no need to hash numberOfCells, it's derived from cellIds's size
-        return Objects.hash( cellIds, cellTypes, cellTypes, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        return Objects.hash( cellIds, Arrays.hashCode( cellTypes ), cellTypeLabels, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override
@@ -129,8 +157,14 @@ public class SingleCellDimension implements Identifiable {
         }
         if ( id != null && ( ( SingleCellDimension ) obj ).id != null )
             return id.equals( ( ( SingleCellDimension ) obj ).id );
-        return Objects.equals( cellTypes, scd.cellTypes )
+        return Objects.equals( cellTypeLabels, scd.cellTypeLabels )
                 && Objects.equals( bioAssays, scd.bioAssays )
+                && Arrays.equals( cellTypes, scd.cellTypes )
                 && Objects.equals( cellIds, scd.cellIds );  // this is the most expensive to compare
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "SingleCellDimension %s", id != null ? "Id=" + id : "" );
     }
 }

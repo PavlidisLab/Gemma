@@ -37,9 +37,6 @@ public class DesignElementDataVector extends DataVector {
 
     @Override
     public int hashCode() {
-        if ( getId() != null ) {
-            return Objects.hash( getId() );
-        }
         return Objects.hash( super.hashCode(), designElement );
     }
 

@@ -5,7 +5,7 @@
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
-           table="RAW_EXPRESSION_DATA_VECTOR" mutable="false">
+           table="SINGLE_CELL_DIMENSION" mutable="false">
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
@@ -22,11 +22,20 @@
         </property>
         <property name="cellTypes">
             <column name="CELL_TYPES" not-null="false" sql-type="LONGBLOB"/>
-            <type name="ubic.gemma.persistence.hibernate.CompressedStringListType">
-                <param name="delimiter">\n</param>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
             </type>
         </property>
-        <property name="numberOfCellTypes">
+        <list name="cellTypeLabels" table="SINGLE_CELL_CELL_TYPE_LABEL" fetch="select" lazy="false">
+            <key foreign-key="SINGLE_CELL_CELL_TYPE_LABEL_DIMENSION_FKC">
+                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
+            </key>
+            <list-index column="ORDERING"/>
+            <element type="string">
+                <column name="CELL_TYPE_LABEL" sql-type="VARCHAR"/>
+            </element>
+        </list>
+        <property name="numberOfCellTypeLabels">
             <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
         </property>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select">
@@ -35,13 +44,15 @@
                 <column name="SINGLE_CELL_DIMENSIONS_FK" sql-type="BIGINT"/>
             </key>
             <list-index column="ORDERING"/>
-            <many-to-many>
+            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
                 <column name="BIO_ASSAYS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </list>
         <property name="bioAssaysOffset">
             <column name="BIO_ASSAYS_OFFSET" not-null="true" sql-type="LONGBLOB"/>
-            <type name="ubic.gemma.persistence.hibernate.IntArrayType"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
+            </type>
         </property>
     </class>
 </hibernate-mapping>

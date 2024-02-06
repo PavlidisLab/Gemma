@@ -34,19 +34,17 @@ public abstract class BulkExpressionDataVector extends DesignElementDataVector {
 
     @Override
     public int hashCode() {
-        if ( getId() != null ) {
-            return Objects.hashCode( getId() );
-        }
-        return Objects.hash( super.hashCode(), Objects.hashCode( bioAssayDimension ) );
+        return Objects.hash( super.hashCode(), bioAssayDimension );
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() )
-                + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
-                + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
-                + ( this.getExpressionExperiment() == null ? ""
-                : " EE=" + this.getExpressionExperiment().getName() + ", " + this.getData().length + " bytes" );
-
+        return String.format( "%s%s%s%s%s%s%s", this.getClass().getSimpleName(),
+                this.getId() != null ? " Id=" + this.getId() : "",
+                this.getDesignElement() != null ? " DE=" + this.getDesignElement().getName() : "",
+                this.getExpressionExperiment() != null ? " EE=" + this.getExpressionExperiment().getName() : "",
+                this.getQuantitationType() != null ? " QT=" + this.getQuantitationType().getName() : "",
+                this.getBioAssayDimension() != null ? " BAD=" + this.getBioAssayDimension().getName() : "",
+                this.getData() != null ? ", " + this.getData().length + " bytes" : "" );
     }
 }

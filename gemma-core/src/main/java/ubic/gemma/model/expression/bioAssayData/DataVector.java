@@ -48,10 +48,9 @@ public abstract class DataVector implements Identifiable, Serializable {
      */
     @Override
     public int hashCode() {
-        if ( id != null ) {
-            return Objects.hashCode( id );
-        }
-        return Objects.hash( expressionExperiment, quantitationType, Arrays.hashCode( data ) );
+        // also, we cannot hash the ID because it is assigned on creation
+        // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
+        return Objects.hash( expressionExperiment, quantitationType );
     }
 
     /**

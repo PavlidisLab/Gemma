@@ -2,7 +2,10 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.persistence.hibernate.IntArrayType;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * An expression data vector that contains data at the resolution of a single cell.
@@ -26,7 +29,32 @@ public class SingleCellExpressionDataVector extends DesignElementDataVector {
     /**
      * Positions of the non-zero data in the {@link #getData()} vector.
      * <p>
-     * This is mapped in the database using {@link IntArrayType}.
+     * This is mapped in the database using {@link ByteArrayType}.
      */
     private int[] dataIndices;
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof SingleCellExpressionDataVector ) ) {
+            return false;
+        }
+        SingleCellExpressionDataVector other = ( SingleCellExpressionDataVector ) object;
+        return super.equals( object )
+                && Objects.equals( singleCellDimension, other.singleCellDimension )
+                && Arrays.equals( dataIndices, other.dataIndices );
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "%s%s%s%s%s%s%s", this.getClass().getSimpleName(),
+                this.getId() != null ? " Id=" + this.getId() : "",
+                this.getDesignElement() != null ? " DE=" + this.getDesignElement().getName() : "",
+                this.getExpressionExperiment() != null ? " EE=" + this.getExpressionExperiment().getName() : "",
+                this.getQuantitationType() != null ? " QT=" + this.getQuantitationType().getName() : "",
+                this.getSingleCellDimension() != null ? " SCD=" + this.getSingleCellDimension().getId() : "",
+                this.getData() != null ? ", " + this.getData().length + " bytes" : "" );
+    }
 }

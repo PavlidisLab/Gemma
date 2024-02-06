@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -1942,6 +1943,16 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( br.getKeywords() );
             Hibernate.initialize( br.getChemicals() );
         }
+    }
+
+    @Override
+    public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        getSessionFactory().getCurrentSession().persist( singleCellDimension );
+    }
+
+    @Override
+    public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        getSessionFactory().getCurrentSession().delete( singleCellDimension );
     }
 
     @Override

@@ -12,6 +12,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -304,4 +305,8 @@ public interface ExpressionExperimentDao
      * The result is stored in the standard query cache.
      */
     long countBioMaterials( @Nullable Filters filters );
+
+    void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 }

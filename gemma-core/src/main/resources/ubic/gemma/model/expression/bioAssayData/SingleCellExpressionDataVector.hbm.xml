@@ -5,10 +5,11 @@
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector"
-           table="SINGLE_CELL_DATA_VECTOR">
+           table="SINGLE_CELL_EXPRESSION_DATA_VECTOR">
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
-            <generator class="native"/>
+            <generator class="native">
+            </generator>
         </id>
         <many-to-one name="singleCellDimension" class="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
                      lazy="proxy" fetch="select">
@@ -21,15 +22,18 @@
         <property name="data" type="org.hibernate.type.MaterializedBlobType">
             <column name="DATA" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
-        <property name="dataIndices" type="ubic.gemma.persistence.hibernate.IntArrayType">
+        <property name="dataIndices">
             <column name="DATA_INDICES" not-null="true" unique="false" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
+            </type>
         </property>
         <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationType"
                      lazy="false" fetch="select">
-            <column name="QUANTITATION_TYPE_FK" not-null="false" sql-type="BIGINT"/>
+            <column name="QUANTITATION_TYPE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-                     cascade="none" lazy="proxy" fetch="select">
+                     lazy="proxy" fetch="select">
             <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>
