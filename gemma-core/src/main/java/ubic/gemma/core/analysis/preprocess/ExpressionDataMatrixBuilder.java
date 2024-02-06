@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ChannelUtils;
@@ -51,7 +51,7 @@ public class ExpressionDataMatrixBuilder {
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixBuilder.class.getName() );
     private final Map<ArrayDesign, BioAssayDimension> dimMap = new HashMap<>();
     private final Map<QuantitationType, Integer> numMissingValues = new HashMap<>();
-    private Collection<RawOrProcessedExpressionDataVector> vectors;
+    private Collection<BulkExpressionDataVector> vectors;
     private ExpressionExperiment expressionExperiment;
     private Collection<ProcessedExpressionDataVector> processedDataVectors = new HashSet<>();
     private QuantitationTypeData dat = null;
@@ -60,7 +60,7 @@ public class ExpressionDataMatrixBuilder {
     /**
      * @param vectors collection of vectors. They should be thawed first.
      */
-    public ExpressionDataMatrixBuilder( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+    public ExpressionDataMatrixBuilder( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 )
             throw new IllegalArgumentException( "No vectors" );
         this.vectors = new HashSet<>();
@@ -76,7 +76,7 @@ public class ExpressionDataMatrixBuilder {
     }
 
     public ExpressionDataMatrixBuilder( Collection<ProcessedExpressionDataVector> processedVectors,
-            Collection<? extends RawOrProcessedExpressionDataVector> otherVectors ) {
+            Collection<? extends BulkExpressionDataVector> otherVectors ) {
         this.vectors = new HashSet<>();
         this.vectors.addAll( otherVectors );
         this.processedDataVectors = processedVectors;
@@ -88,7 +88,7 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.isEmpty() )
             throw new IllegalArgumentException( "No vectors" );
         PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
@@ -101,7 +101,7 @@ public class ExpressionDataMatrixBuilder {
      * @return matrix of appropriate type.
      */
     private static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
-            Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+            Collection<? extends BulkExpressionDataVector> vectors ) {
         ExpressionDataMatrix<?> expressionDataMatrix;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
@@ -292,7 +292,7 @@ public class ExpressionDataMatrixBuilder {
 
         ExpressionDataMatrixBuilder.log.debug( "Checking all vectors to get bioAssayDimensions" );
         Collection<BioAssayDimension> dimensions = new HashSet<>();
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             ArrayDesign adUsed = this.arrayDesignForVector( vector );
             if ( !dimMap.containsKey( adUsed ) ) {
                 dimMap.put( adUsed, vector.getBioAssayDimension() );
@@ -422,7 +422,7 @@ public class ExpressionDataMatrixBuilder {
         }
 
         for ( BioAssayDimension dimension : dimensions ) {
-            for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+            for ( BulkExpressionDataVector vector : vectors ) {
                 if ( !vector.getBioAssayDimension().equals( dimension ) )
                     continue;
 
@@ -567,7 +567,7 @@ public class ExpressionDataMatrixBuilder {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
         for ( BioAssayDimension dim : dimensions ) {
-            for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+            for ( BulkExpressionDataVector vector : vectors ) {
 
                 if ( !vector.getBioAssayDimension().equals( dim ) )
                     continue;
@@ -592,13 +592,13 @@ public class ExpressionDataMatrixBuilder {
     /**
      * @return The 'preferred' data vectors - NOT the processed data vectors!
      */
-    private Collection<RawOrProcessedExpressionDataVector> getPreferredDataVectors() {
-        Collection<RawOrProcessedExpressionDataVector> result = new HashSet<>();
+    private Collection<BulkExpressionDataVector> getPreferredDataVectors() {
+        Collection<BulkExpressionDataVector> result = new HashSet<>();
 
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qtypes = this.getPreferredQTypes();
 
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             if ( !( vector instanceof ProcessedExpressionDataVector ) && dimensions
                     .contains( vector.getBioAssayDimension() ) && qtypes.contains( vector.getQuantitationType() ) )
                 result.add( vector );
@@ -621,7 +621,7 @@ public class ExpressionDataMatrixBuilder {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qtypes = this.getPreferredQTypes();
 
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             if ( vector instanceof ProcessedExpressionDataVector && dimensions.contains( vector.getBioAssayDimension() )
                     && qtypes.contains( vector.getQuantitationType() ) )
                 result.add( ( ProcessedExpressionDataVector ) vector );
@@ -645,7 +645,7 @@ public class ExpressionDataMatrixBuilder {
 
             Collection<QuantitationType> checkedQts = new HashSet<>();
 
-            for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+            for ( BulkExpressionDataVector vector : vectors ) {
 
                 BioAssayDimension dim = vector.getBioAssayDimension();
 

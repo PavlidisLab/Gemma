@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -283,7 +283,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends RawOrProcessedExpressionDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+            Collection<? extends BulkExpressionDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             if ( vectors.isEmpty() ) {
                 vectors = processedExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
             }

@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
@@ -272,7 +272,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
     }
 
-    private BioAssayDimension fillInDesignElementDataVectorAssociations( RawOrProcessedExpressionDataVector dataVector, Caches caches ) {
+    private BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, Caches caches ) {
         // we should have done this already.
         assert dataVector.getDesignElement() != null;
 
@@ -354,7 +354,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         }
     }
 
-    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( RawOrProcessedExpressionDataVector vector, Caches caches ) {
+    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( BulkExpressionDataVector vector, Caches caches ) {
         Map<String, BioAssayDimension> bioAssayDimensionCache = caches.getBioAssayDimensionCache();
 
         String dimensionName = vector.getBioAssayDimension().getName();

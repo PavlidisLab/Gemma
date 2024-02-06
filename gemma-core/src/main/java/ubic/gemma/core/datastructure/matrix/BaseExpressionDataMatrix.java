@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -204,7 +204,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     }
 
     @SuppressWarnings("unused") // useful interface
-    protected abstract void vectorsToMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors );
+    protected abstract void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors );
 
     int getColumnIndex( BioAssay bioAssay ) {
         return columnAssayMap.get( bioAssay );
@@ -368,11 +368,11 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     /**
      * Selects all the vectors passed in (uses them to initialize the data)
      */
-    void selectVectors( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+    void selectVectors( Collection<? extends BulkExpressionDataVector> vectors ) {
         QuantitationType quantitationType = null;
         int i = 0;
-        List<RawOrProcessedExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        for ( RawOrProcessedExpressionDataVector vector : sorted ) {
+        List<BulkExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
+        for ( BulkExpressionDataVector vector : sorted ) {
             if ( this.expressionExperiment == null )
                 this.expressionExperiment = vector.getExpressionExperiment();
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
@@ -397,14 +397,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     }
 
-    Collection<RawOrProcessedExpressionDataVector> selectVectors( Collection<? extends RawOrProcessedExpressionDataVector> vectors,
+    Collection<BulkExpressionDataVector> selectVectors( Collection<? extends BulkExpressionDataVector> vectors,
             Collection<QuantitationType> qTypes ) {
         this.quantitationTypes.addAll( qTypes );
 
-        Collection<RawOrProcessedExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
+        Collection<BulkExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
         int i = 0;
 
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( qTypes.contains( vectorQuantitationType ) ) {
                 if ( this.expressionExperiment == null )
@@ -421,14 +421,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorsOfInterest;
     }
 
-    Collection<RawOrProcessedExpressionDataVector> selectVectors( Collection<? extends RawOrProcessedExpressionDataVector> vectors,
+    Collection<BulkExpressionDataVector> selectVectors( Collection<? extends BulkExpressionDataVector> vectors,
             List<QuantitationType> qTypes ) {
         this.quantitationTypes.addAll( qTypes );
-        List<RawOrProcessedExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        Collection<RawOrProcessedExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
+        List<BulkExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
+        Collection<BulkExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
         int rowIndex = 0;
         for ( QuantitationType soughtType : qTypes ) {
-            for ( RawOrProcessedExpressionDataVector vector : sorted ) {
+            for ( BulkExpressionDataVector vector : sorted ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 if ( vectorQuantitationType.equals( soughtType ) ) {
                     if ( this.expressionExperiment == null )
@@ -446,14 +446,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorsOfInterest;
     }
 
-    Collection<RawOrProcessedExpressionDataVector> selectVectors( Collection<? extends RawOrProcessedExpressionDataVector> vectors,
+    Collection<BulkExpressionDataVector> selectVectors( Collection<? extends BulkExpressionDataVector> vectors,
             QuantitationType quantitationType ) {
         this.quantitationTypes.add( quantitationType );
 
-        Collection<RawOrProcessedExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
+        Collection<BulkExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
         int i = 0;
 
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 if ( this.expressionExperiment == null )
@@ -470,18 +470,18 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorsOfInterest;
     }
 
-    Collection<RawOrProcessedExpressionDataVector> selectVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
+    Collection<BulkExpressionDataVector> selectVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
         Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
         return this.selectVectors( quantitationType, vectors );
     }
 
-    private Collection<RawOrProcessedExpressionDataVector> selectVectors( QuantitationType quantitationType,
-            Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
-        Collection<RawOrProcessedExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
+    private Collection<BulkExpressionDataVector> selectVectors( QuantitationType quantitationType,
+            Collection<? extends BulkExpressionDataVector> vectors ) {
+        Collection<BulkExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
         this.quantitationTypes.add( quantitationType );
-        List<RawOrProcessedExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
+        List<BulkExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
         int i = 0;
-        for ( RawOrProcessedExpressionDataVector vector : sorted ) {
+        for ( BulkExpressionDataVector vector : sorted ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( this.expressionExperiment == null )
                 this.expressionExperiment = vector.getExpressionExperiment();
@@ -512,12 +512,12 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         }
     }
 
-    private List<RawOrProcessedExpressionDataVector> sortVectorsByDesignElement(
-            Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
-        List<RawOrProcessedExpressionDataVector> vectorSort = new ArrayList<>( vectors );
-        Comparator<RawOrProcessedExpressionDataVector> cmp = Comparator
-                .comparing( ( RawOrProcessedExpressionDataVector vector ) -> vector.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
-                .thenComparing( ( RawOrProcessedExpressionDataVector vector ) -> vector.getDesignElement().getId() );
+    private List<BulkExpressionDataVector> sortVectorsByDesignElement(
+            Collection<? extends BulkExpressionDataVector> vectors ) {
+        List<BulkExpressionDataVector> vectorSort = new ArrayList<>( vectors );
+        Comparator<BulkExpressionDataVector> cmp = Comparator
+                .comparing( ( BulkExpressionDataVector vector ) -> vector.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
+                .thenComparing( ( BulkExpressionDataVector vector ) -> vector.getDesignElement().getId() );
         vectorSort.sort( cmp );
         return vectorSort;
     }

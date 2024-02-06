@@ -28,7 +28,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
@@ -43,10 +43,10 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     private static final long serialVersionUID = 1L;
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
-    public ExpressionDataBooleanMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+    public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         this.init();
 
-        for ( RawOrProcessedExpressionDataVector dedv : vectors ) {
+        for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
                 throw new IllegalStateException( "Cannot convert non-boolean quantitation types into boolean matrix" );
             }
@@ -56,10 +56,10 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         this.vectorsToMatrix( vectors );
     }
 
-    public ExpressionDataBooleanMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors,
+    public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors,
             List<QuantitationType> qtypes ) {
         this.init();
-        Collection<RawOrProcessedExpressionDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
+        Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
         this.vectorsToMatrix( selectedVectors );
     }
 
@@ -177,7 +177,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends RawOrProcessedExpressionDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -192,7 +192,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * Fill in the data
      */
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> createMatrix(
-            Collection<? extends RawOrProcessedExpressionDataVector> vectors, int maxSize ) {
+            Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
         ObjectMatrixImpl<CompositeSequence, Integer, Boolean> mat = new ObjectMatrixImpl<>( vectors.size(), maxSize );
 
         // initialize the matrix to false
@@ -208,7 +208,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         ByteArrayConverter bac = new ByteArrayConverter();
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
 
-        for ( RawOrProcessedExpressionDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
             byte[] bytes = vector.getData();
 

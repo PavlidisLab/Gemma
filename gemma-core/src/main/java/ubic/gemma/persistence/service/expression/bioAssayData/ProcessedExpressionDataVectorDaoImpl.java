@@ -808,9 +808,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      *              details.
      */
     private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
-            Collection<? extends RawOrProcessedExpressionDataVector> data ) {
+            Collection<? extends BulkExpressionDataVector> data ) {
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = new HashMap<>();
-        for ( RawOrProcessedExpressionDataVector v : data ) {
+        for ( BulkExpressionDataVector v : data ) {
             BioAssayDimension bioAssayDimension = v.getBioAssayDimension();
             if ( !badVos.containsKey( bioAssayDimension ) ) {
                 badVos.put( bioAssayDimension, new BioAssayDimensionValueObject( bioAssayDimension ) );
@@ -1520,10 +1520,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     private Map<CompositeSequence, DoubleVectorValueObject> unpack(
-            Collection<? extends RawOrProcessedExpressionDataVector> data ) {
+            Collection<? extends BulkExpressionDataVector> data ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-        for ( RawOrProcessedExpressionDataVector v : data ) {
+        for ( BulkExpressionDataVector v : data ) {
             result.put( v.getDesignElement(),
                     new DoubleVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
         }
@@ -1577,12 +1577,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return result;
     }
 
-    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends RawOrProcessedExpressionDataVector> data ) {
+    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends BulkExpressionDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<>();
 
         Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
 
-        for ( RawOrProcessedExpressionDataVector v : data ) {
+        for ( BulkExpressionDataVector v : data ) {
             result.add( new BooleanVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
         }
         return result;

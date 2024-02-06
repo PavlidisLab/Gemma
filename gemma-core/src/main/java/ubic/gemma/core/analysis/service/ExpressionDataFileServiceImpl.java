@@ -45,7 +45,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -482,7 +482,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<RawOrProcessedExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
+            Collection<BulkExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -565,7 +565,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<RawOrProcessedExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
+            Collection<BulkExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -1174,7 +1174,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         return file;
     }
 
-    private void writeJson( File file, Collection<RawOrProcessedExpressionDataVector> vectors ) throws IOException {
+    private void writeJson( File file, Collection<BulkExpressionDataVector> vectors ) throws IOException {
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
@@ -1212,7 +1212,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     }
 
-    private void writeVectors( File file, Collection<RawOrProcessedExpressionDataVector> vectors,
+    private void writeVectors( File file, Collection<BulkExpressionDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );

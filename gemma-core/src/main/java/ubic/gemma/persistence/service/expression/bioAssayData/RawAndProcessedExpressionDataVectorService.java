@@ -1,13 +1,13 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
-public interface RawAndProcessedExpressionDataVectorService extends DesignElementDataVectorService<RawOrProcessedExpressionDataVector> {
+public interface RawAndProcessedExpressionDataVectorService extends DesignElementDataVectorService<BulkExpressionDataVector> {
 
     /**
      * @see RawAndProcessedExpressionDataVectorDao#removeByCompositeSequence(CompositeSequence)
@@ -23,5 +23,5 @@ public interface RawAndProcessedExpressionDataVectorService extends DesignElemen
      * service instead.
      */
     @CheckReturnValue
-    Collection<RawOrProcessedExpressionDataVector> thaw( Collection<RawOrProcessedExpressionDataVector> vectors );
+    Collection<BulkExpressionDataVector> thaw( Collection<BulkExpressionDataVector> vectors );
 }

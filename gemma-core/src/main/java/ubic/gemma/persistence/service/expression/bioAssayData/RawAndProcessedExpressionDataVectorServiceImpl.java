@@ -7,7 +7,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
-public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<RawOrProcessedExpressionDataVector> implements RawAndProcessedExpressionDataVectorService {
+public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<BulkExpressionDataVector> implements RawAndProcessedExpressionDataVectorService {
 
     private final RawAndProcessedExpressionDataVectorDao mainDao;
 
@@ -38,16 +38,16 @@ public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesi
     }
 
     @Override
-    public Collection<RawOrProcessedExpressionDataVector> findAndThaw( BioAssayDimension bioAssayDimension ) {
-        Collection<RawOrProcessedExpressionDataVector> thawedVectors = new HashSet<>();
+    public Collection<BulkExpressionDataVector> findAndThaw( BioAssayDimension bioAssayDimension ) {
+        Collection<BulkExpressionDataVector> thawedVectors = new HashSet<>();
         thawedVectors.addAll( rawExpressionDataVectorService.findAndThaw( bioAssayDimension ) );
         thawedVectors.addAll( processedExpressionDataVectorService.findAndThaw( bioAssayDimension ) );
         return thawedVectors;
     }
 
     @Override
-    public Collection<RawOrProcessedExpressionDataVector> findAndThaw( Collection<QuantitationType> quantitationTypes ) {
-        Collection<RawOrProcessedExpressionDataVector> thawedVectors = new HashSet<>();
+    public Collection<BulkExpressionDataVector> findAndThaw( Collection<QuantitationType> quantitationTypes ) {
+        Collection<BulkExpressionDataVector> thawedVectors = new HashSet<>();
         thawedVectors.addAll( rawExpressionDataVectorService.findAndThaw( quantitationTypes ) );
         thawedVectors.addAll( processedExpressionDataVectorService.findAndThaw( quantitationTypes ) );
         return thawedVectors;
@@ -56,8 +56,8 @@ public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesi
     @Override
     @Deprecated
     @Transactional(readOnly = true)
-    public Collection<RawOrProcessedExpressionDataVector> thaw( Collection<RawOrProcessedExpressionDataVector> vectors ) {
-        Collection<RawOrProcessedExpressionDataVector> thawedVectors = new HashSet<>( vectors.size() );
+    public Collection<BulkExpressionDataVector> thaw( Collection<BulkExpressionDataVector> vectors ) {
+        Collection<BulkExpressionDataVector> thawedVectors = new HashSet<>( vectors.size() );
         Collection<RawExpressionDataVector> rv = vectors.stream()
                 .filter( v -> v instanceof RawExpressionDataVector )
                 .map( v -> ( RawExpressionDataVector ) v )

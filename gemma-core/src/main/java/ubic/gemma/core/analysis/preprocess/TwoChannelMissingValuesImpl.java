@@ -119,7 +119,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         timer.stop();
         this.logTimeInfo( timer, procVectors.size() + rawVectors.size() );
 
-        Collection<? extends RawOrProcessedExpressionDataVector> builderVectors = new HashSet<>(
+        Collection<? extends BulkExpressionDataVector> builderVectors = new HashSet<>(
                 rawVectors.isEmpty() ? procVectors : rawVectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( builderVectors );

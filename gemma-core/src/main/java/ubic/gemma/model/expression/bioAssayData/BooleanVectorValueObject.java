@@ -34,7 +34,7 @@ public class BooleanVectorValueObject extends DataVectorValueObject {
         super();
     }
 
-    public BooleanVectorValueObject( RawOrProcessedExpressionDataVector dedv, BioAssayDimensionValueObject badvo ) {
+    public BooleanVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badvo ) {
         super( dedv, badvo );
         if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
             throw new IllegalArgumentException( "Can only store boolean vectors, got " + dedv.getQuantitationType() );

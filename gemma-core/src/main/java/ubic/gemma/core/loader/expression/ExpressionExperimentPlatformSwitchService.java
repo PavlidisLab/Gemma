@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -590,7 +590,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param vector vector
      * @param bad    to be used as the replacement.
      */
-    private void vectorReWrite( RawOrProcessedExpressionDataVector vector, BioAssayDimension bad ) {
+    private void vectorReWrite( BulkExpressionDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
         List<BioAssay> currentOrder = vector.getBioAssayDimension().getBioAssays();
         if ( this.equivalent( currentOrder, desiredOrder ) ) {

@@ -110,7 +110,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.data = ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) );
     }
 
-    public DoubleVectorValueObject( RawOrProcessedExpressionDataVector dedv, BioAssayDimensionValueObject badVo ) {
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badVo ) {
         this( dedv, null, badVo );
     }
 
@@ -123,7 +123,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dedv dedv
      * @param vectorsBadVo BA dimension vo
      */
-    public DoubleVectorValueObject( RawOrProcessedExpressionDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
             Collection<Long> genes, BioAssayDimension dimToMatch ) {
         this( dedv, genes, vectorsBadVo );
 
@@ -133,7 +133,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     }
 
-    public DoubleVectorValueObject( RawOrProcessedExpressionDataVector dedv, Collection<Long> genes,
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, Collection<Long> genes,
             BioAssayDimensionValueObject badVo ) {
         super( dedv, genes, badVo );
         QuantitationType qt = dedv.getQuantitationType();
@@ -268,7 +268,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
             QuantitationType updatedQuantitationType ) {
-        RawOrProcessedExpressionDataVector result;
+        BulkExpressionDataVector result;
         if ( updatedQuantitationType == null )
             throw new IllegalArgumentException();
         if ( this.masked ) {

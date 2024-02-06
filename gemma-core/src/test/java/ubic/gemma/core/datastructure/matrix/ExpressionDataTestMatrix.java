@@ -27,7 +27,7 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.RawOrProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -76,7 +76,7 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
             DoubleMatrix<String, String> matrix = service.parse( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
-            Collection<RawOrProcessedExpressionDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
+            Collection<BulkExpressionDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
             this.vectorsToMatrix( selectedVectors );
         }
 

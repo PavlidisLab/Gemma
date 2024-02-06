@@ -107,7 +107,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( "QT is null", qt );
 
-        Collection<RawOrProcessedExpressionDataVector> preferredVectors = rawAndProcessedService.find( qt );
+        Collection<BulkExpressionDataVector> preferredVectors = rawAndProcessedService.find( qt );
 
         assertNotNull( preferredVectors );
         assertEquals( 40, preferredVectors.size() );
