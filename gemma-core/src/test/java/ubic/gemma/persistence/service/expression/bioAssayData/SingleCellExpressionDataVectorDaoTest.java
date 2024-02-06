@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @ContextConfiguration
 public class SingleCellExpressionDataVectorDaoTest extends BaseDatabaseTest {
@@ -32,16 +32,11 @@ public class SingleCellExpressionDataVectorDaoTest extends BaseDatabaseTest {
     @Test
     public void test() {
         BioAssay b1 = new BioAssay();
-        Characteristic t1, t2;
-        t1 = new Characteristic();
-        t2 = new Characteristic();
 
         SingleCellDimension dimension = new SingleCellDimension();
         dimension.setCellIds( Arrays.asList( "cell1", "cell2", "cell3" ) );
-        dimension.setBioAssays( Arrays.asList( b1 ) );
+        dimension.setBioAssays( Collections.singletonList( b1 ) );
         dimension.setBioAssaysOffset( new int[] { 0 } );
-        dimension.setCellTypes( Arrays.asList( t1, t2 ) );
-        dimension.setCellTypesOffset( new int[] { 0, 2 } );
 
         SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
         vector.setSingleCellDimension( dimension );

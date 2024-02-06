@@ -1,9 +1,13 @@
 package ubic.gemma.core.util;
 
+import org.springframework.util.Assert;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import static java.util.Arrays.binarySearch;
 
 /**
  * Utilities and algorithms for {@link List}.
@@ -42,6 +46,62 @@ public class ListUtils {
             if ( !element2position.containsKey( element ) ) {
                 element2position.put( element, i );
             }
+        }
+    }
+
+    /**
+     * Get an element of a sparse range array.
+     * @param array            collection of elements applying for the ranges
+     * @param offsets          starting offsets of the ranges
+     * @param numberOfElements the size of the original array
+     * @param index            a position to retrieve
+     * @throws ArrayIndexOutOfBoundsException if the index is out of bounds
+     * @throws IllegalArgumentException       if the array and offsets do not have the same size
+     * @see #validateSparseRangeArray(List, int[], int)
+     */
+    public static <T> T getSparseRangeArrayElement( List<T> array, int[] offsets, int numberOfElements, int index ) {
+        Assert.isTrue( array.size() == offsets.length,
+                String.format( "Invalid size for offsets array, it must contain %d indices.", array.size() ) );
+        if ( index < 0 ) {
+            // FIXME: add support for negative indexing
+            throw new ArrayIndexOutOfBoundsException( "Negative indexing of sparse range arrays is not allowed." );
+        }
+        if ( index >= numberOfElements ) {
+            throw new ArrayIndexOutOfBoundsException( "The index exceeds the upper bound of the array." );
+        }
+        int offset = binarySearch( offsets, index );
+        if ( offset < 0 ) {
+            return array.get( -offset - 2 );
+        }
+        return array.get( offset );
+    }
+
+    /**
+     * Validate a sparse range array.
+     * @param array            collection of elements applying for the ranges
+     * @param offsets          starting offsets of the ranges
+     * @param numberOfElements the size of the original array
+     * @throws IllegalArgumentException if the sparse range array is invalid
+     */
+    public static void validateSparseRangeArray( List<?> array, int[] offsets, int numberOfElements ) throws IllegalArgumentException {
+        Assert.isTrue( array.size() == offsets.length,
+                "There must be as many offsets as entries in the corresponding array." );
+        int k = 0;
+        int lastI = -1;
+        Object lastObject = null;
+        for ( int i : offsets ) {
+            Assert.isTrue( i > lastI, "Offsets must be monotonously increasing." );
+            Assert.isTrue( i < numberOfElements, "Offsets are invalid: indices must not exceed the number of cells." );
+            Object o = array.get( k );
+            // not using equality because one might want to use object identity
+            if ( k > 0 && o == lastObject ) {
+                throw new IllegalArgumentException(
+                        String.format( "Successive ranges [%d, %d[ and [%d, %d[ cannot be for the same object: %s.",
+                                offsets[k - 1], offsets[k], offsets[k], k < offsets.length - 1 ? offsets[k + 1] : numberOfElements, o ) );
+            }
+            lastI = i;
+            lastObject = o;
+            k++;
         }
     }
 }

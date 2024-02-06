@@ -20,17 +20,14 @@
         <property name="numberOfCells">
             <column name="NUMBER_OF_CELLS" not-null="true" sql-type="INTEGER"/>
         </property>
-        <list name="cellTypes" lazy="false" fetch="select">
-            <cache usage="read-write"/>
-            <key foreign-key="CHARACTERISTIC_SINGLE_CELL_DIMENSION_FKC">
-                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
-            </key>
-            <list-index column="ORDERING"/>
-            <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
-        </list>
-        <property name="cellTypesOffset">
-            <column name="CELL_TYPES_OFFSET" not-null="true" sql-type="LONGBLOB"/>
-            <type name="ubic.gemma.persistence.hibernate.IntArrayType"/>
+        <property name="cellTypes">
+            <column name="CELL_TYPES" not-null="false" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.CompressedStringListType">
+                <param name="delimiter">\n</param>
+            </type>
+        </property>
+        <property name="numberOfCellTypes">
+            <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
         </property>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select">
             <cache usage="read-write"/>

@@ -80,6 +80,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
 import static ubic.gemma.persistence.service.SubqueryUtils.guessAliases;
 
 /**
@@ -1352,33 +1353,15 @@ public class ExpressionExperimentServiceImpl
     private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
                 "The number of cell IDs must match the number of cells." );
-        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray( "BioAssay", scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
-        validateSparseRangeArray( "Cell type", scbad.getCellTypes(), scbad.getCellTypesOffset(), scbad.getNumberOfCells() );
-    }
-
-    /**
-     * Validate a sparse range array.
-     * @param messagePrefix a prefix to use for validation errors
-     * @param array         collection of elements applying for the ranges
-     * @param offsets       starting offsets of the ranges
-     * @param size          the size of the original array
-     */
-    private void validateSparseRangeArray( String messagePrefix, List<?> array, int[] offsets, int size ) {
-        Assert.isTrue( array.size() == offsets.length,
-                messagePrefix + " offsets are invalid: there must be as many offsets as entries in the corresponding array." );
-        int k = 0;
-        int lastI = -1;
-        Object lastObject = null;
-        for ( int i : offsets ) {
-            Assert.isTrue( i > lastI, messagePrefix + " offsets are invalid: indices must be monotonously increasing." );
-            Assert.isTrue( i < size, messagePrefix + " offsets are invalid: indices must not exceed the number of cells." );
-            Object o = array.get( k++ );
-            Assert.isTrue( k == 0 || !Objects.equals( array.get( i ), lastObject ),
-                    messagePrefix + " offsets are invalid: successive ranges cannot be of the same object." );
-            lastI = i;
-            lastObject = o;
+        if ( scbad.getCellTypes() != null ) {
+            Assert.notNull( scbad.getNumberOfCellTypes() );
+            Assert.isTrue( scbad.getCellTypes().stream().distinct().count() == scbad.getNumberOfCellTypes(),
+                    "The number of cell types must match the number of distinct values the cellTypes collection." );
+        } else {
+            Assert.isNull( scbad.getNumberOfCellTypes(), "There is no cell types assigned, the number of cell types must be null." );
         }
+        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
+        validateSparseRangeArray(  scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
     }
 
     @Override

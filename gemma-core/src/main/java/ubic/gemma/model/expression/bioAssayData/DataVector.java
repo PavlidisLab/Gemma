@@ -18,16 +18,22 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * An abstract class representing a one-dimensional vector of data about some aspect of an {@link ExpressionExperiment}.
  * @see DesignElementDataVector
  */
+@Getter
+@Setter
 public abstract class DataVector implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -5823802521832643417L;
@@ -42,10 +48,10 @@ public abstract class DataVector implements Identifiable, Serializable {
      */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        if ( id != null ) {
+            return Objects.hashCode( id );
+        }
+        return Objects.hash( expressionExperiment, quantitationType, Arrays.hashCode( data ) );
     }
 
     /**
@@ -61,39 +67,11 @@ public abstract class DataVector implements Identifiable, Serializable {
             return false;
         }
         final DataVector that = ( DataVector ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public QuantitationType getQuantitationType() {
-        return this.quantitationType;
-    }
-
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
-    }
-
-    public byte[] getData() {
-        return this.data;
-    }
-
-    public void setData( byte[] data ) {
-        this.data = data;
+        if ( this.id != null && that.id != null ) {
+            return Objects.equals( id, that.id );
+        }
+        return Objects.equals( expressionExperiment, that.expressionExperiment )
+                && Objects.equals( quantitationType, that.quantitationType )
+                && Arrays.equals( data, that.data );
     }
 }

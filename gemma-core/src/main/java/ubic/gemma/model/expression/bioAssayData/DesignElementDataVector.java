@@ -18,22 +18,42 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import java.util.Objects;
 
 /**
  * Data vector associated to a {@link CompositeSequence}.
  */
+@Getter
+@Setter
 public class DesignElementDataVector extends DataVector {
 
     private static final long serialVersionUID = -4185333066166517308L;
 
     private CompositeSequence designElement;
 
-    public CompositeSequence getDesignElement() {
-        return this.designElement;
+    @Override
+    public int hashCode() {
+        if ( getId() != null ) {
+            return Objects.hash( getId() );
+        }
+        return Objects.hash( super.hashCode(), designElement );
     }
 
-    public void setDesignElement( CompositeSequence designElement ) {
-        this.designElement = designElement;
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof DesignElementDataVector ) )
+            return false;
+        DesignElementDataVector other = ( DesignElementDataVector ) object;
+        if ( getId() != null && other.getId() != null ) {
+            return Objects.equals( getId(), other.getId() );
+        }
+        return Objects.equals( designElement, ( ( DesignElementDataVector ) object ).designElement )
+                && super.equals( object );
     }
 }

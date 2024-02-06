@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests for extra utilities for {@link java.util.List}.
@@ -32,5 +33,11 @@ public class ListUtilsTest {
         assertThat( str2position.get( "a" ) ).isEqualTo( 0 );
         assertThat( str2position.get( "A" ) ).isEqualTo( 0 );
         assertThat( str2position.get( "baBa" ) ).isEqualTo( 2 );
+    }
+
+    @Test
+    public void testSparseRangeArray() {
+        assertThatThrownBy( () -> ListUtils.validateSparseRangeArray( Arrays.asList( "a", "a" ), new int[] { 0, 50 }, 100 ) )
+                .isInstanceOf( IllegalArgumentException.class );
     }
 }
