@@ -131,7 +131,7 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     @Category(SlowTest.class)
     public final void testHomologeneFromFtpServer() throws Exception {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/current/homologene.data" );
+        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/last-archive/homologene.data" );
         hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
         Future<HomologeneService> homologeneService = hgs.getObject();
         assertThat( homologeneService ).succeedsWithin( 30, TimeUnit.SECONDS );
