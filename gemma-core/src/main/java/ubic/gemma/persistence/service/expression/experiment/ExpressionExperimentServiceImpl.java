@@ -1305,15 +1305,16 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s already have vectors for the quantitation type: %s; use replaceSingleCellDataVectors() to replace existing vectors.",
                         ee, quantitationType ) );
         validateSingleCellDataVectors( ee, quantitationType, vectors );
-        if ( vectors.iterator().next().getSingleCellDimension().getId() == null ) {
-            log.info( "Creating a new single-cell dimension for " + ee );
-            expressionExperimentDao.createSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        if ( scd.getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee + ": " + scd );
+            expressionExperimentDao.createSingleCellDimension( ee, scd );
         }
         for ( SingleCellExpressionDataVector v : vectors ) {
             v.setExpressionExperiment( ee );
@@ -1335,22 +1336,23 @@ public class ExpressionExperimentServiceImpl
         ee.getQuantitationTypes().add( quantitationType );
         update( ee ); // will take care of creating vectors
         auditTrailService.addUpdateEvent( ee, DataAddedEvent.class,
-                String.format( "Added %d vectors for %s", numVectorsAdded, quantitationType ) );
+                String.format( "Added %d vectors for %s with dimension %s", numVectorsAdded, quantitationType, scd ) );
     }
 
     @Override
     @Transactional
     public void replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s does not have the quantitation type: %s; use addSingleCellDataVectors() to add new vectors instead.",
                         ee, quantitationType ) );
         validateSingleCellDataVectors( ee, quantitationType, vectors );
         boolean scdCreated = false;
-        if ( vectors.iterator().next().getSingleCellDimension().getId() == null ) {
-            log.info( "Creating a new single-cell dimension for " + ee );
-            expressionExperimentDao.createSingleCellDimension( ee, vectors.iterator().next().getSingleCellDimension() );
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        if ( scd.getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee + ": " + scd );
+            expressionExperimentDao.createSingleCellDimension( ee, scd );
             scdCreated = true;
         }
         Set<SingleCellExpressionDataVector> vectorsToBeReplaced = ee.getSingleCellExpressionDataVectors().stream()
@@ -1371,7 +1373,7 @@ public class ExpressionExperimentServiceImpl
         int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - ( previousSize - numVectorsRemoved );
         update( ee );
         auditTrailService.addUpdateEvent( ee, DataReplacedEvent.class,
-                String.format( "Replaced %d vectors with %d vectors for %s.", numVectorsRemoved, numVectorsAdded, quantitationType ) );
+                String.format( "Replaced %d vectors with %d vectors for %s with dimension %s.", numVectorsRemoved, numVectorsAdded, quantitationType, scd ) );
     }
 
     private void validateSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
@@ -1392,6 +1394,9 @@ public class ExpressionExperimentServiceImpl
         validateSingleCellDimension( ee, singleCellDimension );
         Assert.isTrue( vectors.stream().allMatch( v -> v.getSingleCellDimension() == singleCellDimension ),
                 "All vectors must share the same dimension: " + singleCellDimension );
+        Assert.isTrue( singleCellDimension.getId() == null
+                        || ee.getSingleCellExpressionDataVectors().stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).anyMatch( singleCellDimension::equals ),
+                singleCellDimension + " is persistent, but does not belong any single-cell vector of this dataset: " + ee );
     }
 
     /**
@@ -1418,20 +1423,26 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        Assert.notNull( ee.getId() );
-        Assert.notNull( quantitationType.getId() );
-        Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) );
+        Assert.notNull( ee.getId(), "The dataset must be persistent." );
+        Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
+        Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
+                String.format( "%s does not have the quantitation type %s.", ee, quantitationType ) );
         Set<SingleCellExpressionDataVector> vectors = ee.getSingleCellExpressionDataVectors().stream()
                 .filter( v -> v.getQuantitationType().equals( quantitationType ) ).collect( Collectors.toSet() );
+        SingleCellDimension scd;
         if ( !vectors.isEmpty() ) {
+            scd = vectors.iterator().next().getSingleCellDimension();
             removeSingleCellVectorsAndDimensionIfNecessary( ee, vectors, null );
         } else {
+            scd = null;
             log.warn( "No vectors with the quantitation type: " + quantitationType );
         }
         ee.getQuantitationTypes().remove( quantitationType );
         update( ee );
-        auditTrailService.addUpdateEvent( ee, DataRemovedEvent.class,
-                String.format( "Removed %d vectors for %s.", vectors.size(), quantitationType ) );
+        if ( !vectors.isEmpty() ) {
+            auditTrailService.addUpdateEvent( ee, DataRemovedEvent.class,
+                    String.format( "Removed %d vectors for %s with dimension %s.", vectors.size(), quantitationType, scd ) );
+        }
     }
 
     /**
