@@ -1946,6 +1946,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee "
+                        + "group by scedv.singleCellDimension" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }

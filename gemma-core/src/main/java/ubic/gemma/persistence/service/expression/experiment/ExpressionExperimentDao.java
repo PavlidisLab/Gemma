@@ -306,6 +306,8 @@ public interface ExpressionExperimentDao
      */
     long countBioMaterials( @Nullable Filters filters );
 
+    List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
+
     void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
