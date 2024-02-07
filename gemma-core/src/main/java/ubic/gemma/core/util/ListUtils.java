@@ -93,6 +93,9 @@ public class ListUtils {
             Assert.isTrue( i > lastI, "Offsets must be monotonously increasing." );
             Assert.isTrue( i < numberOfElements, "Offsets are invalid: indices must not exceed the number of cells." );
             Object o = array.get( k );
+            if ( k == 0 && i != 0 ) {
+                throw new IllegalArgumentException( "The first offset must be zero." );
+            }
             // not using equality because one might want to use object identity
             if ( k > 0 && o == lastObject ) {
                 throw new IllegalArgumentException(

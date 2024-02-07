@@ -42,9 +42,17 @@ public class SingleCellExpressionDataVector extends DesignElementDataVector {
             return false;
         }
         SingleCellExpressionDataVector other = ( SingleCellExpressionDataVector ) object;
+        if ( getId() != null && other.getId() != null ) {
+            return Objects.equals( getId(), other.getId() );
+        }
         return super.equals( object )
                 && Objects.equals( singleCellDimension, other.singleCellDimension )
                 && Arrays.equals( dataIndices, other.dataIndices );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( super.hashCode(), singleCellDimension );
     }
 
     @Override

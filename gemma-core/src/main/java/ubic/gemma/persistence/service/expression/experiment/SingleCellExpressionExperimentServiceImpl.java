@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -137,6 +138,21 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( singleCellDimension.getId() == null
                         || ee.getSingleCellExpressionDataVectors().stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).anyMatch( singleCellDimension::equals ),
                 singleCellDimension + " is persistent, but does not belong any single-cell vector of this dataset: " + ee );
+        // we only support double for storage
+        // TODO: support counting data using integers too
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,
+                "Only double is supported for single-cell data vector storage." );
+        int maximumDataLength = 8 * singleCellDimension.getCellIds().size();
+        for ( SingleCellExpressionDataVector vector : vectors ) {
+            Assert.isTrue( vector.getData().length < maximumDataLength,
+                    String.format( "All vector must have at most %d bytes.", maximumDataLength ) );
+            // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
+            int lastI = -1;
+            for ( int i : vector.getDataIndices() ) {
+                Assert.isTrue( i > lastI );
+                Assert.isTrue( i < maximumDataLength );
+            }
+        }
     }
 
     /**
@@ -150,8 +166,15 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             Assert.notNull( scbad.getCellTypeLabels() );
             Assert.isTrue( scbad.getCellTypes().length == scbad.getCellIds().size(),
                     "The number of cell types must match the number of cell IDs." );
-            Assert.isTrue( scbad.getCellTypeLabels().size() == scbad.getNumberOfCellTypeLabels(),
+            int numberOfCellTypeLabels = scbad.getCellTypeLabels().size();
+            Assert.isTrue( numberOfCellTypeLabels > 0,
+                    "There must be at least one cell type label declared in the cellTypeLabels collection." );
+            Assert.isTrue( numberOfCellTypeLabels == scbad.getNumberOfCellTypeLabels(),
                     "The number of cell types must match the number of values the cellTypeLabels collection." );
+            for ( int k : scbad.getCellTypes() ) {
+                Assert.isTrue( k >= 0 && k < numberOfCellTypeLabels,
+                        String.format( "Cell type vector values must be within the [%d, %d[ range.", 0, numberOfCellTypeLabels ) );
+            }
         } else {
             Assert.isNull( scbad.getCellTypeLabels() );
             Assert.isNull( scbad.getNumberOfCellTypeLabels(), "There is no cell types assigned, the number of cell types must be null." );
