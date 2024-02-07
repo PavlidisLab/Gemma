@@ -18,7 +18,7 @@
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequence"
-                   lazy="false" fetch="join">
+                   lazy="false" fetch="select">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"
