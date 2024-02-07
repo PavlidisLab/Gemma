@@ -89,8 +89,8 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' generateDataFile ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|-q|-t|-threads|--experiment|-w|-x|--expressionQuery|-batchOutputFile|--forceWrite|-e|-f|--taxon|--excludeEEFile|-batchFormat|-eeset) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'-all' '--eeListfile' '-q' '-t' '-threads' '--experiment' '-w' '-x' '--expressionQuery' '-batchOutputFile' '--forceWrite' '--help' '-e' '-f' '--taxon' '--excludeEEFile' '-batchFormat' '-h' '-eeset'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|-q|-t|--experiment|-x|--expressionQuery|-batchOutputFile|-e|-f|--taxon|--excludeEEFile|-batchFormat|-eeset) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'-all' '--eeListfile' '-q' '-t' '--experiment' '-w' '-x' '--expressionQuery' '-batchOutputFile' '--forceWrite' '--help' '-e' '-f' '--taxon' '--excludeEEFile' '-batchFormat' '-h' '-eeset'" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|-f|--excludeEEFile|-x|-batchOutputFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -274,9 +274,9 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' makePlatformAnnotFiles ' ]]; then
         if ! [[ "$current_option" =~ (-a|--array|-mdate|-t|--adListFile|-f|-batchFormat|--taxon|-batchOutputFile|-l) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'-o' '-t' '-batchOutputFile' '--batch' '--help' '-a' '-b' '--array' '-mdate' '--adListFile' '--overwrite' '-f' '-batchFormat' '--taxon' '-h' '-auto' '-nogo' '--nogo' '-l'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dontDeleteOtherFiles' '-t' '-batchOutputFile' '--batch' '--help' '-a' '-b' '--array' '-mdate' '--adListFile' '-f' '-batchFormat' '--taxon' '-h' '-auto' '-nogo' '--nogo' '-k' '-l'" -- "$2")
         fi
-        if [[ "$current_option" =~ (--adListFile|-f|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--dontDeleteOtherFiles|--adListFile|-f|-batchOutputFile|-k) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -353,8 +353,8 @@ function __gemma_cli_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
     fi
     if [[ " $words " =~ ' blackList ' ]]; then
-        if ! [[ "$current_option" =~ (-file|-a) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'-undo' '-file' '--help' '-a' '-h' '-pp'" -- "$2")
+        if ! [[ "$current_option" =~ (-file|-a|-reason|-accession|--accession) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'-undo' '-file' '--help' '-a' '-h' '-reason' '-pp' '-accession' '--accession'" -- "$2")
         fi
         if [[ "$current_option" =~ (-file) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
