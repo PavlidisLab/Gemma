@@ -26,7 +26,7 @@
                 <param name="arrayType">int</param>
             </type>
         </property>
-        <list name="cellTypeLabels" table="SINGLE_CELL_CELL_TYPE_LABEL" fetch="select" lazy="false">
+        <list name="cellTypeLabels" table="SINGLE_CELL_CELL_TYPE_LABEL" fetch="select" lazy="false" mutable="false">
             <key foreign-key="SINGLE_CELL_CELL_TYPE_LABEL_DIMENSION_FKC">
                 <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
             </key>
@@ -38,7 +38,7 @@
         <property name="numberOfCellTypeLabels">
             <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
         </property>
-        <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select">
+        <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
             <cache usage="read-write"/>
             <key foreign-key="SINGLE_CELL_DIMENSIONS_FKC">
                 <column name="SINGLE_CELL_DIMENSIONS_FK" sql-type="BIGINT"/>
