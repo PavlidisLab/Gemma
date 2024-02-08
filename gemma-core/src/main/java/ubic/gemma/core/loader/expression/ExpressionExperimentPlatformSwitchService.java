@@ -49,6 +49,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
@@ -260,7 +261,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
             bioAssayDimensionService.remove( bioAssayDimension );
-            log.info( "Removed unused BioAssayDimension: " + bioAssayDimension.getId() );
+            log.info( "Removed unused BioAssay dimension: " + bioAssayDimension );
         }
 
         // remove any BioAssays that are not kept in the newly created dimension
@@ -272,13 +273,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     ee.getBioAssays().remove( ba );
                     ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
                     bioAssayService.remove( ba );
-                    ExpressionExperimentPlatformSwitchService.log.info( "Removed unused BioAssay: " + ba );
                     removed.add( ba );
                 }
             }
         }
 
-        log.info( "Removed " + removed.size() + " unused bioassays" );
+        if ( !removed.isEmpty() ) {
+            log.info( "Removed " + removed.size() + " unused bioassays: " + removed.stream().map( BioAssay::toString ).collect( Collectors.joining( ", " ) ) );
+        }
     }
 
     /**
