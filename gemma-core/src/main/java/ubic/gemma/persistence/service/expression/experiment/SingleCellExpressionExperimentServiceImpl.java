@@ -256,6 +256,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      */
     private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
         Assert.isTrue( !scbad.getCellIds().isEmpty(), "There must be at least one cell ID." );
+        Assert.isTrue( scbad.getCellIds().stream().distinct().count() == scbad.getCellIds().size(),
+                "Cell IDs must be unique." );
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
                 "The number of cell IDs must match the number of cells." );
         if ( scbad.getCellTypes() != null ) {
@@ -266,6 +268,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             int numberOfCellTypeLabels = scbad.getCellTypeLabels().size();
             Assert.isTrue( numberOfCellTypeLabels > 0,
                     "There must be at least one cell type label declared in the cellTypeLabels collection." );
+            Assert.isTrue( scbad.getCellTypeLabels().stream().distinct().count() == scbad.getCellTypeLabels().size(),
+                    "Cell type labels must be unique." );
             Assert.isTrue( numberOfCellTypeLabels == scbad.getNumberOfCellTypeLabels(),
                     "The number of cell types must match the number of values the cellTypeLabels collection." );
             for ( int k : scbad.getCellTypes() ) {
