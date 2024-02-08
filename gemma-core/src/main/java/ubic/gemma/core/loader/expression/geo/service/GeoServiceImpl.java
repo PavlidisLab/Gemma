@@ -18,9 +18,10 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import com.sun.scenario.Settings;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.cfg.Settings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
@@ -52,6 +53,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
+import ubic.gemma.persistence.util.SettingsConfig;
 
 import java.util.*;
 
@@ -64,7 +66,9 @@ import java.util.*;
 public class GeoServiceImpl extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
-    private static final int MINIMUM_SAMPLE_COUNT_TO_LOAD = Settings.getInt( "geo.minimumSamplesToLoad", 4 );
+
+    @Value( "${geo.minimumSamplesToLoad}")
+    private int MINIMUM_SAMPLE_COUNT_TO_LOAD;
 
     private final ArrayDesignReportService arrayDesignReportService;
     private final BioAssayService bioAssayService;
