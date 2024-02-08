@@ -131,6 +131,13 @@ public interface ExpressionExperimentService
     <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     /**
+     * Load an experiment and thaw it as per {@link #thaw(ExpressionExperiment)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThaw( Long id );
+
+    /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
      * and message.
      */
@@ -487,18 +494,6 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationTypeValueObject> getQuantitationTypeValueObjects( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Get the quantitation types for the expression experiment, for the array design specified. This is really only
-     * useful for expression experiments that use more than one array design.
-     *
-     * @param expressionExperiment experiment
-     * @param arrayDesign          platform
-     * @return quantitation type
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(

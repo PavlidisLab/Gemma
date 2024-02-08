@@ -201,7 +201,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
         log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
-      //  expressionExperimentDao.update( experiment );
+        //  expressionExperimentDao.update( experiment );
         bioMaterialService.update( result.keySet() );
 
         return result;
@@ -678,6 +678,17 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThaw( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thaw( ee );
+        }
+        return ee;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
@@ -1144,12 +1155,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
-        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
     }
 
     @Override
