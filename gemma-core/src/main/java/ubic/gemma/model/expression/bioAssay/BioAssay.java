@@ -55,6 +55,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
     /**
      * If the sample data was switched to another platform, this is what it was originally.
      */
+    @Nullable
     private ArrayDesign originalPlatform;
 
     private BioMaterial sampleUsed;
@@ -217,6 +218,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.metadata = metadata;
     }
 
+    @Nullable
     public ArrayDesign getOriginalPlatform() {
         return originalPlatform;
     }
