@@ -144,7 +144,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 "Only double is supported for single-cell data vector storage." );
         int maximumDataLength = 8 * singleCellDimension.getCellIds().size();
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            Assert.isTrue( vector.getData().length < maximumDataLength,
+            Assert.isTrue( vector.getData().length <= maximumDataLength,
                     String.format( "All vector must have at most %d bytes.", maximumDataLength ) );
             // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
             int lastI = -1;

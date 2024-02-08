@@ -370,8 +370,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             v.setDesignElement( cs );
             v.setSingleCellDimension( scd );
             v.setQuantitationType( qt );
-            v.setData( new byte[0] );
-            v.setDataIndices( new int[0] );
+            v.setData( new byte[8 * 100] );
+            int[] ix = new int[8 * 100];
+            for ( int i = 0; i < 800; i++ ) {
+                ix[i] = i;
+            }
+            v.setDataIndices( ix );
             vectors.add( v );
         }
         return vectors;
