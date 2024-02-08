@@ -100,6 +100,7 @@ pipeline {
                     branch 'hotfix-*'
                     branch 'release-*'
                     branch 'development'
+                    branch 'geo_dataset_minimum_size'
                 }
             }
             parallel {
@@ -109,6 +110,7 @@ pipeline {
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            branch 'geo_dataset_minimum_size'
                         }
                     }
                     steps {
