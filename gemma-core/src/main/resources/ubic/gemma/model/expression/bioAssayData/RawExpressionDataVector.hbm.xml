@@ -11,6 +11,7 @@
             <generator class="native">
             </generator>
         </id>
+        <!-- assumed readily available in DataVectorValueObject -->
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
                      lazy="false" fetch="select">
             <column name="BIO_ASSAY_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
