@@ -1967,6 +1967,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension ) {
+        int updatedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "update SingleCellExpressionDataVector scd set scd.singleCellDimension = :newDimension where scd.singleCellDimension = :dim" )
+                .setParameter( "dim", dimension )
+                .setParameter( "newDimension", newDimension )
+                .executeUpdate();
+        if ( updatedVectors > 0 && Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            // will reload vectors with the updated SCD
+            // if the vectors are not initialized, they will be loaded with the updated SCD when they are accessed
+            getSessionFactory().getCurrentSession().refresh( ee );
+        }
+        return updatedVectors;
+    }
+
+    @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         // the constants for aliases are messing with the inspector
         //language=HQL

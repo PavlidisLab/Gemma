@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.*;
 
-import static java.util.Collections.unmodifiableList;
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
 
 @Getter
@@ -88,10 +87,6 @@ public class SingleCellDimension implements Identifiable {
      */
     private int[] bioAssaysOffset = new int[0];
 
-    public List<String> getCellIds() {
-        return unmodifiableList( cellIds );
-    }
-
     public void setCellIds( List<String> cellIds ) {
         this.cellIds = cellIds;
         // invalidate index cache
@@ -152,13 +147,11 @@ public class SingleCellDimension implements Identifiable {
         if ( !( obj instanceof SingleCellDimension ) )
             return false;
         SingleCellDimension scd = ( SingleCellDimension ) obj;
-        if ( id != null && scd.id != null ) {
-            return Objects.equals( id, scd.id );
-        }
-        if ( id != null && ( ( SingleCellDimension ) obj ).id != null )
-            return id.equals( ( ( SingleCellDimension ) obj ).id );
+        if ( id != null && scd.id != null )
+            return id.equals( scd.id );
         return Objects.equals( cellTypeLabels, scd.cellTypeLabels )
                 && Objects.equals( bioAssays, scd.bioAssays )
+                && Arrays.equals( bioAssaysOffset, scd.bioAssaysOffset )
                 && Arrays.equals( cellTypes, scd.cellTypes )
                 && Objects.equals( cellIds, scd.cellIds );  // this is the most expensive to compare
     }

@@ -311,4 +311,13 @@ public interface ExpressionExperimentDao
     void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Replace the SCD of a given dataset.
+     * @param ee           an expression experiment; its vectors will be refreshed
+     * @param dimension    the existing dimension
+     * @param newDimension the new dimension
+     * @return the number of updated vectors as a result
+     */
+    int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension );
 }

@@ -17,7 +17,7 @@
                 <param name="delimiter">\n</param>
             </type>
         </property>
-        <property name="numberOfCells">
+        <property name="numberOfCells" type="java.lang.Integer">
             <column name="NUMBER_OF_CELLS" not-null="true" sql-type="INTEGER"/>
         </property>
         <property name="cellTypes">
@@ -35,7 +35,7 @@
                 <column name="CELL_TYPE_LABEL" sql-type="VARCHAR"/>
             </element>
         </list>
-        <property name="numberOfCellTypeLabels">
+        <property name="numberOfCellTypeLabels" type="java.lang.Integer">
             <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
         </property>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">

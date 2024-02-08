@@ -20,8 +20,10 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -186,6 +188,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().persist( ad );
         ee = new ExpressionExperiment();
         ee.setTaxon( taxon );
+        // TODO: model bioassays against sub-biomaterial to represent cell aggregates
+        BioMaterial bm = BioMaterial.Factory.newInstance( "a", taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        ee.getBioAssays().add( BioAssay.Factory.newInstance( "a", ad, bm ) );
+        ee.getBioAssays().add( BioAssay.Factory.newInstance( "b", ad, bm ) );
+        ee.getBioAssays().add( BioAssay.Factory.newInstance( "c", ad, bm ) );
+        ee.getBioAssays().add( BioAssay.Factory.newInstance( "d", ad, bm ) );
         ee = expressionExperimentDao.create( ee );
     }
 
@@ -323,6 +332,24 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataRemovedEvent.class ), any() );
     }
 
+    @Test
+    public void testRelabelCellTypes() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
+        sessionFactory.getCurrentSession().flush();
+        String[] ct = new String[100];
+        for ( int i = 0; i < ct.length; i++ ) {
+            ct[i] = i < 75 ? "A" : "B";
+        }
+        SingleCellDimension newScd = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ) );
+        assertThat( newScd.getId() ).isNotNull();
+        assertThat( ee.getSingleCellExpressionDataVectors() )
+                .hasSize( 10 )
+                .allSatisfy( v -> assertThat( v.getSingleCellDimension() ).isEqualTo( newScd ) );
+    }
+
     private SingleCellDimension createSingleCellDimension() {
         SingleCellDimension scd = new SingleCellDimension();
         scd.setCellIds( IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.randomAlphanumeric( 10 ) ).collect( Collectors.toList() ) );
@@ -334,6 +361,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scd.setCellTypes( ct );
         scd.setCellTypeLabels( Arrays.asList( "A", "B" ) );
         scd.setNumberOfCellTypeLabels( 2 );
+        scd.getBioAssays().addAll( ee.getBioAssays() );
+        scd.setBioAssaysOffset( new int[] { 0, 25, 50, 75 } );
         return scd;
     }
 

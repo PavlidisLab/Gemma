@@ -83,7 +83,7 @@ public class ByteArrayType implements UserType, ParameterizedType {
 
     @Override
     public Object nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
-        byte[] data = lobHandler.getBlobAsBytes( rs, 0 );
+        byte[] data = lobHandler.getBlobAsBytes( rs, names[0] );
         if ( data != null ) {
             switch ( arrayType ) {
                 case INT:

@@ -36,4 +36,11 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
+
+    /**
+     * Relabel the cell types of an existing set of single-cell vectors.
+     * @return a new dimension with the relabeled cell types, the original one is deleted
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    SingleCellDimension relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels );
 }

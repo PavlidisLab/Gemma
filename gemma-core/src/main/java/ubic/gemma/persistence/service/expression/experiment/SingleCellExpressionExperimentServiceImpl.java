@@ -20,6 +20,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -155,34 +156,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
     }
 
-    /**
-     * Validate single-cell dimension.
-     */
-    private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
-        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
-                "The number of cell IDs must match the number of cells." );
-        if ( scbad.getCellTypes() != null ) {
-            Assert.notNull( scbad.getNumberOfCellTypeLabels() );
-            Assert.notNull( scbad.getCellTypeLabels() );
-            Assert.isTrue( scbad.getCellTypes().length == scbad.getCellIds().size(),
-                    "The number of cell types must match the number of cell IDs." );
-            int numberOfCellTypeLabels = scbad.getCellTypeLabels().size();
-            Assert.isTrue( numberOfCellTypeLabels > 0,
-                    "There must be at least one cell type label declared in the cellTypeLabels collection." );
-            Assert.isTrue( numberOfCellTypeLabels == scbad.getNumberOfCellTypeLabels(),
-                    "The number of cell types must match the number of values the cellTypeLabels collection." );
-            for ( int k : scbad.getCellTypes() ) {
-                Assert.isTrue( k >= 0 && k < numberOfCellTypeLabels,
-                        String.format( "Cell type vector values must be within the [%d, %d[ range.", 0, numberOfCellTypeLabels ) );
-            }
-        } else {
-            Assert.isNull( scbad.getCellTypeLabels() );
-            Assert.isNull( scbad.getNumberOfCellTypeLabels(), "There is no cell types assigned, the number of cell types must be null." );
-        }
-        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
-    }
-
     @Override
     @Transactional
     public void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
@@ -247,5 +220,64 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensions( ee );
+    }
+
+    @Override
+    @Transactional
+    public SingleCellDimension relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels ) {
+        Assert.notNull( ee.getId(), "Dataset must be persistent." );
+        Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
+        SingleCellDimension newDimension = new SingleCellDimension();
+        newDimension.getCellIds().addAll( dimension.getCellIds() );
+        newDimension.setNumberOfCells( dimension.getNumberOfCells() );
+        newDimension.getBioAssays().addAll( dimension.getBioAssays() );
+        newDimension.setBioAssaysOffset( dimension.getBioAssaysOffset() );
+        int[] ct = new int[dimension.getCellIds().size()];
+        List<String> labels = newCellTypeLabels.stream().sorted().distinct().collect( Collectors.toList() );
+        for ( int i = 0; i < ct.length; i++ ) {
+            ct[i] = Collections.binarySearch( labels, newCellTypeLabels.get( i ) );
+        }
+        newDimension.setCellTypes( ct );
+        newDimension.setCellTypeLabels( labels );
+        newDimension.setNumberOfCellTypeLabels( labels.size() );
+        validateSingleCellDimension( ee, newDimension );
+        expressionExperimentDao.createSingleCellDimension( ee, newDimension );
+        int updatedVectors = expressionExperimentDao.replaceSingleCellDimension( ee, dimension, newDimension );
+        if ( updatedVectors == 0 ) {
+            throw new IllegalStateException( "There are no vectors with the dimension: " + dimension + ", cannot relabel cell types." );
+        }
+        expressionExperimentDao.deleteSingleCellDimension( ee, dimension );
+        log.info( "Relabelled " + updatedVectors + " single-cell vectors for " + ee + " with new dimension: " + newDimension );
+        return newDimension;
+    }
+
+    /**
+     * Validate single-cell dimension.
+     */
+    private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
+        Assert.isTrue( !scbad.getCellIds().isEmpty(), "There must be at least one cell ID." );
+        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
+                "The number of cell IDs must match the number of cells." );
+        if ( scbad.getCellTypes() != null ) {
+            Assert.notNull( scbad.getNumberOfCellTypeLabels() );
+            Assert.notNull( scbad.getCellTypeLabels() );
+            Assert.isTrue( scbad.getCellTypes().length == scbad.getCellIds().size(),
+                    "The number of cell types must match the number of cell IDs." );
+            int numberOfCellTypeLabels = scbad.getCellTypeLabels().size();
+            Assert.isTrue( numberOfCellTypeLabels > 0,
+                    "There must be at least one cell type label declared in the cellTypeLabels collection." );
+            Assert.isTrue( numberOfCellTypeLabels == scbad.getNumberOfCellTypeLabels(),
+                    "The number of cell types must match the number of values the cellTypeLabels collection." );
+            for ( int k : scbad.getCellTypes() ) {
+                Assert.isTrue( k >= 0 && k < numberOfCellTypeLabels,
+                        String.format( "Cell type vector values must be within the [%d, %d[ range.", 0, numberOfCellTypeLabels ) );
+            }
+        } else {
+            Assert.isNull( scbad.getCellTypeLabels() );
+            Assert.isNull( scbad.getNumberOfCellTypeLabels(), "There is no cell types assigned, the number of cell types must be null." );
+        }
+        Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
+        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
     }
 }
