@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import com.sun.scenario.Settings;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,6 +64,7 @@ import java.util.*;
 public class GeoServiceImpl extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
+    private static final int MINIMUM_SAMPLE_COUNT_TO_LOAD = Settings.getInt( "geo.minimumSamplesToLoad", 4 );
 
     private final ArrayDesignReportService arrayDesignReportService;
     private final BioAssayService bioAssayService;
@@ -319,7 +321,7 @@ public class GeoServiceImpl extends AbstractGeoService {
          */
         if ( result.isEmpty() ) {
             throw new IllegalStateException( "No result from fetching and coversion of " + geoAccession );
-        } else if (result.size() > 1) {
+        } else if ( result.size() > 1 ) {
             throw new IllegalStateException( "Got more than one result from fetching and coversion of " + geoAccession );
         }
 
@@ -391,14 +393,19 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     private void check( ExpressionExperiment ee ) {
         if ( ee.getBioAssays().isEmpty() ) {
-            throw new IllegalStateException( "Experiment has no bioassays " + ee );
+            throw new IllegalStateException( "Experiment has no bioassays " + ee.getShortName() );
+        }
+
+        if ( ee.getBioAssays().size() < MINIMUM_SAMPLE_COUNT_TO_LOAD ) {
+            throw new IllegalStateException( "Experiment has too few bioassays "
+                    + ee.getShortName() + ", has " + ee.getBioAssays().size() + ", minimum is  " + MINIMUM_SAMPLE_COUNT_TO_LOAD );
         }
 
         if ( ee.getRawExpressionDataVectors().size() == 0 ) {
             /*
              * This is okay if the platform is MPSS or Exon arrays for which we load data later.
              */
-            AbstractGeoService.log.warn( "Experiment has no data vectors (this might be expected): " + ee );
+            AbstractGeoService.log.warn( "Experiment has no data vectors (this might be expected): " + ee.getShortName() );
         }
 
     }
@@ -449,7 +456,7 @@ public class GeoServiceImpl extends AbstractGeoService {
                     "Data set is for unsupported taxa (" + StringUtils.join( unsupportedTaxa, ";" ) + ")" + series );
         }
 
-        if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */ ) {
+        if ( series.getSamples().size() < MINIMUM_SAMPLE_COUNT_TO_LOAD ) {
             throw new IllegalStateException(
                     "After removing samples from unsupported taxa, this data set is too small to load: " + series
                             .getSamples().size() + " left (removed " + toSkip.size() + ")" );
