@@ -26,23 +26,14 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    def pom = readMavenPom()
-                    testdbUrl = pom.properties['gemma.testdb.build.url']
-                    gemmaVersion = pom.version
+                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
+                    gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
+                    baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
-                    }
-                    for (dep in pom.dependencies) {
-                        if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
-                            baseCodeVersion = dep.version
-                            break
-                        }
-                    }
-                    if (baseCodeVersion == null) {
-                        error('The baseCode dependency was not found in pom.xml.')
                     }
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData'
@@ -112,7 +103,7 @@ pipeline {
                 }
             }
             parallel {
-                stage('Run slow unit tests') {
+                stage('Run slow unit tests and integration tests') {
                     when {
                         anyOf {
                             branch 'hotfix-*'
@@ -121,40 +112,15 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "Slow tests", "Slow tests for #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
-                    }
-                    post {
-                        always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
-                        }
-                        success {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                        }
-                        failure {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                        }
-                    }
-                }
-                stage('Run integration tests') {
-                    when {
-                        anyOf {
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
-                    steps {
-                        setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
                         }
                     }
                     post {
                         always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
