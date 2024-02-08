@@ -524,6 +524,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from ProcessedExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
+                                + "join dev.designElement de "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
                 .setParameter( "ad", arrayDesign )
