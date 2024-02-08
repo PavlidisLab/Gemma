@@ -140,6 +140,13 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
             bm.setName( name );
             return bm;
         }
+
+        public static BioMaterial newInstance( String name, Taxon taxon ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setName( name );
+            bm.setSourceTaxon( taxon );
+            return bm;
+        }
     }
 
 }

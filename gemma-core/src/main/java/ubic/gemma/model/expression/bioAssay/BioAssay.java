@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
@@ -54,6 +55,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
     /**
      * If the sample data was switched to another platform, this is what it was originally.
      */
+    @Nullable
     private ArrayDesign originalPlatform;
 
     private BioMaterial sampleUsed;
@@ -68,22 +70,13 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
 
     @Override
     public int hashCode() {
-        int hashCode;
-
-        if ( this.getId() != null ) {
-            return 29 * this.getId().hashCode();
-        }
-        int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
-
-        int descHash = this.getDescription() == null ? 0 : this.getDescription().hashCode();
-        hashCode = 29 * nameHash + descHash;
-
-        return hashCode;
+        return Objects.hash( getName() );
     }
 
     @Override
     public boolean equals( Object object ) {
-
+        if ( this == object )
+            return true;
         if ( !( object instanceof BioAssay ) ) {
             return false;
         }
@@ -225,6 +218,7 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         this.metadata = metadata;
     }
 
+    @Nullable
     public ArrayDesign getOriginalPlatform() {
         return originalPlatform;
     }
@@ -253,6 +247,14 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
         public static BioAssay newInstance( String name ) {
             BioAssay ba = new BioAssay();
             ba.setName( name );
+            return ba;
+        }
+
+        public static BioAssay newInstance( String name, ArrayDesign arrayDesignUsed, BioMaterial sampleUsed ) {
+            BioAssay ba = new BioAssay();
+            ba.setName( name );
+            ba.setArrayDesignUsed( arrayDesignUsed );
+            ba.setSampleUsed( sampleUsed );
             return ba;
         }
     }

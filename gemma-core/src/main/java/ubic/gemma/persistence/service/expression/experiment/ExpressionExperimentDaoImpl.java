@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -1942,6 +1943,42 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( br.getKeywords() );
             Hibernate.initialize( br.getChemicals() );
         }
+    }
+
+    @Override
+    public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee "
+                        + "group by scedv.singleCellDimension" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
+    public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        getSessionFactory().getCurrentSession().persist( singleCellDimension );
+    }
+
+    @Override
+    public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension ) {
+        int updatedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "update SingleCellExpressionDataVector scd set scd.singleCellDimension = :newDimension where scd.singleCellDimension = :dim" )
+                .setParameter( "dim", dimension )
+                .setParameter( "newDimension", newDimension )
+                .executeUpdate();
+        if ( updatedVectors > 0 && Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            // will reload vectors with the updated SCD
+            // if the vectors are not initialized, they will be loaded with the updated SCD when they are accessed
+            getSessionFactory().getCurrentSession().refresh( ee );
+        }
+        return updatedVectors;
     }
 
     @Override

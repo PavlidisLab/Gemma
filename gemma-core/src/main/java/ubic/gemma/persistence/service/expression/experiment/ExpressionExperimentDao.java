@@ -12,6 +12,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -304,4 +305,19 @@ public interface ExpressionExperimentDao
      * The result is stored in the standard query cache.
      */
     long countBioMaterials( @Nullable Filters filters );
+
+    List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
+
+    void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Replace the SCD of a given dataset.
+     * @param ee           an expression experiment; its vectors will be refreshed
+     * @param dimension    the existing dimension
+     * @param newDimension the new dimension
+     * @return the number of updated vectors as a result
+     */
+    int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension );
 }
