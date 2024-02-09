@@ -485,6 +485,8 @@
 				<configuration>
 					<skipTestProject>true</skipTestProject>
 					<versionDigitToIncrement>1</versionDigitToIncrement>
+					<useSnapshotInHotfix>true</useSnapshotInHotfix>
+					<useSnapshotInRelease>true</useSnapshotInRelease>
 				</configuration>
 			</plugin>
 			<plugin>
