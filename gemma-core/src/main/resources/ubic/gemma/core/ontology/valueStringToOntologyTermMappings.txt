@@ -13,7 +13,7 @@ A549	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.
 A549 cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 A549 epithelial cells	A549 cell	http://purl.obolibrary.org/obo/CLO_0001601	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 abdominal subcutaneous adipose tissue	subcutaneous abdominal adipose tissue	http://purl.obolibrary.org/obo/UBERON_0014455	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-ActD	actinomycin D	http://purl.obolibrary.org/obo/CHEBI_27666	treatment	http://www.ebi.ac.uk/efo/EFO_0000408
+ActD	actinomycin D	http://purl.obolibrary.org/obo/CHEBI_27666	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 active tuberculosis	tuberculosis	http://purl.obolibrary.org/obo/MONDO_0018076	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Acute hippocampal slice	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Acute Lymphoblastic Leukemia (ALL)	acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/MONDO_0004967	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -244,8 +244,8 @@ frozen tissue of ovarian tumors	ovarian cancer	http://purl.obolibrary.org/obo/MO
 frozen tissue of primary breast tumors	breast cancer	http://purl.obolibrary.org/obo/MONDO_0007254	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 full-thickness colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 fvb	FVB	http://www.ebi.ac.uk/efo/EFO_0022483	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-fvb/n	FVB/N	http://www.ebi.ac.uk/efo/EFO_0022467	strain	http://www.ebi.ac.uk/efo/EFO_0005137
-fvb/nj	FVB/NJ	http://www.ebi.ac.uk/efo/EFO_0007728	strain	http://www.ebi.ac.uk/efo/EFO_0005136
+fvb/n	FVB/N	http://www.ebi.ac.uk/efo/EFO_0022467	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+fvb/nj	FVB/NJ	http://www.ebi.ac.uk/efo/EFO_0007728	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 gactrocnemius muscle	gastrocnemius	http://purl.obolibrary.org/obo/UBERON_0001388	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 gastric adenocarcinoma	gastric adenocarcinoma	http://purl.obolibrary.org/obo/MONDO_0005036	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 gastric cancer	gastric cancer	http://purl.obolibrary.org/obo/MONDO_0001056	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -465,7 +465,7 @@ parietal cortex	parietal cortex	http://purl.obolibrary.org/obo/UBERON_0016530	or
 Parkinson's Disease	Parkinson disease	http://purl.obolibrary.org/obo/MONDO_0005180	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Patient Primary Pancreatic Tumor	malignant pancreatic neoplasm	http://purl.obolibrary.org/obo/MONDO_0009831	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Patient-matched nontumor control	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-PBMC	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000635
+PBMC	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PBMCs	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PBMCs from peripheral blood	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 PDAC	pancreatic ductal adenocarcinoma	http://purl.obolibrary.org/obo/MONDO_0005184	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -579,7 +579,7 @@ spinal cord	spinal cord	http://purl.obolibrary.org/obo/UBERON_0002240	organism p
 spiny projection neurons	pyramidal neuron	http://purl.obolibrary.org/obo/CL_0000598	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 spleen	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Spleen Cell Cultures	spleen	http://purl.obolibrary.org/obo/UBERON_0002106	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-sprague dawley	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005138
+sprague dawley	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Sprague-Dawley	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Sprague-Dawley (SD)	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Sprague-Dawley rat	Sprague Dawley	http://www.ebi.ac.uk/efo/EFO_0001352	strain	http://www.ebi.ac.uk/efo/EFO_0005135
@@ -618,7 +618,7 @@ thymus	thymus	http://purl.obolibrary.org/obo/UBERON_0002370	organism part	http:/
 thyroid	thyroid gland	http://purl.obolibrary.org/obo/UBERON_0002046	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Tibialis anterior muscle	tibialis anterior	http://purl.obolibrary.org/obo/UBERON_0001385	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 TK6	TK6 cell	http://purl.obolibrary.org/obo/CLO_0009357	cell line	http://purl.obolibrary.org/obo/CLO_0000031
-total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://purl.obolibrary.org/obo/CL_0000233
+total RNA	total RNA	http://www.ebi.ac.uk/efo/EFO_0004964	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
 trabecular bone	trabecular bone tissue	http://purl.obolibrary.org/obo/UBERON_0002483	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 trachea	trachea	http://purl.obolibrary.org/obo/UBERON_0003126	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 triple-negative breast cancer	triple-negative breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0005494	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -670,7 +670,7 @@ Whole visceral adipose tissue	visceral abdominal adipose tissue	http://purl.obol
 whole-blood	blood	http://purl.obolibrary.org/obo/UBERON_0000178	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 wild type	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 wildtype	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
-wistar	Wistar	http://www.ebi.ac.uk/efo/EFO_0001342	strain	http://www.ebi.ac.uk/efo/EFO_0005139
+wistar	Wistar	http://www.ebi.ac.uk/efo/EFO_0001342	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Wistar rat	Wistar	http://www.ebi.ac.uk/efo/EFO_0001342	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 zebularine	zebularine	http://purl.obolibrary.org/obo/CHEBI_46938	treatment	http://www.ebi.ac.uk/efo/EFO_0000727

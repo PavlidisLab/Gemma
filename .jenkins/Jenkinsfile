@@ -26,23 +26,14 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    def pom = readMavenPom()
-                    testdbUrl = pom.properties['gemma.testdb.build.url']
-                    gemmaVersion = pom.version
+                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
+                    gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
+                    baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
                     if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
-                    }
-                    for (dep in pom.dependencies) {
-                        if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
-                            baseCodeVersion = dep.version
-                            break
-                        }
-                    }
-                    if (baseCodeVersion == null) {
-                        error('The baseCode dependency was not found in pom.xml.')
                     }
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData'

@@ -77,6 +77,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         options.addOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION, false, "Migrate remaining factor values that weren't mentioned in the migration file." );
         options.addOption( MIGRATE_NON_TRIVIAL_CASES_OPTION, false, "Migrate non-trivial cases (i.e. 2 or more old-style characteristics) to subject-only statements. The affected factor values will be marked as needs attention." );
         options.addOption( NOOP_OPTION, false, "Only validate migrations; no statements will be saved" );
+        addBatchOption( options );
     }
 
     @Value

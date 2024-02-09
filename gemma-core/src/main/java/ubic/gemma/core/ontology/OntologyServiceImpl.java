@@ -458,7 +458,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public OntologyTerm getTerm( String uri ) {
-        return findFirst( ontology -> ontology.getTerm( uri ) );
+        return findFirst( ontology -> {
+            OntologyTerm term = ontology.getTerm( uri );
+            // some terms mentioned, but not declared in some ontologies (see https://github.com/PavlidisLab/Gemma/issues/998)
+            // FIXME: baseCode should return null if there is no <rdfs:label/>, not default the local name or URI
+            if ( term != null && ( term.getLabel() == null || term.getLabel().equals( term.getUri() ) ) ) {
+                return null;
+            }
+            return term;
+        } );
     }
 
     @Override

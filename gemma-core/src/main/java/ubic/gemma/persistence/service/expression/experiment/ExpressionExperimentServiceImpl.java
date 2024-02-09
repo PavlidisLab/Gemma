@@ -73,6 +73,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
@@ -103,6 +104,8 @@ public class ExpressionExperimentServiceImpl
     private AuditEventService auditEventService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
@@ -155,7 +158,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
+    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
@@ -168,7 +171,40 @@ public class ExpressionExperimentServiceImpl
             }
         }
         expressionExperimentDao.update( experiment );
+        return fv;
+    }
 
+
+    @Override
+    @Transactional
+    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
+        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
+        Map<BioMaterial, FactorValue> result = new HashMap<>();
+        int count = 0;
+        for ( BioMaterial bm : fvs.keySet() ) {
+            FactorValue fv = fvs.get( bm );
+            fv.setSecurityOwner( experiment );
+            fv = this.factorValueService.create( fv );
+
+            for ( ExperimentalFactor ef : efs ) {
+                if ( fv.getExperimentalFactor().equals( ef ) ) {
+                    ef.getFactorValues().add( fv );
+                    break;
+                }
+            }
+            bm.getFactorValues().add( fv );
+            result.put( bm, fv );
+            ++count;
+            if ( count % 50 == 0 ) {
+                log.info( "Processed: " + count + " biomaterials for new factor values" );
+            }
+        }
+        log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
+        //  expressionExperimentDao.update( experiment );
+        bioMaterialService.update( result.keySet() );
+
+        return result;
     }
 
     @Override
@@ -642,6 +678,17 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThaw( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thaw( ee );
+        }
+        return ee;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
@@ -745,6 +792,8 @@ public class ExpressionExperimentServiceImpl
      */
     private Set<String> inferTermsUris( Collection<String> termUris ) {
         Set<String> excludedTermUris = new HashSet<>( termUris );
+        // null is a special indicator for free-text terms or categories
+        excludedTermUris.remove( FREE_TEXT );
         // expand exclusions with implied terms via subclass relation
         Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
         // exclude terms using the subClass relation
@@ -1106,12 +1155,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd ) {
-        return this.expressionExperimentDao.getQuantitationTypes( ee, oldAd );
     }
 
     @Override

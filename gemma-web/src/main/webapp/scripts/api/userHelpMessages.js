@@ -390,7 +390,9 @@ Gemma.HelpText.WidgetDefaults = {
 	ExperimentalFactorAddWindow: {
 		descriptionEmptyText: "A short phrase such as 'control vs. drug'",
 		descriptionUnique: "Description must be unique among factors",
-		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked."
+		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked.",
+		makeFromExistingCharacteristicTT : "Optional: Select an existing 'raw' BioMaterial Characteristic to prepopulate the new factor with." +
+			 "If you check 'continuous', the values will be intereprted as numbers."
 	},
 	// ExperimentalFactorChooserPanel : {
 	// helpTitle : "Help for factor choose",

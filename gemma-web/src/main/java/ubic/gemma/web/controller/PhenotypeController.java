@@ -217,7 +217,6 @@ public class PhenotypeController extends BaseController {
         return this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
     }
 
-    @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
     public ModelAndView showAllPhenotypes( HttpServletRequest request ) {
         ModelAndView mav = new ModelAndView( "phenotypes" );
 
@@ -228,12 +227,10 @@ public class PhenotypeController extends BaseController {
         return mav;
     }
 
-    @RequestMapping(value = "/neurocartaStatistics.html", method = RequestMethod.GET)
     public ModelAndView showNeurocartaStatistics() {
         return new ModelAndView( "neurocartaStatistics" );
     }
 
-    @RequestMapping(value = "/phenotypeAssociationManager.html", method = RequestMethod.GET)
     public ModelAndView showPhenotypeAssociationManager() {
         return new ModelAndView( "phenotypeAssociationManager" );
     }

@@ -67,7 +67,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     }
 
     @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions( Options options ) {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
                 .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
@@ -81,6 +80,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
 
         this.addDateOption( options );
         this.addAutoOption( options );
+        this.addBatchOption( options );
     }
 
     @Override

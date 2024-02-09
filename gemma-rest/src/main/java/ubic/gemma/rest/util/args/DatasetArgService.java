@@ -68,7 +68,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             }
         }
         if ( excludeFreeText ) {
-            result.add( null );
+            result.add( ExpressionExperimentService.FREE_TEXT );
         }
         if ( excludeUncategorizedTerms ) {
             result.add( ExpressionExperimentService.UNCATEGORIZED );

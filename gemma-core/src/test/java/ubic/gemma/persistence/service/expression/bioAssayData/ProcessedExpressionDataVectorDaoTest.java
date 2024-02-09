@@ -187,7 +187,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     private static void checkVectorInitializationBeforeThaw( ProcessedExpressionDataVector vector ) {
         assertThat( Hibernate.isInitialized( vector ) ).isTrue();
         assertThat( Hibernate.isInitialized( vector.getExpressionExperiment() ) ).isFalse();
-        assertThat( Hibernate.isInitialized( vector.getBioAssayDimension() ) ).isFalse();
+        assertThat( Hibernate.isInitialized( vector.getBioAssayDimension() ) ).isTrue();
         assertThat( Hibernate.isInitialized( vector.getDesignElement() ) ).isTrue();
         assertThat( Hibernate.isInitialized( vector.getDesignElement().getBiologicalCharacteristic() ) ).isTrue();
         assertThat( Hibernate.isInitialized( vector.getQuantitationType() ) ).isTrue();

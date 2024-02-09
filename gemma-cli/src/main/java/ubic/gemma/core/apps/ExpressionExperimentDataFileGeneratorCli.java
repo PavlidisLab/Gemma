@@ -42,7 +42,7 @@ import java.util.concurrent.Callable;
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
+    private static final String DESCRIPTION = "Generate analysis text files (diff expression)";
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
@@ -86,11 +86,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
+        Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
-        this.addThreadsOption( options );
         options.addOption( forceWriteOption );
     }
 
@@ -112,7 +111,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
 
-            expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
+            //expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
