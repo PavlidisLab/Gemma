@@ -135,25 +135,11 @@ pipeline {
                     }
                 }
                 stage('Deploy artifacts') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'development'
-                        }
-                    }
                     steps {
                         sh 'mvn -B deploy -DskipTests'
                     }
                 }
                 stage ('Deploy Maven website') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
                     steps {
                         sh 'mvn -B site-deploy'
                         sh "ln -Tsf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
