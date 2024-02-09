@@ -82,6 +82,8 @@
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
 				<prop key="hibernate.search.lucene_version">LUCENE_36</prop>
 				<prop key="hibernate.search.default.indexBase">${gemma.search.dir}</prop>
+				<!-- prevents Hibernate from obtaining a JDBC connection when initializing; this is not stable -->
+				<prop key="hibernate.temp.use_jdbc_metadata_defaults">${gemma.hibernate.use_jdbc_metadata_defaults}</prop>
 			</props>
 		</property>
 	</bean>

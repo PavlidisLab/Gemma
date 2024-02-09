@@ -99,10 +99,20 @@ public class SpringContextUtil {
     public static void prepareContext( ApplicationContext context ) {
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
+            if ( cac.isActive() ) {
+                throw new IllegalStateException( "The context is already active! This method can only be invoked prior to calling refresh()." );
+            }
             if ( !cac.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
                 log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
                 cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
             }
+        }
+        if ( context.getEnvironment().acceptsProfiles( SpringProfiles.NODB ) ) {
+            // This prevents Hibernate from trying to connect to the database to get sensible defaults
+            // The value is picked up by SettingsConfig and then substituted in applicationContext-hibernate.xml as a
+            // property placeholder
+            // FIXME: use the profile to set this property instead
+            System.setProperty( "gemma.hibernate.use_jdbc_metadata_defaults", "false" );
         }
         BuildInfo buildInfo = BuildInfo.fromSettings();
         SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",

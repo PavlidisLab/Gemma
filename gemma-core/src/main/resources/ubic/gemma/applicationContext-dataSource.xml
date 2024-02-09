@@ -36,6 +36,12 @@
         </bean>
     </beans>
 
+    <beans profile="nodb">
+        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+            <!-- intentionally left blank -->
+        </bean>
+    </beans>
+
     <beans profile="production">
         <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
             <property name="host" value="${mail.host}"/>

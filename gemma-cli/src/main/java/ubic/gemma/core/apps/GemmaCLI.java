@@ -52,6 +52,7 @@ public class GemmaCLI {
             HELP_ALL_OPTION = "ha",
             COMPLETION_OPTION = "c",
             COMPLETION_SHELL_OPTION = "cs",
+            NODB_OPTION = "nodb",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -81,6 +82,7 @@ public class GemmaCLI {
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
                 .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
+                .addOption( NODB_OPTION, "nodb", false, String.format( "Enable the %s profile which prevents database access; not all commands support this option", SpringProfiles.NODB ) )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -153,6 +155,13 @@ public class GemmaCLI {
         // check for the -testing/--testing flag to load the appropriate application context
         if ( commandLine.hasOption( TESTING_OPTION ) ) {
             profiles.add( SpringProfiles.TEST );
+        }
+
+        // this profile will ensure that no database connection is used during application initialization, making
+        // --help-all, 'subcommand --help' and --complete work even if the database is down
+        if ( commandLine.hasOption( HELP_ALL_OPTION ) || commandLine.hasOption( COMPLETION_OPTION ) || commandLine.hasOption( NODB_OPTION )
+                || commandLine.getArgList().contains( "-help" ) || commandLine.getArgList().contains( "--help" ) ) {
+            profiles.add( SpringProfiles.NODB );
         }
 
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );

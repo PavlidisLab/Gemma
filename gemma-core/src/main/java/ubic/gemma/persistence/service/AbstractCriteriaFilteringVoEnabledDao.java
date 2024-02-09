@@ -8,14 +8,12 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.internal.CriteriaImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.FilterCriteriaUtils;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -37,6 +35,9 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
     @Autowired
     private PlatformTransactionManager platformTransactionManager;
+
+    @Autowired
+    private Environment environment;
 
     /**
      * List of aliases used in the criteria query from {@link #getFilteringCriteria(Filters)}.
@@ -281,6 +282,11 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     }
 
     private List<FilterablePropertyCriteriaAlias> getFilterablePropertyCriteriaAliases() {
+        if ( environment.acceptsProfiles( SpringProfiles.NODB ) ) {
+            log.debug( String.format( "The %s profile is active, will not lookup the database for criteria aliases for %s.",
+                    SpringProfiles.NODB, elementClass ) );
+            return Collections.emptyList();
+        }
         // FIXME: unfortunately, this requires a session...
         Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getFilteringCriteria( Filters.empty() ) );
         if ( criteria instanceof CriteriaImpl ) {
