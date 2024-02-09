@@ -123,8 +123,8 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         @Override
         public void afterPropertiesSet() {
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-acls.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-entities.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-indices.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/h2/init-entities.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/h2/init-indices.sql" ), false );
         }
     }
 }
