@@ -1,0 +1,1312 @@
+h2. EXPERIMENT
+
+[addGEOData] - Load data from GEO
+[addTSVData] - Load an experiment from a tab-delimited file instead of GEO
+[affyFromCel] - Reanalyze Affymetrix data from CEL files, if available; affy-power-tools must be configured.
+[coexpAnalyze] - Analyze expression data sets for coexpressed genes
+[corrMat] - Create or update sample correlation matrices for expression experiments
+[deleteDiffEx] - Delete differential expression analyses for experiment(s) from the system
+[deleteExperiments] - Delete experiments or platforms from the system
+[diffExAnalyze] - Analyze expression data sets for differentially expressed genes.
+[fillBatchInfo] - Populate the batch information for experiments (if possible)
+[findDatasetPubs] - Identify experiments that have no publication in Gemma and try to fill it in.
+[generateDataFile] - Generate analysis text files (diff expression, co-expression)
+[getDataMatrix] - Prints preferred data matrix to a file; gene information is included if available.
+[importDesign] - Import an experimental design
+[makePrivate] - Make experiments private
+[makeProcessedData] - Performs preprocessing. Optionally can do only selected processing steps including batch correction, rank computation and diagnostic computation
+[makePublic] - Make experiments public
+[pca] - Run PCA (using SVD) on data sets
+[printExperimentalDesign] - Prints experimental design to a file in a R-friendly format
+[pubmedAssociateToExperiments] - Set or update the primary publication for experiments by fetching from GEO
+[replaceData] - Replace expression data for non-Affymetrix and non-RNA-seq data sets
+[rnaseqBatchInfo] - Load RNASeq batch information; header files expected to be in structure like ${gemma.fastq.headers.dir}/GSExxx/GSMxxx/SRRxxx.fastq.header
+[rnaseqDataAdd] - Add expression quantifiation to an RNA-seq experiment
+[runGeeq] - Generate or update GEEQ scores
+[splitExperiment] - Split an experiment into parts based on an experimental factor
+[switchExperimentPlatform] - Switch an experiment to a different array design (usually a merged one)
+[vectorMerge] - For experiments that used multiple array designs, merge the expression profiles
+
+h2. PLATFORM
+
+[adATcleanup] - No description provided
+[addPlatformSequences] - Attach sequences to array design, from a file or fetching from BLAST database.
+[affyCollapse] - No description provided
+[blatPlatform] - Run BLAT on the sequences for a platform; the results are persisted in the DB.
+[deletePlatformElements] - No description provided
+[detachSequences] - Remove all associations that a platform has with sequences, for cases where imported data had wrong associations. Also can be used to delete sequences associated with a platform (use very carefully as sequences can be shared by platforms)
+[genericPlatform] - Update a 'platform' based on a list of NCBI IDs
+[makePlatformAnnotFiles] - Generate annotation files for platforms.
+[mapPlatformToGenes] - Process the BLAT results for an array design to map them onto genes
+[mergePlatforms] - Make a new array design that combines the reporters from others.
+[platformRepeatScan] - Run RepeatMasker on sequences for an Array design
+[platformSubsumptionTest] - Test microarray designs to see if one subsumes other(s) (in terms of probe sequences), and if so update their information
+[probeRename] - No description provided
+[seqCleanup] - Examines biosequences for array designs in the database and removes duplicates.
+
+h2. ANALYSIS
+
+[dumpForNIF] - Generate views of the database in flat files
+[listGEOData] - Grab information on GEO data sets not yet in the system, working backwards in time
+[platformMapSummary] - No description provided
+[viewExpDesigns] - Dump a view of experimental design(s)
+
+h2. METADATA
+
+[affyAltsUpdate] - Populate the 'alternative' information for Affymetrix platforms
+[blackList] - Add GEO entities (series or platforms) to the blacklist
+[findObsoleteTerms] - Check for characteristics using obsolete terms as values (excluding GO), prints to sdout
+[updatePubMeds] - Refresh stored information on publications
+
+h2. PHENOTYPES
+
+[ctdDownload] - Creates a .tsv file of lines of evidence from CTD, to be used with evidenceImport to import into Phenocarta.
+[deletePhenotypes] - Use to remove all evidence from an external database, usually to reimport them after
+[dgaDownload] - Creates a .tsv file of lines of evidence from DGA, to be used with evidenceImport to import into Phenocarta.
+[evidenceImport] - Import gene-phenotype information from any of the supported sources (via files created with the appropriate source-specific CLI)
+[gwasDownload] - Creates a .tsv file of lines of evidence from GWAS publications, to be used with evidenceImport to import into Phenocarta.
+[loadEvidenceForClassifier] - No description provided
+[omimDownload] - Creates a .tsv file of lines of evidence from OMIM, to be used with evidenceImport to import into Phenocarta.
+[rgdDownload] - Creates a .tsv file of lines of evidence from RGD, to be used with evidenceImport to import into Phenocarta.
+[sfariDownload] - Creates a .tsv file of lines of evidence from SFARI, to be used with evidenceImport to import into Phenocarta. Requires input files be downloaded manually first.
+
+h2. SYSTEM
+
+[addExternalDatabase] - Add a new external database.
+[geneUpdate] - Load/update gene information from NCBI
+[loadGenesFromFile] - loading genes from a non-NCBI files; only used for species like salmon
+[searchIndex] - Create or update the searchable indexes for a Gemma production system
+[updateExternalDatabase] - Update an external database and optionally perform a release.
+[updateGOAnnots] - Update GO annotations
+[updateMultifunc] - Update or create gene multifunctionality metrics
+
+h2. MISC
+
+[fetchMeshTerms] - Gets MESH headings for a set of pubmed ids
+[listExternalDatabases] - Print an overview of all external databases used by Gemma
+[loadTaxa] - Populate taxon tables
+[migrateFactorValues] - Perform the migration of old-style characteristics to statements
+[orderVectorsByDesign] - Experimental: reorder the vectors by experimental design, to save computation later.
+[pubmedLoad] - Loads PubMed records into the database from XML files
+[pubmedSearchAndSave] - perform pubmed searches from a list of terms, and persist the results in the database
+
+h2. General Options
+
+||Flags||Description||
+|{{-h,--help}}|Show help|
+|{{-ha,--help-all}}|Show complete help with all available CLI commands|
+|{{-c,--completion}}|Generate a completion script|
+|{{-cs,--completion-shell}}|Indicate which shell to generate completion for. Only fish and bash are supported|
+|{{-cw,--completion-wiki}}|Produce Wiki markup to update curator documentation|
+|{{-version,--version}}|Show Gemma version|
+|{{-logger,--logger}}|Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). For example, '--logger ubic.gemma=5' or '--logger org.hibernate.SQL=5'|
+|{{-v,--verbosity}}|Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)|
+|{{-testing,--testing}}|Use the test environment|
+
+h2. addGEOData
+
+Load data from GEO
+
+{{Usage: gemma-cli addGEOData [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-f,--file=Input file] [-e,--acc=Accession(s)] [-y,--platforms] [-n,--nomatch] [-splitByPlatform] [-force,--force] [-update,--update] [-nopost] [-allowsuper]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f,--file}}|Optional path to file with list of experiment accessions to load|
+|{{-e,--acc}}|Optional comma-delimited list of accessions (GSE or GDS or GPL) to load|
+|{{-y,--platforms}}|Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS|
+|{{-n,--nomatch}}|Do not try to match samples across platforms|
+|{{-splitByPlatform}}|Force data from each platform into a separate experiment. This implies '-nomatch'|
+|{{-force,--force}}|Reload data set if it already exists in system|
+|{{-update,--update}}|Update existing experiment in Gemma; overrides all other options except those choosing experiments|
+|{{-nopost}}|Suppress postprocessing steps|
+|{{-allowsuper}}|Allow sub/super series to be loaded|
+
+h2. addTSVData
+
+Load an experiment from a tab-delimited file instead of GEO
+
+{{Usage: gemma-cli addTSVData [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -f,--file=File Name [-d,--dir=File Folder]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f,--file}}|the list of experiments in flat file|
+|{{-d,--dir}}|The folder for containing the experiment files|
+
+h2. affyFromCel
+
+Reanalyze Affymetrix data from CEL files, if available; affy-power-tools must be configured.
+
+{{Usage: gemma-cli affyFromCel [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-aptFile=path] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-aptFile}}|File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; ensure you used the right official CDF/MPS configuration|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. coexpAnalyze
+
+Analyze expression data sets for coexpressed genes
+
+{{Usage: gemma-cli coexpAnalyze [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t=ARG] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-mdate=ARG] [-n] [-init] [-c,--cdfcut=Tolerance Threshold] [-k,--cachecut=Cache Threshold] [-w,--fwe=Family Wise Error Rate] [-m,--missingcut=Missing Value Threshold] [-l,--lowcut=Expression Threshold] [-lv,--lowvarcut=Variance Threshold] [-dv,--distinctValCut=Fraction distinct values threshold] [-a,--abs] [-nonegcorr] [-d,--nodb] [-dataFile=Expression data file] [-array=Array Design] [-text] [-metric=metric] [-noimages] [-normalizemethod=method] [-logtransform] [-subset=Number of coexpression links to print out] [-choosecut=Singular correlation threshold] [-probeDegreeLim=ARG] [-noqc] [-delete] [-force,--force] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t}}|Taxon species name e.g. 'mouse'|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-n}}|Update the node degree for taxon given by -t option. All other options ignored.|
+|{{-init}}|Initialize links for taxon given by -t option, based on old data. All other options ignored.|
+|{{-c,--cdfcut}}|The tolerance threshold for coefficient value|
+|{{-k,--cachecut}}|The threshold for coefficient cache|
+|{{-w,--fwe}}|The setting for family wise error control|
+|{{-m,--missingcut}}|Fraction of data points that must be present in a profile to be retained , default=0.3|
+|{{-l,--lowcut}}|Fraction of expression vectors to reject based on low values, default=0.2|
+|{{-lv,--lowvarcut}}|Fraction of expression vectors to reject based on low variance (or coefficient of variation), default=0.05|
+|{{-dv,--distinctValCut}}|Fraction of values which must be distinct (NaN counts as one value), default=0.5|
+|{{-a,--abs}}|Use the absolute value of the correlation (rarely used)|
+|{{-nonegcorr}}|Omit negative correlated probes in link selection|
+|{{-d,--nodb}}|Don't save the results in the database (i.e., testing)|
+|{{-dataFile}}|Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option|
+|{{-array}}|Provide the short name of the array design used. Only needed if you are using the 'dataFile' option|
+|{{-text}}|Output links as text. If multiple experiments are analyzed (e.g. using -f option) results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT|
+|{{-metric}}|Similarity metric {pearson|spearman}, default is pearson|
+|{{-noimages}}|Suppress the generation of correlation matrix images|
+|{{-normalizemethod}}|Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)|
+|{{-logtransform}}|Log-transform the data prior to analysis, if it is not already transformed.|
+|{{-subset}}|Only a random subset of total coexpression links will be written to output with approximate size given as the argument; recommended if thresholds are loose to avoid memory problems or gigantic files.|
+|{{-choosecut}}|Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none|
+|{{-probeDegreeLim}}|null|
+|{{-noqc}}|Skip strict QC for outliers, batch effects and correlation distribution|
+|{{-delete}}|Delete analyses for selected experiments, instead of doing analysis; supersedes all other options|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. corrMat
+
+Create or update sample correlation matrices for expression experiments
+
+{{Usage: gemma-cli corrMat [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. deleteDiffEx
+
+Delete differential expression analyses for experiment(s) from the system
+
+{{Usage: gemma-cli deleteDiffEx [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+
+h2. deleteExperiments
+
+Delete experiments or platforms from the system
+
+{{Usage: gemma-cli deleteExperiments [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-a,--array=comma-delimited list of platform short names]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-a,--array}}|Delete platform(s) instead; you must delete associated experiments first; other options are ignored|
+
+h2. diffExAnalyze
+
+Analyze expression data sets for differentially expressed genes.
+
+{{Usage: gemma-cli diffExAnalyze [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-mdate=ARG] [-auto] [-force,--force] [-factors=ARG] [-subset=ARG] [-type=ARG] [-usebatch] [-nodb] [-redo] [-delete] [-nobayes] [-nofiles]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+|{{-factors}}|ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores|
+|{{-subset}}|ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors|
+|{{-type}}|Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test), GENERICLM (generic LM, no interactions); default: auto-detect|
+|{{-usebatch}}|If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis.|
+|{{-nodb}}|Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database|
+|{{-redo}}|If using automatic analysis try to base analysis on previous analysis's choice of statistical model. Will re-run all analyses for the experiment|
+|{{-delete}}|Instead of running the analysis on the given experiments, remove the old analyses. Use with care!|
+|{{-nobayes}}|Do not apply empirical-Bayes moderated statistics. Default is to use eBayes|
+|{{-nofiles}}|Don't create archive files after analysis. Default is to make them|
+
+h2. fillBatchInfo
+
+Populate the batch information for experiments (if possible)
+
+{{Usage: gemma-cli fillBatchInfo [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. findDatasetPubs
+
+Identify experiments that have no publication in Gemma and try to fill it in.
+
+{{Usage: gemma-cli findDatasetPubs [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. generateDataFile
+
+Generate analysis text files (diff expression, co-expression)
+
+{{Usage: gemma-cli generateDataFile [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-threads=numThreads] [-w,--forceWrite=ForceWrite]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-threads}}|Number of threads to use for batch processing.|
+|{{-w,--forceWrite}}|Overwrites exsiting files if this option is set|
+
+h2. getDataMatrix
+
+Prints preferred data matrix to a file; gene information is included if available.
+
+{{Usage: gemma-cli getDataMatrix [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-o,--outputFileName=filename] [-filter]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-o,--outputFileName}}|File name. If omitted, the file name will be based on the short name of the experiment.|
+|{{-filter}}|Filter expression matrix under default parameters|
+
+h2. importDesign
+
+Import an experimental design
+
+{{Usage: gemma-cli importDesign [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -e,--experiment=Expression experiment name -f,--designFile=Design file}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name|
+|{{-f,--designFile}}|Experimental design description file|
+
+h2. makePrivate
+
+Make experiments private
+
+{{Usage: gemma-cli makePrivate [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+
+h2. makeProcessedData
+
+Performs preprocessing. Optionally can do only selected processing steps including batch correction, rank computation and diagnostic computation
+
+{{Usage: gemma-cli makeProcessedData [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force] [-mdate=ARG] [-diagupdate] [-rankupdate] [-ignoreqm]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-diagupdate}}|Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)|
+|{{-rankupdate}}|Only update the expression intensity rank information (may be combined with other options)|
+|{{-ignoreqm}}|Ignore mismatch between raw quantitations and that inferred from data|
+
+h2. makePublic
+
+Make experiments public
+
+{{Usage: gemma-cli makePublic [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+
+h2. pca
+
+Run PCA (using SVD) on data sets
+
+{{Usage: gemma-cli pca [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. printExperimentalDesign
+
+Prints experimental design to a file in a R-friendly format
+
+{{Usage: gemma-cli printExperimentalDesign [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] -o,--outFilePrefix=outFilePrefix}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-o,--outFilePrefix}}|File prefix for saving the output (short name will be appended)|
+
+h2. pubmedAssociateToExperiments
+
+Set or update the primary publication for experiments by fetching from GEO
+
+{{Usage: gemma-cli pubmedAssociateToExperiments [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-pubmedIDFile=pubmedIDFile] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-pubmedIDFile}}|A text file which contains the list of pubmed IDs associated with each experiment ID. If the pubmed ID is not found, it will try to use the existing pubmed ID associated with the experiment. Each row has two columns: pubmedId and experiment shortName, e.g. 22438826<TAB>GSE27715|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. replaceData
+
+Replace expression data for non-Affymetrix and non-RNA-seq data sets
+
+{{Usage: gemma-cli replaceData [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-file=file path] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-file}}|Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. rnaseqBatchInfo
+
+Load RNASeq batch information; header files expected to be in structure like ${gemma.fastq.headers.dir}/GSExxx/GSMxxx/SRRxxx.fastq.header
+
+{{Usage: gemma-cli rnaseqBatchInfo [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. rnaseqDataAdd
+
+Add expression quantifiation to an RNA-seq experiment
+
+{{Usage: gemma-cli rnaseqDataAdd [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-rpkm=file path] [-count=file path] [-allowMissing] -a=platform short name [-rlen=length] [-log2cpm] [-multiqc=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-rpkm}}|File with RPKM data|
+|{{-count}}|File with count data|
+|{{-allowMissing}}|Set this if your data files don't have information for all samples.|
+|{{-a}}|Target platform (must already exist in the system)|
+|{{-rlen}}|Information on read length given as a string like '100:paired', '36:unpaired' or simply '36' if pairedness is unknown|
+|{{-log2cpm}}|Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed|
+|{{-multiqc}}|File containing a MultiQC report|
+
+h2. runGeeq
+
+Generate or update GEEQ scores
+
+{{Usage: gemma-cli runGeeq [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-auto] [-mdate=ARG] [-force,--force] [-m,--mode=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+|{{-m,--mode}}|If specified, switches the scoring mode. By default the mode is set to 'all'
+ Possible values are:
+ all - runs all scoring
+ batch- recalculates batch related scores - info, confound and batch effect
+ reps - recalculates score for replicates
+ pub - recalculates score for publication|
+
+h2. splitExperiment
+
+Split an experiment into parts based on an experimental factor
+
+{{Usage: gemma-cli splitExperiment [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-factor=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-factor}}|ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')|
+
+h2. switchExperimentPlatform
+
+Switch an experiment to a different array design (usually a merged one)
+
+{{Usage: gemma-cli switchExperimentPlatform [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-a,--array=Array design] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-a,--array}}|Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. vectorMerge
+
+For experiments that used multiple array designs, merge the expression profiles
+
+{{Usage: gemma-cli vectorMerge [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery] [-force,--force]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+|{{-force,--force}}|Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)|
+
+h2. adATcleanup
+
+No description provided
+
+{{Usage: gemma-cli adATcleanup [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. addPlatformSequences
+
+Attach sequences to array design, from a file or fetching from BLAST database.
+
+{{Usage: gemma-cli addPlatformSequences [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--file=Input sequence file] [-mdate=ARG] [-auto] [-i,--ids=Input identifier file] -y,--type=Sequence type [-s,--sequence=accession] [-force] [-t=taxon]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--file}}|Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have probe identifiers included, provide identifiers via the -i option.|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-i,--ids}}|Path to file (two columns with probe ids and sequence accessions); can use in combination with -file|
+|{{-y,--type}}|AFFY_TARGET
+AFFY_PROBE
+EST
+mRNA
+REFSEQ
+BAC
+WHOLE_GENOME
+WHOLE_CHROMOSOME
+DNA
+OTHER
+ORF
+AFFY_COLLAPSED
+OLIGO
+DUMMY|
+|{{-s,--sequence}}|A single accession to update|
+|{{-force}}|Force overwriting of existing sequences; If biosequences are encountered that already have sequences filled in, they will be overwritten; default is to leave them.|
+|{{-t}}|Taxon common name (e.g., human) for sequences (only required if array design is 'naive')|
+
+h2. affyCollapse
+
+No description provided
+
+{{Usage: gemma-cli affyCollapse [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] -affyProbeFile=ARG}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-affyProbeFile}}|Affymetrix probe file to use as input|
+
+h2. blatPlatform
+
+Run BLAT on the sequences for a platform; the results are persisted in the DB.
+
+{{Usage: gemma-cli blatPlatform [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] [-sensitive] [-t=taxon] [-s,--scoreThresh=Blat score threshold] [-b,--blatfile=PSL file]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-sensitive}}|Run on more sensitive server, if available|
+|{{-t}}|Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)|
+|{{-s,--scoreThresh}}|Threshold (0-1.0) for acceptance of BLAT alignments [Default = 0.7]|
+|{{-b,--blatfile}}|Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate multiple platforms to run); -t option overrides|
+
+h2. deletePlatformElements
+
+No description provided
+
+{{Usage: gemma-cli deletePlatformElements [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] -f,--file=file [-mdate=ARG] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--file}}|File (tabbed) with element ids in the first column|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. detachSequences
+
+Remove all associations that a platform has with sequences, for cases where imported data had wrong associations. Also can be used to delete sequences associated with a platform (use very carefully as sequences can be shared by platforms)
+
+{{Usage: gemma-cli detachSequences [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] [-delete]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-delete}}|Delete sequences instead of detaching them - use with care|
+
+h2. genericPlatform
+
+Update a 'platform' based on a list of NCBI IDs
+
+{{Usage: gemma-cli genericPlatform [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -t,--taxon=taxon -a,--platform=shortName -f,--geneListFile=file [-nodb]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-t,--taxon}}|Taxon of the genes|
+|{{-a,--platform}}|Platform short name (existing or new to add)|
+|{{-f,--geneListFile}}|File with list of NCBI IDs of genes to add to platform (one per line)|
+|{{-nodb}}|Dry run: Do not update the database nor delete any flat files|
+
+h2. makePlatformAnnotFiles
+
+Generate annotation files for platforms.
+
+{{Usage: gemma-cli makePlatformAnnotFiles [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] [-l=file of short names] [-b,--batch] [-o,--overwrite] [-t,--taxon=taxon name] [-nogo,--nogo]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-l}}|Use specified file for batch generating annotation files.   File is a list of shortNames (one per line); Overrides -a,-t,-f options |
+|{{-b,--batch}}|Generates annotation files for all eligible Array Designs  Overrides other selection methods but can be combined with '--taxon' |
+|{{-o,--overwrite}}|If set will overwrite existing annotation files in the output directory|
+|{{-t,--taxon}}|Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all known genes for the taxon, or with --batch to process all arrays for the taxon.|
+|{{-nogo,--nogo}}|Skip GO annotation|
+
+h2. mapPlatformToGenes
+
+Process the BLAT results for an array design to map them onto genes
+
+{{Usage: gemma-cli mapPlatformToGenes [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] [-i,--identityThreshold=value] [-s,--scoreThreshold=value] [-o,--overlapThreshold=value] [-usePred] [-config=configstring] [-mirna] [-t=taxon] [-force] [-import=file] [-ncbi] [-source=dbname] [-nodb] [-probes=probes]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-i,--identityThreshold}}|Sequence identity threshold, default = 0.8|
+|{{-s,--scoreThreshold}}|Blat score threshold, default = 0.75|
+|{{-o,--overlapThreshold}}|Minimum fraction of probe overlap with exons, default = 0.05|
+|{{-usePred}}|Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default=false)|
+|{{-config}}|String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set, all will be used except as listed below and in combination with the 'usePred' option:
+ r - search refseq track for genes (best to leave on)
+k - search knownGene track for genes (best to leave on, but track may be missing for some organisms)
+i - search miRNA track for genes (Default = false)
+e - search EST track for transcripts (Default=false)
+m - search mRNA track for transcripts (Default=false)
+n - search Ensembl track for predicted genes (Default=false) 
+|
+|{{-mirna}}|Only seek miRNAs; this is the same as '-config i; overrides -config.|
+|{{-t}}|Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all ArrayDesigns from that taxon (overrides -a)|
+|{{-force}}|Run no matter what|
+|{{-import}}|Import annotations from a file rather than our own analysis. You must provide the taxon option. File format: 2 columns with column 1= probe name in Gemma, column 2=sequence name (not required, and not used for direct gene-based annotation) column 3 = gene symbol (will be matched to that in Gemma)|
+|{{-ncbi}}|If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)|
+|{{-source}}|Source database name (GEO etc); required if using -import|
+|{{-nodb}}|Don't save the results to the database, print to stdout instead (not with -import)|
+|{{-probes}}|Comma-delimited list of probe names to process (for testing); implies -nodb|
+
+h2. mergePlatforms
+
+Make a new array design that combines the reporters from others.
+
+{{Usage: gemma-cli mergePlatforms [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] -o,--other=Other platforms [-n,--name=name] [-s,--shortname=shortname] [-add]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-o,--other}}|Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. If the platform given with -a is already a merged design, these will be added to it if the -add option is givenThe designs cannot be ones already merged into another design, but they can be mergees.|
+|{{-n,--name}}|Name for new platform, if the given platform is not already a merged design|
+|{{-s,--shortname}}|Short name for new platform, if the given platform is not already a merged design|
+|{{-add}}|If the given platform is already a merged design, add the -o designs to it. Recommended unless there is a specific reason to create a new design.|
+
+h2. platformRepeatScan
+
+Run RepeatMasker on sequences for an Array design
+
+{{Usage: gemma-cli platformRepeatScan [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--file=.out file] [-mdate=ARG] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--file}}|RepeatScan file to use as input|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. platformSubsumptionTest
+
+Test microarray designs to see if one subsumes other(s) (in terms of probe sequences), and if so update their information
+
+{{Usage: gemma-cli platformSubsumptionTest [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] -o,--other=Other platform [-all]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-o,--other}}|Short name(s) of platforms to compare to the first one, comma-delimited|
+|{{-all}}|Test all platforms listed against all (not just to the first one)|
+
+h2. probeRename
+
+No description provided
+
+{{Usage: gemma-cli probeRename [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] -f,--file=ARG [-mdate=ARG] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--file}}|Two-column file with old and new identifiers (additional columns ignored)|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. seqCleanup
+
+Examines biosequences for array designs in the database and removes duplicates.
+
+{{Usage: gemma-cli seqCleanup [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto] [-dryrun] [-b,--file]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+|{{-dryrun}}|Set to run without any database modifications|
+|{{-b,--file}}|File with list of biosequence ids to check; default: check all on provided platforms|
+
+h2. dumpForNIF
+
+Generate views of the database in flat files
+
+{{Usage: gemma-cli dumpForNIF [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-d,--dataset] [-t,--tissue] [-x,--diffexpression] [-l,--limit=Limit number of datasets]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-d,--dataset}}|Will generate a zip file containing a summary of all accessible datasets in gemma|
+|{{-t,--tissue}}|Will generate a zip file containing a summary of all the tissues in accessible datasets|
+|{{-x,--diffexpression}}|Will generate a zip file containing a summary of all the differential expressed genes in accessible datasets|
+|{{-l,--limit}}|will impose a limit on how many datasets to process|
+
+h2. listGEOData
+
+Grab information on GEO data sets not yet in the system, working backwards in time
+
+{{Usage: gemma-cli listGEOData [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-date=date limit] [-gselimit=GSE identifier] [-platformLimit=comma-delimited list of GPLs] -output=path [-platforms] [-startat=GSE ID] [-startdate=date]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-date}}|A release date to stop the search in format yyyy.MM.dd e.g. 2010.01.12|
+|{{-gselimit}}|A GSE at which to stop the search|
+|{{-platformLimit}}|Limit to selected platforms|
+|{{-output}}|File path for output (required)|
+|{{-platforms}}|Fetch a list of all platforms instead of experiments (date and gselimit ignored)|
+|{{-startat}}|Attempt to 'fast-rewind' to the given GSE ID and continue retreiving from there |
+|{{-startdate}}|Attempt to 'fast-rewind' to the given date (yyyy.MM.dd) and continue retreiving from there |
+
+h2. platformMapSummary
+
+No description provided
+
+{{Usage: gemma-cli platformMapSummary [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-a,--array=Array design] [-f,--adListFile=Array Design list file] [-mdate=ARG] [-auto]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-a,--array}}|Array design name (or short name); or comma-delimited list|
+|{{-f,--adListFile}}|File with list of short names or IDs of designs (one per line; use instead of '-a')|
+|{{-mdate}}|Constrain to run only on entities with analyses older than the given date. For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. If there is no record of when the analysis was last run, it will be run.|
+|{{-auto}}|Attempt to process entities that need processing based on workflow criteria.|
+
+h2. viewExpDesigns
+
+Dump a view of experimental design(s)
+
+{{Usage: gemma-cli viewExpDesigns [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. affyAltsUpdate
+
+Populate the 'alternative' information for Affymetrix platforms
+
+{{Usage: gemma-cli affyAltsUpdate [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. blackList
+
+Add GEO entities (series or platforms) to the blacklist
+
+{{Usage: gemma-cli blackList [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-file=file name] [-undo] [-pp] [-a=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-file}}|Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional additional columns: name, description of entity; lines starting with '#' are ignored|
+|{{-undo}}|Remove items from blacklist instead of adding. File can contain just one column of IDs|
+|{{-pp}}|Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options except -a)|
+|{{-a}}|A comma-delimited of GPL IDs to check. Combine with -pp, not relevant to any other option|
+
+h2. findObsoleteTerms
+
+Check for characteristics using obsolete terms as values (excluding GO), prints to sdout
+
+{{Usage: gemma-cli findObsoleteTerms [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. updatePubMeds
+
+Refresh stored information on publications
+
+{{Usage: gemma-cli updatePubMeds [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-pmids=ids]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-pmids}}|Pubmed ids, comma-delimited; default is to do all in DB|
+
+h2. ctdDownload
+
+Creates a .tsv file of lines of evidence from CTD, to be used with evidenceImport to import into Phenocarta.
+
+{{Usage: gemma-cli ctdDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. deletePhenotypes
+
+Use to remove all evidence from an external database, usually to reimport them after
+
+{{Usage: gemma-cli deletePhenotypes [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -d=name}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-d}}|External database name (e.g. 'GWAS_Catalog', 'DGA' etc.)|
+
+h2. dgaDownload
+
+Creates a .tsv file of lines of evidence from DGA, to be used with evidenceImport to import into Phenocarta.
+
+{{Usage: gemma-cli dgaDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. evidenceImport
+
+Import gene-phenotype information from any of the supported sources (via files created with the appropriate source-specific CLI)
+
+{{Usage: gemma-cli evidenceImport [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -f=file path [-c]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f}}|The file|
+|{{-c}}|Create in database; default is false (prints to stdout)|
+
+h2. gwasDownload
+
+Creates a .tsv file of lines of evidence from GWAS publications, to be used with evidenceImport to import into Phenocarta.
+
+{{Usage: gemma-cli gwasDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. loadEvidenceForClassifier
+
+No description provided
+
+{{Usage: gemma-cli loadEvidenceForClassifier [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. omimDownload
+
+Creates a .tsv file of lines of evidence from OMIM, to be used with evidenceImport to import into Phenocarta.
+
+{{Usage: gemma-cli omimDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. rgdDownload
+
+Creates a .tsv file of lines of evidence from RGD, to be used with evidenceImport to import into Phenocarta.
+
+{{Usage: gemma-cli rgdDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. sfariDownload
+
+Creates a .tsv file of lines of evidence from SFARI, to be used with evidenceImport to import into Phenocarta. Requires input files be downloaded manually first.
+
+{{Usage: gemma-cli sfariDownload [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. addExternalDatabase
+
+Add a new external database.
+
+{{Usage: gemma-cli addExternalDatabase [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -n,--name=ARG -t,--type=ARG}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-n,--name}}|null|
+|{{-t,--type}}|null|
+
+h2. geneUpdate
+
+Load/update gene information from NCBI
+
+{{Usage: gemma-cli geneUpdate [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-f,--file=Input File Path] [-taxon=taxon] [-nodownload] [-restart=ncbi id]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f,--file}}|Optional path to the gene_info and gene2accession files|
+|{{-taxon}}|Specific taxon for which to update genes|
+|{{-nodownload}}|Set to suppress NCBI file download|
+|{{-restart}}|Enter the NCBI ID of the gene you want to start on (implies -nodownload, and assumes you have the right -taxon option, if any)|
+
+h2. loadGenesFromFile
+
+loading genes from a non-NCBI files; only used for species like salmon
+
+{{Usage: gemma-cli loadGenesFromFile [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-f=file] [-t=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f}}|Tab delimited format containing gene symbol, gene name, uniprot id in that order|
+|{{-t}}|Taxon common name e.g. 'salmonoid'; does not have to be a species |
+
+h2. searchIndex
+
+Create or update the searchable indexes for a Gemma production system
+
+{{Usage: gemma-cli searchIndex [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-g] [-e] [-a] [-b] [-s] [-q] [-x] [-y] [-threads=numThreads]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-g}}|Index genes|
+|{{-e}}|Index datasets|
+|{{-a}}|Index platforms|
+|{{-b}}|Index bibliographic references|
+|{{-s}}|Index probes|
+|{{-q}}|Index sequences|
+|{{-x}}|Index datasets groups|
+|{{-y}}|Index gene sets|
+|{{-threads}}|Number of threads to use for batch processing.|
+
+h2. updateExternalDatabase
+
+Update an external database and optionally perform a release.
+
+{{Usage: gemma-cli updateExternalDatabase [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -n,--name=ARG [-d,--description=ARG] [-parentDatabase,--parent-database=ARG] [-release,--release] [-releaseVersion,--release-version=ARG] [-releaseUrl,--release-url=ARG] [-releaseNote,--release-note=ARG] [-lastUpdated,--last-updated=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-n,--name}}|External database name|
+|{{-d,--description}}|Update the description|
+|{{-parentDatabase,--parent-database}}|Update the parent database either by ID or name|
+|{{-release,--release}}|Update the release details|
+|{{-releaseVersion,--release-version}}|Release version (optional)|
+|{{-releaseUrl,--release-url}}|Release URL (optional)|
+|{{-releaseNote,--release-note}}|Note to include in the audit event related to the new release|
+|{{-lastUpdated,--last-updated}}|Moment the release was performed if known, otherwise the current time will be used|
+
+h2. updateGOAnnots
+
+Update GO annotations
+
+{{Usage: gemma-cli updateGOAnnots [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-f,--file=Input File Path]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f,--file}}|Optional location of the gene2go.gz file|
+
+h2. updateMultifunc
+
+Update or create gene multifunctionality metrics
+
+{{Usage: gemma-cli updateMultifunc [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-t,--taxon=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-t,--taxon}}|Taxon to process|
+
+h2. fetchMeshTerms
+
+Gets MESH headings for a set of pubmed ids
+
+{{Usage: gemma-cli fetchMeshTerms [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -f,--file=Id file [-m]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-f,--file}}|null|
+|{{-m}}|Use major subjects only|
+
+h2. listExternalDatabases
+
+Print an overview of all external databases used by Gemma
+
+{{Usage: gemma-cli listExternalDatabases [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. loadTaxa
+
+Populate taxon tables
+
+{{Usage: gemma-cli loadTaxa [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+
+h2. migrateFactorValues
+
+Perform the migration of old-style characteristics to statements
+
+{{Usage: gemma-cli migrateFactorValues [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-migrationFile=ARG] [-migrateRemainingCharacteristics] [-migrateRemainingFactorValues] [-migrateNonTrivialCases] [-noop]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-migrationFile}}|File containing factor value migrations|
+|{{-migrateRemainingCharacteristics}}|Migrate remaining characteristics of factor values that were mentioned in the migration file. The affected factor values will be marked as needs attention.|
+|{{-migrateRemainingFactorValues}}|Migrate remaining factor values that weren't mentioned in the migration file.|
+|{{-migrateNonTrivialCases}}|Migrate non-trivial cases (i.e. 2 or more old-style characteristics) to subject-only statements. The affected factor values will be marked as needs attention.|
+|{{-noop}}|Only validate migrations; no statements will be saved|
+
+h2. orderVectorsByDesign
+
+Experimental: reorder the vectors by experimental design, to save computation later.
+
+{{Usage: gemma-cli orderVectorsByDesign [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-e,--experiment=shortname] [-all] [-f,--eeListfile=file] [-eeset=eeSetName] [-t,--taxon=taxon name] [-x,--excludeEEFile=file] [-q,--expressionQuery=expressionQuery]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-e,--experiment}}|Expression experiment short name. Most tools recognize comma-delimited values given on the command line, and if this option is omitted (and none other provided), the tool will be applied to all expression experiments.|
+|{{-all}}|Process all expression experiments|
+|{{-f,--eeListfile}}|File with list of short names or IDs of expression experiments (one per line; use instead of '-e')|
+|{{-eeset}}|Name of expression experiment set to use|
+|{{-t,--taxon}}|Taxon of the expression experiments and genes|
+|{{-x,--excludeEEFile}}|File containing list of expression experiments to exclude|
+|{{-q,--expressionQuery}}|Use a query string for defining which expression experiments to use|
+
+h2. pubmedLoad
+
+Loads PubMed records into the database from XML files
+
+{{Usage: gemma-cli pubmedLoad [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] -d,--dir=Directory}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-d,--dir}}|Directory of PubMed XML files to load|
+
+h2. pubmedSearchAndSave
+
+perform pubmed searches from a list of terms, and persist the results in the database
+
+{{Usage: gemma-cli pubmedSearchAndSave [-h,--help] [-batchFormat=ARG] [-batchOutputFile=ARG] [-d,--persist]}}
+
+||Flags||Description||
+|{{-h,--help}}|Print this message|
+|{{-batchFormat}}|Format to use to the batch summary|
+|{{-batchOutputFile}}|Output file to use for the batch summary (default is standard output)|
+|{{-d,--persist}}|Persist the results. Otherwise just search.|
+

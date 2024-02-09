@@ -52,6 +52,7 @@ public class GemmaCLI {
             HELP_ALL_OPTION = "ha",
             COMPLETION_OPTION = "c",
             COMPLETION_SHELL_OPTION = "cs",
+            COMPLETION_WIKI_OPTION = "cw",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -81,6 +82,7 @@ public class GemmaCLI {
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
                 .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
+                .addOption( COMPLETION_WIKI_OPTION, "completion-wiki", false, "Produce Wiki markup to update curator documentation" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -179,38 +181,35 @@ public class GemmaCLI {
 
         if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
             CompletionGenerator completionGenerator;
-            String shellName;
-            if ( commandLine.hasOption( COMPLETION_SHELL_OPTION ) ) {
-                shellName = commandLine.getOptionValue( COMPLETION_SHELL_OPTION );
+            if ( commandLine.hasOption( COMPLETION_WIKI_OPTION ) ) {
+                completionGenerator = new WikiCompletionGenerator( options, commandGroups );
             } else {
-                // attempt to guess the intended shell from $SHELL
-                String shell = System.getenv( "SHELL" );
-                if ( StringUtils.isNotBlank( shell ) ) {
-                    shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
+                String shellName;
+                if ( commandLine.hasOption( COMPLETION_SHELL_OPTION ) ) {
+                    shellName = commandLine.getOptionValue( COMPLETION_SHELL_OPTION );
                 } else {
-                    System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
+                    // attempt to guess the intended shell from $SHELL
+                    String shell = System.getenv( "SHELL" );
+                    if ( StringUtils.isNotBlank( shell ) ) {
+                        shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
+                    } else {
+                        System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
+                        System.exit( 1 );
+                        return;
+                    }
+                }
+                if ( shellName.equals( "bash" ) ) {
+                    completionGenerator = new BashCompletionGenerator( options, commandGroups );
+                } else if ( shellName.equals( "fish" ) ) {
+                    completionGenerator = new FishCompletionGenerator( options, commandGroups );
+                } else {
+                    System.err.printf( "Completion is not support for %s.%n", shellName );
                     System.exit( 1 );
                     return;
                 }
             }
-            if ( shellName.equals( "bash" ) ) {
-                completionGenerator = new BashCompletionGenerator( commandsByName.keySet() );
-            } else if ( shellName.equals( "fish" ) ) {
-                completionGenerator = new FishCompletionGenerator( commandsByName.keySet() );
-            } else {
-                System.err.printf( "Completion is not support for %s.%n", shellName );
-                System.exit( 1 );
-                return;
-            }
             PrintWriter completionWriter = new PrintWriter( System.out );
-            completionGenerator.beforeCompletion( completionWriter );
-            completionGenerator.generateCompletion( options, completionWriter );
-            for ( SortedMap<String, CLI> group : commandGroups.values() ) {
-                for ( CLI cli : group.values() ) {
-                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
-                }
-            }
-            completionGenerator.afterCompletion( completionWriter );
+            completionGenerator.generateCompletion( completionWriter );
             completionWriter.flush();
             System.exit( 0 );
             return;

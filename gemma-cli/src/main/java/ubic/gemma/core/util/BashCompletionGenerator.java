@@ -2,6 +2,7 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.apps.GemmaCLI;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -9,7 +10,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BashCompletionGenerator implements CompletionGenerator {
+public class BashCompletionGenerator extends AbstractCompletionGenerator {
 
     private static final String INDENT = "    ";
 
@@ -23,22 +24,26 @@ public class BashCompletionGenerator implements CompletionGenerator {
      */
     private String indent = "";
 
-    public BashCompletionGenerator( Set<String> subcommands ) {
-        this.subcommands = subcommands;
+    public BashCompletionGenerator( Options generalOptions, SortedMap<GemmaCLI.CommandGroup, SortedMap<String, CLI>> commands ) {
+        super( generalOptions, commands );
+        this.subcommands = commands.values().stream().map( Map::keySet ).flatMap( Collection::stream ).collect( Collectors.toSet() );
     }
 
     @Override
-    public void beforeCompletion( PrintWriter writer ) {
+    public void generateCompletion( PrintWriter writer ) {
         writer.println( "function __gemma_cli_complete() {" );
         pushIndent();
         writer.append( indent ).println( "COMPREPLY=()" );
         writer.append( indent ).println( "words=\"${COMP_WORDS[*]}\"" );
         writer.append( indent ).println( "current_option=\"${COMP_WORDS[$COMP_CWORD-1]}\"" );
-
+        super.generateCompletion( writer );
+        popIndent();
+        writer.println( "}" );
+        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli" );
     }
 
     @Override
-    public void generateCompletion( Options options, PrintWriter writer ) {
+    protected void generateGeneralCompletion( Options options, PrintWriter writer ) {
         writer.append( indent )
                 .printf( "if ! [[ \" $words \" =~ ' '(%s)' ' ]]; then%n",
                         subcommands.stream().map( String::trim ).map( this::quoteRegex ).collect( Collectors.joining( "|" ) ) );
@@ -50,7 +55,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
     }
 
     @Override
-    public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
+    protected void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         writer.append( indent ).printf( "if [[ \" $words \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
         pushIndent();
         generateWordsFromOptions( subcommandOptions, writer );
@@ -124,13 +129,6 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
     private void popIndent() {
         indent = indent.substring( 0, indent.length() - INDENT.length() );
-    }
-
-    @Override
-    public void afterCompletion( PrintWriter writer ) {
-        popIndent();
-        writer.println( "}" );
-        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli" );
     }
 
     private String quoteRegex( String s ) {
