@@ -105,10 +105,8 @@ pipeline {
             parallel {
                 stage('Run slow unit tests and integration tests') {
                     when {
-                        anyOf {
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
+                        not {
+                            branch 'master'
                         }
                     }
                     steps {
@@ -147,14 +145,6 @@ pipeline {
                     }
                 }
                 stage ('Deploy Gemma Web') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
                     steps {
                         sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
                         sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
@@ -162,10 +152,8 @@ pipeline {
                 }
                 stage ('Deploy Gemma CLI') {
                     when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
+                        not {
+                            branch 'development'
                         }
                     }
                     steps {
