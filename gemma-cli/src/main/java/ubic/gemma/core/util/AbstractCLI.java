@@ -76,7 +76,6 @@ public abstract class AbstractCLI implements CLI {
     private static final String AUTO_OPTION_NAME = "auto";
     private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
-    private static final String TESTING_OPTION = "testing";
     private static final String DATE_OPTION = "mdate";
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
@@ -148,6 +147,19 @@ public abstract class AbstractCLI implements CLI {
         return ctx.getBean( clz );
     }
 
+    @Override
+    public Options getOptions() {
+        Options options = new Options();
+        buildStandardOptions( options );
+        buildOptions( options );
+        return options;
+    }
+
+    @Override
+    public boolean allowPositionalArguments() {
+        return allowPositionalArguments;
+    }
+
     /**
      * {@inheritDoc}
      * <p>
@@ -159,9 +171,7 @@ public abstract class AbstractCLI implements CLI {
      */
     @Override
     public int executeCommand( String... args ) {
-        Options options = new Options();
-        buildStandardOptions( options );
-        buildOptions( options );
+        Options options = getOptions();
         try {
             DefaultParser parser = new DefaultParser();
             CommandLine commandLine = parser.parse( options, args );
@@ -169,9 +179,6 @@ public abstract class AbstractCLI implements CLI {
             if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options, new PrintWriter( System.out, true ) );
                 return SUCCESS;
-            }
-            if ( commandLine.hasOption( TESTING_OPTION ) ) {
-                throw new UnrecognizedOptionException( String.format( "The -testing/--testing option must be passed before the %s command.", getCommandName() ) );
             }
             if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
                 throw new UnrecognizedOptionException( "The command line does not allow positional arguments." );
@@ -271,6 +278,16 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
+     * Add the -batchFormat and -batchOutputFile options.
+     * <p>
+     * These options allow the user to control how and where batch processing results are summarized.
+     */
+    protected void addBatchOption( Options options ) {
+        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+    }
+
+    /**
      * Allow positional arguments to be specified. The default is false and an error will be produced if positional
      * arguments are supplied by the user.
      * <p>
@@ -305,9 +322,6 @@ public abstract class AbstractCLI implements CLI {
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
-        options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
-        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
     }
 
     /**

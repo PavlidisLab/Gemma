@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -50,7 +51,17 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@Component
 public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
+
+    @Autowired
+    private ExpressionExperimentService eeService;
+    @Autowired
+    private PreprocessorService preprocessorService;
+    @Autowired
+    private GeoService geoService;
+    @Autowired
+    private ArrayDesignService ads;
 
     // Command line Options
     private String accessionFile = null;
@@ -61,10 +72,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     private boolean allowSubSeriesLoad = false;
     private boolean allowSuperSeriesLoad = false;
     // Service Beans
-    @Autowired
-    private ExpressionExperimentService eeService;
-    @Autowired
-    private PreprocessorService preprocessorService;
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
     private boolean updateOnly = false;
@@ -79,7 +86,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         return "addGEOData";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().argName( "Input file" )
@@ -122,11 +128,12 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
          * add 'allowsub/super' series option;
          */
         options.addOption( Option.builder( "allowsuper" ).desc( "Allow sub/super series to be loaded" ).build() );
+
+        addBatchOption( options );
     }
 
     @Override
     protected void doWork() throws Exception {
-        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
         if ( accessions == null && accessionFile == null ) {
@@ -148,7 +155,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
                 if ( platformOnly ) {
                     Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
-                    ArrayDesignService ads = this.getBean( ArrayDesignService.class );
                     for ( Object object : designs ) {
                         assert object instanceof ArrayDesign;
                         ArrayDesign ad = ( ArrayDesign ) object;
@@ -157,7 +163,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         addSuccessObject( ad );
                     }
                 } else {
-                    this.processAccession( geoService, accession );
+                    this.processAccession( accession );
                 }
             }
 
@@ -175,7 +181,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         continue;
                     }
 
-                    this.processAccession( geoService, accession );
+                    this.processAccession( accession );
 
                 }
             }
@@ -224,10 +230,10 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
     }
 
-    private void processAccession( GeoService geoService, String accession ) {
+    private void processAccession( String accession ) {
         try {
 
-            log.info(" ***** Starting processing of " + accession + " *****");
+            log.info( " ***** Starting processing of " + accession + " *****" );
             if ( updateOnly ) {
                 geoService.updateFromGEO( accession );
                 addSuccessObject( accession, "Updated" );

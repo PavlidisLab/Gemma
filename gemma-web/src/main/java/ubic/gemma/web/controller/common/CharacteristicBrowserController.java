@@ -137,6 +137,8 @@ public class CharacteristicBrowserController {
 
         boolean searchEfs = true; // fixme, make this optional
 
+        queryString = queryString.trim();
+
         List<AnnotationValueObject> results = new ArrayList<>();
         if ( StringUtils.isBlank( queryString ) ) {
             return results;

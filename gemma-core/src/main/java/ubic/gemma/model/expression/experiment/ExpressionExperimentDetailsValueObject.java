@@ -422,6 +422,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
         this.arrayDesigns = arrayDesigns;
+        if ( arrayDesigns.isEmpty() ) {
+            // this seems to occur in one situation I'm aware of, sorting the
+            // legacy experiment browser (expressionExperiment/showAllExpressionExperiments.html)
+            // by Assay count. Other columns are okay.
+            return;
+        }
         ArrayDesignValueObject ad = arrayDesigns.iterator().next();
         setArrayDesignCount( ( long ) arrayDesigns.size() );
         this.setTechnologyType( ad.getTechnologyType() );

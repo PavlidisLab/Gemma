@@ -109,6 +109,9 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
     @Autowired
     protected SessionFactory sessionFactory;
 
+    @Autowired
+    protected AclService aclService;
+
     protected static class DataSourceInitializer implements InitializingBean {
 
         private final JdbcTemplate template;

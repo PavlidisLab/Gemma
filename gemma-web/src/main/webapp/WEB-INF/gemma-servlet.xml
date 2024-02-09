@@ -97,6 +97,9 @@
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.HandlerExceptionResolverComposite">
         <property name="exceptionResolvers">
             <list>
+                <!-- handle all Spring MVC built-in exceptions -->
+                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver"/>
+                <!-- handles Gemma-specific exceptions -->
                 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
                     <property name="statusCodes">
                         <props>
@@ -115,6 +118,7 @@
                         </props>
                     </property>
                 </bean>
+                <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
                     <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
                     <property name="statusCode" value="500"/>
@@ -342,7 +346,6 @@
         </dwr:remote>
     </bean>
 
-
     <bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
         <dwr:remote javascript="SearchService">
             <dwr:include method="ajaxSearch"/>
@@ -420,6 +423,7 @@
             <dwr:include method="createExperimentalFactor"/>
             <dwr:include method="deleteExperimentalFactors"/>
             <dwr:include method="updateExperimentalFactors"/>
+            <dwr:include method="getBioMaterialCharacteristicCategories"/>
             <dwr:include method="getFactorValues"/>
             <dwr:include method="createFactorValue"/>
             <dwr:include method="deleteFactorValues"/>

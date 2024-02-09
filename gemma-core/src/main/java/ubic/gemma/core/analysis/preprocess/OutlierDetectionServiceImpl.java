@@ -183,7 +183,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     private List<OutlierDetails> removeFalsePositives( List<OutlierDetails> outliers, double threshold ) {
 
-        OutlierDetectionServiceImpl.log.info( "outliers.size() = " + outliers.size() + "; threshold = " + threshold );
+        OutlierDetectionServiceImpl.log.debug( String.format( "outliers = %d; threshold %.2f", outliers.size(), threshold ) );
 
         for ( int i = 0; i < outliers.size(); i++ ) {
             if ( outliers.get( i ).getThirdQuartile() >= threshold ) {

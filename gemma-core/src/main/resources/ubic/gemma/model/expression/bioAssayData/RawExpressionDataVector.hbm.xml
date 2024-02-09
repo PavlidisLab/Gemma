@@ -11,12 +11,13 @@
             <generator class="native">
             </generator>
         </id>
+        <!-- assumed readily available in DataVectorValueObject -->
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
-                     lazy="proxy" fetch="select">
+                     lazy="false" fetch="select">
             <column name="BIO_ASSAY_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="designElement" class="ubic.gemma.model.expression.designElement.CompositeSequence"
-                     lazy="false" fetch="join">
+                     lazy="false" fetch="select">
             <column name="DESIGN_ELEMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <property name="data" type="org.hibernate.type.MaterializedBlobType">

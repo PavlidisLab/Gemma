@@ -144,17 +144,6 @@ public class Settings {
             throw new RuntimeException( "Extra built-in configuration could not be loaded.", e );
         }
 
-        String gemmaAppDataHome = Settings.config.getString( "gemma.appdata.home" );
-        if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
-            File f2 = Paths.get( gemmaAppDataHome, "local.properties" ).toFile();
-            try {
-                log.debug( "Loading configuration from " + f2.getAbsolutePath() + "." );
-                Settings.config.addConfiguration( ConfigUtils.loadConfig( f2 ) );
-            } catch ( ConfigurationException e ) {
-                throw new RuntimeException( "Local configuration could not be loaded from " + f2.getAbsolutePath() + ".", e );
-            }
-        }
-
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "ubic/gemma/version.properties" );
             Settings.config.addConfiguration( pc );

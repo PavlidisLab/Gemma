@@ -222,14 +222,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
-    public final void testGetQuantitationTypesForArrayDesign() {
-        ExpressionExperiment ee = createExpressionExperiment();
-        ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
-        Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee, ad );
-        assertEquals( 2, types.size() );
-    }
-
-    @Test
     public final void testGetRawExpressionDataVectors() {
         ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
         ees.add( eel );

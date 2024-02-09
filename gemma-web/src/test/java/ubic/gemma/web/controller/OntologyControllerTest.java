@@ -34,7 +34,9 @@ public class OntologyControllerTest extends BaseWebTest {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL" );
+            return new TestPropertyPlaceholderConfigurer(
+                    "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL",
+                    "gemma.hosturl=https://gemma.msl.ubc.ca" );
         }
 
         @Bean
@@ -115,7 +117,8 @@ public class OntologyControllerTest extends BaseWebTest {
                 .andExpect( content().string( containsString( "FactorValue #1: foo" ) ) )
                 .andExpect( content().string( containsString( "instance of" ) ) )
                 .andExpect( content().string( containsString( "TGEMO_0000001" ) ) )
-                .andExpect( content().string( containsString( "bar" ) ) );
+                .andExpect( content().string( containsString( "bar" ) ) )
+                .andExpect( content().string( containsString( "curl -X Accept:application/rdf+xml https://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
         verify( factorValueOntologyService ).getFactorValueAnnotations( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
     }

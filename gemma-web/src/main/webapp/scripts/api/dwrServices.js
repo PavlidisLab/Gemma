@@ -389,6 +389,10 @@ ExperimentalDesignController.getBioMaterials = function (p0, callback) {
     dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'getBioMaterials', p0,
         callback);
 };
+ExperimentalDesignController.getBioMaterialCharacteristicCategories = function (p0, callback) {
+    dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'getBioMaterialCharacteristicCategories', p0,
+        callback);
+};
 ExperimentalDesignController.createDesignFromFile = function (p0, p1, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/createDesignFromFile");
     dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'createDesignFromFile', p0,

@@ -13,6 +13,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 
@@ -37,6 +38,13 @@ public class OntologyController {
             TGFVO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
 
     private static final MediaType RDF_XML = MediaType.parseMediaType( "application/rdf+xml" );
+
+    /**
+     * FIXME: use {@link org.springframework.beans.factory.annotation.Value} for injecting this, but I think injection
+     *        is broken in controllers. See <a href="https://github.com/PavlidisLab/Gemma/issues/1001">#1001</a> for
+     *        details.
+     */
+    private static final String hostUrl = Settings.getHostUrl();
 
     @Autowired
     private GemmaOntologyService gemmaOntologyService;
@@ -105,6 +113,8 @@ public class OntologyController {
             s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
         }
         s.append( "</ul>" );
+        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
         s.append( "</div>" );
         return s.toString();
     }
@@ -140,6 +150,8 @@ public class OntologyController {
             s.append( "<li>annotation of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
         }
         s.append( "</ul>" );
+        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d/%d</pre>", hostUrl, factorValueId, annotationId ) );
         s.append( "</div>" );
         return s.toString();
     }

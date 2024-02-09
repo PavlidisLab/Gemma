@@ -90,16 +90,6 @@ public class SettingsConfig {
         log.debug( "Loading default configuration files from classpath." );
         result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
         result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
-        for ( PropertySource<?> ps : result ) {
-            String appDataHome = ( String ) ps.getProperty( "gemma.appdata.home" );
-            if ( appDataHome != null ) {
-                // FIXME: handle placeholder substitution in gemma.appdata.home
-                Path p2 = Paths.get( appDataHome, "local.properties" );
-                log.debug( "Loading configuration from " + p2.toAbsolutePath() + "." );
-                result.addLast( new ResourcePropertySource( new FileSystemResource( p2.toFile() ) ) );
-                break;
-            }
-        }
 
         ClassPathResource versionResource = new ClassPathResource( "ubic/gemma/version.properties" );
         if ( versionResource.exists() ) {

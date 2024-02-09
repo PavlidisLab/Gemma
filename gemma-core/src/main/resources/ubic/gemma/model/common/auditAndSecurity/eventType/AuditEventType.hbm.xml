@@ -105,6 +105,8 @@
             </subclass>
             <subclass abstract="false" discriminator-value="DataAddedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent"/>
+            <subclass abstract="false" discriminator-value="DataRemovedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent"/>
             <subclass abstract="false" discriminator-value="SampleRemovalReversionEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent"/>
             <subclass abstract="false" discriminator-value="MeanVarianceUpdateEvent"

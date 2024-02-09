@@ -18,6 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -41,8 +42,13 @@ import java.util.Map;
  * Fetch their GEO records and check for pubmed IDs
  * Add the publications where we find them.
  */
+@Component
 public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private ExpressionExperimentService eeserv;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
     private PersisterHelper persisterHelper;
 
@@ -59,13 +65,11 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-
+        addBatchOption( options );
     }
 
     @Override
     protected void doWork() throws Exception {
-
-        ExpressionExperimentService eeserv = this.getBean( ExpressionExperimentService.class );
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
         Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications();
         for ( ExpressionExperiment ee : ees ) {
@@ -146,7 +150,6 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
      */
     private BibliographicReference getBibliographicReference( String pubmedId ) {
         // check if it already in the system
-        BibliographicReferenceService bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
         BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
         if ( publication == null ) {
             PubMedSearch pms = new PubMedSearch();

@@ -46,8 +46,8 @@ Gemma.GemmaNavigationHeader = Ext
                   items : [ {
                      xtype : 'panel',
                      html : '<div style="margin:10px;padding:5px;"><p>Gemma is a web site, database and a set of tools for the meta-analysis, re-use and '
-                        + 'sharing of genomics data, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands '
-                        + 'of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential'
+                        + 'sharing of gene expression profiling data. Gemma contains data from thousands '
+                        + 'of public studies, referencing thousands of published papers. Users can search, access and visualize the data and differential'
                         + ' expression results. For more information, see the '
                         + '<a href="https://pavlidislab.github.io/Gemma/" target="_blank">help and documentation.&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '

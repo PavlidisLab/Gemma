@@ -15,16 +15,18 @@ import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeNoException;
 
@@ -102,8 +104,24 @@ public class GeoTermReplacementTest {
 
         SoftAssertions assertions = new SoftAssertions();
 
+        Map<String, String> categories;
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( requireNonNull( GeoTermReplacementTest.class.getResourceAsStream( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" ) ) ) ) ) {
+            categories = reader.lines()
+                    .filter( line -> !line.startsWith( "#" ) )
+                    .map( line -> line.split( "\t", 2 ) )
+                    .collect( Collectors.toMap( row -> row[0], row -> row[1] ) );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        for ( Rec rec : records ) {
+            assertions.assertThat( categories )
+                    .withFailMessage( "%s: Unknown category URI %s", rec.synonym, rec.categoryUri )
+                    .containsKey( rec.categoryUri )
+                    .withFailMessage( "%s: Invalid URI %s for category %s", rec.synonym, rec.categoryUri, rec.category )
+                    .containsEntry( rec.categoryUri, rec.category );
+        }
+
         Set<String> seen = new HashSet<>();
-        int failures = 0;
         for ( int i = 0; i < ontologies.size(); i++ ) {
             OntologyService os;
             try {

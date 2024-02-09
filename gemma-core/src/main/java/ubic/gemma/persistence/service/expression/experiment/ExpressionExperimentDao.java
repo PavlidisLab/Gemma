@@ -180,8 +180,6 @@ public interface ExpressionExperimentDao
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
-
     /**
      * Obtain the preferred quantitation type, if available.
      */
@@ -272,7 +270,16 @@ public interface ExpressionExperimentDao
     Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     /**
+     * Special indicator for free-text terms.
+     * <p>
+     * Free-text terms or categories have a null URI and a non-empty label.
+     */
+    String FREE_TEXT = null;
+
+    /**
      * Special indicator for an uncategorized term.
+     * <p>
+     * Uncategorized terms (or the uncategorized category) has both null URI and label.
      */
     String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
 
