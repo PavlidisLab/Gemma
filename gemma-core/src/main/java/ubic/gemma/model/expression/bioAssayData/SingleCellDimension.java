@@ -2,7 +2,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -45,30 +44,10 @@ public class SingleCellDimension implements Identifiable {
     private int numberOfCells = 0;
 
     /**
-     * Cell types assignment to individual cells from the {@link #cellTypeLabels} collections.
-     * <p>
-     * If supplied, its size must be equal to that of {@link #cellIds}.
+     * Set of cell types assignment to individual cells. This is empty if no cell types have been assigned and should
+     * always contain a preferred labelling as per {@link CellTypeLabelling#preferred} if non-empty.
      */
-    @Nullable
-    private int[] cellTypes;
-
-    /**
-     * Cell type labels, or null if unknown.
-     * <p>
-     * Those are user-supplied cell type identifiers. Its size must be equal to that of {@link #cellIds}.
-     * <p>
-     * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
-     */
-    @Nullable
-    private List<String> cellTypeLabels;
-
-    /**
-     * Number of distinct cell types.
-     * <p>
-     * This must always be equal to number of distinct elements of {@link #cellTypes}.
-     */
-    @Nullable
-    private Integer numberOfCellTypeLabels;
+    private Set<CellTypeLabelling> cellTypeLabellings = new HashSet<>();
 
     /**
      * List of bioassays that each cell belongs to.
@@ -107,19 +86,6 @@ public class SingleCellDimension implements Identifiable {
         return getBioAssay( getCellIndex( cellId ) );
     }
 
-    public String getCellTypeLabel( int index ) {
-        Assert.notNull( cellTypes, "No cell types have been assigned." );
-        Assert.notNull( cellTypeLabels, "No cell labels exist." );
-        return cellTypeLabels.get( cellTypes[index] );
-    }
-
-    /**
-     * Obtain a cell type label by cell ID.
-     */
-    public String getCellTypeLabelByCellId( String cellId ) {
-        return getCellTypeLabel( getCellIndex( cellId ) );
-    }
-
     private int getCellIndex( String cellId ) {
         if ( cellIdToIndex == null ) {
             cellIdToIndex = ListUtils.indexOfElements( cellIds );
@@ -137,7 +103,7 @@ public class SingleCellDimension implements Identifiable {
             return Objects.hash( id );
         }
         // no need to hash numberOfCells, it's derived from cellIds's size
-        return Objects.hash( cellIds, Arrays.hashCode( cellTypes ), cellTypeLabels, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        return Objects.hash( cellIds, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override
@@ -149,10 +115,8 @@ public class SingleCellDimension implements Identifiable {
         SingleCellDimension scd = ( SingleCellDimension ) obj;
         if ( id != null && scd.id != null )
             return id.equals( scd.id );
-        return Objects.equals( cellTypeLabels, scd.cellTypeLabels )
-                && Objects.equals( bioAssays, scd.bioAssays )
+        return Objects.equals( bioAssays, scd.bioAssays )
                 && Arrays.equals( bioAssaysOffset, scd.bioAssaysOffset )
-                && Arrays.equals( cellTypes, scd.cellTypes )
                 && Objects.equals( cellIds, scd.cellIds );  // this is the most expensive to compare
     }
 

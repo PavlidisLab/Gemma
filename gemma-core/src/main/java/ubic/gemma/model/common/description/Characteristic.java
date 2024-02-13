@@ -291,6 +291,22 @@ public class Characteristic extends AbstractDescribable implements Serializable,
             entity.setEvidenceCode( evidenceCode );
             return entity;
         }
+
+        public static Characteristic newInstance( Category category ) {
+            Characteristic entity = new Characteristic();
+            entity.setCategory( category.getCategory() );
+            entity.setCategoryUri( category.getCategoryUri() );
+            return entity;
+        }
+
+        public static Characteristic newInstance( Category category, String value, @Nullable String valueUri ) {
+            Characteristic entity = new Characteristic();
+            entity.setCategory( category.getCategory() );
+            entity.setCategoryUri( category.getCategoryUri() );
+            entity.setValue( value );
+            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
+            return entity;
+        }
     }
 
 }

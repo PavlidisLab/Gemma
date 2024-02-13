@@ -20,24 +20,12 @@
         <property name="numberOfCells" type="java.lang.Integer">
             <column name="NUMBER_OF_CELLS" not-null="true" sql-type="INTEGER"/>
         </property>
-        <property name="cellTypes">
-            <column name="CELL_TYPES" not-null="false" sql-type="LONGBLOB"/>
-            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
-                <param name="arrayType">int</param>
-            </type>
-        </property>
-        <list name="cellTypeLabels" table="SINGLE_CELL_CELL_TYPE_LABEL" fetch="select" lazy="false" mutable="false">
-            <key foreign-key="SINGLE_CELL_CELL_TYPE_LABEL_DIMENSION_FKC">
+        <set name="cellTypeLabellings" lazy="true" fetch="select" cascade="all-delete-orphan">
+            <key foreign-key="SINGLE_CELL_DIMENSION_FKC">
                 <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
             </key>
-            <list-index column="ORDERING"/>
-            <element type="string">
-                <column name="CELL_TYPE_LABEL" sql-type="VARCHAR"/>
-            </element>
-        </list>
-        <property name="numberOfCellTypeLabels" type="java.lang.Integer">
-            <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
-        </property>
+            <one-to-many class="ubic.gemma.model.expression.bioAssayData.CellTypeLabelling"/>
+        </set>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
             <cache usage="read-write"/>
             <key foreign-key="SINGLE_CELL_DIMENSIONS_FKC">

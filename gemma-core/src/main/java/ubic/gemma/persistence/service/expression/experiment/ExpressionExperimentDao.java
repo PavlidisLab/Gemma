@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -312,12 +313,22 @@ public interface ExpressionExperimentDao
 
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
+    List<CellTypeLabelling> getCellTypeLabellings( ExpressionExperiment ee );
+
     /**
-     * Replace the SCD of a given dataset.
-     * @param ee           an expression experiment; its vectors will be refreshed
-     * @param dimension    the existing dimension
-     * @param newDimension the new dimension
-     * @return the number of updated vectors as a result
+     * Obtain the preferred labelling of the preferred single-cell vectors.
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there are multiple preferred cell-type
+     * labellings
      */
-    int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension );
+    @Nullable
+    CellTypeLabelling getPreferredCellTypeLabelling( ExpressionExperiment ee );
+
+    /**
+     * Add the given cell type labelling to the single-cell dimension.
+     * <p>
+     * If the new labelling is preferred, any existing one is marked as non-preferred.
+     */
+    void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeLabelling cellTypeLabelling );
+
+    List<Characteristic> getCellTypes( ExpressionExperiment ee );
 }

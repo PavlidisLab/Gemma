@@ -142,5 +142,28 @@
                 </subclass>
             </subclass>
         </subclass>
+        <subclass name="ubic.gemma.model.expression.bioAssayData.CellTypeLabelling"
+                  discriminator-value="SingleCellLabelling">
+            <property name="preferred" type="java.lang.Boolean">
+                <column name="IS_PREFERRED" not-null="true" sql-type="TINYINT"/>
+            </property>
+            <property name="cellTypes">
+                <column name="CELL_TYPES" not-null="false" sql-type="LONGBLOB"/>
+                <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                    <param name="arrayType">int</param>
+                </type>
+            </property>
+            <list name="cellTypeLabels" table="SINGLE_CELL_CELL_TYPE_LABEL" fetch="select" lazy="false"
+                  cascade="all-delete-orphan">
+                <key foreign-key="CHARACTERISTIC_CELL_TYPE_LABELLING_FKC">
+                    <column name="CHARACTERISTIC_CELL_TYPE_LABELLING_FK" sql-type="BIGINT"/>
+                </key>
+                <list-index column="CELL_TYPE_LABELLING_ORDERING"/>
+                <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+            </list>
+            <property name="numberOfCellTypeLabels" type="java.lang.Integer">
+                <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
+            </property>
+        </subclass>
     </class>
 </hibernate-mapping>

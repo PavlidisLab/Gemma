@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -1949,9 +1950,8 @@ public class ExpressionExperimentDaoImpl
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by scedv.singleCellDimension" )
+                .createQuery( "select distinct scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -1967,18 +1967,55 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public int replaceSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension, SingleCellDimension newDimension ) {
-        int updatedVectors = getSessionFactory().getCurrentSession()
-                .createQuery( "update SingleCellExpressionDataVector scd set scd.singleCellDimension = :newDimension where scd.singleCellDimension = :dim" )
-                .setParameter( "dim", dimension )
-                .setParameter( "newDimension", newDimension )
-                .executeUpdate();
-        if ( updatedVectors > 0 && Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
-            // will reload vectors with the updated SCD
-            // if the vectors are not initialized, they will be loaded with the updated SCD when they are accessed
-            getSessionFactory().getCurrentSession().refresh( ee );
+    public List<CellTypeLabelling> getCellTypeLabellings( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeLabellings ctl "
+                        + "where scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Nullable
+    @Override
+    public CellTypeLabelling getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
+        return ( CellTypeLabelling ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeLabellings ctl "
+                        + "where scedv.quantitationType.isPreferred = true and ctl.preferred = true and scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
+    public void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeLabelling labelling ) {
+        if ( labelling.isPreferred() ) {
+            for ( CellTypeLabelling l : dimension.getCellTypeLabellings() ) {
+                if ( l.isPreferred() ) {
+                    log.info( "Marking existing cell type labelling as non-preferred, a new preferred labelling will be added." );
+                    l.setPreferred( false );
+                    break;
+                }
+            }
         }
-        return updatedVectors;
+        getSessionFactory().getCurrentSession().persist( labelling );
+        dimension.getCellTypeLabellings().add( labelling );
+    }
+
+    @Override
+    public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ct from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeLabellings ctl "
+                        + "join ctl.cellTypeLabels ct "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and ctl.preferred = true" )
+                .setParameter( "ee", ee )
+                .list();
     }
 
     @Override

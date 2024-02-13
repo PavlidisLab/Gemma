@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -18,13 +19,18 @@ import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
+import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
@@ -187,6 +193,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
         sessionFactory.getCurrentSession().persist( ad );
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.setTaxon( taxon );
         // TODO: model bioassays against sub-biomaterial to represent cell aggregates
         BioMaterial bm = BioMaterial.Factory.newInstance( "a", taxon );
@@ -218,8 +225,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
                 .hasSize( 1 )
                 .allSatisfy( scd -> {
-                    assertThat( scd.getCellTypeLabel( 0 ) ).isEqualTo( "A" );
-                    assertThat( scd.getCellTypeLabel( 50 ) ).isEqualTo( "B" );
+                    assertThat( scd.getCellTypeLabellings().iterator().next().getCellTypeLabel( 0 ).getValue() ).isEqualTo( "A" );
+                    assertThat( scd.getCellTypeLabellings().iterator().next().getCellTypeLabel( 50 ).getValue() ).isEqualTo( "B" );
                 } );
 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
@@ -339,15 +346,76 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
         sessionFactory.getCurrentSession().flush();
+        assertThat( scExpressionExperimentService.getCellTypeLabellings( ee ) )
+                .hasSize( 1 );
+        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isNotNull();
+        assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
+                .extracting( Characteristic::getValue )
+                .containsExactlyInAnyOrder( "A", "B" );
         String[] ct = new String[100];
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 75 ? "A" : "B";
         }
-        SingleCellDimension newScd = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ) );
-        assertThat( newScd.getId() ).isNotNull();
+        CellTypeLabelling newLabelling = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ), null, null );
+        assertThat( newLabelling ).satisfies( l -> {
+            assertThat( l.getId() ).isNotNull();
+            assertThat( l.isPreferred() ).isTrue();
+        } );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
-                .allSatisfy( v -> assertThat( v.getSingleCellDimension() ).isEqualTo( newScd ) );
+                .allSatisfy( v -> assertThat( v.getSingleCellDimension().getCellTypeLabellings() ).contains( newLabelling ) );
+        assertThat( scExpressionExperimentService.getCellTypeLabellings( ee ) )
+                .hasSize( 1 )
+                .contains( newLabelling );
+        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isEqualTo( newLabelling );
+        assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
+                .extracting( Characteristic::getValue )
+                .containsExactlyInAnyOrder( "A", "B" );
+
+        scExpressionExperimentService.removeCellTypeLabels( ee, scd, newLabelling );
+        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isNull();
+
+        // FIXME: add proper assertions for the created factor, but the ExperimentalFactorService is mocked
+        verify( experimentalFactorService, times( 2 ) ).create( any( ExperimentalFactor.class ) );
+        verify( experimentalFactorService, times( 2 ) ).remove( any( ExperimentalFactor.class ) );
+    }
+
+    /**
+     * This a behaviour test when the labelling is not unique. This can be caused by multiple preferred single-cell QTs
+     * or multiple preferred cell type labellings.
+     */
+    @Test
+    public void testGetPreferredCellTypeLabellingWhenNonUnique() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
+
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
+        QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2 );
+        assertThat( qt.getIsPreferred() ).isFalse();
+        assertThat( qt2.getIsPreferred() ).isTrue();
+
+        // now we're going to do something really bad...
+        qt.setIsPreferred( true );
+
+        assertThatThrownBy( () -> scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) )
+                .isInstanceOf( NonUniqueResultException.class );
+    }
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+
+    @Test
+    public void testRecreateCellTypeFactor() {
+        when( experimentalFactorService.create( any( ExperimentalFactor.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );
+        ExperimentalFactor factor = scExpressionExperimentService.recreateCellTypeFactor( ee );
+        assertThat( factor.getCategory() ).isNotNull().satisfies( f -> {
+            assertThat( f.getCategory() ).isEqualTo( "cell type" );
+            assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
+        } );
     }
 
     private SingleCellDimension createSingleCellDimension() {
@@ -358,9 +426,14 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 50 ? 0 : 1;
         }
-        scd.setCellTypes( ct );
-        scd.setCellTypeLabels( Arrays.asList( "A", "B" ) );
-        scd.setNumberOfCellTypeLabels( 2 );
+        CellTypeLabelling labelling = new CellTypeLabelling();
+        labelling.setPreferred( true );
+        labelling.setCellTypes( ct );
+        labelling.setCellTypeLabels( Arrays.asList(
+                Characteristic.Factory.newInstance( Categories.CELL_TYPE, "A", null ),
+                Characteristic.Factory.newInstance( Categories.CELL_TYPE, "B", null ) ) );
+        labelling.setNumberOfCellTypeLabels( 2 );
+        scd.getCellTypeLabellings().add( labelling );
         scd.getBioAssays().addAll( ee.getBioAssays() );
         scd.setBioAssaysOffset( new int[] { 0, 25, 50, 75 } );
         return scd;
