@@ -93,9 +93,14 @@ public class ExpressionDataMatrixColumnSort {
                         throw new IllegalStateException( "Continuous factors should have Measurements as values" );
                     }
 
+                    if ( fv.getMeasurement().getValue().isEmpty() ) {
+                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
+                        sortedVals.put( Double.NaN, fv );
+                        continue;
+                    }
+
                     Double v = Double.parseDouble( fv.getMeasurement().getValue() );
                     sortedVals.put( v, fv );
-
                 }
 
                 if ( sortedVals.isEmpty() ) {
