@@ -55,7 +55,7 @@ public class ExpressionDataDoubleMatrixUtil {
 
     private static final double LOGARITHM_BASE = 2.0;
     private static final int COLUMNS_LIMIT = 4;
-    private static final double VALUES_LIMIT = 0.7;
+    private static final double VALUES_LIMIT = 0.5;
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
 
