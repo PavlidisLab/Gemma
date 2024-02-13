@@ -23,14 +23,11 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -53,29 +50,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public void remove( ExperimentalFactor experimentalFactor ) {
-        ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
-
-        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
-        ed.getExperimentalFactors().remove( experimentalFactor );
-
-        // remove associations with the experimental factor values in related expression experiments
-        //noinspection unchecked
-        List<BioMaterial> bioMaterials = getSessionFactory().getCurrentSession()
-                .createQuery( "select bm from BioMaterial as bm join bm.factorValues fv where fv.experimentalFactor = :ef group by bm" )
-                .setParameter( "ef", experimentalFactor )
-                .list();
-        for ( BioMaterial bm : bioMaterials ) {
-            bm.getFactorValues().removeAll( experimentalFactor.getFactorValues() );
-        }
-
-        // remove the experimental factor this cascades to values.
-        super.remove( experimentalFactor );
-    }
-
-    @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
-
         BusinessKey.checkValidKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );

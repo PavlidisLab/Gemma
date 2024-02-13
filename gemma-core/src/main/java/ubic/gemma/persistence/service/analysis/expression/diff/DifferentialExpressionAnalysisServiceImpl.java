@@ -254,6 +254,14 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
+    @Transactional
+    public int removeForExperimentalFactor( ExperimentalFactor experimentalFactor ) {
+        Collection<DifferentialExpressionAnalysis> found = differentialExpressionAnalysisDao.findByFactor( experimentalFactor );
+        this.remove( found );
+        return found.size();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment ) {
         return this.differentialExpressionAnalysisDao.findByExperiment( experiment );

@@ -77,6 +77,11 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    public Collection<BioMaterial> findByFactor( ExperimentalFactor factor ) {
+        return bioMaterialDao.findByFactor( factor );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         return this.bioMaterialDao.findByFactorValue( fv );

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
@@ -34,6 +35,8 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
     BioMaterial copy( BioMaterial bioMaterial );
 
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    Collection<BioMaterial> findByFactor( ExperimentalFactor factor );
 
     Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
