@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseService;
@@ -48,6 +49,9 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioMaterial> findByFactor( ExperimentalFactor cellTypeFactor );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> findByFactorValue( FactorValue fv );

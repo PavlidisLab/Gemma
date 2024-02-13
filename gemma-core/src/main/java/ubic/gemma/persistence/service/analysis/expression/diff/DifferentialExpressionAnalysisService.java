@@ -133,4 +133,9 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit );
 
+    /**
+     * Remove analyses using the given factor.
+     * @return the number of analysis removed
+     */
+    int removeForExperimentalFactor( ExperimentalFactor experimentalFactor );
 }
