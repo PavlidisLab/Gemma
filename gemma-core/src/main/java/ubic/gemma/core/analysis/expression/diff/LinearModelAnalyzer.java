@@ -1097,7 +1097,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
                 + ( interceptFactor == null ? "" : " with intercept treated as factor" )
                 + ( interactionFactorLists.isEmpty() ? "" : " with interaction" )
-                + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+                + ( subsetFactorValue == null ? "" : " Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Set<ExpressionAnalysisResultSet> resultSets = this
