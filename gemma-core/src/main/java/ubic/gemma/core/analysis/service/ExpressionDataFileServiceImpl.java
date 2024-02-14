@@ -617,7 +617,10 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                     this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
                 }
 
-                assert dear.getContrasts().size() == 1;
+                if (dear.getContrasts().size() != 1) {
+                    //
+                    throw new IllegalStateException( "Expected exactly one contrast for continuous factor" );
+                }
 
                 ContrastResult contrast = dear.getContrasts().iterator().next();
 
