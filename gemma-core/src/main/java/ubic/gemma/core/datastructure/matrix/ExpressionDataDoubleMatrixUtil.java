@@ -54,8 +54,19 @@ import java.util.stream.Collectors;
 public class ExpressionDataDoubleMatrixUtil {
 
     private static final double LOGARITHM_BASE = 2.0;
-    private static final int COLUMNS_LIMIT = 4;
-    private static final double VALUES_LIMIT = 0.5;
+
+
+    /**
+     * This threshold is used to determine if a row has too many identical value; a value of N means that the number of distinct values in the
+     * expression vector of length M must be at least N * M.
+     */
+    private static final double MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT = 0.3;
+
+    /**
+     * We don't apply the "unique values" filter to matrices with fewer columns than this.
+     */
+    private static final int MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER = 4;
+
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
 
@@ -85,12 +96,12 @@ public class ExpressionDataDoubleMatrixUtil {
         }
         r = dmatrix.rows();
 
-        if ( dmatrix.columns() > ExpressionDataDoubleMatrixUtil.COLUMNS_LIMIT ) {
+        if ( dmatrix.columns() > ExpressionDataDoubleMatrixUtil.MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER ) {
             /* This threshold had been 10^-5, but it's probably too stringent. Also remember
              * the data are log transformed the threshold should be transformed as well (it's not that simple),
              * but that's a minor effect.
              * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT, 0.001 );
+            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT, 0.001 );
             if ( dmatrix.rows() < r ) {
                 ExpressionDataDoubleMatrixUtil.log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
             }
