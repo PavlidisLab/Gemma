@@ -43,8 +43,7 @@ public class SingleCellDimensionTest {
         assertEquals( ba4, scd.getBioAssay( 99 ) );
         assertThrows( IndexOutOfBoundsException.class, () -> scd.getBioAssay( -1 ) );
         assertThrows( IndexOutOfBoundsException.class, () -> scd.getBioAssay( 100 ) );
-        assertEquals( ba1, scd.getBioAssayByCellId( cellIds.get( 0 ) ) );
-        assertThrows( IllegalArgumentException.class, () -> scd.getBioAssayByCellId( "unknown cell ID" ) );
+        assertEquals( 25, scd.getNumberOfCellsBySample( 0 ) );
+        assertEquals( cellIds.subList( 0, 25 ), scd.getCellIdsBySample( 0 ) );
     }
-
 }

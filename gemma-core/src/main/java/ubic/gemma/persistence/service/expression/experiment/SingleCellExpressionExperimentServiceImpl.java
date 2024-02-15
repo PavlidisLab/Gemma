@@ -324,8 +324,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      */
     private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
         Assert.isTrue( !scbad.getCellIds().isEmpty(), "There must be at least one cell ID." );
-        Assert.isTrue( scbad.getCellIds().stream().distinct().count() == scbad.getCellIds().size(),
-                "Cell IDs must be unique." );
+        for ( int i = 0; i < scbad.getBioAssays().size(); i++ ) {
+            List<String> sampleCellIds = scbad.getCellIdsBySample( i );
+            Assert.isTrue( sampleCellIds.stream().distinct().count() == sampleCellIds.size(),
+                    "Cell IDs must be unique for each sample." );
+        }
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
                 "The number of cell IDs must match the number of cells." );
         Assert.isTrue( scbad.getCellTypeLabellings().stream().filter( CellTypeLabelling::isPreferred ).count() <= 1,

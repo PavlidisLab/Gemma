@@ -2,14 +2,11 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
 import java.util.*;
 
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
@@ -23,18 +20,11 @@ public class SingleCellDimension implements Identifiable {
     /**
      * Cell identifiers.
      * <p>
-     * Those are user-supplied cell identifiers. Each cell must be assigned a unique id.
+     * Those are user-supplied cell identifiers. Each cell from a given {@link BioAssay} must be assigned a unique id.
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
      */
     private List<String> cellIds = new ArrayList<>();
-
-    /**
-     * An internal collection for mapping cell IDs to their position in {@link #cellIds}.
-     */
-    @Nullable
-    @Transient
-    private Map<String, Integer> cellIdToIndex;
 
     /**
      * Number of cells.
@@ -52,7 +42,7 @@ public class SingleCellDimension implements Identifiable {
     /**
      * List of bioassays that each cell belongs to.
      * <p>
-     * The {@link BioAssay} {@code bioAssays[i]} applies to all the cells in the interval {@code [bioAssaysOffset[i], bioAssaysOffset[i+1][}.
+     * The {@link BioAssay} {@code bioAssays[sampleIndex]} applies to all the cells in the interval {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][}.
      * To find the bioassay type of a given cell, use {@link #getBioAssay(int)}.
      */
     private List<BioAssay> bioAssays = new ArrayList<>();
@@ -66,35 +56,35 @@ public class SingleCellDimension implements Identifiable {
      */
     private int[] bioAssaysOffset = new int[0];
 
-    public void setCellIds( List<String> cellIds ) {
-        this.cellIds = cellIds;
-        // invalidate index cache
-        this.cellIdToIndex = null;
+    /**
+     * Obtain the {@link BioAssay} for a given cell position.
+     *
+     * @param cellIndex the cell position in {@link #cellIds}
+     */
+    public BioAssay getBioAssay( int cellIndex ) {
+        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, cellIds.size(), cellIndex );
     }
 
     /**
-     * Obtain the {@link BioAssay} for a given position.
+     * Obtain a list of cell IDs for the given sample.
+     *
+     * @param sampleIndex the sample position in {@link #bioAssays}
      */
-    public BioAssay getBioAssay( int index ) {
-        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, cellIds.size(), index );
+    public List<String> getCellIdsBySample( int sampleIndex ) {
+        return cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) );
     }
 
     /**
-     * Obtain the {@link BioAssay} for a given cell ID.
+     * Obtain the number for cells for the given sample.
+     *
+     * @param sampleIndex the sample position in {@link #bioAssays}
      */
-    public BioAssay getBioAssayByCellId( String cellId ) {
-        return getBioAssay( getCellIndex( cellId ) );
-    }
-
-    private int getCellIndex( String cellId ) {
-        if ( cellIdToIndex == null ) {
-            cellIdToIndex = ListUtils.indexOfElements( cellIds );
+    public int getNumberOfCellsBySample( int sampleIndex ) {
+        if ( sampleIndex == bioAssays.size() - 1 ) {
+            return cellIds.size() - bioAssaysOffset[sampleIndex];
+        } else {
+            return bioAssaysOffset[sampleIndex + 1] - bioAssaysOffset[sampleIndex];
         }
-        Integer index = cellIdToIndex.get( cellId );
-        if ( index == null ) {
-            throw new IllegalArgumentException( "Cell ID not found: " + cellId );
-        }
-        return index;
     }
 
     @Override
