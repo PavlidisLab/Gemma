@@ -66,6 +66,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioMaterial copy( BioMaterial bioMaterial ) {
         return this.bioMaterialDao.copy( bioMaterial );
     }
