@@ -42,7 +42,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see    BioMaterialService
+ * @see BioMaterialService
  */
 @Service
 public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial, BioMaterialValueObject>
@@ -66,6 +66,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioMaterial copy( BioMaterial bioMaterial ) {
         return this.bioMaterialDao.copy( bioMaterial );
     }
@@ -77,6 +78,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactor( ExperimentalFactor factor ) {
         return bioMaterialDao.findByFactor( factor );
     }
@@ -206,6 +208,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional
     public void removeCharacteristic( BioMaterial bm, Characteristic characterId ) {
         Assert.notNull( characterId.getId(), "The characteristic must be persistent." );
         if ( !bm.getCharacteristics().remove( characterId ) ) {
