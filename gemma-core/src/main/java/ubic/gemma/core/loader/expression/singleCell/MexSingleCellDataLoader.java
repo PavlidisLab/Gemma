@@ -15,7 +15,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -35,7 +34,7 @@ import static java.util.function.Function.identity;
  */
 @CommonsLog
 @Setter
-public class MexCellDataLoader implements SingleCellDataLoader {
+public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
@@ -55,7 +54,7 @@ public class MexCellDataLoader implements SingleCellDataLoader {
      */
     private boolean allowMappingProbeNamesToGeneSymbols = false;
 
-    public MexCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
+    public MexSingleCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
         Assert.isTrue( sampleNames.size() == barcodeFiles.size()
                         && barcodeFiles.size() == genesFiles.size()
                         && genesFiles.size() == matrixFiles.size(),
