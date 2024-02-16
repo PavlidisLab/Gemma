@@ -109,6 +109,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @JsonIgnore
     private Date lastSequenceUpdate;
     private String name;
+
+
+    @JsonIgnore
+    private Date createDate;
+
     /**
      * The number of unique genes that this array design maps to.
      */
@@ -141,6 +146,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     // for the Versioned interface
     private String releaseVersion;
     private URL releaseUrl;
+
 
     /**
      * Main external reference.
@@ -236,6 +242,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.switchedExpressionExperimentCount = arrayDesignValueObject.switchedExpressionExperimentCount;
         this.releaseVersion = arrayDesignValueObject.releaseVersion;
         this.releaseUrl = arrayDesignValueObject.releaseUrl;
+        this.createDate = arrayDesignValueObject.createDate;
     }
 
     /**

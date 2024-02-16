@@ -51,6 +51,12 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditables ) {
+        return this.auditEventDao.getCreateEvents( auditables );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.auditEventDao.getLastEvent( auditable, type );
     }
@@ -64,7 +70,7 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Override
     @Transactional(readOnly = true)
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         return this.auditEventDao.getLastEventsByType( auditables, types );
     }
 
