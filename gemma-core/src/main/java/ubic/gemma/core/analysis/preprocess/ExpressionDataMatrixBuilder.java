@@ -88,7 +88,7 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+    public static BulkExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.isEmpty() )
             throw new IllegalArgumentException( "No vectors" );
         PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
@@ -100,9 +100,9 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors        raw vectors
      * @return matrix of appropriate type.
      */
-    private static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
+    private static BulkExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
             Collection<? extends BulkExpressionDataVector> vectors ) {
-        ExpressionDataMatrix<?> expressionDataMatrix;
+        BulkExpressionDataMatrix<?> expressionDataMatrix;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
         } else if ( representation.equals( PrimitiveType.STRING ) ) {

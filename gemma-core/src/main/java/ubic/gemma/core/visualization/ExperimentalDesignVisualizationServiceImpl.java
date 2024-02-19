@@ -31,6 +31,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
@@ -365,7 +366,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<>();
 
-        ExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
+        BulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
 
         ExpressionExperiment sourceExperiment = null;
         if ( experiment instanceof ExpressionExperimentSubSet ) {

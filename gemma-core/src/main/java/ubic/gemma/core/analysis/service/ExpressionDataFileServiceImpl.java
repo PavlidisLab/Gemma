@@ -32,10 +32,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -44,8 +41,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -701,9 +698,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     /**
      * Checks whether the given file is ok to return, or it should be regenerated.
      *
-     * @param  forceWrite whether the file should be overridden even if found.
-     * @param  f          the file to check.
-     * @param  check      the file will be considered invalid after this date.
+     * @param forceWrite whether the file should be overridden even if found.
+     * @param f          the file to check.
+     * @param check      the file will be considered invalid after this date.
      * @return true, if the given file is ok to be returned, false if it should be regenerated.
      */
     private boolean checkFileOkToReturn( boolean forceWrite, File f, Date check ) {
@@ -885,7 +882,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     /**
      * @return Map of composite sequence ids to an array of strings: [probe name, genes symbol(s), gene Name(s), gemma
-     *         id(s), ncbi id(s)].
+     * id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annotations = new HashMap<>();
@@ -1175,14 +1172,14 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     private void writeJson( File file, Collection<BulkExpressionDataVector> vectors ) throws IOException {
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
     }
 
-    private void writeJson( File file, ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
+    private void writeJson( File file, BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
@@ -1190,14 +1187,14 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
-            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
+            BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix, true );
 
     }
 
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
-            ExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException {
+            BulkExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException {
         MatrixWriter matrixWriter = new MatrixWriter();
 
         if ( gzipped ) {
@@ -1214,7 +1211,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private void writeVectors( File file, Collection<BulkExpressionDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 

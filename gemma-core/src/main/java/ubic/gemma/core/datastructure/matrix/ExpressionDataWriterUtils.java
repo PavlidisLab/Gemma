@@ -98,7 +98,7 @@ public class ExpressionDataWriterUtils {
      * @param assayColumnIndex The column index in the matrix.
      * @return BA name
      */
-    public static String constructBioAssayName( ExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
+    public static String constructBioAssayName( BulkExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
 
         BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
         Collection<BioAssay> bioAssaysForColumn = matrix.getBioAssaysForColumn( assayColumnIndex );

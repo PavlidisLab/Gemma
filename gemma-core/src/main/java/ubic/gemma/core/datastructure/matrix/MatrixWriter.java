@@ -41,9 +41,9 @@ import java.util.Map;
  */
 @CommonsLog
 @ParametersAreNonnullByDefault
-public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
+public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?>> {
 
-    public void write( Writer writer, ExpressionDataMatrix<?> matrix,
+    public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
             throws IOException {
         this.write( writer, matrix, geneAnnotations, writeHeader, true, true, orderByDesign );
@@ -61,7 +61,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
      * @throws IOException when the write failed
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
-    public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
+    public void writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
         this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true, true );
     }
@@ -80,7 +80,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
      * @throws IOException when the write failed
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
+    public void writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int rows = matrix.rows();
@@ -135,7 +135,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
      * @throws IOException when the write failed
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void write( Writer writer, ExpressionDataMatrix<?> matrix,
+    public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int rows = matrix.rows();
@@ -172,7 +172,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
         log.debug( "Done writing" );
     }
 
-    public void writeJSON( Writer writer, ExpressionDataMatrix<?> matrix ) throws IOException {
+    public void writeJSON( Writer writer, BulkExpressionDataMatrix<?> matrix ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
@@ -207,7 +207,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
         writer.write( buf.toString() );
     }
 
-    private List<BioMaterial> getBioMaterialsInRequestedOrder( ExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
+    private List<BioMaterial> getBioMaterialsInRequestedOrder( BulkExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
         List<BioMaterial> bioMaterials = new ArrayList<>();
         if ( orderByDesign ) {
             bioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
@@ -223,7 +223,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
      * @param geneAnnotations just passed in to check it is there.
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
-    private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<?> matrix,
+    private void writeHeader( List<BioMaterial> orderedBioMaterials, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
             StringBuffer buf ) {
 
@@ -360,7 +360,7 @@ public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
     }
 
     @Override
-    public void writeTsv( ExpressionDataMatrix<?> entity, Writer writer ) throws IOException {
+    public void writeTsv( BulkExpressionDataMatrix<?> entity, Writer writer ) throws IOException {
         write( writer, entity, null, true, true, true, true );
     }
 

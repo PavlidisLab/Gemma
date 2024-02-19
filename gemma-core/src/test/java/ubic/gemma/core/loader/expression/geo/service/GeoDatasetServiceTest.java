@@ -28,6 +28,7 @@ import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -328,7 +329,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
-        ExpressionDataMatrix<Double> matrix = builder.getPreferredData();
+        BulkExpressionDataMatrix<Double> matrix = builder.getPreferredData();
 
         assertNotNull( matrix );
 
@@ -414,7 +415,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         log.debug( buf.toString() );
     }
 
-    private void testMatrixValue( ExpressionExperiment exp, ExpressionDataMatrix<Double> matrix, String probeToTest,
+    private void testMatrixValue( ExpressionExperiment exp, BulkExpressionDataMatrix<Double> matrix, String probeToTest,
             String sampleToTest, double expectedValue ) {
 
         CompositeSequence soughtDesignElement = null;
