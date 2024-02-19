@@ -8,9 +8,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.*;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -24,8 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-
-import static java.util.function.Function.identity;
 
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
@@ -59,11 +56,15 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                         && barcodeFiles.size() == genesFiles.size()
                         && genesFiles.size() == matrixFiles.size(),
                 "There must be exactly the same number of each type of files." );
-        this.sampleNames = sampleNames;
+        this.sampleNames = Collections.unmodifiableList( sampleNames );
         this.barcodeFiles = barcodeFiles;
         this.genesFiles = genesFiles;
         this.matrixFiles = matrixFiles;
         this.numberOfSamples = barcodeFiles.size();
+    }
+
+    public List<String> getSampleNames() {
+        return sampleNames;
     }
 
     @Override
@@ -106,15 +107,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide cell type labels.
      */
     @Override
-    public Optional<CellTypeLabelling> getCellTypeLabelling() {
+    public Optional<CellTypeAssignment> getCellTypeLabelling() {
         return Optional.empty();
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( ArrayDesign platform, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
-        Map<String, CompositeSequence> probeByName = platform.getCompositeSequences().stream()
-                .collect( Collectors.toMap( CompositeSequence::getName, identity() ) );
-
+    public Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
         ArrayList<CompRowMatrix> matrices = new ArrayList<>( numberOfSamples );
@@ -129,9 +127,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 String[] pieces = s.split( "\t", 3 );
                 String geneId = pieces[0];
                 String geneSymbol = pieces[1];
-                CompositeSequence probe = probeByName.get( geneId );
+                CompositeSequence probe = elementsMapping.get( geneId );
                 if ( probe == null && allowMappingProbeNamesToGeneSymbols ) {
-                    probe = probeByName.get( geneSymbol );
+                    probe = elementsMapping.get( geneSymbol );
                 }
                 if ( probe == null ) {
                     missingElements.add( geneId );
@@ -149,11 +147,11 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
 
             if ( missingElements.size() == elements.size() ) {
-                throw new IllegalArgumentException( "None of the elements of " + platform + " match genes from " + genesFile + "." );
+                throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile + "." );
             } else if ( missingElements.size() > 10 ) {
-                log.warn( String.format( "%s does not have elements for %d/%d genes from %s.", platform, missingElements.size(), elements.size(), genesFile ) );
+                log.warn( String.format( "The supplied mapping does not have elements for %d/%d genes from %s.", missingElements.size(), elements.size(), genesFile ) );
             } else if ( !missingElements.isEmpty() ) {
-                log.warn( String.format( "%s does not have elements for the following genes: %s from %s.", platform,
+                log.warn( String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
                         missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile ) );
             }
 

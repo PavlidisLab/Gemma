@@ -314,7 +314,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[] getColumn( Integer index ) {
+    public Double[] getColumn( int index ) {
         double[] rawResult = this.matrix.getColumn( index );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
@@ -350,25 +350,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[] getRow( Integer index ) {
+    public Double[] getRow( int index ) {
         double[] rawRow = matrix.getRow( index );
         return ArrayUtils.toObject( rawRow );
-    }
-
-    @Override
-    public Double[][] getRows( List<CompositeSequence> designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        Double[][] result = new Double[designElements.size()][];
-        int i = 0;
-        for ( CompositeSequence element : designElements ) {
-            Double[] rowResult = this.getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
     }
 
     @Override

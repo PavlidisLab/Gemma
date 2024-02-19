@@ -204,7 +204,7 @@ public class ExpressionDataMatrixColumnSort {
      * @param mat matrix
      * @return bio materials
      */
-    public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
+    public static List<BioMaterial> orderByExperimentalDesign( BulkExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = ExpressionDataMatrixColumnSort.getBms( mat );
 
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null );
@@ -466,7 +466,7 @@ public class ExpressionDataMatrixColumnSort {
     /**
      * Get all biomaterials for a matrix.
      */
-    private static List<BioMaterial> getBms( ExpressionDataMatrix<?> mat ) {
+    private static List<BioMaterial> getBms( BulkExpressionDataMatrix<?> mat ) {
         List<BioMaterial> result = new ArrayList<>();
         for ( int i = 0; i < mat.columns(); i++ ) {
             result.add( mat.getBioMaterialForColumn( i ) );
@@ -476,6 +476,7 @@ public class ExpressionDataMatrixColumnSort {
 
     /**
      * Get all (non-constant) factors used by the passed biomaterials
+     *
      * @param bms biomaterials
      * @return factors relevant to these biomaterials, ignoring those which have constant values.
      */
@@ -574,6 +575,7 @@ public class ExpressionDataMatrixColumnSort {
      * </p><p>
      * Any batch factor is used last (we sort by batch only within the most granular factor's levels)
      * </p>
+     *
      * @param start   biomaterials to sort
      * @param factors sorted list of factors to define sort order for biomaterials, cannot be null
      */

@@ -1,14 +1,15 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -40,18 +41,18 @@ public interface SingleCellDataLoader {
     /**
      * Load single-cell type labelling present in the data.
      */
-    Optional<CellTypeLabelling> getCellTypeLabelling() throws IOException;
+    Optional<CellTypeAssignment> getCellTypeLabelling() throws IOException;
 
     /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.
-     * <p>
-     * Make sure to close the stream when done, preferably using a try-with-resource block.
      *
-     * @param platform         a platform to use when mapping vectors to probes/genes
+     * @param elementsMapping  a mapping of element names used in the dataset to {@link CompositeSequence}
      * @param dimension        a dimension to use for creating vectors, may be loaded from the single-cell data with
      *                         {@link #getSingleCellDimension(Collection)}
      * @param quantitationType a quantitation type to extract from the data for, may be loaded from the single-cell data
      *                         with {@link #getQuantitationTypes()}
+     * @return a stream of single-cell expression data vectors that must be closed when done, preferably using a
+     * try-with-resource block.
      */
-    Stream<SingleCellExpressionDataVector> loadVectors( ArrayDesign platform, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException;
+    Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException;
 }

@@ -94,7 +94,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    public String[] getColumn( Integer index ) {
+    public String[] getColumn( int index ) {
         return this.matrix.getColumn( index );
     }
 
@@ -122,17 +122,8 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    public String[] getRow( Integer index ) {
+    public String[] getRow( int index ) {
         return matrix.getRow( index );
-    }
-
-    @Override
-    public String[][] getRows( List<CompositeSequence> designElements ) {
-        String[][] res = new String[this.rows()][];
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
-        }
-        return res;
     }
 
     @Override

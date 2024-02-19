@@ -21,13 +21,18 @@ package ubic.gemma.core.datastructure.matrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
  * Represents a matrix of data from an {@link ExpressionExperiment}.
+ * <p>
+ * The rows of this matrix represent design elements.
  *
  * @author pavlidis
  * @author keshav
+ * @see BulkExpressionDataMatrix
+ * @see SingleCellExpressionDataMatrix
  */
 public interface ExpressionDataMatrix<T> {
 
@@ -37,91 +42,30 @@ public interface ExpressionDataMatrix<T> {
     ExpressionExperiment getExpressionExperiment();
 
     /**
-     * Total number of columns.
+     * Obtain all the design elements in this data matrix.
+     */
+    List<CompositeSequence> getDesignElements();
+
+    /**
+     * Return a design element for a given index.
      *
-     * @return int
+     * @throws IndexOutOfBoundsException if the supplied index is not within zero and {@link #rows()}
+     */
+    CompositeSequence getDesignElementForRow( int index );
+
+    /**
+     * Obtain the total number of columns.
      */
     int columns();
-
-    /**
-     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
-     * design.
-     *
-     * @param el el
-     * @return int
-     */
-    int columns( CompositeSequence el );
-
-    /**
-     * Access a single value of the matrix. This is generally the easiest way to do it.
-     *
-     * @param row    row
-     * @param column col
-     * @return t
-     */
-    T get( int row, int column );
 
     /**
      * Access a single column of the matrix.
      *
      * @param column index
      * @return T[]
+     * @throws IndexOutOfBoundsException if the supplied index is not within zero and {@link #columns()}
      */
-    T[] getColumn( Integer column );
-
-    /**
-     * Obtain all the design elements in this data matrix.
-     */
-    List<CompositeSequence> getDesignElements();
-
-    /**
-     * @param index i
-     * @return cs
-     */
-    CompositeSequence getDesignElementForRow( int index );
-
-    /**
-     * Access the entire matrix.
-     *
-     * @return T[][]
-     */
-    T[][] getRawMatrix();
-
-    /**
-     * Return a row that 'came from' the given design element.
-     *
-     * @param designElement de
-     * @return t
-     */
-    T[] getRow( CompositeSequence designElement );
-
-    /**
-     * Access a single row of the matrix, by index. A complete row is returned.
-     *
-     * @param index i
-     * @return t[]
-     */
-    T[] getRow( Integer index );
-
-    /**
-     * @return list of elements representing the row 'labels'.
-     */
-    List<ExpressionDataMatrixRowElement> getRowElements();
-
-    int getRowIndex( CompositeSequence designElement );
-
-    /**
-     * Access a submatrix
-     *
-     * @param designElements de
-     * @return T[][]
-     */
-    T[][] getRows( List<CompositeSequence> designElements );
-
-    /**
-     * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
-     */
-    boolean hasMissingValues();
+    T[] getColumn( int column );
 
     /**
      * @return int
@@ -129,11 +73,32 @@ public interface ExpressionDataMatrix<T> {
     int rows();
 
     /**
-     * Set a value in the matrix, by index
+     * Access a single row of the matrix, by index. A complete row is returned.
      *
-     * @param row    row
-     * @param column col
-     * @param value  val
+     * @param index i
+     * @return t[]
+     * @throws IndexOutOfBoundsException if the supplied index is not within zero and {@link #rows()}
      */
-    void set( int row, int column, T value );
+    T[] getRow( int index );
+
+    /**
+     * Return a row that 'came from' the given design element.
+     *
+     * @param designElement de
+     * @return the corresponding row or null if the design element is not found in the matrix
+     */
+    @Nullable
+    T[] getRow( CompositeSequence designElement );
+
+    /**
+     * @return the index for the given design element, or -1 if not found
+     */
+    int getRowIndex( CompositeSequence designElement );
+
+    /**
+     * Access a single value of the matrix by row and column.
+     *
+     * @throws IndexOutOfBoundsException if either the row or column is outside the matrix bounds
+     */
+    T get( int row, int column );
 }

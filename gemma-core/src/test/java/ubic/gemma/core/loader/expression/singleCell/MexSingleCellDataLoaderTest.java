@@ -2,12 +2,9 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -17,54 +14,33 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
 
-public class MexCellDataLoaderTest {
+public class MexSingleCellDataLoaderTest {
 
     private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     @Test
     public void test() throws IOException {
-        ArrayDesign platform = ArrayDesign.Factory.newInstance( "GPL12311", null );
-
-        // consider the first file as a platform!
+        // consider the first file for mapping to elements
+        Map<String, CompositeSequence> elementsMapping;
         ClassPathResource cpr = new ClassPathResource( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
         try ( BufferedReader br = new BufferedReader( new InputStreamReader( new GZIPInputStream( cpr.getInputStream() ) ) ) ) {
-            br.lines().forEach( line -> platform.getCompositeSequences().add( CompositeSequence.Factory.newInstance( line.split( "\t", 2 )[0] ) ) );
+            elementsMapping = br.lines()
+                    .map( line -> line.split( "\t", 2 )[0] )
+                    .collect( Collectors.toMap( s -> s, CompositeSequence.Factory::newInstance ) );
         }
 
-        List<String> sampleNames = new ArrayList<>();
-        List<Path> barcodeFiles = new ArrayList<>();
-        List<Path> geneFiles = new ArrayList<>();
-        List<Path> matrixFiles = new ArrayList<>();
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources( "data/loader/expression/singleCell/GSE224438/*" );
-        Map<String, List<Resource>> f = Arrays.stream( resources )
-                .collect( Collectors.groupingBy( r -> r.getFilename().split( "_", 2 )[0], Collectors.toList() ) );
-        f = new TreeMap<>( f );
-        for ( Map.Entry<String, List<Resource>> entry : f.entrySet() ) {
-            String sampleName = entry.getKey();
-            Resource barcodeFile = entry.getValue().stream()
-                    .filter( p -> p.getFilename().endsWith( "barcodes.tsv.gz" ) )
-                    .findFirst()
-                    .orElse( null );
-            Resource geneFile = entry.getValue().stream().filter( p -> p.getFilename().endsWith( "features.tsv.gz" ) ).findFirst().orElse( null );
-            Resource matrixFile = entry.getValue().stream().filter( p -> p.getFilename().endsWith( "matrix.mtx.gz" ) ).findFirst().orElse( null );
-            if ( barcodeFile != null && geneFile != null && matrixFile != null ) {
-                sampleNames.add( sampleName );
-                barcodeFiles.add( barcodeFile.getFile().toPath() );
-                geneFiles.add( geneFile.getFile().toPath() );
-                matrixFiles.add( matrixFile.getFile().toPath() );
-            }
-        }
-        MexCellDataLoader loader = new MexCellDataLoader( sampleNames, barcodeFiles, geneFiles, matrixFiles );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
         ArrayList<BioAssay> bas = new ArrayList<>();
-        for ( String sampleName : sampleNames ) {
+        for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
         }
         assertThat( loader.getCellTypeLabelling() ).isEmpty();
@@ -79,7 +55,7 @@ public class MexCellDataLoaderTest {
         assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( platform, dimension, qt ).collect( Collectors.toList() );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {

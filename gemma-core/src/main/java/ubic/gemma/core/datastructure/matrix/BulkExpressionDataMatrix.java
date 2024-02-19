@@ -50,6 +50,18 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
     Collection<QuantitationType> getQuantitationTypes();
 
     /**
+     * @return a {@link BioAssayDimension} that covers all the biomaterials in this matrix.
+     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
+     *                               used in the experiment.
+     */
+    BioAssayDimension getBestBioAssayDimension();
+
+    /**
+     * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
+     */
+    boolean hasMissingValues();
+
+    /**
      * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
      * designelements per row, it is possible for this method to retrieve a data that does not come from the bioassay
      * and/or designelement arguments.
@@ -70,6 +82,13 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
     T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
 
     /**
+     * Access the entire matrix.
+     *
+     * @return T[][]
+     */
+    T[][] getRawMatrix();
+
+    /**
      * Access a single column of the matrix.
      *
      * @param bioAssay i
@@ -85,6 +104,21 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      */
     T[][] getColumns( List<BioAssay> bioAssays );
 
+
+    /**
+     * @return list of elements representing the row 'labels'.
+     */
+    List<ExpressionDataMatrixRowElement> getRowElements();
+
+    /**
+     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
+     * design.
+     *
+     * @param el el
+     * @return int
+     */
+    int columns( CompositeSequence el );
+
     /**
      * @param index i
      * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
@@ -97,13 +131,6 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      * @return the index of the column for the data for the bioMaterial.
      */
     int getColumnIndex( BioMaterial bioMaterial );
-
-    /**
-     * @return The bioassaydimension that covers all the biomaterials in this matrix.
-     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
-     *                               used in the experiment.
-     */
-    BioAssayDimension getBestBioAssayDimension();
 
     /**
      * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
@@ -122,4 +149,13 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      * used in the study.
      */
     Collection<BioAssay> getBioAssaysForColumn( int index );
+
+    /**
+     * Set a value in the matrix, by index
+     *
+     * @param row    row
+     * @param column col
+     * @param value  val
+     */
+    void set( int row, int column, T value );
 }

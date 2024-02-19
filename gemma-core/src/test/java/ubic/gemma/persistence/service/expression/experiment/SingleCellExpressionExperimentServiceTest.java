@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
@@ -10,11 +9,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
@@ -24,7 +20,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -33,14 +29,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Arrays;
@@ -77,93 +66,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
 
         @Bean
-        public AuditEventService auditEventService() {
-            return mock( AuditEventService.class );
+        public ExperimentalFactorService experimentalFactorService() {
+            return mock();
         }
 
         @Bean
         public AuditTrailService auditTrailService() {
-            return mock( AuditTrailService.class );
-        }
-
-        @Bean
-        public BioAssayDimensionService bioAssayDimensionService() {
-            return mock( BioAssayDimensionService.class );
-        }
-
-        @Bean
-        public DifferentialExpressionAnalysisService differentialExpressionAnalysisService() {
-            return mock( DifferentialExpressionAnalysisService.class );
-        }
-
-        @Bean
-        public ExpressionExperimentSetService expressionExperimentSetService() {
-            return mock( ExpressionExperimentSetService.class );
-        }
-
-        @Bean
-        public ExpressionExperimentSubSetService expressionExperimentSubSetService() {
-            return mock( ExpressionExperimentSubSetService.class );
-        }
-
-        @Bean
-        public ExperimentalFactorService experimentalFactorService() {
-            return mock( ExperimentalFactorService.class );
-        }
-
-        @Bean
-        public FactorValueService factorValueService() {
-            return mock( FactorValueService.class );
-        }
-
-        @Bean
-        public OntologyService ontologyService() {
-            return mock( OntologyService.class );
-        }
-
-        @Bean
-        public PrincipalComponentAnalysisService principalComponentAnalysisService() {
-            return mock( PrincipalComponentAnalysisService.class );
-        }
-
-        @Bean
-        public QuantitationTypeService quantitationTypeService() {
-            return mock( QuantitationTypeService.class );
-        }
-
-        @Bean
-        public SearchService searchService() {
-            return mock( SearchService.class );
-        }
-
-        @Bean
-        public SecurityService securityService() {
-            return mock( SecurityService.class );
-        }
-
-        @Bean
-        public SVDService svdService() {
-            return mock( SVDService.class );
-        }
-
-        @Bean
-        public CoexpressionAnalysisService coexpressionAnalysisService() {
-            return mock( CoexpressionAnalysisService.class );
-        }
-
-        @Bean
-        public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
-            return mock( SampleCoexpressionAnalysisService.class );
-        }
-
-        @Bean
-        public BlacklistedEntityService blacklistedEntityService() {
-            return mock( BlacklistedEntityService.class );
-        }
-
-        @Bean
-        public AccessDecisionManager accessDecisionManager() {
-            return mock( AccessDecisionManager.class );
+            return mock();
         }
     }
 
@@ -175,6 +84,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
 
     private ArrayDesign ad;
     private ExpressionExperiment ee;
@@ -211,6 +123,19 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     }
 
     @Test
+    public void testGetSingleCellDataMatrix() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
+        SingleCellExpressionDataMatrix<Double> matrix = scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
+        assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
+        assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
+        assertThat( matrix.columns() ).isEqualTo( 100 );
+        assertThat( matrix.rows() ).isEqualTo( 100 );
+    }
+
+    @Test
     public void testAddSingleCellDataVectors() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
 
@@ -225,8 +150,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
                 .hasSize( 1 )
                 .allSatisfy( scd -> {
-                    assertThat( scd.getCellTypeLabellings().iterator().next().getCellTypeLabel( 0 ).getValue() ).isEqualTo( "A" );
-                    assertThat( scd.getCellTypeLabellings().iterator().next().getCellTypeLabel( 50 ).getValue() ).isEqualTo( "B" );
+                    assertThat( scd.getCellTypeAssignments().iterator().next().getCellType( 0 ).getValue() ).isEqualTo( "A" );
+                    assertThat( scd.getCellTypeAssignments().iterator().next().getCellType( 50 ).getValue() ).isEqualTo( "B" );
                 } );
 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
@@ -356,14 +281,14 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 75 ? "A" : "B";
         }
-        CellTypeLabelling newLabelling = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ), null, null );
+        CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ), null, null );
         assertThat( newLabelling ).satisfies( l -> {
             assertThat( l.getId() ).isNotNull();
             assertThat( l.isPreferred() ).isTrue();
         } );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
-                .allSatisfy( v -> assertThat( v.getSingleCellDimension().getCellTypeLabellings() ).contains( newLabelling ) );
+                .allSatisfy( v -> assertThat( v.getSingleCellDimension().getCellTypeAssignments() ).contains( newLabelling ) );
         assertThat( scExpressionExperimentService.getCellTypeLabellings( ee ) )
                 .hasSize( 1 )
                 .contains( newLabelling );
@@ -403,9 +328,6 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .isInstanceOf( NonUniqueResultException.class );
     }
 
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService;
-
     @Test
     public void testRecreateCellTypeFactor() {
         when( experimentalFactorService.create( any( ExperimentalFactor.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
@@ -426,14 +348,14 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 50 ? 0 : 1;
         }
-        CellTypeLabelling labelling = new CellTypeLabelling();
+        CellTypeAssignment labelling = new CellTypeAssignment();
         labelling.setPreferred( true );
-        labelling.setCellTypes( ct );
-        labelling.setCellTypeLabels( Arrays.asList(
+        labelling.setCellTypeIndices( ct );
+        labelling.setCellTypes( Arrays.asList(
                 Characteristic.Factory.newInstance( Categories.CELL_TYPE, "A", null ),
                 Characteristic.Factory.newInstance( Categories.CELL_TYPE, "B", null ) ) );
-        labelling.setNumberOfCellTypeLabels( 2 );
-        scd.getCellTypeLabellings().add( labelling );
+        labelling.setNumberOfCellTypes( 2 );
+        scd.getCellTypeAssignments().add( labelling );
         scd.getBioAssays().addAll( ee.getBioAssays() );
         scd.setBioAssaysOffset( new int[] { 0, 25, 50, 75 } );
         return scd;
@@ -473,8 +395,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             v.setSingleCellDimension( scd );
             v.setQuantitationType( qt );
             v.setData( new byte[8 * 100] );
-            int[] ix = new int[8 * 100];
-            for ( int i = 0; i < 800; i++ ) {
+            int[] ix = new int[100];
+            for ( int i = 0; i < 100; i++ ) {
                 ix[i] = i;
             }
             v.setDataIndices( ix );

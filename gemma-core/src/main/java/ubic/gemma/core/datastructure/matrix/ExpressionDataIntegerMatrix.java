@@ -70,7 +70,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer[] getColumn( Integer index ) {
+    public Integer[] getColumn( int index ) {
         return this.matrix.getColumn( index );
     }
 
@@ -98,17 +98,8 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer[] getRow( Integer index ) {
+    public Integer[] getRow( int index ) {
         return this.matrix.getRow( index );
-    }
-
-    @Override
-    public Integer[][] getRows( List<CompositeSequence> designElements ) {
-        Integer[][] res = new Integer[this.rows()][];
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
-        }
-        return res;
     }
 
     @Override

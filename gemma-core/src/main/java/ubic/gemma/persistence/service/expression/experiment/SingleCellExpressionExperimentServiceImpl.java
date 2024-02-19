@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
@@ -16,7 +18,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -51,6 +53,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Autowired
     @Deprecated
     private SessionFactory sessionFactory;
+
+    @Override
+    @Transactional(readOnly = true)
+    public SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+        return new DoubleSingleCellExpressionDataMatrix( expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType ) );
+    }
 
     @Override
     @Transactional
@@ -88,7 +96,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         ee.getQuantitationTypes().add( quantitationType );
         expressionExperimentDao.update( ee ); // will take care of creating vectors
         if ( quantitationType.getIsPreferred() && scdCreated ) {
-            CellTypeLabelling preferredLabelling = scd.getCellTypeLabellings().stream().filter( CellTypeLabelling::isPreferred ).findFirst().orElse( null );
+            CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
                 log.info( "New single-cell preferred vectors were added, recreating the cell type factor." );
                 recreateCellTypeFactor( ee, preferredLabelling );
@@ -135,7 +143,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - ( previousSize - numVectorsRemoved );
         expressionExperimentDao.update( ee );
         if ( quantitationType.getIsPreferred() && scdCreated ) {
-            CellTypeLabelling preferredLabelling = scd.getCellTypeLabellings().stream().filter( CellTypeLabelling::isPreferred ).findFirst().orElse( null );
+            CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
                 log.info( "Preferred single-cell vectors were replaced, recreating the cell type factor." );
                 recreateCellTypeFactor( ee, preferredLabelling );
@@ -213,7 +221,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     /**
      * Remove the given single-cell vectors and their corresponding single-cell dimension if necessary.
-     * @param ee the experiment to remove the vectors from.
+     *
+     * @param ee                the experiment to remove the vectors from.
      * @param additionalVectors additional vectors to check if the single-cell dimension is still in use (i.e. vectors that are in the process of being added).
      */
     private void removeSingleCellVectorsAndDimensionIfNecessary( ExpressionExperiment ee,
@@ -254,11 +263,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public CellTypeLabelling relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels, Protocol protocol, String description ) {
+    public CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol protocol, @Nullable String description ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
         Assert.isTrue( ee.getBioAssays().containsAll( dimension.getBioAssays() ), "Single-cell dimension does not belong to the dataset." );
-        CellTypeLabelling labelling = new CellTypeLabelling();
+        CellTypeAssignment labelling = new CellTypeAssignment();
         labelling.setPreferred( true );
         labelling.setProtocol( protocol );
         labelling.setDescription( description );
@@ -267,11 +276,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = Collections.binarySearch( labels, newCellTypeLabels.get( i ) );
         }
-        labelling.setCellTypes( ct );
-        labelling.setCellTypeLabels( labels.stream()
+        labelling.setCellTypeIndices( ct );
+        labelling.setCellTypes( labels.stream()
                 .map( l -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, l, null ) )
                 .collect( Collectors.toList() ) );
-        labelling.setNumberOfCellTypeLabels( labels.size() );
+        labelling.setNumberOfCellTypes( labels.size() );
         expressionExperimentDao.addCellTypeLabelling( ee, dimension, labelling );
         validateSingleCellDimension( ee, dimension );
         log.info( "Relabelled single-cell vectors for " + ee + " with: " + labelling );
@@ -287,14 +296,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeCellTypeLabels( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeLabelling cellTypeLabelling ) {
+    public void removeCellTypeLabels( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
         Assert.isTrue( ee.getBioAssays().containsAll( dimension.getBioAssays() ), "Single-cell dimension does not belong to the dataset." );
-        Assert.isTrue( dimension.getCellTypeLabellings().contains( cellTypeLabelling ),
+        Assert.isTrue( dimension.getCellTypeAssignments().contains( cellTypeAssignment ),
                 "The supplied labelling does not belong to the dimension." );
-        boolean alsoRemoveFactor = cellTypeLabelling.equals( getPreferredCellTypeLabelling( ee ) );
-        dimension.getCellTypeLabellings().remove( cellTypeLabelling );
+        boolean alsoRemoveFactor = cellTypeAssignment.equals( getPreferredCellTypeLabelling( ee ) );
+        dimension.getCellTypeAssignments().remove( cellTypeAssignment );
         if ( alsoRemoveFactor ) {
             log.info( "The preferred cell type labels have been removed, removing the cell type factor..." );
             removeCellTypeFactorIfExists( ee );
@@ -303,13 +312,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<CellTypeLabelling> getCellTypeLabellings( ExpressionExperiment ee ) {
+    public List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee ) {
         return expressionExperimentDao.getCellTypeLabellings( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CellTypeLabelling getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
+    public CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
         return expressionExperimentDao.getPreferredCellTypeLabelling( ee );
     }
 
@@ -331,21 +340,21 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
                 "The number of cell IDs must match the number of cells." );
-        Assert.isTrue( scbad.getCellTypeLabellings().stream().filter( CellTypeLabelling::isPreferred ).count() <= 1,
+        Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
                 "There must be at most one preferred cell type labelling." );
-        for ( CellTypeLabelling labelling : scbad.getCellTypeLabellings() ) {
-            Assert.notNull( labelling.getNumberOfCellTypeLabels() );
-            Assert.notNull( labelling.getCellTypeLabels() );
-            Assert.isTrue( labelling.getCellTypes().length == scbad.getCellIds().size(),
+        for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
+            Assert.notNull( labelling.getNumberOfCellTypes() );
+            Assert.notNull( labelling.getCellTypes() );
+            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getCellIds().size(),
                     "The number of cell types must match the number of cell IDs." );
-            int numberOfCellTypeLabels = labelling.getCellTypeLabels().size();
+            int numberOfCellTypeLabels = labelling.getCellTypes().size();
             Assert.isTrue( numberOfCellTypeLabels > 0,
                     "There must be at least one cell type label declared in the cellTypeLabels collection." );
-            Assert.isTrue( labelling.getCellTypeLabels().stream().distinct().count() == labelling.getCellTypeLabels().size(),
+            Assert.isTrue( labelling.getCellTypes().stream().distinct().count() == labelling.getCellTypes().size(),
                     "Cell type labels must be unique." );
-            Assert.isTrue( numberOfCellTypeLabels == labelling.getNumberOfCellTypeLabels(),
+            Assert.isTrue( numberOfCellTypeLabels == labelling.getNumberOfCellTypes(),
                     "The number of cell types must match the number of values the cellTypeLabels collection." );
-            for ( int k : labelling.getCellTypes() ) {
+            for ( int k : labelling.getCellTypeIndices() ) {
                 Assert.isTrue( k >= 0 && k < numberOfCellTypeLabels,
                         String.format( "Cell type vector values must be within the [%d, %d[ range.", 0, numberOfCellTypeLabels ) );
             }
@@ -359,12 +368,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee ) {
-        CellTypeLabelling ctl = getPreferredCellTypeLabelling( ee );
+        CellTypeAssignment ctl = getPreferredCellTypeLabelling( ee );
         Assert.notNull( ctl, "There must be a preferred cell type labelling for " + ee + " to update the cell type factor." );
         return recreateCellTypeFactor( ee, ctl );
     }
 
-    private ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee, CellTypeLabelling ctl ) {
+    private ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl ) {
         removeCellTypeFactorIfExists( ee );
         // create a new cell type factor
         ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance();
@@ -372,7 +381,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         cellTypeFactor.setCategory( Characteristic.Factory.newInstance( Categories.CELL_TYPE ) );
         cellTypeFactor.setExperimentalDesign( ee.getExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
-        for ( Characteristic ct : ctl.getCellTypeLabels() ) {
+        for ( Characteristic ct : ctl.getCellTypes() ) {
             FactorValue fv = new FactorValue();
             Statement s = new Statement();
             s.setCategory( ct.getCategory() );

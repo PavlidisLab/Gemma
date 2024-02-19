@@ -11,6 +11,12 @@ import java.util.*;
 
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
 
+/**
+ * Represents a single-cell dimension, holding shared information for a set of {@link SingleCellExpressionDataVector}.
+ *
+ * @author poirigui
+ * @see SingleCellExpressionDataVector
+ */
 @Getter
 @Setter
 public class SingleCellDimension implements Identifiable {
@@ -29,28 +35,28 @@ public class SingleCellDimension implements Identifiable {
     /**
      * Number of cells.
      * <p>
-     * This should always be equal to the size of {@link #cellIds}.
+     * This must always be equal to the size of {@link #cellIds}.
      */
     private int numberOfCells = 0;
 
     /**
      * Set of cell types assignment to individual cells. This is empty if no cell types have been assigned and should
-     * always contain a preferred labelling as per {@link CellTypeLabelling#preferred} if non-empty.
+     * always contain a preferred labelling as per {@link CellTypeAssignment#isPreferred()} if non-empty.
      */
-    private Set<CellTypeLabelling> cellTypeLabellings = new HashSet<>();
+    private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
 
     /**
-     * List of bioassays that each cell belongs to.
+     * List of {@link BioAssay}s applicable to the cells.
      * <p>
-     * The {@link BioAssay} {@code bioAssays[sampleIndex]} applies to all the cells in the interval {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][}.
-     * To find the bioassay type of a given cell, use {@link #getBioAssay(int)}.
+     * The {@link BioAssay} in {@code bioAssays[sampleIndex]} applies to all the cells in the interval {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][}.
+     * To find the bioassay of a given cell, use {@link #getBioAssay(int)}.
      */
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
      * Offsets of the bioassays.
      * <p>
-     * This always contain {@code bioAssays.size()} elements.
+     * This must always contain {@code bioAssays.size()} elements.
      * <p>
      * This is stored in the database using {@link ByteArrayType}.
      */
@@ -60,8 +66,10 @@ public class SingleCellDimension implements Identifiable {
      * Obtain the {@link BioAssay} for a given cell position.
      *
      * @param cellIndex the cell position in {@link #cellIds}
+     * @throws IllegalArgumentException  if the sparse range array is invalid as per {@link ubic.gemma.core.util.ListUtils#getSparseRangeArrayElement(List, int[], int, int)}
+     * @throws IndexOutOfBoundsException if the index is out of bounds
      */
-    public BioAssay getBioAssay( int cellIndex ) {
+    public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
         return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, cellIds.size(), cellIndex );
     }
 
@@ -71,11 +79,13 @@ public class SingleCellDimension implements Identifiable {
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public List<String> getCellIdsBySample( int sampleIndex ) {
-        return cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) );
+        return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
     }
 
     /**
      * Obtain the number for cells for the given sample.
+     * <p>
+     * This is more efficient than looking up the size of {@link #getCellIdsBySample(int)}.
      *
      * @param sampleIndex the sample position in {@link #bioAssays}
      */

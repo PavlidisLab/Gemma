@@ -91,7 +91,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public Boolean[] getColumn( Integer index ) {
+    public Boolean[] getColumn( int index ) {
         ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
         Boolean[] res = new Boolean[rawResult.size()];
         int i = 0;
@@ -135,24 +135,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public Boolean[] getRow( Integer index ) {
+    public Boolean[] getRow( int index ) {
         return matrix.getRow( index );
-    }
-
-    @Override
-    public Boolean[][] getRows( List<CompositeSequence> designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        Boolean[][] result = new Boolean[designElements.size()][];
-        int i = 0;
-        for ( CompositeSequence element : designElements ) {
-            Boolean[] rowResult = this.getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
     }
 
     @Override

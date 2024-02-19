@@ -316,6 +316,14 @@
             <version>4.2.2.GA</version>
         </dependency>
 
+        <!-- MTJ, for reading MatrixMarket formats -->
+        <!-- this is also declared in baseCode, but we use it explicitly for reading single-cell data -->
+        <dependency>
+            <groupId>com.googlecode.matrix-toolkits-java</groupId>
+            <artifactId>mtj</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
         <!-- Testing -->
         <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>

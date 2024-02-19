@@ -44,10 +44,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -841,6 +838,7 @@ public class ExpressionExperimentDaoImpl
      * <p>
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
+     *
      * @param column            column holding the URI to be excluded
      * @param labelColumn       column holding the label (only used if excludeFreeText or excludeUncategorized is true,
      *                          then we will check if the label is non-null to cover some edge cases)
@@ -1749,6 +1747,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
         populateArrayDesignCount( results );
+        populateSingleCellMetadata( results );
     }
 
     @Override
@@ -1967,7 +1966,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<CellTypeLabelling> getCellTypeLabellings( ExpressionExperiment ee ) {
+    public List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
@@ -1980,8 +1979,8 @@ public class ExpressionExperimentDaoImpl
 
     @Nullable
     @Override
-    public CellTypeLabelling getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
-        return ( CellTypeLabelling ) getSessionFactory().getCurrentSession()
+    public CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeLabellings ctl "
@@ -1991,9 +1990,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeLabelling labelling ) {
+    public void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment labelling ) {
         if ( labelling.isPreferred() ) {
-            for ( CellTypeLabelling l : dimension.getCellTypeLabellings() ) {
+            for ( CellTypeAssignment l : dimension.getCellTypeAssignments() ) {
                 if ( l.isPreferred() ) {
                     log.info( "Marking existing cell type labelling as non-preferred, a new preferred labelling will be added." );
                     l.setPreferred( false );
@@ -2002,7 +2001,7 @@ public class ExpressionExperimentDaoImpl
             }
         }
         getSessionFactory().getCurrentSession().persist( labelling );
-        dimension.getCellTypeLabellings().add( labelling );
+        dimension.getCellTypeAssignments().add( labelling );
     }
 
     @Override
@@ -2015,6 +2014,17 @@ public class ExpressionExperimentDaoImpl
                         + "join ctl.cellTypeLabels ct "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and ctl.preferred = true" )
                 .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
+    public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", quantitationType )
                 .list();
     }
 
@@ -2270,6 +2280,30 @@ public class ExpressionExperimentDaoImpl
         Map<Long, Long> adCountById = results.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setArrayDesignCount( adCountById.get( eevo.getId() ) );
+        }
+    }
+
+    private void populateSingleCellMetadata( Collection<ExpressionExperimentValueObject> eevos ) {
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv.expressionExperiment.id, scd, cta from ExpressionExperiment ee "
+                        + "join ee.singleCellExpressionDataVectors scedv "
+                        + "join scedv.quantitationType qt "
+                        + "join scedv.singleCellDimension scd "
+                        + "left join scd.cellTypeAssignments cta "
+                        + "where scedv.expressionExperiment.id in :ees "
+                        + "and qt.isPreferred = true and cta is null or cta.preferred = true "
+                        + "group by scedv.expressionExperiment" )
+                .setParameterList( "ees", EntityUtils.getIds( eevos ) )
+                .list();
+        if ( !results.isEmpty() ) {
+            Map<Long, ExpressionExperimentValueObject> voById = EntityUtils.getIdMap( eevos );
+            for ( Object[] row : results ) {
+                Long id = ( Long ) row[0];
+                SingleCellDimension scd = ( SingleCellDimension ) row[1];
+                CellTypeAssignment cta = ( CellTypeAssignment ) row[2];
+                voById.get( id ).setSingleCellDimension( new SingleCellDimensionValueObject( scd, cta ) );
+            }
         }
     }
 }

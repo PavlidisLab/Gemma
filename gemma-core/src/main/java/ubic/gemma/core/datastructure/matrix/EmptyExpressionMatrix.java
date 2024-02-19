@@ -84,7 +84,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object[] getColumn( Integer column ) {
+    public Object[] getColumn( int column ) {
         throw new UnsupportedOperationException();
     }
 
@@ -104,12 +104,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object[] getRow( Integer index ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getRows( List<CompositeSequence> designElements ) {
+    public Object[] getRow( int index ) {
         throw new UnsupportedOperationException();
     }
 

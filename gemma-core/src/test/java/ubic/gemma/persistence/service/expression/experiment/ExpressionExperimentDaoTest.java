@@ -15,14 +15,17 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
@@ -384,6 +387,62 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertNotNull( bm );
         assertFalse( bm.getBioAssaysUsedIn().contains( ba1 ) );
         assertTrue( bm.getBioAssaysUsedIn().contains( ba2 ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectWithSingleCellData() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        CompositeSequence cs = new CompositeSequence();
+        cs.setArrayDesign( ad );
+        sessionFactory.getCurrentSession().persist( cs );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.setCellIds( Arrays.asList( "A", "B", "C" ) );
+        scd.getBioAssays().add( ba );
+        scd.setBioAssaysOffset( new int[] { 0 } );
+        CellTypeAssignment cta = new CellTypeAssignment();
+        cta.setCellTypeIndices( new int[] { 0, 1, 1, 0 } );
+        cta.setCellTypes( Arrays.asList( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "X", null ),
+                Characteristic.Factory.newInstance( Categories.CELL_TYPE, "Y", null ) ) );
+        cta.setPreferred( true );
+        cta.setNumberOfCellTypes( 0 );
+        scd.getCellTypeAssignments().add( cta );
+        sessionFactory.getCurrentSession().persist( scd );
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.COUNT );
+        qt.setIsPreferred( true );
+        ee.getQuantitationTypes().add( qt );
+        SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+        vector.setData( ByteArrayUtils.doubleArrayToBytes( new double[] { 1.0, 2.0, 1.0, 2.0 } ) );
+        vector.setDataIndices( new int[] { 0, 1, 2, 4 } );
+        vector.setExpressionExperiment( ee );
+        vector.setDesignElement( cs );
+        vector.setQuantitationType( qt );
+        vector.setSingleCellDimension( scd );
+        ee.getSingleCellExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( eevo );
+        assertNotNull( eevo.getSingleCellDimension() );
+        assertEquals( Arrays.asList( "A", "B", "C" ), eevo.getSingleCellDimension().getCellIds() );
+        assertNotNull( eevo.getSingleCellDimension().getCellTypeAssignment() );
+        assertEquals( Arrays.asList( 1L, 2L, 2L, 1L ), eevo.getSingleCellDimension().getCellTypeAssignment().getCellTypeIds() );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {

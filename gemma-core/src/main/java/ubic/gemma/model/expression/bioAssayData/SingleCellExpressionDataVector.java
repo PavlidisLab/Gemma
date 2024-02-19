@@ -8,11 +8,12 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * An expression data vector that contains data at the resolution of a single cell.
+ * An expression data vector that contains data at the resolution of individual cells.
  * <p>
  * This is achieved by storing cell metadata such as IDs and cell types in a {@link SingleCellDimension} that is shared
  * among all vectors of a given {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and individual
  * non-zero cell expression in a sparse data structure similar to the rows of a CSR matrix.
+ *
  * @author poirigui
  */
 @Getter

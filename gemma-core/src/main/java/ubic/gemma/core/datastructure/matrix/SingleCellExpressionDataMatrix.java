@@ -24,4 +24,13 @@ public interface SingleCellExpressionDataMatrix<T> extends ExpressionDataMatrix<
      * Return the single-cell dimension for this matrix.
      */
     SingleCellDimension getSingleCellDimension();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * <b>Important note:</b> Retrieving a column is a {@code O(n log m)} operation where {@code n} is the number of
+     * vectors and {@code m} is the number of cells. Always favour row-oriented operations when possible.
+     */
+    @Override
+    T[] getColumn( int column );
 }

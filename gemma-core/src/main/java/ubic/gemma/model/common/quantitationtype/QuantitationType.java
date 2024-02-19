@@ -214,84 +214,27 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             return false;
         }
         final QuantitationType that = ( QuantitationType ) object;
-
         if ( that.getId() != null && this.getId() != null ) {
-            return Objects.equals( that.getId(), this.getId() );
+            return getId().equals( that.getId() );
         }
-
-        if ( that.getName() != null && this.getName() != null && !this.getName().equals( that.getName() ) ) {
-            return false;
-        }
-
-        if ( this.getScale() != null && that.getScale() != null && !this.getScale().equals( that.getScale() ) ) {
-            return false;
-        }
-
-        if ( this.getIsPreferred() != that.getIsPreferred() ) {
-            return false;
-        }
-
-        if ( this.getIsRatio() != that.getIsRatio() ) {
-            return false;
-        }
-
-        if ( this.getIsNormalized() != that.getIsNormalized() ) {
-            return false;
-        }
-
-        if ( this.getIsBackground() != that.getIsBackground() ) {
-            return false;
-        }
-
-        if ( this.getIsBackgroundSubtracted() != that.getIsBackgroundSubtracted() ) {
-            return false;
-        }
-
-        if ( this.getGeneralType() != null && that.getGeneralType() != null && !this.getGeneralType()
-                .equals( that.getGeneralType() ) ) {
-            return false;
-        }
-
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( this.getRepresentation() != null && that.getRepresentation() != null && !this.getRepresentation()
-                .equals( that.getRepresentation() ) ) {
-            return false;
-        }
-
-        return this.getType() == null || that.getRepresentation() == null || this.getType().equals( that.getType() );
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( scale, that.scale )
+                && Objects.equals( isPreferred, that.isPreferred )
+                && Objects.equals( isRatio, that.isRatio )
+                && Objects.equals( isNormalized, that.isNormalized )
+                && Objects.equals( isBackground, that.isBackground )
+                && Objects.equals( isBackgroundSubtracted, that.isBackgroundSubtracted )
+                && Objects.equals( isBatchCorrected, that.isBatchCorrected )
+                && Objects.equals( type, that.type )
+                && Objects.equals( generalType, that.generalType )
+                && Objects.equals( representation, that.representation )
+                && Objects.equals( isRecomputedFromRawData, that.isRecomputedFromRawData );
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() );
-        return hashCode;
-    }
-
-    private int computeHashCode() {
-        int hashCode = 0;
-        if ( this.getName() != null ) {
-            hashCode = hashCode + this.getName().hashCode();
-        }
-        if ( this.getType() != null ) {
-            hashCode = hashCode + this.getType().hashCode();
-        }
-        if ( this.getRepresentation() != null ) {
-            hashCode = hashCode + this.getRepresentation().hashCode();
-        }
-        if ( this.getGeneralType() != null ) {
-            hashCode = hashCode + this.getGeneralType().hashCode();
-        }
-        if ( this.getScale() != null ) {
-            hashCode = hashCode + this.getScale().hashCode();
-        }
-        hashCode += Boolean.hashCode( this.getIsBackground() );
-        hashCode += Boolean.hashCode( this.getIsBackgroundSubtracted() );
-        hashCode += Boolean.hashCode( this.getIsNormalized() );
-        hashCode += Boolean.hashCode( this.getIsPreferred() );
-        hashCode += Boolean.hashCode( this.getIsRatio() );
-
-        return hashCode;
+        return Objects.hash( getName(), type, representation, generalType, scale, isBackground, isBackgroundSubtracted,
+                isNormalized, isPreferred, isBatchCorrected, isRatio, isRecomputedFromRawData );
     }
 
     @Override
@@ -350,6 +293,7 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             result.isBackground = quantitationType.isBackground;
             result.isBackgroundSubtracted = quantitationType.isBackgroundSubtracted;
             result.isBatchCorrected = quantitationType.isBatchCorrected;
+            result.isRecomputedFromRawData = quantitationType.isRecomputedFromRawData;
             return result;
         }
 

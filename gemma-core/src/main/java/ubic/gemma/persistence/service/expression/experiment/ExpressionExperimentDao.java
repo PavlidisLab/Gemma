@@ -10,10 +10,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.CellTypeLabelling;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -105,6 +102,7 @@ public interface ExpressionExperimentDao
      * Obtain the dataset usage frequency by technology type for the given dataset IDs.
      * <p>
      * Note: No ACL filtering is performed.
+     *
      * @see #getTechnologyTypeUsageFrequency()
      */
     Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds );
@@ -123,6 +121,7 @@ public interface ExpressionExperimentDao
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
      * <p>
      * Note: no ACL filtering is performed. Only administrator can see troubled platforms.
+     *
      * @see #getArrayDesignsUsageFrequency(int)
      */
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults );
@@ -142,6 +141,7 @@ public interface ExpressionExperimentDao
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
      * <p>
      * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
+     *
      * @see #getOriginalPlatformsUsageFrequency(int)
      */
     Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults );
@@ -214,11 +214,11 @@ public interface ExpressionExperimentDao
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param ids        only list specific ids, or null to ignore
-     * @param taxon      only list EEs in the specified taxon, or null to ignore
-     * @param sort       the field to order the results by.
-     * @param offset     offset
-     * @param limit      maximum number of results to return
+     * @param ids    only list specific ids, or null to ignore
+     * @param taxon  only list EEs in the specified taxon, or null to ignore
+     * @param sort   the field to order the results by.
+     * @param offset offset
+     * @param limit  maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
@@ -313,22 +313,28 @@ public interface ExpressionExperimentDao
 
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
-    List<CellTypeLabelling> getCellTypeLabellings( ExpressionExperiment ee );
+    List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred labelling of the preferred single-cell vectors.
+     *
      * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there are multiple preferred cell-type
-     * labellings
+     *                                                                        labellings
      */
     @Nullable
-    CellTypeLabelling getPreferredCellTypeLabelling( ExpressionExperiment ee );
+    CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee );
 
     /**
      * Add the given cell type labelling to the single-cell dimension.
      * <p>
      * If the new labelling is preferred, any existing one is marked as non-preferred.
      */
-    void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeLabelling cellTypeLabelling );
+    void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
+
+    /**
+     * Obtain a set of single-cell data vectors for the given quantitation type.
+     */
+    List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 }
