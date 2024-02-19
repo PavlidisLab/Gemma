@@ -33,6 +33,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
  * 'tag' of free text.
@@ -285,27 +287,35 @@ public class Characteristic extends AbstractDescribable implements Serializable,
             entity.setName( name );
             entity.setDescription( description );
             entity.setValue( value );
-            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
+            entity.setValueUri( stripToNull( valueUri ) );
             entity.setCategory( category );
-            entity.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
             entity.setEvidenceCode( evidenceCode );
             return entity;
         }
 
-        public static Characteristic newInstance( Category category ) {
+        public static Characteristic newInstance( String category, @Nullable String categoryUri ) {
             Characteristic entity = new Characteristic();
-            entity.setCategory( category.getCategory() );
-            entity.setCategoryUri( category.getCategoryUri() );
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            return entity;
+        }
+
+        public static Characteristic newInstance( Category category ) {
+            return newInstance( category.getCategory(), category.getCategoryUri() );
+        }
+
+        public static Characteristic newInstance( String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
+            final Characteristic entity = new Characteristic();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setValue( value );
+            entity.setValueUri( stripToNull( valueUri ) );
             return entity;
         }
 
         public static Characteristic newInstance( Category category, String value, @Nullable String valueUri ) {
-            Characteristic entity = new Characteristic();
-            entity.setCategory( category.getCategory() );
-            entity.setCategoryUri( category.getCategoryUri() );
-            entity.setValue( value );
-            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
-            return entity;
+            return newInstance( category.getCategory(), category.getCategoryUri(), value, valueUri );
         }
     }
 

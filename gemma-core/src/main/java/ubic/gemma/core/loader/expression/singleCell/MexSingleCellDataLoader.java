@@ -13,6 +13,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -109,6 +110,14 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public Optional<CellTypeAssignment> getCellTypeAssignment() {
         return Optional.empty();
+    }
+
+    /**
+     * MEX does not provide experimental factors.
+     */
+    @Override
+    public Set<ExperimentalFactor> getFactors() throws IOException {
+        return Collections.emptySet();
     }
 
     @Override

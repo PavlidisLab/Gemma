@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Represents the labelling of cell types.
@@ -71,5 +72,11 @@ public class CellTypeAssignment extends Analysis {
     @Override
     public boolean equals( Object object ) {
         return super.equals( object );
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" );
     }
 }

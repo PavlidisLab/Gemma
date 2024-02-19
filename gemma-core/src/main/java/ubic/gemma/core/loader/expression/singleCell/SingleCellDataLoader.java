@@ -6,6 +6,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -42,6 +43,11 @@ public interface SingleCellDataLoader {
      * Load single-cell type labelling present in the data.
      */
     Optional<CellTypeAssignment> getCellTypeAssignment() throws IOException;
+
+    /**
+     * Load experimental factors present in the data.
+     */
+    Set<ExperimentalFactor> getFactors() throws IOException;
 
     /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.
