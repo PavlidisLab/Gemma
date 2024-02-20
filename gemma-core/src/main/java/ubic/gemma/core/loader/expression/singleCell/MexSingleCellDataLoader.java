@@ -107,7 +107,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide cell type labels.
      */
     @Override
-    public Optional<CellTypeAssignment> getCellTypeLabelling() {
+    public Optional<CellTypeAssignment> getCellTypeAssignment() {
         return Optional.empty();
     }
 

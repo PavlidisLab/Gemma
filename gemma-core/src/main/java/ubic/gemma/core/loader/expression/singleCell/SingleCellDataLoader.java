@@ -41,7 +41,7 @@ public interface SingleCellDataLoader {
     /**
      * Load single-cell type labelling present in the data.
      */
-    Optional<CellTypeAssignment> getCellTypeLabelling() throws IOException;
+    Optional<CellTypeAssignment> getCellTypeAssignment() throws IOException;
 
     /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.

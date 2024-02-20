@@ -1966,12 +1966,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee ) {
+    public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
+                .createQuery( "select distinct cta from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
-                        + "join scd.cellTypeLabellings ctl "
+                        + "join scd.cellTypeAssignments cta "
                         + "where scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -1979,29 +1979,29 @@ public class ExpressionExperimentDaoImpl
 
     @Nullable
     @Override
-    public CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
+    public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ctl from SingleCellExpressionDataVector scedv "
+                .createQuery( "select distinct cta from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
-                        + "join scd.cellTypeLabellings ctl "
-                        + "where scedv.quantitationType.isPreferred = true and ctl.preferred = true and scedv.expressionExperiment = :ee" )
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType.isPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
 
     @Override
-    public void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment labelling ) {
-        if ( labelling.isPreferred() ) {
-            for ( CellTypeAssignment l : dimension.getCellTypeAssignments() ) {
-                if ( l.isPreferred() ) {
-                    log.info( "Marking existing cell type labelling as non-preferred, a new preferred labelling will be added." );
-                    l.setPreferred( false );
+    public void addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment assignment ) {
+        if ( assignment.isPreferred() ) {
+            for ( CellTypeAssignment a : dimension.getCellTypeAssignments() ) {
+                if ( a.isPreferred() ) {
+                    log.info( "Marking existing cell type assignment as non-preferred, a new preferred assignment will be added." );
+                    a.setPreferred( false );
                     break;
                 }
             }
         }
-        getSessionFactory().getCurrentSession().persist( labelling );
-        dimension.getCellTypeAssignments().add( labelling );
+        getSessionFactory().getCurrentSession().persist( assignment );
+        dimension.getCellTypeAssignments().add( assignment );
     }
 
     @Override
@@ -2010,9 +2010,9 @@ public class ExpressionExperimentDaoImpl
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ct from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
-                        + "join scd.cellTypeLabellings ctl "
-                        + "join ctl.cellTypeLabels ct "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and ctl.preferred = true" )
+                        + "join scd.cellTypeAssignments cta "
+                        + "join cta.cellTypes ct "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and cta.preferred = true" )
                 .setParameter( "ee", ee )
                 .list();
     }

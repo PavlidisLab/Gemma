@@ -62,7 +62,7 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Remove the given cell type labelling.
      *
-     * If the cell type labelling is preferred and applies the the preferred vectors as per {@link #getPreferredCellTypeLabelling(ExpressionExperiment)}, the cell type factor will be removed.
+     * If the cell type labelling is preferred and applies the the preferred vectors as per {@link #getPreferredCellTypeAssignment(ExpressionExperiment)}, the cell type factor will be removed.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     void removeCellTypeLabels( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment );
@@ -71,14 +71,14 @@ public interface SingleCellExpressionExperimentService {
      * Obtain all the cell type labellings from all single-cell vectors.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee );
+    List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred cell type labelling from the preferred single-cell vectors.
      */
     @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee );
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

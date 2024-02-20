@@ -43,7 +43,7 @@ public class MexSingleCellDataLoaderTest {
         for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
         }
-        assertThat( loader.getCellTypeLabelling() ).isEmpty();
+        assertThat( loader.getCellTypeAssignment() ).isEmpty();
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         assertThat( qt ).isNotNull();
         assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );

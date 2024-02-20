@@ -281,12 +281,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .map( l -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, l, null ) )
                 .collect( Collectors.toList() ) );
         labelling.setNumberOfCellTypes( labels.size() );
-        expressionExperimentDao.addCellTypeLabelling( ee, dimension, labelling );
+        expressionExperimentDao.addCellTypeAssignment( ee, dimension, labelling );
         validateSingleCellDimension( ee, dimension );
         log.info( "Relabelled single-cell vectors for " + ee + " with: " + labelling );
 
         // checking labelling.isPreferred() is not enough, the labelling might apply to non-preferred vectors
-        if ( labelling.equals( getPreferredCellTypeLabelling( ee ) ) ) {
+        if ( labelling.equals( getPreferredCellTypeAssignment( ee ) ) ) {
             log.info( "New labels are preferred and also apply to preferred single-cell vectors, recreating the cell type factor..." );
             recreateCellTypeFactor( ee, labelling );
         }
@@ -302,7 +302,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( ee.getBioAssays().containsAll( dimension.getBioAssays() ), "Single-cell dimension does not belong to the dataset." );
         Assert.isTrue( dimension.getCellTypeAssignments().contains( cellTypeAssignment ),
                 "The supplied labelling does not belong to the dimension." );
-        boolean alsoRemoveFactor = cellTypeAssignment.equals( getPreferredCellTypeLabelling( ee ) );
+        boolean alsoRemoveFactor = cellTypeAssignment.equals( getPreferredCellTypeAssignment( ee ) );
         dimension.getCellTypeAssignments().remove( cellTypeAssignment );
         if ( alsoRemoveFactor ) {
             log.info( "The preferred cell type labels have been removed, removing the cell type factor..." );
@@ -312,14 +312,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getCellTypeLabellings( ee );
+    public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getCellTypeAssignments( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getPreferredCellTypeLabelling( ee );
+    public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getPreferredCellTypeAssignment( ee );
     }
 
     @Override
@@ -368,7 +368,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee ) {
-        CellTypeAssignment ctl = getPreferredCellTypeLabelling( ee );
+        CellTypeAssignment ctl = getPreferredCellTypeAssignment( ee );
         Assert.notNull( ctl, "There must be a preferred cell type labelling for " + ee + " to update the cell type factor." );
         return recreateCellTypeFactor( ee, ctl );
     }

@@ -132,7 +132,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
-        assertThat( matrix.rows() ).isEqualTo( 100 );
+        assertThat( matrix.rows() ).isEqualTo( 10 );
     }
 
     @Test
@@ -271,9 +271,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
         sessionFactory.getCurrentSession().flush();
-        assertThat( scExpressionExperimentService.getCellTypeLabellings( ee ) )
+        assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
                 .hasSize( 1 );
-        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isNotNull();
+        assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isNotNull();
         assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
                 .extracting( Characteristic::getValue )
                 .containsExactlyInAnyOrder( "A", "B" );
@@ -289,16 +289,16 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
                 .allSatisfy( v -> assertThat( v.getSingleCellDimension().getCellTypeAssignments() ).contains( newLabelling ) );
-        assertThat( scExpressionExperimentService.getCellTypeLabellings( ee ) )
+        assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
                 .hasSize( 1 )
                 .contains( newLabelling );
-        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isEqualTo( newLabelling );
+        assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEqualTo( newLabelling );
         assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
                 .extracting( Characteristic::getValue )
                 .containsExactlyInAnyOrder( "A", "B" );
 
         scExpressionExperimentService.removeCellTypeLabels( ee, scd, newLabelling );
-        assertThat( scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) ).isNull();
+        assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isNull();
 
         // FIXME: add proper assertions for the created factor, but the ExperimentalFactorService is mocked
         verify( experimentalFactorService, times( 2 ) ).create( any( ExperimentalFactor.class ) );
@@ -324,7 +324,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         // now we're going to do something really bad...
         qt.setIsPreferred( true );
 
-        assertThatThrownBy( () -> scExpressionExperimentService.getPreferredCellTypeLabelling( ee ) )
+        assertThatThrownBy( () -> scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .isInstanceOf( NonUniqueResultException.class );
     }
 

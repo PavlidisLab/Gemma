@@ -313,23 +313,23 @@ public interface ExpressionExperimentDao
 
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
-    List<CellTypeAssignment> getCellTypeLabellings( ExpressionExperiment ee );
+    List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred labelling of the preferred single-cell vectors.
+     * Obtain the preferred assignment of the preferred single-cell vectors.
      *
      * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there are multiple preferred cell-type
      *                                                                        labellings
      */
     @Nullable
-    CellTypeAssignment getPreferredCellTypeLabelling( ExpressionExperiment ee );
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
 
     /**
-     * Add the given cell type labelling to the single-cell dimension.
+     * Add the given cell type assignment to the single-cell dimension.
      * <p>
      * If the new labelling is preferred, any existing one is marked as non-preferred.
      */
-    void addCellTypeLabelling( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment );
+    void addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
