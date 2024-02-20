@@ -617,7 +617,18 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                     this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
                 }
 
-                if (dear.getContrasts().size() != 1) {
+                /*
+                If there are no results for the DEAR then we wouldn't expect contrasts, so we just leave a blank.
+                 */
+                if ( dear.getPvalue() == null ) {
+                    String contrastData = "\t\t";
+                    rowBuffer.append( contrastData );
+                    buf.append( rowBuffer ).append( '\n' );
+                    continue;
+                }
+
+
+                if ( dear.getContrasts().size() != 1 ) {
                     //
                     throw new IllegalStateException( "Expected exactly one contrast for continuous factor" );
                 }

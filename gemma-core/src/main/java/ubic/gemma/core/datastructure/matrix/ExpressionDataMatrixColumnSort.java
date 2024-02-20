@@ -89,8 +89,12 @@ public class ExpressionDataMatrixColumnSort {
                         continue;
                     }
 
-                    if ( fv.getMeasurement() == null ) {
-                        throw new IllegalStateException( "Continuous factors should have Measurements as values" );
+                    if ( fv.getMeasurement() == null || fv.getMeasurement().getValue() == null ) {
+                       // throw new IllegalStateException( "Continuous factors should have Measurements as values" );
+                        // This can happen if a value is missing, as nothing would be added to the BioMaterial.
+                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
+                        sortedVals.put( Double.NaN, fv );
+                        continue;
                     }
 
                     if ( fv.getMeasurement().getValue().isEmpty() ) {

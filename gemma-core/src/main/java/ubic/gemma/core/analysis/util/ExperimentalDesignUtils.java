@@ -306,11 +306,16 @@ public class ExperimentalDesignUtils {
 
                 if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                     Measurement measurement = fv.getMeasurement();
-                    assert measurement != null;
-                    try {
-                        value = Double.parseDouble( measurement.getValue() );
-                    } catch ( NumberFormatException e ) {
+
+                    if ( measurement == null ) {
                         value = Double.NaN;
+                        continue;
+                    } else {
+                        try {
+                            value = Double.parseDouble( measurement.getValue() );
+                        } catch ( NumberFormatException e ) {
+                            value = Double.NaN;
+                        }
                     }
                 } else {
                     /*
