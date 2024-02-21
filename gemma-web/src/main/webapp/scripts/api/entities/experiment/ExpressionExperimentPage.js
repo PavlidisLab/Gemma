@@ -77,14 +77,15 @@ function roundScore(value, valDecimals) {
 function getBatchInfoBadges(ee) {
     var result = "";
 
-    if (ee.batchConfound !== null && ee.batchConfound !== "") {
+    var hasBatchConfound = ee.batchConfound !== null && ee.batchConfound !== "";
+
+    if (hasBatchConfound) {
         result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch confound',
             ee.batchConfound);
-        return result;
     }
 
     // batch status, shown whether we have batch information or not.
-    if (ee.batchEffect !== null) {
+    if (!hasBatchConfound && ee.batchEffect !== null) {
 		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
 		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
