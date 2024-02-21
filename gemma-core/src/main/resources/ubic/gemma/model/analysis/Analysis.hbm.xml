@@ -143,12 +143,13 @@
             </subclass>
         </subclass>
         <subclass name="ubic.gemma.model.expression.bioAssayData.CellTypeAssignment"
-                  discriminator-value="SingleCellLabelling">
+                  discriminator-value="CellTypeAssignment">
+            <!-- unfortunately, columns cannot be made non-null because of other subclasses of Analysis  -->
             <property name="preferred" type="java.lang.Boolean">
-                <column name="IS_PREFERRED" not-null="true" sql-type="TINYINT"/>
+                <column name="IS_PREFERRED" not-null="false" sql-type="TINYINT"/>
             </property>
             <property name="cellTypeIndices">
-                <column name="CELL_TYPE_INDICES" not-null="true" sql-type="LONGBLOB"/>
+                <column name="CELL_TYPE_INDICES" not-null="false" sql-type="LONGBLOB"/>
                 <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
                     <param name="arrayType">int</param>
                 </type>
@@ -162,7 +163,7 @@
                 <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
             </list>
             <property name="numberOfCellTypes" type="java.lang.Integer">
-                <column name="NUMBER_OF_CELL_TYPES" not-null="true" sql-type="INTEGER"/>
+                <column name="NUMBER_OF_CELL_TYPES" not-null="false" sql-type="INTEGER"/>
             </property>
         </subclass>
     </class>
