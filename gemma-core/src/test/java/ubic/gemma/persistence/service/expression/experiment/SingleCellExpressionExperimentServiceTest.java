@@ -119,7 +119,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @After
     public void resetMocks() {
-        reset( auditTrailService );
+        reset( experimentalFactorService, auditTrailService );
     }
 
     @Test
