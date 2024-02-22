@@ -12,35 +12,54 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialServiceImpl;
 import ubic.gemma.persistence.util.TestComponent;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
+public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
 
     @Configuration
     @TestComponent
     static class ExperimentalFactorServiceTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
         @Bean
+        public ExperimentalFactorService experimentalFactorService( ExperimentalFactorDao experimentalFactorDao, BioMaterialService bioMaterialService ) {
+            return new ExperimentalFactorServiceImpl( experimentalFactorDao, mock(), bioMaterialService);
+        }
+
+        @Bean
+        public BioMaterialService bioMaterialService( SessionFactory sessionFactory ) {
+            return new BioMaterialServiceImpl( new BioMaterialDaoImpl( sessionFactory ), mock(), mock(), mock() );
+        }
+
+        @Bean
         public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
             return new ExperimentalFactorDaoImpl( sessionFactory );
         }
 
+        @Bean
+        public CharacteristicService characteristicService() {
+            return mock();
+        }
     }
 
     @Autowired
-    private ExperimentalFactorDao experimentalFactorDao;
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
     private SessionFactory sessionFactory;
 
     @Test
     public void testDeleteExperimentalFactor() {
-        ExperimentalFactor ef = experimentalFactorDao.create( createExperimentalFactor() );
-        experimentalFactorDao.remove( ef );
+        ExperimentalFactor ef = experimentalFactorService.create( createExperimentalFactor() );
+        experimentalFactorService.remove( ef );
     }
 
     @Test
@@ -74,7 +93,7 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().clear();
         ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
         ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
-        experimentalFactorDao.remove( ef );
+        experimentalFactorService.remove( ef );
 
         assertFalse( ed.getExperimentalFactors().contains( ef ) );
 

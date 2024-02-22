@@ -157,7 +157,7 @@
             <list name="cellTypes" fetch="select" lazy="false" cascade="all-delete-orphan">
                 <!-- this appears in the CHARACTERISTIC table, so it has to be spelled out for clarity -->
                 <key foreign-key="CHARACTERISTIC_CELL_TYPE_ASSIGNMENT_FKC">
-                    <column name="CHARACTERISTIC_CELL_TYPE_ASSIGNMENT_FK" sql-type="BIGINT"/>
+                    <column name="CELL_TYPE_ASSIGNMENT_FK" sql-type="BIGINT"/>
                 </key>
                 <list-index column="CELL_TYPE_ASSIGNMENT_ORDERING"/>
                 <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
