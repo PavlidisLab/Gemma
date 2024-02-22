@@ -442,7 +442,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertNotNull( eevo.getSingleCellDimension() );
         assertEquals( Arrays.asList( "A", "B", "C" ), eevo.getSingleCellDimension().getCellIds() );
         assertNotNull( eevo.getSingleCellDimension().getCellTypeAssignment() );
-        assertEquals( Arrays.asList( 1L, 2L, 2L, 1L ), eevo.getSingleCellDimension().getCellTypeAssignment().getCellTypeIds() );
+        Long typeAId = cta.getCellTypes().get( 0 ).getId();
+        Long typeBId = cta.getCellTypes().get( 1 ).getId();
+        assertEquals( Arrays.asList( typeAId, typeBId, typeBId, typeAId ), eevo.getSingleCellDimension().getCellTypeAssignment().getCellTypeIds() );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
