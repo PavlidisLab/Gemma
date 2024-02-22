@@ -138,4 +138,6 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
      * @return the number of analysis removed
      */
     int removeForExperimentalFactor( ExperimentalFactor experimentalFactor );
+
+    int removeForExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors );
 }

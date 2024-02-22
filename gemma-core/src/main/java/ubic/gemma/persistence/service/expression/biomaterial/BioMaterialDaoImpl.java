@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -94,23 +93,6 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
                 .setParameter( "ee", experiment ).list();
-    }
-
-    @Override
-    public Collection<BioMaterial> findByFactor( ExperimentalFactor factor ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv.experimentalFactor = :f" )
-                .setParameter( "f", factor )
-                .list();
-    }
-
-    @Override
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
-                .setParameter( "f", fv ).list();
     }
 
     @Override
