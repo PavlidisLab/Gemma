@@ -23,10 +23,12 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Geeq;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -367,7 +369,7 @@ public class ExpressionDataMatrixColumnSort {
         for ( ExperimentalFactor ef : factors ) {
 
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
-                return ef;
+              //  return ef;
             }
 
             /*
@@ -493,6 +495,11 @@ public class ExpressionDataMatrixColumnSort {
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> factorValues = bm.getFactorValues();
             for ( FactorValue fv : factorValues ) {
+
+                if (fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( "DE_Exclude"::equalsIgnoreCase )) {
+                    continue;
+                }
+
                 if ( !usedFactorValues.containsKey( fv.getExperimentalFactor() ) ) {
                     usedFactorValues.put( fv.getExperimentalFactor(), new HashSet<>() );
                 }
@@ -576,7 +583,7 @@ public class ExpressionDataMatrixColumnSort {
      * Sort biomaterials according to a list of ordered factors.
      * </p>
      * <p>
-     * If any factor is continuous, we sort by it and don't do any further sorting.
+     * FIXME If any factor is continuous, we sort by it and don't do any further sorting.
      * </p><p>
      * Otherwise, for categorical factors, we sort recursively (by levels of the first factor, then
      * within that by levels of the second factor etc.)
@@ -620,10 +627,10 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByFactor( simplest, fv2bms, start );
 
         // Abort ordering, so we are ordered only by the first continuous factor.
-        if ( ExperimentalDesignUtils.isContinuous( simplest ) ) {
-            assert ordered != null;
-            return ordered;
-        }
+//        if ( ExperimentalDesignUtils.isContinuous( simplest ) ) {
+//            assert ordered != null;
+//            return ordered;
+//        }
 
         LinkedList<ExperimentalFactor> factorsStillToDo = new LinkedList<>();
         factorsStillToDo.addAll( factors );

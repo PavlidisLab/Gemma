@@ -433,22 +433,22 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 Double value;
-                if ( fv.getMeasurement() != null ) {
-                    try {
-                        value = Double.parseDouble( fv.getMeasurement().getValue() );
-                    } catch ( NumberFormatException e ) {
-                        log.warn( "non-numeric Measurement value: " + fv.getMeasurement().getValue());
-                        value = fvV.get( fv.getId() ); // not good.
+                if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                    if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) {
+                        try {
+                            value = Double.parseDouble( fv.getMeasurement().getValue() );
+                        } catch ( NumberFormatException e ) {
+                            value = Double.NaN;
+                        }
+                    } else {
+                        value = Double.NaN;
                     }
                 } else {
-                    value = fvV.get( fv.getId() );
+                    value = fvV.get( fv.getId() ); // we use IDs to stratify the groups.
                 }
                 result.get( baVo ).put( ef, value );
-
             }
-
         }
-
         return result;
     }
 
