@@ -1804,6 +1804,7 @@ public class ExpressionExperimentDaoImpl
         if ( !ee.getOtherParts().isEmpty() ) {
             log.info( String.format( "Detaching split experiment from %d other parts", ee.getOtherParts().size() ) );
             for ( ExpressionExperiment e : ee.getOtherParts() ) {
+                log.debug( "Detaching from " + e );
                 e.getOtherParts().remove( ee );
             }
             ee.getOtherParts().clear();
@@ -1816,18 +1817,20 @@ public class ExpressionExperimentDaoImpl
             if ( dim.getBioAssays().isEmpty() ) {
                 dimensionsToRemove.add( dim );
             } else {
-                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the dimension will not be deleted.", dim ) );
+                log.warn( dim + " is attached to more than one ExpressionExperiment, the dimension will not be deleted." );
             }
         }
 
         // detach BAs from the samples, completely detached samples will be removed later
         Set<BioMaterial> samplesToRemove = new HashSet<>();
+        Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
         for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.getSampleUsed().getFactorValues().removeAll( fvs );
             ba.getSampleUsed().getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
-            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() ) {
+            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
                 samplesToRemove.add( ba.getSampleUsed() );
             } else {
-                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the sample will not be deleted.", ba.getSampleUsed() ) );
+                log.warn( ba.getSampleUsed() + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
             }
         }
 
@@ -1850,6 +1853,18 @@ public class ExpressionExperimentDaoImpl
                 getSessionFactory().getCurrentSession().delete( dim );
             }
         }
+    }
+
+    private List<FactorValue> getFactorValues( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct fv from ExpressionExperiment ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where ee = :ee" )
+                .setParameter( "ee", ee )
+                .list();
     }
 
     @Override
