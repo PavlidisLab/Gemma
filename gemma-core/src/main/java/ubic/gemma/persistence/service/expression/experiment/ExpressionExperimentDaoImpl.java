@@ -1755,25 +1755,29 @@ public class ExpressionExperimentDaoImpl
         ee.getCurationDetails().setLastTroubledEvent( null );
 
         // dissociate this EE from other parts
-        for ( ExpressionExperiment e : ee.getOtherParts() ) {
-            e.getOtherParts().remove( ee );
-        }
-        ee.getOtherParts().clear();
-
-        // detach from BA dimensions
-        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-        for ( BioAssayDimension dim : dims ) {
-            dim.getBioAssays().clear();
+        if ( !ee.getOtherParts().isEmpty() ) {
+            log.info( String.format( "Detaching split experiment from %d other parts", ee.getOtherParts().size() ) );
+            for ( ExpressionExperiment e : ee.getOtherParts() ) {
+                e.getOtherParts().remove( ee );
+            }
+            ee.getOtherParts().clear();
         }
 
-        // first pass, detach BAs from the samples
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
+        // detach from BAs from dimensions, completely detached dimension will be removed later
+        Set<BioAssayDimension> dimensionsToRemove = new HashSet<>();
+        for ( BioAssayDimension dim : this.getBioAssayDimensions( ee ) ) {
+            dim.getBioAssays().removeAll( ee.getBioAssays() );
+            if ( dim.getBioAssays().isEmpty() ) {
+                dimensionsToRemove.add( dim );
+            } else {
+                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the dimension will not be deleted.", dim ) );
+            }
         }
 
-        // second pass, delete samples that are no longer attached to BAs
+        // detach BAs from the samples, completely detached samples will be removed later
         Set<BioMaterial> samplesToRemove = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.getSampleUsed().getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
             if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() ) {
                 samplesToRemove.add( ba.getSampleUsed() );
             } else {
@@ -1783,11 +1787,22 @@ public class ExpressionExperimentDaoImpl
 
         super.remove( ee );
 
-        // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
-        // cascading and that is not allowed in the data model
-        log.debug( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
-        for ( BioMaterial bm : samplesToRemove ) {
-            getSessionFactory().getCurrentSession().delete( bm );
+        if ( !samplesToRemove.isEmpty() ) {
+            // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
+            // cascading and that is not allowed in the data model
+            log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
+            for ( BioMaterial bm : samplesToRemove ) {
+                log.debug( "Removing " + bm + "..." );
+                getSessionFactory().getCurrentSession().delete( bm );
+            }
+        }
+
+        if ( !dimensionsToRemove.isEmpty() ) {
+            log.info( String.format( "Removing %d BioAssayDimension that are no longer attached to any BioAssay", dimensionsToRemove.size() ) );
+            for ( BioAssayDimension dim : dimensionsToRemove ) {
+                log.debug( "Removing " + dim + "..." );
+                getSessionFactory().getCurrentSession().delete( dim );
+            }
         }
     }
 

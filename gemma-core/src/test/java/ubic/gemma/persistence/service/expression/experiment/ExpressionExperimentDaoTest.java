@@ -16,11 +16,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -384,6 +387,49 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertNotNull( bm );
         assertFalse( bm.getBioAssaysUsedIn().contains( ba1 ) );
         assertTrue( bm.getBioAssaysUsedIn().contains( ba2 ) );
+    }
+
+    @Test
+    public void removeWithBioAssayDimension() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        CompositeSequence cs1 = CompositeSequence.Factory.newInstance( "test", arrayDesign );
+        arrayDesign.getCompositeSequences().add( cs1 );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba1 = new BioAssay();
+        ba1.setArrayDesignUsed( arrayDesign );
+        ba1.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba1 );
+        ExpressionExperiment ee1 = new ExpressionExperiment();
+        ee1.getBioAssays().add( ba1 );
+        // create quantitations
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.COUNT );
+        ee1.getQuantitationTypes().add( qt );
+        BioAssayDimension bad = new BioAssayDimension();
+        bad.getBioAssays().add( ba1 );
+        sessionFactory.getCurrentSession().persist( bad );
+        RawExpressionDataVector vector = new RawExpressionDataVector();
+        vector.setExpressionExperiment( ee1 );
+        vector.setDesignElement( cs1 );
+        vector.setQuantitationType( qt );
+        vector.setBioAssayDimension( bad );
+        vector.setData( new byte[0] );
+        ee1.getRawExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee1 );
+
+        ee1 = reload( ee1 );
+        expressionExperimentDao.remove( ee1 );
+        sessionFactory.getCurrentSession().flush();
+        assertNull( sessionFactory.getCurrentSession().get( BioAssayDimension.class, bad.getId() ) );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
