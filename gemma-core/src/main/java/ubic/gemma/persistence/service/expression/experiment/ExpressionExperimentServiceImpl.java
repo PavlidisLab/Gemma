@@ -992,11 +992,29 @@ public class ExpressionExperimentServiceImpl
                     log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
                     break;
                 }
+
+                // Use the "date run" information as a first pass to decide if there is a batch association.
+                // This won't always be present.
                 double minP = 1.0;
+                if ( svd.getDatePvals() != null ) {
+                    for ( Integer component : svd.getDatePvals().keySet() ) {
+                        Double pVal = svd.getDatePvals().get( component );
+                        if ( pVal != null && pVal < minP ) {
+                            details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
+                            minP = pVal;
+                        }
+                    }
+                }
+
+                // we can override the date-based p-value with the factor-based p-value if it is lower.
+                // The reason to do this is it can be underpowered. The date-based one is more sensitive.
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-                    Double pVal = cmpEffects.get( ef.getId() );
 
+                    // could use the effect size instead of the p-values (or in addition)
+                    //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );
+
+                    Double pVal = cmpEffects.get( ef.getId() );
                     if ( pVal != null && pVal < minP ) {
                         details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                         minP = pVal;

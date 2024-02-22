@@ -512,7 +512,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     svo.setPCFactorCorrelationPval( componentNumber, ef,
                             CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing.size() ) );
                 } else {
-                    // one-way ANOVA on ranks.
+                    // one-way ANOVA on ranks. This test is pretty underpowered.
                     double kwPVal = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
 
                     svo.setPCFactorCorrelationPval( componentNumber, ef, kwPVal );
@@ -522,19 +522,20 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     double corrPvalue = CorrelationStats
                             .spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing.size() );
                     assert Math.abs( factorCorrelation ) < 1.0 + 1e-2; // sanity.
+
                     /*
-                     * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
+                     * If the regular linear correlation is strong,
                      * then we should just use that -- basically, it means the order we have the groups happens to be a
-                     * good one. Of course we could just store pvalues, but that's not easy to use either.
+                     * good one.
                      */
                     if ( corrPvalue <= kwPVal ) {
                         svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                        svo.setPCFactorCorrelationPval( componentNumber, ef, corrPvalue);
                     } else {
                         // hack. A bit like turning pvalues into prob it
                         double approxCorr = CorrelationStats
                                 .correlationForPvalue( kwPVal, eigenGeneWithoutMissing.size() );
                         svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );
-
                     }
                 }
 
