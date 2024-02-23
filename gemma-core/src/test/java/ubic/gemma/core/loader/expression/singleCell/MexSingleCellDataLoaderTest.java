@@ -3,13 +3,13 @@ package ubic.gemma.core.loader.expression.singleCell;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +46,9 @@ public class MexSingleCellDataLoaderTest {
         assertThat( loader.getCellTypeAssignment() ).isEmpty();
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         assertThat( qt ).isNotNull();
+        assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
+        assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+        assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
         assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 10000 );
@@ -75,7 +78,7 @@ public class MexSingleCellDataLoaderTest {
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000038206" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
                     int lastSampleOffset = dimension.getBioAssaysOffset()[3];
-                    assertThat( byteArrayConverter.byteArrayToDoubles( v.getData() ) )
+                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
                             .hasSize( 594 );
                     assertThat( v.getDataIndices() )
                             .hasSize( 594 )

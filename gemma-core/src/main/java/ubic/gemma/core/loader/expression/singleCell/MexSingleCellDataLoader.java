@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
+import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.time.StopWatch;
@@ -105,12 +106,34 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<QuantitationType> getQuantitationTypes() {
+    public Set<QuantitationType> getQuantitationTypes() throws IOException {
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.COUNT );
+        boolean allCounts = true;
+        for ( Path matrix : matrixFiles ) {
+            try ( MatrixVectorReader reader = readMatrixMarketFromPath( matrix ) ) {
+                if ( !reader.hasInfo() ) {
+                    log.info( matrix + " does not have an info line, impossible to tell if it contains counts." );
+                    allCounts = false;
+                    break;
+                }
+                MatrixInfo matrixInfo = reader.readMatrixInfo();
+                if ( !matrixInfo.isInteger() ) {
+                    allCounts = false;
+                    break;
+                }
+            }
+        }
+        if ( allCounts ) {
+            qt.setType( StandardQuantitationType.COUNT );
+            qt.setScale( ScaleType.COUNT );
+        } else {
+            qt.setType( StandardQuantitationType.AMOUNT );
+            // TODO: detect scale type from data
+            log.warn( "Scale type cannot be detected from non-counting data." );
+            qt.setScale( ScaleType.OTHER );
+        }
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        qt.setScale( ScaleType.COUNT );
         return Collections.singleton( qt );
     }
 
