@@ -12,17 +12,6 @@
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
     </bean>
 
-    <!-- Message source for this context, loaded from localized "messages_xx" files -->
-    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-        <property name="basenames">
-            <list>
-                <value>classpath:messages</value>
-                <value>classpath:ubic/gemma/core/messages</value>
-            </list>
-        </property>
-        <property name="fallbackToSystemLocale" value="false"/>
-    </bean>
-
     <!-- Configure Velocity for sending e-mail -->
     <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
         <constructor-arg>
