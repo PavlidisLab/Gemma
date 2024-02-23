@@ -32,7 +32,7 @@ function getStatusBadge(faIconClass, colorClass, title, qTip) {
 function getGeeqBadges(quality, suitability) {
     var val = '';
     val = val   +
-        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
+            '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
         'ext:qtip="Quality:&nbsp;' + roundScore(quality, 1) + '<br/>' +
         'Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data." >' +
         getGeeqIcon(Number(quality)) + "" +
@@ -316,9 +316,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     window.open(ctxBasePath + "/experimentalDesign/showExperimentalDesign.html?eeid=" + experimentDetails.id);
                 }
             }],
-            html: batchInfo + '<div id="eeDesignMatrix" style="height:80%">Loading...</div>',
+            html: batchInfo + "<span style='font-size:smaller;padding:4px'>Continuous factors are not shown in this view</span> " + '<div id="eeDesignMatrix" style="height:100%">Loading...</div>',
             layout: 'absolute',
-            // items -> bar chart and table?
             listeners: {
                 render: function () {
                     DesignMatrix.init({
@@ -368,20 +367,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
 
     makeDiagnosticsTab: function (experimentDetails, isAdmin) {
-// removed; update diagnostics from the admin tab instead
-//        var refreshDiagnosticsLink = '';
-//        if (this.editable || isAdmin) {
-//            refreshDiagnosticsLink = '<a href="refreshDiagnostics.html?id=' + experimentDetails.id + '"><img '
-//                + 'src="' + ctxBasePath + '/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
-//        }
-//        this.refreshDiagnosticsBtn = new Ext.Button({
-//            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
-//            text: 'Refresh diagnostics',
-//            handler: function () {
-//                window.location = "refreshDiagnostics.html?id=" + experimentDetails.id;
-//            },
-//            hidden: (this.editable || isAdmin)
-//        });
 
         var metaRow = new Ext.Panel(
             {

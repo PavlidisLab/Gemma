@@ -381,7 +381,7 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
         ExpressionExperiment ee = getExperimentById( e.getId(), true );
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
+        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true, true ); // ignore "batch" and continuous.
     }
 
     /**
