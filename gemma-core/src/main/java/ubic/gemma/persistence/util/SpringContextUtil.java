@@ -88,6 +88,26 @@ public class SpringContextUtil {
     }
 
     /**
+     * Obtain a nano context for Gemma.
+     * <p>
+     * This context only contains bean annotated with {@link Nano}.
+     */
+    public static ApplicationContext getNanoContext( String... activeProfiles ) {
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            ConfigurableApplicationContext context = new ClassPathXmlApplicationContext( new String[] { "classpath*:ubic/gemma/nanoContext-*.xml" }, false );
+            for ( String activeProfile : activeProfiles ) {
+                context.getEnvironment().addActiveProfile( activeProfile );
+            }
+            prepareContext( context );
+            context.refresh();
+            return context;
+        } finally {
+            SpringContextUtil.log.info( "Got Gemma nano context in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
+        }
+    }
+
+    /**
      * Prepare a given context for prime time.
      * <p>
      * Perform the following steps:
