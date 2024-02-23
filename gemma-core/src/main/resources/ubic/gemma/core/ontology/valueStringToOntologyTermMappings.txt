@@ -127,7 +127,6 @@ Bone marrow sample	bone marrow	http://purl.obolibrary.org/obo/UBERON_0002371	org
 bone marrow-derived macrophages	bone marrow macrophage	http://purl.obolibrary.org/obo/CL_0002476	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Borrelia burgdorferi	Borreliella burgdorferi	http://purl.obolibrary.org/obo/NCBITaxon_139	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 brain	brain	http://purl.obolibrary.org/obo/UBERON_0000955	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-brain 	brain	http://purl.obolibrary.org/obo/UBERON_0000955	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Brain - Cerebellum	cerebellum	http://purl.obolibrary.org/obo/UBERON_0002037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Brain - Hippocampus	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 brain (cortex)	cerebral cortex	http://purl.obolibrary.org/obo/UBERON_0000956	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
