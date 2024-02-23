@@ -634,7 +634,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             }
         }
         // WARNING cache size() can be slow, esp. terracotta.
-        AbstractDao.log.info( "Cached " + i + ", input " + newResults.size() + "; total cached: "
+        AbstractDao.log.debug( "Cached " + i + ", input " + newResults.size() + "; total cached: "
                 /* + this.processedDataVectorCache.size() */ );
     }
 
@@ -933,7 +933,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             }
         }
 
-        AbstractDao.log.info( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
+        AbstractDao.log.debug( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
 
         /*
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
@@ -950,7 +950,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         this.checkCache( ees, genes, results, needToSearch, genesToSearch );
 
         if ( !results.isEmpty() )
-            AbstractDao.log.info( results.size() + " vectors fetched from cache" );
+            AbstractDao.log.debug( results.size() + " vectors fetched from cache" );
 
         /*
          * Get data that wasn't in the cache.
@@ -972,7 +972,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         if ( !noncached.isEmpty() )
-            AbstractDao.log.info( noncached.size() + " vectors retrieved so far, for noGeneProbes" );
+            AbstractDao.log.debug( noncached.size() + " vectors retrieved so far, for noGeneProbes" );
 
         /*
          * Non-cached items.
@@ -990,7 +990,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         if ( !moreNonCached.isEmpty() )
-            AbstractDao.log.info( noncached.size() + " more fetched from db" );
+            AbstractDao.log.debug( noncached.size() + " more fetched from db" );
 
         noncached.putAll( moreNonCached );
 
