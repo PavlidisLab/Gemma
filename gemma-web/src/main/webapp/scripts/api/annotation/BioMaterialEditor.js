@@ -39,7 +39,7 @@ Ext.extend( Gemma.BioMaterialEditor, Ext.Panel, {
       ExperimentalDesignController.getExperimentalFactors( this.expressionExperiment, function( factorData ) {
          config = {
             factors : factorData,
-            bioMaterials : data
+            bioMaterials : data // BM Value objects.
          };
          Ext.apply( config, this.originalConfig );
 
@@ -63,6 +63,7 @@ Ext.extend( Gemma.BioMaterialEditor, Ext.Panel, {
     * @memberOf Gemma.BioMaterialEditor
     */
    init : function() {
+
       var loadMaskTarget = this.el !== null ? this.el : Ext.getBody();
 
       this.loadMask = new Ext.LoadMask( loadMaskTarget, {
@@ -216,6 +217,7 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
             continue;
          }
 
+         // column header
          columns.push( {
             id : "char" + category.hashCode(),
             header : category + " (raw characteristic)",
@@ -223,7 +225,7 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
             dataIndex : "char" + category.hashCode(),
             width : 120,
             tooltip : category + ": A non-constant Biomaterial characteristic displayed for reference purposes.",
-            sortable : true
+            sortable : true,
          } );
       }
 
@@ -541,8 +543,9 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
             if ( !this.characteristics.hasOwnProperty( c ) ) {
                continue;
             }
+
             var cval = bmvo.characteristicValues[c];
-            if ( cval ) {
+             if ( cval ) {
                data[i].push( cval );
             } else {
                data[i].push( "" ); // shouldn't happen if we picked useful characteristics well.
