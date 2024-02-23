@@ -1536,7 +1536,7 @@ public class ExpressionExperimentController {
     private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, true );
         try {
-            sampleCoexpressionAnalysisService.compute( ee );
+            sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw e;

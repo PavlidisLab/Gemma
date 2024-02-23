@@ -248,7 +248,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) throws SampleCoexpressionRelatedPreprocessingException {
         try {
-            sampleCoexpressionAnalysisService.compute( ee );
+            sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         } catch ( RuntimeException e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw new SampleCoexpressionRelatedPreprocessingException( ee, e );
