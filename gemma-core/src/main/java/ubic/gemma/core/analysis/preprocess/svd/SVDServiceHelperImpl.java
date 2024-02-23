@@ -118,13 +118,10 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                         valueToStore = Double.NaN; // due to a missing value
                     }
                 } else {
-                    /*
-                     * This is a hack so we don't need special datastructures for continuous and categorical. We're
-                     * storing the ID but as a double.
-                     */
-                    valueToStore = fv.getId().doubleValue();
+                    valueToStore =Double.NaN;
                 }
             } else {
+                // for categorical factors, we use the ids as dummy values.
                 valueToStore = fv.getId().doubleValue();
             }
 
