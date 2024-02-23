@@ -12,6 +12,8 @@ import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 /**
  * A special kind of characteristic that act as a statement.
  * <p>
@@ -33,6 +35,15 @@ public class Statement extends Characteristic {
     public static class Factory {
         public static Statement newInstance() {
             return new Statement();
+        }
+
+        public static Statement newInstance( String category, @Nullable String categoryUri, String subject, @Nullable String subjectUri ) {
+            final Statement entity = new Statement();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setSubject( subject );
+            entity.setSubjectUri( stripToNull( subjectUri ) );
+            return entity;
         }
     }
 

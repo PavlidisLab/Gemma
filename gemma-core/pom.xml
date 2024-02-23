@@ -324,6 +324,15 @@
             <version>1.0.4</version>
         </dependency>
 
+        <!-- HDF5 -->
+        <dependency>
+            <groupId>org.hdf5group</groupId>
+            <artifactId>hdf5</artifactId>
+            <version>${hdf5.version}</version>
+            <scope>system</scope>
+            <systemPath>${hdf5.jarPath}</systemPath>
+        </dependency>
+
         <!-- Testing -->
         <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>
