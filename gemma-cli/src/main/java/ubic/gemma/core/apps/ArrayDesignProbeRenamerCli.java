@@ -29,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenami
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,6 +76,12 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     @Override
     public String getCommandName() {
         return "probeRename";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override
