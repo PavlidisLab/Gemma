@@ -1,32 +1,41 @@
 package ubic.gemma.core.util;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.format.datetime.DateFormatter;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nullable;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Properties;
 
+@CommonsLog
 @Configuration
 public class BuildInfo implements InitializingBean {
 
     private static final String MAVEN_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     /**
-     * Retrieves the build info using {@link Settings}
-     * @deprecated simply autowire this configuration to access build information at runtime
+     * Retrieve build information directly from the classpath.
      */
-    @Deprecated
-    public static BuildInfo fromSettings() {
-        try {
-            return new BuildInfo( Settings.getString( "gemma.version" ),
-                    Settings.getString( "gemma.build.timestamp" ),
-                    Settings.getString( "gemma.build.gitHash" ) );
-        } catch ( Exception e ) {
+    public static BuildInfo fromClasspath() {
+        Properties props = new Properties();
+        try ( InputStream reader = new ClassPathResource( "/ubic/gemma/version.properties" ).getInputStream() ) {
+            props.load( reader );
+            return new BuildInfo( props.getProperty( "gemma.version" ),
+                    props.getProperty( "gemma.build.timestamp" ),
+                    props.getProperty( "gemma.build.gitHash" ) );
+        } catch ( FileNotFoundException e ) {
+            return new BuildInfo();
+        } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -44,7 +53,7 @@ public class BuildInfo implements InitializingBean {
 
     }
 
-    private BuildInfo( String version, String timestampAsString, String gitHash ) throws Exception {
+    private BuildInfo( String version, String timestampAsString, String gitHash ) {
         this.version = version;
         this.timestampAsString = timestampAsString;
         this.gitHash = gitHash;
@@ -52,10 +61,15 @@ public class BuildInfo implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         if ( timestampAsString != null ) {
-            timestamp = new DateFormatter( MAVEN_DATETIME_PATTERN )
-                    .parse( timestampAsString, Locale.getDefault() );
+            try {
+                timestamp = new DateFormatter( MAVEN_DATETIME_PATTERN )
+                        .parse( timestampAsString, Locale.getDefault() );
+
+            } catch ( ParseException e ) {
+                log.error( "Failed to parse build timestamp.", e );
+            }
         }
     }
 

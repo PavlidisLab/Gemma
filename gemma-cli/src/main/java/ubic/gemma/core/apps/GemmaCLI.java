@@ -101,7 +101,7 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
-            BuildInfo buildInfo = BuildInfo.fromSettings();
+            BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma version %s%n", buildInfo );
             System.exit( 0 );
             return;
