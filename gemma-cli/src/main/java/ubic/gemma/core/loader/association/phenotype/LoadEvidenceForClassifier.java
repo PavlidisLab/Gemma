@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,6 +58,12 @@ public class LoadEvidenceForClassifier extends AbstractAuthenticatedCLI {
     @Override
     public String getCommandName() {
         return "loadEvidenceForClassifier";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override
