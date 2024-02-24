@@ -309,6 +309,12 @@
     <cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension.bioAssays" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
+    <cache name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+
+    <cache name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension.bioAssays" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+
     <cache name="ubic.gemma.model.expression.biomaterial.BioMaterial" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 

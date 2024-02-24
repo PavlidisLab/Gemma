@@ -6,6 +6,7 @@
 <hibernate-mapping>
     <class name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
            table="SINGLE_CELL_DIMENSION" mutable="false">
+        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
@@ -27,7 +28,7 @@
             <one-to-many class="ubic.gemma.model.expression.bioAssayData.CellTypeAssignment"/>
         </set>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
-            <cache usage="read-write"/>
+            <cache usage="read-only"/>
             <key foreign-key="SINGLE_CELL_DIMENSIONS_FKC">
                 <column name="SINGLE_CELL_DIMENSIONS_FK" sql-type="BIGINT"/>
             </key>
