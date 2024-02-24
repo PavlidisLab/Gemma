@@ -64,8 +64,18 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         this.numberOfSamples = barcodeFiles.size();
     }
 
-    public List<String> getSampleNames() {
-        return sampleNames;
+    public Set<String> getSampleNames() {
+        return new HashSet<>( sampleNames );
+    }
+
+    @Override
+    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
+
+    }
+
+    @Override
+    public void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements ) {
+
     }
 
     @Override
@@ -118,6 +128,17 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public Set<ExperimentalFactor> getFactors() throws IOException {
         return Collections.emptySet();
+    }
+
+    @Override
+    public Set<String> getGenes() throws IOException {
+        Set<String> result = new HashSet<>();
+        for ( Path gf : genesFiles ) {
+            readLinesFromPath( gf ).stream()
+                    .map( line -> line.split( "\t", 2 )[0] )
+                    .forEach( result::add );
+        }
+        return result;
     }
 
     @Override

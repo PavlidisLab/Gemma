@@ -215,10 +215,18 @@ public abstract class AbstractCLI implements CLI {
         }
     }
 
+    /**
+     * Describe the intended usage for the command.
+     * <p>
+     * This will be included in the 'Usage: ...' error message when the CLI is misused.
+     */
+    protected String getUsage() {
+        return "gemma-cli [options] " + this.getCommandName() + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
+    }
+
     private void printHelp( Options options, PrintWriter writer ) {
-        new HelpFormatter().printHelp( writer, 150,
-                this.getCommandName() + " [options]",
-                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
+        new HelpFormatter().printHelp( writer, 150, getUsage(),
+                ( StringUtils.isNotBlank( this.getShortDesc() ) ? this.getShortDesc() + "\n" : "" ) + AbstractCLI.HEADER,
                 options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
     }
 
@@ -392,7 +400,7 @@ public abstract class AbstractCLI implements CLI {
         }
         String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
                 message.replaceAll( "\n", "\nWARNING: " ) );
-        if ( "YES".equals( line.trim() ) ) {
+        if ( "YES" .equals( line.trim() ) ) {
             return;
         }
         throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );

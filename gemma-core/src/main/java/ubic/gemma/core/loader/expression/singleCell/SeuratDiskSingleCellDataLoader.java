@@ -31,6 +31,21 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
+    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
+
+    }
+
+    @Override
+    public void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements ) {
+
+    }
+
+    @Override
+    public Set<String> getSampleNames() throws IOException {
+        return null;
+    }
+
+    @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) {
         return null;
     }
@@ -42,12 +57,17 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
 
     @Nullable
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment() throws IOException {
+    public Optional<CellTypeAssignment> getCellTypeAssignment() {
         return Optional.empty();
     }
 
     @Override
     public Set<ExperimentalFactor> getFactors() throws IOException {
+        return null;
+    }
+
+    @Override
+    public Set<String> getGenes() throws IOException {
         return null;
     }
 

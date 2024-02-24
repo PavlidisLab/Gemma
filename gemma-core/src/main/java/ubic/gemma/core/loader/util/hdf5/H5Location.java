@@ -7,6 +7,7 @@ import hdf.hdf5lib.callbacks.H5L_iterate_opdata_t;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static hdf.hdf5lib.H5.*;
 
@@ -45,30 +46,26 @@ public abstract class H5Location {
         return attributes;
     }
 
-    @Nullable
-    public H5Attribute getAttribute( String name ) {
+    public Optional<H5Attribute> getAttribute( String name ) {
         if ( !H5Aexists( locId, name ) ) {
-            return null;
+            return Optional.empty();
         }
-        return H5Attribute.open( locId, name );
+        return Optional.of( H5Attribute.open( locId, name ) );
     }
 
-    @Nullable
-    public H5Attribute getAttribute( String path, String name ) {
+    public Optional<H5Attribute> getAttribute( String path, String name ) {
         if ( !H5Aexists_by_name( locId, path, name, HDF5Constants.H5P_DEFAULT ) ) {
-            return null;
+            return Optional.empty();
         }
-        return H5Attribute.open( locId, path, name );
+        return Optional.of( H5Attribute.open( locId, path, name ) );
     }
 
     @Nullable
     public String getStringAttribute( String name ) {
-        try ( H5Attribute attr = getAttribute( name ) ) {
-            if ( attr == null ) {
-                return null;
-            }
-            return attr.toStringVector()[0];
-        }
+        return getAttribute( name )
+                .map( H5Attribute::toStringVector )
+                .map( s -> s[0] )
+                .orElse( null );
     }
 
     /**
@@ -76,12 +73,17 @@ public abstract class H5Location {
      */
     @Nullable
     public String getStringAttribute( String path, String name ) {
-        try ( H5Attribute attr = getAttribute( path, name ) ) {
-            if ( attr == null ) {
-                return null;
-            }
-            return attr.toStringVector()[0];
-        }
+        return getAttribute( path, name )
+                .map( H5Attribute::toStringVector )
+                .map( s -> s[0] )
+                .orElse( null );
+    }
+
+    /**
+     * Check if a given path exists relative to this location.
+     */
+    public boolean exists( String path ) {
+        return H5Lexists( locId, path, HDF5Constants.H5P_DEFAULT );
     }
 
     /**

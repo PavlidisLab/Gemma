@@ -23,6 +23,28 @@ import java.util.stream.Stream;
 public interface SingleCellDataLoader {
 
     /**
+     * Ignore unmatched samples from the data when creating the {@link SingleCellDimension} in {@link #getSingleCellDimension(Collection)}.
+     * <p>
+     * This defaults to true.
+     */
+    void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples );
+
+    /**
+     * Ignore unmatched design elements from the data when creating vectors in {@link #loadVectors(Map, SingleCellDimension, QuantitationType)}.
+     * <p>
+     * This defaults to true.
+     * <p>
+     * There's a <a href="https://github.com/PavlidisLab/Gemma/issues/973">discussions to make this default in false</a>
+     * in general for sequencing data.
+     */
+    void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements );
+
+    /**
+     * Obtain the sample names present in the data.
+     */
+    Set<String> getSampleNames() throws IOException;
+
+    /**
      * Load the single-cell dimension present in the data.
      * <p>
      * Not all samples might be present and thus the returned {@link SingleCellDimension} will have a expression data
@@ -30,9 +52,10 @@ public interface SingleCellDataLoader {
      *
      * @param bioAssays a set of bioassays to use when populating the dimension, not all bioassays may be used
      * @throws IllegalArgumentException if a sample present in the data cannot be matched to one of the supplied
-     *                                  {@link BioAssay}
+     *                                  {@link BioAssay}, ignored if {@link #setIgnoreUnmatchedSamples(boolean)} is set
+     *                                  to true.
      */
-    SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException;
+    SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException, IllegalArgumentException;
 
     /**
      * Load quantitation types present in the data.
@@ -50,6 +73,11 @@ public interface SingleCellDataLoader {
     Set<ExperimentalFactor> getFactors() throws IOException;
 
     /**
+     * Load gene identifiers present in the data.
+     */
+    Set<String> getGenes() throws IOException;
+
+    /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.
      *
      * @param elementsMapping  a mapping of element names used in the dataset to {@link CompositeSequence}
@@ -57,8 +85,11 @@ public interface SingleCellDataLoader {
      *                         {@link #getSingleCellDimension(Collection)}
      * @param quantitationType a quantitation type to extract from the data for, may be loaded from the single-cell data
      *                         with {@link #getQuantitationTypes()}
+     * @throws IllegalArgumentException if a design element present in the data cannot be matched to one of the supplied
+     *                                  elements, requires setting {@link #setIgnoreUnmatchedDesignElements(boolean)} to
+     *                                  false
      * @return a stream of single-cell expression data vectors that must be closed when done, preferably using a
      * try-with-resource block.
      */
-    Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException;
+    Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
 }

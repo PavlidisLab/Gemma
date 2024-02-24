@@ -22,15 +22,20 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.persistence.util.Nano;
 import ubic.gemma.persistence.util.SpringContextUtil;
 import ubic.gemma.persistence.util.SpringProfiles;
+import ubic.gemma.persistence.util.TestComponent;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -64,6 +69,7 @@ public class GemmaCLI {
     private static final Pattern PASSWORD_IN_CLI_MATCHER = Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" );
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
+
 
     public static void main( String[] args ) {
         Option logOpt = Option.builder( VERBOSITY_OPTION )
@@ -152,7 +158,12 @@ public class GemmaCLI {
             profiles.add( SpringProfiles.TEST );
         }
 
-        ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
+        ApplicationContext ctx;
+        if ( !commandLine.getArgList().isEmpty() && isEligibleForNanoContext( commandLine.getArgList().get( 0 ) ) ) {
+            ctx = SpringContextUtil.getNanoContext( profiles.toArray( new String[0] ) );
+        } else {
+            ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
+        }
 
         /*
          * Build a map from command names to classes.
@@ -210,6 +221,38 @@ public class GemmaCLI {
     }
 
     /**
+     * Determine if a command is eligible for the nano context.
+     * @see SpringContextUtil#getNanoContext(String[])
+     */
+    private static boolean isEligibleForNanoContext( String commandName ) {
+        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider( false );
+        scanner.addIncludeFilter( new AnnotationTypeFilter( Nano.class ) );
+        scanner.addExcludeFilter( new AnnotationTypeFilter( TestComponent.class ) );
+        return checkCandidates( scanner.findCandidateComponents( "ubic.gemma.core.apps" ), commandName )
+                || checkCandidates( scanner.findCandidateComponents( "ubic.gemma.core.loader" ), commandName )
+                || checkCandidates( scanner.findCandidateComponents( "ubic.gemma.contrib.apps" ), commandName );
+    }
+
+    private static boolean checkCandidates( Set<BeanDefinition> candidates, String commandName ) {
+        for ( BeanDefinition c : candidates ) {
+            try {
+                Class<?> clazz = Class.forName( c.getBeanClassName() );
+                if ( CLI.class.isAssignableFrom( clazz ) ) {
+                    CLI cli = ( CLI ) clazz.newInstance();
+                    if ( commandName.equals( cli.getCommandName() ) ) {
+                        return true;
+                    }
+                }
+            } catch ( ClassNotFoundException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException | InstantiationException e ) {
+                // the default constructor is either private or require arguments, we cannot make a determination
+            }
+        }
+        return false;
+    }
+
+    /**
      * Mask password for logging
      */
     static String getOptStringForLogging( Object[] argsToPass ) {
@@ -243,7 +286,7 @@ public class GemmaCLI {
         footer.append( '\n' );
         footer.append( AbstractCLI.FOOTER );
 
-        new HelpFormatter().printHelp( writer, 150, "gemma-cli <commandName> [options]",
+        new HelpFormatter().printHelp( writer, 150, "gemma-cli [options] <commandName> [commandOptions]",
                 AbstractCLI.HEADER, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
     }
 
