@@ -67,18 +67,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
- * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
- * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
- * than one dataset. GEO also supports the concept of a superseries. See
- * http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * Convert GEO domain objects into Gemma objects.
+ * <p>
+ * Usually we trigger this by passing in {@link GeoSeries} objects.
+ * <p>
+ * GEO has four basic kinds of objects: Platforms ({@link ArrayDesign}), Samples ({@link BioMaterial}), Series ({@link ExpressionExperiment})
+ * and DataSets (which are curated {@link ExpressionExperiment}). Note that a sample can belong to more than one series.
+ * A series can include more than one dataset. GEO also supports the concept of a super-series. See <a href="https://www.ncbi.nlm.nih.gov/geo/info/soft.html">SOFT submission instructions</a>.
+ * <p>
  * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
- * arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * arrays were both run on the same samples. Thus, we actually normally go by GSE.
+ * <p>
  * This service can be used in database-aware or unaware states. However, it has prototype scope as it has some 'global'
  * data structures used during processing.
  *
- * @author keshav
+ * @author kesv
  * @author pavlidis
  */
 @Component
@@ -570,7 +574,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                     // have to drill down.
                     if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) ||  sample.getLibStrategy().equalsIgnoreCase( "Other" )) {
+                            .equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }

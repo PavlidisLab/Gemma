@@ -28,9 +28,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -43,12 +45,30 @@ import java.util.Set;
 public class BioMaterial extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
 
     private static final long serialVersionUID = 4374359557498220256L;
-    private ubic.gemma.model.genome.Taxon sourceTaxon;
+    private Taxon sourceTaxon;
     private Set<FactorValue> factorValues = new HashSet<>();
     private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
     private Set<Treatment> treatments = new HashSet<>();
     private Set<Characteristic> characteristics = new HashSet<>();
+    @Nullable
     private DatabaseEntry externalAccession;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getName() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BioMaterial ) )
+            return false;
+        final BioMaterial that = ( BioMaterial ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+        return Objects.equals( getName(), that.getName() );
+    }
 
     @Override
     @DocumentId
@@ -87,12 +107,13 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
      *         than one
      *         BioMaterial may reference a given external accession.
      */
+    @Nullable
     @IndexedEmbedded
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;
     }
 
-    public void setExternalAccession( DatabaseEntry externalAccession ) {
+    public void setExternalAccession( @Nullable DatabaseEntry externalAccession ) {
         this.externalAccession = externalAccession;
     }
 

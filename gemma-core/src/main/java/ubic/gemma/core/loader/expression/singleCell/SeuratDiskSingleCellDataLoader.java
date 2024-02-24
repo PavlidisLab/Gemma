@@ -1,12 +1,15 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -28,6 +31,11 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
 
     public SeuratDiskSingleCellDataLoader( Path path ) {
         this.path = path;
+    }
+
+    @Override
+    public void setSampleNameComparator( SampleNameComparator sampleNameComparator ) {
+
     }
 
     @Override
@@ -57,12 +65,17 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
 
     @Nullable
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment() {
+    public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) {
         return Optional.empty();
     }
 
     @Override
-    public Set<ExperimentalFactor> getFactors() throws IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+        return null;
+    }
+
+    @Override
+    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException {
         return null;
     }
 

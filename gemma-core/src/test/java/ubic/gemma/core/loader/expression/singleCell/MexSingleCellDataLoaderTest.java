@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
 
 public class MexSingleCellDataLoaderTest {
@@ -43,7 +44,7 @@ public class MexSingleCellDataLoaderTest {
         for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
         }
-        assertThat( loader.getCellTypeAssignment() ).isEmpty();
+        assertThat( loader.getCellTypeAssignment( mock() ) ).isEmpty();
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         assertThat( qt ).isNotNull();
         assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );

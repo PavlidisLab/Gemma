@@ -77,19 +77,13 @@ public class BioAssay extends AbstractDescribable implements gemma.gsec.model.Se
     public boolean equals( Object object ) {
         if ( this == object )
             return true;
-        if ( !( object instanceof BioAssay ) ) {
+        if ( !( object instanceof BioAssay ) )
             return false;
-        }
         final BioAssay that = ( BioAssay ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
-            return false;
-
-        return this.getDescription() == null || that.getDescription() == null || this.getDescription()
-                .equals( that.getDescription() );
+        return Objects.equals( this.getName(), that.getName() )
+                && Objects.equals( this.getDescription(), that.getDescription() );
     }
 
     @Override

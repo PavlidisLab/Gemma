@@ -8,14 +8,18 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,6 +46,10 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private final List<Path> barcodeFiles;
     private final List<Path> genesFiles;
     private final List<Path> matrixFiles;
+
+    private SampleNameComparator sampleNameComparator;
+    private boolean ignoreUnmatchedSamples = true;
+    private boolean ignoreUnmatchedDesignElements = true;
 
     private final int numberOfSamples;
 
@@ -70,33 +78,55 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
+    public void setSampleNameComparator( SampleNameComparator sampleNameComparator ) {
+        this.sampleNameComparator = sampleNameComparator;
+    }
 
+    @Override
+    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
+        this.ignoreUnmatchedSamples = ignoreUnmatchedSamples;
     }
 
     @Override
     public void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements ) {
-
+        this.ignoreUnmatchedDesignElements = ignoreUnmatchedDesignElements;
     }
 
     @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
+        Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
+        Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match sample names with BioMaterials" );
         SingleCellDimension scd = new SingleCellDimension();
         List<String> cellIds = new ArrayList<>();
         List<BioAssay> bas = new ArrayList<>( bioAssays.size() );
         int[] basO = new int[bioAssays.size()];
         for ( int i = 0; i < numberOfSamples; i++ ) {
             String sampleName = sampleNames.get( i );
-            BioAssay ba = bioAssays.stream()
-                    .filter( b -> b.getSampleUsed().getName().equals( sampleName ) ).findFirst()
-                    .orElseThrow( () -> new IllegalArgumentException( "No matching sample found for " + sampleName ) );
-            bas.add( ba );
-            basO[i] = cellIds.size();
-            List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
-            if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
-                throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
+            List<BioAssay> matchedBas = bioAssays.stream()
+                    .filter( b -> sampleNameComparator.compare( b.getSampleUsed(), sampleName ) )
+                    .collect( Collectors.toList() );
+            if ( matchedBas.size() == 1 ) {
+                BioAssay ba = matchedBas.iterator().next();
+                bas.add( ba );
+                basO[i] = cellIds.size();
+                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
+                if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
+                    throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
+                }
+                cellIds.addAll( sampleCellIds );
+            } else if ( matchedBas.size() > 1 ) {
+                throw new IllegalArgumentException( "There is more than one BioAssay matching " + sampleName );
+            } else {
+                String message = "No matching sample found for " + sampleName;
+                if ( ignoreUnmatchedSamples ) {
+                    log.warn( message );
+                } else {
+                    throw new IllegalArgumentException( message );
+                }
             }
-            cellIds.addAll( sampleCellIds );
+        }
+        if ( bas.isEmpty() ) {
+            throw new IllegalArgumentException( "No samples were matched." );
         }
         scd.setCellIds( cellIds );
         scd.setNumberOfCells( cellIds.size() );
@@ -141,7 +171,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide cell type labels.
      */
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment() {
+    public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) {
         return Optional.empty();
     }
 
@@ -149,8 +179,16 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide experimental factors.
      */
     @Override
-    public Set<ExperimentalFactor> getFactors() throws IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
         return Collections.emptySet();
+    }
+
+    /**
+     * MEX does not provide sample characteristics;
+     */
+    @Override
+    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException {
+        return Collections.emptyMap();
     }
 
     @Override
@@ -199,13 +237,21 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 k++;
             }
 
-            if ( missingElements.size() == elements.size() ) {
-                throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile + "." );
-            } else if ( missingElements.size() > 10 ) {
-                log.warn( String.format( "The supplied mapping does not have elements for %d/%d genes from %s.", missingElements.size(), elements.size(), genesFile ) );
-            } else if ( !missingElements.isEmpty() ) {
-                log.warn( String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
-                        missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile ) );
+            if ( !missingElements.isEmpty() ) {
+                String message;
+                if ( missingElements.size() == elements.size() ) {
+                    throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile.getFileName() + "." );
+                } else if ( missingElements.size() > 10 ) {
+                    message = ( String.format( "The supplied mapping does not have elements for %d/%d genes from %s.", missingElements.size(), elements.size(), genesFile.getFileName() ) );
+                } else {
+                    message = ( String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
+                            missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile.getFileName() ) );
+                }
+                if ( ignoreUnmatchedDesignElements ) {
+                    log.warn( message );
+                } else {
+                    throw new IllegalArgumentException( message );
+                }
             }
 
             StopWatch timer = StopWatch.createStarted();
@@ -213,12 +259,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             try ( MatrixVectorReader mvr = readMatrixMarketFromPath( matrixFile ) ) {
                 matrix = new CompRowMatrix( mvr );
             }
-            log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
+            log.info( String.format( "Loading %s took %d ms", matrixFile.getFileName(), timer.getTime() ) );
 
             Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( i ),
-                    "Matrix file " + matrixFile + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( i ) + "." );
+                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( i ) + "." );
             Assert.isTrue( matrix.numRows() == elements.size(),
-                    "Matrix file " + matrixFile + " does not have the expected number of rows." );
+                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of rows." );
 
             matrices.add( matrix );
         }

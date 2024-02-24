@@ -1,13 +1,17 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -21,6 +25,16 @@ import java.util.stream.Stream;
  * @author poirigui
  */
 public interface SingleCellDataLoader {
+
+    @FunctionalInterface
+    interface SampleNameComparator {
+        boolean compare( BioMaterial bioMaterial, String sampleNameFromData );
+    }
+
+    /**
+     * Set the strategy used for comparing sample names from the data to the names of the supplied {@link BioMaterial}.
+     */
+    void setSampleNameComparator( SampleNameComparator sampleNameComparator );
 
     /**
      * Ignore unmatched samples from the data when creating the {@link SingleCellDimension} in {@link #getSingleCellDimension(Collection)}.
@@ -64,13 +78,25 @@ public interface SingleCellDataLoader {
 
     /**
      * Load single-cell type labelling present in the data.
+     * @param dimension dimension to use for organizing cell types
      */
-    Optional<CellTypeAssignment> getCellTypeAssignment() throws IOException;
+    Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException;
 
     /**
      * Load experimental factors present in the data.
+     * @param samples                samples to use when determining which factors to load
+     * @param factorValueAssignments if non-null, the proposed assignment of factor values to samples are populated in
+     *                               the mapping.
+     * @return a set of factors present in the data
      */
-    Set<ExperimentalFactor> getFactors() throws IOException;
+    Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException;
+
+    /**
+     * Load sample characteristics present in the data.
+     * @param samples to use when determining which characteristics to load
+     * @return proposed mapping of samples to characteristics
+     */
+    Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException;
 
     /**
      * Load gene identifiers present in the data.

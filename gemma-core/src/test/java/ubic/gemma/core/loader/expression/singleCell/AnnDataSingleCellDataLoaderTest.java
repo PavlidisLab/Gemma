@@ -1,10 +1,10 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -24,11 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AnnDataSingleCellDataLoaderTest {
 
-    @Before
-    public void setUp() {
-
-    }
-
     @Test
     public void test() throws IOException {
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
@@ -36,6 +31,8 @@ public class AnnDataSingleCellDataLoaderTest {
         loader.setSampleFactorName( "ID" );
         loader.setCellTypeFactorName( "celltype1" );
         loader.setUnknownCellTypeIndicator( "UNK_ALL" );
+        loader.setIgnoreUnmatchedSamples( false );
+        loader.setSampleNameComparator( ( bm, n ) -> n.equals( bm.getName() ) );
 
         Collection<BioAssay> bas = new HashSet<>();
         for ( String sampleName : loader.getSampleNames() ) {
@@ -55,7 +52,7 @@ public class AnnDataSingleCellDataLoaderTest {
                 .hasSize( 1000 )
                 .startsWith( "SLC4A1AP" );
 
-        assertThat( loader.getCellTypeAssignment() ).hasValueSatisfying( assignment -> {
+        assertThat( loader.getCellTypeAssignment( dimension ) ).hasValueSatisfying( assignment -> {
             assertThat( assignment.getCellTypes() )
                     .hasSize( 8 )
                     .extracting( Characteristic::getValue )
@@ -66,7 +63,17 @@ public class AnnDataSingleCellDataLoaderTest {
                     .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
         } );
 
-        assertThat( loader.getFactors() )
+        Set<BioMaterial> samples = bas.stream().map( BioAssay::getSampleUsed ).collect( Collectors.toSet() );
+        assertThat( loader.getSampleCharacteristics( samples ) )
+                .hasSize( 22 )
+                .extractingByKey( BioMaterial.Factory.newInstance( "C-1262" ) )
+                .satisfies( c -> {
+                    assertThat( c )
+                            .hasSize( 23 )
+                            .contains( Characteristic.Factory.newInstance( "Manner.of.Death", null, "Accidental", null ) );
+                } );
+
+        assertThat( loader.getFactors( samples, null ) )
                 .hasSize( 56 )
                 .satisfiesOnlyOnce( factor -> {
                     assertThat( factor.getName() ).isEqualTo( "BMI" );
@@ -84,7 +91,10 @@ public class AnnDataSingleCellDataLoaderTest {
                 } );
 
         Set<QuantitationType> qts = loader.getQuantitationTypes();
-        assertThat( qts ).hasSize( 1 ).extracting( QuantitationType::getName ).containsExactly( "X" );
+        assertThat( qts ).hasSize( 1 ).first().satisfies( qt -> {
+            assertThat( qt.getName() ).isEqualTo( "X" );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG1P );
+        } );
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
@@ -126,12 +136,49 @@ public class AnnDataSingleCellDataLoaderTest {
         loader.setSampleFactorName( "ID" );
         loader.setCellTypeFactorName( "celltype1" );
         loader.setUnknownCellTypeIndicator( "UNK_ALL" );
+        loader.setIgnoreUnmatchedSamples( true );
+        loader.setSampleNameComparator( ( bm, n ) -> n.equals( bm.getName() ) );
 
         // load two samples
         Set<BioAssay> bas = new HashSet<>();
-        BioAssay.Factory.newInstance( "", null, BioMaterial.Factory.newInstance( "" ) );
-        BioAssay.Factory.newInstance( "", null, BioMaterial.Factory.newInstance( "" ) );
+        bas.add( BioAssay.Factory.newInstance( "C-13151", null, BioMaterial.Factory.newInstance( "C-13151" ) ) );
+        bas.add( BioAssay.Factory.newInstance( "P-13281", null, BioMaterial.Factory.newInstance( "P-13281" ) ) );
 
-        loader.getSingleCellDimension( bas );
+        SingleCellDimension dim = loader.getSingleCellDimension( bas );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+
+        assertThat( dim.getBioAssays() )
+                .hasSize( 2 )
+                .extracting( BioAssay::getName )
+                .containsExactly( "C-13151", "P-13281" );
+        assertThat( dim.getCellIds() ).containsExactly( "GTAGAGGCACCTGTCT_5", "GACTATGAGACTCCGC_5", "TTCGATTCAGCAAGAC_5",
+                "TCTCACGGTCGGTACC_5", "GGGTCTGGTCACCCTT_5", "CTTCAATAGTAGGCCA_5",
+                "CATTGCCGTCCGAAAG_5", "TCACGGGTCCTGTACC_5", "TCCTAATGTAGATTGA_5",
+                "CCAAGCGCACGTTGGC_5", "GTTCGCTTCACGACTA_5", "GCTTGGGGTTACCCTC_5",
+                "CGTGCTTTCATGAGGG_5", "CCGTTCAAGCGCCTAC_5", "CTTTCGGGTGCATGAG_5",
+                "TCATGAGTCGTAATGC_5", "TCATACTTCCCTCATG_5", "CTAGGTATCATCTATC_5",
+                "TCATGTTCACCTGTCT_5", "ATTCCATCACGCTTAA_5", "TTCGGTCAGGTTGGTG_5",
+                "ATGAGGGCAATGACCT_5", "AACCTTTCAACTTCTT_5", "TGTGATGCATGCACTA_5",
+                "CCCTAACAGTTAGTGA_16", "TGTAACGTCGTTCTCG_16", "CTACATTCAAGTGGTG_16",
+                "TCATCATCAGACGCTC_16", "GACCCTTGTGACCTGC_16", "AACCTGACAAAGGGTC_16",
+                "ATAGACCGTGCTCCGA_16", "CCCTCTCGTGGAGAAA_16", "AGCGCCAGTCGTCTCT_16",
+                "AAAGGTAGTTTGATCG_16", "CACAACATCGAACCAT_16" );
+
+        Map<String, CompositeSequence> elementsMapping = new HashMap<>();
+        elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
+        assertThat( loader.loadVectors( elementsMapping, dim, qt ) )
+                .first().satisfies( v -> {
+                    assertThat( v.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
+                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                            .usingComparatorWithPrecision( 0.00000001 )
+                            .containsExactly(
+                                    0., 0.71611292, 2.21477848, 0.5758799, 1.95063931, 2.54813097, 2.65149612,
+                                    2.45977532, 1.61314598, 0.82234731, 0., 2.71867203, 0.77666734, 1.90074419,
+                                    1.25652567, 3.13875217, 2.20132395, 2.7090048, 3.07420778, 2.32110793, 2.73402347,
+                                    2.18838474, 2.48651234 );
+                    assertThat( v.getDataIndices() )
+                            .containsExactly( 0, 1, 5, 6, 7, 8, 10, 12, 13, 15, 16, 17, 18, 19, 25, 26, 27, 28,
+                                    29, 30, 31, 32, 33 );
+                } );
     }
 }
