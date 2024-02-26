@@ -197,6 +197,14 @@ public class ExpressionDataDoubleMatrixUtil {
                 ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
                 MatrixStats.convertToLog2( transformedMatrix, 10 );
                 break;
+            case LOG1P:
+                ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log1p to log2 **** " );
+                for ( int i = 0; i < transformedMatrix.rows(); i++ ) {
+                    for ( int j = 0; j < transformedMatrix.columns(); j++ ) {
+                        transformedMatrix.set( i, j, Math.log( Math.expm1( transformedMatrix.get( i, j ) ) ) / Math.log( 2 ) );
+                    }
+                }
+                break;
             case LINEAR:
                 ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
                 MatrixStats.logTransform( transformedMatrix );
