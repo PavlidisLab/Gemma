@@ -36,6 +36,10 @@ public enum ScaleType {
      */
     LOG10,
     /**
+     * Data is log-transformed as per {@code ln X + 1}
+     */
+    LOG1P,
+    /**
      * Data is log-transformed, but the base is unknown.
      */
     LOGBASEUNKNOWN,
