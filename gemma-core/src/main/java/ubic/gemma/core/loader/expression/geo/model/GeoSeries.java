@@ -54,7 +54,7 @@ public class GeoSeries extends GeoData {
     private Map<Integer, GeoReplication> replicates;
     private GeoSampleCorrespondence sampleCorrespondence;
     private String summary = "";
-    private String supplementaryFile = "";
+    private Collection<String> supplementaryFiles = new HashSet<>();
     private GeoValues values;
     private Collection<String> webLinks;
 
@@ -75,7 +75,7 @@ public class GeoSeries extends GeoData {
      * See also GeoDataset.convertStringToExperimentType
      *
      * @param  string series type string
-     * @return        series type object
+     * @return series type object
      */
     public static SeriesType convertStringToSeriesType( String string ) {
         if ( string.equalsIgnoreCase( "Expression profiling by array" ) ) {
@@ -108,13 +108,13 @@ public class GeoSeries extends GeoData {
         } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" ) || string
                 .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
                 || string
-                        .equalsIgnoreCase( "time-course" )
+                .equalsIgnoreCase( "time-course" )
                 || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
-                        .equalsIgnoreCase( "SuperSeries" )
+                .equalsIgnoreCase( "SuperSeries" )
                 || string.equalsIgnoreCase( "Logical set" ) || string
-                        .equalsIgnoreCase( "DNA Oligonucleotide Array" )
+                .equalsIgnoreCase( "DNA Oligonucleotide Array" )
                 || string
-                        .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
+                .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
             // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
             // different than 'Other' (note capitalization). The old meaning is still expression arrays.
             return SeriesType.geneExpressionByArray;
@@ -365,12 +365,16 @@ public class GeoSeries extends GeoData {
     /**
      * @return String
      */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
+    public Collection<String> getSupplementaryFiles() {
+        return supplementaryFiles;
     }
 
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public void setSupplementaryFiles( Collection<String> supplementaryFiles ) {
+        this.supplementaryFiles = supplementaryFiles;
+    }
+
+    public void addToSupplementaryFiles( String supplementaryFile ) {
+        this.supplementaryFiles.add( supplementaryFile );
     }
 
     public GeoValues getValues() {
@@ -385,7 +389,7 @@ public class GeoSeries extends GeoData {
      * Get a subset of the values. This is only used for 'splitting' a series.
      *
      * @param  s Samples to include data from.
-     * @return   geo values
+     * @return geo values
      */
     public GeoValues getValues( Collection<GeoSample> s ) {
         return values.subset( s );
