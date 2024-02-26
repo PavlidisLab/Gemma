@@ -47,10 +47,10 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testFromSettings() {
+    public void testFromClasspath() {
         assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
                 getClass().getResource( "/ubic/gemma/version.properties" ) != null );
-        buildInfo = BuildInfo.fromSettings();
+        buildInfo = BuildInfo.fromClasspath();
         assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
         assertNotNull( buildInfo.getGitHash() );

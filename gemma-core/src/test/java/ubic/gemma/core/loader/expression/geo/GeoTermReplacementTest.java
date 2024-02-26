@@ -11,6 +11,7 @@ import org.junit.experimental.categories.Category;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
+import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -40,6 +41,7 @@ public class GeoTermReplacementTest {
     private static final List<OntologyService> ontologies = new ArrayList<>();
 
     static {
+        addOntology( new GemmaOntologyService() );
         addOntology( new CellLineOntologyService() );
         addOntology( new CellTypeOntologyService() );
         addOntology( new ObiService() );

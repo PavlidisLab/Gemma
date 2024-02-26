@@ -28,6 +28,7 @@ import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -58,6 +59,12 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     public String getCommandName() {
         return "affyCollapse";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override

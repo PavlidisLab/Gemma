@@ -101,7 +101,7 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
-            BuildInfo buildInfo = BuildInfo.fromSettings();
+            BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma version %s%n", buildInfo );
             System.exit( 0 );
             return;
@@ -267,6 +267,7 @@ public class GemmaCLI {
 
         StringBuilder footer = new StringBuilder();
         if ( commands != null ) {
+            footer.append( '\n' );
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
             for ( Map.Entry<CommandGroup, SortedMap<String, CLI>> entry : commands.entrySet() ) {
@@ -274,8 +275,17 @@ public class GemmaCLI {
                     continue;
                 Map<String, CLI> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
+                int longestCommandInGroup = commandsInGroup.keySet().stream()
+                        .map( String::length )
+                        .max( Integer::compareTo )
+                        .orElse( 0 );
                 for ( Map.Entry<String, CLI> e : commandsInGroup.entrySet() ) {
-                    footer.append( e.getKey() ).append( " - " ).append( e.getValue().getShortDesc() ).append( '\n' );
+                    footer.append( e.getKey() )
+                            .append( StringUtils.repeat( ' ', longestCommandInGroup - e.getKey().length() ) )
+                            // FIXME: use a tabulation, but it creates newlines in IntelliJ's console
+                            .append( "    " )
+                            .append( StringUtils.defaultIfBlank( e.getValue().getShortDesc(), "No description provided" ) )
+                            .append( '\n' );
                 }
                 footer.append( '\n' );
             }

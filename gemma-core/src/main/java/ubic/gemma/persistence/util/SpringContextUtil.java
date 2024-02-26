@@ -104,7 +104,7 @@ public class SpringContextUtil {
                 cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
             }
         }
-        BuildInfo buildInfo = BuildInfo.fromSettings();
+        BuildInfo buildInfo = BuildInfo.fromClasspath();
         SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
                 buildInfo,
                 context.getEnvironment().getActiveProfiles().length > 0 ?

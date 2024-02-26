@@ -22,6 +22,7 @@ import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -34,6 +35,12 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     @Override
     public String getCommandName() {
         return "platformMapSummary";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override
