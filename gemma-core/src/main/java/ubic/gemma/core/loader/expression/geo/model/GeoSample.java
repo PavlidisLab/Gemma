@@ -61,7 +61,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private final Collection<GeoReplication> replicates;
     private String scanProtocol = "";
     private Collection<String> seriesAppearsIn = new HashSet<>();
-    private String supplementaryFile = "";
+    private Collection<String> supplementaryFiles = new HashSet<>();
     private int tagCount;
     private int tagLength;
 
@@ -335,11 +335,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return seriesAppearsIn;
     }
 
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
+    public Collection<String> getSupplementaryFiles() {
+        return supplementaryFiles;
     }
 
     /**
@@ -468,8 +465,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.seriesAppearsIn = otherSeriesAppearsIn;
     }
 
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public void setSupplementaryFiles( Collection<String> supplementaryFiles ) {
+        this.supplementaryFiles = supplementaryFiles;
+    }
+
+    public void addToSupplementaryFiles( String s ) {
+        this.supplementaryFiles.add( s );
     }
 
     /**

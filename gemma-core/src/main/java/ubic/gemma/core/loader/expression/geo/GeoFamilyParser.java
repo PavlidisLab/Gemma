@@ -1385,7 +1385,7 @@ public class GeoFamilyParser implements Parser<Object> {
             results.getSampleMap().get( currentSampleAccession ).addSeriesAppearsIn( value );
 
         } else if ( this.startsWithIgnoreCase( line, "!Sample_supplementary_file" ) ) {
-            sampleSet( currentSampleAccession, GeoSample::setSupplementaryFile, value );
+            this.sampleAddTo( currentSampleAccession, GeoSample::addToSupplementaryFiles, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
