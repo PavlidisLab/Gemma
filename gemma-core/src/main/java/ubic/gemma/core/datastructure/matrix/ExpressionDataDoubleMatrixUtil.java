@@ -493,8 +493,6 @@ public class ExpressionDataDoubleMatrixUtil {
             return true;
         }
         // FIXME: use a faster algorithm for the median, there's a O(n) approach
-        // sort only if necessary, median expects a sorted input
-        v.sort();
         return isCloseToZero( DescriptiveWithMissing.median( v ) );
     }
 
