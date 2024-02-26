@@ -61,7 +61,7 @@ anterior cingulate	anterior cingulate gyrus	http://purl.obolibrary.org/obo/UBERO
 Anterior Cingulate Cortex	anterior cingulate cortex	http://purl.obolibrary.org/obo/UBERON_0009835	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 anterior pituitary	adenohypophysis	http://purl.obolibrary.org/obo/UBERON_0002196	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 aorta	aorta	http://purl.obolibrary.org/obo/UBERON_0000947	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-APP/PS1	APP/PS1	http://gemma.msl.ubc.ca/ont/TGEMO_0017	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+APP/PS1	APP/PS1	http://gemma.msl.ubc.ca/ont/TGEMO_00174	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Appendix	vermiform appendix	http://purl.obolibrary.org/obo/UBERON_0001154	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 arcuate nucleus	arcuate nucleus of hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001932	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 articular cartilage	articular cartilage of joint	http://purl.obolibrary.org/obo/UBERON_0010996	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -337,7 +337,7 @@ dexamethasone	dexamethasone	http://purl.obolibrary.org/obo/CHEBI_41879	treatment
 DFC	dorsolateral prefrontal cortex	http://purl.obolibrary.org/obo/UBERON_0009834	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Diabetic	diabetes mellitus	http://purl.obolibrary.org/obo/MONDO_0005015	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Diagnostic_acute_leukemia	acute leukemia	http://purl.obolibrary.org/obo/MONDO_0010643	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-differentiated adipocytes	fat cell	http://purl.obolibrary.org/obo/CL_0000136	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+differentiated adipocytes	adipocyte	http://purl.obolibrary.org/obo/CL_0000136	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 diffuse intrinsic pontine glioma	diffuse intrinsic pontine glioma	http://purl.obolibrary.org/obo/MONDO_0006033	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Diffuse large B-cell lymphoma	diffuse large B-cell lymphoma	http://purl.obolibrary.org/obo/MONDO_0018905	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 diffuse large B-cell lymphoma (DLBCL)	diffuse large B-cell lymphoma	http://purl.obolibrary.org/obo/MONDO_0018905	disease	http://www.ebi.ac.uk/efo/EFO_0000408
