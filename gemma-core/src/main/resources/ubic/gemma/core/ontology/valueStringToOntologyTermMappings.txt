@@ -61,7 +61,7 @@ anterior cingulate	anterior cingulate gyrus	http://purl.obolibrary.org/obo/UBERO
 Anterior Cingulate Cortex	anterior cingulate cortex	http://purl.obolibrary.org/obo/UBERON_0009835	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 anterior pituitary	adenohypophysis	http://purl.obolibrary.org/obo/UBERON_0002196	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 aorta	aorta	http://purl.obolibrary.org/obo/UBERON_0000947	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-APP/PS1	APP/PS1	http://gemma.msl.ubc.ca/ont/TGEMO_0017	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+APP/PS1	APP/PS1	http://gemma.msl.ubc.ca/ont/TGEMO_00174	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 Appendix	vermiform appendix	http://purl.obolibrary.org/obo/UBERON_0001154	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 arcuate nucleus	arcuate nucleus of hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001932	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 articular cartilage	articular cartilage of joint	http://purl.obolibrary.org/obo/UBERON_0010996	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
