@@ -147,7 +147,8 @@ public class GeoTermReplacementTest {
                 if ( "http://purl.obolibrary.org/obo/CL_0000047".equals( term.getUri() ) && "neuronal stem cell".equals( term.getLabel() ) ) {
                     continue;
                 }
-                if ( "http://purl.obolibrary.org/obo/CL_0000136".equals( term.getUri() ) && "adipocyte".equals( term.getLabel() ) ) {
+                // EFO has a typo, ignore it
+                if ( "http://purl.obolibrary.org/obo/CL_0000136".equals( term.getUri() ) && "fat cell".equals( term.getLabel() ) ) {
                     continue;
                 }
                 seen.add( rec.synonym );
