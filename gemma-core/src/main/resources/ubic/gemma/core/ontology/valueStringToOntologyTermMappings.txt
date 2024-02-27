@@ -337,7 +337,7 @@ dexamethasone	dexamethasone	http://purl.obolibrary.org/obo/CHEBI_41879	treatment
 DFC	dorsolateral prefrontal cortex	http://purl.obolibrary.org/obo/UBERON_0009834	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Diabetic	diabetes mellitus	http://purl.obolibrary.org/obo/MONDO_0005015	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Diagnostic_acute_leukemia	acute leukemia	http://purl.obolibrary.org/obo/MONDO_0010643	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-differentiated adipocytes	fat cell	http://purl.obolibrary.org/obo/CL_0000136	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+differentiated adipocytes	adipocyte	http://purl.obolibrary.org/obo/CL_0000136	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 diffuse intrinsic pontine glioma	diffuse intrinsic pontine glioma	http://purl.obolibrary.org/obo/MONDO_0006033	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Diffuse large B-cell lymphoma	diffuse large B-cell lymphoma	http://purl.obolibrary.org/obo/MONDO_0018905	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 diffuse large B-cell lymphoma (DLBCL)	diffuse large B-cell lymphoma	http://purl.obolibrary.org/obo/MONDO_0018905	disease	http://www.ebi.ac.uk/efo/EFO_0000408
