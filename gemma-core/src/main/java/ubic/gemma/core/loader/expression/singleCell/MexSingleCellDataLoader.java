@@ -5,6 +5,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.basecode.io.ByteArrayConverter;
@@ -98,8 +99,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match sample names with BioMaterials" );
         SingleCellDimension scd = new SingleCellDimension();
         List<String> cellIds = new ArrayList<>();
-        List<BioAssay> bas = new ArrayList<>( bioAssays.size() );
-        int[] basO = new int[bioAssays.size()];
+        List<BioAssay> bas = new ArrayList<>();
+        int[] basO = new int[0];
+        Set<String> unmatchedSamples = new HashSet<>();
         for ( int i = 0; i < numberOfSamples; i++ ) {
             String sampleName = sampleNames.get( i );
             List<BioAssay> matchedBas = bioAssays.stream()
@@ -108,7 +110,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             if ( matchedBas.size() == 1 ) {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
-                basO[i] = cellIds.size();
+                basO = ArrayUtils.add( basO, cellIds.size() );
                 List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
@@ -117,16 +119,18 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             } else if ( matchedBas.size() > 1 ) {
                 throw new IllegalArgumentException( "There is more than one BioAssay matching " + sampleName );
             } else {
-                String message = "No matching sample found for " + sampleName;
-                if ( ignoreUnmatchedSamples ) {
-                    log.warn( message );
-                } else {
-                    throw new IllegalArgumentException( message );
-                }
+                unmatchedSamples.add( sampleName );
             }
         }
         if ( bas.isEmpty() ) {
             throw new IllegalArgumentException( "No samples were matched." );
+        } else if ( !unmatchedSamples.isEmpty() ) {
+            String message = "No matching samples found for " + unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) );
+            if ( ignoreUnmatchedSamples ) {
+                log.warn( message );
+            } else {
+                throw new IllegalArgumentException( message );
+            }
         }
         scd.setCellIds( cellIds );
         scd.setNumberOfCells( cellIds.size() );
@@ -179,15 +183,15 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide experimental factors.
      */
     @Override
-    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) {
         return Collections.emptySet();
     }
 
     /**
-     * MEX does not provide sample characteristics;
+     * MEX does not provide sample characteristics.
      */
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException {
+    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) {
         return Collections.emptyMap();
     }
 
@@ -206,10 +210,23 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     public Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
-        ArrayList<CompRowMatrix> matrices = new ArrayList<>( numberOfSamples );
-        for ( int i = 0; i < numberOfSamples; i++ ) {
-            Path genesFile = genesFiles.get( i );
-            Path matrixFile = matrixFiles.get( i );
+        ArrayList<CompRowMatrix> matrices = new ArrayList<>( scd.getBioAssays().size() );
+        List<BioAssay> bioAssays = scd.getBioAssays();
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssay ba = bioAssays.get( j );
+            // match corresponding sample in the SCD
+            List<String> matchedSampleNames = sampleNames.stream()
+                    .filter( sampleName -> sampleNameComparator.compare( ba.getSampleUsed(), sampleName ) )
+                    .collect( Collectors.toList() );
+            if ( matchedSampleNames.isEmpty() ) {
+                throw new IllegalArgumentException( ba + " does not match any sample." );
+            } else if ( matchedSampleNames.size() > 1 ) {
+                throw new IllegalArgumentException( ba + " matches more than one sample: " + String.join( ", ", matchedSampleNames ) );
+            }
+
+            String sampleName = matchedSampleNames.iterator().next();
+            Path genesFile = genesFiles.get( sampleNames.indexOf( sampleName ) );
+            Path matrixFile = matrixFiles.get( sampleNames.indexOf( sampleName ) );
 
             Set<String> missingElements = new HashSet<>();
             List<CompositeSequence> elements = new ArrayList<>();
@@ -228,24 +245,25 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 elements.add( probe );
                 if ( probe != null ) {
                     if ( !elementsToSampleMatrixRow.containsKey( probe ) ) {
-                        int[] W = new int[numberOfSamples];
+                        int[] W = new int[scd.getBioAssays().size()];
                         Arrays.fill( W, -1 );
                         elementsToSampleMatrixRow.put( probe, W );
                     }
-                    elementsToSampleMatrixRow.get( probe )[i] = k;
+                    elementsToSampleMatrixRow.get( probe )[j] = k;
                 }
                 k++;
             }
 
-            if ( !missingElements.isEmpty() ) {
+            if ( elementsToSampleMatrixRow.isEmpty() ) {
+                throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile.getFileName() + "." );
+            } else if ( !missingElements.isEmpty() ) {
                 String message;
-                if ( missingElements.size() == elements.size() ) {
-                    throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile.getFileName() + "." );
-                } else if ( missingElements.size() > 10 ) {
-                    message = ( String.format( "The supplied mapping does not have elements for %d/%d genes from %s.", missingElements.size(), elements.size(), genesFile.getFileName() ) );
+                if ( missingElements.size() > 10 ) {
+                    message = String.format( "The supplied mapping does not have elements for %d/%d genes from %s.",
+                            missingElements.size(), elements.size(), genesFile.getFileName() );
                 } else {
-                    message = ( String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
-                            missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile.getFileName() ) );
+                    message = String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
+                            missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile.getFileName() );
                 }
                 if ( ignoreUnmatchedDesignElements ) {
                     log.warn( message );
@@ -261,8 +279,8 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile.getFileName(), timer.getTime() ) );
 
-            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( i ),
-                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( i ) + "." );
+            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),
+                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( j ) + "." );
             Assert.isTrue( matrix.numRows() == elements.size(),
                     "Matrix file " + matrixFile.getFileName() + " does not have the expected number of rows." );
 
@@ -288,7 +306,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             double[] X = new double[nnz];
             int[] IX = new int[nnz];
             int offset = 0;
-            for ( int k = 0; k < matrices.size(); k++ ) {
+            for ( int k = 0; k < scd.getBioAssays().size(); k++ ) {
                 CompRowMatrix matrix = matrices.get( k );
                 int i = I[k];
                 if ( i == -1 ) {
