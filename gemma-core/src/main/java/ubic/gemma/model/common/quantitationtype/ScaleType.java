@@ -28,6 +28,10 @@ public enum ScaleType {
     LN,
     LOG2,
     LOG10,
+    /**
+     * Data is log-transformed as per {@code ln X + 1}
+     */
+    LOG1P,
     LOGBASEUNKNOWN,
     /**
      * Deprecated, do not use.
