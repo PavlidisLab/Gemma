@@ -363,6 +363,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
                 .getArrayDesignsUsed( experimentAnalyzed );
         Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
+        if ( analysis.getExperimentAnalyzed().getId() == null ) {// this can happen when using -nodb
+            analysis.getExperimentAnalyzed().setId( experimentAnalyzed.getId() );
+        }
         String filename = this.getDiffExArchiveFileName( analysis );
         File f = this.getOutputFile( filename );
 
@@ -611,11 +614,11 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
                 StringBuilder rowBuffer = new StringBuilder();
 
-                if ( geneAnnotations.isEmpty() ) {
-                    rowBuffer.append( dear.getProbe().getName() );
-                } else {
-                    this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
-                }
+//                if ( geneAnnotations.isEmpty() ) {
+//                    rowBuffer.append( dear.getProbe().getName() );
+//                } else {
+                this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
+                // }
 
                 /*
                 If there are no results for the DEAR then we wouldn't expect contrasts, so we just leave a blank.
