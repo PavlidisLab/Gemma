@@ -140,7 +140,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
          * Get the ordering we want.
          */
         List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( start, ee.getExperimentalDesign().getExperimentalFactors(), null );
+                .orderByExperimentalDesign( start, ee.getExperimentalDesign().getExperimentalFactors() );
 
         /*
          * Map of biomaterials to the new order index.
