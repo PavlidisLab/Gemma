@@ -138,12 +138,17 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
+
         // it is faster to query those separately because there's a large number of rows fetched via the results &
         // contrasts and only a handful of factors
         Hibernate.initialize( ears.getExperimentalFactors() );
+
         // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
         // I still think it's neat to use stream API for that though in case we ever make them lazy:
         // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
+
+        // this needs to be initialized because it does not appear in the experimental factors
+        Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
     }
 
     @Override
