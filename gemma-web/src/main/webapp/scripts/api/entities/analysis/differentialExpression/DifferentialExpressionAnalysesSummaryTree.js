@@ -556,7 +556,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }
 
                 // for categorical, list the names
-                var abrLen = 20;
+                var abrLen = 30;
                 if (ef.type === 'categorical') {
                     for (var m = 0; m < fvu.length; m++) {
                         if (m > 0 && m < fvu.length) {
@@ -566,7 +566,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     }
 
                 } else {
-                    // for continuous, show range like "(0 - 10)"
+                    // for continuous, show range like "(0 - 10)" but also the descriptive name.
+                    var name = ef.name;
                     var vals = [];
                     for (var m = 0; m < fvu.length; m++) {
                         vals[m] = fvu[m].factorValue;
@@ -579,11 +580,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                                 return a - b;
                             });
 
-                            text = Number(vals[0]).toPrecision(2) + "&nbsp;&ndash;&nbsp;"
+                            text = ef.description + ': ' + Number(vals[0]).toPrecision(2) + "&nbsp;&ndash;&nbsp;"
                                 + Number(vals[vals.length - 1]).toPrecision(2);
                         } catch (err) {
                             vals.sort(); // alpha
-                            text = Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
+                            text = ef.description + ': ' + Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
                                 + Ext.util.Format.ellipsis(vals[vals.length - 1], abrLen, true);
                         }
                     }
