@@ -23,6 +23,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
@@ -65,6 +66,8 @@ public class GemmaCLI {
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
 
+    private static ApplicationContext ctx = null;
+
     public static void main( String[] args ) {
         Option logOpt = Option.builder( VERBOSITY_OPTION )
                 .longOpt( "verbosity" ).hasArg()
@@ -88,21 +91,21 @@ public class GemmaCLI {
         try {
             commandLine = new DefaultParser().parse( options, args, true );
         } catch ( ParseException e ) {
-            System.exit( 1 );
+            exit( 1 );
             return; // that's silly...
         }
 
         // quick help without loading the context
         if ( commandLine.hasOption( HELP_OPTION ) ) {
             GemmaCLI.printHelp( options, null, new PrintWriter( System.out, true ) );
-            System.exit( 0 );
+            exit( 0 );
             return;
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma version %s%n", buildInfo );
-            System.exit( 0 );
+            exit( 0 );
             return;
         }
 
@@ -113,7 +116,7 @@ public class GemmaCLI {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
                 GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
-                System.exit( 1 );
+                exit( 1 );
                 return;
             }
         }
@@ -123,7 +126,7 @@ public class GemmaCLI {
                 String[] vals = value.split( "=" );
                 if ( vals.length != 2 ) {
                     System.err.println( "Logging value must in format [loggerName]=[value]." );
-                    System.exit( 1 );
+                    exit( 1 );
                 }
                 String loggerName = vals[0];
                 try {
@@ -133,7 +136,7 @@ public class GemmaCLI {
                             loggerName,
                             ExceptionUtils.getRootCauseMessage( e ) );
                     GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
-                    System.exit( 1 );
+                    exit( 1 );
                     return;
                 }
             }
@@ -219,7 +222,7 @@ public class GemmaCLI {
         if ( commandLine.getArgList().isEmpty() ) {
             System.err.println( "No command was supplied." );
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
-            System.exit( 1 );
+            exit( 1 );
         }
 
         // the first element of the remaining args is the command and the rest are the arguments
@@ -247,7 +250,7 @@ public class GemmaCLI {
             }
         }
 
-        System.exit( statusCode );
+        exit( statusCode );
     }
 
     /**
@@ -296,6 +299,16 @@ public class GemmaCLI {
 
         new HelpFormatter().printHelp( writer, 150, "gemma-cli <commandName> [options]",
                 AbstractCLI.HEADER, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
+    }
+
+    /**
+     * Exit the application with the given status code.
+     */
+    private static void exit( int statusCode ) {
+        if ( ctx instanceof ConfigurableApplicationContext ) {
+            ( ( ConfigurableApplicationContext ) ctx ).close();
+        }
+        System.exit( statusCode );
     }
 
     // order here is significant.
