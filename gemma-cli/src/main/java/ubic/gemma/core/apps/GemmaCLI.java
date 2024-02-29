@@ -28,7 +28,6 @@ import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.*;
 import ubic.gemma.persistence.util.SpringContextUtil;
-import ubic.gemma.persistence.util.SpringProfiles;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -55,7 +54,7 @@ public class GemmaCLI {
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
-            TESTING_OPTION = "testing"; // historically named '-testing', but now '--testing' is also accepted
+            TESTDB_OPTION = "testdb";
 
     /**
      * Pattern used to match password in the CLI arguments.
@@ -84,7 +83,7 @@ public class GemmaCLI {
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
-                .addOption( TESTING_OPTION, "testing", false, "Use the test environment" );
+                .addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" );
         CommandLine commandLine;
         try {
             commandLine = new DefaultParser().parse( options, args, true );
@@ -150,9 +149,9 @@ public class GemmaCLI {
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
 
-        // check for the -testing/--testing flag to load the appropriate application context
-        if ( commandLine.hasOption( TESTING_OPTION ) ) {
-            profiles.add( SpringProfiles.TEST );
+        // enable the test database
+        if ( commandLine.hasOption( TESTDB_OPTION ) ) {
+            profiles.add( "testdb" );
         }
 
         ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );

@@ -21,7 +21,7 @@
         </bean>
     </beans>
 
-    <beans profile="test">
+    <beans profile="test,testdb">
         <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
             <property name="driverClassName" value="${gemma.testdb.driver}"/>
             <property name="username" value="${gemma.testdb.user}"/>
