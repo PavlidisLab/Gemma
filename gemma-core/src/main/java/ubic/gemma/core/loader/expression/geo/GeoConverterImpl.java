@@ -565,23 +565,30 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( GeoSample sample : series.getSamples() ) {
-            if ( sample.getType().equals( "RNA" ) ) {
+            if ( sample.getType() != null && sample.getType().equals( GeoSampleType.RNA ) ) {
                 // this is apparently what we get for microarrays
                 continue;
-            } else if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
+            } else if ( sample.getType().equals( GeoSampleType.MPSS ) ) {
 
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
+                if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.TRANSCRIPTOMIC ) ) {
 
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
+                    if ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) || sample.getLibStrategy()
+                            .equals( GeoLibraryStrategy.SSRNA_SEQ ) || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
                 }
             }
 
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed'; 
+            // single-cell RNA-Seq
+            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA
+            else if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
+                    && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                continue;
+            }
+
+            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
 
             GeoConverterImpl.log
                     .info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType()
