@@ -142,7 +142,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                     dis.close();
                     return;
                 }
-                GeoFamilyParser.log.info( parsedLines + " lines parsed." );
+                GeoFamilyParser.log.debug( parsedLines + " lines parsed." );
             }
 
             try {
@@ -164,7 +164,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             assert future.isDone();
             // assert executor.isTerminated();
 
-            GeoFamilyParser.log.info( "Done parsing." );
+            GeoFamilyParser.log.debug( "Done parsing." );
         }
     }
 
@@ -217,7 +217,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
          * Skip if we're not going to use the data.
          */
         if ( !currentSample.hasUsableData() ) {
-            GeoFamilyParser.log.info( "Sample is not expected to have any data" );
+            GeoFamilyParser.log.debug( "Sample is not expected to have any data" );
             return;
         }
 
@@ -912,7 +912,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 GeoPlatform platform = new GeoPlatform();
                 platform.setGeoAccession( value );
                 results.getPlatformMap().put( value, platform );
-                GeoFamilyParser.log.info( "Starting platform " + platform );
+                GeoFamilyParser.log.debug( "Starting platform " + platform );
             } else if ( this.startsWithIgnoreCase( line, "^SERIES" ) ) {
                 inSeries = true;
                 inSubset = false;
@@ -1389,7 +1389,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 /*
                  * Empty sample, we won't get any data and this messes things up later.
                  */
-                GeoFamilyParser.log.warn( "No data for sample " + currentSampleAccession );
+                GeoFamilyParser.log.debug( "No data for sample " + currentSampleAccession );
                 this.initializeQuantitationTypes();
                 this.checkDataCompleteness(); // because we don't get the table_end.
             }
@@ -1439,6 +1439,10 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             sample.setLibSource( GeoLibrarySource.GENOMIC );
         } else if ( string.equalsIgnoreCase( "transcriptomic single cell" ) ) {
             sample.setLibSource( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC );
+        } else if ( string.equalsIgnoreCase( "genomic single cell" ) ) {
+            sample.setLibSource( GeoLibrarySource.SINGLE_CELL_GENOMIC );
+        } else if ( string.equalsIgnoreCase( "other" ) ) {
+            sample.setLibSource( GeoLibrarySource.OTHER );
         } else {
             throw new IllegalArgumentException( "Unknown library source: " + string );
         }
@@ -1517,17 +1521,17 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else if ( this.startsWithIgnoreCase( line, "!Series_relation" ) ) {
 
             if ( value.toLowerCase().startsWith( "superseries" ) ) {
-                GeoFamilyParser.log.info( " ** SuperSeries detected **" );
+                GeoFamilyParser.log.debug( " ** SuperSeries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSuperSeries, true );
             } else if ( value.toLowerCase().startsWith( "subseries" ) ) {
-                GeoFamilyParser.log.info( " ** Subseries detected **" );
+                GeoFamilyParser.log.debug( " ** Subseries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSubSeries, true );
             }
 
         } else if ( this.startsWithIgnoreCase( line, "!Series_summary" ) ) {
 
             if ( value.toLowerCase().startsWith( "this superseries" ) ) {
-                GeoFamilyParser.log.info( " ** SuperSeries detected **" );
+                GeoFamilyParser.log.debug( " ** SuperSeries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSuperSeries, true );
             } else if ( value.toLowerCase().startsWith( "gse" ) && results.getSeriesMap().get( currentSeriesAccession )
                     .isSuperSeries() ) {

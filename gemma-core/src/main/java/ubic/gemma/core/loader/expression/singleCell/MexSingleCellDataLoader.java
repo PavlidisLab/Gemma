@@ -48,7 +48,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private final List<Path> genesFiles;
     private final List<Path> matrixFiles;
 
-    private SampleNameComparator sampleNameComparator;
+    private BioAssayToSampleNameMatcher sampleNameComparator;
     private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedDesignElements = true;
 
@@ -79,7 +79,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setSampleNameComparator( SampleNameComparator sampleNameComparator ) {
+    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator ) {
         this.sampleNameComparator = sampleNameComparator;
     }
 
@@ -105,7 +105,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         for ( int i = 0; i < numberOfSamples; i++ ) {
             String sampleName = sampleNames.get( i );
             List<BioAssay> matchedBas = bioAssays.stream()
-                    .filter( b -> sampleNameComparator.compare( b.getSampleUsed(), sampleName ) )
+                    .filter( b -> sampleNameComparator.matches( b, sampleName ) )
                     .collect( Collectors.toList() );
             if ( matchedBas.size() == 1 ) {
                 BioAssay ba = matchedBas.iterator().next();
@@ -125,7 +125,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         if ( bas.isEmpty() ) {
             throw new IllegalArgumentException( "No samples were matched." );
         } else if ( !unmatchedSamples.isEmpty() ) {
-            String message = "No matching samples found for " + unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) );
+            String message = "No matching samples found for: " + unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) );
             if ( ignoreUnmatchedSamples ) {
                 log.warn( message );
             } else {
@@ -183,7 +183,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide experimental factors.
      */
     @Override
-    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) {
+    public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) {
         return Collections.emptySet();
     }
 
@@ -191,7 +191,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide sample characteristics.
      */
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) {
+    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) {
         return Collections.emptyMap();
     }
 
@@ -216,7 +216,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             BioAssay ba = bioAssays.get( j );
             // match corresponding sample in the SCD
             List<String> matchedSampleNames = sampleNames.stream()
-                    .filter( sampleName -> sampleNameComparator.compare( ba.getSampleUsed(), sampleName ) )
+                    .filter( sampleName -> sampleNameComparator.matches( ba, sampleName ) )
                     .collect( Collectors.toList() );
             if ( matchedSampleNames.isEmpty() ) {
                 throw new IllegalArgumentException( ba + " does not match any sample." );

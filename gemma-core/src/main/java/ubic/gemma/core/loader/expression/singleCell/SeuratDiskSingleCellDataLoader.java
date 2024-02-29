@@ -34,7 +34,7 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setSampleNameComparator( SampleNameComparator sampleNameComparator ) {
+    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator ) {
 
     }
 
@@ -70,12 +70,12 @@ public class SeuratDiskSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
         return null;
     }
 
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException {
+    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) {
         return null;
     }
 

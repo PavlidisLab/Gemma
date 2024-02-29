@@ -99,7 +99,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+        return GemmaCLI.CommandGroup.EXPERIMENT;
     }
 
     @Nullable

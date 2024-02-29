@@ -2,6 +2,7 @@ package ubic.gemma.core.util;
 
 import ubic.gemma.core.apps.GemmaCLI;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**

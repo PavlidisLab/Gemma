@@ -49,6 +49,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     protected Fetcher datasetFetcher;
     protected Fetcher seriesFetcher;
     protected Fetcher platformFetcher;
+    protected Fetcher supplementaryMaterialFetcher;
 
     protected GeoFamilyParser parser;
 

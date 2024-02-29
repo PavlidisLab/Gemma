@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
@@ -127,6 +128,7 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
      */
+    @Value( "${geo.platform.import.maxelements}" )
     private int tooManyElements = Settings
             .getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
@@ -565,7 +567,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( GeoSample sample : series.getSamples() ) {
-            if ( sample.getType() != null && sample.getType().equals( GeoSampleType.RNA ) ) {
+            if ( sample.getType().equals( GeoSampleType.RNA ) ) {
                 // this is apparently what we get for microarrays
                 continue;
             } else if ( sample.getType().equals( GeoSampleType.MPSS ) ) {

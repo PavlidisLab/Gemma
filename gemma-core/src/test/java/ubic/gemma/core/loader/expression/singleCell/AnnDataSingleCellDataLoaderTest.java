@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,13 +27,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
     @Test
     public void test() throws IOException {
-        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
-        loader.setSampleFactorName( "ID" );
-        loader.setCellTypeFactorName( "celltype1" );
-        loader.setUnknownCellTypeIndicator( "UNK_ALL" );
-        loader.setIgnoreUnmatchedSamples( false );
-        loader.setSampleNameComparator( ( bm, n ) -> n.equals( bm.getName() ) );
+        AnnDataSingleCellDataLoader loader = createLoader();
 
         Collection<BioAssay> bas = new HashSet<>();
         for ( String sampleName : loader.getSampleNames() ) {
@@ -63,23 +58,23 @@ public class AnnDataSingleCellDataLoaderTest {
                     .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
         } );
 
-        Set<BioMaterial> samples = bas.stream().map( BioAssay::getSampleUsed ).collect( Collectors.toSet() );
-        assertThat( loader.getSampleCharacteristics( samples ) )
+        assertThat( loader.getSamplesCharacteristics( bas ) )
                 .hasSize( 22 )
                 .extractingByKey( BioMaterial.Factory.newInstance( "C-1262" ) )
                 .satisfies( c -> {
                     assertThat( c )
-                            .hasSize( 23 )
-                            .contains( Characteristic.Factory.newInstance( "Manner.of.Death", null, "Accidental", null ) );
+                            .hasSize( 36 )
+                            .contains( Characteristic.Factory.newInstance( "Manner.of.Death", null, "Accidental", null ) )
+                            .contains( Characteristic.Factory.newInstance( "Age", null, "41.0", null ) )
+                            .contains( Characteristic.Factory.newInstance( "DSM.IV.AUD", null, "1", null ) );
                 } );
 
-        assertThat( loader.getFactors( samples, null ) )
-                .hasSize( 56 )
-                .satisfiesOnlyOnce( factor -> {
-                    assertThat( factor.getName() ).isEqualTo( "BMI" );
-                    assertThat( factor.getType() ).isEqualTo( FactorType.CONTINUOUS );
-                    // continuous factors are not populated (yet!)
-                    assertThat( factor.getFactorValues() ).isEmpty();
+        Map<BioMaterial, Set<FactorValue>> fva = new HashMap<>();
+        assertThat( loader.getFactors( bas, fva ) )
+                .hasSize( 36 )
+                .noneSatisfy( factor -> {
+                    assertThat( factor.getName() ).isEqualTo( "ID" );
+                    assertThat( factor.getName() ).isEqualTo( "celltype1" );
                 } )
                 .satisfiesOnlyOnce( factor -> {
                     assertThat( factor.getName() ).isEqualTo( "Cause.of.Death" );
@@ -88,6 +83,39 @@ public class AnnDataSingleCellDataLoaderTest {
                             .flatExtracting( FactorValue::getCharacteristics )
                             .extracting( Characteristic::getValue )
                             .contains( "Aspiration", "Cardiac Tamponade", "Cardiovascular Disease" );
+                } )
+                .satisfiesOnlyOnce( factor -> {
+                    assertThat( factor.getName() ).isEqualTo( "BMI" );
+                    assertThat( factor.getType() ).isEqualTo( FactorType.CONTINUOUS );
+                    assertThat( factor.getFactorValues() ).isNotEmpty().allSatisfy( fv -> {
+                        assertThat( fv.getMeasurement() ).isNotNull();
+                        assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                    } );
+                } )
+                .satisfiesOnlyOnce( factor -> {
+                    assertThat( factor.getName() ).isEqualTo( "Age" );
+                    assertThat( factor.getType() ).isEqualTo( FactorType.CONTINUOUS );
+                    assertThat( factor.getFactorValues() ).isNotEmpty().allSatisfy( fv -> {
+                        assertThat( fv.getMeasurement() ).isNotNull();
+                        assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                    } );
+                } );
+
+        assertThat( fva )
+                .hasSize( 22 )
+                .allSatisfy( ( bm, fvs ) -> {
+                    assertThat( fvs )
+                            .hasSize( 36 )
+                            .satisfiesOnlyOnce( fv -> {
+                                assertThat( fv.getExperimentalFactor().getName() ).isEqualTo( "DSM.IV.CUD" );
+                                assertThat( fv.getMeasurement() ).isNotNull();
+                                assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.INT );
+                            } )
+                            .satisfiesOnlyOnce( fv -> {
+                                assertThat( fv.getExperimentalFactor().getName() ).isEqualTo( "Age" );
+                                assertThat( fv.getMeasurement() ).isNotNull();
+                                assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                            } );
                 } );
 
         Set<QuantitationType> qts = loader.getQuantitationTypes();
@@ -131,13 +159,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
     @Test
     public void testLoadSpecificSamples() throws IOException {
-        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
-        loader.setSampleFactorName( "ID" );
-        loader.setCellTypeFactorName( "celltype1" );
-        loader.setUnknownCellTypeIndicator( "UNK_ALL" );
-        loader.setIgnoreUnmatchedSamples( true );
-        loader.setSampleNameComparator( ( bm, n ) -> n.equals( bm.getName() ) );
+        AnnDataSingleCellDataLoader loader = createLoader();
 
         // load two samples
         Set<BioAssay> bas = new HashSet<>();
@@ -151,18 +173,23 @@ public class AnnDataSingleCellDataLoaderTest {
                 .hasSize( 2 )
                 .extracting( BioAssay::getName )
                 .containsExactly( "C-13151", "P-13281" );
-        assertThat( dim.getCellIds() ).containsExactly( "GTAGAGGCACCTGTCT_5", "GACTATGAGACTCCGC_5", "TTCGATTCAGCAAGAC_5",
-                "TCTCACGGTCGGTACC_5", "GGGTCTGGTCACCCTT_5", "CTTCAATAGTAGGCCA_5",
-                "CATTGCCGTCCGAAAG_5", "TCACGGGTCCTGTACC_5", "TCCTAATGTAGATTGA_5",
-                "CCAAGCGCACGTTGGC_5", "GTTCGCTTCACGACTA_5", "GCTTGGGGTTACCCTC_5",
-                "CGTGCTTTCATGAGGG_5", "CCGTTCAAGCGCCTAC_5", "CTTTCGGGTGCATGAG_5",
-                "TCATGAGTCGTAATGC_5", "TCATACTTCCCTCATG_5", "CTAGGTATCATCTATC_5",
-                "TCATGTTCACCTGTCT_5", "ATTCCATCACGCTTAA_5", "TTCGGTCAGGTTGGTG_5",
-                "ATGAGGGCAATGACCT_5", "AACCTTTCAACTTCTT_5", "TGTGATGCATGCACTA_5",
-                "CCCTAACAGTTAGTGA_16", "TGTAACGTCGTTCTCG_16", "CTACATTCAAGTGGTG_16",
-                "TCATCATCAGACGCTC_16", "GACCCTTGTGACCTGC_16", "AACCTGACAAAGGGTC_16",
-                "ATAGACCGTGCTCCGA_16", "CCCTCTCGTGGAGAAA_16", "AGCGCCAGTCGTCTCT_16",
-                "AAAGGTAGTTTGATCG_16", "CACAACATCGAACCAT_16" );
+        assertThat( dim.getBioAssaysOffset() )
+                .hasSize( 2 )
+                .containsExactly( 0, 24 );
+        assertThat( dim.getCellIds() )
+                .hasSize( 35 )
+                .containsExactly( "GTAGAGGCACCTGTCT_5", "GACTATGAGACTCCGC_5", "TTCGATTCAGCAAGAC_5",
+                        "TCTCACGGTCGGTACC_5", "GGGTCTGGTCACCCTT_5", "CTTCAATAGTAGGCCA_5",
+                        "CATTGCCGTCCGAAAG_5", "TCACGGGTCCTGTACC_5", "TCCTAATGTAGATTGA_5",
+                        "CCAAGCGCACGTTGGC_5", "GTTCGCTTCACGACTA_5", "GCTTGGGGTTACCCTC_5",
+                        "CGTGCTTTCATGAGGG_5", "CCGTTCAAGCGCCTAC_5", "CTTTCGGGTGCATGAG_5",
+                        "TCATGAGTCGTAATGC_5", "TCATACTTCCCTCATG_5", "CTAGGTATCATCTATC_5",
+                        "TCATGTTCACCTGTCT_5", "ATTCCATCACGCTTAA_5", "TTCGGTCAGGTTGGTG_5",
+                        "ATGAGGGCAATGACCT_5", "AACCTTTCAACTTCTT_5", "TGTGATGCATGCACTA_5",
+                        "CCCTAACAGTTAGTGA_16", "TGTAACGTCGTTCTCG_16", "CTACATTCAAGTGGTG_16",
+                        "TCATCATCAGACGCTC_16", "GACCCTTGTGACCTGC_16", "AACCTGACAAAGGGTC_16",
+                        "ATAGACCGTGCTCCGA_16", "CCCTCTCGTGGAGAAA_16", "AGCGCCAGTCGTCTCT_16",
+                        "AAAGGTAGTTTGATCG_16", "CACAACATCGAACCAT_16" );
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
@@ -180,5 +207,16 @@ public class AnnDataSingleCellDataLoaderTest {
                             .containsExactly( 0, 1, 5, 6, 7, 8, 10, 12, 13, 15, 16, 17, 18, 19, 25, 26, 27, 28,
                                     29, 30, 31, 32, 33 );
                 } );
+    }
+
+    private AnnDataSingleCellDataLoader createLoader() throws IOException {
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
+        loader.setSampleFactorName( "ID" );
+        loader.setCellTypeFactorName( "celltype1" );
+        loader.setUnknownCellTypeIndicator( "UNK_ALL" );
+        loader.setIgnoreUnmatchedSamples( true );
+        loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
+        return loader;
     }
 }

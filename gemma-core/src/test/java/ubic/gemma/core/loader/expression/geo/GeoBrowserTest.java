@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.expression.geo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -46,8 +46,8 @@ public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void checkThatGeoIsAvailable() throws Exception {
         assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
     }
 

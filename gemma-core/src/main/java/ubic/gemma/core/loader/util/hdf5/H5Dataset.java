@@ -42,7 +42,7 @@ public class H5Dataset implements AutoCloseable {
      * Obtain a 1D slice of the dataset.
      */
     public H5Dataspace slice( long start, long end ) {
-        Assert.isTrue( start >= 0 && end <= size() && start < end, "Invalid slice" );
+        Assert.isTrue( start >= 0 && end <= size() && start < end, "Invalid slice: [" + start + ", " + end + "[" );
         long diskSpaceId = H5Dget_space( datasetId );
         H5Sselect_hyperslab( diskSpaceId, HDF5Constants.H5S_SELECT_SET, new long[] { start }, null, new long[] { end - start }, null );
         return new H5Dataspace( diskSpaceId );
@@ -51,6 +51,12 @@ public class H5Dataset implements AutoCloseable {
     public int[] toIntegerVector() {
         int[] buf = new int[( int ) size()];
         H5Dread( datasetId, HDF5Constants.H5T_NATIVE_INT32, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+        return buf;
+    }
+
+    public double[] toDoubleVector() {
+        double[] buf = new double[( int ) size()];
+        H5Dread( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
         return buf;
     }
 

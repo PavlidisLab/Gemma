@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.*;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -43,7 +44,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     private final Path file;
 
-    private SampleNameComparator sampleNameComparator;
+    private BioAssayToSampleNameMatcher sampleNameComparator;
     private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedDesignElements = true;
 
@@ -69,8 +70,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setSampleNameComparator( SampleNameComparator sampleNameComparator ) {
-        this.sampleNameComparator = sampleNameComparator;
+    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher ) {
+        this.sampleNameComparator = bioAssayToSampleNameMatcher;
     }
 
     @Override
@@ -85,6 +86,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<String> getSampleNames() throws IOException {
+        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         String[] sampleNames;
         try ( H5File h5File = openFile(); H5Group v = h5File.getGroup( "var" ) ) {
             sampleNames = loadCategoricalColumnFromDataframe( v, sampleFactorName );
@@ -99,6 +101,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Assert.notNull( sampleFactorName, "The sample factor name must be set." );
         SingleCellDimension singleCellDimension = new SingleCellDimension();
         try ( H5File h5File = openFile() ) {
+            String[] cellIds;
+            try ( H5Group v = h5File.getGroup( "var" ) ) {
+                cellIds = loadStringIndexFromDataframe( v );
+            }
             String[] sampleNames;
             try ( H5Group v = h5File.getGroup( "var" ) ) {
                 sampleNames = loadCategoricalColumnFromDataframe( v, sampleFactorName );
@@ -121,25 +127,38 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             String currentSampleName = null;
             BioAssay currentSample;
             Set<String> unmatchedSamples = new TreeSet<>();
+            List<String> cellIdsL = new ArrayList<>();
+            List<BioAssay> bas = new ArrayList<>();
+            int[] basO = new int[0];
+            int j = 0;
             for ( int i = 0; i < sampleNames.length; i++ ) {
                 String sampleName = sampleNames[i];
                 if ( !sampleName.equals( currentSampleName ) ) {
                     // lookup the sample
                     List<BioAssay> match = bioAssays.stream()
-                            .filter( ba -> sampleNameComparator.compare( ba.getSampleUsed(), sampleName ) )
+                            .filter( ba -> sampleNameComparator.matches( ba, sampleName ) )
                             .collect( Collectors.toList() );
                     if ( match.size() == 1 ) {
                         currentSampleName = sampleName;
                         currentSample = match.get( 0 );
-                        singleCellDimension.getBioAssays().add( currentSample );
-                        // FIXME: this is utterly inefficient
-                        singleCellDimension.setBioAssaysOffset( ArrayUtils.add( singleCellDimension.getBioAssaysOffset(), i ) );
+                        bas.add( currentSample );
+                        basO = ArrayUtils.add( basO, j );
                     } else if ( match.size() > 1 ) {
                         throw new IllegalStateException( String.format( "There is more than one BioAssay matching %s.", sampleName ) );
                     } else {
                         unmatchedSamples.add( sampleName );
+                        // skip until next sample
+                        // the i++ of the for-loop will position the index at the next sample
+                        for ( ; i < sampleNames.length - 1; i++ ) {
+                            if ( !sampleName.equals( sampleNames[i + 1] ) ) {
+                                break;
+                            }
+                        }
+                        continue;
                     }
                 }
+                cellIdsL.add( cellIds[i] );
+                j++;
             }
             if ( bioAssays.isEmpty() ) {
                 throw new IllegalArgumentException( "No samples were matched." );
@@ -152,11 +171,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     throw new IllegalStateException( msg );
                 }
             }
-            try ( H5Group v = h5File.getGroup( "var" ) ) {
-                String[] cellIds = loadStringIndexFromDataframe( v );
-                singleCellDimension.setCellIds( Arrays.asList( cellIds ) );
-                singleCellDimension.setNumberOfCells( cellIds.length );
-            }
+            singleCellDimension.setBioAssays( bas );
+            singleCellDimension.setBioAssaysOffset( basO );
+            singleCellDimension.setCellIds( cellIdsL );
+            singleCellDimension.setNumberOfCells( cellIdsL.size() );
         }
         return singleCellDimension;
     }
@@ -224,10 +242,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException {
-        if ( cellTypeFactorName == null ) {
-            log.warn( "No cell type factor name was set. Cell type assignment will not be loaded. Use getFactors() to identify a suitable candidate." );
-            return Optional.empty();
-        }
+        Assert.notNull( cellTypeFactorName, "A cell type factor name must be set to determine cell type assignments." );
         try ( H5File h5File = openFile() ) {
             H5Group group = h5File.getGroup( "var/" + cellTypeFactorName );
             String et = group.getStringAttribute( "encoding-type" );
@@ -271,62 +286,148 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         Set<ExperimentalFactor> factors = new HashSet<>();
         try ( H5File h5File = openFile() ) {
-            for ( String g : h5File.getChildren( "var" ) ) {
-                boolean isCategorical = Objects.equals( h5File.getStringAttribute( "var/" + g, "encoding-type" ), "categorical" );
-                ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( g, isCategorical ? FactorType.CATEGORICAL : FactorType.CONTINUOUS );
-                Characteristic c = Characteristic.Factory.newInstance( g, null );
-                factor.setCategory( c );
-                if ( isCategorical ) {
-                    try ( H5Dataset categories = h5File.getDataset( "var/" + g + "/categories" ) ) {
-                        // popuate FVs
-                        for ( String fv : categories.toStringVector() ) {
-                            FactorValue fvO = FactorValue.Factory.newInstance( factor );
-                            fvO.getCharacteristics().add( Statement.Factory.newInstance( c.getCategory(), c.getCategoryUri(), fv, null ) );
-                            fvO.setValue( fv );
-                            factor.getFactorValues().add( fvO );
-                        }
+            try ( H5Group vars = h5File.getGroup( "var" ) ) {
+                String indexColumn = vars.getStringAttribute( "_index" );
+                String[] sampleNames = loadCategoricalColumnFromDataframe( vars, sampleFactorName );
+                for ( String factorName : vars.getChildren() ) {
+                    if ( factorName.equals( indexColumn ) || factorName.equals( sampleFactorName ) || factorName.equals( cellTypeFactorName ) ) {
+                        // cell IDs, sample names, etc. are not useful as sample characteristics
+                        continue;
                     }
+                    String encodingType = vars.getStringAttribute( factorName, "encoding-type" );
+                    String[] values;
+                    PrimitiveType representation;
+                    if ( "categorical".equals( encodingType ) ) {
+                        values = loadCategoricalColumnFromDataframe( vars, factorName );
+                        representation = PrimitiveType.STRING;
+                    } else if ( "string-array".equals( encodingType ) ) {
+                        values = loadStringArrayColumnFromDataframe( vars, factorName );
+                        representation = PrimitiveType.STRING;
+                    } else if ( "array".equals( encodingType ) ) {
+                        try ( H5Dataset vector = vars.getDataset( factorName ) ) {
+                            switch ( vector.getType().getFundamentalType() ) {
+                                case INTEGER:
+                                    values = Arrays.stream( vector.toIntegerVector() ).mapToObj( Integer::toString ).toArray( String[]::new );
+                                    representation = PrimitiveType.INT;
+                                    break;
+                                case FLOAT:
+                                    values = Arrays.stream( vector.toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
+                                    representation = PrimitiveType.DOUBLE;
+                                    break;
+                                default:
+                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                    continue;
+                            }
+                        }
+                    } else {
+                        log.warn( "Unsupported encoding type: " + encodingType );
+                        continue;
+                    }
+                    extractSingleValueBySampleName( sampleNames, values ).ifPresent( sampleValues -> {
+                        boolean isCategorical = "categorical".equals( encodingType ) || "string-array".equals( encodingType );
+                        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( factorName, isCategorical ? FactorType.CATEGORICAL : FactorType.CONTINUOUS );
+                        Characteristic c = Characteristic.Factory.newInstance( factorName, null );
+                        factor.setCategory( c );
+                        if ( "categorical".equals( encodingType ) ) {
+                            Arrays.stream( values ).distinct().forEach( fv -> {
+                                FactorValue fvO = FactorValue.Factory.newInstance( factor );
+                                fvO.getCharacteristics().add( Statement.Factory.newInstance( c.getCategory(), c.getCategoryUri(), fv, null ) );
+                                fvO.setValue( fv );
+                                factor.getFactorValues().add( fvO );
+                            } );
+                            if ( factorValueAssignments != null ) {
+                                Map<String, FactorValue> fvByValue = factor.getFactorValues().stream()
+                                        .collect( Collectors.toMap( FactorValue::getValue, fv -> fv ) );
+                                sampleValues.forEach( ( sn, v ) -> {
+                                    for ( BioAssay sample : samples ) {
+                                        if ( sampleNameComparator.matches( sample, sn ) ) {
+                                            factorValueAssignments
+                                                    .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
+                                                    .add( fvByValue.get( v ) );
+                                        }
+                                    }
+                                } );
+                            }
+                        } else {
+                            // measurement, no need to create any FVs since those are unique to each sample
+                            if ( factorValueAssignments != null ) {
+                                sampleValues.forEach( ( sn, v ) -> {
+                                    for ( BioAssay sample : samples ) {
+                                        if ( sampleNameComparator.matches( sample, sn ) ) {
+                                            FactorValue fvO = FactorValue.Factory.newInstance( factor );
+                                            Measurement measurement = new Measurement();
+                                            measurement.setRepresentation( representation );
+                                            measurement.setValue( v );
+                                            fvO.setMeasurement( measurement );
+                                            fvO.setValue( v );
+                                            factor.getFactorValues().add( fvO );
+                                            factorValueAssignments
+                                                    .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
+                                                    .add( fvO );
+                                        }
+                                    }
+                                } );
+                            }
+                        }
+                        factors.add( factor );
+                    } );
                 }
-                if ( factorValueAssignments != null ) {
-                    // TODO: populate FVs
-                }
-                factors.add( factor );
             }
         }
         return factors;
     }
 
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException {
-        Assert.notNull( sampleFactorName );
+    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
+        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         Map<BioMaterial, Set<Characteristic>> result = new HashMap<>();
         try ( H5File h5File = openFile() ) {
             try ( H5Group vars = h5File.getGroup( "var" ) ) {
                 String indexColumn = vars.getStringAttribute( "_index" );
-                String[] cellIds = loadStringIndexFromDataframe( vars );
                 String[] sampleNames = loadCategoricalColumnFromDataframe( vars, sampleFactorName );
-                assert cellIds.length == sampleNames.length;
                 for ( String factorName : vars.getChildren() ) {
-                    if ( factorName.equals( indexColumn )
-                            || factorName.equals( sampleFactorName )
-                            || !"categorical".equals( vars.getStringAttribute( factorName, "encoding-type" ) ) ) {
-                        // cell IDs, sample names, continuous factors, etc. are not useful as sample characteristics
+                    if ( factorName.equals( indexColumn ) || factorName.equals( sampleFactorName ) || factorName.equals( cellTypeFactorName ) ) {
+                        // cell IDs, sample names, etc. are not useful as sample characteristics
                         continue;
                     }
-                    // to be valid for sample-level, a characteristic has to be the same for all cells
-                    String[] values = loadCategoricalColumnFromDataframe( vars, factorName );
-                    extractSingleValueBySampleName( sampleNames, values ).ifPresent( fvs -> {
-                        fvs.forEach( ( sampleName, value ) -> {
-                            samples.stream()
-                                    .filter( b -> sampleNameComparator.compare( b, sampleName ) )
-                                    .forEach( bm -> {
-                                        result.computeIfAbsent( bm, k -> new HashSet<>() ).add( Characteristic.Factory.newInstance( factorName, null, value, null ) );
-                                    } );
-                        } );
-                    } );
+                    String encodingType = vars.getStringAttribute( factorName, "encoding-type" );
+                    String[] values;
+                    if ( "categorical".equals( encodingType ) ) {
+                        // to be valid for sample-level, a characteristic has to be the same for all cells
+                        values = loadCategoricalColumnFromDataframe( vars, factorName );
+                    } else if ( "string-array".equals( encodingType ) ) {
+                        values = loadStringArrayColumnFromDataframe( vars, factorName );
+                    } else if ( "array".equals( encodingType ) ) {
+                        try ( H5Dataset vector = vars.getDataset( factorName ) ) {
+                            Assert.isTrue( Objects.equals( vars.getStringAttribute( "encoding-type" ), "dataframe" ),
+                                    "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
+                            Assert.isTrue( Objects.equals( vars.getStringAttribute( factorName, "encoding-type" ), "array" ),
+                                    "The column " + factorName + " is not an array." );
+                            switch ( vector.getType().getFundamentalType() ) {
+                                case INTEGER:
+                                    values = Arrays.stream( vector.toIntegerVector() ).mapToObj( Integer::toString ).toArray( String[]::new );
+                                    break;
+                                case FLOAT:
+                                    values = Arrays.stream( vector.toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
+                                    break;
+                                default:
+                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                    continue;
+                            }
+                        }
+                    } else {
+                        log.warn( "Unsupported encoding type: " + encodingType );
+                        continue;
+                    }
+                    extractSingleValueBySampleName( sampleNames, values )
+                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> samples.stream()
+                                    .filter( b -> sampleNameComparator.matches( b, sampleName ) )
+                                    .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
+                                            .add( Characteristic.Factory.newInstance( factorName, null, value, null ) ) ) ) );
                 }
             }
         }
@@ -336,8 +437,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     /**
      * Extract a single value by sample name if possible.
      */
-    private Optional<Map<String, String>> extractSingleValueBySampleName( String[] sampleNames, String[] values ) {
-        Map<String, String> cs = new HashMap<>();
+    private <T> Optional<Map<String, T>> extractSingleValueBySampleName( String[] sampleNames, T[] values ) {
+        Map<String, T> cs = new HashMap<>();
         for ( int i = 0; i < sampleNames.length; i++ ) {
             String sampleName = sampleNames[i];
             if ( cs.containsKey( sampleName ) && !cs.get( sampleName ).equals( values[i] ) ) {
@@ -359,6 +460,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public Stream<SingleCellExpressionDataVector> loadVectors
             ( Map<String, CompositeSequence> elementsMapping, SingleCellDimension dimension, QuantitationType
                     quantitationType ) throws IOException {
+        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         Assert.isTrue( quantitationType.getName().equals( "X" ) || quantitationType.getName().startsWith( "layers/" ),
                 "The name of the quantitation must refer to a valid path in the HDF5 file." );
         // we don't want to close it since it will be closed by the stream
@@ -455,6 +557,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
+    /**
+     * Load a string array column from a dataframe.
+     */
+    private String[] loadStringArrayColumnFromDataframe( H5Group df, String columnName ) {
+        Assert.isTrue( Objects.equals( df.getStringAttribute( "encoding-type" ), "dataframe" ),
+                "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
+        Assert.isTrue( Objects.equals( df.getStringAttribute( columnName, "encoding-type" ), "string-array" ),
+                "The column " + columnName + " is not a string array." );
+        return df.getDataset( columnName ).toStringVector();
+    }
+
     private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( H5Group X, String[] samples, String[]
             genes, QuantitationType qt, SingleCellDimension scd, Map<String, CompositeSequence> elementsMapping ) {
         int[] shape = X.getAttribute( "shape" )
@@ -462,31 +575,34 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 .orElseThrow( () -> new IllegalStateException( "The sparse matrix does not have a shape attribute." ) );
         Assert.isTrue( genes.length == shape[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
-        Assert.isTrue( scd.getCellIds().size() == shape[1],
-                "The number of cells in the dimension does not match the number of columns in the sparse matrix." );
+        Assert.isTrue( samples.length == shape[1],
+                "The number of supplied samples does not match the number of columns in the sparse matrix." );
+        Assert.isTrue( scd.getCellIds().size() <= shape[1],
+                "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
         // build a sample offset index for efficiently selecting samples
-        List<BioAssay> samplesBioAssay = new ArrayList<>();
-        int[] _sampleOffset = new int[0];
+        int numberOfSamples = ( int ) Arrays.stream( samples ).distinct().count();
+        List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
+        int[] sampleOffset = new int[numberOfSamples];
+        int W = 0;
         String currentSample = null;
         for ( int i = 0; i < samples.length; i++ ) {
             String sample = samples[i];
             if ( !sample.equals( currentSample ) ) {
                 currentSample = sample;
+                sampleOffset[W++] = i;
                 List<BioAssay> matchedBas = scd.getBioAssays().stream()
                         .filter( b -> sample.equals( b.getSampleUsed().getName() ) )
                         .collect( Collectors.toList() );
                 if ( matchedBas.size() == 1 ) {
                     samplesBioAssay.add( matchedBas.iterator().next() );
-                    _sampleOffset = ArrayUtils.add( _sampleOffset, i );
-                } else if ( matchedBas.size() > 1 ) {
-                    throw new IllegalStateException( "There is more than one BioAssay matching " + sample );
+                } else {
+                    samplesBioAssay.add( null );
                 }
             }
         }
-        int[] sampleOffset = _sampleOffset;
 
-        assert samplesBioAssay.size() == scd.getBioAssays().size();
+        assert samplesBioAssay.size() == sampleOffset.length;
 
         int[] intptr;
         try ( H5Dataset indptr = X.getDataset( "indptr" ) ) {
@@ -511,12 +627,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         throw new IllegalStateException( String.format( "Indices for %s are not sorted.", genes[i] ) );
                     }
                     // simple case: the number of BAs match the number of samples
-                    if ( scd.getBioAssays().size() == sampleOffset.length ) {
+                    if ( scd.getBioAssays().size() == samples.length ) {
                         // this is using the same storage strategy from ByteArrayConverter
                         vector.setData( data.slice( intptr[i], intptr[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
                         vector.setDataIndices( IX );
                     } else {
                         log.info( "Slicing relevant samples..." );
+                        log.info( "offset: " + Arrays.toString( sampleOffset ) );
                         // compute the vector length
                         int nnz = 0;
                         for ( BioAssay ba : scd.getBioAssays() ) {
@@ -536,7 +653,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 start = -start - 2;
                             }
                             int end;
-                            // find the ending poisition where the sample occurs
+                            // find the ending position where the sample occurs
                             if ( j < sampleOffset.length - 1 ) {
                                 end = Arrays.binarySearch( IX, j + 1 ) - 2;
                                 if ( end < 0 ) {

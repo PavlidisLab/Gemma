@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -21,15 +20,13 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.TestComponent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
 import static org.mockito.Mockito.mock;
+import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
 
 /**
@@ -68,18 +65,14 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
     @Test
     public void test() throws IOException {
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "/data/loader/expression/singleCell/GSE224438" );
+        loader.setBioAssayToSampleNameMatcher( ( bm, s ) -> s.equals( bm.getName() ) );
 
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign platform = new ArrayDesign();
         platform.setPrimaryTaxon( taxon );
-        Map<String, CompositeSequence> elementsMapping;
-        ClassPathResource cpr = new ClassPathResource( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( new GZIPInputStream( cpr.getInputStream() ) ) ) ) {
-            elementsMapping = br.lines()
-                    .map( line -> line.split( "\t", 2 )[0] )
-                    .collect( Collectors.toMap( s -> s, name -> CompositeSequence.Factory.newInstance( name, platform ) ) );
-        }
+        Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
+        elementsMapping.values().forEach( cs -> cs.setArrayDesign( platform ) );
         platform.getCompositeSequences().addAll( elementsMapping.values() );
         sessionFactory.getCurrentSession().persist( platform );
         ExpressionExperiment ee = new ExpressionExperiment();

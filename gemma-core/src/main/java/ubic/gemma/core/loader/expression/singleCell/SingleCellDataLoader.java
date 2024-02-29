@@ -26,15 +26,18 @@ import java.util.stream.Stream;
  */
 public interface SingleCellDataLoader {
 
+    /**
+     * Strategy used for comparing {@link BioAssay} to sample names from the data.
+     */
     @FunctionalInterface
-    interface SampleNameComparator {
-        boolean compare( BioMaterial bioMaterial, String sampleNameFromData );
+    interface BioAssayToSampleNameMatcher {
+        boolean matches( BioAssay bioAssay, String sampleNameFromData );
     }
 
     /**
-     * Set the strategy used for comparing sample names from the data to the names of the supplied {@link BioMaterial}.
+     * Set the strategy used for comparing {@link BioAssay} to sample names from the data.
      */
-    void setSampleNameComparator( SampleNameComparator sampleNameComparator );
+    void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator );
 
     /**
      * Ignore unmatched samples from the data when creating the {@link SingleCellDimension} in {@link #getSingleCellDimension(Collection)}.
@@ -89,14 +92,14 @@ public interface SingleCellDataLoader {
      *                               the mapping.
      * @return a set of factors present in the data
      */
-    Set<ExperimentalFactor> getFactors( Collection<BioMaterial> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException;
+    Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException;
 
     /**
-     * Load sample characteristics present in the data.
+     * Load samples characteristics present in the data.
      * @param samples to use when determining which characteristics to load
-     * @return proposed mapping of samples to characteristics
+     * @return proposed characteristics grouped by sample
      */
-    Map<BioMaterial, Set<Characteristic>> getSampleCharacteristics( Collection<BioMaterial> samples ) throws IOException;
+    Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException;
 
     /**
      * Load gene identifiers present in the data.
