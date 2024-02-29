@@ -122,7 +122,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         StopWatch timer = StopWatch.createStarted();
         List<?> qResult = getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e, r from DifferentialExpressionAnalysis a "
+                .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                         + "join a.experimentAnalyzed e  "
                         + "join a.resultSets rs join rs.results r "
                         + "where e.id in (:experimentsAnalyzed) and r.correctedPvalue < :threshold"
@@ -411,7 +411,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         if ( qResult.size() < minNumberOfResults ) {
             // FIXME this is kind of dumb. If we always return the top minimum, why not just always get that?
             AbstractDao.log.info( "Too few results met threshold, repeating to just get the top hits" );
-            qs = "select distinct r from DifferentialExpressionAnalysisResult r "
+            qs = "select r from DifferentialExpressionAnalysisResult r "
                     + "where r.resultSet = :resultSet "
                     + "order by r.correctedPvalue";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
