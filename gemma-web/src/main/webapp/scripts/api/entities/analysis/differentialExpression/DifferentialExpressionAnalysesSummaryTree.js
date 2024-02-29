@@ -440,7 +440,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 // across all opened windows.
                 return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div';
             },
-            getActionLinks: function (resultSet, factor, eeID, primaryFactorID, nodeId) {
+            getActionLinks: function ( resultSet, factorString, eeID, primaryFactorID, nodeId) {
                 /* link for details */
                 var numbers = this.getExpressionNumbers(resultSet, nodeId, true);
                 var linkText = '&nbsp;'
@@ -471,18 +471,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                 linkText += '</span>';
                 /* provide link for visualization. */
-                var tipText = "View top differentially expressed genes for &quot;" + factor + "&quot;";
+                var tipText = "View top differentially expressed genes for &quot;" + factorString + "&quot;";
                 linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
-                   + resultSet.resultSetId + '\',\'' + factor
+                   + resultSet.resultSetId + '\',\'' + factorString
                    + '\', \'' + primaryFactorID + '\')">&nbsp;'
                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
                 var pValueDistImageSize = 16;
-                var strippedFactorName = Ext.util.Format.stripTags(factor);
-                // factorName is for backwards compatibility. Deprecated in favor of using the resultSetId.
                 var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
-                    + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape(strippedFactorName);
-                var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factor) + '\', \'' + imageUrl
+                    + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
+                var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factorString) + '\', \'' + imageUrl
                     + '\');';
 
                 // -8px -6px is used as background-position property because the image has gray border.
@@ -503,23 +501,27 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
              *         interaction
              */
             getFactorNameText: function (analysis, resultSet) {
-                var factor = '';
+                var factorText = '';
                 var interaction = 0;
                 if (resultSet.experimentalFactors === null || resultSet.experimentalFactors.length === 0) {
-                    factor = "n/a";
+                    factorText = "n/a";
                 } else {
 
                     for (var k = 0; k < resultSet.experimentalFactors.length; k++) {
                         var ef = resultSet.experimentalFactors[k];
-                        if (k > 0 && k < resultSet.experimentalFactors.length) {
-                            factor = factor + "&nbsp;X&nbsp;";
-                            interaction = interaction + 1;
-                        }
-                        factor = factor + ef.name;
 
+                        if (ef.type === 'continuous') {
+                            factorText = factorText + ef.name + ': ' + ef.description;
+                        } else {
+                            if ( k > 0 && k < resultSet.experimentalFactors.length ) {
+                                factorText = factorText + "&nbsp;X&nbsp;";
+                                interaction = interaction + 1;
+                            }
+                            factorText = factorText + ef.name;
+                        }
                     }
                 }
-                return [factor, interaction];
+                return [factorText, interaction];
             },
 
             getPrimaryFactorID: function (analysis, resultSet) {
