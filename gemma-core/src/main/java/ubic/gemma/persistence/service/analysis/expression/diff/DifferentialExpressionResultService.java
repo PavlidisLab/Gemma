@@ -115,37 +115,8 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds,
-            int limit );
-
     List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
             int maxResultsToReturn, int minNumberOfResults );
-
-    /**
-     * Given a list of result sets finds the diff expression results that met the given threshold
-     *
-     * @param threshold threshold
-     * @param limit     limit
-     * @return map to diff ex VOs
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit );
-
-    /**
-     * Fetch the analysis associated with a result set.
-     *
-     * @param rs result set
-     * @return diff ex.
-     */
-    DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
-
-    Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> getExperimentalFactors(
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**
      * @param ids ids
