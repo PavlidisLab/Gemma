@@ -14,7 +14,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.SpringProfiles;
+import ubic.gemma.persistence.util.EnvironmentProfiles;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
  * For a full integration test base class, use {@link ubic.gemma.web.util.BaseSpringWebTest}.
  * @author poirigui
  */
-@ActiveProfiles({ "web", SpringProfiles.TEST })
+@ActiveProfiles({ "web", EnvironmentProfiles.TEST })
 @WebAppConfiguration
 public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 

@@ -18,7 +18,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
-import ubic.gemma.persistence.util.SpringProfiles;
+import ubic.gemma.persistence.util.EnvironmentProfiles;
 
 import javax.ws.rs.core.Application;
 
@@ -27,7 +27,7 @@ import javax.ws.rs.core.Application;
  * Spring components.
  * @author poirigui
  */
-@ActiveProfiles({ "web", SpringProfiles.TEST })
+@ActiveProfiles({ "web", EnvironmentProfiles.TEST })
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 public abstract class BaseJerseyTest extends JerseyTest implements InitializingBean {
