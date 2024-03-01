@@ -863,10 +863,10 @@ public class ExpressionExperimentDaoImpl
     private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
         List<String> clauses = new ArrayList<>( 5 );
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
-            clauses.add( "T.CATEGORY_URI not in (:excludedCategoryUris)" );
+            clauses.add( "T.CATEGORY_URI is null or T.CATEGORY_URI not in (:excludedCategoryUris)" );
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
-            clauses.add( "T.VALUE_URI not in (:excludedTermUris)" );
+            clauses.add( "T.VALUE_URI is null or T.VALUE_URI not in (:excludedTermUris)" );
         }
         if ( excludeFreeTextCategories ) {
             // we don't want to exclude "uncategorized" terms when excluding free-text categories
