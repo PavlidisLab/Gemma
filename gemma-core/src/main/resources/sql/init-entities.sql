@@ -171,7 +171,7 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     EXPRESSION_EXPERIMENT_FK              bigint,
     ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int not null default 0,
     LEVEL                                 varchar(255),
-    primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
+    primary key (ID, EXPRESSION_EXPERIMENT_FK)
 );
 
 -- note: constraint names cannot exceed 64 characters, so we cannot use the usual naming convention
