@@ -694,8 +694,7 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
+        query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
         query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
                 + "order by EE_COUNT desc";
@@ -773,17 +772,28 @@ public class ExpressionExperimentDaoImpl
             query += " and T.LEVEL = :level";
         }
         if ( category != null ) {
+            // a specific category is requested
             if ( category.equals( UNCATEGORIZED ) ) {
                 query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL";
-            } else {
-                query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category";
             }
+            // using COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category is very inefficient and we never use http:// in category labels
+            else if ( category.startsWith( "http://" ) ) {
+                query += " and T.CATEGORY_URI = :category";
+            } else {
+                query += " and T.CATEGORY = :category";
+            }
+            // no need to filter out excluded categories if a specific one is requested
+            query += getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+        } else {
+            // all categories are requested, we may filter out excluded ones
+            query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
         }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
         query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
-                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
-                + "having EE_COUNT >= :minFrequency ";
+                + "group by "
+                // no need to group by category if a specific one is requested
+                + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
+                + "COALESCE(T.VALUE_URI, T.`VALUE`) "
+                + ( minFrequency > 0 ? "having EE_COUNT >= :minFrequency " : "" );
         if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
             query += " or VALUE_URI in (:retainedTermUris)";
         }
@@ -819,7 +829,9 @@ public class ExpressionExperimentDaoImpl
         if ( level != null ) {
             q.setParameter( "level", level );
         }
-        q.setParameter( "minFrequency", minFrequency );
+        if ( minFrequency > 0 ) {
+            q.setParameter( "minFrequency", minFrequency );
+        }
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
@@ -842,38 +854,40 @@ public class ExpressionExperimentDaoImpl
      * <p>
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
-     * @param column            column holding the URI to be excluded
-     * @param labelColumn       column holding the label (only used if excludeFreeText or excludeUncategorized is true,
-     *                          then we will check if the label is non-null to cover some edge cases)
-     * @param excludedUrisParam name of the binding parameter for the excluded URIs
-     * @param excludedUris      list of URIs to exclude
-     * @param excludeFreeText   whether to exclude free-text URIs
-     * @param retainedTermUris  list of terms that should bypass the exclusion
+     *  @param excludedTermUris          list of URIs to exclude
+     *
+     * @param excludeFreeTextCategories whether to exclude free-text categories
+     * @param excludeFreeTextTerms      whether to exclude free-text terms
+     * @param retainedTermUris          list of terms that should bypass the exclusion
      */
-    private String getExcludeUrisClause( String column, String labelColumn, String excludedUrisParam, @Nullable Collection<String> excludedUris, boolean excludeFreeText, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
-        String query = "";
-        if ( excludedUris != null && !excludedUris.isEmpty() ) {
-            query += " and ((" + column + " not in (:" + excludedUrisParam + ")";
-            if ( excludeUncategorized ) {
-                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
-            }
-            if ( excludeFreeText ) {
-                query += " and (" + column + " is not null or " + labelColumn + " is null)";
-            }
-            query += ")";
+    private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
+        List<String> clauses = new ArrayList<>( 5 );
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            clauses.add( "T.CATEGORY_URI not in (:excludedCategoryUris)" );
+        }
+        if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
+            clauses.add( "T.VALUE_URI not in (:excludedTermUris)" );
+        }
+        if ( excludeFreeTextCategories ) {
+            // we don't want to exclude "uncategorized" terms when excluding free-text categories
+            clauses.add( "T.CATEGORY_URI is not null or T.CATEGORY is null" );
+        }
+        if ( excludeFreeTextTerms ) {
+            clauses.add( "T.VALUE_URI is not null" );
+        }
+        if ( excludeUncategorized ) {
+            clauses.add( "COALESCE(T.CATEGORY_URI, T.CATEGORY) is not null" );
+        }
+        if ( !clauses.isEmpty() ) {
+            String query = "";
+            query += " and ((" + String.join( ") and (", clauses ) + ")";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
                 query += " or T.VALUE_URI in (:retainedTermUris)";
             }
             query += ")";
-        } else {
-            if ( excludeUncategorized ) {
-                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
-            }
-            if ( excludeFreeText ) {
-                query += " and (" + column + " is not null or " + labelColumn + " is null)";
-            }
+            return query;
         }
-        return query;
+        return "";
     }
 
     @Override
