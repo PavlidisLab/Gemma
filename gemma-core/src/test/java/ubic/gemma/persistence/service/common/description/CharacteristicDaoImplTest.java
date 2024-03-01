@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
@@ -25,6 +27,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -38,6 +41,10 @@ import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +57,22 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     @Configuration
     @TestComponent
     static class CharacteristicDaoImplContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
+            Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath, "gemma.admin.email=gemma" );
+        }
+
+        /**
+         * Needed to convert {@link String} to {@link Path}.
+         */
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
+        }
 
         @Bean
         public CharacteristicDao characteristicDao( SessionFactory sessionFactory ) {

@@ -103,7 +103,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "from INVESTIGATION I "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.VALUE) "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
                     + "union "
                     + "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:bmClass as char(255)) "
                     + "from INVESTIGATION I "
@@ -111,7 +111,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
                     + "join CHARACTERISTIC C on BM.ID = C.BIO_MATERIAL_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.VALUE) "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
                     + "union "
                     + "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:edClass as char(255)) "
                     + "from INVESTIGATION I "
@@ -121,7 +121,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
                     // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
                     + "where I.class = 'ExpressionExperiment' and C.class = 'Statement' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.VALUE) "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
                     + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)";
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
