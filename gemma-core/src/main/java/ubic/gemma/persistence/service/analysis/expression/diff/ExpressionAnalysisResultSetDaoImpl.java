@@ -148,7 +148,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
 
         // this needs to be initialized because it does not appear in the experimental factors
-        Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
+        if ( ears.getAnalysis().getSubsetFactorValue() != null ) {
+            Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
+            Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
+        }
     }
 
     @Override
