@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +44,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -52,7 +52,6 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -136,8 +135,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             + "join ARRAY_DESIGN AD on BA.ORIGINAL_PLATFORM_FK = AD.ID "
             + "group by I.ID, AD.ID "
             + "on duplicate key update ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK)";
-    private static final Path DEFAULT_GENE2CS_INFO_PATH = Paths.get( Settings.getString( "gemma.appdata.home" ), "DbReports", "gene2cs.info" );
+
     private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
+
     @Autowired
     private AuditEventService auditEventService;
 
@@ -150,7 +150,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Autowired
     private SessionFactory sessionFactory;
 
-    private Path gene2CsInfoPath = DEFAULT_GENE2CS_INFO_PATH;
+    @Value("${gemma.gene2cs.path}")
+    private Path gene2CsInfoPath;
+
+    @Value("${gemma.admin.email}")
+    private String adminEmailAddress;
+
     private boolean sendEmail = true;
 
     @Override
@@ -250,14 +255,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * For use in tests.
      */
     @Override
-    public void setGene2CsInfoPath( Path gene2CsInfoPath ) {
-        this.gene2CsInfoPath = gene2CsInfoPath;
-    }
-
-    /**
-     * For use in tests.
-     */
-    @Override
     public void disableEmail() {
         this.sendEmail = false;
     }
@@ -297,7 +294,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( !sendEmail )
             return;
         SimpleMailMessage msg = new SimpleMailMessage();
-        String adminEmailAddress = Settings.getAdminEmailAddress();
         if ( StringUtils.isBlank( adminEmailAddress ) ) {
             TableMaintenanceUtilImpl.log
                     .warn( "No administrator email address could be found, so gene2cs status email will not be sent." );

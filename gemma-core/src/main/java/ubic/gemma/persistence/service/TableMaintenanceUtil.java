@@ -74,9 +74,6 @@ public interface TableMaintenanceUtil {
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2ArrayDesignEntries();
 
-    @Secured({ "GROUP_ADMIN" })
-    void setGene2CsInfoPath( Path gene2CsInfoPath );
-
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })
     void disableEmail();

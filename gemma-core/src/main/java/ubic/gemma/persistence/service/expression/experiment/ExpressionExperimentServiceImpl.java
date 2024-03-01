@@ -793,13 +793,20 @@ public class ExpressionExperimentServiceImpl
     private Set<String> inferTermsUris( Collection<String> termUris ) {
         Set<String> excludedTermUris = new HashSet<>( termUris );
         // null is a special indicator for free-text terms or categories
-        excludedTermUris.remove( FREE_TEXT );
+        boolean removedFreeText = excludedTermUris.remove( FREE_TEXT );
+        boolean removedUncategorized = excludedTermUris.remove( UNCATEGORIZED );
         // expand exclusions with implied terms via subclass relation
         Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
         // exclude terms using the subClass relation
         Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
         for ( OntologyTerm t : impliedTerms ) {
             excludedTermUris.add( t.getUri() );
+        }
+        if ( removedFreeText ) {
+            excludedTermUris.add( FREE_TEXT );
+        }
+        if ( removedUncategorized ) {
+            excludedTermUris.add( UNCATEGORIZED );
         }
         return excludedTermUris;
     }
