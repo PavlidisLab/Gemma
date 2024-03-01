@@ -4,13 +4,14 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.format.support.DefaultFormattingConversionService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,6 +36,18 @@ public class SettingsConfig {
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
         configurer.setPropertySources( propertySources() );
         return configurer;
+    }
+
+    /**
+     * The default Spring conversion service has limited support for Java 8 types.
+     * <p>
+     * This might be resolved in Spring 4+, in which case we could remove this declaration.
+     */
+    @Bean
+    public ConversionService conversionService() {
+        DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+        service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+        return service;
     }
 
     private static PropertySources propertySources() throws IOException {
