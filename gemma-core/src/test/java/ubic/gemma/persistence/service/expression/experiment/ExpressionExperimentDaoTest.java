@@ -432,6 +432,22 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertNull( sessionFactory.getCurrentSession().get( BioAssayDimension.class, bad.getId() ) );
     }
 
+    @Test
+    public void testGetAllAnnotations() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        expressionExperimentDao.getAllAnnotations( ee );
+    }
+
+    @Test
+    public void testGetAnnotationsByLevel() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        expressionExperimentDao.getExperimentAnnotations( ee );
+        expressionExperimentDao.getBioMaterialAnnotations( ee );
+        expressionExperimentDao.getExperimentalDesignAnnotations( ee );
+    }
+
     private ExpressionExperiment reload( ExpressionExperiment e ) {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( e );

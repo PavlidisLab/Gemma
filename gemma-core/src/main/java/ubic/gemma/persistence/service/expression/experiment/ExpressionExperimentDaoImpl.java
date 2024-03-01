@@ -625,17 +625,27 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment ) {
         //noinspection unchecked
-        List<Object[]> result = ( ( List<Object[]> ) getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*}, {T}.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
-                .addEntity( "T", Characteristic.class )
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, T.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                        + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .setParameter( "eeId", expressionExperiment.getId() )
-                .list() );
+                .list();
         //noinspection unchecked
         return result.stream()
-                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[1],
-                        Collectors.mapping( row -> ( Characteristic ) row[0], Collectors.toList() ) ) );
+                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[5],
+                        Collectors.mapping( this::convertRowToCharacteristic, Collectors.toList() ) ) );
+    }
+
+    @Override
+    public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
     }
 
     @Override
@@ -650,13 +660,19 @@ public class ExpressionExperimentDaoImpl
 
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
         //noinspection unchecked
-        return getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + "where {T}.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
-                .addEntity( "T", Characteristic.class )
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                        + "where T.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .setParameter( "level", level )
                 .setParameter( "eeId", expressionExperiment.getId() )
                 .list();
+        return result.stream().map( this::convertRowToCharacteristic ).collect( Collectors.toList() );
     }
 
     @Override
@@ -690,7 +706,7 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.ID is not null ";
+                + "where T.EXPRESSION_EXPERIMENT_FK is not null ";
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
@@ -764,7 +780,7 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.ID is not null"; // this is necessary for the clause building since there might be no clause
+                + "where T.EXPRESSION_EXPERIMENT_FK is not null"; // this is necessary for the clause building since there might be no clause
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
@@ -837,16 +853,20 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> result = q.list();
         TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
         for ( Object[] row : result ) {
-            GOEvidenceCode evidenceCode;
-            try {
-                evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
-            } catch ( IllegalArgumentException e ) {
-                evidenceCode = null;
-            }
-            Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
-            byC.put( c, ( Long ) row[5] );
+            byC.put( convertRowToCharacteristic( row ), ( Long ) row[5] );
         }
         return byC;
+    }
+
+    private Characteristic convertRowToCharacteristic( Object[] row ) {
+        GOEvidenceCode evidenceCode;
+        try {
+            evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
+        } catch ( IllegalArgumentException e ) {
+            evidenceCode = null;
+        }
+        Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
+        return c;
     }
 
     /**
