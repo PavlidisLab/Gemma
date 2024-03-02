@@ -258,6 +258,11 @@ public interface ExpressionExperimentDao
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
+     * Obtain experiment-level annotations.
+     */
+    List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
      * Obtain sample-level annotations.
      */
     List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );

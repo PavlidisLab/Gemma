@@ -151,7 +151,7 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
-                            branch stagingBranch
+                            branch stagingBranch + '-*'
                             branch 'development'
                         }
                     }

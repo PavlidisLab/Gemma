@@ -2,16 +2,10 @@
 
 -- hilo for generating IDs, under the MultipleHiLoPerTableGenerator method.
 -- See http://blog.eyallupu.com/2011/01/hibernatejpa-identity-generators.html
-drop table if exists hibernate_sequences;
 create table hibernate_sequences (
 	sequence_name VARCHAR(255) not null,
 	sequence_next_hi_value BIGINT not null
 );
-
-delete from CONTACT;
-delete from TAXON;
-delete from EXTERNAL_DATABASE;
-delete from AUDIT_TRAIL;
 
 -- alter CHROMOSOME_FEATURE for case insensitive search
 ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) default NULL;
@@ -36,10 +30,10 @@ insert into AUDIT_TRAIL VALUES (3);
 set @n:=now();
 
 -- username=gemmaAgent: id = 2, password = 'XXXXXXXX', audit trail #2, using salt={username}
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, EMAIL, PASSWORD_HINT) values (2, "User", "gemmaAgent",  "", "gemmaAgent", "2db458c67b4b52bba0184611c302c9c174ce8de4", 1, "pavlab-support@msl.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, EMAIL, PASSWORD_HINT) values (2, 'User', 'gemmaAgent',  '', 'gemmaAgent', '2db458c67b4b52bba0184611c302c9c174ce8de4', 1, 'pavlab-support@msl.ubc.ca', 'hint');
 
 -- username=administrator: id = 1, password = 'administrator', audit trail #1 using salt=username ('administrator')
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, EMAIL, PASSWORD_HINT) values (1, "User", "administrator",  "", "administrator", "b7338dcc17d6b6c199a75540aab6d0506567b980", 1, "pavlab-support@msl.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, EMAIL, PASSWORD_HINT) values (1, 'User', 'administrator',  '', 'administrator', 'b7338dcc17d6b6c199a75540aab6d0506567b980', 1, 'pavlab-support@msl.ubc.ca', 'hint');
 
 -- initialize the audit trails
 insert into AUDIT_EVENT VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1);
@@ -48,12 +42,12 @@ insert into AUDIT_EVENT VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3);
 
 
 -- Note that 'Administrators' is a constant set in AuthorityConstants. The names of these groups are defined in UserGroupDao.
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (1, "Administrators", "Users with administrative rights", 1);
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (2, "Users", "Default group for all authenticated users", 2);
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (3, "Agents", "For 'autonomous' agents that run within the server context, such as scheduled tasks.", 3);
-insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, "ADMIN", 1);
-insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, "USER", 2);
-insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, "AGENT", 3);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (1, 'Administrators', 'Users with administrative rights', 1);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (2, 'Users', 'Default group for all authenticated users', 2);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (3, 'Agents', 'For \'autonomous\' agents that run within the server context, such as scheduled tasks.', 3);
+insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, 'ADMIN', 1);
+insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, 'USER', 2);
+insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, 'AGENT', 3);
 
 -- make admin in the admin group
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (1, 1);
@@ -65,13 +59,13 @@ insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (2, 1);
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (3, 2);
 
 -- taxa
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Homo sapiens","human","9606",1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Mus musculus","mouse","10090",1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Rattus norvegicus","rat","10116",1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE,SECONDARY_NCBI_ID) values ("Saccharomyces cerevisiae","yeast","4932",1,559292);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Danio rerio","zebrafish","7955",1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Homo sapiens','human','9606',1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Mus musculus','mouse','10090',1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Rattus norvegicus','rat','10116',1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE,SECONDARY_NCBI_ID) values ('Saccharomyces cerevisiae','yeast','4932',1,559292);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Danio rerio','zebrafish','7955',1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Drosophila melanogaster','fly','7227',1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ('Caenorhabditis elegans','worm','6239',1);
 
 -- external databases
 
@@ -141,7 +135,6 @@ call add_external_database_relation('rn7', 'rn7 RNA-Seq annotations');
 drop procedure add_external_database_relation;
 
 -- denormalized table joining genes and compositeSequences; maintained by TableMaintenanceUtil.
-drop table if exists GENE2CS;
 create table GENE2CS
 (
     GENE BIGINT not null,
@@ -156,7 +149,6 @@ alter table GENE2CS
 alter table GENE2CS
     add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
 
-drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
     ID                                    bigint,
@@ -185,7 +177,6 @@ alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     add index EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE (CATEGORY_URI(100), CATEGORY, VALUE_URI(100), VALUE),
     add index EE2C_LEVEL (LEVEL);
 
-drop table if exists EXPRESSION_EXPERIMENT2ARRAY_DESIGN;
 create table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
 (
     EXPRESSION_EXPERIMENT_FK              bigint  not null,
