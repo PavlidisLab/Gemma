@@ -158,12 +158,6 @@
 			<version>1.0.3.RELEASE</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- latest for Spring 3 -->
-		<dependency>
-			<groupId>org.springframework.ws</groupId>
-			<artifactId>spring-ws-core</artifactId>
-			<version>2.1.4.RELEASE</version>
-		</dependency>
 
 		<!-- Scheduling -->
 		<!-- This is the latest Quartz release compatible with Spring 3 -->

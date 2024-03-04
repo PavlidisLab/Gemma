@@ -163,18 +163,6 @@
         <load-on-startup>2</load-on-startup>
     </servlet>
 
-    <!-- Defines the Spring-WS MessageDispatcherServlet -->
-    <servlet>
-        <servlet-name>gemma-ws</servlet-name>
-        <servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
-        <init-param>
-            <!-- Transform the location attributes in WSDLs -->
-            <param-name>transformWsdlLocations</param-name>
-            <param-value>false</param-value>
-        </init-param>
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-
     <servlet>
         <servlet-name>gemma-rest</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
@@ -242,11 +230,6 @@
         <servlet-name>gemma</servlet-name>
         <url-pattern>/</url-pattern>
         <url-pattern>/dwr/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma-ws</servlet-name>
-        <url-pattern>/ws/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
