@@ -241,8 +241,8 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                         numSkippedChunks++;
 
                         // repeated empty results can just mean we ran out of records.
-                        if (numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
-                            log.info("Have already skipped " + numSkippedChunks + " chunks, still no records: bailing");
+                        if ( numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
+                            log.info( "Have already skipped " + numSkippedChunks + " chunks, still no records: bailing" );
                             break;
                         }
                         start += NCBI_CHUNK_SIZE;
@@ -368,11 +368,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                                     + "\t" + geoRecord.getSubSeriesOf()
                                     + "\t" + geoRecord.getPubMedIds()
                                     + "\t" + geoRecord.getTitle()
-                                    + "\t" + geoRecord.getSummary()
+                                    + "\t" + clean(geoRecord.getSummary())
                                     + "\t" + geoRecord.getMeshHeadings()
-                                    + "\t" + geoRecord.getSampleDetails()
-                                    + "\t" + geoRecord.getLibraryStrategy()
-                                    + "\t" + geoRecord.getOverallDesign() + "\n" );
+                                    + "\t" + clean(geoRecord.getSampleDetails())
+                                    + "\t" + clean(geoRecord.getLibraryStrategy())
+                                    + "\t" + clean(geoRecord.getOverallDesign()) + "\n" );
 
                     seen.add( geoRecord.getGeoAccession() );
 
@@ -385,6 +385,16 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
             }
         }
 
+    }
+
+
+    /**
+     * Replace any 'tab' characters with spaces.
+     * @param s
+     * @return
+     */
+    String clean( String s ) {
+        return s.replace( '\t', ' ' );
     }
 
 }
