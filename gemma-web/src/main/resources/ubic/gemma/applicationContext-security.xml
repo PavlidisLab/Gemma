@@ -52,6 +52,8 @@
 
 		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
 
+		<s:intercept-url pattern="/dwr/index.html" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/dwr/test/**" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/monitoring" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"
