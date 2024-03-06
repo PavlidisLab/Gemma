@@ -1,0 +1,116 @@
+package ubic.gemma.web.controller.diff;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportResource;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.web.util.BaseWebTest;
+
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwrIndex;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
+
+@ContextConfiguration
+public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
+
+    @Configuration
+    @TestComponent
+    @ImportResource("classpath:/ubic/gemma/web/controller/diff/DifferentialExpressionAnalysisControllerTest.xml")
+    static class DifferentialExpressionAnalysisControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
+
+        @Bean
+        public TaskRunningService taskRunningService() {
+            return mock();
+        }
+
+        @Bean
+        public AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public DifferentialExpressionAnalysisService differentialExpressionAnalysisService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentReportService experimentReportService() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Test
+    public void testIndex() throws Exception {
+        mvc.perform( dwrIndex() )
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.TEXT_HTML ) );
+    }
+
+    @Test
+    public void test() throws Exception {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
+                .andExpect( callback().value( nullValue() ) );
+    }
+
+    @Test
+    public void testBatchCall() throws Exception {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
+                        .batch( 1 ) )
+                .andExpect( callback().batch( 0 ).doesNotExist() )
+                .andExpect( callback().batch( 1 ).value( nullValue() ) );
+    }
+
+    @Test
+    public void testMultipleCalls() throws Exception {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( expressionExperimentService.loadAndThawLiteOrFail( eq( 2L ), any(), any() ) ).thenReturn( ee );
+        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
+                        .and( 2L ) )
+                .andExpect( callback( 0 ).value( nullValue() ) )
+                .andExpect( callback( 1 ).value( nullValue() ) )
+                .andExpect( callback( 2 ).doesNotExist() )
+                .andExpect( exception( 2 ).doesNotExist() );
+    }
+
+    @Test
+    public void testMissingEndpoint() throws Exception {
+        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run2", 1L ) )
+                .andExpect( exception().javaClassName( "java.lang.Throwable" ) )
+                .andExpect( exception().message( "Error" ) );
+    }
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
+
+    <dwr:controller id="dwrController" debug="true">
+        <dwr:config-param name="generateDtoClasses" value="dtoall"/>
+        <dwr:config-param name="allowScriptTagRemoting" value="true"/>
+        <dwr:config-param name="crossDomainSessionSecurity" value="false"/>
+    </dwr:controller>
+
+    <bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="alwaysUseFullPath" value="true"/>
+        <property name="mappings">
+            <props>
+                <prop key="/dwr/**/*">dwrController</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="differentialExpressionAnalysisController"
+          class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController">
+        <dwr:remote javascript="DifferentialExpressionAnalysisController">
+            <dwr:include method="run"/>
+        </dwr:remote>
+    </bean>
+
+</beans>
