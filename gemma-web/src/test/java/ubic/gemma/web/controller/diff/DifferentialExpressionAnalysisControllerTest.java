@@ -24,10 +24,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
-import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwrStaticPage;
-import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
-import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.*;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.*;
 
 @ContextConfiguration
 public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
@@ -121,10 +119,9 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
-        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
-                        .batch( 1 ) )
-                .andExpect( callback().batch( 0 ).doesNotExist() )
-                .andExpect( callback().batch( 1 ).value( nullValue() ) );
+        mvc.perform( dwrBatch( 1 ).dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
+                .andExpect( batch( 0 ).callback().doesNotExist() )
+                .andExpect( batch( 1 ).callback().value( nullValue() ) );
         verify( taskRunningService ).submitTaskCommand( any() );
     }
 

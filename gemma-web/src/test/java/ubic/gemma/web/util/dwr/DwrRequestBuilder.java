@@ -18,34 +18,18 @@ public class DwrRequestBuilder implements RequestBuilder {
     private final String servletPath;
     private final Class<?> clazz;
     private final String methodName;
+    private final int batchId;
 
     // internal state
-    private final int batchId;
     private final StringBuilder callPayload;
     private int callCount = 0;
 
-    public DwrRequestBuilder( String servletPath, Class<?> clazz, String methodName ) {
+    public DwrRequestBuilder( String servletPath, Class<?> clazz, String methodName, int batchId ) {
         this.servletPath = servletPath;
         this.clazz = clazz;
         this.methodName = methodName;
-        this.batchId = 0;
-        this.callPayload = new StringBuilder();
-    }
-
-    private DwrRequestBuilder( DwrRequestBuilder that, int batchId ) {
-        this.servletPath = that.servletPath;
-        this.clazz = that.clazz;
-        this.methodName = that.methodName;
         this.batchId = batchId;
-        this.callPayload = new StringBuilder( that.callPayload );
-        this.callCount = that.callCount;
-    }
-
-    /**
-     * Derive a DWR request builder for the given batch ID.
-     */
-    public DwrRequestBuilder batch( int batchId ) {
-        return new DwrRequestBuilder( this, batchId );
+        this.callPayload = new StringBuilder();
     }
 
     /**

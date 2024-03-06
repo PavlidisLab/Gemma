@@ -26,6 +26,13 @@ public class MockDwrRequestBuilders {
      * Perform a DWR call.
      */
     public static DwrRequestBuilder dwr( Class<?> clazz, String methodName, Object... args ) {
-        return new DwrRequestBuilder( SERVLET_PATH, clazz, methodName ).and( args );
+        return new DwrRequestBuilder( SERVLET_PATH, clazz, methodName, 0 ).and( args );
+    }
+
+    /**
+     * Perform a batched DWR call.
+     */
+    public static DwrBatchRequestBuilder dwrBatch( int batchId ) {
+        return new DwrBatchRequestBuilder( SERVLET_PATH, batchId );
     }
 }
