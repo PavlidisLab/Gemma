@@ -1,31 +1,9 @@
 -- Initialize the database with some scraps of data. See also init-indices.sql and mysql-acegi-acl.sql.
 
--- hilo for generating IDs, under the MultipleHiLoPerTableGenerator method.
--- See http://blog.eyallupu.com/2011/01/hibernatejpa-identity-generators.html
-create table hibernate_sequences (
-	sequence_name VARCHAR(255) not null,
-	sequence_next_hi_value BIGINT not null
-);
-
--- alter CHROMOSOME_FEATURE for case insensitive search
-ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NAME varchar(255) default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GI varchar(255) default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GENE_ID  int(11) UNIQUE;
--- alter GENE_ALIAS for case insensitive search
-ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) default NULL;
-
-
--- wider columns.
-alter table BIO_SEQUENCE modify SEQUENCE LONGTEXT;
-alter table JOB_INFO modify MESSAGES LONGTEXT;
-
-
 -- all of these are used.
 insert into AUDIT_TRAIL VALUES (1);
 insert into AUDIT_TRAIL VALUES (2);
 insert into AUDIT_TRAIL VALUES (3);
-
 
 set @n:=now();
 
@@ -149,6 +127,8 @@ alter table GENE2CS
 alter table GENE2CS
     add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
 
+-- this table is created in the hibernate schema
+drop table EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
     ID                                    bigint,

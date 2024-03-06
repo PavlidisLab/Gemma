@@ -25,6 +25,8 @@ alter table GENE2CS
 alter table GENE2CS
     add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
 
+-- this table is created in the hibernate schema
+drop table EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
     ID                                    bigint,
