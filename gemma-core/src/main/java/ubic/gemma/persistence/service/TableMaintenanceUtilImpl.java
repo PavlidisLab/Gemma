@@ -128,11 +128,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
             + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
             + "join ARRAY_DESIGN AD on BA.ARRAY_DESIGN_USED_FK = AD.ID "
+            + "where I.class = 'ExpressionExperiment' "
             + "group by I.ID, AD.ID "
             + "union "
             + "select I.ID, AD.ID, TRUE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
             + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
             + "join ARRAY_DESIGN AD on BA.ORIGINAL_PLATFORM_FK = AD.ID "
+            + "where I.class = 'ExpressionExperiment' "
             + "group by I.ID, AD.ID "
             + "on duplicate key update ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK)";
 
