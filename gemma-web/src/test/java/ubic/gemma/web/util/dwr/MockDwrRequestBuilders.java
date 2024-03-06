@@ -32,7 +32,7 @@ public class MockDwrRequestBuilders {
     /**
      * Perform a batched DWR call.
      */
-    public static DwrBatchRequestBuilder dwrBatch( int batchId ) {
-        return new DwrBatchRequestBuilder( SERVLET_PATH, batchId );
+    public static MockDwrBatchRequestBuilders dwrBatch( int batchId ) {
+        return new MockDwrBatchRequestBuilders( SERVLET_PATH, batchId );
     }
 }

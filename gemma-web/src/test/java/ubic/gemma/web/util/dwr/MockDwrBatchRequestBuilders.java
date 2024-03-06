@@ -1,11 +1,11 @@
 package ubic.gemma.web.util.dwr;
 
-public class DwrBatchRequestBuilder {
+public class MockDwrBatchRequestBuilders {
 
     private final String servletPath;
     private final int batchId;
 
-    public DwrBatchRequestBuilder( String servletPath, int batchId ) {
+    public MockDwrBatchRequestBuilders( String servletPath, int batchId ) {
         this.servletPath = servletPath;
         this.batchId = batchId;
     }
