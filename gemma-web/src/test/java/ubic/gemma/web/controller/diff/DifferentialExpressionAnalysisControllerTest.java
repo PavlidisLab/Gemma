@@ -1,5 +1,6 @@
 package ubic.gemma.web.controller.diff;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +21,7 @@ import ubic.gemma.web.util.BaseWebTest;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
@@ -66,6 +66,14 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @After
+    public void resetMocks() {
+        reset( expressionExperimentService, taskRunningService );
+    }
+
     @Test
     public void testIndex() throws Exception {
         mvc.perform( dwrIndex() )
@@ -78,8 +86,10 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( taskRunningService.submitTaskCommand( any() ) ).thenReturn( "23" );
         mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
-                .andExpect( callback().value( nullValue() ) );
+                .andExpect( callback().value( "23" ) );
+        verify( taskRunningService ).submitTaskCommand( any() );
     }
 
     @Test
@@ -91,6 +101,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
                         .batch( 1 ) )
                 .andExpect( callback().batch( 0 ).doesNotExist() )
                 .andExpect( callback().batch( 1 ).value( nullValue() ) );
+        verify( taskRunningService ).submitTaskCommand( any() );
     }
 
     @Test
@@ -105,6 +116,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
                 .andExpect( callback( 1 ).value( nullValue() ) )
                 .andExpect( callback( 2 ).doesNotExist() )
                 .andExpect( exception( 2 ).doesNotExist() );
+        verify( taskRunningService, times( 2 ) ).submitTaskCommand( any() );
     }
 
     @Test
@@ -112,5 +124,6 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run2", 1L ) )
                 .andExpect( exception().javaClassName( "java.lang.Throwable" ) )
                 .andExpect( exception().message( "Error" ) );
+        verifyNoInteractions( taskRunningService );
     }
 }
