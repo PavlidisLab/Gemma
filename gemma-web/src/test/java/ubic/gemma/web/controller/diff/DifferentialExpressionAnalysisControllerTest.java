@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
-import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwrIndex;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwrStaticPage;
 import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
 import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
 
@@ -76,9 +76,33 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
     @Test
     public void testIndex() throws Exception {
-        mvc.perform( dwrIndex() )
+        mvc.perform( dwrStaticPage( "/index.html" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.TEXT_HTML ) );
+    }
+
+    @Test
+    public void testDiffExAnalysisControllerTestPage() throws Exception {
+        mvc.perform( dwrStaticPage( "/test/DifferentialExpressionAnalysisController" ) )
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.TEXT_HTML ) );
+    }
+
+    /**
+     * This error is produced via {@link javax.servlet.http.HttpServletResponse#sendError(int)} and thus is not
+     * intercepted by Spring's error handler. It will however be handled by the Web server via {@code error.jsp}.
+     */
+    @Test
+    public void testUndefinedTestPage() throws Exception {
+        mvc.perform( dwrStaticPage( "/test/bleh" ) )
+                .andExpect( status().isNotImplemented() );
+    }
+
+    @Test
+    public void testJsEngine() throws Exception {
+        mvc.perform( dwrStaticPage( "/engine.js" ) )
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType( "text/javascript;charset=utf-8" ) );
     }
 
     @Test

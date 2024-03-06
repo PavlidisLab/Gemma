@@ -1,7 +1,10 @@
 package ubic.gemma.web.util.dwr;
 
+import org.directwebremoting.impl.DefaultContainer;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import javax.servlet.ServletConfig;
 
 public class MockDwrRequestBuilders {
 
@@ -11,10 +14,11 @@ public class MockDwrRequestBuilders {
     private static final String SERVLET_PATH = "/dwr";
 
     /**
-     * Request the DWR index.
+     * Request the DWR static page.
+     * @see org.directwebremoting.impl.ContainerUtil#setupDefaults(DefaultContainer, ServletConfig)
      */
-    public static RequestBuilder dwrIndex() {
-        return MockMvcRequestBuilders.get( SERVLET_PATH + "/index.html" )
+    public static RequestBuilder dwrStaticPage( String page ) {
+        return MockMvcRequestBuilders.get( SERVLET_PATH + page )
                 .servletPath( SERVLET_PATH );
     }
 
