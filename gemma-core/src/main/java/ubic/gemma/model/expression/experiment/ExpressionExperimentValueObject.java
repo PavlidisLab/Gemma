@@ -89,8 +89,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * Creates a new value object out of given Expression Experiment.
      *
      * @param ee the experiment to convert into a value object.
+     * @param ignoreDesign exclude the experimental design from serialization
+     * @param ignoreAccession exclude accession from serialization
      */
-    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession ) {
         super( ee );
         this.shortName = ee.getShortName();
         this.name = ee.getName();
@@ -98,7 +100,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.description = ee.getDescription();
 
         // accession
-        if ( ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+        if ( !ignoreAccession && ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
@@ -113,7 +115,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Counts
-        if ( ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ) {
+        if ( Hibernate.isInitialized( ee.getBioAssays() ) ) {
             this.numberOfBioAssays = ee.getBioAssays().size();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
@@ -121,7 +123,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // ED
-        if ( ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
+        if ( !ignoreDesign && ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
@@ -140,6 +142,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else {
             geeq = null;
         }
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+        this( ee, false, false );
     }
 
     /**

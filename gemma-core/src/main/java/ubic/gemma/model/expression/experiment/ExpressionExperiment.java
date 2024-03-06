@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.SecuredNotChild;
+import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
@@ -37,6 +38,7 @@ import java.util.Set;
  * @author paul
  */
 @Indexed
+@CommonsLog
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
     public static final class Factory {
@@ -271,11 +273,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.batchEffectStatistics = batchEffectStatistics;
     }
 
+    /**
+     * The {@link #numberOfSamples} is adjusted to the number of assigned bioassays.
+     */
     @Override
     public void setBioAssays( Set<BioAssay> bioAssays ) {
         super.setBioAssays( bioAssays );
-        if ( bioAssays != null && Hibernate.isInitialized( bioAssays ) )
+        if ( Hibernate.isInitialized( bioAssays ) ) {
             this.numberOfSamples = bioAssays.size();
+        } else {
+            log.error( String.format( "A new set of BioAssays was assigned to ExpressionExperiment with ID %d, but it is not initialized. The numberOfSamples field might diverge from bioAssays.size().", getId() ) );
+        }
     }
 
     @Override
