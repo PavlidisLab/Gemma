@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.cfg.Settings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,10 +27,7 @@ import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
-import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
-import ubic.gemma.core.loader.expression.geo.GeoConverter;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
@@ -44,7 +40,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -53,8 +48,8 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.util.SettingsConfig;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -67,7 +62,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
 
-    @Value( "${geo.minimumSamplesToLoad}")
+    @Value("${geo.minimumSamplesToLoad}")
     private int MINIMUM_SAMPLE_COUNT_TO_LOAD;
 
     private final ArrayDesignReportService arrayDesignReportService;
@@ -387,6 +382,15 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
 
+    }
+
+    @Override
+    @Transactional
+    public  Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform ) {
+        File f = new File( softFile );
+        this.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( f.getParent() ) );
+        return fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform );
     }
 
     private void check( Collection<ExpressionExperiment> result ) {
