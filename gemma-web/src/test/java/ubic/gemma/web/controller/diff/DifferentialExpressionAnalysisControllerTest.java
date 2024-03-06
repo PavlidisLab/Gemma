@@ -34,7 +34,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
     @Configuration
     @TestComponent
-    @ImportResource("classpath:/ubic/gemma/web/controller/diff/DifferentialExpressionAnalysisControllerTest.xml")
+    @ImportResource("classpath:ubic/gemma/web/controller/diff/DifferentialExpressionAnalysisControllerTest-dwr.xml")
     static class DifferentialExpressionAnalysisControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
 
         @Bean
