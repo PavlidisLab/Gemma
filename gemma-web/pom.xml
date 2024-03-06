@@ -14,7 +14,7 @@
 		<finalName>Gemma</finalName>
 		<testResources>
 			<testResource>
-				<directory>${project.basedir}/test/resources</directory>
+				<directory>${project.basedir}/src/test/resources</directory>
 			</testResource>
 			<testResource>
 				<targetPath>WEB-INF</targetPath>
