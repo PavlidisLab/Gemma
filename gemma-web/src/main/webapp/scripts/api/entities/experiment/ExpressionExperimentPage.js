@@ -97,7 +97,7 @@ function getBatchInfoBadges(ee) {
             if (ee.batchConfound !== null && ee.batchConfound !== "") {
                 // no-op.
             } else {
-                result = result + getStatusBadge('cogs', 'green', 'no batch effect', "Batch information is present, but no substantial effect was detected, so the data are not corrected.")
+                result = result + getStatusBadge('cogs', 'green', 'negligible batch effect', "Batch information is present, but the batch effect was considered below the threshold for warranting correction")
             }
         } else if (ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
@@ -106,7 +106,7 @@ function getBatchInfoBadges(ee) {
         } else if (ee.batchEffect === "BATCH_EFFECT_FAILURE") {
             result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffectStatistics )
         } else if (ee.batchEffect === "BATCH_EFFECT_UNDETERMINED_FAILURE") {
-            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect is undetermined, there was likely a problem with the SVD or a missing batch factor.');
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect could not be determined.');
         } else {
             // unsupported batch effect type
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Unsupported batch effect type')
