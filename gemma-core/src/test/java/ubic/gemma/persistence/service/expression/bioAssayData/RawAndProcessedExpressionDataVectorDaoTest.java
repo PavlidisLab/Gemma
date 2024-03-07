@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -21,7 +20,8 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
@@ -94,6 +94,7 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
         pv.setExpressionExperiment( ee );
         ee.setRawExpressionDataVectors( Collections.singleton( ev ) );
         ee.setProcessedExpressionDataVectors( Collections.singleton( pv ) );
+        ee.setNumberOfDataVectors( 1 );
         sessionFactory.getCurrentSession().persist( ee );
         assertEquals( 2, rawAndProcessedExpressionDataVectorDao.findByExpressionExperiment( ee ).size() );
         assertEquals( 2, rawAndProcessedExpressionDataVectorDao.removeByCompositeSequence( cs ) );

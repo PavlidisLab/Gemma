@@ -177,6 +177,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
             vectors.add( vector );
         }
         ee.setProcessedExpressionDataVectors( vectors );
+        ee.setNumberOfDataVectors( vectors.size() );
         session.persist( ee );
         session.flush();
         session.clear();

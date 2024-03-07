@@ -487,7 +487,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             compositeSequences.add( cs );
         }
-        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<>( vectors ) );
+        Set<ProcessedExpressionDataVector> vectorsSet = new HashSet<>( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( vectorsSet );
+        expressionExperiment.setNumberOfDataVectors( vectorsSet.size() );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }

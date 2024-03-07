@@ -79,6 +79,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee.setNumberOfSamples( 1 );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );
         ee.setProcessedExpressionDataVectors( Collections.singleton( new ProcessedExpressionDataVector() ) );
+        ee.setNumberOfDataVectors( 1 );
         expressionExperimentDao.thaw( ee );
         expressionExperimentDao.thawBioAssays( ee );
         expressionExperimentDao.thawWithoutVectors( ee );
