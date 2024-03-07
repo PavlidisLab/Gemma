@@ -130,10 +130,11 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
 
 <div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
-    <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
-        <div style="margin-right: 10px;">
+    <div class="footer" style="display: flex; align-items: baseline; gap: 10px; padding-left: 10px; padding-right: 10px;">
+        <div>
             Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
             <security:authorize access="hasAuthority('GROUP_ADMIN')">
+                <span class="d-xl-inline">
                 <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
                     built
                 </c:if>
@@ -144,9 +145,10 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                     from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
                         target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
                 </c:if>
+                </span>
             </security:authorize>
         </div>
-        <div style="margin-right: 10px;">Copyright &copy; 2007-2023</div>
+        <div>Copyright &copy; 2007-2023</div>
         <div class="d-sm">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
             been updated!
