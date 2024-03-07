@@ -619,11 +619,8 @@ public class ExpressionDataMatrixColumnSort {
     /**
      * <p>
      * Sort biomaterials according to a list of ordered factors.
-     * </p>
-     * <p>
-     * FIXME If any factor is continuous, we sort by it and don't do any further sorting.
      * </p><p>
-     * Otherwise, for categorical factors, we sort recursively (by levels of the first factor, then
+     * For categorical factors, we sort recursively (by levels of the first factor, then
      * within that by levels of the second factor etc.)
      * </p><p>
      * Any batch factor is used last (we sort by batch only within the most granular factor's levels)
