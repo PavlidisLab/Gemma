@@ -149,7 +149,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
             </security:authorize>
         </div>
         <div>Copyright &copy; 2007-2023</div>
-        <div class="d-sm">
+        <div class="d-lg">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
             been updated!
         </div>
