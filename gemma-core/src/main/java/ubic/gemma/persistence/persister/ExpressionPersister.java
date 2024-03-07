@@ -317,11 +317,6 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             ++count;
-
-            if ( Thread.interrupted() ) {
-                AbstractPersister.log.debug( "Cancelled" );
-                return null;
-            }
         }
 
         AbstractPersister.log.debug( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size()
@@ -454,19 +449,17 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment, Caches caches ) {
-
-        Set<BioAssay> alreadyFilled = new HashSet<>();
-
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             AbstractPersister.log.debug( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 this.fillInBioAssayAssociations( bioAssay, caches );
-                alreadyFilled.add( bioAssay );
             }
         } else {
             AbstractPersister.log.debug( "Filling in bioassays via data vectors" ); // usual case.
+            Set<BioAssay> alreadyFilled;
             alreadyFilled = this.fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches );
             expressionExperiment.setBioAssays( alreadyFilled );
+            expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
     }
 

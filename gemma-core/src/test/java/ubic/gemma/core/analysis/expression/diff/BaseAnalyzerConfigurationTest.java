@@ -331,6 +331,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         biomaterial3b.getBioAssaysUsedIn().add( bioAssay3b );
 
         expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
+        expressionExperiment.setNumberOfSamples( new HashSet<>( bioAssays ).size() );
 
         experimentalFactors = new ArrayList<>();
         experimentalFactors.add( experimentalFactorA_Area );
@@ -431,6 +432,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssays.remove( bioAssay3b );
 
         expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
+        expressionExperiment.setNumberOfSamples( new HashSet<>( bioAssays ).size() );
 
         bioAssayDimension.setBioAssays( bioAssays );
 

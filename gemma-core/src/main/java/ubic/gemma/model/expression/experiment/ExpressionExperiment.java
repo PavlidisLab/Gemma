@@ -273,19 +273,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.batchEffectStatistics = batchEffectStatistics;
     }
 
-    /**
-     * The {@link #numberOfSamples} is adjusted to the number of assigned bioassays.
-     */
-    @Override
-    public void setBioAssays( Set<BioAssay> bioAssays ) {
-        super.setBioAssays( bioAssays );
-        if ( Hibernate.isInitialized( bioAssays ) ) {
-            this.numberOfSamples = bioAssays.size();
-        } else {
-            log.error( String.format( "A new set of BioAssays was assigned to ExpressionExperiment with ID %d, but it is not initialized. The numberOfSamples field might diverge from bioAssays.size().", getId() ) );
-        }
-    }
-
     @Override
     public void setCurationDetails( CurationDetails curationDetails ) {
         this.curationDetails = curationDetails;

@@ -338,6 +338,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
             ExpressionExperiment ee = new ExpressionExperiment();
             ee.setShortName( shortName );
             ee.setBioAssays( bas );
+            ee.setNumberOfSamples( bas.size() );
             QuantitationType qt = new QuantitationType();
             return new ExpressionDataDoubleMatrix( ee, qt, matrix );
         } catch ( IOException e ) {

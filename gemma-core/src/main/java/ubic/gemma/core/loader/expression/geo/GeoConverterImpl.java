@@ -1965,6 +1965,7 @@ public class GeoConverterImpl implements GeoConverter {
         expExp.setExperimentalDesign( design );
 
         expExp.setBioAssays( new HashSet<BioAssay>() );
+        // numberOfSample is updated later when the BAs are populated
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
             throw new IllegalArgumentException( "No sample correspondence!" );

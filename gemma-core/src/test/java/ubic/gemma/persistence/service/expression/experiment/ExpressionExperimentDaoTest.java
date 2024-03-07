@@ -76,6 +76,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ba.setSampleUsed( new BioMaterial() );
         ba.setArrayDesignUsed( new ArrayDesign() );
         ee.setBioAssays( Collections.singleton( ba ) );
+        ee.setNumberOfSamples( 1 );
         ee.setRawExpressionDataVectors( Collections.singleton( new RawExpressionDataVector() ) );
         ee.setProcessedExpressionDataVectors( Collections.singleton( new ProcessedExpressionDataVector() ) );
         expressionExperimentDao.thaw( ee );
