@@ -1,0 +1,70 @@
+/* a responsive mini-framework inspired by Bootstrap 5 https://getbootstrap.com/docs/5.0/ */
+
+/* xs screen */
+.container {
+    margin: 0 20px;
+}
+
+.d-sm {
+    display: none;
+}
+
+.d-md {
+    display: none;
+}
+
+.d-lg {
+    display: none;
+}
+
+.d-xl {
+    display: none;
+}
+
+/* small screens */
+@media (min-width: 576px) {
+    .container {
+        margin: 0 auto;
+        width: 768px;
+    }
+
+    .d-sm {
+        display: block;
+    }
+}
+
+/* medium screen */
+@media (min-width: 768px) {
+    .container {
+        margin: 0 auto;
+        width: 768px;
+    }
+
+    .d-md {
+        display: block;
+    }
+}
+
+/* large screens */
+@media (min-width: 992px) {
+    .container {
+        margin: 0 auto;
+        width: 992px;
+    }
+
+    .d-lg {
+        display: block;
+    }
+}
+
+/* xl screens */
+@media (min-width: 1200px) {
+    .container {
+        margin: 0 auto;
+        width: 1200px;
+    }
+
+    .d-xl {
+        display: block;
+    }
+}

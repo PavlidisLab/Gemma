@@ -6,32 +6,6 @@
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
 <jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
-<style>
-    /* Additional styles for larger screens */
-    @media (min-width: 1200px) {
-        /* Adjust 768px to the appropriate breakpoint for your design */
-        .container {
-            margin: 0 auto;
-            width: 1200px;
-        }
-
-        #generalSearchSimple-div {
-            flex-grow: 1;
-            /* Ensure it takes available space, adjust as needed */
-        }
-
-        #summaryPanel-div {
-            /* This will push the div to the right at larger screens */
-            order: 2; /* Flexbox order can be used to visually reorder elements */
-        }
-    }
-
-    @media (max-width: 768px) {
-        .container {
-            margin: 0 20px;
-        }
-    }
-</style>
 </head>
 
 <script type="text/javascript">
@@ -66,7 +40,7 @@ Ext.onReady( function() {
 <div id="frontPageSlideShow">
     <div class="container"
             style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 40px; margin-bottom: 40px;">
-        <div style="width:330px; font-size: small;">
+        <div style="width:330px; font-size: small; margin-bottom: 20px;">
             Gemma provides data, experimental design annotations, and differential expression analysis results for
             thousands
             of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
@@ -85,7 +59,7 @@ Ext.onReady( function() {
                                      &chdlp=b|l&chdls=2f2f2f,13"
                  width="340" height="240"
                  alt="A pie chart representing proportion of taxa among Gemma datasets." />--%>
-        <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
+        <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); margin-bottom: 20px;"
                 src="${pageContext.request.contextPath}/images/showoff.png"
                 width="300"
                 alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
@@ -100,7 +74,7 @@ Ext.onReady( function() {
         <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
         <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
 
-        <div style="width:250px;" id="summaryPanel-div"></div>
+        <div style="width:250px; margin-bottom: 20px;" id="summaryPanel-div"></div>
     </div>
 </div>
 <%--
@@ -157,7 +131,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
 <div id="footer" style="position: fixed; bottom: 0; height: 24px; background: white;">
     <div id="divider"></div>
     <div class="footer" style="display: flex; align-items: baseline; padding-left: 10px; padding-right: 10px;">
-        <div>
+        <div style="margin-right: 10px;">
             Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
             <security:authorize access="hasAuthority('GROUP_ADMIN')">
                 <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
@@ -172,8 +146,8 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 </c:if>
             </security:authorize>
         </div>
-        <div style="margin-left: 10px;">Copyright &copy; 2007-2023</div>
-        <div style="margin-left: 10px;">
+        <div style="margin-right: 10px;">Copyright &copy; 2007-2023</div>
+        <div class="d-sm">
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
             been updated!
         </div>
