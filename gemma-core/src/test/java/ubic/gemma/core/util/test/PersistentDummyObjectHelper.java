@@ -777,7 +777,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName(
                 RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
         ee.setBioAssays( bas1 );
-        ee.setNumberOfSamples( bioAssays.size() );
+        ee.setNumberOfSamples( bas1.size() );
 
         Collection<FactorValue> allFactorValues = new HashSet<>();
 
