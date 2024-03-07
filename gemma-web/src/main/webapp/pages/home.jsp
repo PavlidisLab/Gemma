@@ -66,7 +66,7 @@ Ext.onReady( function() {
 <div id="frontPageSlideShow">
     <div class="container"
             style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 40px; margin-bottom: 40px;">
-        <div style="width:400px; font-size: 1.2em;">
+        <div style="width:330px; font-size: small;">
             Gemma provides data, experimental design annotations, and differential expression analysis results for
             thousands
             of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
@@ -88,7 +88,7 @@ Ext.onReady( function() {
         <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
                 src="${pageContext.request.contextPath}/images/showoff.png"
                 width="300"
-                alt="Example of a dataset view" />
+                alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
         <%--  <img style="position: absolute; top: 180px; left: 435px;"
                   src="${pageContext.request.contextPath}/images/slideShow/humanOutline_35_3.png"
                   alt="An overlay of a human on top of its section of the pie chart."
@@ -100,7 +100,7 @@ Ext.onReady( function() {
         <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
         <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
 
-        <div style="width:300px;" id="summaryPanel-div"></div>
+        <div style="width:250px;" id="summaryPanel-div"></div>
     </div>
 </div>
 <%--
