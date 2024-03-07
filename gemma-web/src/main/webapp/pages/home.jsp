@@ -39,8 +39,8 @@ Ext.onReady( function() {
 
 <div id="frontPageSlideShow">
     <div class="container"
-            style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 40px; margin-bottom: 40px;">
-        <div style="width:330px; font-size: small; margin-bottom: 20px;">
+            style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-top: 40px; margin-bottom: 40px;">
+        <div style="width:330px; font-size: small;">
             Gemma provides data, experimental design annotations, and differential expression analysis results for
             thousands
             of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
@@ -59,7 +59,7 @@ Ext.onReady( function() {
                                      &chdlp=b|l&chdls=2f2f2f,13"
                  width="340" height="240"
                  alt="A pie chart representing proportion of taxa among Gemma datasets." />--%>
-        <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); margin-bottom: 20px;"
+        <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
                 src="${pageContext.request.contextPath}/images/showoff.png"
                 width="300"
                 alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
@@ -74,7 +74,7 @@ Ext.onReady( function() {
         <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
         <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
 
-        <div style="width:250px; margin-bottom: 20px;" id="summaryPanel-div"></div>
+        <div style="width:250px;" id="summaryPanel-div"></div>
     </div>
 </div>
 <%--
@@ -93,8 +93,8 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
     <div id="generalSearchSimple-div" style="margin-bottom: 40px;"></div>
     <%--    <div style="width:250px;padding-left:40px;" id="summaryPanel-div"></div>--%>
     <div id="news-updates">
-        <div style="display:flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 40px;">
-            <p style="margin-right: 15px; width: 900px;">
+        <div style="display:flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 40px;">
+            <p style="width: 800px;">
                 Convenient programmatic access to Gemma's data and analyses is available via the software packages
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
                 and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
@@ -111,8 +111,8 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                         width="75" />
             </a>
         </div>
-        <div style="display:flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 40px;">
-            <p style="margin-right: 15px; width: 900px;">
+        <div style="display:flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 40px;">
+            <p style="width: 800px;">
                 We invite you to try out the new <a href="${pageContext.request.contextPath}/browse">Gemma
                 Browser</a>, our new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
@@ -121,7 +121,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser."
-                        width="200" />
+                        width="300" />
             </a>
         </div>
     </div>
