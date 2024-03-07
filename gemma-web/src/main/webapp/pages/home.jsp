@@ -32,15 +32,15 @@ Ext.onReady( function() {
 
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText" class="container">
-    <h2 style="text-align: center; color: grey; font-size: 1.5em;">
+    <h5 style="text-align: center;" class="gray">
         Database of curated and re-analyzed gene expression studies
-    </h2>
+    </h5>
 </div>
 
 <div id="frontPageSlideShow">
     <div class="container"
             style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-top: 40px; margin-bottom: 40px;">
-        <div style="width:330px; font-size: small;">
+        <div style="width:330px;" class="small">
             Gemma provides data, experimental design annotations, and differential expression analysis results for
             thousands
             of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a

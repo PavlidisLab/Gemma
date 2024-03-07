@@ -1,0 +1,195 @@
+/* Override for Ext.js */
+
+.x-form-field-wrap .x-go-trigger {
+    background-image: url('../../images/icons/search-trigger.gif');
+    cursor: pointer;
+}
+
+.x-menu-item-text {
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.x-loading {
+    background: url('../../images/default/tree/loading.gif') no-repeat center;
+}
+
+/* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
+.x-panel-collapsed-text {
+    /* see .front-page-header-text
+    color: #15428B;
+    font: bold 11px tahoma, arial, verdana, sans-serif;*/
+    padding: 5px 3px 4px 5px;
+    float: right;
+    line-height: 13px;
+}
+
+/* make sure link text is white when selected in Ext tables
+ */
+.x-grid-row-selected a {
+    color: white !important;
+}
+
+/*
+ * FileUploadField component styles
+ */
+.x-form-file-wrap {
+    position: relative;
+    height: 22px;
+}
+
+.x-form-file-wrap .x-form-file {
+    position: absolute;
+    right: 0;
+    -moz-opacity: 0;
+    filter: alpha(opacity:0);
+    opacity: 0;
+    z-index: 2;
+    height: 22px;
+}
+
+.x-form-file-wrap .x-form-file-btn {
+    position: absolute;
+    right: 0;
+    z-index: 1;
+}
+
+.x-form-file-wrap .x-form-file-text {
+    position: absolute;
+    left: 0;
+    z-index: 3;
+    color: #777;
+}
+
+/*
+* On ext fields set fieldClass to this to remove border/shading.
+*/
+.x-bare-field {
+    padding: 1px 3px;
+    background: transparent;
+    border: 0;
+    font-size-adjust: none;
+    font-stretch: normal;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    line-height: normal;
+    margin: 0;
+}
+
+/** Use as 'baseCls' for panels to remove outline. */
+.x-plain-panel {
+    border: 0;
+}
+
+/** Used by Ext in table layouts, but not defined in ext-all.css */
+.x-table-layout-cell {
+    padding: 5px;
+    margin: 3px;
+    vertical-align: top;
+}
+
+/**
+*  Override ext default
+*/
+.x-progress-text {
+    font-weight: normal;
+    color: #000;
+    padding: 1px 5px;
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    text-align: center;
+}
+
+/**
+* Replacement for StatusBar lost in Ext 3
+*/
+.x-statusbar .x-status-text {
+    height: 21px;
+    line-height: 21px;
+    padding: 0 4px;
+    cursor: default;
+}
+
+.x-statusbar .x-status-busy {
+    padding-left: 25px;
+    background: transparent url(../../images/default/grid/loading.gif) no-repeat 3px 3px;
+}
+
+.x-statusbar .x-status-text-panel {
+    border-top: 1px solid #99BBE8;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+    border-left: 1px solid #99BBE8;
+    padding: 2px 8px 2px 5px;
+}
+
+.right-align-btn .x-btn-mc {
+    text-align: right;
+}
+
+.unstyledTitle .x-panel-header {
+    background: none repeat-x scroll 0 -1px transparent;
+    color: black;
+    border: 0 solid;
+}
+
+.unstyledTitle .x-tool-toggle {
+    background-position: 0 -255px;
+    float: left;
+    margin-right: 5px;
+}
+
+.unstyledTitle .x-tool-toggle-over {
+    background-position: -15px -255px;
+}
+
+.x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle {
+    background-position: 0 -240px;
+}
+
+.x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle-over {
+    background-position: -15px -240px;
+}
+
+.x-tool-delete {
+    background-image: url('../../images/icons/cross.png');
+    margin-left: 10px;
+}
+
+.x-tool-delete-over {
+    background-image: url('../../images/icons/cross.png');
+    margin-left: 10px;
+}
+
+.x-tool-saveEdit {
+    background-image: url('../../images/icons/diskEdit2.png');
+    margin-left: 10px;
+}
+
+.x-tool-saveEdit-over {
+    background-image: url('../../images/icons/diskEdit2.png');
+    margin-left: 10px;
+}
+
+/* end of hover thumbnails*/
+.x-form-trigger-paste-genes {
+    background-image: url("../../images/icons/page_upload.png")
+}
+
+.x-form-item {
+    padding-left: 5px;
+    width: 100%;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.x-form-item:nth-child(odd) {
+    /* border-bottom: solid 1px #eeeeee; */
+    background: #f4f4f4;
+}
+
+.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link) {
+    background: #f4f4f4;
+}
+

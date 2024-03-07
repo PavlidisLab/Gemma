@@ -447,7 +447,7 @@ var Heatmap = function() {
                   id : "heatmaplabel-" + Ext.id(),
                   tag : 'div',
                   html : "&nbsp;" + rowLabel,
-                  style : "white-space: nowrap"
+                  style : "white-space: nowrap; font-size: 14px;"
                }, true );
                Ext.DomHelper.applyStyles( text, "position:absolute;top:" + offsety + "px;left:" + (offsetx + 5) + "px" );
             }

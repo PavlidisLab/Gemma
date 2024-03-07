@@ -84,7 +84,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
         var selectedSet = this.selectedSetValueObject;
 
         if (!selectedSet) {
-            this.previewContent.setTitle('<span style="font-size:1.2em">' + 'No selection'
+            this.previewContent.setTitle('<span>' + 'No selection'
                 + '</span> &nbsp;&nbsp;<span style="font-weight:normal">(0 genes)');
             return;
         }
