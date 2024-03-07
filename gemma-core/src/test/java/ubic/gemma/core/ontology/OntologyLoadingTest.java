@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @CommonsLog
 @ActiveProfiles("production")
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-ontology.xml", "classpath:ubic/gemma/core/ontology/OntologyLoadingTest-context.xml" })
+@ContextConfiguration
 public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
 
     @Autowired

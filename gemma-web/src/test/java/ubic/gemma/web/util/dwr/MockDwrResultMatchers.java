@@ -7,6 +7,13 @@ package ubic.gemma.web.util.dwr;
 public class MockDwrResultMatchers {
 
     /**
+     * Match a batch of DWR results.
+     */
+    public static DwrBatchMatchers batch( int batchId ) {
+        return new DwrBatchMatchers( batchId );
+    }
+
+    /**
      * Match a DWR callback.
      */
     public static DwrCallbackMatchers callback( int callId ) {

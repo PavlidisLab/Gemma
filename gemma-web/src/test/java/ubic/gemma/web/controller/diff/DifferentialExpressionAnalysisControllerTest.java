@@ -1,5 +1,6 @@
 package ubic.gemma.web.controller.diff;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,21 +21,18 @@ import ubic.gemma.web.util.BaseWebTest;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
-import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwrIndex;
-import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
-import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.*;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.*;
 
 @ContextConfiguration
 public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
     @Configuration
     @TestComponent
-    @ImportResource("classpath:/ubic/gemma/web/controller/diff/DifferentialExpressionAnalysisControllerTest.xml")
+    @ImportResource("classpath:ubic/gemma/web/controller/diff/DifferentialExpressionAnalysisControllerTest-dwr.xml")
     static class DifferentialExpressionAnalysisControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
 
         @Bean
@@ -66,11 +64,43 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @After
+    public void resetMocks() {
+        reset( expressionExperimentService, taskRunningService );
+    }
+
     @Test
     public void testIndex() throws Exception {
-        mvc.perform( dwrIndex() )
+        mvc.perform( dwrStaticPage( "/index.html" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.TEXT_HTML ) );
+    }
+
+    @Test
+    public void testDiffExAnalysisControllerTestPage() throws Exception {
+        mvc.perform( dwrStaticPage( "/test/DifferentialExpressionAnalysisController" ) )
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType( MediaType.TEXT_HTML ) );
+    }
+
+    /**
+     * This error is produced via {@link javax.servlet.http.HttpServletResponse#sendError(int)} and thus is not
+     * intercepted by Spring's error handler. It will however be handled by the Web server via {@code error.jsp}.
+     */
+    @Test
+    public void testUndefinedTestPage() throws Exception {
+        mvc.perform( dwrStaticPage( "/test/bleh" ) )
+                .andExpect( status().isNotImplemented() );
+    }
+
+    @Test
+    public void testJsEngine() throws Exception {
+        mvc.perform( dwrStaticPage( "/engine.js" ) )
+                .andExpect( status().isOk() )
+                .andExpect( content().contentType( "text/javascript;charset=utf-8" ) );
     }
 
     @Test
@@ -78,8 +108,10 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( taskRunningService.submitTaskCommand( any() ) ).thenReturn( "23" );
         mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
-                .andExpect( callback().value( nullValue() ) );
+                .andExpect( callback().value( "23" ) );
+        verify( taskRunningService ).submitTaskCommand( any() );
     }
 
     @Test
@@ -87,10 +119,10 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
-        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
-                        .batch( 1 ) )
-                .andExpect( callback().batch( 0 ).doesNotExist() )
-                .andExpect( callback().batch( 1 ).value( nullValue() ) );
+        mvc.perform( dwrBatch( 1 ).dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
+                .andExpect( batch( 0 ).callback().doesNotExist() )
+                .andExpect( batch( 1 ).callback().value( nullValue() ) );
+        verify( taskRunningService ).submitTaskCommand( any() );
     }
 
     @Test
@@ -105,6 +137,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
                 .andExpect( callback( 1 ).value( nullValue() ) )
                 .andExpect( callback( 2 ).doesNotExist() )
                 .andExpect( exception( 2 ).doesNotExist() );
+        verify( taskRunningService, times( 2 ) ).submitTaskCommand( any() );
     }
 
     @Test
@@ -112,5 +145,6 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run2", 1L ) )
                 .andExpect( exception().javaClassName( "java.lang.Throwable" ) )
                 .andExpect( exception().message( "Error" ) );
+        verifyNoInteractions( taskRunningService );
     }
 }
