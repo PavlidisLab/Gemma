@@ -108,6 +108,16 @@ h6 {
 	font-size: 1.25em;
 }
 
+/* rescale headers within the main content */
+/* h1 -> h4, h2 -> h5, etc. */
+#main h1 {
+	font-size: 1.5em;
+}
+
+#main h2, #main h3, #main h4, #main h5, #main h6 {
+	font-size: 1.25em;
+}
+
 /* END HEADINGS */ /* TEXT */
 p {
 	margin-bottom: 1em;

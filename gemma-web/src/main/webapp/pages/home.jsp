@@ -32,9 +32,9 @@ Ext.onReady( function() {
 
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText" class="container">
-    <h5 style="text-align: center;" class="gray">
+    <h1 style="font-weight: bold; text-align: center;" class="gray">
         Database of curated and re-analyzed gene expression studies
-    </h5>
+    </h1>
 </div>
 
 <div id="frontPageSlideShow">
