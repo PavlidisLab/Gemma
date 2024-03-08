@@ -94,25 +94,26 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
     <%--    <div style="width:250px;padding-left:40px;" id="summaryPanel-div"></div>--%>
     <div id="news-updates">
         <div style="display:flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 40px;">
-            <p style="width: 800px;">
+            <p style="width: 795px;">
                 Convenient programmatic access to Gemma's data and analyses is available via the software packages
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
                 and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
             </p>
-            <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
-                <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
-                        alt="Bioconductor Logo"
-                        width="175"
-                        style="margin-right: 15px;" />
-            </a>
-            <a href="https://pypi.org/project/gemmapy/">
-                <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
-                        alt="PyPi Logo"
-                        width="75" />
-            </a>
+            <div style="display: flex; justify-content: space-around; width: 395px;">
+                <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
+                    <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
+                            alt="Bioconductor Logo"
+                            width="175" />
+                </a>
+                <a href="https://pypi.org/project/gemmapy/">
+                    <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
+                            alt="PyPi Logo"
+                            width="75" />
+                </a>
+            </div>
         </div>
         <div style="display:flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 40px;">
-            <p style="width: 800px;">
+            <p style="width: 795px;">
                 We invite you to try out the new <a href="${pageContext.request.contextPath}/browse">Gemma
                 Browser</a>, our new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
@@ -121,7 +122,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser."
-                        width="300" />
+                        width="395" />
             </a>
         </div>
     </div>
@@ -153,7 +154,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
             Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
             been updated!
         </div>
-        <!-- <div style="margin-left: 10px;"><jsp:include page="/common/social.jsp"/></div> -->
+        <!-- <div><jsp:include page="/common/social.jsp"/></div> -->
         <div style="flex-grow: 1"></div>
         <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" style="align-self: center;">
             <img alt="Creative Commons License"
