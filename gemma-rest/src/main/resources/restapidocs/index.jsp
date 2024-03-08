@@ -10,10 +10,10 @@
 <body>
 <header class="header">
     <a href="${pageContext.request.contextPath}/home.html" class="logo">
-        <img src="${pageContext.request.contextPath}/images/logo/gemma-headerlogo.png"/>
+        <img src="${pageContext.request.contextPath}/images/logo/gemma-headerlogo.png" height="63" alt="Gemma Logo"/>
     </a>
     <a href="https://www.ubc.ca/" class="right-logo">
-        <img src="${pageContext.request.contextPath}/images/logo/ubcgrey_logo_40.png"/>
+        <img src="${pageContext.request.contextPath}/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo"/>
     </a>
 </header>
 <div id="swagger-ui"></div>
