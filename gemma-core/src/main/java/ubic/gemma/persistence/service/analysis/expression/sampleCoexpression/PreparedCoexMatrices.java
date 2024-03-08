@@ -16,16 +16,20 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 
+import javax.annotation.Nullable;
+
 /**
  * Helper class for sample coexpression analysis.
  */
 public class PreparedCoexMatrices {
 
-    public PreparedCoexMatrices( SampleCoexpressionMatrix matrix, SampleCoexpressionMatrix regressedMatrix ) {
+    public PreparedCoexMatrices( @Nullable SampleCoexpressionMatrix matrix, @Nullable SampleCoexpressionMatrix regressedMatrix ) {
         this.matrix = matrix;
         this.regressedMatrix = regressedMatrix;
     }
 
+    @Nullable
     SampleCoexpressionMatrix matrix;
+    @Nullable
     SampleCoexpressionMatrix regressedMatrix;
 }

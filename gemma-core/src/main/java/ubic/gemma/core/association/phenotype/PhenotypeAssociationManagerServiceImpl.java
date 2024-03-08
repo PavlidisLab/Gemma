@@ -769,6 +769,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return ontologyTermsFound.stream()
+                .filter( t -> t.getLabel() != null )
                 .map( t -> new CharacteristicValueObject( t.getLabel().toLowerCase(), t.getUri() ) )
                 .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
                 .collect( Collectors.toCollection( TreeSet::new ) );

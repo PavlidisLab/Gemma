@@ -76,7 +76,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             try {
                 ontologyTerms = this.ontologyService.findTerms( value );
                 for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-                    if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
+                    if ( StringUtils.equalsIgnoreCase( ontologyTerm.getLabel(), characteristicValueObject.getValue() ) ) {
                         characteristic.setValueUri( ontologyTerm.getUri() );
                         break;
                     }
@@ -171,6 +171,10 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             Collection<OntologyTerm> ontologyTerms ) {
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<>();
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+            if ( ontologyTerm.getLabel() == null ) {
+                log.warn( "Term with null label: " + ontologyTerm.getUri() + "; it cannot be converted to a CharacteristicValueObject" );
+                continue;
+            }
             characteristicsVO.add( new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() ) );
         }
         return characteristicsVO;

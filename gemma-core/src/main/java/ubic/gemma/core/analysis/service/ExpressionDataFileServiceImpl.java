@@ -428,6 +428,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             throw new IllegalArgumentException( "ExpressionExperiment has been removed." );
         }
         ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, qt );
+        if ( matrix == null ) {
+            throw new IllegalArgumentException( "ExpressionExperiment has no processed data vectors." );
+        }
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );
@@ -659,7 +662,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             Collection<Long> usedFactorValueIds = new HashSet<>();
             for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
                 for ( ContrastResult contrast : dear.getContrasts() ) {
-                    usedFactorValueIds.add( contrast.getFactorValue().getId() );
+                    if ( contrast.getFactorValue() != null ) {
+                        usedFactorValueIds.add( contrast.getFactorValue().getId() );
+                    }
                 }
                 break; // only have to look at one.
             }

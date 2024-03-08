@@ -419,8 +419,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     public Collection<OntologyTerm> getCategoryTerms() {
         return categoryTerms.stream()
                 .map( term -> {
+                    String termUri = term.getUri();
+                    if ( termUri == null ) {
+                        return term; // a free-text category
+                    }
                     if ( experimentalFactorOntologyService.isOntologyLoaded() ) {
-                        OntologyTerm efoTerm = experimentalFactorOntologyService.getTerm( term.getUri() );
+                        OntologyTerm efoTerm = experimentalFactorOntologyService.getTerm( termUri );
                         if ( efoTerm != null ) {
                             return efoTerm;
                         }
@@ -448,7 +452,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( ot != null ) {
             for ( AnnotationProperty ann : ot.getAnnotations() ) {
                 // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
-                if ( ann.getUri().equals( "http://purl.obolibrary.org/obo/IAO_0000115" ) ) {
+                if ( "http://purl.obolibrary.org/obo/IAO_0000115".equals( ann.getUri() ) ) {
                     return ann.getContents();
                 }
             }
@@ -681,6 +685,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( OntologyTerm ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
+                    if ( ontologyTerm.getLabel() == null ) {
+                        log.warn( "Term with null label: " + ontologyTerm.getUri() + "; it cannot be converted to a CharacteristicValueObject" );
+                        continue;
+                    }
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
                     characteristicsFromOntology.add( phenotype );
                 }

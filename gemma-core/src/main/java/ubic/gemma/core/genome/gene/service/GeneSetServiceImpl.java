@@ -121,7 +121,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSet> loadAll( Taxon tax ) {
+    public Collection<GeneSet> loadAll( @Nullable Taxon tax ) {
         return this.geneSetDao.loadAll( tax );
     }
 

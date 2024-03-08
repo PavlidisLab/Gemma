@@ -152,7 +152,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll( Taxon tax );
+    Collection<GeneSet> loadAll( @Nullable Taxon tax );
 
     /**
      * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the current user has

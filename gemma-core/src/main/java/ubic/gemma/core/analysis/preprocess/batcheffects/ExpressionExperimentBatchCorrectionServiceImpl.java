@@ -303,7 +303,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * @return true if the factor should be used in the model for batch correction
      */
     private boolean retainForBatchCorrection( ExperimentalFactor ef ) {
-        if ( ef.getCategory().getCategoryUri() != null && ef.getCategory().getCategoryUri().equals( COLLECTION_OF_MATERIAL_URI ) ) {
+        if ( ef.getCategory() != null && COLLECTION_OF_MATERIAL_URI.equals( ef.getCategory().getCategoryUri() ) ) {
             for ( FactorValue fv : ef.getFactorValues() ) {
                 for ( Characteristic c : fv.getCharacteristics() ) {
                     if ( c.getValueUri() != null && ( c.getValueUri().equals( DE_EXCLUDE_URI ) || c.getValueUri().equals( DE_INCLUDE_URI ) ) ) {

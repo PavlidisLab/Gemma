@@ -580,12 +580,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private Characteristic termForCategoryLookup( String category, Collection<OntologyTerm> terms ) {
 
         OntologyTerm t = null;
-        String lookup = category.replaceAll( "_", " " ).toLowerCase();
+        String lookup = category.replaceAll( "_", " " );
         for ( OntologyTerm to : terms ) {
-            if ( to.getLabel().equals( category )
-                    || to.getLabel().toLowerCase().equals( lookup )
+            if ( category.equalsIgnoreCase( to.getLabel() )
+                    || lookup.equalsIgnoreCase( to.getLabel() )
                     // if EFO is loaded, the "sex" term is actually named "biological sex"
-                    || ( to.getLabel().equals( "biological sex" ) && lookup.equals( "sex" ) ) ) {
+                    || ( "biological sex".equalsIgnoreCase( to.getLabel() ) && "sex".equalsIgnoreCase( lookup ) ) ) {
                 t = to;
                 break;
             }

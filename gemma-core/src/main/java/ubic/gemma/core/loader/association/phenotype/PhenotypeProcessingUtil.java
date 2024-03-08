@@ -562,7 +562,7 @@ class PhenotypeProcessingUtil {
 
                 if ( ontologyTerm != null ) {
 
-                    if ( ontologyTerm.getLabel().equalsIgnoreCase( valueStaticFile ) ) {
+                    if ( valueStaticFile.equalsIgnoreCase( ontologyTerm.getLabel() ) ) {
 
                         if ( manualDescriptionToValuesUriMapping.get( termId ) != null ) {
                             col = manualDescriptionToValuesUriMapping.get( termId );
@@ -917,8 +917,12 @@ class PhenotypeProcessingUtil {
                     meshOrOmimId + this.findExtraInfoMeshDescription( meshOrOmimId ) + " PARENT: (" );
 
             for ( OntologyTerm o : onParents ) {
-
-                String meshId = this.changeToId( o.getUri() );
+                String termUri = o.getUri();
+                if ( termUri == null ) {
+                    log.warn( "Ignoring free-text term " + o );
+                    continue;
+                }
+                String meshId = this.changeToId( termUri );
                 Collection<String> uri = this.findManualMappingTermValueUri( meshId );
                 if ( uri != null && !uri.isEmpty() ) {
                     phenotypesUri.addAll( uri );
@@ -1185,8 +1189,13 @@ class PhenotypeProcessingUtil {
         Map<String, Collection<OntologyTerm>> diseaseTerms = new HashMap<>();
 
         for ( OntologyTerm m : meshTerms ) {
+            String termUri = m.getUri();
+            if ( termUri == null ) {
+                log.warn( "Ignoring free-text term: " + m );
+                continue;
+            }
 
-            String meshId = this.changeToId( m.getUri() );
+            String meshId = this.changeToId( termUri );
 
             Collection<OntologyTerm> onDisease = this.findOntologyTermsUriWithDiseaseId( meshId );
 
