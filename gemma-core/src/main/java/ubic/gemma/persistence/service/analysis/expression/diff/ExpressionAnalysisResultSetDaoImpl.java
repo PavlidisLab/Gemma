@@ -80,10 +80,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         + "where ears.id = :rsId" )
                 .setParameter( "rsId", id )
                 .uniqueResult();
-        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
-            // will also initialize the biological characteristics and sequence database entries
-            // this is efficient because of batch loading and second-level caching
-            Hibernate.initialize( r.getProbe() );
+        if ( ears != null ) {
+            for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+                // will also initialize the biological characteristics and sequence database entries
+                // this is efficient because of batch loading and second-level caching
+                Hibernate.initialize( r.getProbe() );
+            }
         }
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
