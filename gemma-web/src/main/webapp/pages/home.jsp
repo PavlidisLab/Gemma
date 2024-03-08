@@ -49,7 +49,7 @@ Ext.onReady( function() {
             standardized
             procedures. We have especially good coverage of experiments relevant to the nervous system. See the <a
                 href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information.
-            Gemma was and developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/" target="_blank">Pavlidis
+            Gemma was and developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis
             group at UBC</a>.
         </div>
 
@@ -118,7 +118,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 Browser</a>, our new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
-            <a href="${appConfig['gemma.gemBrow.url']}" style="align-self: center;">
+            <a href="${appConfig['gemma.gemBrow.url']}">
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser."

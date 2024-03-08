@@ -8,6 +8,8 @@
 body {
 	font-family: Avenir, Helvetica, Arial, sans-serif;
 	font-size: 16px;
+	font-size-adjust: none;
+	line-height: normal;
 	color: rgba(0, 0, 0, 0.87);
 	text-decoration: none;
 }
@@ -74,7 +76,6 @@ a.internal:hover {
 
 span.link {
 	cursor: pointer;
-	text-decoration: underline;
 	color: #1976d2;
 }
 
@@ -85,59 +86,45 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
 	font-size: 6em;
-	letter-spacing: -1px;
-	line-height: 1.3em;
-	margin: 0 0 0.5em 0;
-	padding: 0;
 }
 
 h2 {
 	font-size: 3.75em;
-	line-height: 1.4em;
-	margin: 0 0 0.5em 0;
-	padding: 0;
 }
 
 h3 {
 	font-size: 3em;
-	line-height: 1.3em;
-	margin: 0 0 0.5em 0;
-	padding: 10px 0px 0px 0;
 }
 
 h4 {
 	font-size: 2.125em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
 }
 
 h5 {
 	font-size: 1.5em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
 }
 
 h6 {
 	font-size: 1.25em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
 }
 
 /* END HEADINGS */ /* TEXT */
 p {
-	margin: 0 0 0.8em 0;
-	padding: 0 0 0 0;
-	line-height: 1.4em;
+	margin-bottom: 1em;
+}
+
+.bigger {
+	font-size: 1.5em;
 }
 
 .big {
 	font-size: 1.25em;
 }
 
-/* reduced font size elements */
+.normal {
+	font-size: 1em;
+}
+
 .small {
 	font-size: 0.875em;
 }
