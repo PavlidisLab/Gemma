@@ -114,11 +114,11 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         </div>
         <div style="display:flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 40px;">
             <p style="width: 795px;">
-                We invite you to try out the new <a href="${gemma.gemBrow.url}">Gemma
+                We invite you to try out the new <a href="${appConfig['gemma.gemBrow.url']}">Gemma
                 Browser</a>, our new interface for exploring and searching Gemma's data holdings. It's still in beta,
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
-            <a href="${gemma.gemBrow.url}" style="align-self: center;">
+            <a href="${appConfig['gemma.gemBrow.url']}" style="align-self: center;">
                 <img
                         src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser."
