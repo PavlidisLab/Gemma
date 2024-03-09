@@ -7,8 +7,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestUtils {
 
@@ -48,9 +47,11 @@ public class TestUtils {
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
 
+            assertNotNull( ba.getSequenceReadLength() );
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
 
             if ( ba.getDescription().contains( accession ) ) {
+                assertNotNull( ba.getSequenceReadCount() );
                 assertEquals( readCount, ba.getSequenceReadCount().intValue() );
                 found = true;
             }

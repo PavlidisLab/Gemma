@@ -2704,7 +2704,7 @@ public class GeoConverterImpl implements GeoConverter {
         for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
-                    if ( m.getCategory().equals( c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
                         matchingFactorValue = fv;
                         break factors;
                     }

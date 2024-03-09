@@ -218,8 +218,10 @@ public class ExperimentalDesignController extends BaseController {
                     fv.setExperimentalFactor( ef );
 
                     Statement s = Statement.Factory.newInstance();
-                    s.setCategory( ef.getCategory().getCategory() );
-                    s.setCategoryUri( ef.getCategory().getCategoryUri() );
+                    if ( ef.getCategory() != null ) {
+                        s.setCategory( ef.getCategory().getCategory() );
+                        s.setCategoryUri( ef.getCategory().getCategoryUri() );
+                    }
                     s.setSubject( cvo.getValue() );
                     s.setSubjectUri( cvo.getValueUri() ); // can be null
                     fv.getCharacteristics().add( s );

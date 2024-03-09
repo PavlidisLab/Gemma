@@ -83,7 +83,7 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
                     if ( f.getCharacteristics().size() > 0 ) {
                         for ( Characteristic c : f.getCharacteristics() ) {
-                            if ( c.getCategory().equals( category ) ) {
+                            if ( Objects.equals( c.getCategory(), category ) ) {
 
                                 String value = c.getValue();
 
