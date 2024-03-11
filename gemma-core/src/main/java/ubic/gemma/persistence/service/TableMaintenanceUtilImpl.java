@@ -245,6 +245,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Override
     @Timed
+    @Transactional
     public int updateExpressionExperiment2CharacteristicEntries( Class<?> level ) {
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
