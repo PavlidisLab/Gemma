@@ -89,31 +89,25 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and AOI.OBJECT_ID = I.ID "
                     + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
                     + "group by AOI.ID), 0)";
-    /**
-     * Query used to repopulate the EXPRESSION_EXPERIMENT2CHARACTERISTIC table.
-     * <p>
-     * To keep things tidy, characteristics are grouped by experiment, category and value and an arbitrary
-     * characteristic is selected to represent the whole group.
-     * <p>
-     * It's important to use the MIN(C.ID) because we want consistency in the query output.
-     */
-    private static final String E2C_QUERY =
-            "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
-                    + "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:eeClass as char(256)) "
+
+    private static final String EE2C_EE_QUERY =
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(256)) "
                     + "from INVESTIGATION I "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
-                    + "union "
-                    + "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:bmClass as char(255)) "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_BM_QUERY =
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
                     + "from INVESTIGATION I "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
                     + "join CHARACTERISTIC C on BM.ID = C.BIO_MATERIAL_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
-                    + "union "
-                    + "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:edClass as char(255)) "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_ED_QUERY =
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
                     + "from INVESTIGATION I "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
                     + "join EXPERIMENTAL_FACTOR EF on EXPERIMENTAL_DESIGN.ID = EF.EXPERIMENTAL_DESIGN_FK "
@@ -121,8 +115,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CHARACTERISTIC C on FV.ID = C.FACTOR_VALUE_FK "
                     // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
                     + "where I.class = 'ExpressionExperiment' and C.class = 'Statement' "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) "
-                    + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)";
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -232,13 +225,48 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Timed
     public int updateExpressionExperiment2CharacteristicEntries() {
         log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
-        int updated = sessionFactory.getCurrentSession().createSQLQuery( E2C_QUERY )
+        int updated = sessionFactory.getCurrentSession()
+                .createSQLQuery(
+                        "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
+                                + EE2C_EE_QUERY
+                                + " union "
+                                + EE2C_BM_QUERY
+                                + " union "
+                                + EE2C_ED_QUERY + " "
+                                + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                .setParameter( "eeClass", ExpressionExperiment.class )
-                .setParameter( "bmClass", BioMaterial.class )
-                .setParameter( "edClass", ExperimentalDesign.class )
+                .setParameter( 0, ExpressionExperiment.class )
+                .setParameter( 1, BioMaterial.class )
+                .setParameter( 2, ExperimentalDesign.class )
                 .executeUpdate();
         log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated.", updated ) );
+        return updated;
+    }
+
+    @Override
+    @Timed
+    public int updateExpressionExperiment2CharacteristicEntries( Class<?> level ) {
+        String query;
+        if ( level.equals( ExpressionExperiment.class ) ) {
+            query = EE2C_EE_QUERY;
+        } else if ( level.equals( BioMaterial.class ) ) {
+            query = EE2C_BM_QUERY;
+        } else if ( level.equals( ExperimentalDesign.class ) ) {
+            query = EE2C_ED_QUERY;
+        } else {
+            throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
+        }
+        log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at level " + level + "..." );
+        int updated = sessionFactory.getCurrentSession()
+                .createSQLQuery(
+                        "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
+                                + query + " "
+                                + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .setParameter( 0, level )
+                .executeUpdate();
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at level %s; %d entries were updated.",
+                level, updated ) );
         return updated;
     }
 

@@ -10,11 +10,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.io.File;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author poirigui
@@ -56,6 +61,12 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2CharacteristicEntries() {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment.class );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( BioMaterial.class );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExperimentalDesign.class );
+        assertThatThrownBy( () -> {
+            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( FactorValue.class );
+        } ).isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test(expected = AccessDeniedException.class)
