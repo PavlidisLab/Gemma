@@ -24,7 +24,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
+import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
@@ -34,6 +36,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -65,17 +68,16 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee ) {
 
-//        for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-//            if ( qt.getIsBatchCorrected() ) { // this avoids batch correcting when we don't need to
-//                ExpressionExperimentBatchCorrectionServiceImpl.log
-//                        .info( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
-//                return false;
-//            }
-//        }
-
         ExperimentalFactor batch = this.getBatchFactor( ee );
         if ( batch == null ) {
             ExpressionExperimentBatchCorrectionServiceImpl.log.info( "No batch factor found: " + ee );
+            return false;
+        }
+
+        BatchEffectType bet = expressionExperimentService.getBatchEffect( ee );
+        if ( BatchEffectType.NO_BATCH_EFFECT_SUCCESS.equals( bet ) || BatchEffectType.SINGLE_BATCH_SUCCESS.equals( bet ) ) {
+            ExpressionExperimentBatchCorrectionServiceImpl.log.info( "Experiment does not require batch correction as " +
+                    "batch effect is negligible or it's a single batch: " + ee );
             return false;
         }
 
@@ -111,10 +113,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                 }
             }
         }
-        /*
-         * consider merging batches. - we already do this when we create the batch factor, so in general batches should
-         * always have at least 2 samples
-         */
         for ( Long batchId : batches.keySet() ) {
             if ( batches.get( batchId ) < 2 ) {
                 ExpressionExperimentBatchCorrectionServiceImpl.log
@@ -124,6 +122,17 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             }
         }
 
+        /*
+        Get the experimental design matrix we would use for batch correction. If this is not full rank we can't proceed.
+         */
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee );
+        ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
+        try {
+            new ComBat( designU ); // without data, just to check
+        } catch ( ComBatException c ) { // probably because it's not full rank.
+            log.info( c.getMessage() );
+            return false;
+        }
         return true;
 
     }
@@ -144,10 +153,41 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             return null;
         }
 
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee, originalDataMatrix );
+        ExpressionDataDoubleMatrix finalMatrix = removeOutliers( originalDataMatrix, ee );
 
-        return this.doComBat( ee, originalDataMatrix, design );
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee, finalMatrix );
 
+        return this.doComBat( ee, finalMatrix, design );
+
+    }
+
+    /**
+     * Remove outlier samples from the data matrix, based on outliers that were flagged in the experiment (not just candidate outliers)
+     * @param originalDataMatrix
+     * @param ee
+     * @return the original matrix, or if outliers were present, a new matrix with the outliers removed
+     */
+    public static ExpressionDataDoubleMatrix removeOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionExperiment ee ) {
+
+        List<BioMaterial> columnsToKeep = new ArrayList<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( !ba.getIsOutlier() ) {
+
+               /*
+               Find the index of this bioassay in the originalDataMatrix
+                */
+                columnsToKeep.add( ba.getSampleUsed() );
+
+            } else {
+                log.info( "Dropping outlier sample: " + ba + " from batch correction" );
+            }
+        }
+
+        ExpressionDataDoubleMatrix finalMatrix = originalDataMatrix;
+        if ( columnsToKeep.size() < originalDataMatrix.columns() ) {
+            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, LinearModelAnalyzer.createBADMap( columnsToKeep ) );
+        }
+        return finalMatrix;
     }
 
     @Override
@@ -212,7 +252,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         return designU;
     }
 
-    private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix originalDataMatrix,
+    private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix
+            originalDataMatrix,
             ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
         ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
@@ -239,7 +280,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         try {
             results = comBat.run( true ); // false: NONPARAMETRIC
         } catch ( ComBatException e ) {
-            throw new IllegalStateException( "ComBat failed likely due to confounds between batching and other factors: " + e.getMessage(), e );
+            log.error( e.getMessage() );
+            return null;
         }
 
         // note these plots always reflect the parametric setup.
@@ -274,13 +316,18 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         return correctedExpressionDataMatrix;
     }
 
+
+    private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee ) {
+        return this.getDesign( ee, null );
+    }
+
     /**
      * Extract sample information, format into something ComBat can use.
      *
      * Certain factors are removed at this stage, notably "DE_Exclude/Include" factors.
      *
      * @param ee
-     * @param mat
+     * @param mat only used to get sample ordering?
      * @return design matrix
      */
     private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee,
@@ -291,8 +338,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         /* remove experimental factors that are for DE_Exclude */
         List<ExperimentalFactor> retainedFactors = experimentalFactors.stream().filter( ef -> retainForBatchCorrection( ef ) ).collect( Collectors.toList() );
 
-        List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, retainedFactors );
-
+        List<BioMaterial> orderedSamples = new ArrayList<>();
+        if ( mat == null ) {
+            // we're using this in a mode where we don't care about the order.
+            orderedSamples = ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() );
+        } else {
+            orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, retainedFactors );
+        }
         return ExperimentalDesignUtils.sampleInfoMatrix( retainedFactors, orderedSamples,
                 ExperimentalDesignUtils.getBaselineConditions( orderedSamples, retainedFactors ) );
     }
@@ -313,6 +365,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                 }
             }
         }
+        log.info( "Retaining factor " + ef.getName() + " for batch correction model" );
         return true;
     }
 
@@ -346,7 +399,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      *
      * @return updated designU
      */
-    private ObjectMatrix<BioMaterial, String, Object> orderMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix,
+    private ObjectMatrix<BioMaterial, String, Object> orderMatrix
+    ( DoubleMatrix<CompositeSequence, BioMaterial> matrix,
             ObjectMatrix<BioMaterial, String, Object> designU ) {
 
         ObjectMatrix<BioMaterial, String, Object> result = new ObjectMatrixImpl<>( designU.rows(), designU.columns() );
