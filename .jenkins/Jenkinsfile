@@ -25,6 +25,11 @@ pipeline {
         maven 'Maven 3.8.1'
     }
     stages {
+        stage('Intentional failure') {
+            steps {
+                sh 'exit 1'
+            }
+        }
         stage('Checkout scm') {
             steps {
                 checkout scm
@@ -177,8 +182,8 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        unstable {
-            slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
+        unsuccessful {
+            slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)", notifyCommitters: true
         }
     }
 }
