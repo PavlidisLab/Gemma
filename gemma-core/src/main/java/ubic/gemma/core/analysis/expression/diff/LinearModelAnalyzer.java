@@ -123,7 +123,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param  columnsToUse columns to use
      * @return bio assay dimension
      */
-    private static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
+    public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
          * Indices of the biomaterials in the original matrix.
          */
@@ -382,10 +382,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( dmatrix == null ) {
             throw new RuntimeException( String.format( "There are no processed EVs for %s.", expressionExperiment ) );
         }
-
-        /*
-         * FIXME remove flagged outlier samples ... at some point; so we don't carry NaNs around unnecessarily.
-         */
 
         return this.run( expressionExperiment, dmatrix, config );
 
