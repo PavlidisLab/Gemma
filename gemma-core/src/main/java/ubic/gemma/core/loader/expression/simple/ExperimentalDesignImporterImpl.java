@@ -368,9 +368,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
                 Statement newVc = Statement.Factory.newInstance();
                 if ( category != null ) {
-                    String category2 = category.getCategory();
-                    assert category2 != null;
-                    newVc.setCategory( category2 );
+                    newVc.setCategory( category.getCategory() );
                     newVc.setCategoryUri( category.getCategoryUri() );
                 }
                 newVc.setValue( value ); // don't have a valueUri at this point
