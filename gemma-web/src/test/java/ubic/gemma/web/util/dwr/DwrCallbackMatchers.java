@@ -22,10 +22,6 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
 
         @Override
         public void assertValue( String responseContent, Object expectedValue ) throws ParseException {
-            if ( responseContent.trim().startsWith( "[" ) || responseContent.trim().startsWith( "{" ) ) {
-                super.assertValue( responseContent, expectedValue );
-                return;
-            }
             try {
                 super.assertValue( "{\"data\":" + responseContent + "}", expectedValue );
             } catch ( AssertionError e ) {
@@ -35,10 +31,6 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
 
         @Override
         public <T> void assertValue( String content, Matcher<T> matcher ) throws ParseException {
-            if ( content.trim().startsWith( "[" ) || content.trim().startsWith( "{" ) ) {
-                super.assertValue( content, matcher );
-                return;
-            }
             try {
                 super.assertValue( "{\"data\":" + content + "}", matcher );
             } catch ( AssertionError e ) {
@@ -47,11 +39,8 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
         }
     };
 
-    private final int callId;
-
     public DwrCallbackMatchers( int batchId, int callId ) {
         super( "dwr.engine._remoteHandleCallback", batchId, callId );
-        this.callId = callId;
     }
 
     public ResultMatcher value( Object expected ) {
@@ -64,9 +53,5 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
         return result -> {
             jsonPathHelper.assertValue( getReply( result ), matcher );
         };
-    }
-
-    public DwrCallbackMatchers batch( int batchId ) {
-        return new DwrCallbackMatchers( batchId, this.callId );
     }
 }

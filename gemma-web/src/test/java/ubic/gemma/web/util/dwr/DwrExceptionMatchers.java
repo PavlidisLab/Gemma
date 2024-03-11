@@ -9,11 +9,8 @@ import org.springframework.test.web.servlet.ResultMatcher;
  */
 public class DwrExceptionMatchers extends AbstractDwrReplyMatchers {
 
-    private final int callId;
-
     public DwrExceptionMatchers( int batchId, int callId ) {
         super( "dwr.engine._remoteHandleException", batchId, callId );
-        this.callId = callId;
     }
 
     public ResultMatcher javaClassName( String value ) {
@@ -28,8 +25,4 @@ public class DwrExceptionMatchers extends AbstractDwrReplyMatchers {
         };
     }
 
-    @Override
-    public DwrExceptionMatchers batch( int batchId ) {
-        return new DwrExceptionMatchers( batchId, callId );
-    }
 }
