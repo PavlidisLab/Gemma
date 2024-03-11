@@ -266,8 +266,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .setParameter( 0, level )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at level %s; %d entries were updated.",
-                level, updated ) );
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated.",
+                level.getSimpleName(), updated ) );
         return updated;
     }
 
