@@ -2,7 +2,8 @@
 
 /* xs screen */
 .container {
-    margin: 0 20px;
+    margin: 0 auto;
+    padding: 0 1.25em;
 }
 
 .d-sm {
@@ -40,8 +41,7 @@
 /* small screens */
 @media (min-width: 576px) {
     .container {
-        margin: 0 auto;
-        width: 576px;
+        width: calc(576px - 2 * 1.25em);
     }
 
     .d-sm {
@@ -56,8 +56,7 @@
 /* medium screen */
 @media (min-width: 768px) {
     .container {
-        margin: 0 auto;
-        width: 768px;
+        width: calc(768px - 2 * 1.25em);
     }
 
     .d-md {
@@ -67,13 +66,16 @@
     .d-md-inline {
         display: inline;
     }
+
+    .flex-md-nowrap {
+        flex-wrap: nowrap;
+    }
 }
 
 /* large screens */
 @media (min-width: 992px) {
     .container {
-        margin: 0 auto;
-        width: 992px;
+        width: calc(992px - 2 * 1.25em);
     }
 
     .d-lg {
@@ -83,13 +85,16 @@
     .d-lg-inline {
         display: inline;
     }
+
+    .flex-lg-nowrap {
+        flex-wrap: nowrap;
+    }
 }
 
 /* xl screens */
 @media (min-width: 1200px) {
     .container {
-        margin: 0 auto;
-        width: 1200px;
+        width: calc(1200px - 2 * 1.25em);
     }
 
     .d-xl {
