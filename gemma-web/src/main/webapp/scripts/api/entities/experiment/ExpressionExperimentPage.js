@@ -104,7 +104,8 @@ function getBatchInfoBadges(ee) {
         } else if (ee.batchEffect === "NO_BATCH_INFO") {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo);
         } else if (ee.batchEffect === "BATCH_EFFECT_FAILURE") {
-            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffectStatistics )
+            // FIXME I'm not sure we should use this. It just indicates there was a batch effect, but it wasn't corrected for some reason.
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'uncorrectable batch effect', "Batch effect may be present but could not be corrected: " + ee.batchConfound )
         } else if (ee.batchEffect === "BATCH_EFFECT_UNDETERMINED_FAILURE") {
             result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect could not be determined.');
         } else {
