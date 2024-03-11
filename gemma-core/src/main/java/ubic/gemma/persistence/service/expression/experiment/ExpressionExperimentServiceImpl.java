@@ -1037,9 +1037,6 @@ public class ExpressionExperimentServiceImpl
         return details;
     }
 
-    /**
-     * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
-     */
     @Override
     @Transactional(readOnly = true)
     public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
@@ -1061,6 +1058,7 @@ public class ExpressionExperimentServiceImpl
         } else if ( beDetails.getBatchEffectStatistics() == null ) {
             return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
         } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            // this means there was a batch effect but we couldn't correct it
             return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
             return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
