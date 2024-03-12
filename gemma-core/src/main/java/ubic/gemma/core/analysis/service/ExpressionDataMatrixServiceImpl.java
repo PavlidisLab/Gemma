@@ -114,16 +114,6 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType );
-        if ( vectors.isEmpty() ) {
-            return null;
-        }
-        return new ExpressionDataDoubleMatrix( vectors );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
         return new ExpressionDataDoubleMatrix( rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
     }

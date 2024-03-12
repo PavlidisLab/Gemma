@@ -175,6 +175,12 @@ public class BatchConfoundUtils {
 
                     factorValueIndexes.put( fv.getId(), index++ );
                 }
+
+                if ( factorValueIndexes.size() < 2 ) {
+                    // This can happen if we're looking at a subset by this factor
+                    continue; // to the next factor
+                }
+
                 Map<Long, Long> factorValueMembership = new HashMap<>();
 
                 for ( Long bmId : bmToFv.keySet() ) {

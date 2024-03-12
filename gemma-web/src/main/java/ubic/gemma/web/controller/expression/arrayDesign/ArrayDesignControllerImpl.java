@@ -320,7 +320,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public ArrayDesignValueObjectExt getDetails( Long id ) {
 
         ArrayDesign arrayDesign = this.getADSafely( id );
-        log.info( "Loading details of " + arrayDesign );
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
@@ -343,7 +342,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( result.getIsAffymetrixAltCdf() )
             result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
 
-        log.info( "Finished loading details of " + arrayDesign );
         return result;
     }
 

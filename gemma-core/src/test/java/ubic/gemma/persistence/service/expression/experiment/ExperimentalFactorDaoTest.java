@@ -28,7 +28,6 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
             return new ExperimentalFactorDaoImpl( sessionFactory );
         }
-
     }
 
     @Autowired

@@ -47,6 +47,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -54,6 +55,7 @@ import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.Map.Entry;
@@ -89,6 +91,8 @@ public class DEDVController {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SVDService svdService;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
 
     /**
      * Assign colour lists (queues actually) to factors. The idea is that every factor value will get a colour assigned
@@ -402,10 +406,12 @@ public class DEDVController {
      *
      * @param resultSetId The resultset we're specifically interested. Note that this is what is used to choose the
      *                    vectors, since it could be a subset of an experiment.
+     * @param givenThreshold
+     * @param primaryFactorID  If non-null, the factor to use for sorting the samples before other factors are considered
      * @return collection of visualization value objects
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId,
-            Double givenThreshold ) {
+            Double givenThreshold, @Nullable Long primaryFactorID ) {
 
         if ( resultSetId == null ) {
             throw new IllegalArgumentException( "The resultSetId parameter cannot be null" );
@@ -422,8 +428,14 @@ public class DEDVController {
                 .getDiffExVectors( resultSetId, threshold, MAX_RESULTS_TO_RETURN );
         // at this point the dedvs are reduced down to the subset we need to visualize
 
+        ExperimentalFactor primaryFactor = this.experimentalFactorService.load( primaryFactorID );
+
+        if ( primaryFactor == null ) {
+            throw new IllegalArgumentException( "No factor found for id=" + primaryFactorID );
+        }
+
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvs );
+                .sortVectorDataByDesign( dedvs, primaryFactor );
 
         return makeVisCollection( dedvs, null, null, layouts );
     }

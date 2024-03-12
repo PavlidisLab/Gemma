@@ -16,6 +16,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
@@ -75,4 +76,12 @@ public interface GeoService {
 
     void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
 
+    /**
+     * Load from a SOFT file. This can be used for testing but maybe there are other situations it is useful.
+     *
+     * @param accession e.g GSE1234
+     * @param softFile the full path to the SOFT file. The file name has to be [accession].soft.gz
+     * @return a single experiment.
+     */
+    Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform  );
 }

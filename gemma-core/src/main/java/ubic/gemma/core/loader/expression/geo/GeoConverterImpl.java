@@ -1965,6 +1965,7 @@ public class GeoConverterImpl implements GeoConverter {
         expExp.setExperimentalDesign( design );
 
         expExp.setBioAssays( new HashSet<BioAssay>() );
+        // numberOfSample is updated later when the BAs are populated
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
             throw new IllegalArgumentException( "No sample correspondence!" );
@@ -2703,7 +2704,7 @@ public class GeoConverterImpl implements GeoConverter {
         for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
-                    if ( m.getCategory().equals( c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
                         matchingFactorValue = fv;
                         break factors;
                     }

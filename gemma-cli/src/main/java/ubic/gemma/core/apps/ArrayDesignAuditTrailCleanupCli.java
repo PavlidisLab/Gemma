@@ -30,6 +30,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import javax.annotation.Nullable;
+
 /**
  * work in progress
  *
@@ -45,6 +47,12 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
     @Override
     public String getCommandName() {
         return "adATcleanup";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     /*

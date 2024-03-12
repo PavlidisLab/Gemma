@@ -34,6 +34,8 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
     /**
      * Test method for {@link ubic.gemma.persistence.service.genome.taxon.TaxonService#findOrCreate(Taxon)} )}.
      * Situation where the secondary id is treated as the primary, we must not make a new taxon!
+     *
+     * This test uses a taxon Gemma isn't using right now but this could be relevant in general.
      */
     @Test
     public void testFindOrCreate() {
@@ -41,7 +43,7 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
         t.setNcbiId( 559292 );
 
         Taxon yeast = taxonService.findByCommonName( "yeast" );
-        assertNotNull( yeast ); // this should be loaded automatically.
+        assertNotNull( yeast );
 
         Taxon found = taxonService.findOrCreate( t );
 
@@ -50,9 +52,9 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadValueObject() {
-        Taxon yeast = taxonService.findByCommonName( "yeast" );
-        assertNotNull( yeast ); // this should be loaded automatically.
-        TaxonValueObject vo = taxonService.loadValueObject( yeast );
+        Taxon h = taxonService.findByCommonName( "human" );
+        assertNotNull( h );
+        TaxonValueObject vo = taxonService.loadValueObject( h );
         assertNotNull( vo );
     }
 

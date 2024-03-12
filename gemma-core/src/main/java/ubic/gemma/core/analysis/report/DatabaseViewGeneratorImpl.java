@@ -144,7 +144,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                      * check if vocab characteristic.
                      */
 
-                    if ( c.getCategory().equals( "OrganismPart" ) ) { // or tissue? check URI
+                    if ( "OrganismPart".equals( c.getCategory() ) ) { // or tissue? check URI
 
                         String uri = "";
 

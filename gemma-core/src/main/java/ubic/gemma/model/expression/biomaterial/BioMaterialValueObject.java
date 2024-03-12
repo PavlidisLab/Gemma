@@ -66,6 +66,13 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private Map<String, String> characteristicValues = new HashMap<>();
 
     /**
+     * Map of categories to original text values (for this biomaterial).
+     * This is only used for display and will only be populated if the original value is different from the value.
+     */
+    @GemmaWebOnly
+    private Map<String, String> characteristicOriginalValues = new HashMap<>();
+
+    /**
      * Indicate if this is using the {@link #fVBasicVOs} or {@link #factorValueObjects} for representing factor values.
      */
     @JsonIgnore
@@ -156,6 +163,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
                 continue;
             }
             this.characteristicValues.put( c.getCategory(), c.getValue() );
+            if ( c.getOriginalValue() != null && !c.getOriginalValue().equals( c.getValue() ) ) {
+                this.characteristicOriginalValues.put( c.getCategory(), c.getOriginalValue() );
+            }
         }
     }
 

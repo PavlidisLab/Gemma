@@ -68,7 +68,7 @@ public class AsyncSingletonFactoryTest extends AbstractJUnit4SpringContextTests 
     public void testGetBeanThenCancel() throws Exception {
         MyServiceFactory factory = beanFactory.getBean( MyServiceFactory.class );
         Future<Future<MyService>> myServiceFuture = Executors.newSingleThreadExecutor().submit( factory::getObject );
-        Thread.sleep( 10 );
+        Thread.sleep( 20 );
         Assert.assertTrue( factory.isInitialized() );
         Assert.assertTrue( myServiceFuture.isDone() );
         Assert.assertFalse( myServiceFuture.get().isDone() );

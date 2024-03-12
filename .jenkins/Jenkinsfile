@@ -6,6 +6,9 @@ def dataDir = '/space/gemmaData'
 def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
 
+// either hotfix or release, we only have one staging server
+def stagingBranch = 'hotfix'
+
 void setBuildStatus(String context, String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -32,13 +35,13 @@ pipeline {
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
-                    if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
+                    if (env.BRANCH_NAME != "master" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
                     }
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData'
                     }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                    if (env.BRANCH_NAME =~ '^' + stagingBranch + '-.*') {
                         dataDir = '/space/staginggemmaData'
                     }
                     if (env.BRANCH_NAME == 'master') {
@@ -46,7 +49,7 @@ pipeline {
                     } else {
                         deployDir = 'chalmers:' + deployDir
                     }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                    if (env.BRANCH_NAME =~ '^' + stagingBranch + '-.*') {
                         deployDir += '-staging'
                     }
                     if (env.BRANCH_NAME != 'master') {
@@ -65,10 +68,7 @@ pipeline {
                     archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -85,10 +85,7 @@ pipeline {
                 success {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -105,10 +102,8 @@ pipeline {
             parallel {
                 stage('Run slow unit tests and integration tests') {
                     when {
-                        anyOf {
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
+                        not {
+                            branch 'master'
                         }
                     }
                     steps {
@@ -126,34 +121,17 @@ pipeline {
                         success {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
-                        failure {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
+                        unsuccessful {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
                 }
                 stage('Deploy artifacts') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'development'
-                        }
-                    }
                     steps {
                         sh 'mvn -B deploy -DskipTests'
                     }
                 }
                 stage ('Deploy Maven website') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
                     steps {
                         sh 'mvn -B site-deploy'
                         sh "ln -Tsf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
@@ -164,8 +142,7 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
+                            branch stagingBranch + '-*'
                             branch 'development'
                         }
                     }
@@ -176,10 +153,8 @@ pipeline {
                 }
                 stage ('Deploy Gemma CLI') {
                     when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
+                        not {
+                            branch 'development'
                         }
                     }
                     steps {
@@ -193,7 +168,7 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        unstable {
+        unsuccessful {
             slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }

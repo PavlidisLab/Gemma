@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.31.1</version>
+	<version>1.31.2</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -140,6 +140,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
+			<version>1.1.20</version>
 		</dependency>
 
 		<dependency>
@@ -485,6 +486,8 @@
 				<configuration>
 					<skipTestProject>true</skipTestProject>
 					<versionDigitToIncrement>1</versionDigitToIncrement>
+					<useSnapshotInHotfix>true</useSnapshotInHotfix>
+					<useSnapshotInRelease>true</useSnapshotInRelease>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -626,7 +629,7 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<gsec.version>0.0.16-SNAPSHOT</gsec.version>
+		<gsec.version>0.0.16</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>

@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.ontology;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,7 +114,7 @@ public class GoMetricImpl implements GoMetric {
                 Double pMin;
                 Double score;
 
-                if ( ontoM.getUri().equalsIgnoreCase( ontoC.getUri() ) )
+                if ( StringUtils.equalsIgnoreCase( ontoM.getUri(), ontoC.getUri() ) )
                     pMin = GOProbMap.get( ontoM.getUri() );
                 else
                     pMin = this.checkParents( ontoM, ontoC, GOProbMap );
@@ -208,7 +209,7 @@ public class GoMetricImpl implements GoMetric {
                 Double pMin;
                 Double score;
 
-                if ( ontoM.getUri().equalsIgnoreCase( ontoC.getUri() ) )
+                if ( StringUtils.equalsIgnoreCase( ontoM.getUri(), ontoC.getUri() ) )
                     pMin = GOProbMap.get( ontoM.getUri() );
                 else
                     pMin = this.checkParents( ontoM, ontoC, GOProbMap );
@@ -310,6 +311,11 @@ public class GoMetricImpl implements GoMetric {
         int termCount = termCountMap.get( term );
         OntologyTerm ont = geneOntologyService.getTerm( term );
 
+        if ( ont == null ) {
+            GoMetricImpl.log.warn( "No GO term found for: " + term + ", will fallback to zero for the number of children occurrences." );
+            return 0;
+        }
+
         Collection<OntologyTerm> children = ont.getChildren( false, partOf );
 
         if ( children.isEmpty() ) {
@@ -397,7 +403,7 @@ public class GoMetricImpl implements GoMetric {
                 if ( this.isRoot( termC ) )
                     continue;
 
-                if ( ( termM.getUri().equalsIgnoreCase( termC.getUri() ) ) && ( GOProbMap.get( termM.getUri() ) != null ) ) {
+                if ( StringUtils.equalsIgnoreCase( termM.getUri(), termC.getUri() ) && ( GOProbMap.get( termM.getUri() ) != null ) ) {
 
                     double value = GOProbMap.get( termM.getUri() );
                     if ( value < pMin ) {

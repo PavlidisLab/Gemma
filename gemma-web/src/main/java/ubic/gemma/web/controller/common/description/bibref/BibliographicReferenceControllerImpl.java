@@ -249,14 +249,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             }
             CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
             if ( !citationToEEs.containsKey( cvo ) ) {
-                citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
+                citationToEEs.put( cvo, new ArrayList<>() );
             }
-            ExpressionExperiment ee = entry.getKey();
-            ee.setBioAssays( null );
-            ee.setAccession( null );
-            ee.setExperimentalDesign( null );
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( ee ) );
-
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true, true ) );
         }
 
         return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );

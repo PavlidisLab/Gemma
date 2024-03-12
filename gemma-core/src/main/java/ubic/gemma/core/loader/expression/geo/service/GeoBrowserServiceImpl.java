@@ -49,6 +49,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -80,6 +81,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private XPathExpression xgpls;
     private XPathExpression xsummary;
 
+    private final ExecutorService es = Executors.newSingleThreadExecutor();
+
     @Override
     public void afterPropertiesSet() throws XPathExpressionException {
         XPathFactory xf = XPathFactory.newInstance();
@@ -89,11 +92,19 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
         xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
         xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
         xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
-        Executors.newSingleThreadExecutor().submit( this::initializeLocalInfo );
+        try {
+            es.submit( this::initializeLocalInfo );
+        } finally {
+            es.shutdown();
+        }
     }
 
     @Override
     public void destroy() throws Exception {
+        if ( !es.isTerminated() ) {
+            log.warn( "GeoBrowser is still loading local info, shutting it down now..." );
+            es.shutdownNow();
+        }
         saveLocalInfo();
     }
 

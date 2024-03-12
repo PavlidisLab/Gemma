@@ -20,8 +20,6 @@ package ubic.gemma.persistence.service;
 
 import org.springframework.security.access.annotation.Secured;
 
-import java.nio.file.Path;
-
 /**
  * @author paul
  */
@@ -68,14 +66,20 @@ public interface TableMaintenanceUtil {
     int updateExpressionExperiment2CharacteristicEntries();
 
     /**
+     * Update a specific level of the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
+     * @param level the level to update which is either {@link ubic.gemma.model.expression.experiment.ExpressionExperiment},
+     *              {@link ubic.gemma.model.expression.biomaterial.BioMaterial} or {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}
+     * @return the number of records that were created or updated
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateExpressionExperiment2CharacteristicEntries( Class<?> level );
+
+    /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2ArrayDesignEntries();
-
-    @Secured({ "GROUP_ADMIN" })
-    void setGene2CsInfoPath( Path gene2CsInfoPath );
 
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })

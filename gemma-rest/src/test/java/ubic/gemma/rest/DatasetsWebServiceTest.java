@@ -373,15 +373,25 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasetProcessedExpression() throws IOException {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) )
-                .thenReturn( qt );
+        when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).getMaskedPreferredQuantitationType( ee );
-        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
+        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), any() );
+    }
+
+    @Test
+    public void testGetDatasetProcessedExpressionWhenNoProcessedVectorsExist() throws IOException {
+        when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( false );
+        assertThat( target( "/datasets/1/data/processed" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).load( 1L );
+        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
+        verifyNoMoreInteractions( expressionExperimentService );
+        verifyNoInteractions( expressionDataFileService );
     }
 
     @Test

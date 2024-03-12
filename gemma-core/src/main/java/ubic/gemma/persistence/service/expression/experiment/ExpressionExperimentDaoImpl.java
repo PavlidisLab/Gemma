@@ -625,17 +625,27 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment ) {
         //noinspection unchecked
-        List<Object[]> result = ( ( List<Object[]> ) getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*}, {T}.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
-                .addEntity( "T", Characteristic.class )
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, T.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                        + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .setParameter( "eeId", expressionExperiment.getId() )
-                .list() );
+                .list();
         //noinspection unchecked
         return result.stream()
-                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[1],
-                        Collectors.mapping( row -> ( Characteristic ) row[0], Collectors.toList() ) ) );
+                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[5],
+                        Collectors.mapping( this::convertRowToCharacteristic, Collectors.toList() ) ) );
+    }
+
+    @Override
+    public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
     }
 
     @Override
@@ -650,13 +660,19 @@ public class ExpressionExperimentDaoImpl
 
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
         //noinspection unchecked
-        return getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select {T.*} from EXPRESSION_EXPERIMENT2CHARACTERISTIC {T} "
-                                + "where {T}.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
-                .addEntity( "T", Characteristic.class )
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                        + "where T.LEVEL = :level and T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                // FIXME: use an EnumType for converting
+                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
                 .setParameter( "level", level )
                 .setParameter( "eeId", expressionExperiment.getId() )
                 .list();
+        return result.stream().map( this::convertRowToCharacteristic ).collect( Collectors.toList() );
     }
 
     @Override
@@ -690,12 +706,11 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.ID is not null ";
+                + "where T.EXPRESSION_EXPERIMENT_FK is not null ";
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
+        query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
         query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                 + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
                 + "order by EE_COUNT desc";
@@ -765,7 +780,7 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
                 + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.ID is not null"; // this is necessary for the clause building since there might be no clause
+                + "where T.EXPRESSION_EXPERIMENT_FK is not null"; // this is necessary for the clause building since there might be no clause
         if ( eeIds != null ) {
             query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
         }
@@ -773,17 +788,28 @@ public class ExpressionExperimentDaoImpl
             query += " and T.LEVEL = :level";
         }
         if ( category != null ) {
+            // a specific category is requested
             if ( category.equals( UNCATEGORIZED ) ) {
                 query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) is NULL";
-            } else {
-                query += " and COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category";
             }
+            // using COALESCE(T.CATEGORY_URI, T.CATEGORY) = :category is very inefficient and we never use http:// in category labels
+            else if ( category.startsWith( "http://" ) ) {
+                query += " and T.CATEGORY_URI = :category";
+            } else {
+                query += " and T.CATEGORY = :category";
+            }
+            // no need to filter out excluded categories if a specific one is requested
+            query += getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+        } else {
+            // all categories are requested, we may filter out excluded ones
+            query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
         }
-        query += getExcludeUrisClause( "T.CATEGORY_URI", "T.CATEGORY", "excludedCategoryUris", excludedCategoryUris, excludeFreeTextCategories, excludeUncategorized, retainedTermUris );
-        query += getExcludeUrisClause( "T.VALUE_URI", "T.`VALUE`", "excludedTermUris", excludedTermUris, excludeFreeTextTerms, false, retainedTermUris );
         query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
-                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY), COALESCE(T.VALUE_URI, T.`VALUE`) "
-                + "having EE_COUNT >= :minFrequency ";
+                + "group by "
+                // no need to group by category if a specific one is requested
+                + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
+                + "COALESCE(T.VALUE_URI, T.`VALUE`) "
+                + ( minFrequency > 0 ? "having EE_COUNT >= :minFrequency " : "" );
         if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
             query += " or VALUE_URI in (:retainedTermUris)";
         }
@@ -819,22 +845,28 @@ public class ExpressionExperimentDaoImpl
         if ( level != null ) {
             q.setParameter( "level", level );
         }
-        q.setParameter( "minFrequency", minFrequency );
+        if ( minFrequency > 0 ) {
+            q.setParameter( "minFrequency", minFrequency );
+        }
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> result = q.list();
         TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
         for ( Object[] row : result ) {
-            GOEvidenceCode evidenceCode;
-            try {
-                evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
-            } catch ( IllegalArgumentException e ) {
-                evidenceCode = null;
-            }
-            Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
-            byC.put( c, ( Long ) row[5] );
+            byC.put( convertRowToCharacteristic( row ), ( Long ) row[5] );
         }
         return byC;
+    }
+
+    private Characteristic convertRowToCharacteristic( Object[] row ) {
+        GOEvidenceCode evidenceCode;
+        try {
+            evidenceCode = row[4] != null ? GOEvidenceCode.valueOf( ( String ) row[4] ) : null;
+        } catch ( IllegalArgumentException e ) {
+            evidenceCode = null;
+        }
+        Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
+        return c;
     }
 
     /**
@@ -842,38 +874,40 @@ public class ExpressionExperimentDaoImpl
      * <p>
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
-     * @param column            column holding the URI to be excluded
-     * @param labelColumn       column holding the label (only used if excludeFreeText or excludeUncategorized is true,
-     *                          then we will check if the label is non-null to cover some edge cases)
-     * @param excludedUrisParam name of the binding parameter for the excluded URIs
-     * @param excludedUris      list of URIs to exclude
-     * @param excludeFreeText   whether to exclude free-text URIs
-     * @param retainedTermUris  list of terms that should bypass the exclusion
+     *  @param excludedTermUris          list of URIs to exclude
+     *
+     * @param excludeFreeTextCategories whether to exclude free-text categories
+     * @param excludeFreeTextTerms      whether to exclude free-text terms
+     * @param retainedTermUris          list of terms that should bypass the exclusion
      */
-    private String getExcludeUrisClause( String column, String labelColumn, String excludedUrisParam, @Nullable Collection<String> excludedUris, boolean excludeFreeText, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
-        String query = "";
-        if ( excludedUris != null && !excludedUris.isEmpty() ) {
-            query += " and ((" + column + " not in (:" + excludedUrisParam + ")";
-            if ( excludeUncategorized ) {
-                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
-            }
-            if ( excludeFreeText ) {
-                query += " and (" + column + " is not null or " + labelColumn + " is null)";
-            }
-            query += ")";
+    private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
+        List<String> clauses = new ArrayList<>( 5 );
+        if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
+            clauses.add( "T.CATEGORY_URI is null or T.CATEGORY_URI not in (:excludedCategoryUris)" );
+        }
+        if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
+            clauses.add( "T.VALUE_URI is null or T.VALUE_URI not in (:excludedTermUris)" );
+        }
+        if ( excludeFreeTextCategories ) {
+            // we don't want to exclude "uncategorized" terms when excluding free-text categories
+            clauses.add( "T.CATEGORY_URI is not null or T.CATEGORY is null" );
+        }
+        if ( excludeFreeTextTerms ) {
+            clauses.add( "T.VALUE_URI is not null" );
+        }
+        if ( excludeUncategorized ) {
+            clauses.add( "COALESCE(T.CATEGORY_URI, T.CATEGORY) is not null" );
+        }
+        if ( !clauses.isEmpty() ) {
+            String query = "";
+            query += " and ((" + String.join( ") and (", clauses ) + ")";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
                 query += " or T.VALUE_URI in (:retainedTermUris)";
             }
             query += ")";
-        } else {
-            if ( excludeUncategorized ) {
-                query += " and COALESCE(" + column + ", " + labelColumn + ") is not null";
-            }
-            if ( excludeFreeText ) {
-                query += " and (" + column + " is not null or " + labelColumn + " is null)";
-            }
+            return query;
         }
-        return query;
+        return "";
     }
 
     @Override
@@ -1297,13 +1331,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
-        return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt from ExpressionExperiment ee "
-                        + "join ee.processedExpressionDataVectors pv "
-                        + "join pv.quantitationType qt "
-                        + "where qt.isMaskedPreferred = true and ee = :ee "
-                        + "group by qt" )
+    public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(pedv) > 0 from ProcessedExpressionDataVector pedv "
+                        + "where pedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -1755,40 +1786,70 @@ public class ExpressionExperimentDaoImpl
         ee.getCurationDetails().setLastTroubledEvent( null );
 
         // dissociate this EE from other parts
-        for ( ExpressionExperiment e : ee.getOtherParts() ) {
-            e.getOtherParts().remove( ee );
-        }
-        ee.getOtherParts().clear();
-
-        // detach from BA dimensions
-        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-        for ( BioAssayDimension dim : dims ) {
-            dim.getBioAssays().clear();
+        if ( !ee.getOtherParts().isEmpty() ) {
+            log.info( String.format( "Detaching split experiment from %d other parts", ee.getOtherParts().size() ) );
+            for ( ExpressionExperiment e : ee.getOtherParts() ) {
+                log.debug( "Detaching from " + e );
+                e.getOtherParts().remove( ee );
+            }
+            ee.getOtherParts().clear();
         }
 
-        // first pass, detach BAs from the samples
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
+        // detach from BAs from dimensions, completely detached dimension will be removed later
+        Set<BioAssayDimension> dimensionsToRemove = new HashSet<>();
+        for ( BioAssayDimension dim : this.getBioAssayDimensions( ee ) ) {
+            dim.getBioAssays().removeAll( ee.getBioAssays() );
+            if ( dim.getBioAssays().isEmpty() ) {
+                dimensionsToRemove.add( dim );
+            } else {
+                log.warn( dim + " is attached to more than one ExpressionExperiment, the dimension will not be deleted." );
+            }
         }
 
-        // second pass, delete samples that are no longer attached to BAs
+        // detach BAs from the samples, completely detached samples will be removed later
         Set<BioMaterial> samplesToRemove = new HashSet<>();
+        Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
         for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() ) {
+            ba.getSampleUsed().getFactorValues().removeAll( fvs );
+            ba.getSampleUsed().getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
+            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
                 samplesToRemove.add( ba.getSampleUsed() );
             } else {
-                log.warn( String.format( "%s is attached to more than one ExpressionExperiment, the sample will not be deleted.", ba.getSampleUsed() ) );
+                log.warn( ba.getSampleUsed() + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
             }
         }
 
         super.remove( ee );
 
-        // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
-        // cascading and that is not allowed in the data model
-        log.debug( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
-        for ( BioMaterial bm : samplesToRemove ) {
-            getSessionFactory().getCurrentSession().delete( bm );
+        if ( !samplesToRemove.isEmpty() ) {
+            // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
+            // cascading and that is not allowed in the data model
+            log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
+            for ( BioMaterial bm : samplesToRemove ) {
+                log.debug( "Removing " + bm + "..." );
+                getSessionFactory().getCurrentSession().delete( bm );
+            }
         }
+
+        if ( !dimensionsToRemove.isEmpty() ) {
+            log.info( String.format( "Removing %d BioAssayDimension that are no longer attached to any BioAssay", dimensionsToRemove.size() ) );
+            for ( BioAssayDimension dim : dimensionsToRemove ) {
+                log.debug( "Removing " + dim + "..." );
+                getSessionFactory().getCurrentSession().delete( dim );
+            }
+        }
+    }
+
+    private List<FactorValue> getFactorValues( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct fv from ExpressionExperiment ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where ee = :ee" )
+                .setParameter( "ee", ee )
+                .list();
     }
 
     @Override

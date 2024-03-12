@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.31.1</version>
+		<version>1.31.2</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -13,6 +13,9 @@
 	<build>
 		<finalName>Gemma</finalName>
 		<testResources>
+			<testResource>
+				<directory>${project.basedir}/src/test/resources</directory>
+			</testResource>
 			<testResource>
 				<targetPath>WEB-INF</targetPath>
 				<directory>${project.basedir}/src/main/webapp/WEB-INF</directory>

@@ -2,12 +2,12 @@
          xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 http://maven.apache.org/xsd/site-2.0.0.xsd">
     <bannerLeft>
         <name>Gemma</name>
-        <src>https://gemma.msl.ubc.ca/images/logo/gemma-headerlogo.png</src>
+        <src>/images/gemma-headerlogo.png</src>
         <href>https://gemma.msl.ubc.ca</href>
     </bannerLeft>
     <bannerRight>
         <name>UBC</name>
-        <src>https://gemma.msl.ubc.ca/images/logo/ubcgrey_logo_40.png</src>
+        <src>/images/ubc-logo-2018-crest-blue-rgb72.jpg</src>
         <href>https://www.ubc.ca/</href>
     </bannerRight>
     <body>

@@ -187,10 +187,9 @@ public interface ExpressionExperimentDao
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * Obtain the masked preferred quantitation type, if available.
+     * Test if the dataset has preferred expression data vectors.
      */
-    @Nullable
-    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
+    boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
@@ -256,6 +255,11 @@ public interface ExpressionExperimentDao
      * Obtain all annotations, grouped by applicable level.
      */
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain experiment-level annotations.
+     */
+    List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain sample-level annotations.

@@ -278,6 +278,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
         }
 
+        ee.setNumberOfSamples( ee.getBioAssays().size() );
+
         if ( !removed.isEmpty() ) {
             log.info( "Removed " + removed.size() + " unused bioassays: " + removed.stream().map( BioAssay::toString ).collect( Collectors.joining( ", " ) ) );
         }

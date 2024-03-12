@@ -67,7 +67,7 @@ public class ExperimentQCTag extends TagSupport {
          */
 
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
-        buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" >" );
+        buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" class=\"smaller\" >" );
 
         buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"

@@ -1,6 +1,7 @@
 package ubic.gemma.core.apps;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import ubic.gemma.persistence.util.TestComponent;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
-@Category(SlowTest.class)
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
@@ -79,6 +79,8 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
     private ExternalDatabaseService externalDatabaseService;
 
     @Test
+    @Ignore("This test is too slow, see https://github.com/PavlidisLab/Gemma/issues/1056 for details")
+    @Category(SlowTest.class)
     @WithMockUser(authorities = { "GROUP_ADMIN" })
     public void test() throws Exception {
         assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );

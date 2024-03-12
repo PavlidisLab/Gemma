@@ -27,10 +27,7 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -79,13 +76,17 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
                 .createQuery( "select ears from ExpressionAnalysisResultSet ears "
                         + "left join fetch ears.results res "
-                        + "left join fetch res.probe probe "
-                        + "left join fetch probe.biologicalCharacteristic bc "
-                        + "left join fetch bc.sequenceDatabaseEntry "
                         + "left join fetch res.contrasts "
                         + "where ears.id = :rsId" )
                 .setParameter( "rsId", id )
                 .uniqueResult();
+        if ( ears != null ) {
+            for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+                // will also initialize the biological characteristics and sequence database entries
+                // this is efficient because of batch loading and second-level caching
+                Hibernate.initialize( r.getProbe() );
+            }
+        }
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
                     elementClass.getName(), id, timer.getTime() ) );
@@ -139,12 +140,20 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
+
         // it is faster to query those separately because there's a large number of rows fetched via the results &
         // contrasts and only a handful of factors
         Hibernate.initialize( ears.getExperimentalFactors() );
+
         // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
         // I still think it's neat to use stream API for that though in case we ever make them lazy:
         // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
+
+        // this needs to be initialized because it does not appear in the experimental factors
+        if ( ears.getAnalysis().getSubsetFactorValue() != null ) {
+            Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
+            Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
+        }
     }
 
     @Override

@@ -37,10 +37,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -100,28 +97,34 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         for ( FactorValue fv : bm.getFactorValues() ) {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
             double valueToStore;
-            if ( fv.getMeasurement() != null ) {
-                switch ( fv.getMeasurement().getRepresentation() ) {
-                    case INT:
-                        valueToStore = Integer.parseInt( fv.getMeasurement().getValue() );
-                        break;
-                    case LONG:
-                        valueToStore = Long.parseLong( fv.getMeasurement().getValue() );
-                        break;
-                    case DOUBLE:
-                        valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                        break;
-                    default:
-                        // non-numerical measurement can be treated as categorical
-                        valueToStore = fv.getId().doubleValue();
+            if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
+                if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) { // continuous
+                    try {
+                        switch ( fv.getMeasurement().getRepresentation() ) {
+                            case INT:
+                                valueToStore = Integer.parseInt( fv.getMeasurement().getValue() );
+                                break;
+                            case LONG:
+                                valueToStore = Long.parseLong( fv.getMeasurement().getValue() );
+                                break;
+                            case DOUBLE:
+                                valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
+                                break;
+                            default:
+                                // non-numerical measurement can be treated as categorical
+                                valueToStore = fv.getId().doubleValue();
+                        }
+                    } catch ( NumberFormatException e ) {
+                        valueToStore = Double.NaN; // due to a missing value
+                    }
+                } else {
+                    valueToStore =Double.NaN;
                 }
             } else {
-                /*
-                 * This is a hack so we don't need special datastructures for
-                 * continuous and categorical. We're storing the ID but as a double.
-                 */
+                // for categorical factors, we use the ids as dummy values.
                 valueToStore = fv.getId().doubleValue();
             }
+
             bioMaterialFactorMap
                     .computeIfAbsent( experimentalFactor, k -> new HashMap<>() )
                     .put( bm.getId(), valueToStore );
@@ -506,7 +509,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     svo.setPCFactorCorrelationPval( componentNumber, ef,
                             CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing.size() ) );
                 } else {
-                    // one-way ANOVA on ranks.
+                    // one-way ANOVA on ranks. This test is pretty underpowered.
                     double kwPVal = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
 
                     svo.setPCFactorCorrelationPval( componentNumber, ef, kwPVal );
@@ -516,19 +519,20 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     double corrPvalue = CorrelationStats
                             .spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing.size() );
                     assert Math.abs( factorCorrelation ) < 1.0 + 1e-2; // sanity.
+
                     /*
-                     * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
+                     * If the regular linear correlation is strong,
                      * then we should just use that -- basically, it means the order we have the groups happens to be a
-                     * good one. Of course we could just store pvalues, but that's not easy to use either.
+                     * good one.
                      */
                     if ( corrPvalue <= kwPVal ) {
                         svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                        svo.setPCFactorCorrelationPval( componentNumber, ef, corrPvalue);
                     } else {
                         // hack. A bit like turning pvalues into prob it
                         double approxCorr = CorrelationStats
                                 .correlationForPvalue( kwPVal, eigenGeneWithoutMissing.size() );
                         svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );
-
                     }
                 }
 

@@ -66,11 +66,6 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
     @Autowired
     private ManualAuthenticationService manAuthentication;
 
-    @Override
-    public String getShortDesc() {
-        return "No description provided";
-    }
-
     /**
      * Indicate if the command requires authentication.
      * <p>

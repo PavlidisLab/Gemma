@@ -24,7 +24,7 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext
                       {
                          name : 'comboText',
                          convert : function( value, record ) {
-                            return '<div style="font-size:12px;" class="x-combo-list-item" >' + record.officialName
+                            return '<div class="x-combo-list-item" >' + record.officialName
                                + ' <span style="color:grey">(' + record.taxonCommonName + ')</span></div>';
                          }
                       } ],

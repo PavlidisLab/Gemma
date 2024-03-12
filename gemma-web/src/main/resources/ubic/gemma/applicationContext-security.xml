@@ -64,6 +64,14 @@
 		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER"/>
 		<s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER"/>
+
+		<!-- DWR -->
+		<s:intercept-url pattern="/dwr/engine.js" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/util.js" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/interface/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/call/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/**" access="GROUP_ADMIN"/>
+
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
 
 		<s:logout logout-success-url="/login.jsp"/>

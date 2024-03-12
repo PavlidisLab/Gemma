@@ -25,6 +25,10 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "summaryTable"
       }, {
+         name : "createDate",
+         dateFormat : "timestamp",
+         type : "date"
+      }, {
          name : "lastSequenceUpdate",
          dateFormat : "timestamp",
          type : "date"
@@ -400,6 +404,14 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                  tooltip : 'Number of experiments in Gemma that use this design'
                               },
                               {
+                                 header : "Created",
+                                 dataIndex : 'createDate',
+                                 width : 0.07,
+                                 sortDir : 'DESC',
+                                 xtype : 'datecolumn',
+                                 format : 'Y-m-d'
+                              },
+                              {
                                  header : "Seq. Update",
                                  dataIndex : 'lastSequenceUpdate',
                                  width : 0.07,
@@ -704,6 +716,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
             colModel.setHidden( index, !isAdmin );
 
             index = this.getColumnModel().findColumnIndex( 'needsAttention' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'createDate' ); // maybe we can expose this.
             colModel.setHidden( index, !isAdmin );
 
             if ( !isAdmin ) {

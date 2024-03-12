@@ -337,7 +337,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                 this.loadMask.hide();
                 this.add([
                     {
-                        html: '<div style="font-weight: bold; font-size:1.2em;">'
+                        html: '<div style="font-weight: bold;">'
                         + geneDetails.name
                         + '<br />'
                         + geneDetails.officialName
