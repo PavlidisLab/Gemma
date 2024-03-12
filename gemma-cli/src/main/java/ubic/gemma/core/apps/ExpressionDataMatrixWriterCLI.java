@@ -28,6 +28,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -84,7 +85,12 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             }
 
             try {
-                fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                File f = fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                if ( f != null ) {
+                    addSuccessObject( ee, "Written expression data to " + f );
+                } else {
+                    addErrorObject( ee, "No processed expression data vectors to write." );
+                }
             } catch ( IOException e ) {
                 addErrorObject( ee, e );
             }

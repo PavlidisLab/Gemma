@@ -25,6 +25,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -36,6 +38,7 @@ import java.util.Map;
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
+@ParametersAreNonnullByDefault
 public interface ExpressionDataFileService extends TsvFileService<ExpressionExperiment> {
 
     String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
@@ -56,7 +59,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
 
     List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
             Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
-            List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
+            @Nullable List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
 
     /**
      * Delete any existing coexpression, data, or differential expression data files.
@@ -119,11 +122,10 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param compress compress?
      * @param fileName file name
      * @param filtered fitlered?
-     * @return file
+     * @return file, or null if the experiment has no processed expression data
      * @throws IOException when there are IO problems
      */
-    @SuppressWarnings("UnusedReturnValue")
-    // Possible external use
+    @Nullable
     File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException;
 
@@ -159,6 +161,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite whether to force write
      * @return file
      */
+    @Nullable
     File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
 
     /**
@@ -170,8 +173,9 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param filtered   filtered
      * @param forceWrite force re-write even if file already exists and is up to date.
      * @param ee         the experiment
-     * @return file
+     * @return file, or null if the experiment has no processed vectors
      */
+    @Nullable
     File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
@@ -179,10 +183,10 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * can be located from its own file.
      *
      * @param forceWrite To not return the existing file, but create it anew.
-     * @param type       the quantitaion type
+     * @param type       the quantitation type
      * @return file
      */
-    File writeOrLocateDataFile( QuantitationType type, boolean forceWrite );
+    File writeOrLocateDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -205,14 +209,15 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
 
     /**
-     * @param filtered   if the data should be filtered.
-     * @param ee         the experiment
-     * @param forceWrite whether to force write
-     * @return file
+     * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
+    @Nullable
     File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
-    File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
+    /**
+     * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
+     */
+    File writeOrLocateJSONDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 
@@ -229,5 +234,5 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @throws IOException when there was a problem during write
      */
     void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis,
-            DifferentialExpressionAnalysisConfig config ) throws IOException;
+            @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
 }

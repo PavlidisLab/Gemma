@@ -1008,7 +1008,7 @@ public class DatasetsWebService {
         return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputFile( File file, String error, String shortName ) throws IOException {
+    private Response outputFile( @Nullable File file, String error, String shortName ) throws IOException {
         if ( file == null || !file.exists() ) {
             throw new NotFoundException( String.format( error, shortName ) );
         }

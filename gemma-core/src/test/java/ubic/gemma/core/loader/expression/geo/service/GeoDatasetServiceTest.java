@@ -250,6 +250,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
         File f = dataFileService.writeOrLocateDataFile( ee, true, true );
+        assertNotNull( f );
         assertTrue( f.canRead() );
         assertTrue( f.length() > 0 );
     }

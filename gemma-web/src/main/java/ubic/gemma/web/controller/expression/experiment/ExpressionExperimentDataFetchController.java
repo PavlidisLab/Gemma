@@ -251,6 +251,9 @@ public class ExpressionExperimentDataFetchController {
             }
 
             File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            if ( f == null ) {
+                throw new IllegalStateException( "There is no coexpression data for " + ee );
+            }
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
@@ -347,7 +350,7 @@ public class ExpressionExperimentDataFetchController {
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        f = expressionDataFileService.writeOrLocateDataFile( qType, false );
+                        f = expressionDataFileService.writeOrLocateDataFile( ee, qType, false );
                     } else {
 
                         try {
@@ -364,7 +367,7 @@ public class ExpressionExperimentDataFetchController {
             else if ( usedFormat.equals( "json" ) ) {
 
                 if ( qType != null ) {
-                    f = expressionDataFileService.writeOrLocateJSONDataFile( qType, false );
+                    f = expressionDataFileService.writeOrLocateJSONDataFile( ee, qType, false );
                 } else {
                     try {
                         f = expressionDataFileService.writeOrLocateJSONDataFile( ee, false, filtered );
