@@ -487,12 +487,13 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     @Override
     @Transactional(readOnly = true)
     public Taxon getTaxon( GeneSet geneSet ) {
-        if ( geneSet == null )
-            return null;
-        Taxon tmpTax;
-        tmpTax = geneSetDao.getTaxon( geneSet.getId() );
+        return geneSetDao.getTaxon( geneSet );
+    }
 
-        return tmpTax;
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Taxon> getTaxa( GeneSet geneSet ) {
+        return new HashSet<>( geneSetDao.getTaxa( geneSet ) );
     }
 
     private void checkGeneList( GeneSet gset, Collection<GeneSetMember> updatedGenelist, Collection<Gene> genes ) {

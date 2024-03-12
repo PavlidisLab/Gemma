@@ -63,14 +63,22 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public Taxon getTaxon( Long id ) {
+    public Taxon getTaxon( GeneSet geneSet ) {
         // get one gene, check the taxon.
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from GeneSet gs join gs.members m join m.gene g where gs.id = :id" )
-                .setParameter( "id", id ).setMaxResults( 1 );
+        return ( Taxon ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .setParameter( "gs", geneSet )
+                .setMaxResults( 1 )
+                .uniqueResult();
+    }
 
-        Gene g = ( Gene ) q.uniqueResult();
-        return g != null ? g.getTaxon() : null;
+    @Override
+    public List<Taxon> getTaxa( GeneSet geneSet ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .setParameter( "gs", geneSet )
+                .list();
     }
 
     @Override
