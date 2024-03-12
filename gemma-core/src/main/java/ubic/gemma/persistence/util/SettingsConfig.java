@@ -24,6 +24,7 @@ import java.util.Set;
  * Beans declaration for making the settings available via the Spring Environment and placeholder substitution.
  * @author poirigui
  */
+@Nano
 @CommonsLog
 @Configuration
 public class SettingsConfig {
