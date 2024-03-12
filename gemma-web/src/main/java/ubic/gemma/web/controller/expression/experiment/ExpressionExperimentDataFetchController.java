@@ -251,7 +251,7 @@ public class ExpressionExperimentDataFetchController {
             }
 
             File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false )
-                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee );
+                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee ) );
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
