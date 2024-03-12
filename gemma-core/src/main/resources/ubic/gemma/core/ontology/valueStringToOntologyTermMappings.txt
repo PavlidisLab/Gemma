@@ -842,7 +842,6 @@ mouse prefrontal cortex	prefrontal cortex	http://purl.obolibrary.org/obo/UBERON_
 mouse skin fibroblast	skin fibroblast	http://purl.obolibrary.org/obo/CL_0002620	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Mouse striatum	striatum	http://purl.obolibrary.org/obo/UBERON_0002435	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 mPFC	prefrontal cortex	http://purl.obolibrary.org/obo/UBERON_0000451	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-MS	multiple sclerosis	http://purl.obolibrary.org/obo/MONDO_0005301	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 MTB-infected	tuberculosis	http://purl.obolibrary.org/obo/MONDO_0018076	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Mucosa	mucosa	http://purl.obolibrary.org/obo/UBERON_0000344	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 mucosal	mucosa	http://purl.obolibrary.org/obo/UBERON_0000344	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
