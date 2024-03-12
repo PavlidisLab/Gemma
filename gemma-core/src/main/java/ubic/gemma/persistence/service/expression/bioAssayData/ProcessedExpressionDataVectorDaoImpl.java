@@ -23,7 +23,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -515,49 +514,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         return new HashSet<>( matrix.toRawDataVectors() );
-    }
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> find( ArrayDesign arrayDesign,
-            QuantitationType quantitationType ) {
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector dev "
-                                + "join fetch dev.bioAssayDimension bd "
-                                + "join dev.designElement de "
-                                + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
-                .setParameter( "quantitationType", quantitationType )
-                .setParameter( "ad", arrayDesign )
-                .list() );
-    }
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType ) {
-        if ( designElements == null || designElements.size() == 0 )
-            return new HashSet<>();
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector as dev "
-                                // no need for fetch jointures here since the design elements and biological
-                                // characteristics are already in the session
-                                + "join dev.designElement as de "
-                                + "where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements )
-                .setParameter( "qt", quantitationType )
-                .list();
-    }
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from ProcessedExpressionDataVector as v "
-                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", quantitationType )
-                .list();
     }
 
     //

@@ -123,10 +123,10 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param compress compress?
      * @param fileName file name
      * @param filtered fitlered?
-     * @return file, or null if the experiment has no processed expression data
+     * @return file, or empty if the experiment has no processed expression data
      * @throws IOException when there are IO problems
      */
-    Optional<File> writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+    Optional<File> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException;
 
     /**
@@ -136,7 +136,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
      * @param ee the expression experiment
-     * @param qt a quantitation type to use, otherwise the preferred one is picked
+     * @param qt a quantitation type to use
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
@@ -152,7 +152,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    void writeProcessedExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException;
+    void writeProcessedExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -172,9 +172,9 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param filtered   filtered
      * @param forceWrite force re-write even if file already exists and is up to date.
      * @param ee         the experiment
-     * @return file, or null if the experiment has no processed vectors
+     * @return file, or empty if the experiment has no processed vectors
      */
-    Optional<File> writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -184,7 +184,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param type       the quantitation type
      * @return file
      */
-    File writeOrLocateDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
+    File writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -207,14 +207,14 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
 
     /**
-     * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
+     * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)
      */
-    Optional<File> writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
-     * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
+     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
-    File writeOrLocateJSONDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
+    File writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
 
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 

@@ -1164,8 +1164,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getMaskedPreferredQuantitationType( ee );
+    public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
+        return expressionExperimentDao.hasProcessedExpressionData( ee );
     }
 
     @Override

@@ -365,12 +365,6 @@ public class ProcessedExpressionDataVectorServiceImpl
         this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return processedExpressionDataVectorDao.findByExpressionExperiment( ee, quantitationType );
-    }
-
     /**
      * Creates an ExperimentExpressionLevelValueObject for the given experiment and collection of double vector VOs, and
      * adds it to the given vos collection.

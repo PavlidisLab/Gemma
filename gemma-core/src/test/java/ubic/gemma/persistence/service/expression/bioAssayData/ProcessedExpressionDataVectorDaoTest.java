@@ -70,15 +70,6 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testFind() {
-        ArrayDesign ad = new ArrayDesign();
-        ad.setId( 1L );
-        QuantitationType qt = new QuantitationType();
-        qt.setId( 1L );
-        assertThat( processedExpressionDataVectorDao.find( ad, qt ) ).isEmpty();
-    }
-
-    @Test
     @WithMockUser
     public void testCreateProcessedDataVectors() throws QuantitationMismatchException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new LogNormalDistribution( 9, 1 ) );

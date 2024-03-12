@@ -469,11 +469,10 @@ public interface ExpressionExperimentService
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment)
+     * Test if the given experiment has processed data vectors.
      */
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
+    boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     /**
      * @return count of an expressionExperiment's design element data vectors, grouped by quantitation type

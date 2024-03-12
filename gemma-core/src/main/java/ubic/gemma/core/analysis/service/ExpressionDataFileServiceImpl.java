@@ -353,7 +353,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public Optional<File> writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+    public Optional<File> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         File f = new File( fileName );
         return this.writeDataFile( ee, filtered, f, compress );
@@ -424,12 +424,12 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     @Override
     @Transactional(readOnly = true)
-    public void writeProcessedExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException {
+    public void writeProcessedExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException {
         ee = expressionExperimentService.find( ee );
         if ( ee == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment has been removed." );
         }
-        ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, qt );
+        ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         if ( matrix == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment has no processed data vectors." );
         }
@@ -463,7 +463,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public Optional<File> writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
+    public Optional<File> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
         try {
             File f = this.getOutputFile( ee, filtered );
             Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
@@ -480,7 +480,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeOrLocateDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
+    public File writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
 
         try {
             File f = this.getOutputFile( type );
@@ -544,7 +544,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public Optional<File> writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
+    public Optional<File> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
 
         try {
             File f = this.getOutputFile( ee, filtered );
@@ -556,7 +556,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f.getName() );
             ExpressionDataDoubleMatrix matrix = this.getDataMatrix( ee, filtered );
             if ( matrix == null ) {
-                return null;
+                return Optional.empty();
             }
             this.writeJson( f, matrix );
             return Optional.of( f );
@@ -566,7 +566,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
+    public File writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) {
 
         try {
             File f = this.getJSONOutputFile( type );
@@ -1252,10 +1252,6 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     @Override
     @Transactional(readOnly = true)
     public void writeTsv( ExpressionExperiment entity, Writer writer ) throws IOException {
-        QuantitationType qt = expressionExperimentService.getMaskedPreferredQuantitationType( entity );
-        if ( qt == null ) {
-            throw new IllegalArgumentException( String.format( "%s lacks a preferred masked quantitation type.", entity ) );
-        }
-        writeProcessedExpressionData( entity, qt, writer );
+        writeProcessedExpressionData( entity, writer );
     }
 }

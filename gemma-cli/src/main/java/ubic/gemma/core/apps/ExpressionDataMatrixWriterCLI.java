@@ -86,7 +86,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             }
 
             try {
-                Optional<File> f = fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                Optional<File> f = fs.writeProcessedExpressionDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
                 if ( f.isPresent() ) {
                     addSuccessObject( ee, "Written expression data to " + f );
                 } else {

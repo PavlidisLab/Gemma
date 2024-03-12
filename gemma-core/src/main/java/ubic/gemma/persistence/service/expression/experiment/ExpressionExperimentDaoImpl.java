@@ -1331,13 +1331,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
-        return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt from ExpressionExperiment ee "
-                        + "join ee.processedExpressionDataVectors pv "
-                        + "join pv.quantitationType qt "
-                        + "where qt.isMaskedPreferred = true and ee = :ee "
-                        + "group by qt" )
+    public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(pedv) > 0 from ProcessedExpressionDataVector pedv "
+                        + "where pedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }

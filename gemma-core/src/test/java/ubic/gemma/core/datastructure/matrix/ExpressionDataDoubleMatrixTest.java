@@ -312,7 +312,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         processedDataVectorService.computeProcessedExpressionData( newee );
 
         File f1 = expressionDataFileService
-                .writeOrLocateDataFile( expressionExperimentService.load( newee.getId() ), true, true )
+                .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )
                 .orElse( null );
         assertNotNull( f1 );
         assertTrue( f1.exists() );
