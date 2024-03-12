@@ -1,41 +1,21 @@
-/* A CSS Framework by Mike Stenhouse of Content with Style
+/*
+ * This stylesheet is in process of rewrite to match Vuetify's typography
+ */
 
-     Color palette:
-     		 #00718f - new dark blue (hue 193)
-     		 #338da5 - medium tint of 193.
-     		 #9cc8d4 - tint of dark blue 193.
-     		 #004f64 - shade of 193.
-     		 #f9f7db - logo background
-     		 ## Logo colors used in spots
-     		 #c84c27 - new dark orange
-     		 #b53825 - new brick red
-     		 #fddb5c - new bright yellow
-     		 #fcb536 - new light orange
-     		 #f47f20 - new medium orange
-     		 
-     		 Older items
-             #444        - dark gray (text)
-             #3e9ade - medium blue (title)
-             #b4c24b - lime (header 1)
-             #ebf5fc - light cyan (hover text, footer)
-             #d7e9f5    - medium cyan (tab)
-             #1465b7 - dark blue (tab text, hyperlink)
-             #ccc         - medium gray (line)
-             #f7f7f7 - light gray (form background)
-             #f90        - orange (required *)
-             
-             #003366 - blue
-             #CC6633 - orange
-*/ /* TYPOGRAPHY */
+/* A CSS Framework by Mike Stenhouse of Content with Style */
+
+/* TYPOGRAPHY */
 body {
-	text-align: left;
-	font: normal 0.9em arial, sans-serif;
-	color: #000000;
+	font-family: Avenir, Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	font-size-adjust: none;
+	line-height: normal;
+	color: rgba(0, 0, 0, 0.87);
 	text-decoration: none;
 }
 
 .footer {
-	font-size: smaller;
+	font-size: x-small;
 }
 
 img {
@@ -43,19 +23,14 @@ img {
 }
 
 /* LINKS */
-a,a:link a:active {
-	color: #004f64;
+a, a:link a:active {
+	color: #1976d2;
 	text-decoration: none;
 }
 
 a:visited {
-	color: #004f64;
+	color: #1976d2;
 	background-color: transparent;
-}
-
-a:hover {
-	color: #f47f20;
-	text-decoration: none;
 }
 
 .ui-state-hover {
@@ -71,105 +46,101 @@ a.annotationLink {
 }
 
 a.newpage {
-	background: transparent url(../../images/icons/newwindow.png) no-repeat
-		scroll right center;
+	background: transparent url(../../images/icons/newwindow.png) no-repeat scroll right center;
 	padding-right: 15px;
 }
 
 a.external {
-	background: transparent url(../../images/icons/link_external_icon.gif)
-		no-repeat scroll right center;
+	background: transparent url(../../images/icons/link_external_icon.gif) no-repeat scroll right center;
 	padding-left: 15px;
 	padding-right: 10px;
 }
 
 a.external:hover {
-	background: transparent
-		url(../../images/icons/link_external_icon_hover.gif) no-repeat scroll
-		right center;
+	background: transparent url(../../images/icons/link_external_icon_hover.gif) no-repeat scroll right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
 
 a.internal {
-	background: transparent url(../../images/icons/link_internal_icon.gif)
-		no-repeat scroll right center;
+	background: transparent url(../../images/icons/link_internal_icon.gif) no-repeat scroll right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
 
 a.internal:hover {
-	background: transparent
-		url(../../images/icons/link_internal_icon_hover.gif) no-repeat scroll
-		right center;
+	background: transparent url(../../images/icons/link_internal_icon_hover.gif) no-repeat scroll right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
 
 span.link {
 	cursor: pointer;
-	text-decoration: underline;
-	color: #004f64;
+	color: #1976d2;
 }
 
 /* END LINKS */ /* HEADINGS */
-h1,h2,h3,h4,h5,h6 {
+h1, h2, h3, h4, h5, h6 {
 	font-weight: bold;
 }
 
-h1,.big {
-	font-size: 2.2em;
-	letter-spacing: -1px;
-	line-height: 1.3em;
-	margin: 0 0 0.5em 0;
-	padding: 0;
+h1 {
+	font-size: 6em;
 }
 
-h2,.medium {
-	font-size: 1.6em;
-	line-height: 1.4em;
-	margin: 0 0 0.5em 0;
-	padding: 0;
+h2 {
+	font-size: 3.75em;
 }
 
 h3 {
-	font-size: 1.3em;
-	line-height: 1.3em;
-	margin: 0 0 0.5em 0;
-	padding: 10px 0px 0px 0;
-	color: black;
+	font-size: 3em;
 }
 
 h4 {
-	font-size: 1.2em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
-	color: black;
+	font-size: 2.125em;
 }
 
 h5 {
-	font-size: 1.1em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
-	color: black;
+	font-size: 1.5em;
 }
 
 h6 {
-	font-size: 1em;
-	line-height: 1.3em;
-	margin: 0 0 0.25em 0;
-	padding: 0;
-	color: black;
+	font-size: 1.25em;
+}
+
+/* rescale headers within the main content */
+/* h1 -> h4, h2 -> h5, etc. */
+#main h1 {
+	font-size: 1.5em;
+}
+
+#main h2, #main h3, #main h4, #main h5, #main h6 {
+	font-size: 1.25em;
 }
 
 /* END HEADINGS */ /* TEXT */
 p {
+	margin-bottom: 1em;
+}
+
+.bigger {
+	font-size: 1.5em;
+}
+
+.big {
+	font-size: 1.25em;
+}
+
+.normal {
 	font-size: 1em;
-	margin: 0 0 0.8em 0;
-	padding: 0px 0px 0px 0px;
-	line-height: 1.4em;
+}
+
+.small {
+	font-size: 0.875em;
+}
+
+.smaller {
+	font-size: 0.75em;
 }
 
 blockquote {
@@ -178,43 +149,38 @@ blockquote {
 }
 
 pre {
-	font-family: monospace;
-	font-size: 1em;
+	font-family: monospace, monospace;
 }
 
-strong,b {
+strong, b {
 	font-weight: bold;
 }
 
-em,i {
+em, i {
 	font-style: italic;
 }
 
 code {
-	font-family: "courier new", courier, monospace;
-	font-size: 12px;
+	font-family: monospace, monospace;
 	white-space: pre;
 }
 
 textarea {
-	font-family: verdana, arial, helvetica, sans-serif;
-	font-size: 1em;
+	font-family: Avenir, Helvetica, Arial, sans-serif;
 }
 
-.clob,.stacktrace {
+.clob, .stacktrace {
 	border-style: solid;
 	padding: 4px 6px 4px 6px;
 	border-width: 1px;
 	border-color: #DDDDDD;
-	font-size: 1em;
 	line-height: 1.3em;
 	height: 100px;
 	overflow: auto;
 }
 
 .stacktrace {
-	font-size: 10px;
-	font-family: "courier new", courier, monospace;
+	font-family: monospace, monospace;
 	height: 400px;
 }
 
@@ -227,10 +193,6 @@ ul.glassList {
 
 p.emphasized {
 	padding: 0;
-}
-
-p a {
-	text-decoration: underline;
 }
 
 ul.plainList {
@@ -271,16 +233,17 @@ dl dd {
 
 /* END LISTS */ /* TABLE */
 td {
-	font: normal 11px arial, tahoma, helvetica, sans-serif;
+	font-weight: normal;
 }
 
 /* this can interfere with EXT.js tables. */
-table { /*border-style:solid;
-			border-width:1px;
-			border-color:#BBBBBB; 
-            margin: 0 0 0 0;
-            padding: 6px;*/
-	
+table {
+	/*border-style:solid;
+			   border-width:1px;
+			   border-color:#BBBBBB;
+			   margin: 0 0 0 0;
+			   padding: 6px;*/
+
 }
 
 td.label {
@@ -293,7 +256,7 @@ td.label {
 
 th {
 	border-bottom: solid #555555 1px;
-	font: bold 11px arial, tahoma, helvetica, sans-serif;
+	font-weight: bold;
 }
 
 hr {
@@ -307,55 +270,29 @@ div.hr {
 }
 
 .error {
-	background: #fff url(../../images/default/grid/invalid_line.gif)
-		repeat-x bottom;
+	background: #fff url(../../images/default/grid/invalid_line.gif) repeat-x bottom;
 }
 
 /* Help pages */
-h2.helpstep,h3.helpstep {
+h2.helpstep, h3.helpstep {
 	left-margin: 0px;
 	padding: 0px;
 	line-height: 1em;
 	font-size: 1.3em;
-	margin: 0 0 2 0px;
-}
-
-.x-form-field-wrap  .x-go-trigger {
-	background-image: url(../../images/icons/search-trigger.gif);
-	cursor: pointer;
-}
-
-.x-loading {
-	background: url(../../images/default/tree/loading.gif) no-repeat center;
-}
-
-/* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
-.x-panel-collapsed-text {
-	/* see .front-page-header-text
-	color: #15428B;
-	font: bold 11px tahoma, arial, verdana, sans-serif;*/
-	padding: 5px 3px 4px 5px;
-	float: right;
-	line-height: 13px;
+	margin: 0 0 2px 0px;
 }
 
 .blue-text-not-link {
-	color: #15428B;
+	color: #2196F3;
 }
 
 .front-page-header-text {
-	color: #15428B;
-	font: 18px tahoma, arial, verdana, sans-serif;
-}
-
-/* reduced font size elements */
-.small {
-	font-size: smaller;
+	color: #3F51B5;
 }
 
 /* css for scriptaculous hovering */
 .drophover {
-	background-color: #ff0;
+	background-color: #FFEB3B;
 }
 
 .dragItem {
@@ -372,20 +309,20 @@ a.info {
 
 /* colours for positive and negative link counts*/
 .positiveLink {
-	color: darkgreen;
+	color: #4CAF50;
 }
 
 .negativeLink {
-	color: red;
+	color: #F44336;
 }
 
 /* colours for validation/trouble */
 .trouble {
-	color: red;
+	color: #F44336;
 }
 
 .validated {
-	color: darkgreen;
+	color: #4CAF50;
 }
 
 .disabled {
@@ -399,13 +336,13 @@ a.info {
 
 /* colours for characteristics */
 .usedWithUri {
-	color: darkgreen;
+	color: #4CAF50;
 	font-weight: bold;
 }
 
 .usedNoUri {
 	/*	font-weight: bold; */
-	
+
 }
 
 .unusedWithUri {
@@ -413,33 +350,35 @@ a.info {
 }
 
 .unusedNoUri {
-	
+
 }
 
 /* sources of annotations */
 .fromBioMaterial {
-	background-color:#d1e4fd;
-	padding:3px;
+	background-color: #d1e4fd;
+	padding: 3px;
 	line-height: 1.5em;
-	border-radius:15px;
+	border-radius: 15px;
 }
+
 .fromFactorValue {
-	background-color:#F0DE7D;
-	padding:3px;
+	background-color: #F0DE7D;
+	padding: 3px;
 	line-height: 1.5em;
-	border-radius:15px;
+	border-radius: 15px;
 }
+
 .fromExperimentTag {
 	font-weight: bold;
-	background-color:#B0DE78;
-	padding:3px;
+	background-color: #B0DE78;
+	padding: 3px;
 	line-height: 1.5em;
-	border-radius:15px;
+	border-radius: 15px;
 }
 
 a.info:hover {
 	z-index: 25;
-	background-color: #ff0;
+	background-color: #FFEB3B;
 }
 
 a.info span {
@@ -456,12 +395,6 @@ a.info:hover span { /*the span will display just on :hover state*/
 	background-color: #cff;
 	color: #000;
 	text-align: center;
-}
-
-/* make sure link text is white when selected in Ext tables
- */
-.x-grid-row-selected a {
-	color: white !important;
 }
 
 /* tooltips, modified from http://psacake.com/web/jl.asp
@@ -503,115 +436,14 @@ a.tooltip:hover .tooltiptext {
 */
 .metThreshold {
 	font-weight: bold;
-	color: #339900;
+	color: #4CAF50;
 }
 
 /*
 * for display of search results, see search.js
 */
 .search-result-body { /*font-style: italic; */
-	
-}
 
-/*
- * FileUploadField component styles
- */
-.x-form-file-wrap {
-	position: relative;
-	height: 22px;
-}
-
-.x-form-file-wrap .x-form-file {
-	position: absolute;
-	right: 0;
-	-moz-opacity: 0;
-	filter: alpha(opacity :                    0);
-	opacity: 0;
-	z-index: 2;
-	height: 22px;
-}
-
-.x-form-file-wrap .x-form-file-btn {
-	position: absolute;
-	right: 0;
-	z-index: 1;
-}
-
-.x-form-file-wrap .x-form-file-text {
-	position: absolute;
-	left: 0;
-	z-index: 3;
-	color: #777;
-}
-
-/*
-* On ext fields set fieldClass to this to remove border/shading.
-*/
-.x-bare-field {
-	padding: 1px 3px;
-	-x-system-font: none;
-	background: transparent;
-	border: 0px;
-	font-family: tahoma, arial, helvetica, sans-serif;
-	font-size: 12px;
-	font-size-adjust: none;
-	font-stretch: normal;
-	font-style: normal;
-	font-variant: normal;
-	font-weight: normal;
-	line-height: normal;
-	margin: 0;
-	font-family: tahoma, arial, helvetica, sans-serif;
-}
-
-/** Use as 'baseCls' for panels to remove outline. */
-.x-plain-panel {
-	border: 0px;
-}
-
-/** Used by Ext in table layouts, but not defined in ext-all.css */
-.x-table-layout-cell {
-	padding: 5px;
-	margin: 3px;
-	vertical-align: top;
-}
-
-/**
-*  Override ext default
-*/
-.x-progress-text {
-	font-size: 11px;
-	font-weight: normal;
-	color: #000;
-	padding: 1px 5px;
-	overflow: hidden;
-	position: absolute;
-	left: 0;
-	text-align: center;
-}
-
-/**
-* Replacement for StatusBar lost in Ext 3
-*/
-.x-statusbar .x-status-text {
-	height: 21px;
-	line-height: 21px;
-	padding: 0 4px;
-	cursor: default;
-}
-
-.x-statusbar .x-status-busy {
-	padding-left: 25px;
-	background: transparent url(../../images/default/grid/loading.gif)
-		no-repeat 3px 3px;
-}
-
-.x-statusbar .x-status-text-panel {
-	border-top: 1px solid #99BBE8;
-	border-right: 1px solid #fff;
-	border-bottom: 1px solid #fff;
-	border-left: 1px solid #99BBE8;
-	padding: 2px 8px 2px 5px;
 }
 
 .news {
@@ -624,59 +456,11 @@ a.tooltip:hover .tooltiptext {
 }
 
 .news p {
-	
+
 }
 
 .upload-icon {
 	background: url('../../images/icons/add.png') no-repeat 0 0 !important;
-}
-
-.right-align-btn .x-btn-mc {
-	text-align: right;
-}
-
-.unstyledTitle .x-panel-header {
-	background: none repeat-x scroll 0 -1px transparent;
-	color: black;
-	border: 0px solid;
-}
-
-.unstyledTitle .x-tool-toggle {
-	background-position: 0 -255px;
-	float: left;
-	margin-right: 5px;
-}
-
-.unstyledTitle .x-tool-toggle-over {
-	background-position: -15px -255px;
-}
-
-.x-panel,.unstyledTitle,.x-panel-collapsed .x-tool-toggle {
-	background-position: 0 -240px;
-}
-
-.x-panel,.unstyledTitle,.x-panel-collapsed .x-tool-toggle-over {
-	background-position: -15px -240px;
-}
-
-.x-tool-delete {
-	background-image: url('../../images/icons/cross.png');
-	margin-left: 10px;
-}
-
-.x-tool-delete-over {
-	background-image: url('../../images/icons/cross.png');
-	margin-left: 10px;
-}
-
-.x-tool-saveEdit {
-	background-image: url('../../images/icons/diskEdit2.png');
-	margin-left: 10px;
-}
-
-.x-tool-saveEdit-over {
-	background-image: url('../../images/icons/diskEdit2.png');
-	margin-left: 10px;
 }
 
 /* hover thumbnails */
@@ -714,10 +498,6 @@ a.tooltip:hover .tooltiptext {
 	left: 60px;
 	/*position where enlarged image should offset horizontally */
 }
-/* end of hover thumbnails*/
-.x-form-trigger-paste-genes {
-	background-image: url("../../images/icons/page_upload.png")
-}
 
 .absolute-position-loading-mask {
 	top: 70px !important
@@ -725,10 +505,9 @@ a.tooltip:hover .tooltiptext {
 
 .inline-help-form-q-tip {
 	line-height: 1.1em;
-	font-size: 1.0em;
 }
 
-.indent20,.indent20 p,.indent20 ul {
+.indent20, .indent20 p, .indent20 ul {
 	padding-left: 20px
 }
 

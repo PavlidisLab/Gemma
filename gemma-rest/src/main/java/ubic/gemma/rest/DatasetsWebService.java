@@ -122,6 +122,8 @@ public class DatasetsWebService {
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
+    @Autowired
+    private QuantitationTypeArgService quantitationTypeArgService;
 
     @Autowired
     private HttpServletRequest request;
@@ -750,18 +752,14 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        QuantitationType qt = expressionExperimentService.getMaskedPreferredQuantitationType( ee );
-        if ( qt == null ) {
+        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, qt, new OutputStreamWriter( output ) );
+        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, new OutputStreamWriter( output ) );
         return Response.ok( stream )
                 .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
                 .build();
     }
-
-    @Autowired
-    private QuantitationTypeArgService quantitationTypeArgService;
 
     /**
      * Retrieve raw expression data.
@@ -998,7 +996,7 @@ public class DatasetsWebService {
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
+        File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filter ).orElse( null );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
@@ -1008,7 +1006,7 @@ public class DatasetsWebService {
         return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
-    private Response outputFile( File file, String error, String shortName ) throws IOException {
+    private Response outputFile( @Nullable File file, String error, String shortName ) throws IOException {
         if ( file == null || !file.exists() ) {
             throw new NotFoundException( String.format( error, shortName ) );
         }

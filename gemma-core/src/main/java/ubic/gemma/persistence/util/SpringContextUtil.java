@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * Methods to create Spring contexts for Gemma manually. This is meant to be used by CLIs only.
@@ -44,7 +45,7 @@ public class SpringContextUtil {
     /**
      * Obtain an application context for Gemma.
      *
-     * @param activeProfiles list of active profiles, for testing use {@link SpringProfiles#TEST}
+     * @param activeProfiles list of active profiles, for testing use {@link EnvironmentProfiles#TEST}
      * @param additionalConfigurationLocations a list of additional configuration location to load beans from
      * @return a fully initialized {@link ApplicationContext}
      * @throws org.springframework.beans.BeansException if the creation of the context fails
@@ -93,18 +94,27 @@ public class SpringContextUtil {
      * Perform the following steps:
      * <ul>
      * <li>activate the {@code dev} profile as a fallback if no profile are active</li>
+     * <li>verify that exactly one environment profile is active (see {@link EnvironmentProfiles})</li>
      * <li>log an informative message with the context version and active profiles</li>
      * </ul>
      */
     public static void prepareContext( ApplicationContext context ) {
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
-            if ( !cac.getEnvironment().acceptsProfiles( SpringProfiles.PRODUCTION, SpringProfiles.DEV, SpringProfiles.TEST ) ) {
+            if ( !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) ) {
                 log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
-                cac.getEnvironment().addActiveProfile( SpringProfiles.DEV );
+                cac.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
             }
         }
-        BuildInfo buildInfo = BuildInfo.fromSettings();
+        long numberOfActiveEnvironmentProfiles = Stream.of( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST )
+                .filter( context.getEnvironment()::acceptsProfiles )
+                .count();
+        if ( numberOfActiveEnvironmentProfiles == 0 ) {
+            throw new IllegalStateException( "The context must contain at least one environment profile." );
+        } else if ( numberOfActiveEnvironmentProfiles > 1 ) {
+            throw new IllegalStateException( "The context must contain at most one environment profile." );
+        }
+        BuildInfo buildInfo = BuildInfo.fromClasspath();
         SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
                 buildInfo,
                 context.getEnvironment().getActiveProfiles().length > 0 ?

@@ -18,7 +18,7 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
-@ActiveProfiles(SpringProfiles.TEST)
+@ActiveProfiles(EnvironmentProfiles.TEST)
 @ContextConfiguration
 public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
 

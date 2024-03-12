@@ -75,6 +75,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
     private boolean updateOnly = false;
+    private String softFile = null;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -124,6 +125,8 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
         options.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
 
+        options.addOption( Option.builder( "softfile" ).desc( "Load directly from soft.gz file; use with single accession via -e" ).hasArg().argName( "soft file path" ).build() );
+
         /*
          * add 'allowsub/super' series option;
          */
@@ -139,6 +142,14 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         if ( accessions == null && accessionFile == null ) {
             throw new IllegalArgumentException(
                     "You must specific either a file or accessions on the command line" );
+        }
+
+        if ( softFile != null ) {
+            Collection<?> ees = geoService.loadFromSoftFile( accessions, softFile, platformOnly, doMatching, splitByPlatform );
+            for ( Object object : ees ) {
+                addSuccessObject( object );
+            }
+            return;
         }
 
         if ( accessions != null ) {
@@ -228,6 +239,13 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
         this.suppressPostProcessing = commandLine.hasOption( "nopost" );
 
+        if ( commandLine.hasOption( "softfile" ) ) {
+            this.softFile = commandLine.getOptionValue( "softfile" );
+            if ( accessions == null || accessions.split( "," ).length > 1 ) {
+                throw new IllegalArgumentException( "You must specify exactly one accession to load from a SOFT file" );
+            }
+
+        }
     }
 
     private void processAccession( String accession ) {

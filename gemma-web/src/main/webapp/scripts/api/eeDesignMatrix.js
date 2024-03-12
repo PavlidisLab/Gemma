@@ -65,11 +65,9 @@ var DesignMatrix = {
       this.grid = new Ext.grid.GridPanel( {
          ds : this.ds,
          cm : cm,
-         // collapsible : true,
          title : "Experimental Design overview",
          renderTo : "eeDesignMatrix",
          height : height,
-         // width : 600,
          viewConfig : {
             forceFit : true
          }

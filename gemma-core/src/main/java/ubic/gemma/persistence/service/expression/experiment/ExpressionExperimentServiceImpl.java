@@ -793,13 +793,20 @@ public class ExpressionExperimentServiceImpl
     private Set<String> inferTermsUris( Collection<String> termUris ) {
         Set<String> excludedTermUris = new HashSet<>( termUris );
         // null is a special indicator for free-text terms or categories
-        excludedTermUris.remove( FREE_TEXT );
+        boolean removedFreeText = excludedTermUris.remove( FREE_TEXT );
+        boolean removedUncategorized = excludedTermUris.remove( UNCATEGORIZED );
         // expand exclusions with implied terms via subclass relation
         Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
         // exclude terms using the subClass relation
         Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
         for ( OntologyTerm t : impliedTerms ) {
             excludedTermUris.add( t.getUri() );
+        }
+        if ( removedFreeText ) {
+            excludedTermUris.add( FREE_TEXT );
+        }
+        if ( removedUncategorized ) {
+            excludedTermUris.add( UNCATEGORIZED );
         }
         return excludedTermUris;
     }
@@ -992,11 +999,29 @@ public class ExpressionExperimentServiceImpl
                     log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
                     break;
                 }
+
+                // Use the "date run" information as a first pass to decide if there is a batch association.
+                // This won't always be present.
                 double minP = 1.0;
+                if ( svd.getDatePvals() != null ) {
+                    for ( Integer component : svd.getDatePvals().keySet() ) {
+                        Double pVal = svd.getDatePvals().get( component );
+                        if ( pVal != null && pVal < minP ) {
+                            details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
+                            minP = pVal;
+                        }
+                    }
+                }
+
+                // we can override the date-based p-value with the factor-based p-value if it is lower.
+                // The reason to do this is it can be underpowered. The date-based one is more sensitive.
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-                    Double pVal = cmpEffects.get( ef.getId() );
 
+                    // could use the effect size instead of the p-values (or in addition)
+                    //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );
+
+                    Double pVal = cmpEffects.get( ef.getId() );
                     if ( pVal != null && pVal < minP ) {
                         details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                         minP = pVal;
@@ -1012,9 +1037,6 @@ public class ExpressionExperimentServiceImpl
         return details;
     }
 
-    /**
-     * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
-     */
     @Override
     @Transactional(readOnly = true)
     public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
@@ -1036,6 +1058,7 @@ public class ExpressionExperimentServiceImpl
         } else if ( beDetails.getBatchEffectStatistics() == null ) {
             return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
         } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            // this means there was a batch effect but we couldn't correct it
             return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
             return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
@@ -1141,8 +1164,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getMaskedPreferredQuantitationType( ee );
+    public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
+        return expressionExperimentDao.hasProcessedExpressionData( ee );
     }
 
     @Override

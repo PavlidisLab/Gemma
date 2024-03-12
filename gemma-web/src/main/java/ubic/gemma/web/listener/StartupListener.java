@@ -29,7 +29,7 @@ import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.persistence.util.SpringProfiles;
+import ubic.gemma.persistence.util.EnvironmentProfiles;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.ServletContext;
@@ -133,11 +133,11 @@ public class StartupListener extends ContextLoaderListener {
     private static final String JAWR_DEBUG_ON_SYSTEM_PROPERTY = "net.jawr.debug.on";
 
     /**
-     * Set the net.jawr.debug.on system property to true if the current profile is {@link SpringProfiles#DEV} and no
+     * Set the net.jawr.debug.on system property to true if the current profile is {@link EnvironmentProfiles#DEV} and no
      * value has been explicitly set by the user.
      */
     private void configureJawr( ApplicationContext ctx ) {
-        if ( ctx.getEnvironment().acceptsProfiles( SpringProfiles.DEV )
+        if ( ctx.getEnvironment().acceptsProfiles( EnvironmentProfiles.DEV )
                 && System.getProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY ) == null ) {
             log.info( String.format( "Enabling debug mode for JAWR by setting %s=true.", JAWR_DEBUG_ON_SYSTEM_PROPERTY ) );
             System.setProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY, "true" );

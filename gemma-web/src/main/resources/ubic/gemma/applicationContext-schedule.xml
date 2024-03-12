@@ -23,7 +23,9 @@
                 <ref local="whatsNewTrigger"/>
                 <ref local="gene2CsUpdateTrigger"/>
                 <ref local="batchInfoTrigger"/>
-                <ref local="ee2cUpdateTrigger"/>
+                <ref local="ee2cExperimentUpdateTrigger"/>
+                <ref local="ee2cSampleUpdateTrigger"/>
+                <ref local="ee2cExperimentalDesignUpdateTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
@@ -31,46 +33,126 @@
         <property name="autoStartup" value="${quartzOn}"/>
     </bean>
 
+    <bean id="expressionExperimentReportService"
+          class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
+    <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
+    <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
+    <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
+
     <!-- Triggers -->
     <!-- Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L
         W Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html
         for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that
         fire frequently for testing, try <value>0 0/2 * ? * *</value>. -->
     <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="batchInfoDetail"/>
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="expressionExperimentReportService"/>
+                <property name="concurrent" value="false"/>
+                <property name="targetMethod" value="recalculateBatchInfo"/>
+            </bean>
+        </property>
         <!-- every day at 00:30:00 -->
         <property name="cronExpression" value="0 30 0 * * ?"/>
     </bean>
     <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="expressionExperimentReportJobDetail"/>
+        <property name="jobDetail">
+            <bean
+                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="expressionExperimentReportService"/>
+                <property name="concurrent" value="false"/>
+                <property name="targetMethod" value="generateSummaryObjects"/>
+            </bean>
+        </property>
         <!-- every first-of-the-month at 00:15:00 -->
         <property name="cronExpression" value="0 15 0 1 * ?"/>
     </bean>
     <bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="arrayDesignReportJobDetail"/>
+        <property name="jobDetail">
+            <bean
+                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="arrayDesignReportService"/>
+                <property name="concurrent" value="false"/>
+                <property name="targetMethod" value="generateArrayDesignReport"/>
+            </bean>
+        </property>
         <!-- every first-of-the-month at 01:30:00 -->
         <property name="cronExpression" value="0 30 1 1 * ?"/>
     </bean>
     <bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="whatsNewJobDetail"/>
+        <property name="jobDetail">
+            <bean
+                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="whatsNewService"/>
+                <property name="concurrent" value="false"/>
+                <property name="targetMethod" value="generateWeeklyReport"/>
+            </bean>
+        </property>
         <!-- every day at 00:15:00 -->
         <property name="cronExpression" value="0 15 0 * * ?"/>
     </bean>
     <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-        <property name="jobDetail" ref="gene2CsUpdateJobDetail"/>
+        <property name="jobDetail">
+            <bean
+                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="tableMaintenanceUtil"/>
+                <property name="concurrent" value="false"/>
+                <property name="targetMethod" value="updateGene2CsEntries"/>
+            </bean>
+        </property>
         <!-- every day at 00:40:00 -->
         <property name="cronExpression" value="0 40 0 * * ?"/>
     </bean>
-    <bean id="ee2cUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+    <bean id="ee2cExperimentUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <property name="targetObject" ref="tableMaintenanceUtil"/>
                 <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
+                <property name="arguments">
+                    <array>
+                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExpressionExperiment
+                        </value>
+                    </array>
+                </property>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <!-- hourly during working hours when the curators actively dataset tags -->
+        <property name="cronExpression" value="0 0 9-17 ? * MON-FRI"/>
+    </bean>
+    <bean id="ee2cSampleUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="tableMaintenanceUtil"/>
+                <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
+                <property name="arguments">
+                    <array>
+                        <value type="java.lang.Class">ubic.gemma.model.expression.biomaterial.BioMaterial</value>
+                    </array>
+                </property>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <!-- hourly during working hours, when new experiments are imported -->
+        <!-- runs 10 minutes after tag update -->
+        <property name="cronExpression" value="0 10 9-17 ? * MON-FRI"/>
+    </bean>
+    <bean id="ee2cExperimentalDesignUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="tableMaintenanceUtil"/>
+                <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
+                <property name="arguments">
+                    <array>
+                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExperimentalDesign</value>
+                    </array>
+                </property>
                 <property name="concurrent" value="false"/>
             </bean>
         </property>
         <!-- every 30 minutes during working hours (when the curators actively update annotations) -->
-        <property name="cronExpression" value="0 0/30 9-17 ? * MON-FRI"/>
+        <!-- runs 20 minutes after tag update -->
+        <property name="cronExpression" value="0 20/30 9-17 ? * MON-FRI"/>
     </bean>
     <bean id="ee2adUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
@@ -98,44 +180,4 @@
 
     <!--<property name="startDelay" value="12" /> &lt;!&ndash; wait before beginning &ndash;&gt; -->
     <!--</bean> -->
-
-
-    <!-- Job details -->
-    <bean id="batchInfoDetail" class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="expressionExperimentReportService"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="recalculateBatchInfo"/>
-    </bean>
-    <bean id="arrayDesignReportJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="arrayDesignReportService"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="generateArrayDesignReport"/>
-    </bean>
-    <bean id="expressionExperimentReportJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="expressionExperimentReportService"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="generateSummaryObjects"/>
-    </bean>
-    <bean id="whatsNewJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="whatsNewService"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="generateWeeklyReport"/>
-    </bean>
-
-    <bean id="gene2CsUpdateJobDetail"
-          class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="tableMaintenanceUtil"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="updateGene2CsEntries"/>
-    </bean>
-
-    <bean id="expressionExperimentReportService"
-          class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
-
-    <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
-    <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
-    <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
 </beans>

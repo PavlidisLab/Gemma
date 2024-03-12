@@ -241,7 +241,7 @@ Gemma.GeneSetSummary = Ext
                baseCls : 'x-plain-panel',
                bodyStyle : 'padding:10px',
                defaults : {
-                  bodyStyle : 'vertical-align:top;font-size:12px;color:black',
+                  bodyStyle : 'vertical-align:top;',
                   baseCls : 'x-plain-panel',
                   fieldClass : 'x-bare-field'
                },

@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.SecuredNotChild;
+import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
@@ -37,6 +38,7 @@ import java.util.Set;
  * @author paul
  */
 @Indexed
+@CommonsLog
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
     public static final class Factory {
@@ -269,13 +271,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setBatchEffectStatistics( String batchEffectStatistics ) {
         this.batchEffectStatistics = batchEffectStatistics;
-    }
-
-    @Override
-    public void setBioAssays( Set<BioAssay> bioAssays ) {
-        super.setBioAssays( bioAssays );
-        if ( bioAssays != null && Hibernate.isInitialized( bioAssays ) )
-            this.numberOfSamples = bioAssays.size();
     }
 
     @Override

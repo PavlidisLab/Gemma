@@ -291,24 +291,57 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
     @Override
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
+        Set<DifferentialExpressionAnalysis> results = new HashSet<>();
 
         // subset factorValues factors.
-        @SuppressWarnings("unchecked")
-        Collection<DifferentialExpressionAnalysis> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
-                        + " join ssf.experimentalFactor efa where efa = :ef " )
-                .setParameter( "ef", ef )
-                .list();
-
-        // factors used in the analysis.
         //noinspection unchecked
-        result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a join a.resultSets rs"
-                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef " )
+        results.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                        + "join a.subsetFactorValue ssf "
+                        + "where ssf.experimentalFactor = :ef" )
                 .setParameter( "ef", ef )
                 .list() );
 
-        return result;
+        // factors used in the analysis.
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                        + "join a.resultSets rs "
+                        + "join rs.experimentalFactors efa "
+                        + "where efa = :ef" )
+                .setParameter( "ef", ef )
+                .list() );
+
+        return results;
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+        if ( experimentalFactors.isEmpty() ) {
+            return Collections.emptySet();
+        }
+
+        Set<DifferentialExpressionAnalysis> results = new HashSet<>();
+        // subset factorValues factors.
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                        + "join a.subsetFactorValue ssf "
+                        + "where ssf.experimentalFactor in :efs" )
+                .setParameterList( "efs", experimentalFactors )
+                .list() );
+
+        // factors used in the analysis
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                        + "join a.resultSets rs "
+                        + "join rs.experimentalFactors efa "
+                        + "where efa in :efs" )
+                .setParameterList( "efs", experimentalFactors )
+                .list() );
+
+        return results;
     }
 
     @Override

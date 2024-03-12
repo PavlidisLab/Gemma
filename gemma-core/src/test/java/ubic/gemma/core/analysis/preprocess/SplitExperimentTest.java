@@ -131,6 +131,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
             ExpressionExperiment e = eeService.thaw( ( ExpressionExperiment ) b );
 
             // sanity checks for the clones
+            assertNotNull( ee.getAccession() );
+            assertNotNull( e.getAccession() );
             assertNotEquals( ee.getAccession().getId(), e.getAccession().getId() );
             assertEquals( ee.getTaxon(), e.getTaxon() );
             assertNotEquals( ee.getAuditTrail().getId(), e.getAuditTrail().getId() );

@@ -20,8 +20,8 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -56,10 +56,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.
-     *
+     * <p>
      * This is much faster than navigating through the probe's alignments, transcripts and then genes as it uses the
      * internal GENE2CS table described in {@link TableMaintenanceUtil#updateGene2CsEntries()}.
-     *
+     * <p>
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
      */
@@ -76,5 +76,8 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      */
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 
+    /**
+     * Initialize the analysis and subset factor vale.
+     */
     void thaw( ExpressionAnalysisResultSet ears );
 }

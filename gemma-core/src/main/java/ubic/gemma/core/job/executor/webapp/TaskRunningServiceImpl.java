@@ -20,6 +20,7 @@ package ubic.gemma.core.job.executor.webapp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
@@ -44,7 +45,7 @@ import java.util.concurrent.*;
  */
 // Valid, inspection is not parsing the context file for some reason
 @Component
-public class TaskRunningServiceImpl implements TaskRunningService {
+public class TaskRunningServiceImpl implements TaskRunningService, DisposableBean {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
     private final ExecutorService executorService = Executors.newFixedThreadPool( 20 );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
@@ -53,6 +54,19 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
     @Autowired
     private TaskPostProcessing taskPostProcessing;
+
+    @Override
+    public void destroy() throws Exception {
+        log.info( "Shutting down TaskRunningService executor..." );
+        executorService.shutdown();
+        if ( !executorService.isTerminated() ) {
+            log.warn( "There are still running tasks, will wait at most 5 minutes before shutting them down." );
+        }
+        if ( !executorService.awaitTermination( 5, TimeUnit.MINUTES ) ) {
+            log.info( "TaskRunningService executor was still running after 5 minutes, interrupting pending tasks..." );
+            executorService.shutdownNow();
+        }
+    }
 
     @Override
     public SubmittedTask getSubmittedTask( String taskId ) {

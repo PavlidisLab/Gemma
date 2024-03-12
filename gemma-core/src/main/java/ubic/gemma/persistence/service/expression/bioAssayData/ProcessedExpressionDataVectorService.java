@@ -212,9 +212,6 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_ADMIN" })
     void reorderByDesign( ExpressionExperiment ee );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
-
     @Secured({ "GROUP_USER" })
     void update( Collection<ProcessedExpressionDataVector> updatedVectors );
 }

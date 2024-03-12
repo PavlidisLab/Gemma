@@ -76,6 +76,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         if ( term == null )
             return null;
         String uri = term.getUri();
+        if ( uri == null ) {
+            return null;
+        }
         return GeneOntologyServiceImpl.asRegularGoId( uri );
     }
 

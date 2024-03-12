@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.security.core.context.SecurityContextHolder
 import ubic.gemma.persistence.util.SpringContextUtil
-import ubic.gemma.persistence.util.SpringProfiles
+import ubic.gemma.persistence.util.EnvironmentProfiles
 
 /**
  * Class for creation of a spring context. Example usage:
@@ -25,9 +25,9 @@ class SpringSupport {
     /**
      * Available profiles for initializing a new {@link SpringSupport}.
      */
-    public static final String PRODUCTION = SpringProfiles.PRODUCTION,
-                        DEV = SpringProfiles.DEV,
-                        TEST = SpringProfiles.TEST;
+    public static final String PRODUCTION = EnvironmentProfiles.PRODUCTION,
+                        DEV = EnvironmentProfiles.DEV,
+                        TEST = EnvironmentProfiles.TEST;
 
     private final ApplicationContext ctx
 

@@ -96,7 +96,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         leftPanel.add({html: "<br/><h4>Analyses:</h4>"});
         leftPanel.add(this.differentialAnalysisPanelRenderer(this.experimentDetails, manager));
          
-        leftPanel.add(this.linkAnalysisPanelRenderer(this.experimentDetails, manager));
+      //  leftPanel.add(this.linkAnalysisPanelRenderer(this.experimentDetails, manager));
 
         eeRow.add(leftPanel);
 
@@ -1223,6 +1223,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 html: 'Differential Expression Analysis: '
             }]
         });
+
+        if (!ee.suitableForDEA) {
+            var color = "#000";
+            panel.add({
+                html: '<span style="color:' + color + ';" ' + qtip + '>'
+                   + 'Not suitable' + '&nbsp;'
+            });
+            return panel;
+        }
+
         var id = ee.id;
         var runBtn = new Ext.Button({
             text: '<i class="fa fa-refresh fa-fw"/>',
@@ -1231,6 +1241,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             scope: this,
             cls: 'btn-refresh'
         });
+
+
         if (ee.numPopulatedFactors > 0) {
             if (ee.dateDifferentialAnalysis) {
                 var type = ee.differentialAnalysisEventType;
@@ -1238,10 +1250,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 var color = "#000";
                 var suggestRun = true;
                 var qtip = 'ext:qtip="OK"';
-                if (type == 'FailedDifferentialExpressionAnalysisEvent') { // note:
-                    // no
-                    // such
-                    // thing.
+                if (type == 'FailedDifferentialExpressionAnalysisEvent') {
                     color = 'red';
                     qtip = 'ext:qtip="Failed"';
                 }

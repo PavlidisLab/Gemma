@@ -37,6 +37,11 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
     private final ExecutorService executor;
 
     /**
+     * Whether to shut down the {@link #executor} when this bean is disposed.
+     */
+    private boolean shutdownExecutorOnDispose = false;
+
+    /**
      * Singleton if {@link #isSingleton()} is true.
      */
     private volatile Future<T> singletonBean;
@@ -50,6 +55,7 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
 
     protected AbstractAsyncFactoryBean() {
         this( Executors.newSingleThreadExecutor() );
+        this.shutdownExecutorOnDispose = true;
     }
 
     protected AbstractAsyncFactoryBean( ExecutorService executor ) {
@@ -94,6 +100,9 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
 
     @Override
     public final void destroy() {
+        if ( shutdownExecutorOnDispose ) {
+            executor.shutdown();
+        }
         pendingBeans.removeIf( Future::isDone );
         if ( !pendingBeans.isEmpty() ) {
             log.info( String.format( "There are pending beans creation in %s, they will be cancelled.", getClass().getName() ) );

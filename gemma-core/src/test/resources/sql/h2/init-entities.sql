@@ -11,7 +11,6 @@ insert into CONTACT (ID, class, NAME, DESCRIPTION, EMAIL, LAST_NAME, USER_NAME, 
 values (1, 'User', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- denormalized table joining genes and compositeSequences; maintained by TableMaintenanceUtil.
-drop table if exists GENE2CS;
 create table GENE2CS
 (
     GENE BIGINT not null,
@@ -26,7 +25,8 @@ alter table GENE2CS
 alter table GENE2CS
     add constraint GENE2CS_GENE_FKC foreign key (GENE) references CHROMOSOME_FEATURE (ID) on update cascade on delete cascade;
 
-drop table if exists EXPRESSION_EXPERIMENT2CHARACTERISTIC;
+-- this table is created in the hibernate schema
+drop table EXPRESSION_EXPERIMENT2CHARACTERISTIC;
 create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
 (
     ID                                    bigint,
@@ -41,7 +41,7 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     EXPRESSION_EXPERIMENT_FK              bigint,
     ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK int not null default 0,
     LEVEL                                 varchar(255),
-    primary key (ID, EXPRESSION_EXPERIMENT_FK, LEVEL)
+    primary key (ID, EXPRESSION_EXPERIMENT_FK)
 );
 
 alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
@@ -55,7 +55,6 @@ create index EE2C_VALUE_URI_VALUE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (VALUE
 create index EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (CATEGORY_URI, CATEGORY, VALUE_URI, `VALUE`);
 create index EE2C_LEVEL on EXPRESSION_EXPERIMENT2CHARACTERISTIC (LEVEL);
 
-drop table if exists EXPRESSION_EXPERIMENT2ARRAY_DESIGN;
 create table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
 (
     EXPRESSION_EXPERIMENT_FK              bigint  not null,

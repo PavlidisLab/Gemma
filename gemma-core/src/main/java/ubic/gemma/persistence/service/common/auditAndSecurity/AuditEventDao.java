@@ -76,4 +76,6 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditables );
 }

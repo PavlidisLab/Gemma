@@ -389,7 +389,11 @@ public class ExpressionExperimentSetServiceImpl
         for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
             eeTaxon = this.getTaxonForSet( ee );
 
-            assert eeTaxon != null;
+            if ( eeTaxon == null ) {
+                // this can happen if there are 0 samples
+                continue;
+            }
+
             if ( !eeTaxon.equals( groupTaxon ) ) {
                 throw new IllegalArgumentException(
                         "Failed to add experiments of wrong taxa (" + ee + ") to eeset. " + "EESet taxon is "

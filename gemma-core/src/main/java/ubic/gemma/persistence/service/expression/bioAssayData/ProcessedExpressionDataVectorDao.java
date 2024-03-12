@@ -20,8 +20,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -94,14 +92,6 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-
-    Collection<ProcessedExpressionDataVector> find( ArrayDesign arrayDesign,
-            QuantitationType quantitationType );
-
-    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType );
-
-    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
 
     enum RankMethod {
         max, mean

@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service for managing gene sets
@@ -152,7 +153,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll( Taxon tax );
+    Collection<GeneSet> loadAll( @Nullable Taxon tax );
 
     /**
      * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the current user has
@@ -303,9 +304,15 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * all the genes
      *
      * @param  geneSet gene set
-     * @return the taxon or null if the gene set param was null
+     * @return a taxon, or null if the gene set has no member
      */
+    @Nullable
     Taxon getTaxon( GeneSet geneSet );
+
+    /**
+     * Obtain all the taxa for the members of a given gene set.
+     */
+    Set<Taxon> getTaxa( GeneSet geneSet );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

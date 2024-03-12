@@ -7,16 +7,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.model.Gene2CsStatus;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +40,22 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
     @Configuration
     @TestComponent
     static class TableMaintenanceUtilTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
+            Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath, "gemma.admin.email=gemma" );
+        }
+
+        /**
+         * Needed to convert {@link String} to {@link Path}.
+         */
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
+        }
 
         @Bean
         public TableMaintenanceUtil tableMaintenanceUtil() {
@@ -78,13 +95,14 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private MailEngine mailEngine;
 
+    @Value("${gemma.gene2cs.path}")
+    private Path gene2csInfoPath;
+
     private final ExternalDatabase gene2csDatabaseEntry = ExternalDatabase.Factory.newInstance( "gene2cs", DatabaseType.OTHER );
 
     private Session session;
 
     private SQLQuery query;
-
-    private Path gene2csInfoPath;
 
     @Before
     public void setUp() throws IOException {
@@ -93,8 +111,6 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         session = mock( Session.class );
         when( session.createSQLQuery( any() ) ).thenReturn( query );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
-        gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
-        tableMaintenanceUtil.setGene2CsInfoPath( gene2csInfoPath );
     }
 
     @After

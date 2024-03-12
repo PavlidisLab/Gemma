@@ -524,7 +524,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : ctxBasePath + '/home.html',
-                            cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
+                            cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" height="63" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
                          }
                       }, '->', {
                          ref : 'navToolbar',
@@ -560,7 +560,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : 'https://www.ubc.ca/',
-                            cn : '<img src="' + ctxBasePath + '/images/logo/ubcgrey_logo_40.png"/>',
+                            cn : '<img src="' + ctxBasePath + '/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo"/>',
                             style : 'padding-left:15px; padding-right:10px'
                          }
                       } ] );

@@ -137,6 +137,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     var analysisName = null;
                     var analysisNameExtra = null;
                     var nodeText = '';
+                    var primaryFactorID = null;
                     // if analysis has only one result set, don't give
                     // it children and
                     // put all info in parent node
@@ -144,6 +145,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         resultSet = analysis.resultSets[0];
                         // get experimental factor string and build analysis parent node text
                         analysisName = this.getFactorNameText(analysis, resultSet);
+                        primaryFactorID = this.getPrimaryFactorID(analysis, resultSet);
                         analysisNameExtra = this.getFactorNameExtra(analysis, resultSet);
                         nodeText = '';
                         // if there's subset text, add baseline and
@@ -152,10 +154,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         // FIXME
                         if (subsetText !== '') {
                             subsetText += this.getBaseline(resultSet);
-                            subsetText += this.getActionLinks(resultSet, analysisName[0], this.ee.id, nodeId);
+                            subsetText += this.getActionLinks(resultSet, analysisName[0], this.ee.id,  primaryFactorID, nodeId);
                         } else {
                             nodeText += this.getBaseline(resultSet);
-                            nodeText += this.getActionLinks(resultSet, analysisName[0], this.ee.id, nodeId);
+                            nodeText += this.getActionLinks(resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId);
                         }
 
                         parentText = '<b>'
@@ -185,6 +187,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                             // node text
                             analysisName = this.getFactorNameText(analysis, resultSet);
                             analysisNameExtra = this.getFactorNameExtra(analysis, resultSet);
+                            primaryFactorID = this.getPrimaryFactorID(analysis, resultSet);
                             var factor = analysisName[0];
                             interaction += analysisName[1];
 
@@ -199,7 +202,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                             nodeText = '';
                             nodeText += this.getBaseline(resultSet);
-                            nodeText += this.getActionLinks(resultSet, factor, this.ee.id, (nodeId + 1));
+                            nodeText += this.getActionLinks(resultSet, factor, this.ee.id, primaryFactorID,(nodeId + 1));
 
                             // make child nodes for each analysis and
                             // add them to parent
@@ -437,7 +440,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 // across all opened windows.
                 return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div';
             },
-            getActionLinks: function (resultSet, factor, eeID, nodeId) {
+            getActionLinks: function ( resultSet, factorString, eeID, primaryFactorID, nodeId) {
                 /* link for details */
                 var numbers = this.getExpressionNumbers(resultSet, nodeId, true);
                 var linkText = '&nbsp;'
@@ -468,18 +471,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                 linkText += '</span>';
                 /* provide link for visualization. */
-                var tipText = "View top differentially expressed genes for &quot;" + factor + "&quot;";
+                var tipText = "View top differentially expressed genes for &quot;" + factorString + "&quot;";
                 linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
-                    + resultSet.resultSetId + '\',\'' + factor
-                    + '\')">&nbsp;'
-                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
+                   + resultSet.resultSetId + '\',\'' + factorString
+                   + '\', \'' + primaryFactorID + '\')">&nbsp;'
+                   + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
                 var pValueDistImageSize = 16;
-                var strippedFactorName = Ext.util.Format.stripTags(factor);
-                // factorName is for backwards compatibility. Deprecated in favor of using the resultSetId.
                 var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
-                    + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape(strippedFactorName);
-                var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factor) + '\', \'' + imageUrl
+                    + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
+                var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factorString) + '\', \'' + imageUrl
                     + '\');';
 
                 // -8px -6px is used as background-position property because the image has gray border.
@@ -500,23 +501,35 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
              *         interaction
              */
             getFactorNameText: function (analysis, resultSet) {
-                var factor = '';
+                var factorText = '';
                 var interaction = 0;
                 if (resultSet.experimentalFactors === null || resultSet.experimentalFactors.length === 0) {
-                    factor = "n/a";
+                    factorText = "n/a";
                 } else {
 
                     for (var k = 0; k < resultSet.experimentalFactors.length; k++) {
                         var ef = resultSet.experimentalFactors[k];
-                        if (k > 0 && k < resultSet.experimentalFactors.length) {
-                            factor = factor + "&nbsp;X&nbsp;";
-                            interaction = interaction + 1;
-                        }
-                        factor = factor + ef.name;
 
+                        if (ef.type === 'continuous') {
+                            factorText = factorText + ef.name + ': ' + ef.description;
+                        } else {
+                            if ( k > 0 && k < resultSet.experimentalFactors.length ) {
+                                factorText = factorText + "&nbsp;X&nbsp;";
+                                interaction = interaction + 1;
+                            }
+                            factorText = factorText + ef.name;
+                        }
                     }
                 }
-                return [factor, interaction];
+                return [factorText, interaction];
+            },
+
+            getPrimaryFactorID: function (analysis, resultSet) {
+                if (resultSet.experimentalFactors === null || resultSet.experimentalFactors.length === 0) {
+                    return null;
+                } else {
+                    return resultSet.experimentalFactors[0].id;
+                }
             },
 
             isContinuousFactor: function (resultSet) {
@@ -545,7 +558,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }
 
                 // for categorical, list the names
-                var abrLen = 20;
+                var abrLen = 30;
                 if (ef.type === 'categorical') {
                     for (var m = 0; m < fvu.length; m++) {
                         if (m > 0 && m < fvu.length) {
@@ -555,7 +568,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     }
 
                 } else {
-                    // for continuous, show range like "(0 - 10)"
+                    // for continuous, show range like "(0 - 10)" but also the descriptive name.
+                    var name = ef.name;
                     var vals = [];
                     for (var m = 0; m < fvu.length; m++) {
                         vals[m] = fvu[m].factorValue;
@@ -568,11 +582,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                                 return a - b;
                             });
 
-                            text = Number(vals[0]).toPrecision(2) + "&nbsp;&ndash;&nbsp;"
+                            text = ef.description + ': ' + Number(vals[0]).toPrecision(2) + "&nbsp;&ndash;&nbsp;"
                                 + Number(vals[vals.length - 1]).toPrecision(2);
                         } catch (err) {
                             vals.sort(); // alpha
-                            text = Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
+                            text = ef.description + ': ' + Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
                                 + Ext.util.Format.ellipsis(vals[vals.length - 1], abrLen, true);
                         }
                     }
@@ -748,7 +762,7 @@ Ext.reg('differentialExpressionAnalysesSummaryTree', Gemma.DifferentialExpressio
  * fix for now, should replace visualize 'button' with ext button that calls this function, and move function inside
  * Gemma.DifferentialExpressionAnalysesSummaryTree
  */
-function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
+function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails, factorId) {
 
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
@@ -764,6 +778,6 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
     }, this);
 
     visDiffWindow.show({
-        params: [diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
+        params: [diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD, factorId]
     });
 }

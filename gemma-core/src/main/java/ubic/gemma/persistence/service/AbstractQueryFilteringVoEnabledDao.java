@@ -15,6 +15,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Query} API.
  *
@@ -343,7 +345,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     private long doCountWithCache( @Nullable Filters filters, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         try {
-            return ( Long ) this.getFilteringCountQuery( filters ).setCacheable( cacheable ).uniqueResult();
+            return ( Long ) requireNonNull( this.getFilteringCountQuery( filters ).setCacheable( cacheable ).uniqueResult(),
+                    String.format( "Counting query for %s returned null.", elementClass.getName() ) );
         } finally {
             timer.stop();
             if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {

@@ -6,6 +6,9 @@ def dataDir = '/space/gemmaData'
 def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
 
+// either hotfix or release, we only have one staging server
+def stagingBranch = 'hotfix'
+
 void setBuildStatus(String context, String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -38,7 +41,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'development') {
                         dataDir = '/space/sandboxgemmaData'
                     }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                    if (env.BRANCH_NAME =~ '^' + stagingBranch + '-.*') {
                         dataDir = '/space/staginggemmaData'
                     }
                     if (env.BRANCH_NAME == 'master') {
@@ -46,7 +49,7 @@ pipeline {
                     } else {
                         deployDir = 'chalmers:' + deployDir
                     }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                    if (env.BRANCH_NAME =~ '^' + stagingBranch + '-.*') {
                         deployDir += '-staging'
                     }
                     if (env.BRANCH_NAME != 'master') {
@@ -65,10 +68,7 @@ pipeline {
                     archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -85,10 +85,7 @@ pipeline {
                 success {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -124,10 +121,7 @@ pipeline {
                         success {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
-                        failure {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
+                        unsuccessful {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
@@ -145,6 +139,13 @@ pipeline {
                     }
                 }
                 stage ('Deploy Gemma Web') {
+                    when {
+                        anyOf {
+                            branch 'master'
+                            branch stagingBranch + '-*'
+                            branch 'development'
+                        }
+                    }
                     steps {
                         sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
                         sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
@@ -167,7 +168,7 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        unstable {
+        unsuccessful {
             slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }

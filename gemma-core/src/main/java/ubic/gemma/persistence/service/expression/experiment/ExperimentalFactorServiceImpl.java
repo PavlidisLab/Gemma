@@ -17,11 +17,11 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import java.util.Collection;
 
@@ -39,7 +39,7 @@ public class ExperimentalFactorServiceImpl
 
     @Autowired
     public ExperimentalFactorServiceImpl( ExperimentalFactorDao experimentalFactorDao,
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService, BioMaterialService bioMaterialService ) {
         super( experimentalFactorDao );
         this.experimentalFactorDao = experimentalFactorDao;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
@@ -49,13 +49,11 @@ public class ExperimentalFactorServiceImpl
     @Transactional
     public void remove( ExperimentalFactor experimentalFactor ) {
         experimentalFactor = ensureInSession( experimentalFactor );
-        /*
-         * First, check to see if there are any diff results that use this factor.
-         */
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                .findByFactor( experimentalFactor );
-        for ( DifferentialExpressionAnalysis a : analyses ) {
-            differentialExpressionAnalysisService.remove( a );
+        log.info( "Removing factor " + experimentalFactor + "..." );
+        // First, check to see if there are any diff results that use this factor.
+        int removedAnalysis = differentialExpressionAnalysisService.removeForExperimentalFactor( experimentalFactor );
+        if ( removedAnalysis > 0 ) {
+            log.info( String.format( "Removed %d analyses associated to factor %s", removedAnalysis, experimentalFactor ) );
         }
         super.remove( experimentalFactor );
     }
@@ -63,7 +61,13 @@ public class ExperimentalFactorServiceImpl
     @Override
     @Transactional
     public void remove( Collection<ExperimentalFactor> experimentalFactors ) {
-        experimentalFactors.forEach( this::remove );
+        experimentalFactors = ensureInSession( experimentalFactors );
+        // First, check to see if there are any diff results that use this factor.
+        int removedAnalysis = differentialExpressionAnalysisService.removeForExperimentalFactors( experimentalFactors );
+        if ( removedAnalysis > 0 ) {
+            log.info( String.format( "Removed %d analyses associated to %d factors", removedAnalysis, experimentalFactors.size() ) );
+        }
+        super.remove( experimentalFactors );
     }
 
     @Override

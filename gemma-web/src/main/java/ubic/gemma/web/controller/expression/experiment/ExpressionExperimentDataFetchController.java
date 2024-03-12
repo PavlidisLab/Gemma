@@ -250,7 +250,8 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false )
+                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee ) );
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
@@ -347,11 +348,11 @@ public class ExpressionExperimentDataFetchController {
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        f = expressionDataFileService.writeOrLocateDataFile( qType, false );
+                        f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
                     } else {
 
                         try {
-                            f = expressionDataFileService.writeOrLocateDataFile( ee, false, filtered );
+                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered ).orElse( null );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                         }
@@ -364,10 +365,10 @@ public class ExpressionExperimentDataFetchController {
             else if ( usedFormat.equals( "json" ) ) {
 
                 if ( qType != null ) {
-                    f = expressionDataFileService.writeOrLocateJSONDataFile( qType, false );
+                    f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
                 } else {
                     try {
-                        f = expressionDataFileService.writeOrLocateJSONDataFile( ee, false, filtered );
+                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered ).orElse( null );
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                     }

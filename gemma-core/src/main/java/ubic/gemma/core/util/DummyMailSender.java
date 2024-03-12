@@ -22,7 +22,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import ubic.gemma.persistence.util.SpringProfiles;
+import ubic.gemma.persistence.util.EnvironmentProfiles;
 
 /**
  * Mock mail sender for testing.
@@ -38,7 +38,7 @@ public class DummyMailSender implements MailSender, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        if ( environment.acceptsProfiles( SpringProfiles.DEV ) ) {
+        if ( environment.acceptsProfiles( EnvironmentProfiles.DEV ) ) {
             log.warn( "Emails will be sent to a dummy mail sender. If this is not intended, activate the 'production' profile by setting -Dspring.profiles.active=production." );
         }
     }

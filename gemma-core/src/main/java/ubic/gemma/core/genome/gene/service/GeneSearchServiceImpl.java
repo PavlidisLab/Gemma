@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.*;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.*;
@@ -245,8 +244,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 taxon = geneSetService.getTaxon( gs );
                 GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
                 srDo = new SearchResultDisplayObject( gsVo );
-                srDo.setTaxonId( taxon.getId() );
-                srDo.setTaxonName( taxon.getCommonName() );
+                if ( taxon != null ) {
+                    srDo.setTaxonId( taxon.getId() );
+                    srDo.setTaxonName( taxon.getCommonName() );
+                }
                 geneSets.add( srDo );
             }
             taxon = null;
@@ -391,9 +392,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
             GeneSet gs = sr.getResultObject();
             if ( gs != null ) {
-                GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
+                Set<Long> geneSetTaxaIds = geneSetService.getTaxa( gs ).stream()
+                        .map( Taxon::getId )
+                        .collect( Collectors.toSet() );
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
-                if ( Objects.equals( gsVo.getTaxonId(), taxonId ) ) {
+                if ( geneSetTaxaIds.contains( taxonId ) ) {
                     taxonCheckedSets.add( sr );
                 }
             }

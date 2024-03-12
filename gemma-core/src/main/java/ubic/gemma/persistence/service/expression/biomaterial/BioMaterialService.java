@@ -49,9 +49,6 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> findByFactorValue( FactorValue fv );
-
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     BioMaterial findOrCreate( BioMaterial bioMaterial );

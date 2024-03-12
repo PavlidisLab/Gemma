@@ -181,7 +181,7 @@ public class ExperimentalDesignUtils {
         }
         Characteristic category = ef.getCategory();
         return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) &&
-                ( category != null && category.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) );
+                ( category != null && ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( category.getCategory() ) );
     }
 
     /**
@@ -306,11 +306,16 @@ public class ExperimentalDesignUtils {
 
                 if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                     Measurement measurement = fv.getMeasurement();
-                    assert measurement != null;
-                    try {
-                        value = Double.parseDouble( measurement.getValue() );
-                    } catch ( NumberFormatException e ) {
+
+                    if ( measurement == null ) {
                         value = Double.NaN;
+                        continue;
+                    } else {
+                        try {
+                            value = Double.parseDouble( measurement.getValue() );
+                        } catch ( NumberFormatException e ) {
+                            value = Double.NaN;
+                        }
                     }
                 } else {
                     /*

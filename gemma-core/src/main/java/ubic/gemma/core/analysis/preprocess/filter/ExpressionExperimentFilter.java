@@ -108,6 +108,8 @@ public class ExpressionExperimentFilter {
     }
 
     /**
+     * @param matrix     the data matrix
+     * @param threshold  fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at 5 distinct values.
      * @param tolerance differences smaller than this are counted as "the same value".
      */
     public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,

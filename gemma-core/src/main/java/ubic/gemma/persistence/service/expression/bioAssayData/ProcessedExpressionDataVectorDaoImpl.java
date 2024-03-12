@@ -23,7 +23,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -517,49 +516,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return new HashSet<>( matrix.toRawDataVectors() );
     }
 
-    @Override
-    public Collection<ProcessedExpressionDataVector> find( ArrayDesign arrayDesign,
-            QuantitationType quantitationType ) {
-        //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector dev "
-                                + "join fetch dev.bioAssayDimension bd "
-                                + "join dev.designElement de "
-                                + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
-                .setParameter( "quantitationType", quantitationType )
-                .setParameter( "ad", arrayDesign )
-                .list() );
-    }
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType ) {
-        if ( designElements == null || designElements.size() == 0 )
-            return new HashSet<>();
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dev from ProcessedExpressionDataVector as dev "
-                                // no need for fetch jointures here since the design elements and biological
-                                // characteristics are already in the session
-                                + "join dev.designElement as de "
-                                + "where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements )
-                .setParameter( "qt", quantitationType )
-                .list();
-    }
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from ProcessedExpressionDataVector as v "
-                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", quantitationType )
-                .list();
-    }
-
     //
     //    @Override
     //    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
@@ -634,7 +590,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             }
         }
         // WARNING cache size() can be slow, esp. terracotta.
-        AbstractDao.log.info( "Cached " + i + ", input " + newResults.size() + "; total cached: "
+        AbstractDao.log.debug( "Cached " + i + ", input " + newResults.size() + "; total cached: "
                 /* + this.processedDataVectorCache.size() */ );
     }
 
@@ -933,7 +889,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             }
         }
 
-        AbstractDao.log.info( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
+        AbstractDao.log.debug( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
 
         /*
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
@@ -950,7 +906,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         this.checkCache( ees, genes, results, needToSearch, genesToSearch );
 
         if ( !results.isEmpty() )
-            AbstractDao.log.info( results.size() + " vectors fetched from cache" );
+            AbstractDao.log.debug( results.size() + " vectors fetched from cache" );
 
         /*
          * Get data that wasn't in the cache.
@@ -972,7 +928,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         if ( !noncached.isEmpty() )
-            AbstractDao.log.info( noncached.size() + " vectors retrieved so far, for noGeneProbes" );
+            AbstractDao.log.debug( noncached.size() + " vectors retrieved so far, for noGeneProbes" );
 
         /*
          * Non-cached items.
@@ -990,7 +946,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         if ( !moreNonCached.isEmpty() )
-            AbstractDao.log.info( noncached.size() + " more fetched from db" );
+            AbstractDao.log.debug( noncached.size() + " more fetched from db" );
 
         noncached.putAll( moreNonCached );
 
