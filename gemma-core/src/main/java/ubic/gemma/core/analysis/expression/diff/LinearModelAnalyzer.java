@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -71,7 +72,7 @@ import java.util.concurrent.*;
  */
 @Component
 @Scope(value = "prototype")
-public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
+public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer implements DisposableBean {
 
     /**
      * Preset levels for which we will store the HitListSizes.
@@ -141,6 +142,16 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         reorderedDim.setDescription( bioAssays.size() + " bioAssays" );
 
         return reorderedDim;
+    }
+
+    /**
+     * Executor used for performing analyses in the background while the current thread is reporting progress.
+     */
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    @Override
+    public void destroy() throws Exception {
+        executorService.shutdown();
     }
 
     /**
@@ -1363,7 +1374,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         // perform the analysis in a background thread, so that we can provide feedback and interrupt it if it takes
         // too long
-        Future<Map<String, LinearModelSummary>> f = Executors.newSingleThreadExecutor().submit( () -> {
+        Future<Map<String, LinearModelSummary>> f = executorService.submit( () -> {
             StopWatch timer = new StopWatch();
             timer.start();
             LeastSquaresFit fit;
@@ -1443,6 +1454,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             LinearModelAnalyzer.log.info( "Analysis phase done ..." );
             return res;
         } );
+        executorService.shutdown();
 
         StopWatch timer = StopWatch.createStarted();
         long lastTime = 0;
