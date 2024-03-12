@@ -63,7 +63,7 @@ public interface TableMaintenanceUtil {
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2CharacteristicEntries();
+    int updateExpressionExperiment2CharacteristicEntries( boolean truncate );
 
     /**
      * Update a specific level of the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
@@ -72,7 +72,7 @@ public interface TableMaintenanceUtil {
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2CharacteristicEntries( Class<?> level );
+    int updateExpressionExperiment2CharacteristicEntries( Class<?> level, boolean truncate );
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.

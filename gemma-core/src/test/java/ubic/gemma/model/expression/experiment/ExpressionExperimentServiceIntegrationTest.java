@@ -31,7 +31,6 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -430,7 +429,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
             assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
         };
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .noneSatisfy( consumer );
 
@@ -444,7 +443,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .noneSatisfy( consumer );
 
         // update the pivot table
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, 0, 0, null, null, null, null ) )
                 .satisfiesOnlyOnce( consumer );
 
