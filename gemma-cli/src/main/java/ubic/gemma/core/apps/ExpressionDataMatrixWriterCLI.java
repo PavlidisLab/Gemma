@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Prints preferred data matrix to a file.
@@ -85,8 +86,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             }
 
             try {
-                File f = fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
-                if ( f != null ) {
+                Optional<File> f = fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                if ( f.isPresent() ) {
                     addSuccessObject( ee, "Written expression data to " + f );
                 } else {
                     addErrorObject( ee, "No processed expression data vectors to write." );

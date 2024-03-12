@@ -353,7 +353,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+    public Optional<File> writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         File f = new File( fileName );
         return this.writeDataFile( ee, filtered, f, compress );
@@ -440,7 +440,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+    public Optional<File> writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -448,13 +448,13 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             File f = this.getOutputFile( this.getCoexpressionDataFilename( ee ) );
             if ( !forceWrite && f.canRead() ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-                return f;
+                return Optional.of( f );
             }
 
             if ( this.writeCoexpressionData( f, ee ) ) {
-                return f;
+                return Optional.of( f );
             } else {
-                return null;
+                return Optional.empty();
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -463,13 +463,13 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
+    public Optional<File> writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
         try {
             File f = this.getOutputFile( ee, filtered );
             Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
 
             if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
-                return f;
+                return Optional.of( f );
             }
 
             return this.writeDataFile( ee, filtered, f, true );
@@ -544,13 +544,13 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     }
 
     @Override
-    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
+    public Optional<File> writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
 
         try {
             File f = this.getOutputFile( ee, filtered );
             if ( !forceWrite && f.canRead() ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-                return f;
+                return Optional.of( f );
             }
 
             ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f.getName() );
@@ -559,7 +559,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 return null;
             }
             this.writeJson( f, matrix );
-            return f;
+            return Optional.of( f );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -1174,17 +1174,17 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     /**
      * @param compress if true, file will be output in GZIP format.
      */
-    private File writeDataFile( ExpressionExperiment ee, boolean filtered, File f, boolean compress )
+    private Optional<File> writeDataFile( ExpressionExperiment ee, boolean filtered, File f, boolean compress )
             throws IOException, FilteringException {
         ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getName() );
         ExpressionDataDoubleMatrix matrix = this.getDataMatrix( ee, filtered );
         if ( matrix == null ) {
-            return null;
+            return Optional.empty();
         }
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
         this.writeMatrix( f, geneAnnotations, matrix, compress );
-        return f;
+        return Optional.of( f );
     }
 
     /**

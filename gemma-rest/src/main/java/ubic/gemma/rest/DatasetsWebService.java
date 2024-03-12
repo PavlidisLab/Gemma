@@ -998,7 +998,7 @@ public class DatasetsWebService {
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
+        File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter ).orElse( null );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 

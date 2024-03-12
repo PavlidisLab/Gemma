@@ -33,6 +33,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author paul
@@ -125,8 +126,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @return file, or null if the experiment has no processed expression data
      * @throws IOException when there are IO problems
      */
-    @Nullable
-    File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+    Optional<File> writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException;
 
     /**
@@ -161,8 +161,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite whether to force write
      * @return file
      */
-    @Nullable
-    File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
+    Optional<File> writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -175,8 +174,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param ee         the experiment
      * @return file, or null if the experiment has no processed vectors
      */
-    @Nullable
-    File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -211,8 +209,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     /**
      * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
-    @Nullable
-    File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
 
     /**
      * @see #writeOrLocateDataFile(ExpressionExperiment, QuantitationType, boolean)
