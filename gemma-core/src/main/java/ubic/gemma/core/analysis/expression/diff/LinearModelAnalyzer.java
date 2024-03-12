@@ -146,6 +146,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /**
      * Executor used for performing analyses in the background while the current thread is reporting progress.
+     * <p>
+     * This bean is using the prototype scope, so a single-thread executor is suitable to prevent concurrent analyses.
      */
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -1454,7 +1456,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             LinearModelAnalyzer.log.info( "Analysis phase done ..." );
             return res;
         } );
-        executorService.shutdown();
 
         StopWatch timer = StopWatch.createStarted();
         long lastTime = 0;
