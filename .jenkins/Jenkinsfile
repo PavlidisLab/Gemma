@@ -68,10 +68,7 @@ pipeline {
                     archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -88,10 +85,7 @@ pipeline {
                 success {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -127,10 +121,7 @@ pipeline {
                         success {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
-                        failure {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
+                        unsuccessful {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
@@ -177,7 +168,7 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        unstable {
+        unsuccessful {
             slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }
