@@ -263,12 +263,10 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
-     * @param mentionedTermUris if non-null, all the terms explicitly mentioned in the filters are added to the
-     *                          collection. The returned filter might contain terms that have been inferred.
+     * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
+     *                       The returned filter might contain terms that have been inferred.
      */
     Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
-
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -303,6 +301,18 @@ public interface ExpressionExperimentService
     String UNCATEGORIZED = ExpressionExperimentDao.UNCATEGORIZED;
 
     /**
+     * Obtain category usage frequency for datasets matching the given filter.
+     *
+     * @param filters              filters restricting the terms to a given set of datasets
+     * @param excludedCategoryUris ensure that the given category URIs are excluded
+     * @param excludedTermUris     ensure that the given term URIs and their sub-terms (as per {@code subClassOf} relation)
+     *                             are excluded; this requires relevant ontologies to be loaded in {@link ubic.gemma.core.ontology.OntologyService}.
+     * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
+     * @param maxResults           maximum number of results to return
+     */
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
+
+    /**
      * Obtain annotation usage frequency for datasets matching the given filters.
      * <p>
      * Terms may originate from the experiment tags, experimental design or samples.
@@ -311,18 +321,18 @@ public interface ExpressionExperimentService
      * if new terms are attached.
      *
      * @param filters              filters restricting the terms to a given set of datasets
-     * @param maxResults           maximum number of results to return
-     * @param minFrequency         minimum occurrences of a term to be included in the results
      * @param category             a category to restrict annotations to, or null to include all categories
-     * @param excludedCategoryUris ensure that the given categories are excluded
-     * @param excludedTermUris     ensure that the given terms and their sub-terms (as per {@code subClassOf} relation)
+     * @param excludedCategoryUris ensure that the given category URIs are excluded
+     * @param excludedTermUris     ensure that the given term URIs and their sub-terms (as per {@code subClassOf} relation)
      *                             are excluded; this requires relevant ontologies to be loaded in {@link ubic.gemma.core.ontology.OntologyService}.
+     * @param minFrequency         minimum occurrences of a term to be included in the results
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
+     * @param maxResults           maximum number of results to return
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets
      * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * @param expressionExperiment experiment

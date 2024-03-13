@@ -294,7 +294,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, Collections.emptySet() );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, 0, Collections.emptySet(), 100 );
     }
 
     @Test
@@ -310,7 +310,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, 0, null, 100 );
     }
 
     @Test
@@ -329,7 +329,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, 10, null, 5000 );
     }
 
     @Test
@@ -341,7 +341,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, 0, null, 50 );
     }
 
     @Test
@@ -349,7 +349,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), ExpressionExperimentService.UNCATEGORIZED, null, null, 0, null, 100 );
     }
 
     @Test
@@ -357,7 +357,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null, 20 );
     }
 
     @Test
