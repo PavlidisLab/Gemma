@@ -173,7 +173,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetCategoriesWithUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
-        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null ) )
+        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
                 .containsEntry( c, 1L );
     }
 
