@@ -112,8 +112,8 @@
                 <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
                 <property name="arguments">
                     <array>
-                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExpressionExperiment
-                        </value>
+                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExpressionExperiment</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
@@ -130,6 +130,7 @@
                 <property name="arguments">
                     <array>
                         <value type="java.lang.Class">ubic.gemma.model.expression.biomaterial.BioMaterial</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
@@ -147,6 +148,7 @@
                 <property name="arguments">
                     <array>
                         <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExperimentalDesign</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
