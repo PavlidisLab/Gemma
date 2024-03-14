@@ -61,7 +61,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         @Bean
         public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
             Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
-            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath, "gemma.admin.email=gemma" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath );
         }
 
         /**

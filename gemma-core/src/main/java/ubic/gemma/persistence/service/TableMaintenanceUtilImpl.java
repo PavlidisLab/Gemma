@@ -21,13 +21,11 @@ package ubic.gemma.persistence.service;
 
 import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
@@ -147,9 +145,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Value("${gemma.gene2cs.path}")
     private Path gene2CsInfoPath;
-
-    @Value("${gemma.admin.email}")
-    private String adminEmailAddress;
 
     private boolean sendEmail = true;
 
@@ -337,17 +332,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private void sendEmail( Gene2CsStatus results ) {
         if ( !sendEmail )
             return;
-        SimpleMailMessage msg = new SimpleMailMessage();
-        if ( StringUtils.isBlank( adminEmailAddress ) ) {
-            TableMaintenanceUtilImpl.log
-                    .warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
-            return;
-        }
-        msg.setTo( adminEmailAddress );
-        msg.setSubject( "Gene2Cs update status." );
-        msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
-        mailEngine.send( msg );
-        TableMaintenanceUtilImpl.log.info( "Email notification sent to " + adminEmailAddress );
+        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + results.getAnnotation() );
     }
 
     /**
