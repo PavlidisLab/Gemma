@@ -40,8 +40,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 /**
  * RESTful interface for platforms.
@@ -268,7 +270,11 @@ public class PlatformsWebService {
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {
-        return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
+        try {
+            return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
+        }
     }
 
     /**
@@ -277,7 +283,7 @@ public class PlatformsWebService {
      * @param arrayDesign the platform to fetch and output the annotation file for.
      * @return a Response object containing the annotation file.
      */
-    private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
+    private Response outputAnnotationFile( ArrayDesign arrayDesign ) throws IOException {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
@@ -293,8 +299,7 @@ public class PlatformsWebService {
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
-
-        return Response.ok( file )
+        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
                 .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();
