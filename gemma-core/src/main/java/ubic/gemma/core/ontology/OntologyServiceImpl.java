@@ -63,6 +63,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -388,29 +389,47 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        Set<OntologyTerm> toQuery = new HashSet<>( terms );
-        Set<OntologyTerm> results = new HashSet<>();
-        while ( !toQuery.isEmpty() ) {
-            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties ) );
-            results.addAll( newResults );
-            // toQuery = newResults - toQuery
-            newResults.removeAll( toQuery );
-            toQuery.clear();
-            toQuery.addAll( newResults );
-        }
-        return results;
+        return getParentsOrChildren( terms, direct, includeAdditionalProperties, true );
     }
 
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
+        return getParentsOrChildren( terms, direct, includeAdditionalProperties, false );
+    }
+
+    private Set<OntologyTerm> getParentsOrChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties, boolean parents ) {
+        if ( terms.isEmpty() ) {
+            return Collections.emptySet();
+        }
         Set<OntologyTerm> toQuery = new HashSet<>( terms );
         Set<OntologyTerm> results = new HashSet<>();
         while ( !toQuery.isEmpty() ) {
-            Set<OntologyTerm> newResults = combineInThreads( os -> ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties ) );
-            results.addAll( newResults );
-            newResults.removeAll( toQuery );
-            toQuery.clear();
-            toQuery.addAll( newResults );
+            Set<OntologyTerm> newResults = combineInThreads( os -> {
+                StopWatch timer = StopWatch.createStarted();
+                try {
+                    return parents ? ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties )
+                            : ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties );
+                } finally {
+                    if ( timer.getTime() > 10L * terms.size() ) {
+                        log.warn( String.format( "Obtaining %s from %s for %s took %s",
+                                parents ? "parents" : "children",
+                                os,
+                                terms.size() == 1 ? terms.iterator().next() : terms.size() + " terms",
+                                timer ) );
+                    }
+                }
+            } );
+            if ( results.addAll( newResults ) && !direct ) {
+                // there are new results (i.e. a term was inferred from a different ontology), we need to requery them
+                // if they were not in the query
+                newResults.removeAll( toQuery );
+                toQuery.clear();
+                toQuery.addAll( newResults );
+                log.info( String.format( "Found %d new %s terms, will requery them.", newResults.size(),
+                        parents ? "parents" : "children" ) );
+            } else {
+                toQuery.clear();
+            }
         }
         return results;
     }
@@ -887,51 +906,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    /**
-     * Apply a given function to all the loaded ontology service and combine the results in a set.
-     * <p>
-     * The functions are evaluated using Gemma's short-lived task executor.
-     */
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
-        List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
-        ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
-        for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
-            if ( os.isOntologyLoaded() ) {
-                futures.add( completionService.submit( () -> work.apply( os ) ) );
-            }
-        }
-        Set<T> children = new HashSet<>();
-        try {
-            for ( int i = 0; i < futures.size(); i++ ) {
-                children.addAll( completionService.take().get() );
-            }
-        } catch ( InterruptedException e ) {
-            log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
-            Thread.currentThread().interrupt();
-            return children;
-        } catch ( ExecutionException e ) {
-            if ( e.getCause() instanceof RuntimeException ) {
-                throw ( RuntimeException ) e.getCause();
-            } else {
-                throw new RuntimeException( e.getCause() );
-            }
-        } finally {
-            // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
-            // in the pool
-            for ( Future<Collection<T>> future : futures ) {
-                future.cancel( true );
-            }
-        }
-        return children;
-    }
-
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work ) {
-        return combineInThreads( work, ontologyServices );
-    }
-
     @FunctionalInterface
     private interface SearchFunction<T> {
         Collection<T> apply( ubic.basecode.ontology.providers.OntologyService service ) throws OntologySearchException;
+    }
+
+    /**
+     * Similar to {@link #combineInThreads(Function)}, but also handles {@link OntologySearchException}.
+     */
+    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws BaseCodeOntologySearchException {
+        return searchInThreads( function, ontologyServices );
     }
 
     private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws BaseCodeOntologySearchException {
@@ -946,13 +930,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         } catch ( OntologySearchExceptionWrapper e ) {
             throw new BaseCodeOntologySearchException( e.getCause() );
         }
-    }
-
-    /**
-     * Similar to {@link #combineInThreads(Function)}, but also handles {@link OntologySearchException}.
-     */
-    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws BaseCodeOntologySearchException {
-        return searchInThreads( function, ontologyServices );
     }
 
     private static class OntologySearchExceptionWrapper extends RuntimeException {
@@ -970,5 +947,57 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
+    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work ) {
+        return combineInThreads( work, ontologyServices );
+    }
 
+    /**
+     * Apply a given function to all the loaded ontology service and combine the results in a set.
+     * <p>
+     * The functions are evaluated using Gemma's short-lived task executor.
+     */
+    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
+        List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
+        ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
+        for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
+            if ( os.isOntologyLoaded() ) {
+                futures.add( completionService.submit( () -> work.apply( os ) ) );
+            }
+        }
+        Set<T> children = new HashSet<>();
+        try {
+            for ( int i = 0; i < futures.size(); i++ ) {
+                Future<Collection<T>> future;
+                while ( ( future = completionService.poll( 1, TimeUnit.SECONDS ) ) == null ) {
+                    log.warn( String.format( "Ontology query is taking too long (%d/%d completed so far).", i, futures.size() ) );
+                }
+                children.addAll( future.get() );
+            }
+        } catch ( InterruptedException e ) {
+            log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
+            Thread.currentThread().interrupt();
+            return children;
+        } catch ( ExecutionException e ) {
+            if ( e.getCause() instanceof RuntimeException ) {
+                throw ( RuntimeException ) e.getCause();
+            } else {
+                throw new RuntimeException( e.getCause() );
+            }
+        } finally {
+            // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
+            // in the pool
+            List<String> incompleteTasks = new ArrayList<>( futures.size() );
+            for ( Future<Collection<T>> future : futures ) {
+                if ( !future.isDone() ) {
+                    incompleteTasks.add( ontologyServices.get( futures.indexOf( future ) ).toString() );
+                    future.cancel( true );
+                }
+            }
+            if ( !incompleteTasks.isEmpty() ) {
+                log.warn( "The following ontology services did not have time to reply:\n\t"
+                        + String.join( "\n\t", incompleteTasks ) );
+            }
+        }
+        return children;
+    }
 }

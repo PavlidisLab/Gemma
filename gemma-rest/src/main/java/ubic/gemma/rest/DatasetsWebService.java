@@ -39,6 +39,7 @@ import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringExcept
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
@@ -125,6 +126,8 @@ public class DatasetsWebService {
     private GeneArgService geneArgService;
     @Autowired
     private QuantitationTypeArgService quantitationTypeArgService;
+    @Autowired
+    private OntologyService ontologyService;
 
     @Autowired
     private HttpServletRequest request;
@@ -388,16 +391,19 @@ public class DatasetsWebService {
         if ( category != null && category.isEmpty() ) {
             category = ExpressionExperimentService.UNCATEGORIZED;
         }
-        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
-        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
                 filtersWithQuery,
-                category, datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ), datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ), minFrequency != null ? minFrequency : 0, mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null, limit
-        );
+                category,
+                datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
+                minFrequency != null ? minFrequency : 0,
+                mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                limit );
+        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
+        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
-                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         return Responder.limit( results, query, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
@@ -415,25 +421,31 @@ public class DatasetsWebService {
         return new HashSet<>( exclude.getValue() );
     }
 
-
-    private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        return c.getParents( true, false ).stream()
-                .map( t -> toTermVo( t, visited ) )
-                .collect( Collectors.toSet() );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
+        return getParentTerms( c, new LinkedHashSet<>(), visited );
     }
 
-    private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        Set<OntologyTermValueObject> parentVos;
-        if ( visited.containsKey( ontologyTerm ) ) {
-            parentVos = visited.get( ontologyTerm );
-        } else {
-            visited.put( ontologyTerm, Collections.emptySet() );
-            parentVos = ontologyTerm.getParents( true, false ).stream()
-                    .map( t -> toTermVo( t, visited ) )
-                    .collect( Collectors.toSet() );
-            visited.put( ontologyTerm, parentVos );
-        }
-        return new OntologyTermValueObject( ontologyTerm, parentVos );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
+        return ontologyService.getParents( Collections.singleton( c ), true, true ).stream()
+                .map( t -> {
+                    Set<OntologyTermValueObject> parentVos;
+                    if ( stack.contains( t ) ) {
+                        log.debug( "Detected a cycle when visiting " + t + ": " + stack.stream()
+                                .map( ot -> ot.equals( t ) ? ot + "*" : ot.toString() )
+                                .collect( Collectors.joining( " -> " ) ) + " -> " + t + "*" );
+                        return null;
+                    } else if ( visited.containsKey( t ) ) {
+                        parentVos = visited.get( t );
+                    } else {
+                        stack.add( t );
+                        parentVos = getParentTerms( t, stack, visited );
+                        stack.remove( t );
+                        visited.put( t, parentVos );
+                    }
+                    return new OntologyTermValueObject( t, parentVos );
+                } )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
     }
 
     @Value
@@ -465,7 +477,7 @@ public class DatasetsWebService {
         Long numberOfExpressionExperiments;
 
         /**
-         * URIs of parent terms.
+         * URIs of parent terms, or null if excluded.
          */
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)

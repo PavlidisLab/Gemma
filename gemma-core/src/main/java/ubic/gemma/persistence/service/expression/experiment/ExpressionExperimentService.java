@@ -329,7 +329,7 @@ public interface ExpressionExperimentService
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
-     * the matched datasets
+     * the matched datasets and ordered in descending number of associated experiments
      * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
     List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults );

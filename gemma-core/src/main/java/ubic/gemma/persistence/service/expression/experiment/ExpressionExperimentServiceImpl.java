@@ -766,14 +766,15 @@ public class ExpressionExperimentServiceImpl
                 .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
-        // TODO: handle more than one term per URI
         Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+                .filter( t -> t.getUri() != null ) // should never occur, but better be safe than sorry
                 .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
 
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
             Characteristic c = entry.getKey();
             OntologyTerm term;
             if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
+                // TODO: handle more than one term per URI
                 term = termByUri.get( c.getValueUri() ).iterator().next();
             } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
                 term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
@@ -783,6 +784,9 @@ public class ExpressionExperimentServiceImpl
             }
             resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
         }
+
+        // sort in descending order
+        resultWithParents.sort( Comparator.comparing( CharacteristicWithUsageStatisticsAndOntologyTerm::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) );
 
         return resultWithParents;
     }
@@ -833,7 +837,7 @@ public class ExpressionExperimentServiceImpl
                 return Collections.singleton( categoryTerm );
             } else {
                 // combine the direct parents + all the parents from the parents
-                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
+                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> t.getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
                         .collect( Collectors.toSet() );
             }
         }
