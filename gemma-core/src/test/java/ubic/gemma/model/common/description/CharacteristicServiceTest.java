@@ -91,7 +91,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         fv.setCharacteristics( this.getTestPersistentStatements( 1 ) );
         fvService.update( fv );
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
     @Test

@@ -20,6 +20,9 @@ package ubic.gemma.persistence.service;
 
 import org.springframework.security.access.annotation.Secured;
 
+import javax.annotation.Nullable;
+import java.util.Date;
+
 /**
  * @author paul
  */
@@ -63,7 +66,7 @@ public interface TableMaintenanceUtil {
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2CharacteristicEntries( boolean truncate );
+    int updateExpressionExperiment2CharacteristicEntries( @Nullable Date sinceLastUpdate, boolean truncate );
 
     /**
      * Update a specific level of the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
@@ -72,14 +75,14 @@ public interface TableMaintenanceUtil {
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2CharacteristicEntries( Class<?> level, boolean truncate );
+    int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate );
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2ArrayDesignEntries();
+    int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate );
 
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })

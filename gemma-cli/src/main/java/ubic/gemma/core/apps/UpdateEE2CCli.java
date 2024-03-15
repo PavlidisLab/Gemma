@@ -30,7 +30,7 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doWork() throws Exception {
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( truncate );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, truncate );
     }
 
     @Nullable
