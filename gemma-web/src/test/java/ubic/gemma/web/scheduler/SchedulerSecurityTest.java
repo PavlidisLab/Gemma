@@ -18,15 +18,26 @@
  */
 package ubic.gemma.web.scheduler;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.lang.reflect.InvocationTargetException;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests security of methods run by Quartz.
@@ -42,7 +53,11 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
     private WhatsNewService whatsNewService;
 
     @Autowired
-    private ManualAuthenticationService manualAuthenticationService;
+    private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    @Qualifier("groupAgentSecureInvoker")
+    private SecureInvoker secureInvoker;
 
     /*
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT
@@ -59,7 +74,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setManualAuthenticationService( this.manualAuthenticationService );
+        jobDetail.setSecureInvoker( this.secureInvoker );
 
         jobDetail.invoke();
 
@@ -81,7 +96,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setManualAuthenticationService( this.manualAuthenticationService );
+        jobDetail.setSecureInvoker( this.secureInvoker );
 
         jobDetail.invoke();
 
@@ -106,9 +121,44 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setManualAuthenticationService( this.manualAuthenticationService );
+        jobDetail.setSecureInvoker( this.secureInvoker );
         jobDetail.invoke();
 
     }
 
+    @Component
+    public static class TestSecureJob extends SecureQuartzJobBean {
+
+        private TableMaintenanceUtil tableMaintenanceUtil;
+
+        @Override
+        protected void executeAsAgent( JobExecutionContext context ) {
+            assertNotNull( tableMaintenanceUtil );
+            assertNotNull( SecurityContextHolder.getContext().getAuthentication() );
+            assertTrue( SecurityContextHolder.getContext().getAuthentication().isAuthenticated() );
+            assertTrue( SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                    .contains( new SimpleGrantedAuthority( "GROUP_AGENT" ) ) );
+            context.setResult( "Hello world!" );
+        }
+
+        @SuppressWarnings("unused")
+        public void setTableMaintenanceUtil( TableMaintenanceUtil tableMaintenanceUtil ) {
+            this.tableMaintenanceUtil = tableMaintenanceUtil;
+        }
+    }
+
+    @Autowired
+    private TestSecureJob testSecureJob;
+
+    @Test
+    public void testSecureJob() throws JobExecutionException {
+        JobExecutionContext context = mock();
+        JobDataMap jdm = new JobDataMap();
+        jdm.put( "tableMaintenanceUtil", tableMaintenanceUtil );
+        jdm.put( "secureInvoker", secureInvoker );
+        when( context.getScheduler() ).thenReturn( mock() );
+        when( context.getMergedJobDataMap() ).thenReturn( jdm );
+        testSecureJob.execute( context );
+        verify( context ).setResult( "Hello world!" );
+    }
 }
