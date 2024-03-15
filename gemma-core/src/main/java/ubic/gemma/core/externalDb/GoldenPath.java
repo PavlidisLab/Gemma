@@ -74,6 +74,8 @@ public abstract class GoldenPath {
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.setFetchSize( 50 );
 
+        jdbcTemplate.execute( "use " + databaseName );
+
         return jdbcTemplate;
     }
 
