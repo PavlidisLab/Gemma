@@ -51,10 +51,10 @@
     <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="expressionExperimentReportService"/>
                 <property name="concurrent" value="false"/>
                 <property name="targetMethod" value="recalculateBatchInfo"/>
-                <property name="secureInvoker" ref="groupAgentSecureInvoker"/>
             </bean>
         </property>
         <!-- every day at 00:30:00 -->
@@ -64,10 +64,10 @@
         <property name="jobDetail">
             <bean
                 class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="expressionExperimentReportService"/>
                 <property name="concurrent" value="false"/>
                 <property name="targetMethod" value="generateSummaryObjects"/>
-                <property name="secureInvoker" ref="groupAgentSecureInvoker"/>
             </bean>
         </property>
         <!-- every first-of-the-month at 00:15:00 -->
@@ -77,10 +77,10 @@
         <property name="jobDetail">
             <bean
                 class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="arrayDesignReportService"/>
                 <property name="concurrent" value="false"/>
                 <property name="targetMethod" value="generateArrayDesignReport"/>
-                <property name="secureInvoker" ref="groupAgentSecureInvoker"/>
             </bean>
         </property>
         <!-- every first-of-the-month at 01:30:00 -->
@@ -90,10 +90,10 @@
         <property name="jobDetail">
             <bean
                 class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="whatsNewService"/>
                 <property name="concurrent" value="false"/>
                 <property name="targetMethod" value="generateWeeklyReport"/>
-                <property name="secureInvoker" ref="groupAgentSecureInvoker"/>
             </bean>
         </property>
         <!-- every day at 00:15:00 -->
@@ -101,12 +101,11 @@
     </bean>
     <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
-            <bean
-                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="tableMaintenanceUtil"/>
                 <property name="concurrent" value="false"/>
                 <property name="targetMethod" value="updateGene2CsEntries"/>
-                <property name="secureInvoker" ref="groupAgentSecureInvoker"/>
             </bean>
         </property>
         <!-- every day at 00:40:00 -->
@@ -181,6 +180,7 @@
     <bean id="indexExperimentsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <constructor-arg ref="groupAgentSecureInvoker"/>
                 <property name="targetObject" ref="indexerService"/>
                 <property name="targetMethod" value="index"/>
                 <property name="arguments">

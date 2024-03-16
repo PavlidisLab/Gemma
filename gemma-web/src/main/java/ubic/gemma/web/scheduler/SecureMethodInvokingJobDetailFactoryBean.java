@@ -18,9 +18,7 @@
  */
 package ubic.gemma.web.scheduler;
 
-import lombok.Setter;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -31,14 +29,16 @@ import java.lang.reflect.InvocationTargetException;
  * @author paul
  * @see SecureQuartzJobBean
  */
-@Setter
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 
-    private SecureInvoker secureInvoker;
+    private final SecureInvoker secureInvoker;
+
+    public SecureMethodInvokingJobDetailFactoryBean( SecureInvoker secureInvoker ) {
+        this.secureInvoker = secureInvoker;
+    }
 
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {
-        Assert.notNull( secureInvoker, "groupAgentInvoker is not set." );
         try {
             return secureInvoker.invoke( super::invoke );
         } catch ( InvocationTargetException | IllegalAccessException | RuntimeException e ) {

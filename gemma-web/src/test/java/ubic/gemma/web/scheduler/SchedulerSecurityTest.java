@@ -68,13 +68,12 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
 
         String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
 
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
         jobDetail.setTargetMethod( "generateWeeklyReport" );
         jobDetail.setTargetObject( whatsNewService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setSecureInvoker( this.secureInvoker );
 
         jobDetail.invoke();
 
@@ -89,14 +88,13 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
 
         String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
 
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
         jobDetail.setTargetMethod( "findByUpdatedLimit" );
         jobDetail.setArguments( new Object[] { 10 } );
         jobDetail.setTargetObject( expressionExperimentService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setSecureInvoker( this.secureInvoker );
 
         jobDetail.invoke();
 
@@ -114,14 +112,13 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         /*
          * Mimics configuration in xml.
          */
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
         jobDetail.setTargetMethod( "remove" );
         jobDetail.setArguments( new Object[] { null } );
         jobDetail.setTargetObject( expressionExperimentService ); // no access
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.setSecureInvoker( this.secureInvoker );
         jobDetail.invoke();
 
     }
