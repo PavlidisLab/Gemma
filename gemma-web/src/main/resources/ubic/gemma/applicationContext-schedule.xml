@@ -26,6 +26,7 @@
                 <ref local="ee2cExperimentUpdateTrigger"/>
                 <ref local="ee2cSampleUpdateTrigger"/>
                 <ref local="ee2cExperimentalDesignUpdateTrigger"/>
+                <ref local="ee2adUpdateTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
