@@ -70,6 +70,7 @@ public abstract class GoldenPath {
         dataSource.setUsername( user );
         dataSource.setPassword( password );
         dataSource.setMaximumPoolSize( Settings.getInt( "gemma.goldenpath.db.maximumPoolSize" ) );
+        dataSource.addDataSourceProperty( "relaxAutoCommit", "true" );
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.setFetchSize( 50 );
