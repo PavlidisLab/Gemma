@@ -37,6 +37,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * @author pavlidis
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
@@ -174,7 +176,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
                 " ae where trail.id in :trails and ae.action = 'C'";
         Query queryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
-                .setParameterList( "trails", atMap.keySet() );
+                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) );
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
@@ -220,8 +222,8 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
-                .setParameterList( "trails", atMap.keySet() )
-                .setParameterList( "classes", classes );
+                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) )
+                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
 
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {

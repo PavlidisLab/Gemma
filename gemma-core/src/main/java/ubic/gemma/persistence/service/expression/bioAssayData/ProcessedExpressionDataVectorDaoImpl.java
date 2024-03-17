@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -54,6 +53,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author Paul
@@ -302,9 +303,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<>();
 
-        BatchIterator<CompositeSequence> batchIterator = new BatchIterator<>( cs2gene.keySet(), 500 );
-
-        for ( Collection<CompositeSequence> batch : batchIterator ) {
+        for ( Collection<CompositeSequence> batch : batchIdentifiableParameterList( cs2gene.keySet(), 512 ) ) {
 
             //language=HQL
             //noinspection unchecked
@@ -313,7 +312,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                     + "where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) "
                                     + "group by dedv.designElement, dedv.expressionExperiment" )
                     .setParameter( "cs", batch )
-                    .setParameterList( "ees", expressionExperiments )
+                    .setParameterList( "ees", optimizeIdentifiableParameterList( expressionExperiments ) )
                     .list();
 
             for ( Object[] o : qr ) {
@@ -352,7 +351,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
                                 + "where dedv.designElement in (:cs) and dedv.expressionExperiment = :ee "
                                 + "group by dedv.designElement, dedv.expressionExperiment" )
-                .setParameterList( "cs", cs2gene.keySet() )
+                .setParameterList( "cs", optimizeIdentifiableParameterList( cs2gene.keySet() ) )
                 .setParameter( "ee", expressionExperiment )
                 .list();
 
@@ -416,7 +415,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         + "from ProcessedExpressionDataVector dedv "
                         + "where dedv.designElement in (:cs) and dedv.expressionExperiment in (:ees) "
                         + "group by dedv.designElement, dedv.expressionExperiment" )
-                .setParameterList( "cs", cs2gene.keySet() )
+                .setParameterList( "cs", optimizeIdentifiableParameterList( cs2gene.keySet() ) )
                 .setParameterList( "ees", expressionExperiments )
                 .list();
 
@@ -493,8 +492,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             qtsToRemove.forEach( expressionExperiment.getQuantitationTypes()::remove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from QuantitationType where id in (:ids)" )
-                    .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
+                    .createQuery( "delete from QuantitationType qt where qt in (:qts)" )
+                    .setParameterList( "qts", optimizeIdentifiableParameterList( qtsToRemove ) );
         }
     }
 
@@ -726,7 +725,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "inner join bad.bioAssays badba "
                                 + "where e in (:ees) and b in (badba) "
                                 + "group by e, bad" )
-                .setParameterList( "ees", ees )
+                .setParameterList( "ees", optimizeIdentifiableParameterList( ees ) )
                 .list();
 
         for ( Object[] o : r ) {
@@ -1002,9 +1001,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
                                 + " where dedv.designElement.id in ( :cs ) "
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
-                .setParameterList( "cs", cs2gene.keySet() );
+                .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
         if ( ees != null ) {
-            queryObject.setParameterList( "ees", ees );
+            queryObject.setParameterList( "ees", optimizeIdentifiableParameterList( ees ) );
         }
         Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
         //noinspection unchecked

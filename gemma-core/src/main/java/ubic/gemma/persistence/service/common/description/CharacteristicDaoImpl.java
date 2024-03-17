@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -50,6 +49,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author Luke
@@ -173,7 +174,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             query.setParameter( "bmClass", BioMaterial.class );
         }
 
-        query.setParameterList( "uris", uris );
+        query.setParameterList( "uris", optimizeParameterList( uris ) );
 
         if ( taxon != null ) {
             query.setParameter( "taxonId", taxon.getId() );
@@ -198,7 +199,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .sorted()
                 .collect( Collectors.toList() );
 
-        for ( List<String> batch : ListUtils.partition( uniqueUris, 100 ) ) {
+        for ( Collection<String> batch : batchParameterList( uniqueUris, getBatchSize() ) ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
                     .createQuery( "from Characteristic where valueUri in (:uris)" )
@@ -242,7 +243,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .createQuery( "select lower(coalesce(char.valueUri, char.value)), count(char) from Characteristic char "
                         + "where char.valueUri in :uris "
                         + "group by coalesce(char.valueUri, char.value)" )
-                .setParameterList( "uris", uniqueUris )
+                .setParameterList( "uris", optimizeParameterList( uniqueUris ) )
                 .list() )
                 .stream()
                 .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Long ) row[1] ) );
@@ -326,7 +327,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "where C.ID in :ids "
                         + "and (I.class is NULL or I.class = 'ExpressionExperiment') " // for investigations, only retrieve EEs
                         + extraClause )
-                .setParameterList( "ids", characteristicIds )
+                .setParameterList( "ids", optimizeParameterList( characteristicIds ) )
                 .setMaxResults( maxResults )
                 .list();
         Set<Characteristic> characteristicsNotFound = new HashSet<>();
@@ -377,9 +378,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 //            }
 
             if ( efOK ) {
+                //noinspection unchecked
                 List<Object[]> efResults = getSessionFactory().getCurrentSession()
                         .createQuery( "select ef, ef.category from ExperimentalFactor ef where ef.category in :characteristics" )
-                        .setParameterList( "characteristics", characteristicsNotFound ).list();
+                        .setParameterList( "characteristics", optimizeParameterList( characteristicsNotFound ) )
+                        .list();
 
                 for ( Object[] row : efResults ) {
                     charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );

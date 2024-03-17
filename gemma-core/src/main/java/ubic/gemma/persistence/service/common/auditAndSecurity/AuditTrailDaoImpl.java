@@ -27,6 +27,8 @@ import ubic.gemma.persistence.service.AbstractDao;
 import java.util.Collection;
 import java.util.List;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * @author pavlidis
  * @see AuditTrailDao
@@ -54,18 +56,18 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
         if ( !aeIds.isEmpty() ) {
             getSessionFactory().getCurrentSession()
                     .createQuery( "delete from AuditEvent ae where ae.id in :aeIds" )
-                    .setParameterList( "aeIds", aeIds )
+                    .setParameterList( "aeIds", optimizeParameterList( aeIds ) )
                     .executeUpdate();
         }
         if ( !aetIds.isEmpty() ) {
             getSessionFactory().getCurrentSession()
                     .createQuery( "delete from AuditEventType aet where aet.id in :aetIds" )
-                    .setParameterList( "aetIds", aetIds )
+                    .setParameterList( "aetIds", optimizeParameterList( aetIds ) )
                     .executeUpdate();
         }
         return getSessionFactory().getCurrentSession()
                 .createQuery( "delete from AuditTrail at where at.id in :atIds" )
-                .setParameterList( "atIds", ids )
+                .setParameterList( "atIds", optimizeParameterList( ids ) )
                 .executeUpdate();
     }
 }

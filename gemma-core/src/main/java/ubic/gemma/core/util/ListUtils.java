@@ -1,9 +1,8 @@
 package ubic.gemma.core.util;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import org.springframework.util.Assert;
+
+import java.util.*;
 
 /**
  * Utilities and algorithms for {@link List}.
@@ -43,5 +42,32 @@ public class ListUtils {
                 element2position.put( element, i );
             }
         }
+    }
+
+    /**
+     * Pad a collection to the next power of 2 with the given element.
+     */
+    public static <T> Collection<T> padToNextPowerOfTwo( Collection<T> list, T elementForPadding ) {
+        int k = Integer.highestOneBit( list.size() );
+        if ( list.size() == k ) {
+            return list; // already a power of 2
+        }
+        return pad( list, elementForPadding, k << 1 );
+    }
+
+    /**
+     * Pad a collection with the given element.
+     */
+    public static <T> Collection<T> pad( Collection<T> list, T elementForPadding, int size ) {
+        Assert.isTrue( size >= list.size(), "Target size must be greater or equal to the collection size." );
+        if ( list.size() == size ) {
+            return list;
+        }
+        List<T> paddedList = new ArrayList<>( size );
+        paddedList.addAll( list );
+        for ( int j = list.size(); j < size; j++ ) {
+            paddedList.add( elementForPadding );
+        }
+        return paddedList;
     }
 }

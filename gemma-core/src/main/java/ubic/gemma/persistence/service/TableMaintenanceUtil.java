@@ -35,6 +35,11 @@ public interface TableMaintenanceUtil {
     String GENE2CS_QUERY_SPACE = "GENE2CS";
 
     /**
+     * Recommended batch size to use when retrieving entries from the GENE2CS table either by gene or design element.
+     */
+    int GENE2CS_BATCH_SIZE = 2048;
+
+    /**
      * Query space used by the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
      * <p>
      * You may also want to synchronize to {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and

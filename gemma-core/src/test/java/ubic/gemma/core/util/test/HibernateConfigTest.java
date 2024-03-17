@@ -76,7 +76,7 @@ public class HibernateConfigTest extends BaseDatabaseTest {
     public void test() {
         Settings settings = ( ( SessionFactoryImpl ) sessionFactory ).getSettings();
         assertEquals( 3, settings.getMaximumFetchDepth().intValue() );
-        assertEquals( 100, settings.getDefaultBatchFetchSize() );
+        assertEquals( 128, settings.getDefaultBatchFetchSize() );
         assertEquals( 128, settings.getJdbcFetchSize().intValue() );
         assertEquals( 32, settings.getJdbcBatchSize() );
         assertTrue( settings.isJdbcBatchVersionedData() );
