@@ -14,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -121,6 +122,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
+        }
+
+        @Bean
+        public OntologyService ontologyService() {
+            return mock();
         }
     }
 
