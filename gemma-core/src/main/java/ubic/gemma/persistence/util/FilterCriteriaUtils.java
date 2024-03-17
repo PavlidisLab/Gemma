@@ -6,8 +6,10 @@ import org.hibernate.criterion.*;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.util.ListUtils.padToNextPowerOfTwo;
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
 /**
@@ -26,8 +28,8 @@ public class FilterCriteriaUtils {
         Conjunction c = Restrictions.conjunction();
         if ( filters == null || filters.isEmpty() )
             return c;
-        for ( List<Filter> clause : filters ) {
-            if ( clause == null || clause.isEmpty() )
+        for ( Iterable<Filter> clause : filters ) {
+            if ( clause == null || !clause.iterator().hasNext() )
                 continue;
             Disjunction d = Restrictions.disjunction();
             for ( Filter subClause : clause ) {
@@ -77,7 +79,7 @@ public class FilterCriteriaUtils {
                     return Restrictions.ne( property, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( property, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
+                return Restrictions.like( property, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
             case lessThan:
                 return Restrictions.lt( property, filter.getRequiredValue() );
             case greaterThan:
@@ -87,8 +89,12 @@ public class FilterCriteriaUtils {
             case greaterOrEq:
                 return Restrictions.ge( property, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( property, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
-                        "Required value cannot be null for a collection." ) );
+                List<?> item = requireNonNull( ( Collection<?> ) filter.getRequiredValue(), "Required value cannot be null for a collection." )
+                        .stream().sorted().distinct().collect( Collectors.toList() );
+                if ( item.isEmpty() ) {
+                    throw new IllegalArgumentException( "The right hand size of a in operator cannot be empty." );
+                }
+                return Restrictions.in( property, padToNextPowerOfTwo( item, item.get( item.size() - 1 ) ) );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

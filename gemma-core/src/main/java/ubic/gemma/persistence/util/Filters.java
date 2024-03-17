@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import lombok.EqualsAndHashCode;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,18 +13,18 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @EqualsAndHashCode(of = { "clauses" })
-public class Filters implements Iterable<List<Filter>> {
+public class Filters implements Iterable<Iterable<Filter>> {
 
     /**
      * Builder for a disjunctive sub-clause.
      */
     public class FiltersClauseBuilder {
 
-        private final List<Filter> subClauses;
+        private final SortedSet<Filter> subClauses;
         private boolean built = false;
 
         private FiltersClauseBuilder() {
-            subClauses = new ArrayList<>();
+            subClauses = new TreeSet<>();
         }
 
         /**
@@ -65,7 +66,7 @@ public class Filters implements Iterable<List<Filter>> {
         }
 
         public Filters build() {
-            Filters.this.clauses.add( Collections.unmodifiableList( subClauses ) );
+            Filters.this.clauses.add( Collections.unmodifiableSortedSet( subClauses ) );
             built = true;
             return Filters.this;
         }
@@ -92,6 +93,10 @@ public class Filters implements Iterable<List<Filter>> {
      * @return a {@link Filters} with the given filter as only clause
      */
     public static Filters by( Filter... subClauses ) {
+        return empty().and( subClauses );
+    }
+
+    public static Filters by( Collection<Filter> subClauses ) {
         return empty().and( subClauses );
     }
 
@@ -129,10 +134,40 @@ public class Filters implements Iterable<List<Filter>> {
         return empty().and( filters );
     }
 
-    private final List<List<Filter>> clauses;
+    private final SortedSet<SortedSet<Filter>> clauses;
 
     private Filters() {
-        this.clauses = new ArrayList<>();
+        this.clauses = new TreeSet<>( getComparator() );
+    }
+
+    private Comparator<SortedSet<Filter>> getComparator() {
+        return ( filters, otherFilter ) -> {
+            Iterator<Filter> a = filters.iterator();
+            Iterator<Filter> b = otherFilter.iterator();
+            while ( a.hasNext() && b.hasNext() ) {
+                int cmp = a.next().compareTo( b.next() );
+                if ( cmp != 0 ) {
+                    return cmp;
+                }
+            }
+            if ( a.hasNext() ) {
+                return 1;
+            }
+            if ( b.hasNext() ) {
+                return -1;
+            }
+            // clauses are identical, they will be collapsed
+            return 0;
+        };
+    }
+
+    @Nullable
+    private <E> E firstOrNull( SortedSet<E> set ) {
+        try {
+            return set.first();
+        } catch ( NoSuchElementException e ) {
+            return null;
+        }
     }
 
     /**
@@ -146,7 +181,12 @@ public class Filters implements Iterable<List<Filter>> {
      * Add a clause of one or more {@link Filter} sub-clauses to the conjunction.
      */
     public Filters and( Filter... filters ) {
-        clauses.add( Arrays.asList( filters ) );
+        clauses.add( new TreeSet<>( Arrays.asList( filters ) ) );
+        return this;
+    }
+
+    public Filters and( Collection<Filter> filters ) {
+        clauses.add( new TreeSet<>( filters ) );
         return this;
     }
 
@@ -184,8 +224,8 @@ public class Filters implements Iterable<List<Filter>> {
      * Add all the clauses of another filter to this.
      */
     public Filters and( Filters filters ) {
-        for ( List<Filter> clause : filters.clauses ) {
-            clauses.add( Collections.unmodifiableList( new ArrayList<>( clause ) ) );
+        for ( SortedSet<Filter> clause : filters.clauses ) {
+            clauses.add( Collections.unmodifiableSortedSet( new TreeSet<>( clause ) ) );
         }
         return this;
     }
@@ -197,15 +237,16 @@ public class Filters implements Iterable<List<Filter>> {
      */
     public boolean isEmpty() {
         // hint: allMatch returns true if the stream is empty
-        return clauses.stream().allMatch( List::isEmpty );
+        return clauses.stream().allMatch( SortedSet::isEmpty );
     }
 
     /**
      * Obtain an iterator over the clauses contained in this conjunction.
      */
     @Override
-    public Iterator<List<Filter>> iterator() {
-        return clauses.iterator();
+    @Nonnull
+    public Iterator<Iterable<Filter>> iterator() {
+        return clauses.stream().map( c -> ( Iterable<Filter> ) c ).iterator();
     }
 
     @Override

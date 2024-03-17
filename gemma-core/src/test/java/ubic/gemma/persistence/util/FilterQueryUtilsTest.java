@@ -33,15 +33,15 @@ public class FilterQueryUtilsTest {
                 .or( Filter.parse( "ee", "id", Long.class, Filter.Operator.in, Arrays.asList( "5", "6", "7", "8" ) ) )
                 .build();
         assertThat( formRestrictionClause( filters ) )
-                .isEqualTo( " and (ee.shortName like :ee_shortName1) and (ee.id in (:ee_id2)) and (ad.taxonId = :ad_taxonId3) and (ee.id in (:ee_id4) or ee.id in (:ee_id5))" );
+                .isEqualTo( " and (ad.taxonId = :ad_taxonId1) and (ee.id in (:ee_id2)) and (ee.id in (:ee_id3) or ee.id in (:ee_id4)) and (ee.shortName like :ee_shortName5)" );
 
         Query mockedQuery = mock( Query.class );
         addRestrictionParameters( mockedQuery, filters );
-        verify( mockedQuery ).setParameter( "ee_shortName1", "GSE%" );
+        verify( mockedQuery ).setParameter( "ad_taxonId1", 9606L );
         verify( mockedQuery ).setParameterList( "ee_id2", Arrays.asList( 1L, 2L, 3L, 4L ) );
-        verify( mockedQuery ).setParameter( "ad_taxonId3", 9606L );
-        verify( mockedQuery ).setParameterList( "ee_id4", Arrays.asList( 1L, 2L, 3L, 4L ) );
-        verify( mockedQuery ).setParameterList( "ee_id5", Arrays.asList( 5L, 6L, 7L, 8L ) );
+        verify( mockedQuery ).setParameterList( "ee_id3", Arrays.asList( 1L, 2L, 3L, 4L ) );
+        verify( mockedQuery ).setParameterList( "ee_id4", Arrays.asList( 5L, 6L, 7L, 8L ) );
+        verify( mockedQuery ).setParameter( "ee_shortName5", "GSE%" );
     }
 
     @Test

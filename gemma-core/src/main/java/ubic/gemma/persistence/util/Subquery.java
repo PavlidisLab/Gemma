@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  * @see Filter#by(String, String, Class, Filter.Operator, Subquery, String)
  */
 @Value
-public class Subquery {
+public class Subquery implements Comparable<Subquery> {
 
     @Value
     public static class Alias {
@@ -82,6 +83,11 @@ public class Subquery {
         }
         this.rootAlias = rootAlias;
         this.filter = filter;
+    }
+
+    @Override
+    public int compareTo( Subquery subquery ) {
+        return filter.compareTo( subquery.filter );
     }
 
     public String toString() {

@@ -23,7 +23,7 @@ public class FiltersUtils {
         }
         if ( filters == null )
             return false;
-        for ( List<Filter> clause : filters ) {
+        for ( Iterable<Filter> clause : filters ) {
             if ( clause == null )
                 continue;
             for ( Filter subClause : clause ) {
