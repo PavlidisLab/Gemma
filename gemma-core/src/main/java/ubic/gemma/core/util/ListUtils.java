@@ -47,7 +47,7 @@ public class ListUtils {
     /**
      * Pad a collection to the next power of 2 with the given element.
      */
-    public static <T> Collection<T> padToNextPowerOfTwo( Collection<T> list, T elementForPadding ) {
+    public static <T> List<T> padToNextPowerOfTwo( List<T> list, T elementForPadding ) {
         int k = Integer.highestOneBit( list.size() );
         if ( list.size() == k ) {
             return list; // already a power of 2
@@ -58,7 +58,7 @@ public class ListUtils {
     /**
      * Pad a collection with the given element.
      */
-    public static <T> Collection<T> pad( Collection<T> list, T elementForPadding, int size ) {
+    public static <T> List<T> pad( List<T> list, T elementForPadding, int size ) {
         Assert.isTrue( size >= list.size(), "Target size must be greater or equal to the collection size." );
         if ( list.size() == size ) {
             return list;
@@ -69,5 +69,15 @@ public class ListUtils {
             paddedList.add( elementForPadding );
         }
         return paddedList;
+    }
+
+    public static <T> List<List<T>> batch( List<T> list, int batchSize ) {
+        if ( batchSize == -1 ) {
+            return Collections.singletonList( list );
+        }
+        int numberOfBatches = ( list.size() / batchSize ) + ( list.size() % batchSize > 0 ? 1 : 0 );
+        int size = numberOfBatches * batchSize;
+        List<T> paddedList = pad( list, list.get( list.size() - 1 ), size );
+        return org.apache.commons.collections4.ListUtils.partition( paddedList, batchSize );
     }
 }

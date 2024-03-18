@@ -30,10 +30,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static org.junit.Assert.*;
 
@@ -182,6 +181,15 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
+                .containsEntry( c, 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyWithLargeBatch() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
+        List<Long> ees = LongStream.range( 0, 10000 ).boxed().collect( Collectors.toList() );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null ) )
                 .containsEntry( c, 1L );
     }
 

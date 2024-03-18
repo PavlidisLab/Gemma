@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.hibernate.Query;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
@@ -17,9 +18,9 @@ public class QueryUtils {
 
     /**
      * Largest parameter list size for which {@link #optimizeParameterList(Collection)} should be used. Past this size,
-     * no padding will be performed.
+     * no padding will be performed and a warning will be emitted.
      */
-    private static final int MAX_PARAMETER_LIST_SIZE = 2048;
+    public static final int MAX_PARAMETER_LIST_SIZE = 2048;
 
     /**
      * Optimize a given parameter list by sorting, removing duplicates and padding to the next power of two.
@@ -69,7 +70,7 @@ public class QueryUtils {
      * It is recommended to use a power of two in case the same query is also prepared via
      * {@link #optimizeParameterList(Collection)}. This will make it so that the execution plan can be reused.
      */
-    public static <T extends Comparable<T>> Iterable<Collection<T>> batchParameterList( Collection<T> list, int batchSize ) {
+    public static <T extends Comparable<T>> List<List<T>> batchParameterList( Collection<T> list, int batchSize ) {
         Assert.isTrue( batchSize == -1 || batchSize > 0, "Batch size must be strictly positive or equal to -1." );
         if ( list.isEmpty() ) {
             return Collections.emptyList();
@@ -78,10 +79,10 @@ public class QueryUtils {
                 .sorted( Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .distinct()
                 .collect( Collectors.toList() );
-        return batch( sortedList, batchSize );
+        return ListUtils.batch( sortedList, batchSize );
     }
 
-    public static <T extends Identifiable> Iterable<Collection<T>> batchIdentifiableParameterList( Collection<T> list, int batchSize ) {
+    public static <T extends Identifiable> List<List<T>> batchIdentifiableParameterList( Collection<T> list, int batchSize ) {
         Assert.isTrue( batchSize == -1 || batchSize > 0, "Batch size must be strictly positive or equal to -1." );
         if ( list.isEmpty() ) {
             return Collections.emptyList();
@@ -90,32 +91,37 @@ public class QueryUtils {
                 .sorted( Comparator.comparing( Identifiable::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .distinct()
                 .collect( Collectors.toList() );
-        return batch( sortedList, batchSize );
+        return ListUtils.batch( sortedList, batchSize );
     }
 
-    private static <T> Iterable<Collection<T>> batch( List<T> list, int batchSize ) {
-        if ( batchSize == -1 ) {
-            return Collections.singletonList( list );
-        }
-        int numberOfBatches = ( list.size() / batchSize ) + ( list.size() % batchSize > 0 ? 1 : 0 );
-        int size = numberOfBatches * batchSize;
-        List<T> paddedList = ( List<T> ) ListUtils.pad( list, list.get( list.size() - 1 ), size );
-        return () -> new Iterator<Collection<T>>() {
-            private int i = 0;
+    /**
+     * @see #listByBatch(Query, String, Collection, int, int)
+     */
+    public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+        return listByBatch( query, batchParam, list, batchSize, -1 );
+    }
 
-            @Override
-            public boolean hasNext() {
-                return i < numberOfBatches;
-            }
-
-            @Override
-            public List<T> next() {
-                try {
-                    return paddedList.subList( i * batchSize, ( i + 1 ) * batchSize );
-                } finally {
-                    i += 1;
+    /**
+     * List the results of a query by fixed batch size.
+     */
+    public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
+        List<T> result = new ArrayList<>();
+        for ( List<S> batch : batchParameterList( list, batchSize ) ) {
+            int remainingToFetch;
+            if ( maxResults > 0 ) {
+                if ( result.size() < maxResults ) {
+                    remainingToFetch = maxResults - result.size();
+                } else {
+                    break;
                 }
+            } else {
+                remainingToFetch = -1;
             }
-        };
+            query.setParameterList( batchParam, batch );
+            query.setMaxResults( remainingToFetch );
+            //noinspection unchecked
+            result.addAll( query.list() );
+        }
+        return result;
     }
 }

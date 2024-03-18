@@ -67,8 +67,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author pavlidis
@@ -78,8 +77,6 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class ExpressionExperimentDaoImpl
         extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {
-
-    private static final int BATCH_SIZE = 1000;
 
     private static final String
             CHARACTERISTIC_ALIAS = CharacteristicDao.OBJECT_ALIAS,
@@ -666,12 +663,7 @@ public class ExpressionExperimentDaoImpl
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
-                .addSynchronizedEntityClass( Characteristic.class )
-                .setCacheable( true )
-                .setMaxResults( maxResults );
-        if ( eeIds != null ) {
-            q.setParameterList( "eeIds", optimizeParameterList( eeIds ) );
-        }
+                .addSynchronizedEntityClass( Characteristic.class );
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             q.setParameterList( "excludedCategoryUris", optimizeParameterList( excludedCategoryUris ) );
         }
@@ -682,12 +674,36 @@ public class ExpressionExperimentDaoImpl
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = q.list();
+        q.setCacheable( true );
+        List<Object[]> result;
+        if ( eeIds != null ) {
+            if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
+                result = listByBatch( q, "eeIds", eeIds, 2048 );
+                if ( maxResults > 0 ) {
+                    return aggregateC( result ).entrySet().stream()
+                            .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                            .limit( maxResults )
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
+                }
+            } else {
+                //noinspection unchecked
+                result = q
+                        .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
+                        .setMaxResults( maxResults )
+                        .list();
+            }
+        } else {
+            //noinspection unchecked
+            result = q.setMaxResults( maxResults ).list();
+        }
+        return aggregateC( result );
+    }
+
+    private Map<Characteristic, Long> aggregateC( List<Object[]> result ) {
         TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryComparator() );
         for ( Object[] row : result ) {
-            Characteristic c = Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null );
-            byC.put( c, ( Long ) row[2] );
+            byC.compute( Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ),
+                    ( k, v ) -> v != null ? v + ( Long ) row[2] : ( Long ) row[2] );
         }
         return byC;
     }
@@ -756,7 +772,8 @@ public class ExpressionExperimentDaoImpl
                 // no need to group by category if a specific one is requested
                 + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
                 + "COALESCE(T.VALUE_URI, T.`VALUE`) "
-                + ( minFrequency > 0 ? "having EE_COUNT >= :minFrequency " : "" );
+                // if there are too many EE IDs, they will be retrieved by batch and filtered in-memory
+                + ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ? "having EE_COUNT >= :minFrequency " : "" );
         if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
             query += " or VALUE_URI in (:retainedTermUris)";
         }
@@ -771,12 +788,7 @@ public class ExpressionExperimentDaoImpl
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
-                .addSynchronizedEntityClass( Characteristic.class ) // ensures that the cache is invalidated if characteristics are added or removed
-                .setCacheable( true )
-                .setMaxResults( maxResults );
-        if ( eeIds != null ) {
-            q.setParameterList( "eeIds", optimizeParameterList( eeIds ) );
-        }
+                .addSynchronizedEntityClass( Characteristic.class ); // ensures that the cache is invalidated if characteristics are added or removed
         if ( category != null && !category.equals( UNCATEGORIZED ) ) {
             q.setParameter( "category", category );
         }
@@ -792,15 +804,39 @@ public class ExpressionExperimentDaoImpl
         if ( level != null ) {
             q.setParameter( "level", level );
         }
-        if ( minFrequency > 0 ) {
+        if ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ) {
             q.setParameter( "minFrequency", minFrequency );
         }
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = q.list();
+        q.setCacheable( true );
+        List<Object[]> result;
+        if ( eeIds != null ) {
+            if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
+                result = listByBatch( q, "eeIds", eeIds, 2048 );
+                if ( minFrequency > 1 || maxResults > 0 ) {
+                    return aggregate( result ).entrySet().stream()
+                            .filter( e -> e.getValue() >= minFrequency )
+                            .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                            .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
+                }
+            } else {
+                //noinspection unchecked
+                result = q.setParameterList( "eeIds", optimizeParameterList( eeIds ) )
+                        .setMaxResults( maxResults )
+                        .list();
+            }
+        } else {
+            //noinspection unchecked
+            result = q.setMaxResults( maxResults ).list();
+        }
+        return aggregate( result );
+    }
+
+    private Map<Characteristic, Long> aggregate( List<Object[]> result ) {
         TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
         for ( Object[] row : result ) {
-            byC.put( convertRowToCharacteristic( row ), ( Long ) row[5] );
+            byC.compute( convertRowToCharacteristic( row ), ( k, v ) -> v != null ? v + ( Long ) row[5] : ( Long ) row[5] );
         }
         return byC;
     }
@@ -812,8 +848,7 @@ public class ExpressionExperimentDaoImpl
         } catch ( IllegalArgumentException e ) {
             evidenceCode = null;
         }
-        Characteristic c = Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
-        return c;
+        return Characteristic.Factory.newInstance( null, null, ( String ) row[0], ( String ) row[1], ( String ) row[2], ( String ) row[3], evidenceCode );
     }
 
     /**
@@ -928,8 +963,7 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
+        Query q = getSessionFactory().getCurrentSession()
                 .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed a "
@@ -939,10 +973,8 @@ public class ExpressionExperimentDaoImpl
                         + formNonTroubledClause( "ee" )
                         + formNonTroubledClause( "a" ) + " "
                         + "group by a.technologyType, oa.technologyType" )
-                .setParameterList( "ids", optimizeParameterList( eeIds ) )
-                .setCacheable( true )
-                .list();
-        return aggregateTechnologyTypeCounts( result );
+                .setCacheable( true );
+        return aggregateTechnologyTypeCounts( listByBatch( q, "ids", eeIds, getBatchSize() ) );
     }
 
     private Map<TechnologyType, Long> aggregateTechnologyTypeCounts( List<Object[]> result ) {
@@ -1006,16 +1038,35 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class );
         query.setParameter( "original", original );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        query.setCacheable( true );
+        List<Object[]> result;
         if ( eeIds != null ) {
-            query.setParameterList( "ids", optimizeParameterList( eeIds ) );
+            if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
+                result = listByBatch( query, "ids", eeIds, 2048 );
+                if ( maxResults > 0 ) {
+                    // results need to be aggregated and limited
+                    return result.stream()
+                            .collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) )
+                            .entrySet().stream()
+                            .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                            .limit( maxResults )
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                }
+            } else {
+                //noinspection unchecked
+                result = query
+                        .setParameterList( "ids", optimizeParameterList( eeIds ) )
+                        .setMaxResults( maxResults )
+                        .list();
+            }
+        } else {
+            //noinspection unchecked
+            result = query
+                    .setMaxResults( maxResults )
+                    .list();
         }
-        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = query
-                .setCacheable( true )
-                .setMaxResults( maxResults )
-                .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -1152,16 +1203,15 @@ public class ExpressionExperimentDaoImpl
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
-                                + "where ee.id in :eeIds "
-                                + "group by ee.taxon "
-                                + "order by EE_COUNT desc" )
-                .setParameterList( "eeIds", optimizeParameterList( ids ) )
-                .list();
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
+                        + "where ee.id in :eeIds "
+                        + "group by ee.taxon "
+                        + "order by EE_COUNT desc" )
+                .setCacheable( true );
+        List<Object[]> list = listByBatch( query, "eeIds", ids, getBatchSize() );
         return list.stream()
-                .collect( Collectors.toMap( row -> ( Taxon ) row[0], row -> ( Long ) row[1] ) );
+                .collect( Collectors.groupingBy( row -> ( Taxon ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     public Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids ) {
