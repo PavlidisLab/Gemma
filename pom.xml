@@ -496,7 +496,7 @@
 				<version>2.22.2</version>
 				<configuration>
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -511,7 +511,7 @@
 				<version>2.22.2</version>
 				<configuration>
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -646,5 +646,6 @@
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<!--suppress UnresolvedMavenProperty -->
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
+		<redirectTestOutputToFile>true</redirectTestOutputToFile>
 	</properties>
 </project>
