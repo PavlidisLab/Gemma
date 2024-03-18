@@ -37,7 +37,7 @@ public class QueryUtils {
                 .collect( Collectors.toList() );
         if ( sortedList.size() > MAX_PARAMETER_LIST_SIZE ) {
             log.warn( String.format( "Optimizing a large parameter list of size %d may have a negative impact on performance, use batchParameterList() instead.",
-                    sortedList.size() ) );
+                    sortedList.size() ), new Throwable() );
             return list;
         }
         return ListUtils.padToNextPowerOfTwo( sortedList, sortedList.get( sortedList.size() - 1 ) );
@@ -57,7 +57,7 @@ public class QueryUtils {
                 .collect( Collectors.toList() );
         if ( sortedList.size() > MAX_PARAMETER_LIST_SIZE ) {
             log.warn( String.format( "Optimizing a large parameter list of size %d may have a negative impact on performance, use batchIdentifiableParameterList() instead.",
-                    sortedList.size() ) );
+                    sortedList.size() ), new Throwable() );
             return list;
         }
         return ListUtils.padToNextPowerOfTwo( sortedList, sortedList.get( sortedList.size() - 1 ) );
