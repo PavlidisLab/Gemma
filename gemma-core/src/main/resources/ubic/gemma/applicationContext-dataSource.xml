@@ -16,6 +16,7 @@
     <beans profile="production,dev">
         <!-- Database connection information -->
         <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+            <property name="poolName" value="gemma"/>
             <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
             <property name="username" value="${gemma.db.user}"/>
             <property name="password" value="${gemma.db.password}"/>

@@ -58,6 +58,7 @@ public abstract class GoldenPath {
 
         // SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
         HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setPoolName( "goldenpath" );
         String driverClassName = Settings.getString( "gemma.goldenpath.db.driver" );
         String url = Settings.getString( "gemma.goldenpath.db.url" );
         String user = Settings.getString( "gemma.goldenpath.db.user" );
