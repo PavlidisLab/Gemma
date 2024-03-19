@@ -246,10 +246,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     public double[] standardize() {
         /*
-         * FIXME If the values are all equal, variance == 0 and we get nothing back. So we should fill in zeros instead.
-         */
-
-        /*
          * DoubleArrayList constructor does not make a copy, so we have to make one.
          */
         double[] copy = new double[this.data.length];
@@ -257,7 +253,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
         DescriptiveWithMissing.standardize( new DoubleArrayList( copy ) );
         return copy;
-
     }
 
     /**
