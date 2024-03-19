@@ -2,12 +2,10 @@ package ubic.gemma.core.analysis.report;
 
 import org.junit.After;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -32,7 +30,6 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testRecalculateBatchInfo() {
         ee = getTestPersistentBasicExpressionExperiment();
         assertNull( ee.getBatchEffect() );
