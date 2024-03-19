@@ -479,9 +479,11 @@ public class DEDVController {
 
         Collection<DoubleVectorValueObject> dedvs;
         if ( geneIds == null || geneIds.isEmpty() ) {
-            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE );
+            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE  );
+            if ( dedvs.size() > SAMPLE_SIZE ) {
+                dedvs = new ArrayList<>( dedvs ).subList( 0, SAMPLE_SIZE );
+            }
         } else {
-
             if ( geneIds.size() > MAX_RESULTS_TO_RETURN ) {
                 log.warn( geneIds.size() + " genes for visualization. Too many.  Only using first "
                         + MAX_RESULTS_TO_RETURN + " genes. " );
@@ -512,9 +514,9 @@ public class DEDVController {
         time = watch.getTime();
         watch.reset();
         watch.start();
-        if ( time > 100 ) {
+        if ( time > 500 ) {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs" + " in "
-                    + time + " ms (times <100ms not reported)." );
+                    + time + " ms (times <500ms not reported)." );
         }
 
         watch.stop();
@@ -1235,7 +1237,7 @@ public class DEDVController {
 
         long time = timer.getTime();
         if ( time > 1000 ) {
-            log.info( "Created vis value objects in: " + time );
+            log.info( "Created " + result.length + " vis value objects in: " + time );
         }
 
         return result;

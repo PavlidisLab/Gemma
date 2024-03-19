@@ -1033,8 +1033,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     /**
-     * @param  limit if non-null and positive, you will get a random set of vectors for the experiment
      * @param  ee    ee
+     * @param  limit if >0, you will get a "random" set of vectors for the experiment
      * @return processed data vectors
      */
     private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, int limit ) {
@@ -1045,7 +1045,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         StopWatch timer = new StopWatch();
         timer.start();
-        List<ProcessedExpressionDataVector> result;
+        Collection<ProcessedExpressionDataVector> result = new HashSet<>();
 
         Integer availableVectorCount = ee.getNumberOfDataVectors();
         if ( availableVectorCount == null || availableVectorCount == 0 ) {
@@ -1053,26 +1053,39 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
+        /*
+         * To help ensure we get a good random set of items, we can do several queries with different random offsets.
+         */
+        //    int numSegments = 2;
+        //  int segmentSize = ( int ) Math.ceil( limit / numSegments );
+        int segmentSize = limit;
+//        if ( limit < numSegments ) {
+//            segmentSize = limit;
+//        }
+
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( " from ProcessedExpressionDataVector dedv "
-                        + "where dedv.expressionExperiment = :ee" );
+                        + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ); // order by rand() works?
         q.setParameter( "ee", ee );
-        q.setMaxResults( limit );
-        if ( availableVectorCount != null && availableVectorCount > limit ) {
-            q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
+        q.setMaxResults( segmentSize );
+
+        int k = 0;
+        while ( result.size() < limit ) {
+            //   int firstResult = new Random().nextInt( availableVectorCount - segmentSize );
+            //  q.setFirstResult( firstResult );
+            List list = q.list();
+            //   log.info( list.size() + " retrieved this time firstResult=" + 0 );
+            result.addAll( list );
+            k++;
         }
 
-        // we should already be read-only, so this is probably pointless.
-        q.setReadOnly( true );
+        if ( result.size() > limit ) {
+            result = result.stream().limit( limit ).collect( Collectors.toSet() );
+        }
 
-        // and so this probably doesn't do anything useful.
-        q.setFlushMode( FlushMode.MANUAL );
-
-        //noinspection unchecked
-        result = q.list();
         if ( timer.getTime() > 1000 )
             AbstractDao.log
-                    .info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
+                    .info( "Fetch " + result.size() + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms, " + k + " queries were run." );
 
         if ( result.isEmpty() ) {
             AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
