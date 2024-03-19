@@ -267,7 +267,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 } else {
                     return Collections.emptySet();
                 }
-            } );
+            }, "terms matching " + search );
         }
 
         Collection<OntologyTerm> results = new HashSet<>();
@@ -281,7 +281,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return results;
         }
 
-        results = searchInThreads( ontology -> ontology.findTerm( query ) );
+        results = searchInThreads( ontology -> ontology.findTerm( query ), query );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
@@ -331,7 +331,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
-        } ) );
+        }, queryString ) );
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
@@ -410,7 +410,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     return parents ? ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties )
                             : ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties );
                 } finally {
-                    if ( timer.getTime() > 10L * terms.size() ) {
+                    if ( timer.getTime() > Math.max( 10L * terms.size(), 1000L ) ) {
                         log.warn( String.format( "Obtaining %s from %s for %s took %s",
                                 parents ? "parents" : "children",
                                 os,
@@ -418,14 +418,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                                 timer ) );
                     }
                 }
-            } );
+            }, String.format( "%s %s of %d terms", direct ? "direct" : "all", parents ? "parents" : "children", terms.size() ) );
             if ( results.addAll( newResults ) && !direct ) {
                 // there are new results (i.e. a term was inferred from a different ontology), we need to requery them
                 // if they were not in the query
                 newResults.removeAll( toQuery );
                 toQuery.clear();
                 toQuery.addAll( newResults );
-                log.info( String.format( "Found %d new %s terms, will requery them.", newResults.size(),
+                log.debug( String.format( "Found %d new %s terms, will requery them.", newResults.size(),
                         parents ? "parents" : "children" ) );
             } else {
                 toQuery.clear();
@@ -495,7 +495,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris ) {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
-        return combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
+        return combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
+                String.format( "terms for %d URIs", uris.size() ) );
     }
 
     /**
@@ -713,7 +714,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }
             return characteristicsFromOntology;
-        }, ontologyServicesToUse );
+        }, ontologyServicesToUse, "terms matching " + searchQuery );
     }
 
     private String foundValueKey( Characteristic c ) {
@@ -912,13 +913,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     /**
-     * Similar to {@link #combineInThreads(Function)}, but also handles {@link OntologySearchException}.
+     * Similar to {@link #combineInThreads(Function, String)}, but also handles {@link OntologySearchException}.
      */
-    private <T> Set<T> searchInThreads( SearchFunction<T> function ) throws BaseCodeOntologySearchException {
-        return searchInThreads( function, ontologyServices );
+    private <T> Set<T> searchInThreads( SearchFunction<T> function, String query ) throws BaseCodeOntologySearchException {
+        return searchInThreads( function, ontologyServices, query );
     }
 
-    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) throws BaseCodeOntologySearchException {
+    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) throws BaseCodeOntologySearchException {
         try {
             return combineInThreads( os -> {
                 try {
@@ -926,7 +927,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 } catch ( OntologySearchException e ) {
                     throw new OntologySearchExceptionWrapper( e );
                 }
-            }, ontologyServices );
+            }, ontologyServices, query );
         } catch ( OntologySearchExceptionWrapper e ) {
             throw new BaseCodeOntologySearchException( e.getCause() );
         }
@@ -947,8 +948,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work ) {
-        return combineInThreads( work, ontologyServices );
+    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, String query ) {
+        return combineInThreads( work, ontologyServices, query );
     }
 
     /**
@@ -956,7 +957,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * <p>
      * The functions are evaluated using Gemma's short-lived task executor.
      */
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices ) {
+    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
@@ -969,7 +971,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( int i = 0; i < futures.size(); i++ ) {
                 Future<Collection<T>> future;
                 while ( ( future = completionService.poll( 1, TimeUnit.SECONDS ) ) == null ) {
-                    log.warn( String.format( "Ontology query is taking too long (%d/%d completed so far).", i, futures.size() ) );
+                    log.warn( String.format( "Ontology query for %s is taking too long (%d/%d completed so far, %s elapsed).", query, i, futures.size(), timer ) );
                 }
                 children.addAll( future.get() );
             }
