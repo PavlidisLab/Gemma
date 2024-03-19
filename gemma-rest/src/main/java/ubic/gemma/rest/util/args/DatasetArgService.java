@@ -131,19 +131,14 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @param scoreById if non-null, a destination for storing the scores by result ID
      * @throws BadRequestException if the query is empty
      */
-    public Filter getFilterForSearchQuery( String query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
+    public Set<Long> getIdsForSearchQuery( String query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
         List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
         if ( scoreById != null ) {
             for ( SearchResult<ExpressionExperiment> result : _results ) {
                 scoreById.put( result.getResultId(), result.getScore() );
             }
         }
-        Set<Long> ids = _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
-        if ( ids.isEmpty() ) {
-            return service.getFilter( "id", Long.class, Filter.Operator.eq, -1L );
-        } else {
-            return service.getFilter( "id", Long.class, Filter.Operator.in, ids );
-        }
+        return _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
     }
 
     /**

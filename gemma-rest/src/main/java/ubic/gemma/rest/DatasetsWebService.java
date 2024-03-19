@@ -189,9 +189,9 @@ public class DatasetsWebService {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         if ( query != null ) {
+            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
             Map<Long, Double> scoreById = new HashMap<>();
-            Filters filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, scoreById ) );
-            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filtersWithQuery, sort ) );
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query, scoreById ) );
             // sort is stable, so the order of IDs with the same score is preserved
             ids.sort( Comparator.comparingDouble( i -> -scoreById.get( i ) ) );
 
@@ -240,15 +240,18 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count datasets matching the provided query and  filter")
+    @Operation(summary = "Count datasets matching the provided query and filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
         Filters filters = datasetArgService.getFilters( filter );
+        Set<Long> extraIds;
         if ( query != null ) {
-            filters.and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+        } else {
+            extraIds = null;
         }
-        return Responder.respond( expressionExperimentService.countWithCache( filters ) );
+        return Responder.respond( expressionExperimentService.countWithCache( filters, extraIds ) );
     }
 
     public interface UsageStatistics {
@@ -268,15 +271,15 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
         Filters filters = datasetArgService.getFilters( filter );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
         Integer l = limit.getValueNoMaximum();
-        Map<TechnologyType, Long> tts = expressionExperimentService.getTechnologyTypeUsageFrequency( filtersWithQuery );
-        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filtersWithQuery, l );
+        Map<TechnologyType, Long> tts = expressionExperimentService.getTechnologyTypeUsageFrequency( filters, extraIds );
+        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, extraIds, l );
         List<ArrayDesignValueObject> adsVos = arrayDesignService.loadValueObjects( ads.keySet() );
         Map<Long, Long> countsById = ads.entrySet().stream().collect( Collectors.toMap( e -> e.getKey().getId(), Map.Entry::getValue ) );
         List<ArrayDesignWithUsageStatisticsValueObject> results =
@@ -315,15 +318,16 @@ public class DatasetsWebService {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
         int maxResults = limit.getValue( MAX_DATASETS_CATEGORIES );
         List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
-                        filtersWithQuery,
+                        filters,
+                        extraIds,
                         datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
                         datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
                         mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
@@ -382,17 +386,18 @@ public class DatasetsWebService {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
         if ( category != null && category.isEmpty() ) {
             category = ExpressionExperimentService.UNCATEGORIZED;
         }
         List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
-                filtersWithQuery,
+                filters,
+                extraIds,
                 category,
                 datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
                 datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
@@ -499,13 +504,13 @@ public class DatasetsWebService {
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
         Filters filters = datasetArgService.getFilters( filterArg );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
-        return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filtersWithQuery )
+        return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filters, extraIds )
                 .entrySet().stream()
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .collect( Collectors.toList() ), query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );

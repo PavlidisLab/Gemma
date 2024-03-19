@@ -170,7 +170,7 @@ public interface ExpressionExperimentDao
      * <p>
      * Experiments <b>are not</b> filtered by ACLs and toubled experiments are only visible to administrators.
      */
-    Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
+    Map<Taxon, Long> getPerTaxonCount( Collection<Long> ids );
 
     Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 

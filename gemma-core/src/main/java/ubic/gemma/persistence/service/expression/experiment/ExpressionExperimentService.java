@@ -146,7 +146,7 @@ public interface ExpressionExperimentService
 
     List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 
-    long countWithCache( @Nullable Filters filters );
+    long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
@@ -310,7 +310,7 @@ public interface ExpressionExperimentService
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
      */
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * Obtain annotation usage frequency for datasets matching the given filters.
@@ -332,7 +332,7 @@ public interface ExpressionExperimentService
      * the matched datasets and ordered in descending number of associated experiments
      * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * @param expressionExperiment experiment
@@ -343,15 +343,16 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
-    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters );
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
      * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
+     * @param extraIds
      * @param maxResults the maximum of results, or unlimited if less than 1
      */
-    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults );
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults );
 
     /**
      * Calculate the usage frequency of taxa by the datasets matching the provided filters.
@@ -360,7 +361,7 @@ public interface ExpressionExperimentService
      *
      * @see #getPerTaxonCount()
      */
-    Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters );
+    Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     /**
      * Checks the experiment for a batch confound.

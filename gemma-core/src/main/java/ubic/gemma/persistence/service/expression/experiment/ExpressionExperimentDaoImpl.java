@@ -1199,7 +1199,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<Taxon, Long> getPerTaxonCount( List<Long> ids ) {
+    public Map<Taxon, Long> getPerTaxonCount( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
