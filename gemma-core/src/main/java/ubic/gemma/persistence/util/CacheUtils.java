@@ -1,14 +1,14 @@
 package ubic.gemma.persistence.util;
 
-import lombok.Value;
 import net.sf.ehcache.Ehcache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
 /**
@@ -23,6 +23,29 @@ public class CacheUtils {
      */
     public static Cache getCache( CacheManager cacheManager, String cacheName ) throws RuntimeException {
         return Objects.requireNonNull( cacheManager.getCache( cacheName ), String.format( "Cache with name %s does not exist.", cacheName ) );
+    }
+
+    public static int getSize( Cache cache ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return ( ( Ehcache ) cache.getNativeCache() ).getSize();
+        } else if ( cache.getNativeCache() instanceof Map ) {
+            return ( ( Map<?, ?> ) cache.getNativeCache() ).size();
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Check if a cache contains a given key.
+     */
+    public static boolean containsKey( Cache cache, Object key ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return ( ( Ehcache ) cache.getNativeCache() ).isKeyInCache( key );
+        } else if ( cache.getNativeCache() instanceof Map ) {
+            return ( ( Map<?, ?> ) cache.getNativeCache() ).containsKey( key );
+        } else {
+            return cache.get( key ) != null;
+        }
     }
 
     /**
@@ -55,6 +78,14 @@ public class CacheUtils {
         }
     }
 
+    public static Lock acquireReadLock( Cache cache, Object key ) {
+        if ( cache.getNativeCache() instanceof Ehcache ) {
+            return new EhcacheLock( ( Ehcache ) cache.getNativeCache(), key, true );
+        } else {
+            return new CacheLock( cache, key, true );
+        }
+    }
+
     /**
      * Acquire an exclusive write lock on the given key in the cache.
      * <p>
@@ -62,9 +93,9 @@ public class CacheUtils {
      */
     public static Lock acquireWriteLock( Cache cache, Object key ) {
         if ( cache.getNativeCache() instanceof Ehcache ) {
-            return new EhcacheWriteLock( ( Ehcache ) cache.getNativeCache(), key );
+            return new EhcacheLock( ( Ehcache ) cache.getNativeCache(), key, false );
         } else {
-            return new NoopWriteLock();
+            return new CacheLock( cache, key, false );
         }
     }
 
@@ -74,15 +105,16 @@ public class CacheUtils {
         void close();
     }
 
-    @Value
-    private static class EhcacheWriteLock implements Lock {
+    private static class EhcacheLock implements Lock {
 
-        Ehcache cache;
-        Object key;
+        private final Ehcache cache;
+        private final Object key;
+        private final boolean readOnly;
 
-        public EhcacheWriteLock( Ehcache cache, Object key ) {
+        public EhcacheLock( Ehcache cache, Object key, boolean readOnly ) {
             this.cache = cache;
             this.key = key;
+            this.readOnly = readOnly;
             lock();
         }
 
@@ -92,19 +124,60 @@ public class CacheUtils {
         }
 
         private void lock() {
-            cache.acquireWriteLockOnKey( key );
+            if ( readOnly ) {
+                cache.acquireReadLockOnKey( key );
+            } else {
+                cache.acquireWriteLockOnKey( key );
+            }
         }
 
         private void unlock() {
-            cache.releaseWriteLockOnKey( key );
+            if ( readOnly ) {
+                cache.releaseReadLockOnKey( key );
+            } else {
+                cache.releaseWriteLockOnKey( key );
+            }
         }
     }
 
-    private static class NoopWriteLock implements Lock {
+    private static class CacheLock implements Lock {
+
+        /**
+         * Using a WeakHashMap to avoid memory leaks when a cache key is no longer used.
+         */
+        private static final Map<Cache, Map<Object, ReadWriteLock>> lockByKey = new WeakHashMap<>();
+
+        private final ReadWriteLock lock;
+        private final boolean readOnly;
+
+        public CacheLock( Cache cache, Object key, boolean readOnly ) {
+            synchronized ( lockByKey ) {
+                this.lock = lockByKey.computeIfAbsent( cache, k -> new WeakHashMap<>() )
+                        .computeIfAbsent( key, k -> new ReentrantReadWriteLock() );
+            }
+            this.readOnly = readOnly;
+            lock();
+        }
 
         @Override
         public void close() {
-            // noop
+            unlock();
+        }
+
+        private void lock() {
+            if ( readOnly ) {
+                lock.readLock().lock();
+            } else {
+                lock.writeLock().lock();
+            }
+        }
+
+        private void unlock() {
+            if ( readOnly ) {
+                lock.readLock().unlock();
+            } else {
+                lock.writeLock().unlock();
+            }
         }
     }
 }

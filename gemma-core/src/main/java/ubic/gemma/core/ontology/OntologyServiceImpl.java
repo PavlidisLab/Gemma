@@ -30,6 +30,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
@@ -92,7 +93,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Autowired
     private GeneService geneService;
     @Autowired
-    private AsyncTaskExecutor taskExecutor;
+    private AsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
 
     @Autowired
     private ExperimentalFactorOntologyService experimentalFactorOntologyService;
@@ -260,14 +261,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
          * URI input: just retrieve the term.
          */
         if ( search.startsWith( "http://" ) ) {
-            return combineInThreads( ontology -> {
-                OntologyTerm found = ontology.getTerm( search );
-                if ( found != null ) {
-                    return Collections.singleton( found );
-                } else {
-                    return Collections.emptySet();
-                }
-            }, "terms matching " + search );
+            return Collections.singleton( findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search ) );
         }
 
         Collection<OntologyTerm> results = new HashSet<>();
@@ -281,7 +275,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return results;
         }
 
-        results = searchInThreads( ontology -> ontology.findTerm( query ), query );
+        results = searchInThreads( ontology -> ontology.findTerm( query ).stream().collect( Collectors.toSet() ), query );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
@@ -410,12 +404,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     return parents ? ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties )
                             : ontologyCache.getChildren( os, toQuery, direct, includeAdditionalProperties );
                 } finally {
-                    if ( timer.getTime() > Math.max( 10L * terms.size(), 1000L ) ) {
-                        log.warn( String.format( "Obtaining %s from %s for %s took %s",
+                    if ( timer.getTime() > Math.max( 10L * terms.size(), 500L ) ) {
+                        log.warn( String.format( "Obtaining %s from %s for %s took %d ms",
                                 parents ? "parents" : "children",
                                 os,
                                 terms.size() == 1 ? terms.iterator().next() : terms.size() + " terms",
-                                timer ) );
+                                timer.getTime() ) );
                     }
                 }
             }, String.format( "%s %s of %d terms", direct ? "direct" : "all", parents ? "parents" : "children", terms.size() ) );
@@ -457,11 +451,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public Collection<OntologyProperty> getRelationTerms() {
         // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
-        return relationTerms.stream()
-                .map( term -> {
-                    return term;
-                } )
-                .collect( Collectors.toSet() );
+        return Collections.unmodifiableSet( relationTerms );
     }
 
     @Override
@@ -481,15 +471,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public OntologyTerm getTerm( String uri ) {
-        return findFirst( ontology -> {
-            OntologyTerm term = ontology.getTerm( uri );
-            // some terms mentioned, but not declared in some ontologies (see https://github.com/PavlidisLab/Gemma/issues/998)
-            // FIXME: baseCode should return null if there is no <rdfs:label/>, not default the local name or URI
-            if ( term != null && ( term.getLabel() == null || term.getLabel().equals( term.getUri() ) ) ) {
-                return null;
-            }
-            return term;
-        } );
+        return findFirst( ontology -> ontology.getTerm( uri ), uri );
     }
 
     @Override
@@ -866,14 +848,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .thenComparing( CharacteristicValueObject::getNumTimesUsed, Comparator.reverseOrder() )            // most frequently used first
                 .thenComparing( CharacteristicValueObject::isAlreadyPresentInDatabase, Comparator.reverseOrder() ) // already used terms first
                 .thenComparing( c -> c.getValue() != null ? c.getValue().length() : null, Comparator.nullsLast( Comparator.naturalOrder() ) ); // shorter term first
-
     }
 
     /**
      * Find the first non-null result among loaded ontology services.
      */
     @Nullable
-    private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function ) {
+    private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function, String query ) {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService service : ontologyServices ) {
@@ -883,7 +865,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                T result = completionService.take().get();
+                Future<T> future;
+                double timeout = 1000;
+                while ( ( future = completionService.poll( ( long ) timeout, TimeUnit.MILLISECONDS ) ) == null ) {
+                    log.warn( String.format( "Ontology query for %s is taking too long (%d/%d completed so far, %s elapsed).", query, i, futures.size(), timer ) );
+                    timeout *= 1.5; // exponential backoff
+                }
+                T result = future.get();
                 if ( result != null ) {
                     return result;
                 }
@@ -970,8 +958,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
                 Future<Collection<T>> future;
-                while ( ( future = completionService.poll( 1, TimeUnit.SECONDS ) ) == null ) {
+                double timeout = 1000;
+                while ( ( future = completionService.poll( ( long ) timeout, TimeUnit.MILLISECONDS ) ) == null ) {
                     log.warn( String.format( "Ontology query for %s is taking too long (%d/%d completed so far, %s elapsed).", query, i, futures.size(), timer ) );
+                    timeout *= 1.5; // exponential backoff
                 }
                 children.addAll( future.get() );
             }
