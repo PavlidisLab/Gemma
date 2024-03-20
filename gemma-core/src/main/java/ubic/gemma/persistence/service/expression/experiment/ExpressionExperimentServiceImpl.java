@@ -910,6 +910,7 @@ public class ExpressionExperimentServiceImpl
         ee = this.thawBioAssays( ee );
 
         if ( !this.checkHasBatchInfo( ee ) ) {
+            log.info( "Experiment has no batch information, cannot check for confound: " + ee );
             return null;
         }
 
@@ -1045,6 +1046,8 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
+        BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
+
         if ( !beDetails.hasBatchInformation() ) {
             return BatchEffectType.NO_BATCH_INFO;
         } else if ( beDetails.getHasSingletonBatches() ) {
@@ -1059,13 +1062,15 @@ public class ExpressionExperimentServiceImpl
         } else if ( beDetails.hasProblematicBatchInformation() ) {
             // sort of generic
             return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
-        } else if ( beDetails.getBatchEffectStatistics() == null ) {
-            return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
-        } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-            // this means there was a batch effect but we couldn't correct it
-            return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
-            return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
+            if ( batchEffectStatistics == null ) {
+                return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
+            } else if ( batchEffectStatistics.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+                // this means there was a batch effect but we couldn't correct it
+                return BatchEffectType.BATCH_EFFECT_FAILURE;
+            } else {
+                return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
+            }
         }
     }
 
