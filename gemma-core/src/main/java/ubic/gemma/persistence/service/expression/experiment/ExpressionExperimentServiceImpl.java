@@ -623,11 +623,21 @@ public class ExpressionExperimentServiceImpl
             }
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
-                Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
                 Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+                termAndChildrenUris.addAll( e.getValue() );
                 termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
+                if ( termAndChildrenUris.size() > QueryUtils.MAX_PARAMETER_LIST_SIZE ) {
+                    log.warn( String.format( "There too many terms for the clause %s, will pick top %d terms.",
+                            e.getKey().getOriginalProperty(), QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
+                    termAndChildrenUris = termAndChildrenUris.stream()
+                            // favour terms that are mentioned in the filter
+                            .sorted( Comparator.comparing( e.getValue()::contains, Comparator.reverseOrder() ) )
+                            .limit( QueryUtils.MAX_PARAMETER_LIST_SIZE )
+                            .collect( Collectors.toSet() );
+                }
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
