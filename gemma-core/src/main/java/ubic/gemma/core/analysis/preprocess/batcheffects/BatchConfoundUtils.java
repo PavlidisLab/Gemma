@@ -133,8 +133,8 @@ public class BatchConfoundUtils {
             assert numBioMaterials > 0 : "No biomaterials for " + ef;
 
             double p = Double.NaN;
-            double chiSquare;
-            int df;
+            double chiSquare = Double.NaN;
+            int df = 0;
 
             int numBatches = batchFactor.getFactorValues().size();
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
@@ -238,20 +238,64 @@ public class BatchConfoundUtils {
                     continue; // to the next factor
                 }
 
+                /*
+                 * The problem with chi-square test is it is underpowered and we don't detect perfect confounds
+                 * when the sample size is small e.g. 3 + 3.
+                 * So for small sample sizes we apply some special cases 1) when we have a 2x2 table and 3) when we have a small number of batches and observations.
+                 * Otherwise we use the chisquare test.
+                 */
                 ChiSquareTest cst = new ChiSquareTest();
+                if ( finalCounts.length == 2 && finalCounts[0].length == 2 ) { // treat as odds ratio computation
+                    double numerator = ( double ) finalCounts[0][0] * finalCounts[1][1];
+                    double denominator = ( double ) finalCounts[0][1] * finalCounts[1][0];
 
-                try {
-                    chiSquare = cst.chiSquare( finalCounts );
-                } catch ( IllegalArgumentException e ) {
-                    log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: " + e
-                            .getMessage() );
-                    chiSquare = Double.NaN;
+                    // if either value is zero, we have a perfect confound
+                    if ( numerator == 0 || denominator == 0 ) {
+                        chiSquare = Double.POSITIVE_INFINITY; // effectively we shift to fisher's exact test here.
+                    } else {
+                        chiSquare = cst.chiSquare( finalCounts );
+                    }
+                } else if ( numBioMaterials <= 10 && finalCounts.length <= 4 ) { // number of batches and number of samples is small
+                    // look for pairs of rows and columns where there is only one non-zero value in each, which would be a confound.
+                    for ( int r = 0; r < finalCounts.length; r++ ) {
+                        int numNonzero = 0;
+                        int nonZeroIndex = -1;
+                        for ( int c = 0; c < finalCounts[0].length; c++ ) {
+                            if ( finalCounts[r][c] != 0 ) {
+                                numNonzero++;
+                                nonZeroIndex = c;
+                            }
+                        }
+                        // inspect the column
+                        if ( numNonzero == 1 ) {
+                            int numNonzeroColumnVals = 0;
+                            for ( int r2 = 0; r2 < finalCounts.length; r2++ ) {
+                                if ( finalCounts[r2][nonZeroIndex] != 0 ) {
+                                    numNonzeroColumnVals++;
+                                }
+                            }
+                            if ( numNonzeroColumnVals == 1 ) {
+                                chiSquare = Double.POSITIVE_INFINITY;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    try {
+                        chiSquare = cst.chiSquare( finalCounts );
+                    } catch ( IllegalArgumentException e ) {
+                        log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: " + e
+                                .getMessage() );
+                        chiSquare = Double.NaN;
+                    }
                 }
 
                 df = ( finalCounts.length - 1 ) * ( finalCounts[0].length - 1 );
                 ChiSquaredDistribution distribution = new ChiSquaredDistribution( df );
 
-                if ( !Double.isNaN( chiSquare ) ) {
+                if ( chiSquare == Double.POSITIVE_INFINITY ) {
+                    p = 0.0;
+                } else if ( !Double.isNaN( chiSquare ) ) {
                     p = 1.0 - distribution.cumulativeProbability( chiSquare );
                 }
 
