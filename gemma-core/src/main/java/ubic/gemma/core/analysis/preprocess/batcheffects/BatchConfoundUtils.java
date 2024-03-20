@@ -245,6 +245,15 @@ public class BatchConfoundUtils {
                  * Otherwise we use the chisquare test.
                  */
                 ChiSquareTest cst = new ChiSquareTest();
+                // initialize this value; we'll use it when my special test doesn't turn up anything.
+                try {
+                    chiSquare = cst.chiSquare( finalCounts );
+                } catch ( IllegalArgumentException e ) {
+                    log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: " + e
+                            .getMessage() );
+                    chiSquare = Double.NaN;
+                }
+
                 if ( finalCounts.length == 2 && finalCounts[0].length == 2 ) { // treat as odds ratio computation
                     double numerator = ( double ) finalCounts[0][0] * finalCounts[1][1];
                     double denominator = ( double ) finalCounts[0][1] * finalCounts[1][0];
@@ -252,10 +261,10 @@ public class BatchConfoundUtils {
                     // if either value is zero, we have a perfect confound
                     if ( numerator == 0 || denominator == 0 ) {
                         chiSquare = Double.POSITIVE_INFINITY; // effectively we shift to fisher's exact test here.
-                    } else {
-                        chiSquare = cst.chiSquare( finalCounts );
                     }
+
                 } else if ( numBioMaterials <= 10 && finalCounts.length <= 4 ) { // number of batches and number of samples is small
+
                     // look for pairs of rows and columns where there is only one non-zero value in each, which would be a confound.
                     for ( int r = 0; r < finalCounts.length; r++ ) {
                         int numNonzero = 0;
@@ -279,14 +288,6 @@ public class BatchConfoundUtils {
                                 break;
                             }
                         }
-                    }
-                } else {
-                    try {
-                        chiSquare = cst.chiSquare( finalCounts );
-                    } catch ( IllegalArgumentException e ) {
-                        log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: " + e
-                                .getMessage() );
-                        chiSquare = Double.NaN;
                     }
                 }
 
