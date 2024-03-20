@@ -180,7 +180,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.accession = vo.getAccession();
         this.batchConfound = vo.getBatchConfound();
         this.batchEffect = vo.getBatchEffect();
+        this.batchEffectStatistics = vo.getBatchEffectStatistics();
         this.externalDatabase = vo.getExternalDatabase();
+        this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
         this.metadata = vo.getMetadata();
         this.shortName = vo.getShortName();
