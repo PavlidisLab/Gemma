@@ -25,7 +25,7 @@ public class OntologyCacheTest {
     @Before
     public void setUp() {
         ontologyService = mock( OntologyService.class );
-        ontologyCache = new OntologyCache( new ConcurrentMapCache( "parents" ), new ConcurrentMapCache( "children" ) );
+        ontologyCache = new OntologyCache( new ConcurrentMapCache( "search" ), new ConcurrentMapCache( "parents" ), new ConcurrentMapCache( "children" ) );
         term1 = new OntologyTermSimple( "http://example.com/term1", "term1" );
         term2 = new OntologyTermSimple( "http://example.com/term2", "term2" );
         term3 = new OntologyTermSimple( "http://example.com/term3", "term3" );

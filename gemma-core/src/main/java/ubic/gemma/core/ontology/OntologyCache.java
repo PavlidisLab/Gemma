@@ -8,6 +8,7 @@ import org.springframework.cache.Cache;
 import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.persistence.util.CacheUtils;
 
 import javax.annotation.Nullable;
@@ -23,22 +24,14 @@ import java.util.*;
 @CommonsLog
 class OntologyCache {
 
-    private final Cache parentsCache, childrenCache;
+    private final Cache searchCache, parentsCache, childrenCache;
 
-    private long lockTimeoutMillis = 5000;
     private int minSubsetSize = 1;
 
-    OntologyCache( Cache parentsCache, Cache childrenCache ) {
+    OntologyCache( Cache searchCache, Cache parentsCache, Cache childrenCache ) {
+        this.searchCache = searchCache;
         this.parentsCache = parentsCache;
         this.childrenCache = childrenCache;
-    }
-
-    /**
-     * Maximum amount of time in milliseconds to wait for a cache entry to be computed by another thread. If the timeout
-     * is exceeded, no results will be returned.
-     */
-    public void setLockTimeoutMillis( long lockTimeoutMillis ) {
-        this.lockTimeoutMillis = lockTimeoutMillis;
     }
 
     /**
@@ -47,6 +40,24 @@ class OntologyCache {
     void setMinSubsetSize( int minSubsetSize ) {
         Assert.isTrue( minSubsetSize > 0 );
         this.minSubsetSize = minSubsetSize;
+    }
+
+    public Collection<OntologyTerm> findTerm( OntologyService ontology, String query ) throws OntologySearchException {
+        SearchCacheKey key = new SearchCacheKey( ontology, query );
+
+        try ( CacheUtils.Lock ignored = CacheUtils.acquireReadLock( searchCache, key ) ) {
+            Cache.ValueWrapper value = searchCache.get( key );
+            if ( value != null ) {
+                //noinspection unchecked
+                return ( Collection<OntologyTerm> ) value.get();
+            }
+        }
+
+        try ( CacheUtils.Lock ignored = CacheUtils.acquireWriteLock( searchCache, key ) ) {
+            Collection<OntologyTerm> results = ontology.findTerm( query );
+            searchCache.put( key, results );
+            return results;
+        }
     }
 
     /**
@@ -61,6 +72,14 @@ class OntologyCache {
      */
     Set<OntologyTerm> getChildren( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
         return getParentsOrChildren( os, terms, direct, includeAdditionalProperties, childrenCache, false );
+    }
+
+    /**
+     * Clear the search  cache for all entries related to a given ontology service.
+     * @param serv
+     */
+    public void clearSearchCacheByOntology( OntologyService serv ) {
+        CacheUtils.evictIf( searchCache, key -> ( ( SearchCacheKey ) key ).getOntologyService().equals( serv ) );
     }
 
     /**
@@ -178,7 +197,7 @@ class OntologyCache {
     @Value
     @EqualsAndHashCode(cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY)
     private static class ParentsOrChildrenCacheKey {
-        ubic.basecode.ontology.providers.OntologyService ontologyService;
+        OntologyService ontologyService;
         Set<OntologyTerm> terms;
         boolean direct;
         boolean includeAdditionalProperties;
@@ -189,5 +208,11 @@ class OntologyCache {
                     direct ? "direct" : "all",
                     includeAdditionalProperties ? "subClassOf and " + ontologyService.getAdditionalPropertyUris().size() + " additional properties" : "only subClassOf" );
         }
+    }
+
+    @Value
+    private static class SearchCacheKey {
+        OntologyService ontologyService;
+        String query;
     }
 }

@@ -457,6 +457,7 @@
 
     <cache name="ProcessedExpressionDataVectorCache" maxElementsInMemory="100000" overflowToDisk="true" eternal="true"/>
 
+    <cache name="OntologyService.search" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
     <cache name="OntologyService.parents" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
     <cache name="OntologyService.children" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 

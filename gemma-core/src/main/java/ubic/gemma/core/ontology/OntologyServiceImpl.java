@@ -80,6 +80,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
     private static final String
+            SEARCH_CACHE_NAME = "OntologyService.search",
             PARENTS_CACHE_NAME = "OntologyService.parents",
             CHILDREN_CACHE_NAME = "OntologyService.children";
 
@@ -122,7 +123,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        ontologyCache = new OntologyCache( cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
+        ontologyCache = new OntologyCache( cacheManager.getCache( SEARCH_CACHE_NAME ), cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
         if ( ontologyServiceFactories != null && autoLoadOntologies ) {
             List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
                     .map( factory -> {
@@ -274,11 +275,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return results;
         }
 
-        results = searchInThreads( ontology -> ontology.findTerm( query ), query );
+        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, query ), query );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
-                results.addAll( geneOntologyService.findTerm( search ) );
+                results.addAll( ontologyCache.findTerm( geneOntologyService, search ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -320,7 +321,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
         ontologySearchResults.addAll( searchInThreads( service -> {
             Collection<OntologyTerm> results2;
-            results2 = service.findTerm( queryString );
+            results2 = ontologyCache.findTerm( service, queryString );
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
@@ -331,7 +332,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
                 ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                        this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+                        this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString ) ) ) );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
@@ -498,6 +499,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 OntologyServiceImpl.log.info( "Reindexing: " + serv );
                 try {
                     serv.index( true );
+                    ontologyCache.clearSearchCacheByOntology( serv );
                 } catch ( Exception e ) {
                     OntologyServiceImpl.log.error( "Failed to index " + serv + ": " + e.getMessage(), e );
                 }
@@ -514,6 +516,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
             ontologyTaskExecutor.execute( () -> {
                 serv.initialize( true, true );
+                ontologyCache.clearSearchCacheByOntology( serv );
                 ontologyCache.clearByOntology( serv );
             } );
         }
@@ -681,7 +684,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
 
         return searchInThreads( ontologyService -> {
-            Collection<OntologyTerm> ontologyTerms = ontologyService.findTerm( searchQuery );
+            Collection<OntologyTerm> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery );
             Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
             for ( OntologyTerm ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
