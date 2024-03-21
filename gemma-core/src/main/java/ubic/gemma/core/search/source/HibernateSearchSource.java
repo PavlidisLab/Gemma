@@ -58,9 +58,10 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             "fullTextUri", "keywords.term", "meshTerms.term", "pubAccession.accession", "title" };
 
     private static String[] DATASET_FIELDS = {
-            "shortName", "name", "description", "bioAssays.name", "bioAssays.description", "bioAssays.accession.accession",
-            "bioAssays.sampleUsed.name", "bioAssays.sampleUsed.characteristics.value",
-            "bioAssays.sampleUsed.characteristics.valueUri", "characteristics.value", "characteristics.valueUri",
+            "shortName", "name", "description", "accession.accession",
+            "bioAssays.name", "bioAssays.description", "bioAssays.accession.accession", "bioAssays.sampleUsed.name",
+            "bioAssays.sampleUsed.characteristics.value", "bioAssays.sampleUsed.characteristics.valueUri",
+            "characteristics.value", "characteristics.valueUri",
             "experimentalDesign.name", "experimentalDesign.description", "experimentalDesign.experimentalFactors.name",
             "experimentalDesign.experimentalFactors.description",
             "experimentalDesign.experimentalFactors.category.categoryUri",
