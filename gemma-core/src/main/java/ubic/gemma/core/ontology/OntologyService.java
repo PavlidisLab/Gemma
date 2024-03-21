@@ -17,14 +17,12 @@ package ubic.gemma.core.ontology;
 import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,13 +82,13 @@ public interface OntologyService {
     /**
      * @return terms which are allowed for use in the Category of a Characteristic
      */
-    Collection<OntologyTerm> getCategoryTerms();
+    Set<OntologyTerm> getCategoryTerms();
 
     /**
      *
      * @return terms allowed for the predicate (relationship) in a Characteristic
      */
-    Collection<OntologyProperty> getRelationTerms();
+    Set<OntologyProperty> getRelationTerms();
 
     /**
      * Obtain the parents of a collection of terms.

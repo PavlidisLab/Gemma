@@ -79,7 +79,6 @@ import java.util.stream.Collectors;
 public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
-
     private static final String
             PARENTS_CACHE_NAME = "OntologyService.parents",
             CHILDREN_CACHE_NAME = "OntologyService.children";
@@ -275,7 +274,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return results;
         }
 
-        results = searchInThreads( ontology -> ontology.findTerm( query ).stream().collect( Collectors.toSet() ), query );
+        results = searchInThreads( ontology -> ontology.findTerm( query ), query );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
@@ -285,7 +284,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        return results;
+        return pickBest( results );
     }
 
     @Override
@@ -299,7 +298,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
         if ( StringUtils.isBlank( queryString ) ) {
             OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
-            return new HashSet<>();
+            return Collections.emptySet();
         }
 
         if ( OntologyServiceImpl.log.isDebugEnabled() ) {
@@ -363,9 +362,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         countOccurrencesTimerAfter.stop();
 
         // Sort the results rather elaborately.
-        Collection<CharacteristicValueObject> sortedResults = results.values().stream()
+        LinkedHashSet<CharacteristicValueObject> sortedResults = results.values().stream()
                 .sorted( getCharacteristicComparator( queryString ) )
-                .collect( Collectors.toList() );
+                .collect( Collectors.toCollection( LinkedHashSet::new ) );
 
         watch.stop();
 
@@ -396,9 +395,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return Collections.emptySet();
         }
         Set<OntologyTerm> toQuery = new HashSet<>( terms );
-        Set<OntologyTerm> results = new HashSet<>();
+        List<OntologyTerm> results = new ArrayList<>();
         while ( !toQuery.isEmpty() ) {
-            Set<OntologyTerm> newResults = combineInThreads( os -> {
+            List<OntologyTerm> newResults = combineInThreads( os -> {
                 StopWatch timer = StopWatch.createStarted();
                 try {
                     return parents ? ontologyCache.getParents( os, toQuery, direct, includeAdditionalProperties )
@@ -425,11 +424,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 toQuery.clear();
             }
         }
-        return results;
+        return pickBest( results );
     }
 
     @Override
-    public Collection<OntologyTerm> getCategoryTerms() {
+    public Set<OntologyTerm> getCategoryTerms() {
         return categoryTerms.stream()
                 .map( term -> {
                     String termUri = term.getUri();
@@ -449,7 +448,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
     @Override
-    public Collection<OntologyProperty> getRelationTerms() {
+    public Set<OntologyProperty> getRelationTerms() {
         // FIXME: it's not quite like categoryTerms so this map operation is probably not needed at all, the relations don't come from any particular ontology
         return Collections.unmodifiableSet( relationTerms );
     }
@@ -477,8 +476,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris ) {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
-        return combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
-                String.format( "terms for %d URIs", uris.size() ) );
+        return pickBest( combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
+                String.format( "terms for %d URIs", uris.size() ) ) );
     }
 
     /**
@@ -699,13 +698,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }, ontologyServicesToUse, "terms matching " + searchQuery );
     }
 
-    private String foundValueKey( Characteristic c ) {
-        if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
-            return c.getValueUri().toLowerCase();
-        }
-        return c.getValue().toLowerCase();
-    }
-
     /**
      * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
      * for non-ncbi genes.
@@ -903,11 +895,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Similar to {@link #combineInThreads(Function, String)}, but also handles {@link OntologySearchException}.
      */
-    private <T> Set<T> searchInThreads( SearchFunction<T> function, String query ) throws BaseCodeOntologySearchException {
+    private <T> List<T> searchInThreads( SearchFunction<T> function, String query ) throws BaseCodeOntologySearchException {
         return searchInThreads( function, ontologyServices, query );
     }
 
-    private <T> Set<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) throws BaseCodeOntologySearchException {
+    private <T> List<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) throws BaseCodeOntologySearchException {
         try {
             return combineInThreads( os -> {
                 try {
@@ -936,7 +928,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, String query ) {
+    private <T> List<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, String query ) {
         return combineInThreads( work, ontologyServices, query );
     }
 
@@ -945,7 +937,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * <p>
      * The functions are evaluated using Gemma's short-lived task executor.
      */
-    private <T> Set<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) {
+    private <T> List<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) {
         StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
@@ -954,7 +946,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 futures.add( completionService.submit( () -> work.apply( os ) ) );
             }
         }
-        Set<T> children = new HashSet<>();
+        List<T> children = new ArrayList<>();
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
                 Future<Collection<T>> future;
@@ -991,5 +983,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
         return children;
+    }
+
+    /**
+     * Strategy to use when combining results from different ontologies.
+     */
+    private static final Comparator<OntologyTerm> ontologyTermComparator = Comparator
+            .comparing( ( OntologyTerm t ) -> t.getLabel() != null, Comparator.reverseOrder() ) // prefer terms with rdf:label
+            .thenComparing( OntologyTerm::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) ); // prefer the highest score
+
+    /**
+     * Deduplicate terms in the given collection giving preference to those with a <rdf:label/> if available and the
+     * highest {@link OntologyTerm#getScore()}.
+     */
+    private LinkedHashSet<OntologyTerm> pickBest( Collection<OntologyTerm> terms ) {
+        return terms.stream().sorted( ontologyTermComparator ).collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 }
