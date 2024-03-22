@@ -512,6 +512,7 @@ public class DatasetsWebService {
         }
         return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filters, extraIds )
                 .entrySet().stream()
+                .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .collect( Collectors.toList() ), query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
