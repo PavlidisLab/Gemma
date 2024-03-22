@@ -1013,12 +1013,12 @@ public class ExpressionExperimentDaoImpl
                         + "join ARRAY_DESIGN ad on ee2ad.ARRAY_DESIGN_FK = ad.ID "
                         + "join CURATION_DETAILS adcd on adcd.ID = ad.CURATION_DETAILS_FK "
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
-                        + "where not eecd.TROUBLED and not adcd.TROUBLED "
-                        + "and ee2ad.IS_ORIGINAL_PLATFORM = :original "
+                        + "where ee2ad.IS_ORIGINAL_PLATFORM = :original "
                         // exclude noop switch
                         + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
                         + ( eeIds != null ? "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
+                        + ( !SecurityUtil.isUserAdmin() ? "and not eecd.TROUBLED and not adcd.TROUBLED " : "" )
                         + "group by ad.ID "
                         + "order by EE_COUNT desc" )
                 .addEntity( ArrayDesign.class )
