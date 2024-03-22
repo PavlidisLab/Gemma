@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
+import gemma.gsec.util.SecurityUtil;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
@@ -940,22 +941,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency() {
-        Query query = getSessionFactory().getCurrentSession().createQuery(
-                "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed a "
-                        + "left join ba.originalPlatform oa "
-                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
-                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a.technologyType, oa.technologyType" );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> result = query
-                .setCacheable( true )
-                .list();
-        return aggregateTechnologyTypeCounts( result );
+        return getTechnologyTypeUsageFrequencyInternal( null );
     }
 
     @Override
@@ -963,32 +949,37 @@ public class ExpressionExperimentDaoImpl
         if ( eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Query q = getSessionFactory().getCurrentSession()
-                .createQuery( "select a.technologyType, oa.technologyType, count(distinct ee) from ExpressionExperiment ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed a "
-                        + "left join ba.originalPlatform oa "
-                        + "where ee.id in :ids "
-                        + "and (oa is null or a.technologyType <> oa.technologyType) "   // ignore noop switch
-                        + formNonTroubledClause( "ee" )
-                        + formNonTroubledClause( "a" ) + " "
-                        + "group by a.technologyType, oa.technologyType" )
-                .setCacheable( true );
-        return aggregateTechnologyTypeCounts( listByBatch( q, "ids", eeIds, getBatchSize() ) );
+        return getTechnologyTypeUsageFrequencyInternal( eeIds );
     }
 
-    private Map<TechnologyType, Long> aggregateTechnologyTypeCounts( List<Object[]> result ) {
-        Map<TechnologyType, Long> counts = new HashMap<>();
-        for ( Object[] row : result ) {
-            TechnologyType tt = ( TechnologyType ) row[0];
-            TechnologyType originalTt = ( TechnologyType ) row[1];
-            Long count = ( Long ) row[2];
-            counts.compute( tt, ( k, v ) -> v == null ? count : v + count );
-            if ( originalTt != null ) {
-                counts.compute( originalTt, ( k, v ) -> v == null ? count : v + count );
-            }
+    private Map<TechnologyType, Long> getTechnologyTypeUsageFrequencyInternal( @Nullable Collection<Long> eeIds ) {
+        Query q = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select AD.TECHNOLOGY_TYPE as TT, count(distinct EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN EE2AD "
+                        + "join ARRAY_DESIGN AD on EE2AD.ARRAY_DESIGN_FK = AD.ID "
+                        + "join CURATION_DETAILS ADCD on AD.CURATION_DETAILS_FK = ADCD.ID "
+                        + "join INVESTIGATION I on I.ID = EE2AD.EXPRESSION_EXPERIMENT_FK "
+                        + "join CURATION_DETAILS EECD on EECD.ID = I.CURATION_DETAILS_FK "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL "
+                        + ( eeIds != null ? "and EE2AD.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "EE2AD.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
+                        + ( !SecurityUtil.isUserAdmin() ? "and not ADCD.TROUBLED and not EECD.TROUBLED " : "" )
+                        + "group by AD.TECHNOLOGY_TYPE" )
+                .addScalar( "TT", StandardBasicTypes.STRING )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        List<Object[]> results;
+        if ( eeIds != null ) {
+            results = listByBatch( q, "ids", eeIds, getBatchSize() );
+        } else {
+            //noinspection unchecked
+            results = q.list();
         }
-        return counts;
+        return results.stream().collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
