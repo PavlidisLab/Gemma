@@ -621,6 +621,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) {
+        boolean doAclFiltering = eeIds == null;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -648,16 +649,23 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.EXPRESSION_EXPERIMENT_FK is not null ";
+        String query = "select T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
+        if ( doAclFiltering ) {
+            query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
+        }
         if ( eeIds != null ) {
-            query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+            query += "where T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+        } else {
+            query += "where T.EXPRESSION_EXPERIMENT_FK is not null";
         }
         query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
-        query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
-                + "group by COALESCE(T.CATEGORY_URI, T.CATEGORY) "
-                + "order by EE_COUNT desc";
+        if ( doAclFiltering ) {
+            query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        }
+        query += " group by COALESCE(T.CATEGORY_URI, T.CATEGORY)";
+        if ( maxResults > 0 ) {
+            query += " order by EE_COUNT desc";
+        }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
                 .addScalar( "CATEGORY", StandardBasicTypes.STRING )
                 .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
@@ -674,7 +682,9 @@ public class ExpressionExperimentDaoImpl
         if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
-        EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        if ( doAclFiltering ) {
+            EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        }
         q.setCacheable( true );
         List<Object[]> result;
         if ( eeIds != null ) {
@@ -715,6 +725,7 @@ public class ExpressionExperimentDaoImpl
      */
     @Override
     public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+        boolean doAclFiltering = eeIds == null;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -742,11 +753,14 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.EXPRESSION_EXPERIMENT_FK is not null"; // this is necessary for the clause building since there might be no clause
+        String query = "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
+        if ( doAclFiltering ) {
+            query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
+        }
         if ( eeIds != null ) {
-            query += " and T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+            query += "where T.EXPRESSION_EXPERIMENT_FK in :eeIds";
+        } else {
+            query += "where T.EXPRESSION_EXPERIMENT_FK is not null"; // this is necessary for the clause building since there might be no clause
         }
         if ( level != null ) {
             query += " and T.LEVEL = :level";
@@ -768,17 +782,24 @@ public class ExpressionExperimentDaoImpl
             // all categories are requested, we may filter out excluded ones
             query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
         }
-        query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
-                + "group by "
+        if ( doAclFiltering ) {
+            query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        }
+        //language=HQL
+        query += " group by "
                 // no need to group by category if a specific one is requested
                 + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
-                + "COALESCE(T.VALUE_URI, T.`VALUE`) "
-                // if there are too many EE IDs, they will be retrieved by batch and filtered in-memory
-                + ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ? "having EE_COUNT >= :minFrequency " : "" );
-        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
-            query += " or VALUE_URI in (:retainedTermUris)";
+                + "COALESCE(T.VALUE_URI, T.`VALUE`)";
+        // if there are too many EE IDs, they will be retrieved by batch and filtered in-memory
+        if ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ) {
+            query += " having EE_COUNT >= :minFrequency";
+            if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+                query += " or VALUE_URI in (:retainedTermUris)";
+            }
         }
-        query += "order by EE_COUNT desc";
+        if ( maxResults > 0 ) {
+            query += " order by EE_COUNT desc";
+        }
         Query q = getSessionFactory().getCurrentSession().createSQLQuery( query )
                 .addScalar( "VALUE", StandardBasicTypes.STRING )
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
@@ -808,7 +829,9 @@ public class ExpressionExperimentDaoImpl
         if ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ) {
             q.setParameter( "minFrequency", minFrequency );
         }
-        EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        if ( doAclFiltering ) {
+            EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        }
         q.setCacheable( true );
         List<Object[]> result;
         if ( eeIds != null ) {
@@ -816,7 +839,7 @@ public class ExpressionExperimentDaoImpl
                 result = listByBatch( q, "eeIds", eeIds, 2048 );
                 if ( minFrequency > 1 || maxResults > 0 ) {
                     return aggregate( result ).entrySet().stream()
-                            .filter( e -> e.getValue() >= minFrequency )
+                            .filter( e -> e.getValue() >= minFrequency || ( retainedTermUris != null && retainedTermUris.contains( e.getKey().getValueUri() ) ) )
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
                             .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
@@ -941,18 +964,6 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency() {
-        return getTechnologyTypeUsageFrequencyInternal( null );
-    }
-
-    @Override
-    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds ) {
-        if ( eeIds.isEmpty() ) {
-            return Collections.emptyMap();
-        }
-        return getTechnologyTypeUsageFrequencyInternal( eeIds );
-    }
-
-    private Map<TechnologyType, Long> getTechnologyTypeUsageFrequencyInternal( @Nullable Collection<Long> eeIds ) {
         Query q = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select AD.TECHNOLOGY_TYPE as TT, count(distinct EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN EE2AD "
                         + "join ARRAY_DESIGN AD on EE2AD.ARRAY_DESIGN_FK = AD.ID "
@@ -960,7 +971,7 @@ public class ExpressionExperimentDaoImpl
                         + "join INVESTIGATION I on I.ID = EE2AD.EXPRESSION_EXPERIMENT_FK "
                         + "join CURATION_DETAILS EECD on EECD.ID = I.CURATION_DETAILS_FK "
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK" ) + " "
-                        + ( eeIds != null ? "where EE2AD.EXPRESSION_EXPERIMENT_FK in :ids " : "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL " )
+                        + "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL "
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "EE2AD.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                         + ( !SecurityUtil.isUserAdmin() ? "and not ADCD.TROUBLED and not EECD.TROUBLED " : "" )
                         + "group by AD.TECHNOLOGY_TYPE" )
@@ -971,19 +982,34 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
-        List<Object[]> results;
-        if ( eeIds != null ) {
-            results = listByBatch( q, "ids", eeIds, getBatchSize() );
-        } else {
-            //noinspection unchecked
-            results = q.list();
+        //noinspection unchecked
+        List<Object[]> results = q.list();
+        return results.stream().collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    @Override
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
         }
+        Query q = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select AD.TECHNOLOGY_TYPE as TT, count(distinct EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN EE2AD "
+                        + "join ARRAY_DESIGN AD on EE2AD.ARRAY_DESIGN_FK = AD.ID "
+                        + "where EE2AD.EXPRESSION_EXPERIMENT_FK in (:ids) "
+                        + "group by AD.TECHNOLOGY_TYPE" )
+                .addScalar( "TT", StandardBasicTypes.STRING )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        List<Object[]> results = listByBatch( q, "ids", eeIds, getBatchSize() );
         return results.stream().collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
     public Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( int maxResults ) {
-        return getPlatformsUsageFrequency( null, false, maxResults );
+        return getPlatformsUsageFrequency( false, maxResults );
     }
 
     @Override
@@ -993,7 +1019,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( int maxResults ) {
-        return getPlatformsUsageFrequency( null, true, maxResults );
+        return getPlatformsUsageFrequency( true, maxResults );
     }
 
     @Override
@@ -1001,10 +1027,7 @@ public class ExpressionExperimentDaoImpl
         return getPlatformsUsageFrequency( eeIds, true, maxResults );
     }
 
-    private Map<ArrayDesign, Long> getPlatformsUsageFrequency( @Nullable Collection<Long> eeIds, boolean original, int maxResults ) {
-        if ( eeIds != null && eeIds.isEmpty() ) {
-            return Collections.emptyMap();
-        }
+    private Map<ArrayDesign, Long> getPlatformsUsageFrequency( boolean original, int maxResults ) {
         Query query = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select ad.*, count(distinct i.ID) EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + "join INVESTIGATION i on i.ID = ee2ad.EXPRESSION_EXPERIMENT_FK "
@@ -1015,8 +1038,8 @@ public class ExpressionExperimentDaoImpl
                         + "where ee2ad.IS_ORIGINAL_PLATFORM = :original "
                         // exclude noop switch
                         + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
-                        + ( eeIds != null ? "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
+                        // exclude troubled platforms or experiments for non-admins
                         + ( !SecurityUtil.isUserAdmin() ? "and not eecd.TROUBLED and not adcd.TROUBLED " : "" )
                         + "group by ad.ID "
                         // no need to sort results if limiting, we're collecting in a map
@@ -1033,28 +1056,55 @@ public class ExpressionExperimentDaoImpl
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
         List<Object[]> result;
-        if ( eeIds != null ) {
-            if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
-                result = listByBatch( query, "ids", eeIds, 2048 );
-                if ( maxResults > 0 ) {
-                    // results need to be aggregated and limited
-                    return result.stream()
-                            .collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) )
-                            .entrySet().stream()
-                            .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
-                            .limit( maxResults )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
-                }
-            } else {
-                //noinspection unchecked
-                result = query
-                        .setParameterList( "ids", optimizeParameterList( eeIds ) )
-                        .setMaxResults( maxResults )
-                        .list();
+        //noinspection unchecked
+        result = query
+                .setMaxResults( maxResults )
+                .list();
+        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+    }
+
+    private Map<ArrayDesign, Long> getPlatformsUsageFrequency( Collection<Long> eeIds, boolean original, int maxResults ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // exclude noop switch
+        // no need to sort results if limiting, we're collecting in a map
+        Query query = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select ad.*, count(distinct i.ID) EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + "join INVESTIGATION i on i.ID = ee2ad.EXPRESSION_EXPERIMENT_FK "
+                        + "join ARRAY_DESIGN ad on ee2ad.ARRAY_DESIGN_FK = ad.ID "
+                        + "where ee2ad.IS_ORIGINAL_PLATFORM = :original "
+                        // exclude noop switch
+                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
+                        + "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids "
+                        + "group by ad.ID "
+                        // no need to sort results if limiting, we're collecting in a map
+                        + ( maxResults > 0 ? "order by EE_COUNT desc" : "" ) )
+                .addEntity( ArrayDesign.class )
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class );
+        query.setParameter( "original", original );
+        query.setCacheable( true );
+        List<Object[]> result;
+        if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
+            result = listByBatch( query, "ids", eeIds, 2048 );
+            if ( maxResults > 0 ) {
+                // results need to be aggregated and limited
+                return result.stream()
+                        .collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) )
+                        .entrySet().stream()
+                        .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                        .limit( maxResults )
+                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
             }
         } else {
             //noinspection unchecked
             result = query
+                    .setParameterList( "ids", optimizeParameterList( eeIds ) )
                     .setMaxResults( maxResults )
                     .list();
         }
