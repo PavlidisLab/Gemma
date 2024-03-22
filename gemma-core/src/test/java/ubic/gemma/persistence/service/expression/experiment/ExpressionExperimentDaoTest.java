@@ -177,11 +177,31 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
+    public void testGetCategoriesUsageFrequencyAsAnonymous() {
+        expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 );
+    }
+
+    /**
+     * No ACL filtering is done when explicit IDs are provided, so this should work without {@link WithMockUser}.
+     */
+    @Test
+    public void testGetCategoriesUsageFrequencyWithIds() {
+        expressionExperimentDao.getCategoriesUsageFrequency( Collections.singleton( 1L ), null, null, null, -1 );
+    }
+
+    @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetAnnotationUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
                 .containsEntry( c, 1L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetAnnotationUsageFrequencyAsAnonymous() {
+        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null );
     }
 
     @Test
@@ -248,6 +268,14 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .doesNotContainKey( c2 );
+    }
+
+    /**
+     * No ACL filtering is done when explicit IDs are provided, so this should work without {@link WithMockUser}.
+     */
+    @Test
+    public void testGetAnnotationUsageFrequencyWithIds() {
+        expressionExperimentDao.getAnnotationsUsageFrequency( Collections.singleton( 1L ), null, 10, 1, null, null, null, null );
     }
 
     private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
