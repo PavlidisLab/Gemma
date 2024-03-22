@@ -960,8 +960,7 @@ public class ExpressionExperimentDaoImpl
                         + "join INVESTIGATION I on I.ID = EE2AD.EXPRESSION_EXPERIMENT_FK "
                         + "join CURATION_DETAILS EECD on EECD.ID = I.CURATION_DETAILS_FK "
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK" ) + " "
-                        + "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL "
-                        + ( eeIds != null ? "and EE2AD.EXPRESSION_EXPERIMENT_FK in :ids " : "" )
+                        + ( eeIds != null ? "where EE2AD.EXPRESSION_EXPERIMENT_FK in :ids " : "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL " )
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "EE2AD.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                         + ( !SecurityUtil.isUserAdmin() ? "and not ADCD.TROUBLED and not EECD.TROUBLED " : "" )
                         + "group by AD.TECHNOLOGY_TYPE" )
@@ -1020,7 +1019,8 @@ public class ExpressionExperimentDaoImpl
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                         + ( !SecurityUtil.isUserAdmin() ? "and not eecd.TROUBLED and not adcd.TROUBLED " : "" )
                         + "group by ad.ID "
-                        + "order by EE_COUNT desc" )
+                        // no need to sort results if limiting, we're collecting in a map
+                        + ( maxResults > 0 ? "order by EE_COUNT desc" : "" ) )
                 .addEntity( ArrayDesign.class )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
                 // ensures that the cache is invalidated when the ee2ad table is regenerated
@@ -1172,8 +1172,7 @@ public class ExpressionExperimentDaoImpl
         String queryString = "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                 + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                 + formNonTroubledClause( "ee" ) + " "
-                + "group by ee.taxon "
-                + "order by EE_COUNT desc";
+                + "group by ee.taxon";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1197,8 +1196,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                         + "where ee.id in :eeIds "
-                        + "group by ee.taxon "
-                        + "order by EE_COUNT desc" )
+                        + "group by ee.taxon" )
                 .setCacheable( true );
         List<Object[]> list = listByBatch( query, "eeIds", ids, getBatchSize() );
         return list.stream()
