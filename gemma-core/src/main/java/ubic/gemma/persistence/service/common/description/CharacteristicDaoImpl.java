@@ -185,7 +185,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         .limit( limit )
                         .collect( Collectors.toList() );
             } else {
-                // query is limited, but there is no ordering, so we can just fetch the first few results
+                // query is either unlimited or there is no ordering, batching will not affect the output
                 result = listByBatch( query, "uris", uris, 2048, limit );
             }
         } else {
