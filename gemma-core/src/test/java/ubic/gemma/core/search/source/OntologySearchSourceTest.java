@@ -100,7 +100,8 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return Collections.emptyMap();
                     }
                 } ) );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
@@ -136,7 +137,8 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return Collections.emptyMap();
                     }
                 } ) );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {

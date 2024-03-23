@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,14 +90,13 @@ public class FindObsoleteTermsCli extends AbstractCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        Map<String, CharacteristicValueObject> vos = ontologyService.findObsoleteTermUsage();
+        Map<Characteristic, Long> vos = ontologyService.findObsoleteTermUsage();
 
         AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
 
         System.out.println( "Value\tValueUri\tCount" );
-        for ( CharacteristicValueObject vo : vos.values() ) {
-            System.out.println( vo.getValue() + "\t" + vo.getValueUri() + "\t" + vo.getNumTimesUsed() );
+        for ( Map.Entry<Characteristic, Long> vo : vos.entrySet() ) {
+            System.out.println( vo.getKey().getValue() + "\t" + vo.getKey().getValueUri() + "\t" + vo.getValue() );
         }
-
     }
 }

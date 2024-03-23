@@ -285,7 +285,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        return pickBest( results );
+        return results.stream()
+                .sorted( Comparator.comparing( OntologyTerm::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) ) )
+                .collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 
     @Override
@@ -425,7 +427,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 toQuery.clear();
             }
         }
-        return pickBest( results );
+        // drop terms without labels
+        results.removeIf( t -> t.getLabel() == null );
+        return new HashSet<>( results );
     }
 
     @Override
@@ -456,14 +460,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public String getDefinition( String uri ) {
-        if ( uri == null ) return null;
         OntologyTerm ot = this.getTerm( uri );
         if ( ot != null ) {
-            for ( AnnotationProperty ann : ot.getAnnotations() ) {
-                // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
-                if ( "http://purl.obolibrary.org/obo/IAO_0000115".equals( ann.getUri() ) ) {
-                    return ann.getContents();
-                }
+            // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
+            AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
+            if ( annot != null ) {
+                return annot.getContents();
             }
         }
         return null;
@@ -471,42 +473,33 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public OntologyTerm getTerm( String uri ) {
-        return findFirst( ontology -> ontology.getTerm( uri ), uri );
+        return findFirst( ontology -> {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term != null && term.getLabel() == null ) {
+                return null;
+            }
+            return term;
+        }, uri );
     }
 
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris ) {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
-        return pickBest( combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
-                String.format( "terms for %d URIs", uris.size() ) ) );
-    }
-
-    /**
-     * @return true if the Uri is an ObsoleteClass. This will only work if the ontology in question is loaded.
-     */
-    @Override
-    public boolean isObsolete( String uri ) {
-        if ( uri == null )
-            return false;
-        OntologyTerm t = this.getTerm( uri );
-        return t != null && t.isObsolete();
+        List<OntologyTerm> results = combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
+                String.format( "terms for %d URIs", uris.size() ) );
+        results.removeIf( t -> t.getLabel() == null );
+        return new HashSet<>( results );
     }
 
     @Override
     public void reindexAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            if ( serv.isOntologyLoaded() ) {
-                OntologyServiceImpl.log.info( "Reindexing: " + serv );
-                try {
+            if ( serv.isEnabled() && serv.isSearchEnabled() ) {
+                ontologyTaskExecutor.execute( () -> {
+                    OntologyServiceImpl.log.info( "Reindexing " + serv + "..." );
                     serv.index( true );
                     ontologyCache.clearSearchCacheByOntology( serv );
-                } catch ( Exception e ) {
-                    OntologyServiceImpl.log.error( "Failed to index " + serv + ": " + e.getMessage(), e );
-                }
-            } else {
-                if ( serv.isEnabled() )
-                    OntologyServiceImpl.log
-                            .info( "Not available for reindexing (not enabled or finished initialization): " + serv );
+                } );
             }
         }
     }
@@ -514,11 +507,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public void reinitializeAndReindexAllOntologies() {
         for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
-            ontologyTaskExecutor.execute( () -> {
-                serv.initialize( true, true );
-                ontologyCache.clearSearchCacheByOntology( serv );
-                ontologyCache.clearByOntology( serv );
-            } );
+            if ( serv.isOntologyLoaded() ) {
+                if ( serv.isEnabled() ) {
+                    boolean isSearchEnabled = serv.isSearchEnabled();
+                    ontologyTaskExecutor.execute( () -> {
+                        OntologyServiceImpl.log.info( "Reinitializing " + serv + "..." );
+                        serv.initialize( true, isSearchEnabled );
+                        ontologyCache.clearByOntology( serv );
+                        if ( isSearchEnabled ) {
+                            ontologyCache.clearSearchCacheByOntology( serv );
+                        }
+                    } );
+                }
+            }
         }
     }
 
@@ -570,20 +571,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<String, CharacteristicValueObject> findObsoleteTermUsage() {
-        Map<String, CharacteristicValueObject> vos = new HashMap<>();
-
-        int start = 0;
-        int step = 5000;
+    public Map<Characteristic, Long> findObsoleteTermUsage() {
+        Map<Characteristic, Long> results = new HashMap<>();
 
         int prevObsoleteCnt = 0;
         int checked = 0;
-        CharacteristicValueObject lastObsolete = null;
+        Characteristic lastObsolete = null;
+        long total = characteristicService.countAll();
 
-        while ( true ) {
-
+        int step = 5000;
+        for ( int start = 0; ; start += step ) {
             Collection<Characteristic> chars = characteristicService.browse( start, step );
-            start += step;
 
             if ( chars == null || chars.isEmpty() ) {
                 break;
@@ -597,35 +595,30 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 checked++;
 
-                if ( this.getTerm( valueUri ) == null || this.isObsolete( valueUri ) ) {
-
+                OntologyTerm term = this.getTerm( valueUri );
+                if ( term != null && term.isObsolete() ) {
                     if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
                         // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
                         continue;
                     }
-
-
-                    if ( !vos.containsKey( valueUri ) ) {
-                        vos.put( valueUri, new CharacteristicValueObject( ch ) );
-                    }
-                    vos.get( valueUri ).incrementOccurrenceCount();
+                    results.compute( ch, ( k, v ) -> v == null ? 1L : v + 1L );
                     if ( log.isDebugEnabled() )
                         OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
-                    lastObsolete = vos.get( valueUri );
+                    lastObsolete = ch;
                 }
             }
 
-            if ( vos.size() > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + vos.size() + " obsolete or missing terms so far, tested " + checked + " characteristics" );
+            if ( results.size() > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + results.size() + " obsolete or missing terms so far, tested " + checked + " out of " + total + " characteristics" );
                 OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
             }
 
-            prevObsoleteCnt = vos.size();
+            prevObsoleteCnt = results.size();
         }
 
-        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + vos.size() );
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + results.size() );
 
-        return vos;
+        return results;
     }
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
@@ -986,20 +979,5 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
         return children;
-    }
-
-    /**
-     * Strategy to use when combining results from different ontologies.
-     */
-    private static final Comparator<OntologyTerm> ontologyTermComparator = Comparator
-            .comparing( ( OntologyTerm t ) -> t.getLabel() != null, Comparator.reverseOrder() ) // prefer terms with rdf:label
-            .thenComparing( OntologyTerm::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) ); // prefer the highest score
-
-    /**
-     * Deduplicate terms in the given collection giving preference to those with a <rdf:label/> if available and the
-     * highest {@link OntologyTerm#getScore()}.
-     */
-    private LinkedHashSet<OntologyTerm> pickBest( Collection<OntologyTerm> terms ) {
-        return terms.stream().sorted( ontologyTermComparator ).collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 }
