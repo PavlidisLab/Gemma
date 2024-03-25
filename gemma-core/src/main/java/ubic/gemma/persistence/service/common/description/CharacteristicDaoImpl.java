@@ -179,8 +179,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( uris.size() > MAX_PARAMETER_LIST_SIZE ) {
             if ( limit > 0 && rankByLevel ) {
                 // query is limited and order is important, we have to sort the results in memory
-                result = listByBatch( query, "uris", uris, 2048 );
-                result = result.stream()
+                result = streamByBatch( query, "uris", uris, 2048, Object[].class )
                         .sorted( Comparator.comparing( row -> rankClass( ( Class<?> ) row[0] ) ) )
                         .limit( limit )
                         .collect( Collectors.toList() );

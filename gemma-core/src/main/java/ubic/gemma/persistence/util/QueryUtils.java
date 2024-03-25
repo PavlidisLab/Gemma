@@ -8,6 +8,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utilities for {@link org.hibernate.Query}.
@@ -72,6 +73,7 @@ public class QueryUtils {
      */
     public static <T extends Comparable<T>> List<List<T>> batchParameterList( Collection<T> list, int batchSize ) {
         Assert.isTrue( batchSize == -1 || batchSize > 0, "Batch size must be strictly positive or equal to -1." );
+        Assert.isTrue( batchSize <= MAX_PARAMETER_LIST_SIZE, "The batch size must not exceed " + MAX_PARAMETER_LIST_SIZE + "." );
         if ( list.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -84,6 +86,7 @@ public class QueryUtils {
 
     public static <T extends Identifiable> List<List<T>> batchIdentifiableParameterList( Collection<T> list, int batchSize ) {
         Assert.isTrue( batchSize == -1 || batchSize > 0, "Batch size must be strictly positive or equal to -1." );
+        Assert.isTrue( batchSize <= MAX_PARAMETER_LIST_SIZE, "The batch size must not exceed " + MAX_PARAMETER_LIST_SIZE + "." );
         if ( list.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -102,10 +105,15 @@ public class QueryUtils {
     }
 
     /**
-     * List the results of a query by fixed batch size.
+     * List the results of a query by a fixed batch size.
+     * @param query      the query
+     * @param batchParam a parameter of the query for batching
+     * @param list       a collection of values for the batch parameters to retrieve
+     * @param batchSize  the number of elements to fetch in each batch
+     * @param maxResults maximum number of results to return, or -1 to ignore
      */
     public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
-        List<T> result = new ArrayList<>();
+        List<T> result = new ArrayList<>( list.size() );
         for ( List<S> batch : batchParameterList( list, batchSize ) ) {
             int remainingToFetch;
             if ( maxResults > 0 ) {
@@ -123,5 +131,23 @@ public class QueryUtils {
             result.addAll( query.list() );
         }
         return result;
+    }
+
+    /**
+     * @see #streamByBatch(Query, String, Collection, int)
+     */
+    public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query query, String batchParam, Collection<S> list, int batchSize, Class<T> clazz ) {
+        return streamByBatch( query, batchParam, list, batchSize );
+    }
+
+    /**
+     * Stream the results of a query by a fixed batch size.
+     * @see #listByBatch(Query, String, Collection, int)
+     */
+    public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+        //noinspection unchecked
+        return batchParameterList( list, batchSize ).stream()
+                .map( batch -> ( List<T> ) query.setParameterList( batchParam, batch ).list() )
+                .flatMap( List::stream );
     }
 }

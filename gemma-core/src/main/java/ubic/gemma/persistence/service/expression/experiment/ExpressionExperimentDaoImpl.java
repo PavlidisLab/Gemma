@@ -63,6 +63,7 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
@@ -702,7 +703,7 @@ public class ExpressionExperimentDaoImpl
             if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
                 result = listByBatch( q, "eeIds", eeIds, 2048 );
                 if ( maxResults > 0 ) {
-                    return aggregateC( result ).entrySet().stream()
+                    return aggregateByCategory( result ).entrySet().stream()
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults )
                             .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
@@ -718,10 +719,10 @@ public class ExpressionExperimentDaoImpl
             //noinspection unchecked
             result = q.setMaxResults( maxResults ).list();
         }
-        return aggregateC( result );
+        return aggregateByCategory( result );
     }
 
-    private Map<Characteristic, Long> aggregateC( List<Object[]> result ) {
+    private Map<Characteristic, Long> aggregateByCategory( List<Object[]> result ) {
         TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryComparator() );
         for ( Object[] row : result ) {
             byC.compute( Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ),
@@ -1014,8 +1015,8 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        List<Object[]> results = listByBatch( q, "ids", eeIds, getBatchSize() );
-        return results.stream().collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
+        return streamByBatch( q, "ids", eeIds, getBatchSize(), Object[].class )
+                .collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
@@ -1096,12 +1097,12 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ArrayDesign.class );
         query.setParameter( "original", original );
         query.setCacheable( true );
-        List<Object[]> result;
+        Stream<Object[]> result;
         if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
-            result = listByBatch( query, "ids", eeIds, 2048 );
+            result = streamByBatch( query, "ids", eeIds, 2048 );
             if ( maxResults > 0 ) {
                 // results need to be aggregated and limited
-                return result.stream()
+                return result
                         .collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) )
                         .entrySet().stream()
                         .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
@@ -1113,9 +1114,10 @@ public class ExpressionExperimentDaoImpl
             result = query
                     .setParameterList( "ids", optimizeParameterList( eeIds ) )
                     .setMaxResults( maxResults )
-                    .list();
+                    .list()
+                    .stream();
         }
-        return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
+        return result.collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
@@ -1255,8 +1257,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in :eeIds "
                         + "group by ee.taxon" )
                 .setCacheable( true );
-        List<Object[]> list = listByBatch( query, "eeIds", ids, getBatchSize() );
-        return list.stream()
+        return streamByBatch( query, "eeIds", ids, getBatchSize(), Object[].class )
                 .collect( Collectors.groupingBy( row -> ( Taxon ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
