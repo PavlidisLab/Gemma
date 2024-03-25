@@ -696,7 +696,7 @@ public class ExpressionExperimentDaoImpl
                     return aggregateByCategory( result ).entrySet().stream()
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
                 }
             } else {
                 //noinspection unchecked
@@ -713,12 +713,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     private Map<Characteristic, Long> aggregateByCategory( List<Object[]> result ) {
-        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryComparator() );
-        for ( Object[] row : result ) {
-            byC.compute( Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ),
-                    ( k, v ) -> v != null ? v + ( Long ) row[2] : ( Long ) row[2] );
-        }
-        return byC;
+        return result.stream().collect( Collectors.groupingBy( row -> Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ), Collectors.summingLong( row -> ( Long ) row[2] ) ) );
     }
 
     /**
@@ -841,11 +836,11 @@ public class ExpressionExperimentDaoImpl
             if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
                 result = listByBatch( q, "eeIds", eeIds, 2048 );
                 if ( minFrequency > 1 || maxResults > 0 ) {
-                    return aggregate( result ).entrySet().stream()
+                    return aggregateByCategoryAndValue( result ).entrySet().stream()
                             .filter( e -> e.getValue() >= minFrequency || ( retainedTermUris != null && retainedTermUris.contains( e.getKey().getValueUri() ) ) )
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
                 }
             } else {
                 //noinspection unchecked
@@ -857,15 +852,11 @@ public class ExpressionExperimentDaoImpl
             //noinspection unchecked
             result = q.setMaxResults( maxResults ).list();
         }
-        return aggregate( result );
+        return aggregateByCategoryAndValue( result );
     }
 
-    private Map<Characteristic, Long> aggregate( List<Object[]> result ) {
-        TreeMap<Characteristic, Long> byC = new TreeMap<>( Characteristic.getByCategoryAndValueComparator() );
-        for ( Object[] row : result ) {
-            byC.compute( convertRowToCharacteristic( row ), ( k, v ) -> v != null ? v + ( Long ) row[5] : ( Long ) row[5] );
-        }
-        return byC;
+    private Map<Characteristic, Long> aggregateByCategoryAndValue( List<Object[]> result ) {
+        return result.stream().collect( Collectors.groupingBy( this::convertRowToCharacteristic, Collectors.summingLong( row -> ( Long ) row[5] ) ) );
     }
 
     private Characteristic convertRowToCharacteristic( Object[] row ) {

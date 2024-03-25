@@ -7,6 +7,16 @@ import javax.annotation.Nullable;
 public class CharacteristicUtils {
 
     /**
+     * Create a new characteristic that represents the category of a given characteristic.
+     */
+    public static Characteristic getCategory( Characteristic t ) {
+        Characteristic c = new Characteristic();
+        c.setCategory( t.getCategory() );
+        c.setCategoryUri( t.getCategoryUri() );
+        return c;
+    }
+
+    /**
      * Compare a pair of ontology terms.
      */
     public static boolean equals( String a, String aUri, String b, String bUri ) {

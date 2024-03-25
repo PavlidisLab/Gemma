@@ -16,6 +16,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -173,7 +174,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetCategoriesWithUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
-                .containsEntry( c, 1L );
+                .containsEntry( CharacteristicUtils.getCategory( c ), 1L );
     }
 
     @Test

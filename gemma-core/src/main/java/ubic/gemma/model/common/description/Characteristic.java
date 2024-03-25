@@ -220,9 +220,6 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null ) {
-            return super.hashCode();
-        }
         return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
                 StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
     }
