@@ -66,6 +66,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
+import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -487,11 +488,11 @@ public class ExpressionExperimentDaoImpl
         for ( Characteristic c : raw ) {
 
             // filter. Could include this in the query if it isn't too complicated.
-            if ( c.getCategoryUri() == null ) {
+            if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
                 continue;
             }
 
-            if ( c.getValueUri() == null ) {
+            if ( isFreeText( c ) ) {
                 continue;
             }
 
