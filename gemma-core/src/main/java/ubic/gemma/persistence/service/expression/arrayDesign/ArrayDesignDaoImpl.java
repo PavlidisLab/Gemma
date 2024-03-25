@@ -52,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
@@ -1033,22 +1034,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
-                // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select BA.ARRAY_DESIGN_USED_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
-                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                        // FIXME: exclude troubled datasets
-                        + "group by BA.ARRAY_DESIGN_USED_FK"
-                )
+                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where ee2ad.ARRAY_DESIGN_FK in :ids "
+                        + "and not ee2ad.IS_ORIGINAL_PLATFORM"
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
+                        + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> list = query
-                .setCacheable( true )
-                .list();
-        Map<Long, Long> countById = list.stream()
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1058,19 +1060,25 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
-                // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select BA.ORIGINAL_PLATFORM_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
-                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                        // FIXME: exclude troubled datasets
-                        + "group by BA.ORIGINAL_PLATFORM_FK" )
+                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where ee2ad.ARRAY_DESIGN_FK in :ids "
+                        + "and ee2ad.IS_ORIGINAL_PLATFORM "
+                        // ignore noop switches
+                        + "and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)"
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
+                        + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> results = query.setCacheable( true ).list();
-        Map<Long, Long> switchedCountById = results.stream()
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

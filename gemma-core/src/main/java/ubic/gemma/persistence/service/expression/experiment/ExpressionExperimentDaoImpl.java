@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
-import gemma.gsec.util.SecurityUtil;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
@@ -95,13 +94,6 @@ public class ExpressionExperimentDaoImpl
      */
     private static final String[] ONE_TO_MANY_ALIASES = { CHARACTERISTIC_ALIAS, BIO_MATERIAL_CHARACTERISTIC_ALIAS,
             FACTOR_VALUE_CHARACTERISTIC_ALIAS, ALL_CHARACTERISTIC_ALIAS, BIO_ASSAY_ALIAS, ARRAY_DESIGN_ALIAS };
-
-    /**
-     * Queries for retrieving troubled experiment and platform identifiers.
-     */
-    private static final String
-            TROUBLED_EXPERIMENT_IDS_SQL = "select I.ID from INVESTIGATION I join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID where CD.TROUBLED",
-            TROUBLED_PLATFORM_IDS_SQL = "select AD.ID from ARRAY_DESIGN AD join CURATION_DETAILS CD on AD.CURATION_DETAILS_FK = CD.ID where CD.TROUBLED";
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -670,9 +662,7 @@ public class ExpressionExperimentDaoImpl
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
             // troubled filtering
-            if ( !SecurityUtil.isUserAdmin() ) {
-                query += " and T.EXPRESSION_EXPERIMENT_FK not in (" + TROUBLED_EXPERIMENT_IDS_SQL + ")";
-            }
+            query += formNativeNonTroubledClause( "T.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class );
         }
         query += " group by COALESCE(T.CATEGORY_URI, T.CATEGORY)";
         if ( maxResults > 0 ) {
@@ -796,9 +786,7 @@ public class ExpressionExperimentDaoImpl
         }
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
-            if ( !SecurityUtil.isUserAdmin() ) {
-                query += " and T.EXPRESSION_EXPERIMENT_FK not in (" + TROUBLED_EXPERIMENT_IDS_SQL + ")";
-            }
+            query += formNativeNonTroubledClause( "T.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class );
         }
         //language=HQL
         query += " group by "
@@ -985,7 +973,8 @@ public class ExpressionExperimentDaoImpl
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL"
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "EE2AD.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
-                        + ( !SecurityUtil.isUserAdmin() ? " and EE2AD.EXPRESSION_EXPERIMENT_FK not in (" + TROUBLED_EXPERIMENT_IDS_SQL + ") and EE2AD.ARRAY_DESIGN_FK not in (" + TROUBLED_PLATFORM_IDS_SQL + ") " : "" )
+                        + formNativeNonTroubledClause( "EE2AD.ARRAY_DESIGN_FK", ArrayDesign.class )
+                        + formNativeNonTroubledClause( "EE2AD.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by AD.TECHNOLOGY_TYPE" )
                 .addScalar( "TT", StandardBasicTypes.STRING )
                 .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
@@ -1046,10 +1035,11 @@ public class ExpressionExperimentDaoImpl
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.IS_ORIGINAL_PLATFORM = :original"
                         // exclude noop switch
-                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
+                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)" : "" )
                         + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
                         // exclude troubled platforms or experiments for non-admins
-                        + ( !SecurityUtil.isUserAdmin() ? "and ee2ad.ARRAY_DESIGN_FK not in (" + TROUBLED_PLATFORM_IDS_SQL + ") and ee2ad.EXPRESSION_EXPERIMENT_FK not in (" + TROUBLED_EXPERIMENT_IDS_SQL + ") " : "" )
+                        + formNativeNonTroubledClause( "ee2ad.ARRAY_DESIGN_FK", ArrayDesign.class )
+                        + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ad.ID "
                         // no need to sort results if limiting, we're collecting in a map
                         + ( maxResults > 0 ? "order by EE_COUNT desc" : "" ) )
@@ -1081,10 +1071,10 @@ public class ExpressionExperimentDaoImpl
         Query query = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select ad.*, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + "join ARRAY_DESIGN ad on ee2ad.ARRAY_DESIGN_FK = ad.ID "
-                        + "where ee2ad.IS_ORIGINAL_PLATFORM = :original "
+                        + "where ee2ad.IS_ORIGINAL_PLATFORM = :original"
                         // exclude noop switch
-                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM) " : "" )
-                        + "and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids "
+                        + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)" : "" )
+                        + " and ee2ad.EXPRESSION_EXPERIMENT_FK in :ids "
                         + "group by ad.ID "
                         // no need to sort results if limiting, we're collecting in a map
                         + ( maxResults > 0 ? "order by EE_COUNT desc" : "" ) )
@@ -1228,10 +1218,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
+        //language=HQL
         String queryString = "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
-                + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
-                + formNonTroubledClause( "ee" ) + " "
-                + "group by ee.taxon";
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" )
+                + formNonTroubledClause( "ee", ExpressionExperiment.class )
+                + " group by ee.taxon";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
