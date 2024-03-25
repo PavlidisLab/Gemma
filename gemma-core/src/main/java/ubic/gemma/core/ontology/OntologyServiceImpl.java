@@ -33,10 +33,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyProperty;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
@@ -415,6 +412,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     }
                 }
             }, String.format( "%s %s of %d terms", direct ? "direct" : "all", parents ? "parents" : "children", terms.size() ) );
+
             if ( results.addAll( newResults ) && !direct ) {
                 // there are new results (i.e. a term was inferred from a different ontology), we need to requery them
                 // if they were not in the query
@@ -427,6 +425,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 toQuery.clear();
             }
         }
+
+        // when an ontology returns a result without a label, it might be referring to another ontology, so we attempt
+        // to retrieve a results with a label as a replacement
+        Set<String> resultsWithMissingLabels = results.stream()
+                .filter( t -> t.getLabel() == null )
+                .map( OntologyResource::getUri )
+                .collect( Collectors.toSet() );
+        if ( !resultsWithMissingLabels.isEmpty() ) {
+            Set<OntologyTerm> replacements = getTerms( resultsWithMissingLabels );
+            results.removeAll( replacements );
+            results.addAll( replacements );
+        }
+
         // drop terms without labels
         results.removeIf( t -> t.getLabel() == null );
         return new HashSet<>( results );
