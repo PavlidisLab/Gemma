@@ -5,14 +5,16 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.util.Version;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -163,13 +165,14 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
     private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws HibernateSearchException {
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
-            QueryBuilder queryBuilder = fullTextSession.getSearchFactory().buildQueryBuilder().forEntity( clazz )
-                    .get();
-            Query query = queryBuilder.keyword()
-                    .onFields( fields )
-                    .matching( settings.getQuery() )
-                    .createQuery();
             Analyzer analyzer = analyzers.get( clazz );
+            QueryParser queryParser = new QueryParser( Version.LUCENE_36, "", analyzer );
+            Query query;
+            try {
+                query = queryParser.parse( settings.getQuery() );
+            } catch ( ParseException e ) {
+                throw new org.hibernate.search.SearchException( e );
+            }
             Highlighter highlighter = settings.getHighlighter() != null ? settings.getHighlighter().createLuceneHighlighter( new QueryScorer( query ) ) : null;
             String[] projection;
             if ( highlighter != null ) {
