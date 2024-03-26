@@ -27,6 +27,7 @@
                 <ref local="ee2cSampleUpdateTrigger"/>
                 <ref local="ee2cExperimentalDesignUpdateTrigger"/>
                 <ref local="ee2adUpdateTrigger"/>
+                <ref local="indexExperimentsTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
@@ -170,6 +171,22 @@
         <!-- every hour during working hours (mostly when new datasets are added & RNA-Seq data is imported which produce a platform switch) -->
         <!-- datasets are only made public during working hours, so even if they are imported by the pipeline, that will not be reflected until it is made public -->
         <property name="cronExpression" value="0 0 9-17 ? * MON-FRI"/>
+    </bean>
+    <bean id="indexExperimentsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="indexerService"/>
+                <property name="targetMethod" value="index"/>
+                <property name="arguments">
+                    <set>
+                        <value>ubic.gemma.model.expression.experiment.ExpressionExperiment</value>
+                    </set>
+                </property>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <!-- at 1:00 AM, every working day -->
+        <property name="cronExpression" value="23 0 0 ? * MON-FRI"/>
     </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
