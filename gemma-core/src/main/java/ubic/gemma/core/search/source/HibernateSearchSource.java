@@ -34,6 +34,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +44,8 @@ import java.util.stream.Collectors;
 @Component
 @CommonsLog
 public class HibernateSearchSource implements SearchSource, InitializingBean {
+
+    private static final Pattern LUCENE_RESERED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
 
@@ -174,7 +177,14 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             try {
                 query = queryParser.parse( settings.getQuery() );
             } catch ( ParseException e ) {
-                throw new org.hibernate.search.SearchException( e );
+                try {
+                    // attempt to parse it without special characters
+                    String strippedQuery = LUCENE_RESERED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
+                    log.warn( "Invalid Lucene query: '" + settings.getQuery() + "'. Attempting to parse it without special characters: '" + strippedQuery + "'." );
+                    query = queryParser.parse( strippedQuery );
+                } catch ( ParseException ignored ) {
+                    throw new org.hibernate.search.SearchException( e );
+                }
             }
             Highlighter highlighter = settings.getHighlighter() != null ? new Highlighter( settings.getHighlighter().getFormatter(), new QueryScorer( query ) ) : null;
             String[] projection;

@@ -123,4 +123,9 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
                     assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
     }
+
+    @Test
+    public void testSearchWithInvalidQuerySyntax() throws HibernateSearchException {
+        hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder().query( "\"" ).build() );
+    }
 }
