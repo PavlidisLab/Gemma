@@ -88,7 +88,7 @@ public class PubMedXMLFetcherTest {
 
             assertNotNull( br );
 
-            assertEquals( "Tatton-Brown, Katrina; Rahman, Nazneen", br.getAuthorList() );
+            assertEquals( "Ocansey, Sharon; Tatton-Brown, Katrina", br.getAuthorList() );
 
             assertEquals( "GeneReviews", br.getPublication().substring( 0, "GeneReviews".length() ) );
             assertEquals( "EZH2-Related Overgrowth", br.getTitle() );
