@@ -177,8 +177,8 @@
                 <property name="concurrent" value="false"/>
             </bean>
         </property>
-        <!-- at 1:00 AM, every working day -->
-        <property name="cronExpression" value="23 0 0 ? * MON-FRI"/>
+        <!-- at 23:00 PM, every working day -->
+        <property name="cronExpression" value="0 0 23 ? * MON-FRI"/>
     </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
