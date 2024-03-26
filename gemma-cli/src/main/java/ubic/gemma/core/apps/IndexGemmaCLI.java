@@ -31,7 +31,7 @@ public class IndexGemmaCLI extends AbstractCLI {
      */
     private static final IndexableEntity[] indexableEntities = {
             new IndexableEntity( "g", "genes", Gene.class, 1000 ),
-            new IndexableEntity( "e", "datasets", ExpressionExperiment.class, 100 ),
+            new IndexableEntity( "e", "datasets", ExpressionExperiment.class, 1000 ),
             new IndexableEntity( "a", "platforms", ArrayDesign.class, 100 ),
             new IndexableEntity( "b", "bibliographic references", BibliographicReference.class, 1000 ),
             new IndexableEntity( "s", "probes", CompositeSequence.class, 100000 ),
