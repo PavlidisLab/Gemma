@@ -289,8 +289,8 @@ public class SearchSettings implements Serializable {
     }
 
     @Nullable
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, Set<String> fields ) {
-        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
+        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer ) : null;
     }
 
     @Override

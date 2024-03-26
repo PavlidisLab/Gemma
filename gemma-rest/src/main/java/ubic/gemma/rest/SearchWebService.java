@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -24,6 +23,7 @@ import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -99,6 +98,10 @@ public class SearchWebService {
 
         private int highlightedDocuments = 0;
 
+        public Highlighter() {
+            super( new SimpleMarkdownFormatter() );
+        }
+
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
             String searchUrl = ServletUriComponentsBuilder.fromRequest( request )
@@ -110,17 +113,12 @@ public class SearchWebService {
         }
 
         @Override
-        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer, fields );
+            return super.highlightDocument( document, highlighter, analyzer );
         }
     }
 

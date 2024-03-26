@@ -27,7 +27,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -138,6 +137,7 @@ public class DatasetsWebService {
         private final Set<Long> documentIdsToHighlight;
 
         private Highlighter( Set<Long> documentIdsToHighlight ) {
+            super( new SimpleMarkdownFormatter() );
             this.documentIdsToHighlight = documentIdsToHighlight;
         }
 
@@ -156,18 +156,13 @@ public class DatasetsWebService {
         }
 
         @Override
-        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             long id = Long.parseLong( document.get( "id" ) );
             // TODO: maybe use a filter in the Lucene query?
             if ( !documentIdsToHighlight.contains( id ) ) {
                 return Collections.emptyMap();
             }
-            return super.highlightDocument( document, highlighter, analyzer, fields );
+            return super.highlightDocument( document, highlighter, analyzer );
         }
     }
 

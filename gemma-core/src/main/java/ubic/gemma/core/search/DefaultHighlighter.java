@@ -4,8 +4,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
-import org.apache.lucene.search.highlight.QueryScorer;
 import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 
 import javax.annotation.Nullable;
@@ -13,10 +13,19 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @CommonsLog
 public class DefaultHighlighter implements Highlighter {
+
+    private final Formatter formatter;
+
+    public DefaultHighlighter() {
+        this( new SimpleHTMLFormatter() );
+    }
+
+    public DefaultHighlighter( Formatter formatter ) {
+        this.formatter = formatter;
+    }
 
     @Override
     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
@@ -24,15 +33,15 @@ public class DefaultHighlighter implements Highlighter {
     }
 
     @Override
-    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-        return new org.apache.lucene.search.highlight.Highlighter( new SimpleHTMLFormatter(), queryScorer );
+    public Formatter getFormatter() {
+        return formatter;
     }
 
     @Override
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
         Map<String, String> highlights = new HashMap<>();
         for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() || !fields.contains( field.name() ) ) {
+            if ( !field.isTokenized() || field.isBinary() ) {
                 continue;
             }
             try {

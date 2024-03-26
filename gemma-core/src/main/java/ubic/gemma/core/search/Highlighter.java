@@ -2,7 +2,7 @@ package ubic.gemma.core.search;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.Formatter;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -26,13 +26,12 @@ public interface Highlighter {
     Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field );
 
     /**
-     * Obtain a highlighter for Lucene hits to be used with {@link #highlightDocument(Document, org.apache.lucene.search.highlight.Highlighter, Analyzer, Set)}.
+     * Obtain a formatter for highlights.
      */
-    @Nullable
-    org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer );
+    Formatter getFormatter();
 
     /**
      * Highlight a given Lucene document.
      */
-    Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields );
+    Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer );
 }

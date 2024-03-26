@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
@@ -166,14 +167,14 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
             Analyzer analyzer = analyzers.get( clazz );
-            QueryParser queryParser = new QueryParser( Version.LUCENE_36, "", analyzer );
+            QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
             Query query;
             try {
                 query = queryParser.parse( settings.getQuery() );
             } catch ( ParseException e ) {
                 throw new org.hibernate.search.SearchException( e );
             }
-            Highlighter highlighter = settings.getHighlighter() != null ? settings.getHighlighter().createLuceneHighlighter( new QueryScorer( query ) ) : null;
+            Highlighter highlighter = settings.getHighlighter() != null ? new Highlighter( settings.getHighlighter().getFormatter(), new QueryScorer( query ) ) : null;
             String[] projection;
             if ( highlighter != null ) {
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
@@ -213,9 +214,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                 // this happens if an entity is still in the cache, but was removed from the database
                 return null;
             }
-            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         }
     }
 }
