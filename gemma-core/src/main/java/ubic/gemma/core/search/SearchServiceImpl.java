@@ -46,6 +46,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -62,7 +63,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
@@ -73,6 +73,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
 
@@ -182,6 +183,16 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * A composite search source.
      */
     private SearchSource searchSource;
+
+    @Override
+    public Set<String> getFields( Class<? extends Identifiable> resultType ) {
+        return Stream.of( databaseSearchSource, hibernateSearchSource, ontologySearchSource )
+                .filter( s -> s instanceof FieldAwareSearchSource )
+                .map( s -> ( FieldAwareSearchSource ) s )
+                .map( s -> s.getFields( resultType ) )
+                .flatMap( Set::stream )
+                .collect( Collectors.toSet() );
+    }
 
     /*
      * This is the method used by the main search page.

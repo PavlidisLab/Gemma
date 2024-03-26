@@ -61,6 +61,11 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
+     * Name used in the OpenAPI schema to identify a search query.
+     */
+    public static final String QUERY_SCHEMA_NAME = "QueryType";
+
+    /**
      * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
      * fourth argument.
      */
@@ -131,7 +136,7 @@ public class SearchWebService {
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma")
-    public SearchResultsResponseDataObject search( @QueryParam("query") String query,
+    public SearchResultsResponseDataObject search( @QueryParam("query") @Schema(name = QUERY_SCHEMA_NAME) String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,

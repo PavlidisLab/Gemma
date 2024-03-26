@@ -19,8 +19,8 @@ import org.hibernate.search.Search;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.FieldAwareSearchSource;
 import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
  */
 @Component
 @CommonsLog
-public class HibernateSearchSource implements SearchSource, InitializingBean {
+public class HibernateSearchSource implements FieldAwareSearchSource, InitializingBean {
 
-    private static final Pattern LUCENE_RESERED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
+    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
 
@@ -98,9 +98,7 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
 
     private static String[] COMPOSITE_SEQUENCE_FIELDS = { "name", "description" };
 
-    private static String[] prefix( String p, String... fields ) {
-        return Arrays.stream( fields ).map( f -> p + f ).toArray( String[]::new );
-    }
+    private static final Map<Class<?>, Set<String>> ALL_FIELDS = new HashMap<>();
 
     static {
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "primaryPublication.", PUBLICATION_FIELDS ) );
@@ -109,6 +107,16 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "literatureSources.", PUBLICATION_FIELDS ) );
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "members.gene.", GENE_FIELDS ) );
         COMPOSITE_SEQUENCE_FIELDS = ArrayUtils.addAll( COMPOSITE_SEQUENCE_FIELDS, prefix( "biologicalCharacteristic.", BIO_SEQUENCE_FIELDS ) );
+        ALL_FIELDS.put( ExpressionExperiment.class, new HashSet<>( Arrays.asList( DATASET_FIELDS ) ) );
+        ALL_FIELDS.put( ArrayDesign.class, new HashSet<>( Arrays.asList( PLATFORM_FIELDS ) ) );
+        ALL_FIELDS.put( CompositeSequence.class, new HashSet<>( Arrays.asList( COMPOSITE_SEQUENCE_FIELDS ) ) );
+        ALL_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_FIELDS ) ) );
+        ALL_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_FIELDS ) ) );
+        ALL_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_FIELDS ) ) );
+    }
+
+    private static String[] prefix( String p, String... fields ) {
+        return Arrays.stream( fields ).map( f -> p + f ).toArray( String[]::new );
     }
 
     @Autowired
@@ -126,6 +134,11 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         } finally {
             fullTextSession.close();
         }
+    }
+
+    @Override
+    public Set<String> getFields( Class<? extends Identifiable> entityClass ) {
+        return ALL_FIELDS.getOrDefault( entityClass, Collections.emptySet() );
     }
 
     @Override
@@ -179,7 +192,7 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             } catch ( ParseException e ) {
                 try {
                     // attempt to parse it without special characters
-                    String strippedQuery = LUCENE_RESERED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
+                    String strippedQuery = LUCENE_RESERVED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
                     log.warn( "Invalid Lucene query: '" + settings.getQuery() + "'. Attempting to parse it without special characters: '" + strippedQuery + "'." );
                     query = queryParser.parse( strippedQuery );
                 } catch ( ParseException ignored ) {

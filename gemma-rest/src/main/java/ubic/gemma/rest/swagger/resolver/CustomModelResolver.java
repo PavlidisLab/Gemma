@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Resolve {@link Arg} parameters' schema.
- *
+ * <p>
  * This should always be added last with {@link ModelConverters#addConverter(ModelConverter)} to take priority as it
  * addresses a glitch in the original {@link ModelResolver}.
  *
@@ -43,6 +43,12 @@ import java.util.stream.Collectors;
 public class CustomModelResolver extends ModelResolver {
 
     private final SearchService searchService;
+
+    @Autowired
+    private List<EntityArgService<?, ?>> entityArgServices;
+
+    @Autowired
+    private MessageSource messageSource;
 
     @Autowired
     public CustomModelResolver( @Qualifier("swaggerObjectMapper") ObjectMapper objectMapper, SearchService searchService ) {
@@ -123,11 +129,21 @@ public class CustomModelResolver extends ModelResolver {
             extensions.put( "x-gemma-filterable-properties", resolveAvailableProperties( a ) );
             extensions = Collections.unmodifiableMap( extensions );
         }
+        if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equals( schema.name() ) ) {
+            extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
+            Map<String, Set<String>> sp = new HashMap<>();
+            for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
+                Set<String> fields = searchService.getFields( resultType );
+                if ( !fields.isEmpty() ) {
+                    sp.put( resultType.getName(), fields );
+                }
+            }
+            extensions.put( "x-gemma-searchable-properties", sp );
+            extensions = Collections.unmodifiableMap( extensions );
+        }
         return extensions;
     }
 
-    @Autowired
-    private List<EntityArgService<?, ?>> entityArgServices;
 
     @Value
     private static class FilterablePropMeta {
@@ -149,8 +165,6 @@ public class CustomModelResolver extends ModelResolver {
         String label;
     }
 
-    @Autowired
-    private MessageSource messageSource;
 
     private List<FilterablePropMeta> resolveAvailableProperties( Annotated a ) {
         // this is the case for FilterArg and SortArg

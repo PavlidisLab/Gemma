@@ -49,8 +49,8 @@ public class OpenApiTest extends BaseJerseyTest {
     static class OpenApiTestContextConfiguration {
 
         @Bean
-        public CustomModelResolver customModelResolver() {
-            return new CustomModelResolver( Json.mapper(), mock( SearchService.class ) );
+        public CustomModelResolver customModelResolver( SearchService searchService ) {
+            return new CustomModelResolver( Json.mapper(), searchService );
         }
 
         @Bean
@@ -100,6 +100,9 @@ public class OpenApiTest extends BaseJerseyTest {
     private CustomModelResolver customModelResolver;
 
     @Autowired
+    private SearchService searchService;
+
+    @Autowired
     @Qualifier("swaggerObjectMapper")
     private ObjectMapper objectMapper;
 
@@ -107,6 +110,8 @@ public class OpenApiTest extends BaseJerseyTest {
 
     @Before
     public void setUpSpec() throws IOException {
+        when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
+        when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
         // FIXME: this is normally initialized in the servlet
         ModelConverters.getInstance().addConverter( customModelResolver );
         Response response = target( "/openapi.json" ).request().get();
@@ -168,6 +173,19 @@ public class OpenApiTest extends BaseJerseyTest {
                     assertThat( p.getSchema().getType() ).isEqualTo( "integer" );
                     assertThat( p.getSchema().getMinimum() ).isEqualTo( "1" );
                     assertThat( p.getSchema().getMaximum() ).isEqualTo( "5000" );
+                } );
+    }
+
+    @Test
+    public void testSearchableProperties() {
+        assertThat( spec.getPaths().get( "/search" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getName() ).isEqualTo( "query" );
+                    assertThat( p.getSchema().getType() ).isEqualTo( "string" );
+                    //noinspection unchecked
+                    assertThat( p.getSchema().getExtensions() )
+                            .isNotNull()
+                            .containsEntry( "x-gemma-searchable-properties", Collections.singletonMap( ExpressionExperiment.class.getName(), Collections.singletonList( "shortName" ) ) );
                 } );
     }
 }
