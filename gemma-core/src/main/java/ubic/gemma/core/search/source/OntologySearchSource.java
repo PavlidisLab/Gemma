@@ -176,6 +176,8 @@ public class OntologySearchSource implements SearchSource {
             uri2value.put( term.getUri(), term.getLabel() );
             if ( term.getScore() == EXACT_MATCH_SCORE ) {
                 uri2score.put( term.getUri(), 1.0 );
+            } else if ( summaryStatistics.getMax() == summaryStatistics.getMin() ) {
+                uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY );
             } else {
                 uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY * ( term.getScore() - summaryStatistics.getMin() ) / ( summaryStatistics.getMax() - summaryStatistics.getMin() ) );
             }

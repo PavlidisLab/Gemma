@@ -209,7 +209,12 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
 
     @Nullable
     private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
-        double score = FULL_TEXT_SCORE_PENALTY * ( ( Float ) row[1] - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
+        double score;
+        if ( stats.getMax() == stats.getMin() ) {
+            score = FULL_TEXT_SCORE_PENALTY;
+        } else {
+            score = FULL_TEXT_SCORE_PENALTY * ( ( Float ) row[1] - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
+        }
         if ( settings.isFillResults() ) {
             //noinspection unchecked
             T entity = ( T ) row[0];
