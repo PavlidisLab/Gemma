@@ -87,17 +87,17 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.buildOptions( options );
 
         options.addOption( Option.builder( "i" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .longOpt( "identityThreshold" ).build() );
 
         options.addOption( Option.builder( "s" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
                 .longOpt( "scoreThreshold" ).build() );
 
         options.addOption( Option.builder( "o" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Minimum fraction of probe overlap with exons, default = " + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
                 .longOpt( "overlapThreshold" )
                 .build() );
@@ -234,7 +234,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( commandLine.hasOption( 's' ) ) {
-            blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
+            blatScoreThreshold = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
             if ( blatScoreThreshold < 0 || blatScoreThreshold > 1 ) {
                 throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
             }
@@ -249,14 +249,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.mirnaOnlyModeOption = commandLine.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION );
 
         if ( commandLine.hasOption( 'i' ) ) {
-            identityThreshold = ( Double ) commandLine.getParsedOptionValue( 'i' );
+            identityThreshold = ( ( Number ) commandLine.getParsedOptionValue( 'i' ) ).doubleValue();
             if ( identityThreshold < 0 || identityThreshold > 1 ) {
                 throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
             }
         }
 
         if ( commandLine.hasOption( 'o' ) ) {
-            overlapThreshold = ( Double ) commandLine.getParsedOptionValue( 'o' );
+            overlapThreshold = ( ( Number ) commandLine.getParsedOptionValue( 'o' ) ).doubleValue();
             if ( overlapThreshold < 0 || overlapThreshold > 1 ) {
                 throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
             }
