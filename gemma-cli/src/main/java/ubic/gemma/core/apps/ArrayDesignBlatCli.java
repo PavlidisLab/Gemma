@@ -72,7 +72,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .desc(
                         "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
                 .longOpt( "scoreThresh" )
-                .type( Double.class )
+                .type( Number.class )
                 .build();
 
         options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
@@ -106,7 +106,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 //        }
 
         if ( commandLine.hasOption( 's' ) ) {
-            this.blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
+            this.blatScoreThreshold = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
         }
 
         TaxonService taxonService = this.getBean( TaxonService.class );

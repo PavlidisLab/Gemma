@@ -274,7 +274,7 @@ public abstract class AbstractCLI implements CLI {
     protected void addThreadsOption( Options options ) {
         options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
-                .type( Integer.class )
+                .type( Number.class )
                 .build() );
     }
 
@@ -343,7 +343,7 @@ public abstract class AbstractCLI implements CLI {
         this.autoSeek = commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME );
 
         if ( commandLine.hasOption( THREADS_OPTION ) ) {
-            this.numThreads = ( Integer ) commandLine.getParsedOptionValue( THREADS_OPTION );
+            this.numThreads = ( ( Number ) commandLine.getParsedOptionValue( THREADS_OPTION ) ).intValue();
             if ( this.numThreads < 1 ) {
                 throw new IllegalArgumentException( "Number of threads must be greater than 1." );
             }
