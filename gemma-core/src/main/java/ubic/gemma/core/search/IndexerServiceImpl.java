@@ -11,7 +11,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.util.Set;
 
-@Service
+@Service("indexerService")
 public class IndexerServiceImpl implements IndexerService {
 
     @Autowired

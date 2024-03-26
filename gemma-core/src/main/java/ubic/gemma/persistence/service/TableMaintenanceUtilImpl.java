@@ -61,7 +61,7 @@ import java.util.Date;
  * @author jsantos
  * @author paul
  */
-@Service
+@Service("tableMaintenanceUtil")
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     /**

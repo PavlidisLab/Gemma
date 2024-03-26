@@ -35,14 +35,6 @@
         <property name="autoStartup" value="${quartzOn}"/>
     </bean>
 
-    <bean id="expressionExperimentReportService"
-          class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
-    <bean id="phenotypeAssociationManagerService"
-          class="ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl"/>
-    <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
-    <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
-    <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
-
     <!-- Triggers -->
     <!-- Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L
         W Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html
