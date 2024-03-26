@@ -53,7 +53,7 @@ public class IndexerTaskImpl extends AbstractTask<IndexerTaskCommand> implements
         if ( taskCommand.isIndexGeneSet() ) {
             classesToIndex.add( GeneSet.class );
         }
-        indexerService.index( classesToIndex, 4 );
+        indexerService.index( classesToIndex );
         return new TaskResult( taskCommand, null );
     }
 }

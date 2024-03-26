@@ -12,14 +12,22 @@ public interface IndexerService {
 
     /**
      * Index all the searchable entities.
-     * @param numThreads number of threads to use for loading and indexing
      */
-    void index( int numThreads );
+    void index();
 
     /**
-     * Index all the given classes.
+     * Index the given classes.
      * @param classesToIndex a set of classes to index
-     * @param numThreads number of threads to use for loading and indexing
      */
-    void index( Set<Class<? extends Identifiable>> classesToIndex, int numThreads );
+    void index( Set<Class<? extends Identifiable>> classesToIndex );
+
+    /**
+     * Set the number of threads to use for indexing entities.
+     */
+    void setNumThreads( int numThreads );
+
+    /**
+     * Set the logging frequency for reporting progress.
+     */
+    void setLoggingFrequency( int loggingFrequency );
 }

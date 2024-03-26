@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -21,22 +22,21 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Component
 public class IndexGemmaCLI extends AbstractCLI {
-
-    private static final String THREADS_OPTION = "threads";
 
     /**
      * A list of all searchable entities this CLI supports.
      */
     private static final IndexableEntity[] indexableEntities = {
-            new IndexableEntity( "g", "genes", Gene.class ),
-            new IndexableEntity( "e", "datasets", ExpressionExperiment.class ),
-            new IndexableEntity( "a", "platforms", ArrayDesign.class ),
-            new IndexableEntity( "b", "bibliographic references", BibliographicReference.class ),
-            new IndexableEntity( "s", "probes", CompositeSequence.class ),
-            new IndexableEntity( "q", "sequences", BioSequence.class ),
-            new IndexableEntity( "x", "datasets groups", ExpressionExperimentSet.class ),
-            new IndexableEntity( "y", "gene sets", GeneSet.class )
+            new IndexableEntity( "g", "genes", Gene.class, 1000 ),
+            new IndexableEntity( "e", "datasets", ExpressionExperiment.class, 100 ),
+            new IndexableEntity( "a", "platforms", ArrayDesign.class, 10 ),
+            new IndexableEntity( "b", "bibliographic references", BibliographicReference.class, 1000 ),
+            new IndexableEntity( "s", "probes", CompositeSequence.class, 1000 ),
+            new IndexableEntity( "q", "sequences", BioSequence.class, 1000 ),
+            new IndexableEntity( "x", "datasets groups", ExpressionExperimentSet.class, 10 ),
+            new IndexableEntity( "y", "gene sets", GeneSet.class, 10 )
     };
 
     @lombok.Value
@@ -44,6 +44,7 @@ public class IndexGemmaCLI extends AbstractCLI {
         String option;
         String description;
         Class<? extends Identifiable> clazz;
+        int loggingFrequency;
     }
 
     @Autowired
@@ -53,7 +54,6 @@ public class IndexGemmaCLI extends AbstractCLI {
     private File searchDir;
 
     private final Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
-    private int numThreads;
 
     @Override
     public String getCommandName() {
@@ -80,23 +80,27 @@ public class IndexGemmaCLI extends AbstractCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
+        int loggingFrequency = 1000;
         for ( IndexableEntity ie : indexableEntities ) {
             if ( commandLine.hasOption( ie.option ) ) {
                 classesToIndex.add( ie.clazz );
+                loggingFrequency = Math.min( loggingFrequency, ie.loggingFrequency );
             }
         }
+        indexerService.setLoggingFrequency( loggingFrequency );
+        indexerService.setNumThreads( getNumThreads() );
     }
 
     @Override
     protected void doWork() throws Exception {
         if ( classesToIndex.isEmpty() ) {
             log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
-            indexerService.index( getNumThreads() );
+            indexerService.index();
         } else {
             log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
                     searchDir.getAbsolutePath(),
                     classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
-            indexerService.index( classesToIndex, getNumThreads() );
+            indexerService.index( classesToIndex );
         }
     }
 }
