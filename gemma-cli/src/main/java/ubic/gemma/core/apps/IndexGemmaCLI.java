@@ -18,6 +18,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,11 +32,11 @@ public class IndexGemmaCLI extends AbstractCLI {
     private static final IndexableEntity[] indexableEntities = {
             new IndexableEntity( "g", "genes", Gene.class, 1000 ),
             new IndexableEntity( "e", "datasets", ExpressionExperiment.class, 100 ),
-            new IndexableEntity( "a", "platforms", ArrayDesign.class, 10 ),
+            new IndexableEntity( "a", "platforms", ArrayDesign.class, 100 ),
             new IndexableEntity( "b", "bibliographic references", BibliographicReference.class, 1000 ),
             new IndexableEntity( "s", "probes", CompositeSequence.class, 1000 ),
             new IndexableEntity( "q", "sequences", BioSequence.class, 1000 ),
-            new IndexableEntity( "x", "datasets groups", ExpressionExperimentSet.class, 10 ),
+            new IndexableEntity( "x", "datasets groups", ExpressionExperimentSet.class, 100 ),
             new IndexableEntity( "y", "gene sets", GeneSet.class, 10 )
     };
 
@@ -53,7 +54,7 @@ public class IndexGemmaCLI extends AbstractCLI {
     @Value("${gemma.search.dir}")
     private File searchDir;
 
-    private final Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
+    private final Set<IndexableEntity> classesToIndex = new HashSet<>();
 
     @Override
     public String getCommandName() {
@@ -80,27 +81,30 @@ public class IndexGemmaCLI extends AbstractCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        int loggingFrequency = 1000;
         for ( IndexableEntity ie : indexableEntities ) {
             if ( commandLine.hasOption( ie.option ) ) {
-                classesToIndex.add( ie.clazz );
-                loggingFrequency = Math.min( loggingFrequency, ie.loggingFrequency );
+                classesToIndex.add( ie );
             }
         }
-        indexerService.setLoggingFrequency( loggingFrequency );
+        if ( classesToIndex.isEmpty() ) {
+            classesToIndex.addAll( Arrays.asList( indexableEntities ) );
+        }
         indexerService.setNumThreads( getNumThreads() );
     }
 
     @Override
     protected void doWork() throws Exception {
-        if ( classesToIndex.isEmpty() ) {
-            log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
-            indexerService.index();
-        } else {
+        if ( classesToIndex.size() < indexableEntities.length ) {
             log.info( String.format( "The following entities will be indexed under %s:\n\t%s",
                     searchDir.getAbsolutePath(),
-                    classesToIndex.stream().map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
-            indexerService.index( classesToIndex );
+                    classesToIndex.stream().map( IndexableEntity::getClazz ).map( Class::getName ).collect( Collectors.joining( "\n\t" ) ) ) );
+        } else {
+            log.info( String.format( "All entities will be indexed under %s.", searchDir.getAbsolutePath() ) );
+        }
+        for ( IndexableEntity classToIndex : classesToIndex ) {
+            log.info( "Indexing " + classToIndex.getClazz().getName() + "..." );
+            indexerService.setLoggingFrequency( classToIndex.loggingFrequency );
+            indexerService.index( classToIndex.clazz );
         }
     }
 }

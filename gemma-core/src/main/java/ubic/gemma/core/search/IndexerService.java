@@ -2,8 +2,6 @@ package ubic.gemma.core.search;
 
 import ubic.gemma.model.common.Identifiable;
 
-import java.util.Set;
-
 /**
  * Indexer service.
  * @author poirigui
@@ -11,15 +9,10 @@ import java.util.Set;
 public interface IndexerService {
 
     /**
-     * Index all the searchable entities.
+     * Index the given class.
+     * @param classToIndex a set of classes to index
      */
-    void index();
-
-    /**
-     * Index the given classes.
-     * @param classesToIndex a set of classes to index
-     */
-    void index( Set<Class<? extends Identifiable>> classesToIndex );
+    void index( Class<? extends Identifiable> classToIndex );
 
     /**
      * Set the number of threads to use for indexing entities.

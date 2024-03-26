@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 
-import java.util.Set;
-
 @Service("indexerService")
 public class IndexerServiceImpl implements IndexerService {
 
@@ -18,19 +16,22 @@ public class IndexerServiceImpl implements IndexerService {
     private SessionFactory sessionFactory;
 
     private int numThreads = 4;
-    private int loggingFrequency = 10000;
+    private int loggingFrequency = 1000;
 
     @Override
-    public void index() {
-        doIndex( new Class[0] );
-    }
-
-    @Override
-    public void index( Set<Class<? extends Identifiable>> classesToIndex ) {
-        if ( classesToIndex.isEmpty() ) {
-            return;
+    public void index( Class<? extends Identifiable> classToIndex ) {
+        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
+        try {
+            fullTextSession.createIndexer( classToIndex )
+                    .threadsToLoadObjects( numThreads )
+                    .progressMonitor( new SimpleIndexingProgressMonitor( loggingFrequency ) )
+                    .startAndWait();
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        } finally {
+            fullTextSession.close();
         }
-        doIndex( classesToIndex.toArray( new Class[0] ) );
     }
 
     @Override
@@ -43,20 +44,5 @@ public class IndexerServiceImpl implements IndexerService {
     public void setLoggingFrequency( int loggingFrequency ) {
         Assert.isTrue( loggingFrequency > 0, "The logging frequency must be strictly positive." );
         this.loggingFrequency = loggingFrequency;
-    }
-
-    private void doIndex( Class<?>[] classesToIndex ) {
-        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
-        try {
-            fullTextSession.createIndexer( classesToIndex )
-                    .threadsToLoadObjects( numThreads )
-                    .progressMonitor( new SimpleIndexingProgressMonitor( loggingFrequency ) )
-                    .startAndWait();
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException( e );
-        } finally {
-            fullTextSession.close();
-        }
     }
 }
