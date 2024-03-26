@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class HibernateSearchSource implements SearchSource, InitializingBean {
 
+    private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
+
     private static final Class<?>[] SEARCHABLE_CLASSES = new Class[] {
             ExpressionExperiment.class,
             ArrayDesign.class,
@@ -190,9 +192,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .list();
             StopWatch timer = StopWatch.createStarted();
             try {
-                Set<String> fieldsSet = new HashSet<>( Arrays.asList( fields ) );
+                DoubleSummaryStatistics stats = results.stream().mapToDouble( r -> ( Float ) r[1] ).summaryStatistics();
                 return results.stream()
-                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fieldsSet, clazz ) )
+                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, clazz, stats ) )
                         .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
@@ -206,7 +208,8 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
     }
 
     @Nullable
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Set<String> fields, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
+        double score = FULL_TEXT_SCORE_PENALTY * ( ( Float ) row[1] - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
         if ( settings.isFillResults() ) {
             //noinspection unchecked
             T entity = ( T ) row[0];
@@ -214,9 +217,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                 // this happens if an entity is still in the cache, but was removed from the database
                 return null;
             }
-            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, entity, score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         }
     }
 }
