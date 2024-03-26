@@ -17,7 +17,7 @@ public class IndexerServiceImpl implements IndexerService {
     @Autowired
     private SessionFactory sessionFactory;
 
-    private int numThreads = 1;
+    private int numThreads = 4;
     private int loggingFrequency = 10000;
 
     @Override
