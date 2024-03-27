@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
@@ -30,8 +31,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQueryForInexactMatch;
+import static ubic.gemma.core.search.QueryUtils.*;
 
 /**
  * Search source for direct database results.
@@ -90,7 +90,7 @@ public class DatabaseSearchSource implements SearchSource {
      * on access control list (ACL) permissions.
      */
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
@@ -115,15 +115,15 @@ public class DatabaseSearchSource implements SearchSource {
 
     @Override
 
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) {
-        return toSearchResults( ExpressionExperimentSet.class, this.experimentSetService.findByName( settings.getQuery() ), MATCH_BY_NAME_SCORE, "ExperimentSetService.findByName" );
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
+        return toSearchResults( ExpressionExperimentSet.class, this.experimentSetService.findByName( prepareDatabaseQuery( settings ) ), MATCH_BY_NAME_SCORE, "ExperimentSetService.findByName" );
     }
 
     /**
      * A database search for biosequences. Biosequence names are already indexed by compass...
      */
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
@@ -145,12 +145,12 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         return new HashSet<>( this.searchBioSequence( settings ) );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
         return this.searchCompositeSequenceAndPopulateGenes( settings, Collections.emptySet() );
     }
 
@@ -158,7 +158,7 @@ public class DatabaseSearchSource implements SearchSource {
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
         Set<SearchResult<Gene>> geneSet = new SearchResultSet<>();
         Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
         Collection<SearchResult<?>> combinedResults = new HashSet<>();
@@ -167,7 +167,7 @@ public class DatabaseSearchSource implements SearchSource {
         return combinedResults;
     }
 
-    private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) {
+    private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
@@ -245,7 +245,7 @@ public class DatabaseSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
@@ -307,7 +307,7 @@ public class DatabaseSearchSource implements SearchSource {
      * tables
      */
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
 
@@ -365,7 +365,7 @@ public class DatabaseSearchSource implements SearchSource {
     /**
      * Expanded gene search used when a simple search does not yield results.
      */
-    private Collection<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) {
+    private Collection<SearchResult<Gene>> searchGeneExpanded( SearchSettings settings ) throws SearchException {
         Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         String exactString = prepareDatabaseQuery( settings );
@@ -377,7 +377,7 @@ public class DatabaseSearchSource implements SearchSource {
             // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
             results.addAll( toSearchResults( Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
         } else if ( exactString.length() <= 5 ) {
-            if ( settings.isWildcard() ) {
+            if ( isWildcard( settings ) ) {
                 // case 2: user did ask for a wildcard, if the string is 2, 3, 4 or 5 characters.
                 results.addAll( toSearchResults( Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             } else {
@@ -385,7 +385,7 @@ public class DatabaseSearchSource implements SearchSource {
                 results.addAll( toSearchResults( Gene.class, geneService.findByOfficialSymbolInexact( inexactString + "%" ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             }
         } else {
-            if ( settings.isWildcard() ) {
+            if ( isWildcard( settings ) ) {
                 // case 3: string is long enough, and user asked for wildcard.
                 results.addAll( toSearchResults( Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbol" ) );
             } else {
@@ -413,13 +413,13 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
         if ( !settings.isUseDatabase() )
             return Collections.emptySet();
         if ( settings.getTaxon() != null ) {
-            return toSearchResults( GeneSet.class, this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
+            return toSearchResults( GeneSet.class, this.geneSetService.findByName( prepareDatabaseQuery( settings ), settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
         } else {
-            return toSearchResults( GeneSet.class, this.geneSetService.findByName( settings.getQuery() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
+            return toSearchResults( GeneSet.class, this.geneSetService.findByName( prepareDatabaseQuery( settings ) ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
         }
     }
 

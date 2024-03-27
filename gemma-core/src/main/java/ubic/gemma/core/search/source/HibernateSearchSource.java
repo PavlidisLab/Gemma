@@ -6,7 +6,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
-import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Highlighter;
@@ -20,6 +19,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.FieldAwareSearchSource;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
@@ -34,8 +34,9 @@ import ubic.gemma.model.genome.gene.GeneSet;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.search.QueryUtils.parseSafely;
 
 /**
  * Search source based on Hibernate Search.
@@ -44,8 +45,6 @@ import java.util.stream.Collectors;
 @Component
 @CommonsLog
 public class HibernateSearchSource implements FieldAwareSearchSource, InitializingBean {
-
-    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
 
@@ -142,63 +141,51 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
         return searchFor( settings, BibliographicReference.class, PUBLICATION_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
         return searchFor( settings, BioSequence.class, BIO_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
         return searchFor( settings, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ExpressionExperiment.class, DATASET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
         return searchFor( settings, Gene.class, GENE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
         return searchFor( settings, GeneSet.class, GENE_SET_FIELDS );
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws HibernateSearchException {
+    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws SearchException {
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
             Analyzer analyzer = analyzers.get( clazz );
             QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
-            Query query;
-            try {
-                query = queryParser.parse( settings.getQuery() );
-            } catch ( ParseException e ) {
-                try {
-                    // attempt to parse it without special characters
-                    String strippedQuery = LUCENE_RESERVED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
-                    log.warn( "Invalid Lucene query: '" + settings.getQuery() + "'. Attempting to parse it without special characters: '" + strippedQuery + "'." );
-                    query = queryParser.parse( strippedQuery );
-                } catch ( ParseException ignored ) {
-                    throw new org.hibernate.search.SearchException( e );
-                }
-            }
+            Query query = parseSafely( settings, queryParser );
             Highlighter highlighter = settings.getHighlighter() != null ? new Highlighter( settings.getHighlighter().getFormatter(), new QueryScorer( query ) ) : null;
             String[] projection;
             if ( highlighter != null ) {

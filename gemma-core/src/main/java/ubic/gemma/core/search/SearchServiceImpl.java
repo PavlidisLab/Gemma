@@ -75,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
+import static ubic.gemma.core.search.QueryUtils.*;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -663,16 +663,22 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch watch = StopWatch.createStarted();
 
         log.debug( "Starting EE search for " + settings );
-        String[] subclauses = prepareDatabaseQuery( settings ).split( "\\s+OR\\s+" );
-        for ( String subclause : subclauses ) {
-            /*
-             * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
-             * level.
-             */
-            Collection<SearchResult<ExpressionExperiment>> classResults = this
-                    .characteristicEESearchWithChildren( settings.withQuery( subclause ) );
-            if ( classResults.size() > 0 ) {
-                log.debug( "... Found " + classResults.size() + " EEs matching " + subclause );
+        /*
+         * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
+         * level.
+         *
+         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
+         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
+         * single characteristics that match both.
+         *
+         * But if they put in Parkinson's disease we don't want to do two queries.
+         */
+        Set<Set<String>> subclauses = extractDnf( settings );
+
+        for ( Set<String> subclause : subclauses ) {
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.characteristicEESearchWithChildren( settings, subclause );
+            if ( !classResults.isEmpty() ) {
+                log.debug( "... Found " + classResults.size() + " EEs matching " + String.join( " OR ", subclause ) );
             }
             results.addAll( classResults );
         }
@@ -693,17 +699,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param settings search settings
      * @return SearchResults of Experiments
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( SearchSettings settings ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( SearchSettings settings, Set<String> subparts ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
-
-        /*
-         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
-         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
-         * single characteristics that match both.
-         *
-         * But if they put in Parkinson's disease we don't want to do two queries.
-         */
-        String[] subparts = settings.getQuery().split( " AND " );
 
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult<ExpressionExperiment>> allResults = new SearchResultSet<>();
@@ -1383,10 +1380,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Infer a {@link Taxon} from the search settings.
      */
-    private Taxon inferTaxon( SearchSettings settings ) {
+    private Taxon inferTaxon( SearchSettings settings ) throws SearchException {
         // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
         // remove quotes and other characters tha can interfere with the exact match
-        String[] searchTerms = prepareDatabaseQuery( settings ).split( "\\s+", 4 );
+        Set<String> searchTerms = extractTerms( settings );
 
         for ( String term : searchTerms ) {
             if ( nameToTaxonMap.containsKey( term ) ) {

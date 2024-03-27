@@ -50,10 +50,6 @@ import java.util.stream.Collectors;
 @With
 public class SearchSettings implements Serializable {
 
-    public static final char
-            WILDCARD_CHAR = '*',
-            SINGLE_WILDCARD_CHAR = '?';
-
 
     public enum SearchMode {
         /**
@@ -259,13 +255,6 @@ public class SearchSettings implements Serializable {
             throw new IllegalArgumentException( "The term URI must be a valid URI." );
         }
         setQuery( termUri );
-    }
-
-    /**
-     * Check if the query is a wildcard query.
-     */
-    public boolean isWildcard() {
-        return query.contains( String.valueOf( WILDCARD_CHAR ) ) || query.contains( String.valueOf( SINGLE_WILDCARD_CHAR ) );
     }
 
     /**
