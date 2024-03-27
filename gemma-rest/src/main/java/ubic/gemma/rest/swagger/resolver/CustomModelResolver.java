@@ -131,9 +131,9 @@ public class CustomModelResolver extends ModelResolver {
         }
         if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equals( schema.name() ) ) {
             extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
-            Map<String, Set<String>> sp = new HashMap<>();
+            Map<String, List<String>> sp = new HashMap<>();
             for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
-                Set<String> fields = searchService.getFields( resultType );
+                List<String> fields = searchService.getFields( resultType ).stream().sorted().collect( Collectors.toList() );
                 if ( !fields.isEmpty() ) {
                     sp.put( resultType.getName(), fields );
                 }
