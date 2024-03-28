@@ -1,9 +1,5 @@
 package ubic.gemma.core.search.source;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.Formatter;
-import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,22 +11,20 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.OntologyHighlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
-import ubic.gemma.core.search.lucene.LuceneHighlighter;
-import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,20 +80,15 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new LuceneHighlighter() {
+                .withHighlighter( new OntologyHighlighter() {
+                    @Override
+                    public Map<String, String> highlight( String value, String field ) {
+                        return Collections.singletonMap( field, value );
+                    }
+
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
-                    }
-
-                    @Override
-                    public Formatter getFormatter() {
-                        return new SimpleHTMLFormatter();
-                    }
-
-                    @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-                        return Collections.emptyMap();
                     }
                 } ) );
         verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
@@ -122,20 +111,15 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new LuceneHighlighter() {
+                .withHighlighter( new OntologyHighlighter() {
+                    @Override
+                    public Map<String, String> highlight( String value, String field ) {
+                        return Collections.singletonMap( field, value );
+                    }
+
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
-                    }
-
-                    @Override
-                    public Formatter getFormatter() {
-                        return new SimpleMarkdownFormatter();
-                    }
-
-                    @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-                        return Collections.emptyMap();
                     }
                 } ) );
         verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
@@ -152,14 +136,24 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
+    public void testSearchExpressionExperimentWithBooleanQuery() throws SearchException {
+        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d" ) );
+        verify( ontologyService ).findTerms( "a" );
+        verify( ontologyService ).findTerms( "b" );
+        verify( ontologyService ).findTerms( "c" );
+        verify( ontologyService ).getTerm( "http://example.com/d" );
+        verifyNoMoreInteractions( ontologyService );
+    }
+
+    @Test
     public void testGetLabelFromTermUri() {
-        assertEquals( "GO:0004016", getLabelFromTermUri( "http://purl.obolibrary.org/obo/GO_0004016" ) );
-        assertEquals( "CHEBI:7466", getLabelFromTermUri( "http://purl.obolibrary.org/obo/chebi.owl#CHEBI_7466" ) );
-        assertEquals( "BIRNLEX:15001", getLabelFromTermUri( "http://ontology.neuinfo.org/NIF/Function/NIF-Function.owl#birnlex_15001" ) );
-        assertEquals( "GO:0004016", getLabelFromTermUri( "http://purl.obolibrary.org/obo//GO_0004016//" ) );
-        assertEquals( "http://purl.obolibrary.org////", getLabelFromTermUri( "http://purl.obolibrary.org////" ) );
-        assertEquals( "PAT:ID_20327", getLabelFromTermUri( "http://www.orphanet.org/rdfns#pat_id_20327" ) );
-        assertEquals( "PAT:ID_20327", getLabelFromTermUri( "http://www.orphanet.org/rdfns#pat_id_20327" ) );
-        assertEquals( "63857", getLabelFromTermUri( "http://purl.org/commons/record/ncbi_gene/63857" ) );
+        assertEquals( "GO:0004016", getLabelFromTermUri( URI.create( "http://purl.obolibrary.org/obo/GO_0004016" ) ) );
+        assertEquals( "CHEBI:7466", getLabelFromTermUri( URI.create( "http://purl.obolibrary.org/obo/chebi.owl#CHEBI_7466" ) ) );
+        assertEquals( "BIRNLEX:15001", getLabelFromTermUri( URI.create( "http://ontology.neuinfo.org/NIF/Function/NIF-Function.owl#birnlex_15001" ) ) );
+        assertEquals( "GO:0004016", getLabelFromTermUri( URI.create( "http://purl.obolibrary.org/obo//GO_0004016//" ) ) );
+        assertEquals( "http://purl.obolibrary.org////", getLabelFromTermUri( URI.create( "http://purl.obolibrary.org////" ) ) );
+        assertEquals( "PAT:ID_20327", getLabelFromTermUri( URI.create( "http://www.orphanet.org/rdfns#pat_id_20327" ) ) );
+        assertEquals( "PAT:ID_20327", getLabelFromTermUri( URI.create( "http://www.orphanet.org/rdfns#pat_id_20327" ) ) );
+        assertEquals( "63857", getLabelFromTermUri( URI.create( "http://purl.org/commons/record/ncbi_gene/63857" ) ) );
     }
 }

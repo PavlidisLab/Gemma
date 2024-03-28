@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@CommonsLog
 public class DatasetArgService extends AbstractEntityArgService<ExpressionExperiment, ExpressionExperimentService> {
 
     private final SearchService searchService;

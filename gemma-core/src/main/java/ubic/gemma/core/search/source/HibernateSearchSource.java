@@ -142,6 +142,11 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Override
+    public boolean accepts( SearchSettings settings ) {
+        return settings.isUseIndices();
+    }
+
+    @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
     }

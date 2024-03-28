@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CommonsLog
-public class DefaultHighlighter implements LuceneHighlighter {
+public class DefaultHighlighter implements LuceneHighlighter, OntologyHighlighter {
 
     private final Formatter formatter;
 
@@ -29,8 +29,13 @@ public class DefaultHighlighter implements LuceneHighlighter {
     }
 
     @Override
+    public Map<String, String> highlight( String value, String field ) {
+        return Collections.singletonMap( field, value );
+    }
+
+    @Override
     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
-        return Collections.emptyMap();
+        return Collections.singletonMap( field, termLabel );
     }
 
     @Override

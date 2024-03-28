@@ -10,6 +10,9 @@ import org.hibernate.search.util.impl.PassThroughAnalyzer;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 
+import javax.annotation.Nullable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,23 +27,25 @@ public class LuceneQueryUtils {
 
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
-    private static final QueryParser QUERY_PARSER = new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
+    private static QueryParser createQueryParser() {
+        return new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
+    }
 
     /**
      * Safely parse the given search settings into a Lucene query, falling back on a query with special characters
      * escaped if necessary.
      */
     public static Query parseSafely( SearchSettings settings, QueryParser queryParser ) throws SearchException {
+        String query = settings.getQuery();
         try {
-            return queryParser.parse( settings.getQuery() );
+            return queryParser.parse( query );
         } catch ( ParseException e ) {
             String strippedQuery = LUCENE_RESERVED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
-            log.warn( String.format( "Failed to parse '%s' after attempting to parse it without special characters '%s': %s",
-                    settings.getQuery(), strippedQuery, e.getMessage() ) );
+            log.debug( String.format( "Failed to parse '%s'; will attempt to parse it without special characters '%s'.", query, strippedQuery ), e );
             try {
                 return queryParser.parse( strippedQuery );
             } catch ( ParseException e2 ) {
-                throw new LuceneParseSearchException( e );
+                throw new LuceneParseSearchException( String.format( "Failed to parse '%s' after attempting to parse it without special characters as '%s'.", query, strippedQuery ), e2, e );
             }
         }
     }
@@ -52,7 +57,7 @@ public class LuceneQueryUtils {
      */
     public static Set<String> extractTerms( SearchSettings settings ) throws SearchException {
         Set<String> terms = new HashSet<>();
-        extractTerms( parseSafely( settings, QUERY_PARSER ), terms );
+        extractTerms( parseSafely( settings, createQueryParser() ), terms );
         return terms;
     }
 
@@ -63,61 +68,91 @@ public class LuceneQueryUtils {
                     extractTerms( clause.getQuery(), terms );
                 }
             }
-        } else if ( query instanceof TermQuery ) {
+        } else if ( query instanceof TermQuery && isTermGlobal( ( ( TermQuery ) query ).getTerm() ) ) {
             terms.add( termToString( ( ( TermQuery ) query ).getTerm() ) );
         }
     }
 
     /**
      * Extract a DNF (Disjunctive Normal Form) from the query.
+     * <p>
+     * Clauses can be nested (i.e. {@code a OR (d OR (c AND (d AND e))}) as long as {@code OR} and {@code AND} are not
+     * interleaved.
+     * <p>
+     * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
      */
     public static Set<Set<String>> extractDnf( SearchSettings settings ) throws SearchException {
-        Query q = parseSafely( settings, QUERY_PARSER );
-        Set<Set<String>> result = new HashSet<>();
+        Query q = parseSafely( settings, createQueryParser() );
+        Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {
-            boolean isSimpleAndClause = true;
-            for ( BooleanClause clause : ( ( BooleanQuery ) q ) ) {
-                isSimpleAndClause &= clause.isRequired() && clause.getQuery() instanceof TermQuery;
-                if ( clause.isRequired() || clause.isProhibited() ) {
-                    continue; // AND, we ignore
-                }
-                if ( clause.getQuery() instanceof BooleanQuery ) {
-                    Set<String> terms = new HashSet<>();
-                    for ( BooleanClause subClause : ( ( BooleanQuery ) clause.getQuery() ) ) {
-                        if ( !subClause.isRequired() || subClause.isProhibited() ) {
-                            continue; // OR, we ignore
-                        }
-                        if ( subClause.getQuery() instanceof TermQuery ) {
-                            terms.add( termToString( ( ( TermQuery ) subClause.getQuery() ).getTerm() ) );
-                        }
-                    }
-                    if ( !terms.isEmpty() ) {
-                        result.add( terms );
-                    }
-                } else if ( clause.getQuery() instanceof TermQuery ) {
-                    result.add( Collections.singleton( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
-                }
+            Set<Set<String>> ds = new HashSet<>();
+            if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds ) ) {
+                result = ds;
+            } else {
+                result = Collections.emptySet();
             }
-            // check if all the clauses are required, in which case we can just create a nested clause
-            if ( isSimpleAndClause ) {
-                Set<String> terms = new HashSet<>();
-                for ( BooleanClause clause : ( ( BooleanQuery ) q ) ) {
-                    terms.add( ( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
-                }
-                if ( !terms.isEmpty() ) {
-                    result.add( terms );
-                }
-            }
-        } else if ( q instanceof TermQuery ) {
-            result.add( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
+        } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+            result = Collections.singleton( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
+        } else {
+            result = Collections.emptySet();
         }
         return result;
+    }
+
+    private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms ) {
+        if ( query.clauses().stream().anyMatch( BooleanClause::isRequired ) ) {
+            Set<String> subClause = new HashSet<>();
+            terms.add( subClause );
+            return extractNestedConjunctions( query, subClause );
+        }
+        // at this point, all clauses are optional
+        for ( BooleanClause clause : query.clauses() ) {
+            if ( clause.isProhibited() ) {
+                continue;
+            }
+            assert !clause.isRequired();
+            if ( clause.getQuery() instanceof BooleanQuery ) {
+                if ( !extractNestedDisjunctions( ( BooleanQuery ) clause.getQuery(), terms ) ) {
+                    return false;
+                }
+            } else if ( clause.getQuery() instanceof TermQuery && isTermGlobal( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Extract nested conjunctions from a query and populate their terms in the given set.
+     *
+     * @return true if all the clauses in the query are conjunctions
+     */
+    private static boolean extractNestedConjunctions( BooleanQuery query, Set<String> terms ) {
+        if ( !query.clauses().stream().allMatch( c -> c.isRequired() || c.isProhibited() ) ) {
+            // found a disjunction, this is not a valid nested conjunction
+            return false;
+        }
+        // at this point, all the clauses are required
+        for ( BooleanClause clause : query.clauses() ) {
+            if ( clause.isProhibited() ) {
+                continue;
+            }
+            if ( clause.getQuery() instanceof BooleanQuery ) {
+                if ( !extractNestedConjunctions( ( BooleanQuery ) clause.getQuery(), terms ) ) {
+                    return false;
+                }
+            } else if ( clause.getQuery() instanceof TermQuery && isTermGlobal( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) {
+                terms.add( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) );
+            }
+        }
+        return true;
     }
 
     /**
      * Escape the query for a database match.
      * @see #prepareDatabaseQuery(SearchSettings, boolean)
      */
+    @Nullable
     public static String prepareDatabaseQuery( SearchSettings settings ) throws SearchException {
         return prepareDatabaseQuery( settings, false );
     }
@@ -125,46 +160,53 @@ public class LuceneQueryUtils {
     /**
      * Obtain a query suitable for a database match.
      * <p>
+     * This method will return the first global term in the query that is not prohibited. If {@code allowWildcards} is
+     * set to true, prefix and wildcard terms will be considered as well.
+     * <p>
      * The resulting string is free from character that would usually be used for a free-text match unless
      * {@code allowWildcards} is set to true.
      * <p>
      * @param allowWildcards if true, wildcards are supported (i.e. '*' and '?') and translated to their corresponding
      *                       LIKE SQL syntax (i.e. '%' and '_'), all other special characters are escaped.
+     * @return the first suitable term in the query, or null if none of them are applicable for a database query
      */
+    @Nullable
     public static String prepareDatabaseQuery( SearchSettings settings, boolean allowWildcards ) throws SearchException {
-        return rewriteQuery( parseSafely( settings, QUERY_PARSER ), allowWildcards );
+        return prepareDatabaseQueryInternal( parseSafely( settings, createQueryParser() ), allowWildcards );
     }
 
-    private static String rewriteQuery( Query query, boolean replaceWildcards ) {
+    @Nullable
+    private static String prepareDatabaseQueryInternal( Query query, boolean allowWildcards ) {
         if ( query instanceof BooleanQuery ) {
             // pick the first, non-prohibited term
             for ( BooleanClause c : ( BooleanQuery ) query ) {
                 if ( !c.isProhibited() ) {
-                    return rewriteQuery( c.getQuery(), replaceWildcards );
+                    return prepareDatabaseQueryInternal( c.getQuery(), allowWildcards );
                 }
             }
-        } else if ( query instanceof WildcardQuery ) {
-            if ( replaceWildcards ) {
-                return escapeLike( termToString( ( ( WildcardQuery ) query ).getTerm() ) )
-                        .replace( '?', '_' )
-                        .replace( '*', '%' );
-            } else {
-                return termToString( ( ( WildcardQuery ) query ).getTerm() );
-            }
-        } else if ( query instanceof PrefixQuery ) {
-            if ( replaceWildcards ) {
-                return escapeLike( termToString( ( ( PrefixQuery ) query ).getPrefix() ) ) + "%";
-            } else {
-                return termToString( ( ( PrefixQuery ) query ).getPrefix() );
-            }
-        } else if ( query instanceof TermQuery ) {
-            if ( replaceWildcards ) {
+        } else if ( allowWildcards && query instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) query ).getTerm() ) ) {
+            return escapeLike( termToString( ( ( WildcardQuery ) query ).getTerm() ) )
+                    .replace( '?', '_' )
+                    .replace( '*', '%' );
+        } else if ( allowWildcards && query instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) query ).getPrefix() ) ) {
+            return escapeLike( termToString( ( ( PrefixQuery ) query ).getPrefix() ) ) + "%";
+        } else if ( query instanceof TermQuery && isTermGlobal( ( ( TermQuery ) query ).getTerm() ) ) {
+            if ( allowWildcards ) {
                 return escapeLike( termToString( ( ( TermQuery ) query ).getTerm() ) );
             } else {
                 return termToString( ( ( TermQuery ) query ).getTerm() );
             }
         }
-        return "";
+        return null;
+    }
+
+    /**
+     * Check if a given term is global (i.e. not fielded).
+     * <p>
+     * This includes the corner case when a term is a URI and would be parsed as a fielded term.
+     */
+    private static boolean isTermGlobal( Term term ) {
+        return term.field().isEmpty() || term.field().equals( "http" ) || term.field().equals( "https" );
     }
 
     /**
@@ -178,6 +220,23 @@ public class LuceneQueryUtils {
         }
     }
 
+    @Nullable
+    public static URI prepareTermUriQuery( SearchSettings settings ) throws SearchException {
+        Query query = parseSafely( settings, createQueryParser() );
+        if ( query instanceof TermQuery ) {
+            Term term = ( ( TermQuery ) query ).getTerm();
+            if ( term.field().equals( "http" ) || term.field().equals( "https" ) ) {
+                String candidateUri = term.field() + ":" + term.text();
+                try {
+                    return new URI( candidateUri );
+                } catch ( URISyntaxException e ) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
     private static String escapeLike( String s ) {
         return s.replaceAll( "[%_\\\\]", "\\\\$0" );
     }
@@ -187,7 +246,7 @@ public class LuceneQueryUtils {
      */
     public static boolean isWildcard( SearchSettings settings ) {
         try {
-            return isWildcard( QUERY_PARSER.parse( settings.getQuery() ) );
+            return isWildcard( createQueryParser().parse( settings.getQuery() ) );
         } catch ( ParseException e ) {
             return false;
         }

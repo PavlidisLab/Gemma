@@ -1,5 +1,27 @@
 ## Updates
 
+### Update 2.7.3
+
+- fix double-gzipping for the `getPlatformAnnotations` endpoint
+- add a limit argument `getDatasetCategoriesUsageStatistics` with a default value of 200
+- more parent terms now include in `getDatasetAnnotationsUsageFrequency`
+- search is much more efficient and now capable of handling more advanced syntax
+
+#### More free-text categories
+
+We've backfilled thousands of free-text categories from GEO sample metadata which resulted in
+the `getDatasetCategoriesUsageFrequency` endpoint producing far more results than usual. This is now being alleviated
+by a new `limit` parameter with a default value of 200.
+
+#### Complete inference for parent terms in `getDatasetAnnotationsUsageFrequency`
+
+The `getDatasetAnnotationsUsageFrequency` endpoint now include parent terms that satisfy the `hasPart` relation. We've
+rewritten the logic under the hood to be much more efficient and cache frequently requested terms.
+
+#### Advanced search syntax
+
+The search endpoint and individual query parameters now support an advanced search syntax provided by Lucene.
+
 ### Update 2.7.2
 
 Expose statements in `FactorValueValueObject` and `FactorValueBasicValueObject`.

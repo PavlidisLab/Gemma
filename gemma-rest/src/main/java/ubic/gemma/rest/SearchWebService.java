@@ -63,7 +63,7 @@ public class SearchWebService {
     /**
      * Name used in the OpenAPI schema to identify a search query.
      */
-    public static final String QUERY_SCHEMA_NAME = "QueryType";
+    public static final String QUERY_SCHEMA_NAME = "SearchQueryType";
 
     /**
      * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
@@ -136,12 +136,14 @@ public class SearchWebService {
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma")
-    public SearchResultsResponseDataObject search( @QueryParam("query") @Schema(name = QUERY_SCHEMA_NAME) String query,
+    public SearchResultsResponseDataObject search(
+            @QueryParam("query") @Schema(name = QUERY_SCHEMA_NAME) String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
-            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg ) {
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg
+    ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -193,7 +195,7 @@ public class SearchWebService {
             searchResultVos = searchService.loadValueObjects( searchResults );
         } else {
             searchResultVos = searchResults.stream()
-                    .map( sr -> SearchResult.from( sr, ( IdentifiableValueObject<?> ) null ) )
+                    .map( sr -> sr.withResultObject( ( IdentifiableValueObject<?> ) null ) )
                     .collect( Collectors.toList() );
         }
 

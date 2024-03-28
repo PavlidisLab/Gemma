@@ -14,21 +14,28 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Resolve {@link Arg} parameters' schema.
@@ -118,6 +125,20 @@ public class CustomModelResolver extends ModelResolver {
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
+        if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equalsIgnoreCase( schema.name() ) ) {
+            try {
+                return ( description != null ? description + "\n\n" : "" )
+                        + IOUtils.toString( new ClassPathResource( "/restapidocs/fragments/QueryType.md" ).getInputStream(), StandardCharsets.UTF_8 )
+                        // this part of the template is using embedded HTML in Markdown
+                        .replace( "{searchableProperties}", getSearchableProperties().entrySet().stream()
+                                .map( e -> "<h2>" + escapeHtml4( e.getKey() ) + "</h2>"
+                                        + "<ul>" + e.getValue().stream().map( v -> "<li>" + escapeHtml4( v ) + "</li>" ).collect( Collectors.joining() ) + "</ul>" )
+                                .collect( Collectors.joining() ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
         return description;
     }
 
@@ -131,19 +152,26 @@ public class CustomModelResolver extends ModelResolver {
         }
         if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equals( schema.name() ) ) {
             extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
-            Map<String, List<String>> sp = new HashMap<>();
-            for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
-                List<String> fields = searchService.getFields( resultType ).stream().sorted().collect( Collectors.toList() );
-                if ( !fields.isEmpty() ) {
-                    sp.put( resultType.getName(), fields );
-                }
-            }
-            extensions.put( "x-gemma-searchable-properties", sp );
+            extensions.put( "x-gemma-searchable-properties", getSearchableProperties() );
             extensions = Collections.unmodifiableMap( extensions );
         }
         return extensions;
     }
 
+    private final Comparator<String> FIELD_COMPARATOR = Comparator
+            .comparing( ( String s ) -> StringUtils.countOccurrencesOf( s, "." ), Comparator.naturalOrder() )
+            .thenComparing( s -> s );
+
+    private Map<String, List<String>> getSearchableProperties() {
+        Map<String, List<String>> sp = new HashMap<>();
+        for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
+            List<String> fields = searchService.getFields( resultType ).stream().sorted( FIELD_COMPARATOR ).collect( Collectors.toList() );
+            if ( !fields.isEmpty() ) {
+                sp.put( resultType.getName(), fields );
+            }
+        }
+        return sp;
+    }
 
     @Value
     private static class FilterablePropMeta {

@@ -1,6 +1,5 @@
 package ubic.gemma.core.search;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -11,12 +10,7 @@ import java.util.Map;
 public interface Highlighter {
 
     /**
-     * Produce a highlight for a given ontology term.
-     *
-     * @param termUri   a URI for the term or null for a full-text term
-     * @param termLabel a label for the term
-     * @param field     an object path through which the term was found
-     * @return a suitable highlight, or null if none is found
+     * Produce a highlight for a given field.
      */
-    Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field );
+    Map<String, String> highlight( String value, String field );
 }

@@ -89,6 +89,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.rest.SearchWebService.QUERY_SCHEMA_NAME;
+
 /**
  * RESTful interface for datasets.
  *
@@ -173,7 +175,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
-            @QueryParam("query") String query,
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
@@ -225,7 +227,7 @@ public class DatasetsWebService {
         public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo, @Nullable SearchResult<ExpressionExperiment> result ) {
             super( vo );
             if ( result != null ) {
-                this.searchResult = new SearchWebService.SearchResultValueObject<>( SearchResult.from( result, null ) );
+                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ) );
             } else {
                 this.searchResult = null;
             }
@@ -237,8 +239,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @QueryParam("query") String query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+    ) {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
@@ -262,9 +265,10 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
-            @QueryParam("query") String query,
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
+            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+    ) {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
@@ -300,7 +304,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
-            @QueryParam("query") String query,
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
@@ -360,7 +364,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
-            @QueryParam("query") String query,
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
@@ -497,7 +501,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
-            @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
+            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
+    ) {
         Filters filters = datasetArgService.getFilters( filterArg );
         Set<Long> extraIds;
         if ( query != null ) {

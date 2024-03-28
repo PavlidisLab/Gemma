@@ -232,7 +232,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     private SearchResult<ExpressionExperiment> createMockSearchResult( Long id ) {
-        return SearchResult.from( ExpressionExperiment.class, id, 0, "test result object" );
+        return SearchResult.from( ExpressionExperiment.class, id, 0, null, "test result object" );
     }
 
     @Test
