@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultSet;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -31,7 +28,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.QueryUtils.*;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
 
 /**
  * Search source for direct database results.
@@ -369,7 +366,7 @@ public class DatabaseSearchSource implements SearchSource {
         Set<SearchResult<Gene>> results = new SearchResultSet<>();
 
         String exactString = prepareDatabaseQuery( settings );
-        String inexactString = prepareDatabaseQueryForInexactMatch( settings );
+        String inexactString = prepareDatabaseQuery( settings, true );
 
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.

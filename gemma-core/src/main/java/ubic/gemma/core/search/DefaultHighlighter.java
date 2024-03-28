@@ -6,6 +6,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
 
 import javax.annotation.Nullable;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CommonsLog
-public class DefaultHighlighter implements Highlighter {
+public class DefaultHighlighter implements LuceneHighlighter {
 
     private final Formatter formatter;
 

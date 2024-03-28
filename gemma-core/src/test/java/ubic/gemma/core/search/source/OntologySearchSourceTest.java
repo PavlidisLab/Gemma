@@ -19,6 +19,7 @@ import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -85,7 +86,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new Highlighter() {
+                .withHighlighter( new LuceneHighlighter() {
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
@@ -121,7 +122,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new Highlighter() {
+                .withHighlighter( new LuceneHighlighter() {
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );

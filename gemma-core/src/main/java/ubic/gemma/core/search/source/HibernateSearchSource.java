@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.FieldAwareSearchSource;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.QueryUtils.parseSafely;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.parseSafely;
 
 /**
  * Search source based on Hibernate Search.
@@ -186,11 +187,13 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             Analyzer analyzer = analyzers.get( clazz );
             QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
             Query query = parseSafely( settings, queryParser );
-            Highlighter highlighter = settings.getHighlighter() != null ? new Highlighter( settings.getHighlighter().getFormatter(), new QueryScorer( query ) ) : null;
+            Highlighter highlighter;
             String[] projection;
-            if ( highlighter != null ) {
+            if ( settings.getHighlighter() instanceof LuceneHighlighter ) {
+                highlighter = new Highlighter( ( ( LuceneHighlighter ) settings.getHighlighter() ).getFormatter(), new QueryScorer( query ) );
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
+                highlighter = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
             //noinspection unchecked

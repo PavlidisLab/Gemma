@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -279,7 +280,11 @@ public class SearchSettings implements Serializable {
 
     @Nullable
     public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
-        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer ) : null;
+        if ( highlighter instanceof LuceneHighlighter ) {
+            return ( ( LuceneHighlighter ) highlighter ).highlightDocument( document, luceneHighlighter, analyzer );
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -75,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.search.QueryUtils.*;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.

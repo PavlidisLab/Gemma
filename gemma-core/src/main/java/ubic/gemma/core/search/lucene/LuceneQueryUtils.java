@@ -1,4 +1,4 @@
-package ubic.gemma.core.search;
+package ubic.gemma.core.search.lucene;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.lucene.index.Term;
@@ -7,6 +7,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 import org.hibernate.search.util.impl.PassThroughAnalyzer;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.Collections;
@@ -15,16 +16,20 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Utilities for parsing search queries.
+ * Utilities for parsing search queries using Lucene.
  * @author poirigui
  */
 @CommonsLog
-public class QueryUtils {
+public class LuceneQueryUtils {
 
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static final QueryParser QUERY_PARSER = new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
 
+    /**
+     * Safely parse the given search settings into a Lucene query, falling back on a query with special characters
+     * escaped if necessary.
+     */
     public static Query parseSafely( SearchSettings settings, QueryParser queryParser ) throws SearchException {
         try {
             return queryParser.parse( settings.getQuery() );
@@ -35,7 +40,7 @@ public class QueryUtils {
             try {
                 return queryParser.parse( strippedQuery );
             } catch ( ParseException e2 ) {
-                throw new LuceneSearchException( e );
+                throw new LuceneParseSearchException( e );
             }
         }
     }
@@ -111,20 +116,23 @@ public class QueryUtils {
 
     /**
      * Escape the query for a database match.
-     * <p>
-     * The resulting string is free from character that would usually be used for a free-text match.
+     * @see #prepareDatabaseQuery(SearchSettings, boolean)
      */
     public static String prepareDatabaseQuery( SearchSettings settings ) throws SearchException {
-        return rewriteQuery( parseSafely( settings, QUERY_PARSER ), false );
+        return prepareDatabaseQuery( settings, false );
     }
 
     /**
-     * Obtain a query suitable for an inexact match (using a LIKE SQL expression).
+     * Obtain a query suitable for a database match.
      * <p>
-     * This query supports wildcards ('*' and '?'), all other special characters are stripped.
+     * The resulting string is free from character that would usually be used for a free-text match unless
+     * {@code allowWildcards} is set to true.
+     * <p>
+     * @param allowWildcards if true, wildcards are supported (i.e. '*' and '?') and translated to their corresponding
+     *                       LIKE SQL syntax (i.e. '%' and '_'), all other special characters are escaped.
      */
-    public static String prepareDatabaseQueryForInexactMatch( SearchSettings settings ) throws SearchException {
-        return rewriteQuery( parseSafely( settings, QUERY_PARSER ), true );
+    public static String prepareDatabaseQuery( SearchSettings settings, boolean allowWildcards ) throws SearchException {
+        return rewriteQuery( parseSafely( settings, QUERY_PARSER ), allowWildcards );
     }
 
     private static String rewriteQuery( Query query, boolean replaceWildcards ) {

@@ -1,14 +1,15 @@
-package ubic.gemma.core.search;
+package ubic.gemma.core.search.lucene;
 
 import org.junit.Test;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Sets.set;
 import static org.junit.Assert.*;
-import static ubic.gemma.core.search.QueryUtils.*;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
 
-public class QueryUtilsTest {
+public class LuceneQueryUtilsTest {
 
     @Test
     public void testExtractTerms() throws SearchException {
@@ -35,7 +36,7 @@ public class QueryUtilsTest {
         assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA1\"", null ) ) );
         assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "(BRCA1)", null ) ) );
         assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "symbol:BRCA1", null ) ) );
-        assertEquals( "+BRCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "\\+BRCA", null ) ) );
+        assertEquals( "+BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "\\+BRCA", null ), true ) );
         assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA OR TCGA", null ) ) );
         assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA AND TCGA", null ) ) );
         assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA AND NOT TCGA", null ) ) );
@@ -57,23 +58,23 @@ public class QueryUtilsTest {
 
     @Test
     public void testPrepareDatabaseQueryForInexactMatch() throws SearchException {
-        assertEquals( "BRCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "\"BRCA\"", null ) ) );
-        assertEquals( "br%ca", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BR*CA", null ) ) );
-        assertEquals( "brca%", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA*", null ) ) );
-        assertEquals( "BRCA*", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "\"BRCA\\*\"", null ) ) );
-        assertEquals( "brca_", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA?", null ) ) );
-        assertEquals( "BRCA?", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "\"BRCA?\"", null ) ) );
-        assertEquals( "BRCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "+BRCA", null ) ) );
+        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA\"", null ), true ) );
+        assertEquals( "br%ca", prepareDatabaseQuery( SearchSettings.geneSearch( "BR*CA", null ), true ) );
+        assertEquals( "brca%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA*", null ), true ) );
+        assertEquals( "BRCA*", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA\\*\"", null ), true ) );
+        assertEquals( "brca_", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA?", null ), true ) );
+        assertEquals( "BRCA?", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA?\"", null ), true ) );
+        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "+BRCA", null ), true ) );
         // forbidden prefix-style searches
-        assertEquals( "*", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "*", null ) ) );
-        assertEquals( "*BRCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "*BRCA", null ) ) );
-        assertEquals( "?", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "?", null ) ) );
-        assertEquals( "?RCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "?RCA", null ) ) );
+        assertEquals( "*", prepareDatabaseQuery( SearchSettings.geneSearch( "*", null ), true ) );
+        assertEquals( "*BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "*BRCA", null ), true ) );
+        assertEquals( "?", prepareDatabaseQuery( SearchSettings.geneSearch( "?", null ), true ) );
+        assertEquals( "?RCA", prepareDatabaseQuery( SearchSettings.geneSearch( "?RCA", null ), true ) );
         // check for escaping LIKE patterns
-        assertEquals( "BRCA\\\\", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA\\", null ) ) );
-        assertEquals( "BRCA\\%", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA\\%", null ) ) );
-        assertEquals( "BRCA\\%", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA%", null ) ) );
-        assertEquals( "BRCA\\_", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BRCA_", null ) ) );
+        assertEquals( "BRCA\\\\", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\", null ), true ) );
+        assertEquals( "BRCA\\%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\%", null ), true ) );
+        assertEquals( "BRCA\\%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA%", null ), true ) );
+        assertEquals( "BRCA\\_", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA_", null ), true ) );
     }
 
     @Test
