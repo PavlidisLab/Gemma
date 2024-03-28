@@ -167,7 +167,7 @@
             <td>
                 <c:choose>
                     <c:when test="${not empty compositeSequence.biologicalCharacteristic.sequence}">
-                        <textarea rows="10"
+                        <textarea class="smaller" style="font-family: monospace" rows="10"
                                   cols="90" readonly="1">${ compositeSequence.biologicalCharacteristic.sequence} </textarea></c:when>
                     <c:otherwise>No sequence</c:otherwise>
                 </c:choose>

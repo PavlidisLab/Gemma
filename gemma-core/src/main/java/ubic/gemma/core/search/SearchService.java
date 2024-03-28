@@ -44,6 +44,11 @@ public interface SearchService {
     }
 
     /**
+     * Obtain a list of fields that can be searched on for the given result type.
+     */
+    Set<String> getFields( Class<? extends Identifiable> resultType );
+
+    /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
      * for, depending on the configuration of the input object.
      * <ul>

@@ -623,11 +623,21 @@ public class ExpressionExperimentServiceImpl
             }
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
-                Collection<String> termAndChildrenUris = new HashSet<>( e.getValue() );
                 Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+                termAndChildrenUris.addAll( e.getValue() );
                 termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
+                if ( termAndChildrenUris.size() > QueryUtils.MAX_PARAMETER_LIST_SIZE ) {
+                    log.warn( String.format( "There too many terms for the clause %s, will pick top %d terms.",
+                            e.getKey().getOriginalProperty(), QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
+                    termAndChildrenUris = termAndChildrenUris.stream()
+                            // favour terms that are mentioned in the filter
+                            .sorted( Comparator.comparing( e.getValue()::contains, Comparator.reverseOrder() ) )
+                            .limit( QueryUtils.MAX_PARAMETER_LIST_SIZE )
+                            .collect( Collectors.toSet() );
+                }
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
@@ -705,7 +715,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public long countWithCache( @Nullable Filters filters ) {
+    public long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
+        if ( extraIds != null ) {
+            List<Long> eeIds = loadIdsWithCache( filters, null );
+            eeIds.retainAll( extraIds );
+            return eeIds.size();
+        }
         return expressionExperimentDao.countWithCache( filters );
     }
 
@@ -727,17 +742,20 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
-        List<Long> eeIds;
+    public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) {
+        Collection<Long> eeIds;
         if ( filters == null || filters.isEmpty() ) {
-            eeIds = null;
+            eeIds = extraIds;
         } else {
             eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+            if ( extraIds != null ) {
+                eeIds.retainAll( extraIds );
+            }
         }
         if ( excludedTermUris != null ) {
             excludedTermUris = inferTermsUris( excludedTermUris );
         }
-        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris );
+        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris, maxResults );
     }
 
     /**
@@ -746,18 +764,22 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults ) {
         if ( excludedTermUris != null ) {
             excludedTermUris = inferTermsUris( excludedTermUris );
         }
 
-        Map<Characteristic, Long> result;
+        Collection<Long> eeIds;
         if ( filters == null || filters.isEmpty() ) {
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            eeIds = extraIds;
         } else {
-            List<Long> eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
-            result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
+            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
+            if ( extraIds != null ) {
+                eeIds.retainAll( extraIds );
+            }
         }
+
+        Map<Characteristic, Long> result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris );
 
         List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
 
@@ -766,14 +788,15 @@ public class ExpressionExperimentServiceImpl
                 .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
-        // TODO: handle more than one term per URI
         Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+                .filter( t -> t.getUri() != null ) // should never occur, but better be safe than sorry
                 .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
 
         for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
             Characteristic c = entry.getKey();
             OntologyTerm term;
             if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
+                // TODO: handle more than one term per URI
                 term = termByUri.get( c.getValueUri() ).iterator().next();
             } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
                 term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
@@ -783,6 +806,9 @@ public class ExpressionExperimentServiceImpl
             }
             resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
         }
+
+        // sort in descending order
+        resultWithParents.sort( Comparator.comparing( CharacteristicWithUsageStatisticsAndOntologyTerm::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) );
 
         return resultWithParents;
     }
@@ -833,7 +859,7 @@ public class ExpressionExperimentServiceImpl
                 return Collections.singleton( categoryTerm );
             } else {
                 // combine the direct parents + all the parents from the parents
-                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
+                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> t.getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
                         .collect( Collectors.toSet() );
             }
         }
@@ -852,26 +878,43 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters ) {
+    public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
         if ( filters == null || filters.isEmpty() ) {
-            return expressionExperimentDao.getTechnologyTypeUsageFrequency();
+            if ( extraIds != null ) {
+                return expressionExperimentDao.getTechnologyTypeUsageFrequency( extraIds );
+            } else {
+                return expressionExperimentDao.getTechnologyTypeUsageFrequency();
+            }
         } else {
             List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            if ( extraIds != null ) {
+                ids.retainAll( extraIds );
+            }
             return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, int maxResults ) {
+    public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults ) {
         Map<ArrayDesign, Long> result;
         if ( filters == null || filters.isEmpty() ) {
-            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( maxResults ) );
-            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
-                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+            if ( extraIds != null ) {
+                result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( extraIds, maxResults ) );
+                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( extraIds, maxResults ).entrySet() ) {
+                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+                }
+            } else {
+                result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( maxResults ) );
+                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
+                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
+                }
             }
         } else {
             List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            if ( extraIds != null ) {
+                ids.retainAll( extraIds );
+            }
             result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids, maxResults ) );
             for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
                 result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
@@ -891,11 +934,18 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters ) {
+    public Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
         if ( filters == null || filters.isEmpty() ) {
-            return expressionExperimentDao.getPerTaxonCount();
+            if ( extraIds != null ) {
+                return expressionExperimentDao.getPerTaxonCount( extraIds );
+            } else {
+                return expressionExperimentDao.getPerTaxonCount();
+            }
         } else {
             List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
+            if ( extraIds != null ) {
+                ids.retainAll( extraIds );
+            }
             return expressionExperimentDao.getPerTaxonCount( ids );
         }
     }
@@ -906,6 +956,7 @@ public class ExpressionExperimentServiceImpl
         ee = this.thawBioAssays( ee );
 
         if ( !this.checkHasBatchInfo( ee ) ) {
+            log.info( "Experiment has no batch information, cannot check for confound: " + ee );
             return null;
         }
 
@@ -1041,6 +1092,8 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
+        BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
+
         if ( !beDetails.hasBatchInformation() ) {
             return BatchEffectType.NO_BATCH_INFO;
         } else if ( beDetails.getHasSingletonBatches() ) {
@@ -1055,13 +1108,15 @@ public class ExpressionExperimentServiceImpl
         } else if ( beDetails.hasProblematicBatchInformation() ) {
             // sort of generic
             return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
-        } else if ( beDetails.getBatchEffectStatistics() == null ) {
-            return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
-        } else if ( beDetails.getBatchEffectStatistics().getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-            // this means there was a batch effect but we couldn't correct it
-            return BatchEffectType.BATCH_EFFECT_FAILURE;
         } else {
-            return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
+            if ( batchEffectStatistics == null ) {
+                return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
+            } else if ( batchEffectStatistics.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+                // this means there was a batch effect but we couldn't correct it
+                return BatchEffectType.BATCH_EFFECT_FAILURE;
+            } else {
+                return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
+            }
         }
     }
 

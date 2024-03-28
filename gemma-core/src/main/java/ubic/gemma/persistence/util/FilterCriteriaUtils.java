@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * Utilities for integrating {@link Filter} with Hibernate {@link Criteria} API.
@@ -87,8 +88,11 @@ public class FilterCriteriaUtils {
             case greaterOrEq:
                 return Restrictions.ge( property, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( property, ( Collection<?> ) Objects.requireNonNull( filter.getRequiredValue(),
-                        "Required value cannot be null for a collection." ) );
+                if ( !( filter.getRequiredValue() instanceof Collection ) ) {
+                    throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+                }
+                //noinspection rawtypes,unchecked
+                return Restrictions.in( property, optimizeParameterList( ( Collection ) filter.getRequiredValue() ) );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

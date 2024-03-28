@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author pavlidis
  */
-@Component
+@Component("whatsNewService")
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class WhatsNewServiceImpl implements WhatsNewService {
 

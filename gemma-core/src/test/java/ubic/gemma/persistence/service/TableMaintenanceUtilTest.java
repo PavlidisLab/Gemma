@@ -44,7 +44,7 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
             Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
-            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath, "gemma.admin.email=gemma" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath );
         }
 
         /**
@@ -133,7 +133,7 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "" ), any() );
-        verify( mailEngine ).send( any() );
+        verify( mailEngine ).sendAdminMessage( any(), any() );
     }
 
     @Test

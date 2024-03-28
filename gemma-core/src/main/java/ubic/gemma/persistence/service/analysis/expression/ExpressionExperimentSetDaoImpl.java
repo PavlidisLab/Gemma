@@ -20,14 +20,16 @@ package ubic.gemma.persistence.service.analysis.expression;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -35,6 +37,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author paul
@@ -147,7 +151,7 @@ public class ExpressionExperimentSetDaoImpl
         List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
                         "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
                                 + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
-                .setParameterList( "ids", idMap.keySet() ).list();
+                .setParameterList( "ids", optimizeParameterList( idMap.keySet() ) ).list();
 
         for ( Object[] oa : withCoexp ) {
             Long id = ( Long ) oa[0];
@@ -164,7 +168,7 @@ public class ExpressionExperimentSetDaoImpl
                         "select e.id, count(distinct an.experimentAnalyzed) "
                                 + "from ExpressionExperimentSet e, DifferentialExpressionAnalysis an join e.experiments ea "
                                 + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
-                .setParameterList( "ids", idMap.keySet() ).list();
+                .setParameterList( "ids", optimizeParameterList( idMap.keySet() ) ).list();
 
         for ( Object[] oa : withDiffEx ) {
             Long id = ( Long ) oa[0];
@@ -195,7 +199,7 @@ public class ExpressionExperimentSetDaoImpl
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         if ( ids != null )
-            queryObject.setParameterList( "ids", ids );
+            queryObject.setParameterList( "ids", optimizeParameterList( ids ) );
         return queryObject;
     }
 

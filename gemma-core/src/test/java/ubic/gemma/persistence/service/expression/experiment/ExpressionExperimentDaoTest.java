@@ -16,6 +16,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -30,10 +31,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static org.junit.Assert.*;
 
@@ -173,8 +173,22 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetCategoriesWithUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
-        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null ) )
-                .containsEntry( c, 1L );
+        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
+                .containsEntry( CharacteristicUtils.getCategory( c ), 1L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetCategoriesUsageFrequencyAsAnonymous() {
+        expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 );
+    }
+
+    /**
+     * No ACL filtering is done when explicit IDs are provided, so this should work without {@link WithMockUser}.
+     */
+    @Test
+    public void testGetCategoriesUsageFrequencyWithIds() {
+        expressionExperimentDao.getCategoriesUsageFrequency( Collections.singleton( 1L ), null, null, null, -1 );
     }
 
     @Test
@@ -182,6 +196,21 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
+                .containsEntry( c, 1L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetAnnotationUsageFrequencyAsAnonymous() {
+        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetAnnotationUsageFrequencyWithLargeBatch() {
+        Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
+        List<Long> ees = LongStream.range( 0, 10000 ).boxed().collect( Collectors.toList() );
+        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null ) )
                 .containsEntry( c, 1L );
     }
 
@@ -240,6 +269,14 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .doesNotContainKey( c2 );
+    }
+
+    /**
+     * No ACL filtering is done when explicit IDs are provided, so this should work without {@link WithMockUser}.
+     */
+    @Test
+    public void testGetAnnotationUsageFrequencyWithIds() {
+        expressionExperimentDao.getAnnotationsUsageFrequency( Collections.singleton( 1L ), null, 10, 1, null, null, null, null );
     }
 
     private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {

@@ -98,18 +98,19 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void test_whenQueryContainsLikePatterns_thenEscape() throws SearchException {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA%", null ) );
+        verify( geneService ).findByAccession( "BRCA%", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA\\%%" );
     }
 
     @Test
     public void test_whenQueryContainsAsterisk_thenSubstituteForPercent() throws SearchException {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA?*", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA_%" );
+        verify( geneService ).findByOfficialSymbolInexact( "brca_%" );
     }
 
     @Test
     public void test_quotedTerms() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1\" \"BRCA2\"", null ) );
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1 BRCA2\"", null ) );
         verify( geneService ).findByOfficialSymbol( "BRCA1 BRCA2" );
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" table="CURATION_DETAILS">
@@ -29,7 +29,7 @@
             <column name="LAST_UPDATED" not-null="false" unique="false" sql-type="DATETIME(3)"/>
         </property>
         <property name="troubled" type="java.lang.Boolean">
-            <column name="TROUBLED" not-null="true" unique="false" sql-type="TINYINT"/>
+            <column name="TROUBLED" not-null="true" unique="false" sql-type="TINYINT" index="TROUBLED_IX"/>
         </property>
         <property name="needsAttention" type="java.lang.Boolean">
             <column name="NEEDS_ATTENTION" not-null="true" unique="false" sql-type="TINYINT"/>

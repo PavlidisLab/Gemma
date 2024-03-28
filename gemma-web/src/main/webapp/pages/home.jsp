@@ -39,7 +39,7 @@ Ext.onReady( function() {
 
 <div id="frontPageSlideShow">
     <div class="container flex flex-wrap flex-lg-nowrap justify-space-between g-5 mt-10 mb-10">
-        <div class="small">
+        <div class="small w-100" style="max-width: 372px;">
             Gemma provides data, experimental design annotations, and differential expression analysis results for
             thousands
             of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
@@ -58,10 +58,9 @@ Ext.onReady( function() {
                                      &chdlp=b|l&chdls=2f2f2f,13"
                  width="340" height="240"
                  alt="A pie chart representing proportion of taxa among Gemma datasets." />--%>
-        <div class="flex flex-grow flex-wrap flex-md-nowrap g-5 justify-space-around">
-            <img style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
+        <div class="flex flex-grow flex-wrap flex-md-nowrap g-5 justify-space-around w-100">
+            <img class="w-100" style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); max-width: 348px;"
                     src="${pageContext.request.contextPath}/images/showoff.png"
-                    width="300"
                     alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
             <%--  <img style="position: absolute; top: 180px; left: 435px;"
                       src="${pageContext.request.contextPath}/images/slideShow/humanOutline_35_3.png"
@@ -74,7 +73,7 @@ Ext.onReady( function() {
             <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
             <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
 
-            <div style="width: 250px;" id="summaryPanel-div"></div>
+            <div id="summaryPanel-div" class="w-100" style="max-width: 270px;"></div>
         </div>
     </div>
 </div>

@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * @author paul
  */
@@ -192,7 +194,7 @@ public class EntityUtils {
             Collection<String> groups = sessionFactory.getCurrentSession().createQuery(
                             "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                     .setParameter( "user", userName ).list();
-            queryObject.setParameterList( "groups", groups );
+            queryObject.setParameterList( "groups", optimizeParameterList( groups ) );
         }
 
         if ( sqlQuery.contains( ":userName" ) ) {

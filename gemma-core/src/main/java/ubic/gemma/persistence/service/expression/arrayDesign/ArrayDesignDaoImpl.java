@@ -52,7 +52,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author pavlidis
@@ -294,7 +296,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).list();
+                .setParameterList( "ids", optimizeParameterList( ids ) ).list();
         Map<Long, Collection<AuditEvent>> eventMap = new HashMap<>();
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
@@ -439,12 +441,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Set<Long> distinctIds = new HashSet<>( ids );
         //noinspection unchecked,rawtypes
         Set<Long> mergedIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id from ArrayDesign as ad join ad.mergees subs where ad.id in (:ids) group by ad" )
-                .setParameterList( "ids", distinctIds ).list() );
-        return distinctIds.stream().collect( Collectors.toMap( id -> id, mergedIds::contains ) );
+                .setParameterList( "ids", optimizeParameterList( ids ) ).list() );
+        return ids.stream().distinct().collect( Collectors.toMap( id -> id, mergedIds::contains ) );
     }
 
     @Override
@@ -452,12 +453,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Set<Long> distinctIds = new HashSet<>( ids );
         //noinspection unchecked,rawtypes
         Set<Long> mergeeIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id from ArrayDesign as ad where ad.mergedInto.id is not null and ad.id in (:ids)" )
-                .setParameterList( "ids", distinctIds ).list() );
-        return distinctIds.stream().collect( Collectors.toMap( id -> id, mergeeIds::contains ) );
+                .setParameterList( "ids", optimizeParameterList( ids ) ).list() );
+        return ids.stream().distinct().collect( Collectors.toMap( id -> id, mergeeIds::contains ) );
     }
 
     @Override
@@ -465,12 +465,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Set<Long> distinctIds = new HashSet<>( ids );
         //noinspection unchecked,rawtypes
         Set<Long> subsumedIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id from ArrayDesign as ad where ad.subsumingArrayDesign.id is not null and ad.id in (:ids)" )
-                .setParameterList( "ids", distinctIds ).list() );
-        return distinctIds.stream().collect( Collectors.toMap( id -> id, subsumedIds::contains ) );
+                .setParameterList( "ids", optimizeParameterList( ids ) ).list() );
+        return ids.stream().distinct().collect( Collectors.toMap( id -> id, subsumedIds::contains ) );
     }
 
     @Override
@@ -478,12 +477,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Set<Long> distinctIds = new HashSet<>( ids );
         //noinspection unchecked,rawtypes
         Set<Long> subsumerIds = new HashSet<>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id from ArrayDesign as ad join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad" )
-                .setParameterList( "ids", distinctIds ).list() );
-        return distinctIds.stream().collect( Collectors.toMap( id -> id, subsumerIds::contains ) );
+                .setParameterList( "ids", optimizeParameterList( ids ) ).list() );
+        return ids.stream().distinct().collect( Collectors.toMap( id -> id, subsumerIds::contains ) );
     }
 
     @Override
@@ -572,7 +570,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).uniqueResult();
+                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
     }
 
     @Override
@@ -594,7 +592,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                         + ", BlatResult as blat where blat.querySequence != null and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).uniqueResult();
+                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
     }
 
     @Override
@@ -619,7 +617,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                         + "bs2gp.geneProduct=gp and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).uniqueResult();
+                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
     }
 
     @Override
@@ -644,7 +642,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                         + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ).uniqueResult();
+                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
     }
 
     @Override
@@ -1003,7 +1001,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
-                .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e" )
+                .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
+                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( results ) ) )
                 .setCacheable( true )
                 .list();
         Map<Long, Set<DatabaseEntry>> dbi = r.stream()
@@ -1036,22 +1035,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
-                // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select BA.ARRAY_DESIGN_USED_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
-                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                        // FIXME: exclude troubled datasets
-                        + "group by BA.ARRAY_DESIGN_USED_FK"
-                )
+                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where ee2ad.ARRAY_DESIGN_FK in :ids "
+                        + "and not ee2ad.IS_ORIGINAL_PLATFORM"
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
+                        + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> list = query
-                .setCacheable( true )
-                .list();
-        Map<Long, Long> countById = list.stream()
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1061,19 +1061,25 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                // using EXPRESSION_EXPERIMENT_FK, we don't need to do a jointure on the INVESTIGATION table, however
-                // the count reflect the number of bioassays, not EEs
-                .createSQLQuery( "select BA.ORIGINAL_PLATFORM_FK as ID, count(distinct BA.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from BIO_ASSAY BA "
-                        + AclQueryUtils.formNativeAclJoinClause( "BA.EXPRESSION_EXPERIMENT_FK" )
-                        + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() ) + " "
-                        // FIXME: exclude troubled datasets
-                        + "group by BA.ORIGINAL_PLATFORM_FK" )
+                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + "where ee2ad.ARRAY_DESIGN_FK in :ids "
+                        + "and ee2ad.IS_ORIGINAL_PLATFORM "
+                        // ignore noop switches
+                        + "and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)"
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
+                        + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
-                .addScalar( "EE_COUNT", StandardBasicTypes.LONG );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        //noinspection unchecked
-        List<Object[]> results = query.setCacheable( true ).list();
-        Map<Long, Long> switchedCountById = results.stream()
+                .addScalar( "EE_COUNT", StandardBasicTypes.LONG )
+                // ensures that the cache is invalidated when the ee2ad table is regenerated
+                .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
+                // ensures that the cache is invalidated when EEs or ADs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .setCacheable( true );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

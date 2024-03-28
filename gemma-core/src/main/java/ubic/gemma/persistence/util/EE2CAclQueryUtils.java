@@ -26,14 +26,18 @@ public class EE2CAclQueryUtils {
     }
 
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn ) {
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, anonymousMaskColumn, BasePermission.READ.getMask() );
+    }
+
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, int mask ) {
         if ( SecurityUtil.isUserAnonymous() ) {
             SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-            String mask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, BasePermission.READ.getMask() ), sessionFactoryImplementor );
-            return " and " + mask + " <> 0";
+            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, mask ), sessionFactoryImplementor );
+            return " and " + renderedMask + " <> 0";
         } else if ( SecurityUtil.isUserAdmin() ) {
             return "";
         } else {
-            return AclQueryUtils.formNativeAclRestrictionClause( sessionFactoryImplementor );
+            return AclQueryUtils.formNativeAclRestrictionClause( sessionFactoryImplementor, mask );
         }
     }
 

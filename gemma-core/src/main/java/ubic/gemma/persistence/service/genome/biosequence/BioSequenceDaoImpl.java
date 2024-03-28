@@ -32,10 +32,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 
 /**
  * @author pavlidis
@@ -97,30 +98,19 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
     public Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes ) {
         if ( genes == null || genes.isEmpty() )
             return new HashMap<>();
-
         Map<Gene, Collection<BioSequence>> results = new HashMap<>();
-
-        int batchSize = 500;
-
-        if ( genes.size() <= batchSize ) {
-            this.findByGenesBatch( genes, results );
-            return results;
-        }
-
-        Collection<Gene> batch = new HashSet<>();
-
-        for ( Gene gene : genes ) {
-            batch.add( gene );
-            if ( batch.size() == batchSize ) {
-                this.findByGenesBatch( genes, results );
-                batch.clear();
+        for ( Collection<Gene> batch : batchIdentifiableParameterList( genes, 500 ) ) {
+            //noinspection unchecked
+            List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
+                            "select distinct gene, bs from Gene gene "
+                                    + "join fetch gene.products ggp, BioSequence bs "
+                                    + "join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct bsgp "
+                                    + "where ggp = bsgp and gene in (:genes)" )
+                    .setParameterList( "genes", batch ).list();
+            for ( Object[] row : qr ) {
+                results.computeIfAbsent( ( Gene ) row[0], k -> new HashSet<>() ).add( ( BioSequence ) row[1] );
             }
         }
-
-        if ( !batch.isEmpty() ) {
-            this.findByGenesBatch( genes, results );
-        }
-
         return results;
     }
 
@@ -155,18 +145,15 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
             return new HashSet<>();
 
         Collection<BioSequence> result = new HashSet<>();
-        Collection<BioSequence> batch = new HashSet<>();
-
-        for ( BioSequence g : bioSequences ) {
-            batch.add( g );
-            if ( batch.size() == 100 ) {
-                result.addAll( this.doThawBatch( batch ) );
-                batch.clear();
-            }
-        }
-
-        if ( !batch.isEmpty() ) {
-            result.addAll( this.doThawBatch( batch ) );
+        for ( Collection<BioSequence> batch : batchIdentifiableParameterList( bioSequences, 100 ) ) {
+            //noinspection unchecked
+            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( "select b from BioSequence b "
+                            + "left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch b.sequenceDatabaseEntry s "
+                            + "left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                            + "left join fetch bs2gp.geneProduct gp left join fetch gp.gene g "
+                            + "left join fetch g.aliases left join fetch g.accessions  where b in (:bs)" )
+                    .setParameterList( "bs", batch )
+                    .list() );
         }
 
         return result;
@@ -241,34 +228,6 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
             }
         }
         return ( BioSequence ) result;
-    }
-
-    private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select b from BioSequence b "
-                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch b.sequenceDatabaseEntry s "
-                        + " left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)" )
-                .setParameterList( "bids", EntityUtils.getIds( batch ) )
-                .list();
-    }
-
-    private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
-        //noinspection unchecked
-        List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
-                                + " BioSequence bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
-                                + " where ggp=bsgp and gene in (:genes)" )
-                .setParameterList( "genes", genes ).list();
-        for ( Object[] oa : qr ) {
-            Gene g = ( Gene ) oa[0];
-            BioSequence b = ( BioSequence ) oa[1];
-            if ( !results.containsKey( g ) ) {
-                results.put( g, new HashSet<BioSequence>() );
-            }
-            results.get( g ).add( b );
-        }
     }
 
     private void debug( @Nullable BioSequence query, List<?> results ) {

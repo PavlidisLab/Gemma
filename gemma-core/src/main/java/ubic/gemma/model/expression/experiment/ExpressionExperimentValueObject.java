@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -52,6 +53,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonIgnore
     private Long experimentalDesign;
     private String externalDatabase;
+    private String externalDatabaseUri;
     private String externalUri;
     private GeeqValueObject geeq;
     @JsonIgnore
@@ -103,7 +105,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( !ignoreAccession && ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
-            this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
+            this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
+            if ( ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                this.externalUri = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ee.getAccession().getAccession();
+            }
         }
 
         // EE
@@ -175,7 +180,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.accession = vo.getAccession();
         this.batchConfound = vo.getBatchConfound();
         this.batchEffect = vo.getBatchEffect();
+        this.batchEffectStatistics = vo.getBatchEffectStatistics();
         this.externalDatabase = vo.getExternalDatabase();
+        this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
         this.metadata = vo.getMetadata();
         this.shortName = vo.getShortName();

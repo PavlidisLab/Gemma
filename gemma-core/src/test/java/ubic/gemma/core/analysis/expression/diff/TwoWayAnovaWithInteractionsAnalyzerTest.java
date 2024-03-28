@@ -31,6 +31,7 @@ import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the two way anova analyzer with interactions. See test/data/stat-tests/README.txt for R code.
@@ -47,10 +48,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         log.debug( "Testing TwoWayAnova method in " + DiffExAnalyzer.class.getName() );
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         this.configureMocks();
 

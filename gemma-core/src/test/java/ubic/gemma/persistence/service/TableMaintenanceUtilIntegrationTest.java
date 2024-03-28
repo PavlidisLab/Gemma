@@ -60,19 +60,19 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2CharacteristicEntries() {
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment.class );
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( BioMaterial.class );
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExperimentalDesign.class );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment.class, false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( BioMaterial.class, false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExperimentalDesign.class, false );
         assertThatThrownBy( () -> {
-            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( FactorValue.class );
+            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( FactorValue.class, false );
         } ).isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test(expected = AccessDeniedException.class)
     public void testUpdateEE2CAsUser() {
         this.runAsAnonymous();
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
     }
 
     @Test

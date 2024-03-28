@@ -4,6 +4,7 @@ import org.junit.Test;
 import ubic.gemma.core.util.ListUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,5 +33,13 @@ public class ListUtilsTest {
         assertThat( str2position.get( "a" ) ).isEqualTo( 0 );
         assertThat( str2position.get( "A" ) ).isEqualTo( 0 );
         assertThat( str2position.get( "baBa" ) ).isEqualTo( 2 );
+    }
+
+    @Test
+    public void testPadToNextPowerOfTwo() {
+        assertThat( ListUtils.padToNextPowerOfTwo( Collections.emptyList(), null ) ).hasSize( 0 );
+        assertThat( ListUtils.padToNextPowerOfTwo( Arrays.asList( 1L, 2L, 3L ), null ) ).hasSize( 4 );
+        assertThat( ListUtils.padToNextPowerOfTwo( Arrays.asList( 1L, 2L, 3L, 4L ), null ) ).hasSize( 4 );
+        assertThat( ListUtils.padToNextPowerOfTwo( Arrays.asList( 1L, 2L, 3L, 4L, 5L ), null ) ).hasSize( 8 );
     }
 }

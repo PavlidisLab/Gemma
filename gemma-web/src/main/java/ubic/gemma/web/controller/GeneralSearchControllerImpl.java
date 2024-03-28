@@ -202,12 +202,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer, fields )
+            return super.highlightDocument( document, highlighter, analyzer )
                     .entrySet().stream()
                     .collect( Collectors.toMap( e -> localizeField( StringUtils.substringAfterLast( document.get( "_hibernate_class" ), '.' ), e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
         }

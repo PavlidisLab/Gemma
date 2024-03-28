@@ -44,7 +44,7 @@ import java.util.*;
 /**
  * @author jsantos
  */
-@Component
+@Component("arrayDesignReportService")
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private final static String HOME_DIR = Settings.getString( "gemma.appdata.home" );
     private final static Log log = LogFactory.getLog( ArrayDesignReportServiceImpl.class );

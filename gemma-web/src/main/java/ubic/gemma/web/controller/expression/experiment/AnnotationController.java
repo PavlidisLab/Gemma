@@ -102,7 +102,8 @@ public class AnnotationController {
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
-        if ( ontologyService.isObsolete( vc.getValueUri() ) ) {
+        OntologyTerm term = ontologyService.getTerm( vc.getValueUri() );
+        if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
             throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
         }
         expressionExperimentService.addCharacteristic( ee, vc );
@@ -131,7 +132,7 @@ public class AnnotationController {
             int numfilled = 0;
             int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
             for ( CharacteristicValueObject cvo : sortedResults ) {
-                cvo.setValueDefinition( ontologyService.getDefinition( cvo.getValueUri() ) );
+                cvo.setValueDefinition( cvo.getValueUri() != null ? ontologyService.getDefinition( cvo.getValueUri() ) : null );
                 if ( ++numfilled > maxfilled ) {
                     break;
                 }

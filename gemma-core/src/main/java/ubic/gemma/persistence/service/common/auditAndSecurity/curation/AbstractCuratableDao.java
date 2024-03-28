@@ -2,6 +2,8 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -40,7 +42,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         super( objectAlias, elementClass, sessionFactory );
         this.objectAlias = objectAlias;
     }
-   
+
     @Override
     public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
         if ( curatable.getId() == null ) {
@@ -85,6 +87,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
+
     }
 
     /**
@@ -121,15 +124,33 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Format a non-troubled filter for an HQL query.
-     * <p>
-     * For filtering queries, use {@link #addNonTroubledFilter(Filters, String)} instead.
-     *
-     * @param objectAlias an alias for a {@link Curatable} entity
+     * Form a non-troubled clause.
      */
-    protected String formNonTroubledClause( String objectAlias ) {
-        //language=HQL
-        return SecurityUtil.isUserAdmin() ? "" : " and " + objectAlias + ".curationDetails.troubled = false";
+    protected String formNonTroubledClause( String objectAlias, Class<? extends Curatable> clazz ) {
+        String entityName = getSessionFactory().getClassMetadata( clazz ).getEntityName();
+        if ( !SecurityUtil.isUserAdmin() ) {
+            //language=HQL
+            return " and " + objectAlias + " not in (select c from " + entityName + " c join c.curationDetails cd where cd.troubled = true)";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Form a native non-troubled clause.
+     */
+    protected String formNativeNonTroubledClause( String idColumn, Class<? extends Curatable> clazz ) {
+        ClassMetadata classMetadata = getSessionFactory().getClassMetadata( clazz );
+        String table = ( ( SingleTableEntityPersister ) classMetadata )
+                .getTableName();
+        String columnName = ( ( SingleTableEntityPersister ) classMetadata )
+                .getPropertyColumnNames( "curationDetails" )[0];
+        if ( !SecurityUtil.isUserAdmin() ) {
+            //language=SQL
+            return " and " + idColumn + " not in (select c.ID from " + table + " c join CURATION_DETAILS cd on c." + columnName + " = cd.ID where cd.TROUBLED)";
+        } else {
+            return "";
+        }
     }
 
     @Override

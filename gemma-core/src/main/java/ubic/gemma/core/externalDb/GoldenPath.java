@@ -18,18 +18,15 @@
  */
 package ubic.gemma.core.externalDb;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
-
-import java.sql.Driver;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
@@ -57,39 +54,29 @@ public abstract class GoldenPath {
 
     private static JdbcTemplate createJdbcTemplateFromConfig( Taxon taxon ) {
         String host;
-        int port;
-        String user;
-        String password;
         String databaseName = getDbNameForTaxon( taxon );
-        host = Settings.getString( "gemma.goldenpath.db.host" );
-        port = Settings.getInt( "gemma.goldenpath.db.port", 3306 );
 
-        user = Settings.getString( "gemma.goldenpath.db.user" );
-        password = Settings.getString( "gemma.goldenpath.db.password" );
-
-        SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-
-        String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true&useSSL=false";
+        // SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setPoolName( "goldenpath" );
+        String driverClassName = Settings.getString( "gemma.goldenpath.db.driver" );
+        String url = Settings.getString( "gemma.goldenpath.db.url" );
+        String user = Settings.getString( "gemma.goldenpath.db.user" );
+        String password = Settings.getString( "gemma.goldenpath.db.password" );
         GoldenPath.log.info( "Connecting to " + databaseName );
         GoldenPath.log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
-        String driver = Settings.getString( "gemma.goldenpath.db.driver" );
-        if ( StringUtils.isBlank( driver ) ) {
-            driver = Settings.getString( "gemma.db.driver" );
-            GoldenPath.log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
-        }
-        try {
-            //noinspection unchecked
-            dataSource.setDriverClass( ( Class<? extends Driver> ) Class.forName( driver ) );
-        } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( e );
-        }
-        dataSource.setUrl( url );
+        dataSource.setDriverClassName( driverClassName );
+        dataSource.setJdbcUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
+        dataSource.setMaximumPoolSize( Settings.getInt( "gemma.goldenpath.db.maximumPoolSize" ) );
+        dataSource.addDataSourceProperty( "relaxAutoCommit", "true" );
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.setFetchSize( 50 );
+
+        jdbcTemplate.execute( "use " + databaseName );
 
         return jdbcTemplate;
     }

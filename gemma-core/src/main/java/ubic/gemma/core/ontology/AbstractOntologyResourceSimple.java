@@ -17,8 +17,19 @@ public abstract class AbstractOntologyResourceSimple implements OntologyResource
     }
 
     @Override
+    public String getLocalName() {
+        return uri;
+    }
+
+    @Override
     public String getLabel() {
         return label;
+    }
+
+    @Nullable
+    @Override
+    public String getComment() {
+        return null;
     }
 
     @Override

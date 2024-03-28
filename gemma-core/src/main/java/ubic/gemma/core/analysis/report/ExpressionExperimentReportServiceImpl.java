@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
  * @author paul
  * @author klc
  */
-@Service
+@Service("expressionExperimentReportService")
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
     private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";

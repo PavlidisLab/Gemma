@@ -2,7 +2,8 @@ package ubic.gemma.core.search.source;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
+import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -83,24 +86,24 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new Highlighter() {
+                .withHighlighter( new LuceneHighlighter() {
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
 
-                    @Nullable
                     @Override
-                    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-                        return null;
+                    public Formatter getFormatter() {
+                        return new SimpleHTMLFormatter();
                     }
 
                     @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
                         return Collections.emptyMap();
                     }
                 } ) );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
@@ -119,24 +122,24 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new Highlighter() {
+                .withHighlighter( new LuceneHighlighter() {
                     @Override
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
 
-                    @Nullable
                     @Override
-                    public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-                        return null;
+                    public Formatter getFormatter() {
+                        return new SimpleMarkdownFormatter();
                     }
 
                     @Override
-                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+                    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
                         return Collections.emptyMap();
                     }
                 } ) );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {

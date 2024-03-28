@@ -291,7 +291,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .build();
         options.addOption( chooseCutOption );
 
-        options.addOption( Option.builder( "probeDegreeLim" ).hasArg().type( Integer.class ).build() );
+        options.addOption( Option.builder( "probeDegreeLim" ).hasArg().type( Number.class ).build() );
 
         // finer-grained control is possible, of course.
         Option skipQC = Option.builder( "noqc" )
@@ -427,7 +427,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "probeDegreeLim" ) ) {
-            this.linkAnalysisConfig.setProbeDegreeThreshold( ( Integer ) commandLine.getParsedOptionValue( "probeDegreeLim" ) );
+            this.linkAnalysisConfig.setProbeDegreeThreshold( ( ( Number ) commandLine.getParsedOptionValue( "probeDegreeLim" ) ).intValue() );
         }
 
     }

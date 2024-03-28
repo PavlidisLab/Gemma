@@ -21,13 +21,11 @@ package ubic.gemma.persistence.service;
 
 import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
@@ -63,7 +61,7 @@ import java.util.Date;
  * @author jsantos
  * @author paul
  */
-@Service
+@Service("tableMaintenanceUtil")
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     /**
@@ -91,7 +89,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by AOI.ID), 0)";
 
     private static final String EE2C_EE_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(256)) "
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
                     + "from INVESTIGATION I "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
@@ -147,9 +145,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Value("${gemma.gene2cs.path}")
     private Path gene2CsInfoPath;
-
-    @Value("${gemma.admin.email}")
-    private String adminEmailAddress;
 
     private boolean sendEmail = true;
 
@@ -223,8 +218,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     @Transactional
     @Timed
-    public int updateExpressionExperiment2CharacteristicEntries() {
+    public int updateExpressionExperiment2CharacteristicEntries( boolean truncate ) {
         log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table..." );
+        if ( truncate ) {
+            log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC..." );
+            sessionFactory.getCurrentSession()
+                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                    .executeUpdate();
+        }
         int updated = sessionFactory.getCurrentSession()
                 .createSQLQuery(
                         "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
@@ -246,7 +247,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     @Timed
     @Transactional
-    public int updateExpressionExperiment2CharacteristicEntries( Class<?> level ) {
+    public int updateExpressionExperiment2CharacteristicEntries( Class<?> level, boolean truncate ) {
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
             query = EE2C_EE_QUERY;
@@ -257,7 +258,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
         }
-        log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at level " + level + "..." );
+        log.info( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at " + level.getSimpleName() + " level..." );
+        if ( truncate ) {
+            log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC at " + level.getSimpleName() + " level..." );
+            sessionFactory.getCurrentSession()
+                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC where LEVEL = :level" )
+                    .setParameter( "level", level )
+                    .executeUpdate();
+        }
         int updated = sessionFactory.getCurrentSession()
                 .createSQLQuery(
                         "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
@@ -324,17 +332,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private void sendEmail( Gene2CsStatus results ) {
         if ( !sendEmail )
             return;
-        SimpleMailMessage msg = new SimpleMailMessage();
-        if ( StringUtils.isBlank( adminEmailAddress ) ) {
-            TableMaintenanceUtilImpl.log
-                    .warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
-            return;
-        }
-        msg.setTo( adminEmailAddress );
-        msg.setSubject( "Gene2Cs update status." );
-        msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
-        mailEngine.send( msg );
-        TableMaintenanceUtilImpl.log.info( "Email notification sent to " + adminEmailAddress );
+        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + results.getAnnotation() );
     }
 
     /**

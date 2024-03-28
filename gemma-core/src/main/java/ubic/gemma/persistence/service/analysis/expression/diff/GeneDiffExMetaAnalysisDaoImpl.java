@@ -33,6 +33,8 @@ import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * @author Paul
  */
@@ -88,7 +90,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
             //noinspection unchecked
             List<Object[]> queryResults = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "aIds", metaAnalysisIds ).list();
+                    .setParameterList( "aIds", optimizeParameterList( metaAnalysisIds ) ).list();
 
             for ( Object[] queryResult : queryResults ) {
                 GeneDifferentialExpressionMetaAnalysisSummaryValueObject myMetaAnalysis = new GeneDifferentialExpressionMetaAnalysisSummaryValueObject();
@@ -140,7 +142,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from GeneDifferentialExpressionMetaAnalysis a"
                                 + "  inner join a.resultSetsIncluded rs inner join rs.analysis ra where ra.experimentAnalyzed.id in (:ids)" )
-                .setParameterList( "ids", idsToFilter ).list();
+                .setParameterList( "ids", optimizeParameterList( idsToFilter ) ).list();
     }
 
     /**

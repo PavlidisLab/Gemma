@@ -637,7 +637,7 @@ public class ExperimentalDesignController extends BaseController {
 
         Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
 
-        log.info( String.format( "Updating biomaterials took %.2f seconds", w.getTime() / 1000 ) );
+        log.info( String.format( "Updating biomaterials took %.2f seconds", (double)w.getTime() / 1000.0 ) );
 
         if ( biomaterials.isEmpty() ) return;
 

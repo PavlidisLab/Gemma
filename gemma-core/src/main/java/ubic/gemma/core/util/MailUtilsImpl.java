@@ -25,7 +25,6 @@ import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author anton
@@ -58,21 +57,13 @@ public class MailUtilsImpl implements MailUtils {
             if ( emailAddress != null ) {
                 MailUtilsImpl.log.info( "Sending email notification to " + emailAddress );
                 SimpleMailMessage msg = new SimpleMailMessage();
-                msg.setTo( emailAddress );
-                msg.setFrom( Settings.getAdminEmailAddress() );
-                msg.setSubject( "Gemma task completed" );
-
                 String logs = "";
                 if ( taskResult.getException() != null ) {
                     logs += "Task failed with :\n";
                     logs += taskResult.getException().getMessage();
                 }
-
-                msg.setText(
-                        "A job you started on Gemma is completed (taskId=" + taskId + ", " + taskName + ")\n\n" + logs
-                                + "\n" );
-
-                mailEngine.send( msg );
+                String body = "A job you started on Gemma is completed (taskId=" + taskId + ", " + taskName + ")\n\n" + logs + "\n";
+                mailEngine.sendMessage( emailAddress, "Gemma task completed", body );
             }
         }
     }

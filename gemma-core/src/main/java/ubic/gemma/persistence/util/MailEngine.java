@@ -14,8 +14,6 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.springframework.mail.SimpleMailMessage;
-
 import java.util.Map;
 
 /**
@@ -23,10 +21,23 @@ import java.util.Map;
  */
 public interface MailEngine {
 
-    void sendAdminMessage( String bodyText, String subject );
+    /**
+     * Return the admin email address used for {@link #sendAdminMessage(String, String)}
+     */
+    String getAdminEmailAddress();
 
-    void send( SimpleMailMessage msg );
+    /**
+     * Send an email message to the administrator.
+     */
+    void sendAdminMessage( String subject, String bodyText );
 
-    void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model );
+    /**
+     * Send a text email message.
+     */
+    void sendMessage( String to, String subject, String body );
 
+    /**
+     * Send a templated email message.
+     */
+    void sendMessage( String to, String subject, String templateName, Map<String, Object> model );
 }

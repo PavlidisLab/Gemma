@@ -28,6 +28,8 @@ import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 
 import java.util.Collection;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -59,7 +61,7 @@ public class CoexpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
-                .setParameterList( "ids", idsToFilter ).list();
+                .setParameterList( "ids", optimizeParameterList( idsToFilter ) ).list();
     }
 
     @Override

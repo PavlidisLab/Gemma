@@ -94,7 +94,6 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .build();
         searchService.search( settings );
         verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/DOID_14602" );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );
     }

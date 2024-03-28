@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -35,6 +34,7 @@ import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * See test/data/stat-tests/README.txt for R code.
@@ -49,10 +49,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testOneSampleTtest() throws Exception {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         this.configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
 
@@ -127,10 +124,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testTTestWithExpressionExperiment() {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         this.configureMocks();
 

@@ -18,10 +18,8 @@ import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -35,17 +33,13 @@ import java.util.Set;
 public interface OntologyService {
 
     /**
-     * <p>
      * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
-     * </p>
      * <p>
-     *     Will also find terms that are no longer in an ontology we use.
-     * </p>
-     *
+     * Will also find terms that are no longer in an ontology we use.
      * @return map of value URI to a representative characteristic using the term. The latter will contain a count
-     * of how many ocurrences there were.
+     * of how many occurrences there were.
      */
-    Map<String, CharacteristicValueObject> findObsoleteTermUsage();
+    Map<Characteristic, Long> findObsoleteTermUsage();
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -55,6 +49,7 @@ public interface OntologyService {
      * @param  useNeuroCartaOntology use neurocarta ontology
      * @return characteristic vos
      */
+    @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology ) throws SearchException;
 
@@ -63,10 +58,10 @@ public interface OntologyService {
      * looks like a URI, it just retrieves the term.
      * For other queries, this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
-     * @param  search search
+     * @param  query search query
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String search ) throws SearchException;
+    Collection<OntologyTerm> findTerms( String query ) throws SearchException;
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
@@ -82,15 +77,14 @@ public interface OntologyService {
     Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException;
 
     /**
-     * @return terms which are allowed for use in the Category of a Characteristic
+     * Obtain terms which are allowed for use in the category of a {@link ubic.gemma.model.common.description.Characteristic}.
      */
-    Collection<OntologyTerm> getCategoryTerms();
+    Set<OntologyTerm> getCategoryTerms();
 
     /**
-     *
-     * @return terms allowed for the predicate (relationship) in a Characteristic
+     * Obtain terms allowed for the predicate (relationship) in a {@link ubic.gemma.model.expression.experiment.Statement}.
      */
-    Collection<OntologyProperty> getRelationTerms();
+    Set<OntologyProperty> getRelationTerms();
 
     /**
      * Obtain the parents of a collection of terms.
@@ -105,14 +99,13 @@ public interface OntologyService {
     Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
 
     /**
-     * @param  uri uri
-     * @return the definition of the associated OntologyTerm. This requires that the ontology be loaded.
+     * Obtain a definition for the given URI.
      */
+    @Nullable
     String getDefinition( String uri );
 
     /**
-     * @param  uri uri
-     * @return the OntologyTerm for the specified URI.
+     * Obtain a term for the given URI.
      */
     @Nullable
     OntologyTerm getTerm( String uri );
@@ -121,8 +114,6 @@ public interface OntologyService {
      * Return all the terms matching the given URIs.
      */
     Set<OntologyTerm> getTerms( Collection<String> uris );
-
-    boolean isObsolete( String uri );
 
     /**
      * Recreate the search indices, for ontologies that are loaded.

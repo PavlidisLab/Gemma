@@ -176,8 +176,8 @@ public class VisualizationValueObject {
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid,
                     vector.getPvalue() );
 
-            if ( !profile.isAllMissing() )
-                profiles.add( profile );
+            //  if ( !profile.isAllMissing() ) // this might not be a desirable side-effect.
+            profiles.add( profile );
 
         }
     }

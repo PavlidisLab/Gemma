@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -108,7 +109,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public CacheManager cacheManager() {
-            return mock();
+            return new ConcurrentMapCacheManager();
         }
     }
 
@@ -157,10 +158,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         when( chebiOntologyService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", null ) );
         assertNull( ontologyService.getTerm( "http://test" ) );
 
-        // this is covering the case when baseCode defaults to the local name or URI when a term does not have a label
-        when( chebiOntologyService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "http://test" ) );
-        assertNull( ontologyService.getTerm( "http://test" ) );
-
+        // provide the term from another ontology, but with a label this time
         when( obiService.isOntologyLoaded() ).thenReturn( true );
         when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
         assertNotNull( ontologyService.getTerm( "http://test" ) );

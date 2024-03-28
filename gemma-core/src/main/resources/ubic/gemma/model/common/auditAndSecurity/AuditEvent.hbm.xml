@@ -10,11 +10,11 @@
             <generator class="native"/>
         </id>
         <property access="field" name="date" type="java.util.Date">
-            <column name="DATE" not-null="true" sql-type="DATETIME(3)"/>
+            <column name="DATE" not-null="true" sql-type="DATETIME(3)" index="AUDIT_EVENT_DATE"/>
         </property>
         <property access="field" name="action">
             <column name="ACTION" not-null="true"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="AUDIT_EVENT_ACTION"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.AuditAction</param>
                 <param name="useNamed">true</param>

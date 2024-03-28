@@ -62,7 +62,7 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.dialect", H2Dialect.class.getName() );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             props.setProperty( "hibernate.max_fetch_depth", "3" );
-            props.setProperty( "hibernate.default_batch_fetch_size", "100" );
+            props.setProperty( "hibernate.default_batch_fetch_size", "128" );
             props.setProperty( "hibernate.jdbc.fetch_size", "128" );
             props.setProperty( "hibernate.jdbc.batch_size", "32" );
             props.setProperty( "hibernate.jdbc.batch_versioned_data", "true" );
@@ -126,8 +126,9 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         @Override
         public void afterPropertiesSet() {
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-acls.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-entities.sql" ), false );
             JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/h2/init-entities.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/h2/init-indices.sql" ), false );
+            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-data-slim.sql" ), false );
         }
     }
 }

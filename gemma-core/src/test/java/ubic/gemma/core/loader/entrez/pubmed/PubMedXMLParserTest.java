@@ -45,7 +45,6 @@ import static org.junit.Assume.assumeNoException;
 /**
  * @author pavlidis
  */
-@Category(SlowTest.class)
 public class PubMedXMLParserTest {
 
     private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
@@ -175,6 +174,7 @@ public class PubMedXMLParserTest {
      * This uses a medline-format file, instead of the pubmed xml files we get from the eutils.
      */
     @Test
+    @Category(SlowTest.class)
     public void testParseMulti() throws Exception {
         try {
             testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() );

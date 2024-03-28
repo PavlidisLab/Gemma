@@ -7,6 +7,7 @@ package ubic.gemma.model.common.description;
 public final class ExternalDatabases {
 
     public static final String
+            GEO = "GEO",
             GENE = "gene",
             GO = "go",
             MULTIFUNCTIONALITY = "multifunctionality",

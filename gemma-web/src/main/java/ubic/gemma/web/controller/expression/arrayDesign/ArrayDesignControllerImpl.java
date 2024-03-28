@@ -57,6 +57,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -78,7 +79,7 @@ import java.util.*;
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
-    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca"; // FIXME factor out as config
+    private static final String SUPPORT_EMAIL = Settings.getString( "gemma.support.email" );
 
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
 

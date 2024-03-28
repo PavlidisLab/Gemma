@@ -35,14 +35,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -62,7 +60,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
@@ -73,8 +70,9 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static ubic.gemma.core.search.source.DatabaseSearchSourceUtils.prepareDatabaseQuery;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -162,8 +160,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private GeneSearchService geneSearchService;
     @Autowired
     private GeneService geneService;
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     // TODO: use services instead of DAO here
     @Autowired
@@ -175,13 +171,25 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Qualifier("valueObjectConversionService")
     private ConversionService valueObjectConversionService;
 
+    /**
+     * Mapping of supported result types to their corresponding VO type.
+     */
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
-
 
     /**
      * A composite search source.
      */
     private SearchSource searchSource;
+
+    @Override
+    public Set<String> getFields( Class<? extends Identifiable> resultType ) {
+        return Stream.of( databaseSearchSource, hibernateSearchSource, ontologySearchSource )
+                .filter( s -> s instanceof FieldAwareSearchSource )
+                .map( s -> ( FieldAwareSearchSource ) s )
+                .map( s -> s.getFields( resultType ) )
+                .flatMap( Set::stream )
+                .collect( Collectors.toSet() );
+    }
 
     /*
      * This is the method used by the main search page.
@@ -245,8 +253,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             canConvertFromEntity( e.getKey(), e.getValue() );
             canConvertFromId( e.getValue() );
         }
-        // this is a special case because it's non-trivial to perform the conversion
-        supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
     }
 
     private void canConvertFromEntity( Class<? extends Identifiable> from, Class<? extends IdentifiableValueObject<?>> to ) {
@@ -301,9 +307,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         List<Long> entitiesIds = new ArrayList<>();
         List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>();
         for ( SearchResult<?> result : results ) {
-            if ( PhenotypeAssociation.class.equals( resultType ) ) {
-                entitiesVos.add( ( CharacteristicValueObject ) result.getResultObject() );
-            } else if ( resultType.isInstance( result.getResultObject() ) ) {
+            if ( resultType.isInstance( result.getResultObject() ) ) {
                 entities.add( result.getResultObject() );
             } else {
                 entitiesIds.add( result.getResultId() );
@@ -319,8 +323,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
         }
 
-        // FIXME: PhenotypeAssociation does not support conversion from IDs, but once it does or if it's removed,
-        //        then we don't need to check isEmpty()
+        // convert IDs to VOs
         if ( !entitiesIds.isEmpty() ) {
             //noinspection unchecked
             entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
@@ -438,26 +441,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( this.experimentSetSearch( settings ) );
         }
 
-        if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
-            results.addAll( searchPhenotype( settings ) );
-        }
-
         if ( settings.hasResultType( BlacklistedEntity.class ) ) {
             results.addAll( blacklistedResults );
         }
-    }
-
-    /**
-     * Find phenotypes.
-     */
-    private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
-        if ( !settings.isUseDatabase() )
-            return Collections.emptySet();
-        // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
-        String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-        return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
-                .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                .collect( Collectors.toCollection( SearchResultSet::new ) );
     }
 
     //    /**
@@ -652,16 +638,22 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch watch = StopWatch.createStarted();
 
         log.debug( "Starting EE search for " + settings );
-        String[] subclauses = prepareDatabaseQuery( settings ).split( "\\s+OR\\s+" );
-        for ( String subclause : subclauses ) {
-            /*
-             * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
-             * level.
-             */
-            Collection<SearchResult<ExpressionExperiment>> classResults = this
-                    .characteristicEESearchWithChildren( settings.withQuery( subclause ) );
-            if ( classResults.size() > 0 ) {
-                log.debug( "... Found " + classResults.size() + " EEs matching " + subclause );
+        /*
+         * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
+         * level.
+         *
+         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
+         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
+         * single characteristics that match both.
+         *
+         * But if they put in Parkinson's disease we don't want to do two queries.
+         */
+        Set<Set<String>> subclauses = extractDnf( settings );
+
+        for ( Set<String> subclause : subclauses ) {
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.characteristicEESearchWithChildren( settings, subclause );
+            if ( !classResults.isEmpty() ) {
+                log.debug( "... Found " + classResults.size() + " EEs matching " + String.join( " OR ", subclause ) );
             }
             results.addAll( classResults );
         }
@@ -682,17 +674,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @param settings search settings
      * @return SearchResults of Experiments
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( SearchSettings settings ) throws SearchException {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( SearchSettings settings, Set<String> subparts ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
-
-        /*
-         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
-         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
-         * single characteristics that match both.
-         *
-         * But if they put in Parkinson's disease we don't want to do two queries.
-         */
-        String[] subparts = settings.getQuery().split( " AND " );
 
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult<ExpressionExperiment>> allResults = new SearchResultSet<>();
@@ -1372,10 +1355,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Infer a {@link Taxon} from the search settings.
      */
-    private Taxon inferTaxon( SearchSettings settings ) {
+    private Taxon inferTaxon( SearchSettings settings ) throws SearchException {
         // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
         // remove quotes and other characters tha can interfere with the exact match
-        String[] searchTerms = prepareDatabaseQuery( settings ).split( "\\s+", 4 );
+        Set<String> searchTerms = extractTerms( settings );
 
         for ( String term : searchTerms ) {
             if ( nameToTaxonMap.containsKey( term ) ) {

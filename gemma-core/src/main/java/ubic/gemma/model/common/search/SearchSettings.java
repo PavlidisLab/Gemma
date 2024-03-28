@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,10 +50,6 @@ import java.util.stream.Collectors;
 @Builder
 @With
 public class SearchSettings implements Serializable {
-
-    public static final char
-            WILDCARD_CHAR = '*',
-            SINGLE_WILDCARD_CHAR = '?';
 
 
     public enum SearchMode {
@@ -262,13 +259,6 @@ public class SearchSettings implements Serializable {
     }
 
     /**
-     * Check if the query is a wildcard query.
-     */
-    public boolean isWildcard() {
-        return query.contains( String.valueOf( WILDCARD_CHAR ) ) || query.contains( String.valueOf( SINGLE_WILDCARD_CHAR ) );
-    }
-
-    /**
      * Check if this is configured to search a given result type.
      */
     public boolean hasResultType( Class<?> cls ) {
@@ -289,8 +279,12 @@ public class SearchSettings implements Serializable {
     }
 
     @Nullable
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, Set<String> fields ) {
-        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
+        if ( highlighter instanceof LuceneHighlighter ) {
+            return ( ( LuceneHighlighter ) highlighter ).highlightDocument( document, luceneHighlighter, analyzer );
+        } else {
+            return null;
+        }
     }
 
     @Override

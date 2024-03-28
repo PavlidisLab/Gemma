@@ -129,7 +129,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
     }
 
     @After

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.analysis.AnalysisResultSet" table="ANALYSIS_RESULT_SET" mutable="false"
@@ -27,10 +27,12 @@
                       discriminator-value="ExpressionAnalysisResultSet"
                       abstract="false">
                 <property name="numberOfProbesTested" type="java.lang.Integer">
-                    <column name="NUMBER_OF_PROBES_TESTED" not-null="false" unique="false" sql-type="INTEGER"/>
+                    <column name="NUMBER_OF_PROBES_TESTED" not-null="false" unique="false" sql-type="INTEGER"
+                            index="NUMBER_OF_PROBES_TESTED"/>
                 </property>
                 <property name="numberOfGenesTested" type="java.lang.Integer">
-                    <column name="NUMBER_OF_GENES_TESTED" not-null="false" unique="false" sql-type="INTEGER"/>
+                    <column name="NUMBER_OF_GENES_TESTED" not-null="false" unique="false" sql-type="INTEGER"
+                            index="NUMBER_OF_GENES_TESTED"/>
                 </property>
                 <many-to-one name="baselineGroup" class="ubic.gemma.model.expression.experiment.FactorValue"
                              lazy="proxy" fetch="select">
@@ -42,7 +44,7 @@
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>
                     <one-to-many
-                            class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"/>
+                        class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"/>
                 </set>
                 <many-to-one name="analysis"
                              class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"

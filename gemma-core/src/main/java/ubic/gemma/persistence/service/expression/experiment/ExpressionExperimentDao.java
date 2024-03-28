@@ -170,7 +170,7 @@ public interface ExpressionExperimentDao
      * <p>
      * Experiments <b>are not</b> filtered by ACLs and toubled experiments are only visible to administrators.
      */
-    Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
+    Map<Taxon, Long> getPerTaxonCount( Collection<Long> ids );
 
     Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
@@ -271,8 +271,6 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
-
     /**
      * Special indicator for free-text terms.
      * <p>
@@ -286,6 +284,8 @@ public interface ExpressionExperimentDao
      * Uncategorized terms (or the uncategorized category) has both null URI and label.
      */
     String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.

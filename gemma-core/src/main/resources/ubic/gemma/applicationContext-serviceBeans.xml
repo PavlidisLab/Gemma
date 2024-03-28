@@ -70,6 +70,10 @@
                     <bean class="ubic.gemma.core.metrics.binder.database.HikariCPMetrics">
                         <constructor-arg ref="dataSource"/>
                     </bean>
+                    <bean class="ubic.gemma.core.metrics.binder.ThreadPoolTaskExecutorMetrics">
+                        <constructor-arg ref="taskExecutor"/>
+                        <property name="poolName" value="gemmaLocalTasks"/>
+                    </bean>
                 </list>
             </constructor-arg>
         </bean>

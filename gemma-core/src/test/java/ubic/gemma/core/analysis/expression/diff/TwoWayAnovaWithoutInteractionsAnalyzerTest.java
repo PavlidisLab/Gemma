@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the two way anova analyzer. See test/data/stat-tests/README.txt for R code.
@@ -51,10 +52,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         log.debug( "Testing getPValues method in " + DiffExAnalyzer.class.getName() );
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         this.configureMocks();
 

@@ -6,21 +6,21 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 public class MailEngineTest extends AbstractJUnit4SpringContextTests {
@@ -28,6 +28,14 @@ public class MailEngineTest extends AbstractJUnit4SpringContextTests {
     @Configuration
     @TestComponent
     static class MailEngineTestContextConfiguration {
+
+        @Bean
+        public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer(
+                    "gemma.admin.email=gemma@chibi.msl.ubc.ca",
+                    "gemma.noreply.email=noreply@gemma.pavlab.msl.ubc.ca",
+                    "gemma.support.email=pavlab-support@msl.ubc.ca" );
+        }
 
         @Bean
         public MailEngine mailEngine() {
@@ -61,13 +69,13 @@ public class MailEngineTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test() {
-        mailEngine.sendAdminMessage( "test", "test subject" );
+        mailEngine.sendAdminMessage( "test subject", "test" );
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass( SimpleMailMessage.class );
         verify( mailSender ).send( captor.capture() );
         assertThat( captor.getValue() )
                 .isNotNull().satisfies( m -> {
-                    assertThat( m.getTo() ).containsExactly( Settings.getAdminEmailAddress() );
-                    assertThat( m.getFrom() ).isEqualTo( Settings.getAdminEmailAddress() );
+                    assertThat( m.getTo() ).containsExactly( "gemma@chibi.msl.ubc.ca" );
+                    assertThat( m.getFrom() ).isEqualTo( "noreply@gemma.pavlab.msl.ubc.ca" );
                     assertThat( m.getSubject() ).isEqualTo( "test subject" );
                     assertThat( m.getText() ).isEqualTo( "test" );
                 } );
@@ -79,7 +87,7 @@ public class MailEngineTest extends AbstractJUnit4SpringContextTests {
         vars.put( "username", "foo" );
         vars.put( "siteurl", "http://example.com/" );
         vars.put( "confirmLink", "http://example.com/confirm?token=12ijdqwer9283" );
-        mailEngine.sendMessage( new SimpleMailMessage(), "accountCreated.vm", vars );
+        mailEngine.sendMessage( "test", "subject", "accountCreated.vm", vars );
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass( SimpleMailMessage.class );
         verify( mailSender ).send( captor.capture() );
         assertThat( captor.getValue() )

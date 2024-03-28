@@ -4,34 +4,34 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-	<class name="ubic.gemma.model.genome.biosequence.BioSequence" table="BIO_SEQUENCE">
-		<cache usage="nonstrict-read-write" />
-		<id name="id" type="java.lang.Long" unsaved-value="null">
-			<column name="ID" sql-type="BIGINT" />
-			<generator class="native">
-			</generator>
-		</id>
-		<property name="name" type="java.lang.String">
-			<column name="NAME" not-null="false" unique="false"
-				sql-type="VARCHAR(255)" />
-		</property>
-		<property name="description" type="org.hibernate.type.MaterializedClobType">
-			<column name="DESCRIPTION" not-null="false" unique="false"
-				sql-type="text" />
-		</property>
-		<property name="length" type="java.lang.Long">
-			<column name="LENGTH" not-null="false" unique="false" sql-type="BIGINT" />
-		</property>
-		<property name="sequence" type="org.hibernate.type.MaterializedClobType">
-			<column name="SEQUENCE" not-null="false" unique="false"
-				sql-type="longtext" />
-		</property>
-		<property name="isApproximateLength" type="java.lang.Boolean">
-			<column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT" />
-		</property>
-		<property name="isCircular" type="java.lang.Boolean">
-			<column name="IS_CIRCULAR" not-null="false" unique="false" sql-type="TINYINT" />
-		</property>
+    <class name="ubic.gemma.model.genome.biosequence.BioSequence" table="BIO_SEQUENCE">
+        <cache usage="nonstrict-read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)" index="BIOSEQUENCE_NAME"/>
+        </property>
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
+            <column name="DESCRIPTION" not-null="false" unique="false"
+                    sql-type="text"/>
+        </property>
+        <property name="length" type="java.lang.Long">
+            <column name="LENGTH" not-null="false" unique="false" sql-type="BIGINT"/>
+        </property>
+        <property name="sequence" type="org.hibernate.type.MaterializedClobType">
+            <column name="SEQUENCE" not-null="false" unique="false"
+                    sql-type="longtext"/>
+        </property>
+        <property name="isApproximateLength" type="java.lang.Boolean">
+            <column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT"/>
+        </property>
+        <property name="isCircular" type="java.lang.Boolean">
+            <column name="IS_CIRCULAR" not-null="false" unique="false" sql-type="TINYINT"/>
+        </property>
         <property name="polymerType">
             <column name="POLYMER_TYPE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
@@ -49,25 +49,25 @@
             </type>
         </property>
         <property name="fractionRepeats" type="java.lang.Double">
-			<column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE" />
-		</property>
-		<!-- cascade=all is a problem since same entry can be associated with geneproduct - see chromosomefeature configuration -->
-		<!-- this must be eager because BioSequenceValueObject assumes it is readily available -->
-		<many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"
-			cascade="all" lazy="false" fetch="join">
-			<column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
-		</many-to-one>
-		<!-- assumed readily available in BioSequenceValueObject -->
-		<!-- this should be accessed via a select because taxa are shared for many, many probes -->
-		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
-			<column name="TAXON_FK" not-null="true" sql-type="BIGINT" />
-		</many-to-one>
-		<set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">
-			<cache usage="read-write" />
-			<key foreign-key="BIO_SEQUENCE2_GENE_PRODUCT_BIO_SEQUENCE_FKC">
-				<column name="BIO_SEQUENCE_FK" sql-type="BIGINT" />
-			</key>
-			<one-to-many class="ubic.gemma.model.association.BioSequence2GeneProduct" />
-		</set>
-	</class>
+            <column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE"/>
+        </property>
+        <!-- cascade=all is a problem since same entry can be associated with geneproduct - see chromosomefeature configuration -->
+        <!-- this must be eager because BioSequenceValueObject assumes it is readily available -->
+        <many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"
+                     cascade="all" lazy="false" fetch="join">
+            <column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <!-- assumed readily available in BioSequenceValueObject -->
+        <!-- this should be accessed via a select because taxa are shared for many, many probes -->
+        <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
+            <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">
+            <cache usage="read-write"/>
+            <key foreign-key="BIO_SEQUENCE2_GENE_PRODUCT_BIO_SEQUENCE_FKC">
+                <column name="BIO_SEQUENCE_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.association.BioSequence2GeneProduct"/>
+        </set>
+    </class>
 </hibernate-mapping>
