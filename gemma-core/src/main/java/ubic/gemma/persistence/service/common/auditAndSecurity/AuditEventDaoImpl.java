@@ -109,9 +109,14 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     public Collection<Auditable> getNewSinceDate( Date date ) {
         Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AuditEventDaoImpl.AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
-            String queryString = "select distinct adb from " + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
-            this.tryAddAllToResult( result, queryString, date );
+            //noinspection unchecked
+            result.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select adb from " + clazz + " adb "
+                            + "join adb.auditTrail atr "
+                            + "join atr.events as ae "
+                            + "where ae.date > :date and ae.action='C' "
+                            + "group by adb" )
+                    .setParameter( "date", date ).list() );
         }
         return result;
     }
@@ -127,9 +132,14 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     public Collection<Auditable> getUpdatedSinceDate( Date date ) {
         Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AuditEventDaoImpl.AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
-            String queryString = "select distinct adb from " + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
-            this.tryAddAllToResult( result, queryString, date );
+            //noinspection unchecked
+            result.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select adb from " + clazz + " adb "
+                            + "join adb.auditTrail atr "
+                            + "join atr.events as ae "
+                            + "where ae.date > :date and ae.action='U' "
+                            + "group by adb" )
+                    .setParameter( "date", date ).list() );
         }
         return result;
     }
@@ -242,13 +252,6 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         }
 
         return result;
-    }
-
-    private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        queryObject.setParameter( "date", date );
-        //noinspection unchecked
-        result.addAll( queryObject.list() );
     }
 
     /**
