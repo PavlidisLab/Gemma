@@ -45,6 +45,17 @@ public class QueryUtilsTest {
     }
 
     @Test
+    public void testPrepareDatabaseQueryWithUri() throws SearchException {
+        // ideal case, using quotes
+        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "\"http://example.com/GO:1234\"", null ) ) );
+        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234", null ) ) );
+        assertEquals( "http://example.com/GO:1234?a=b#c=d", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234?a=b#c=d", null ) ) );
+        assertEquals( "http://example.com/GO_1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO_1234", null ) ) );
+        assertEquals( "http://example.com/#GO_1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/#GO_1234", null ) ) );
+        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234 OR http://example.com/GO:1235", null ) ) );
+    }
+
+    @Test
     public void testPrepareDatabaseQueryForInexactMatch() throws SearchException {
         assertEquals( "BRCA", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "\"BRCA\"", null ) ) );
         assertEquals( "br%ca", prepareDatabaseQueryForInexactMatch( SearchSettings.geneSearch( "BR*CA", null ) ) );

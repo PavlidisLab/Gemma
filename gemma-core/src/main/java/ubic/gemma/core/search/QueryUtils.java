@@ -1,6 +1,7 @@
 package ubic.gemma.core.search;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
@@ -58,7 +59,7 @@ public class QueryUtils {
                 }
             }
         } else if ( query instanceof TermQuery ) {
-            terms.add( ( ( TermQuery ) query ).getTerm().text() );
+            terms.add( termToString( ( ( TermQuery ) query ).getTerm() ) );
         }
     }
 
@@ -82,28 +83,28 @@ public class QueryUtils {
                             continue; // OR, we ignore
                         }
                         if ( subClause.getQuery() instanceof TermQuery ) {
-                            terms.add( ( ( TermQuery ) subClause.getQuery() ).getTerm().text() );
+                            terms.add( termToString( ( ( TermQuery ) subClause.getQuery() ).getTerm() ) );
                         }
                     }
                     if ( !terms.isEmpty() ) {
                         result.add( terms );
                     }
                 } else if ( clause.getQuery() instanceof TermQuery ) {
-                    result.add( Collections.singleton( ( ( TermQuery ) clause.getQuery() ).getTerm().text() ) );
+                    result.add( Collections.singleton( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
                 }
             }
             // check if all the clauses are required, in which case we can just create a nested clause
             if ( isSimpleAndClause ) {
                 Set<String> terms = new HashSet<>();
                 for ( BooleanClause clause : ( ( BooleanQuery ) q ) ) {
-                    terms.add( ( ( TermQuery ) clause.getQuery() ).getTerm().text() );
+                    terms.add( ( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
                 }
                 if ( !terms.isEmpty() ) {
                     result.add( terms );
                 }
             }
         } else if ( q instanceof TermQuery ) {
-            result.add( Collections.singleton( ( ( TermQuery ) q ).getTerm().text() ) );
+            result.add( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
         }
         return result;
     }
@@ -136,26 +137,37 @@ public class QueryUtils {
             }
         } else if ( query instanceof WildcardQuery ) {
             if ( replaceWildcards ) {
-                return escapeLike( ( ( WildcardQuery ) query ).getTerm().text() )
+                return escapeLike( termToString( ( ( WildcardQuery ) query ).getTerm() ) )
                         .replace( '?', '_' )
                         .replace( '*', '%' );
             } else {
-                return ( ( WildcardQuery ) query ).getTerm().text();
+                return termToString( ( ( WildcardQuery ) query ).getTerm() );
             }
         } else if ( query instanceof PrefixQuery ) {
             if ( replaceWildcards ) {
-                return escapeLike( ( ( PrefixQuery ) query ).getPrefix().text() ) + "%";
+                return escapeLike( termToString( ( ( PrefixQuery ) query ).getPrefix() ) ) + "%";
             } else {
-                return ( ( PrefixQuery ) query ).getPrefix().text();
+                return termToString( ( ( PrefixQuery ) query ).getPrefix() );
             }
         } else if ( query instanceof TermQuery ) {
             if ( replaceWildcards ) {
-                return escapeLike( ( ( TermQuery ) query ).getTerm().text() );
+                return escapeLike( termToString( ( ( TermQuery ) query ).getTerm() ) );
             } else {
-                return ( ( TermQuery ) query ).getTerm().text();
+                return termToString( ( ( TermQuery ) query ).getTerm() );
             }
         }
         return "";
+    }
+
+    /**
+     * Extract a suitable string from a term, detecting URIs that would be parsed as a fielded term.
+     */
+    private static String termToString( Term term ) {
+        if ( term.field().equals( "http" ) || term.field().equals( "https" ) ) {
+            return term.field() + ":" + term.text();
+        } else {
+            return term.text();
+        }
     }
 
     private static String escapeLike( String s ) {
