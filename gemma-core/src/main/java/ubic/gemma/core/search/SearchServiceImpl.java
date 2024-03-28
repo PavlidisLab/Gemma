@@ -41,9 +41,11 @@ import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -253,6 +255,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             canConvertFromEntity( e.getKey(), e.getValue() );
             canConvertFromId( e.getValue() );
         }
+        // FIXME: remove this in the 1.32 series, we still allow selecting Phenotypes from the UI
+        supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
     }
 
     private void canConvertFromEntity( Class<? extends Identifiable> from, Class<? extends IdentifiableValueObject<?>> to ) {
