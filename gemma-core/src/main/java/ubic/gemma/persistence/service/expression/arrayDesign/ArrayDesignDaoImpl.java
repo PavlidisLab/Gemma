@@ -1001,7 +1001,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
-                .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e" )
+                .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
+                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( results ) ) )
                 .setCacheable( true )
                 .list();
         Map<Long, Set<DatabaseEntry>> dbi = r.stream()
