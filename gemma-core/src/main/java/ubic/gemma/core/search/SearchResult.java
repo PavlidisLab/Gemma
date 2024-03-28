@@ -22,7 +22,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,9 +50,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * Create a search result whose result class differ from the object.
      * <p>
-     * This can be useful if you wrap a proxy, or don't want to expose the object class publicly. For example, our
-     * {@link ubic.gemma.model.association.phenotype.PhenotypeAssociation} use a {@link CharacteristicValueObject}
-     * for the result object.
+     * This can be useful if you wrap a proxy, or don't want to expose the object class publicly.
      */
     public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, T entity, double score, @Nullable Map<String, String> highlights, Object source ) {
         if ( entity.getId() == null ) {

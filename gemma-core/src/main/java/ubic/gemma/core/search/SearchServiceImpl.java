@@ -35,18 +35,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -163,8 +160,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private GeneSearchService geneSearchService;
     @Autowired
     private GeneService geneService;
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     // TODO: use services instead of DAO here
     @Autowired
@@ -256,8 +251,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             canConvertFromEntity( e.getKey(), e.getValue() );
             canConvertFromId( e.getValue() );
         }
-        // this is a special case because it's non-trivial to perform the conversion
-        supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
     }
 
     private void canConvertFromEntity( Class<? extends Identifiable> from, Class<? extends IdentifiableValueObject<?>> to ) {
@@ -309,16 +302,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjectsOfSameResultType( List<SearchResult<?>> results, Class<? extends Identifiable> resultType ) {
         List<Identifiable> entities = new ArrayList<>();
-        List<Long> entitiesIds = new ArrayList<>();
         List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>();
         for ( SearchResult<?> result : results ) {
-            if ( PhenotypeAssociation.class.equals( resultType ) ) {
-                entitiesVos.add( ( CharacteristicValueObject ) result.getResultObject() );
-            } else if ( resultType.isInstance( result.getResultObject() ) ) {
-                entities.add( result.getResultObject() );
-            } else {
-                entitiesIds.add( result.getResultId() );
-            }
+            entities.add( result.getResultObject() );
         }
 
         // convert entities to VOs
@@ -327,16 +313,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
                     valueObjectConversionService.convert( entities,
                             TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) ),
-                            TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
-        }
-
-        // FIXME: PhenotypeAssociation does not support conversion from IDs, but once it does or if it's removed,
-        //        then we don't need to check isEmpty()
-        if ( !entitiesIds.isEmpty() ) {
-            //noinspection unchecked
-            entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
-                    valueObjectConversionService.convert( entitiesIds,
-                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
         }
 
@@ -449,26 +425,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results.addAll( this.experimentSetSearch( settings ) );
         }
 
-        if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
-            results.addAll( searchPhenotype( settings ) );
-        }
-
         if ( settings.hasResultType( BlacklistedEntity.class ) ) {
             results.addAll( blacklistedResults );
         }
-    }
-
-    /**
-     * Find phenotypes.
-     */
-    private Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
-        if ( !settings.isUseDatabase() )
-            return Collections.emptySet();
-        // FIXME: add support for OR, but there's a bug in baseCode that prevents this https://github.com/PavlidisLab/baseCode/issues/22
-        String query = settings.getQuery().replaceAll( "\\s+OR\\s+", "" );
-        return this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( query, settings.getMaxResults() ).stream()
-                .map( r -> SearchResult.from( PhenotypeAssociation.class, r, 1.0, "PhenotypeAssociationManagerService.searchInDatabaseForPhenotype" ) )
-                .collect( Collectors.toCollection( SearchResultSet::new ) );
     }
 
     //    /**
