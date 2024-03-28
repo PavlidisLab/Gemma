@@ -171,8 +171,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Qualifier("valueObjectConversionService")
     private ConversionService valueObjectConversionService;
 
+    /**
+     * Mapping of supported result types to their corresponding VO type.
+     */
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
-
 
     /**
      * A composite search source.
@@ -302,9 +304,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     private List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjectsOfSameResultType( List<SearchResult<?>> results, Class<? extends Identifiable> resultType ) {
         List<Identifiable> entities = new ArrayList<>();
+        List<Long> entitiesIds = new ArrayList<>();
         List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>();
         for ( SearchResult<?> result : results ) {
-            entities.add( result.getResultObject() );
+            if ( resultType.isInstance( result.getResultObject() ) ) {
+                entities.add( result.getResultObject() );
+            } else {
+                entitiesIds.add( result.getResultId() );
+            }
         }
 
         // convert entities to VOs
@@ -313,6 +320,15 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
                     valueObjectConversionService.convert( entities,
                             TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) ),
+                            TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
+        }
+
+        // convert IDs to VOs
+        if ( !entitiesIds.isEmpty() ) {
+            //noinspection unchecked
+            entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
+                    valueObjectConversionService.convert( entitiesIds,
+                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
         }
 
