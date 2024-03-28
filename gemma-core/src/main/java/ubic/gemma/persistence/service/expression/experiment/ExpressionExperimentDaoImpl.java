@@ -2224,14 +2224,16 @@ public class ExpressionExperimentDaoImpl
         if ( eevos.isEmpty() ) {
             return;
         }
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, count(distinct ba.arrayDesignUsed) from ExpressionExperiment ee left join ee.bioAssays as ba where ee.id in (:ids) group by ee" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( eevos ) ) )
-                .list();
-        Map<Long, Long> adCountById = results.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, count(distinct ba.arrayDesignUsed) from ExpressionExperiment ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ee.id in (:ids) "
+                        + "group by ee" )
+                .setCacheable( true );
+        Map<Long, Long> adCountById = streamByBatch( q, "ids", EntityUtils.getIds( eevos ), 2048, Object[].class )
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            eevo.setArrayDesignCount( adCountById.get( eevo.getId() ) );
+            eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );
         }
     }
 }
