@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.ontology;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -33,6 +34,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
@@ -854,23 +856,18 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Nullable
     private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function, String query ) {
-        StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
+        List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService service : ontologyServices ) {
             if ( service.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> function.apply( service ) ) );
+                objects.add( service );
             }
         }
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                Future<T> future;
-                double timeout = 1000;
-                while ( ( future = completionService.poll( ( long ) timeout, TimeUnit.MILLISECONDS ) ) == null ) {
-                    log.warn( String.format( "Ontology query for %s is taking too long (%d/%d completed so far, %s elapsed).", query, i, futures.size(), timer ) );
-                    timeout *= 1.5; // exponential backoff
-                }
-                T result = future.get();
+                T result = pollCompletionService( completionService, "Finding first result for " + query, futures, objects, 1000, TimeUnit.MILLISECONDS, 1.5 );
                 if ( result != null ) {
                     return result;
                 }
@@ -887,10 +884,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            // cancel all the remaining futures
-            for ( Future<T> future : futures ) {
-                future.cancel( true );
-            }
+            cancelRemainingFutures( futures, objects );
         }
     }
 
@@ -945,24 +939,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> List<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query ) {
-        StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
+        List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> work.apply( os ) ) );
+                objects.add( os );
             }
         }
         List<T> children = new ArrayList<>();
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                Future<Collection<T>> future;
-                double timeout = 1000;
-                while ( ( future = completionService.poll( ( long ) timeout, TimeUnit.MILLISECONDS ) ) == null ) {
-                    log.warn( String.format( "Ontology query for %s is taking too long (%d/%d completed so far, %s elapsed).", query, i, futures.size(), timer ) );
-                    timeout *= 1.5; // exponential backoff
-                }
-                children.addAll( future.get() );
+                children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, 1000, TimeUnit.MILLISECONDS, 1.5 ) );
             }
         } catch ( InterruptedException e ) {
             log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
@@ -975,20 +964,59 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            // cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads
-            // in the pool
-            List<String> incompleteTasks = new ArrayList<>( futures.size() );
-            for ( Future<Collection<T>> future : futures ) {
-                if ( !future.isDone() ) {
-                    incompleteTasks.add( ontologyServices.get( futures.indexOf( future ) ).toString() );
-                    future.cancel( true );
-                }
-            }
-            if ( !incompleteTasks.isEmpty() ) {
-                log.warn( "The following ontology services did not have time to reply:\n\t"
-                        + String.join( "\n\t", incompleteTasks ) );
-            }
+            cancelRemainingFutures( futures, objects );
         }
         return children;
+    }
+
+    /**
+     * Poll the next available future from the given completion service.
+     *
+     * @param completionService  the completion service to poll from
+     * @param description        a description of the task being waited for logging purposes
+     * @param futures            the list of futures being awaited
+     * @param objects            the list of objects corresponding to the futures for logging purposes
+     * @param timeout            the amount of time to wait for resolving the next available future
+     * @param exponentialBackoff if the future does not resolve within the timeout, increase it by the given amount
+     */
+    private <T> T pollCompletionService( ExecutorCompletionService<T> completionService, String description, List<Future<T>> futures, List<?> objects, long timeout, TimeUnit timeUnit, double exponentialBackoff ) throws InterruptedException, ExecutionException {
+        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
+        Assert.isTrue( exponentialBackoff >= 1.0, "Exponential backoff factor must be greater or equal to 1." );
+        StopWatch timer = StopWatch.createStarted();
+        Future<T> future;
+        double timeoutMs = TimeUnit.MILLISECONDS.convert( timeout, timeUnit );
+        // a fuzz factor to prevent concurrent tasks from all timing out at the same time
+        // up to 10% of the initial timeout
+        double fuzzyMs = RandomUtils.nextDouble( 0.0, timeoutMs / 10.0 );
+        while ( ( future = completionService.poll( ( long ) timeoutMs, timeUnit ) ) == null ) {
+            long i = futures.stream().filter( Future::isDone ).count();
+            log.warn( String.format( "%s is taking too long (%d/%d completed so far, %s elapsed). The following are still running:\n\t%s",
+                    description, i, futures.size(), timer, futures.stream()
+                            .filter( f -> !f.isDone() )
+                            .map( futures::indexOf )
+                            .map( objects::get )
+                            .map( Object::toString )
+                            .collect( Collectors.joining( "\n\t" ) ) ) );
+            timeoutMs = ( timeoutMs + fuzzyMs ) * exponentialBackoff;
+        }
+        return future.get();
+    }
+
+    /**
+     * Cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads in the pool.
+     */
+    private <T> void cancelRemainingFutures( List<Future<T>> futures, List<?> objects ) {
+        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
+        List<String> incompleteTasks = new ArrayList<>( futures.size() );
+        for ( Future<?> future : futures ) {
+            if ( !future.isDone() ) {
+                future.cancel( true );
+                incompleteTasks.add( objects.get( futures.indexOf( future ) ).toString() );
+            }
+        }
+        if ( !incompleteTasks.isEmpty() ) {
+            log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
+                    + String.join( "\n\t", incompleteTasks ) );
+        }
     }
 }
