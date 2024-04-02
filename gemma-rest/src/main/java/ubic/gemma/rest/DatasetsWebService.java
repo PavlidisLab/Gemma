@@ -27,6 +27,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.search.highlight.Highlighter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -88,8 +89,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
-
-import static ubic.gemma.rest.SearchWebService.QUERY_SCHEMA_NAME;
 
 /**
  * RESTful interface for datasets.
@@ -175,7 +174,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
@@ -208,7 +207,7 @@ public class DatasetsWebService {
             return Responder.queryAndPaginate(
                     new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
                             .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
-                    query, filters, new String[] { "id" } );
+                    query.getValue(), filters, new String[] { "id" } );
         } else {
             return Responder.queryAndPaginate(
                     expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) ),
@@ -239,7 +238,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
     ) {
         Filters filters = datasetArgService.getFilters( filter );
@@ -265,7 +264,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("50") LimitArg limit
     ) {
@@ -286,7 +285,7 @@ public class DatasetsWebService {
                         .map( e -> new ArrayDesignWithUsageStatisticsValueObject( e, countsById.get( e.getId() ), tts.getOrDefault( TechnologyType.valueOf( e.getTechnologyType() ), 0L ) ) )
                         .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                         .collect( Collectors.toList() );
-        return Responder.limit( results, query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
+        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
     }
 
     @Value
@@ -304,7 +303,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
@@ -336,7 +335,7 @@ public class DatasetsWebService {
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.queryAndFilter( results, query, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+        return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
     @Value
@@ -364,7 +363,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
@@ -409,7 +408,7 @@ public class DatasetsWebService {
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
                 .collect( Collectors.toList() );
-        return Responder.limit( results, query, filters, new String[] { "classUri", "className", "termUri", "termName" },
+        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
                 limit );
     }
@@ -501,7 +500,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
-            @Parameter(schema = @Schema(name = QUERY_SCHEMA_NAME)) @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
     ) {
         Filters filters = datasetArgService.getFilters( filterArg );
@@ -515,7 +514,7 @@ public class DatasetsWebService {
                 .entrySet().stream()
                 .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
-                .collect( Collectors.toList() ), query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+                .collect( Collectors.toList() ), query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
     @Value

@@ -125,7 +125,7 @@ public class CustomModelResolver extends ModelResolver {
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
-        if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equalsIgnoreCase( schema.name() ) ) {
+        if ( a != null && QueryArg.class.isAssignableFrom( a.getRawType() ) ) {
             try {
                 return ( description != null ? description + "\n\n" : "" )
                         + IOUtils.toString( new ClassPathResource( "/restapidocs/fragments/QueryType.md" ).getInputStream(), StandardCharsets.UTF_8 )
@@ -150,7 +150,7 @@ public class CustomModelResolver extends ModelResolver {
             extensions.put( "x-gemma-filterable-properties", resolveAvailableProperties( a ) );
             extensions = Collections.unmodifiableMap( extensions );
         }
-        if ( schema != null && SearchWebService.QUERY_SCHEMA_NAME.equals( schema.name() ) ) {
+        if ( a != null && QueryArg.class.isAssignableFrom( a.getRawType() ) ) {
             extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
             extensions.put( "x-gemma-searchable-properties", getSearchableProperties() );
             extensions = Collections.unmodifiableMap( extensions );

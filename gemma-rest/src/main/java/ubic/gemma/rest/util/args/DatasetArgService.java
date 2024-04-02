@@ -107,13 +107,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @param highlighter a highlighter to use for the query or null to ignore
      * @throws BadRequestException if the query is empty
      */
-    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( String query, @Nullable Highlighter highlighter ) throws BadRequestException {
-        if ( StringUtils.isBlank( query ) ) {
-            throw new BadRequestException( "A non-empty query must be supplied." );
-        }
+    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter ) throws BadRequestException {
         try {
             SearchSettings settings = SearchSettings.builder()
-                    .query( query )
+                    .query( query.getValue() )
                     .resultType( ExpressionExperiment.class )
                     .highlighter( highlighter )
                     .fillResults( false )
@@ -133,7 +130,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @param scoreById if non-null, a destination for storing the scores by result ID
      * @throws BadRequestException if the query is empty
      */
-    public Set<Long> getIdsForSearchQuery( String query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
+    public Set<Long> getIdsForSearchQuery( QueryArg query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
         List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
         if ( scoreById != null ) {
             for ( SearchResult<ExpressionExperiment> result : _results ) {

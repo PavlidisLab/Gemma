@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -61,12 +60,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify a search query.
-     */
-    public static final String QUERY_SCHEMA_NAME = "SearchQueryType";
-
-    /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -137,15 +131,15 @@ public class SearchWebService {
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma")
     public SearchResultsResponseDataObject search(
-            @QueryParam("query") @Schema(name = QUERY_SCHEMA_NAME) String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
             @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg
     ) {
-        if ( StringUtils.isBlank( query ) ) {
-            throw new BadRequestException( "A non-empty query must be supplied." );
+        if ( query == null ) {
+            throw new BadRequestException( "A query must be supplied." );
         }
         Map<String, Class<? extends Identifiable>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
                 .collect( Collectors.toMap( Class::getName, identity() ) );
@@ -172,7 +166,7 @@ public class SearchWebService {
         }
 
         SearchSettings searchSettings = SearchSettings.builder()
-                .query( query )
+                .query( query.getValue() )
                 .taxon( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
