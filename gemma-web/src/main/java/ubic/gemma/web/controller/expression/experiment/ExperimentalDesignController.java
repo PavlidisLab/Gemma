@@ -773,7 +773,13 @@ public class ExperimentalDesignController extends BaseController {
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
             Statement c;
             if ( charId != null ) {
-                c = fv.getCharacteristics().stream().filter( s -> s.getId().equals( charId ) ).findFirst().orElseThrow( () -> new EntityNotFoundException( String.format( "No characteristic with ID %d in FactorValue with ID %d", charId, fvvo.getId() ) ) );
+                c = fv.getCharacteristics().stream()
+                        .filter( s -> s.getId().equals( charId ) )
+                        .findFirst()
+                        .orElseThrow( () -> new EntityNotFoundException( String.format( "No characteristic with ID %d in FactorValue with ID %d", charId, fvvo.getId() ) ) );
+                // updating the statement can alter its hashCode() and thus breaking the Set contract, we have to remove
+                // it and add it back before saving
+                fv.getCharacteristics().remove( c );
             } else {
                 c = Statement.Factory.newInstance();
             }
@@ -813,6 +819,10 @@ public class ExperimentalDesignController extends BaseController {
                 c.setSecondPredicateUri( null );
                 c.setSecondObject( null );
                 c.setSecondObjectUri( null );
+            }
+
+            if ( charId != null ) {
+                fv.getCharacteristics().add( c );
             }
 
             fvs[i] = fv;
