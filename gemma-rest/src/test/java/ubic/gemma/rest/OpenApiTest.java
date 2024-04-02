@@ -8,6 +8,7 @@ import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,11 +182,16 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getPaths().get( "/search" ).getGet().getParameters() )
                 .anySatisfy( p -> {
                     assertThat( p.getName() ).isEqualTo( "query" );
-                    assertThat( p.getSchema().getType() ).isEqualTo( "string" );
-                    //noinspection unchecked
-                    assertThat( p.getSchema().getExtensions() )
-                            .isNotNull()
-                            .containsEntry( "x-gemma-searchable-properties", Collections.singletonMap( ExpressionExperiment.class.getName(), Collections.singletonList( "shortName" ) ) );
+                    assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
                 } );
+        assertThat( spec.getComponents().getSchemas().get( "QueryArg" ) ).satisfies( s -> {
+            assertThat( s.getType() ).isEqualTo( "string" );
+            //noinspection unchecked
+            assertThat( s.getExtensions() )
+                    .isNotNull()
+                    .containsEntry( "x-gemma-searchable-properties", Collections.singletonMap( ExpressionExperiment.class.getName(), Collections.singletonList( "shortName" ) ) );
+            assertThat( s.getExternalDocs().getUrl() )
+                    .isEqualTo( "https://lucene.apache.org/core/3_6_2/queryparsersyntax.html" );
+        } );
     }
 }

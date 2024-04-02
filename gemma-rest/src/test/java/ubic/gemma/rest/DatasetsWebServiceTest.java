@@ -226,7 +226,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasetsWithEmptyQuery() {
-        assertThat( target( "/datasets" ).queryParam( "query", "" ).request().get() )
+        assertThat( target( "/datasets" ).queryParam( "query", " " ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }

@@ -73,7 +73,7 @@ public class CustomModelResolver extends ModelResolver {
         }
         if ( t.isTypeOrSubTypeOf( FilterArg.Filter.class ) || t.isTypeOrSubTypeOf( SortArg.Sort.class ) ) {
             return null; // ignore those...
-        } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
+        } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) || t.isTypeOrSubTypeOf( QueryArg.class ) ) {
             Schema resolved = super.resolve( type, context, chain );
             String ref = resolved.get$ref();
             // FilterArg and SortArg schemas in parameters are refs to globally-defined schemas and those are
@@ -89,7 +89,7 @@ public class CustomModelResolver extends ModelResolver {
             // definitions in the class's Schema annotation
             Schema resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
             // There's a bug with abstract class such as TaxonArg and GeneArg that result in the schema containing 'type'
-            // and 'properties' fields instead of solely emiting the oneOf
+            // and 'properties' fields instead of solely emitting the oneOf
             if ( t.isAbstract() ) {
                 return resolvedSchema.type( null ).properties( null );
             } else {
@@ -101,7 +101,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as
