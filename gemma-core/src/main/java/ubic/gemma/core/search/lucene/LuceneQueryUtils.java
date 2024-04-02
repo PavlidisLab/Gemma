@@ -200,38 +200,50 @@ public class LuceneQueryUtils {
         return null;
     }
 
+    @Nullable
+    public static URI prepareTermUriQuery( SearchSettings settings ) throws SearchException {
+        Query query = parseSafely( settings, createQueryParser() );
+        if ( query instanceof TermQuery ) {
+            Term term = ( ( TermQuery ) query ).getTerm();
+            return tryParseUri( term );
+        }
+        return null;
+    }
+
     /**
      * Check if a given term is global (i.e. not fielded).
      * <p>
      * This includes the corner case when a term is a URI and would be parsed as a fielded term.
      */
     private static boolean isTermGlobal( Term term ) {
-        return term.field().isEmpty() || term.field().equals( "http" ) || term.field().equals( "https" );
+        return term.field().isEmpty() || tryParseUri( term ) != null;
     }
 
     /**
      * Extract a suitable string from a term, detecting URIs that would be parsed as a fielded term.
      */
     private static String termToString( Term term ) {
-        if ( term.field().equals( "http" ) || term.field().equals( "https" ) ) {
-            return term.field() + ":" + term.text();
+        URI uri;
+        if ( ( uri = tryParseUri( term ) ) != null ) {
+            return uri.toString();
         } else {
             return term.text();
         }
     }
 
     @Nullable
-    public static URI prepareTermUriQuery( SearchSettings settings ) throws SearchException {
-        Query query = parseSafely( settings, createQueryParser() );
-        if ( query instanceof TermQuery ) {
-            Term term = ( ( TermQuery ) query ).getTerm();
-            if ( term.field().equals( "http" ) || term.field().equals( "https" ) ) {
-                String candidateUri = term.field() + ":" + term.text();
-                try {
-                    return new URI( candidateUri );
-                } catch ( URISyntaxException e ) {
-                    return null;
-                }
+    private static URI tryParseUri( Term term ) {
+        if ( term.text().startsWith( "http://" ) || term.text().startsWith( "https://" ) ) {
+            try {
+                return new URI( term.text() );
+            } catch ( URISyntaxException e ) {
+                // ignore, it will be treated as a term term
+            }
+        } else if ( ( term.field().equals( "http" ) || term.field().equals( "https" ) ) && term.text().startsWith( "//" ) ) {
+            try {
+                return new URI( term.field() + ":" + term.text() );
+            } catch ( URISyntaxException e ) {
+                // ignore, it will be treated as a fielded term
             }
         }
         return null;

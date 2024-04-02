@@ -4,6 +4,8 @@ import org.junit.Test;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 
+import java.net.URI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Sets.set;
 import static org.junit.Assert.*;
@@ -122,5 +124,15 @@ public class LuceneQueryUtilsTest {
         assertTrue( isWildcard( SearchSettings.geneSearch( "BRCA?", null ) ) );
         assertFalse( isWildcard( SearchSettings.geneSearch( "BRCA\\*", null ) ) );
         assertFalse( isWildcard( SearchSettings.geneSearch( "\"BRCA1\" \"BRCA2\"", null ) ) );
+    }
+
+    @Test
+    public void testPrepareTermUriQuery() throws SearchException {
+        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "http://example.com", null ) ) );
+        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "\"http://example.com\"", null ) ) );
+        // an invalid URI
+        assertNull( prepareTermUriQuery( SearchSettings.geneSearch( "\"http://example.com /test\"", null ) ) );
+        // an interesting case: a fielded search for a URI
+        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "http:\"http://example.com\"", null ) ) );
     }
 }
