@@ -79,14 +79,14 @@ public class LuceneQueryUtils {
     }
 
     /**
-     * Extract a DNF (Disjunctive Normal Form) from the query.
+     * Extract a DNF (Disjunctive Normal Form) from the terms of a query.
      * <p>
      * Clauses can be nested (i.e. {@code a OR (d OR (c AND (d AND e))}) as long as {@code OR} and {@code AND} are not
      * interleaved.
      * <p>
      * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
      */
-    public static Set<Set<String>> extractDnf( SearchSettings settings ) throws SearchException {
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings ) throws SearchException {
         Query q = parseSafely( settings, createQueryParser() );
         Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {

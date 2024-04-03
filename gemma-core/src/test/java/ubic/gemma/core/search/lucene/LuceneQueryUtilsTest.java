@@ -24,38 +24,44 @@ public class LuceneQueryUtilsTest {
 
     @Test
     public void testExtractDnf() throws SearchException {
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND BRCA3) OR NOT BRCA4 OR -BRCA5 OR (BRCA6 OR BRCA7)", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND BRCA3) OR NOT BRCA4 OR -BRCA5 OR (BRCA6 OR BRCA7)", null ) ) )
                 .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2", "BRCA3" ), set( "BRCA6" ), set( "BRCA7" ) );
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 AND BRCA2", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND BRCA2", null ) ) )
                 .containsExactlyInAnyOrder( set( "BRCA1", "BRCA2" ) );
-        assertThat( extractDnf( SearchSettings.geneSearch( "NOT BRCA1 AND NOT BRCA2", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "NOT BRCA1 AND NOT BRCA2", null ) ) )
                 .isEmpty();
-        assertThat( extractDnf( SearchSettings.geneSearch( "NOT BRCA1 OR NOT BRCA2", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "NOT BRCA1 OR NOT BRCA2", null ) ) )
                 .isEmpty();
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 AND NOT BRCA2", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND NOT BRCA2", null ) ) )
                 .containsExactly( set( "BRCA1" ) );
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 OR NOT (BRCA2 AND BRCA3)", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR NOT (BRCA2 AND BRCA3)", null ) ) )
                 .containsExactly( set( "BRCA1" ) );
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 AND (BRCA2 OR BRCA3)", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND (BRCA2 OR BRCA3)", null ) ) )
                 .isEmpty();
     }
 
     @Test
+    public void testExtractDnfWithQuotedSpaces() throws SearchException {
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "\"alpha beta\" OR \"gamma delta\"", null ) ) )
+                .containsExactlyInAnyOrder( set( "alpha beta" ), set( "gamma delta" ) );
+    }
+
+    @Test
     public void testExtractDnfWithNestedOrInClause() throws SearchException {
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 OR (BRCA3 AND BRCA4))", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 OR (BRCA3 AND BRCA4))", null ) ) )
                 .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2" ), set( "BRCA3", "BRCA4" ) );
     }
 
     @Test
     public void testExtractDnfWithNestedAndInSubClause() throws SearchException {
-        assertThat( extractDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND (BRCA3 AND BRCA4))", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND (BRCA3 AND BRCA4))", null ) ) )
                 .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2", "BRCA3", "BRCA4" ) );
     }
 
     @Test
     public void testExtractDnfWithUris() throws SearchException {
         // this is an important case for searching datasets by ontology terms
-        assertThat( extractDnf( SearchSettings.geneSearch( "http://example.com/GO:1234 OR http://example.com/GO:1235", null ) ) )
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "http://example.com/GO:1234 OR http://example.com/GO:1235", null ) ) )
                 .contains( set( "http://example.com/GO:1234" ), set( "http://example.com/GO:1235" ) );
     }
 

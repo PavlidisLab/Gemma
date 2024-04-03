@@ -137,11 +137,12 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testSearchExpressionExperimentWithBooleanQuery() throws SearchException {
-        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d" ) );
+        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d OR \"a quoted string containing an escaped quote \\\"\"" ) );
         verify( ontologyService ).findTerms( "a" );
         verify( ontologyService ).findTerms( "b" );
         verify( ontologyService ).findTerms( "c" );
         verify( ontologyService ).getTerm( "http://example.com/d" );
+        verify( ontologyService ).findTerms( "\"a quoted string containing an escaped quote \\\"\"" );
         verifyNoMoreInteractions( ontologyService );
     }
 

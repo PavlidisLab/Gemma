@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.lucene.queryParser.QueryParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -24,7 +25,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import java.net.URI;
 import java.util.*;
 
-import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractDnf;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
 @Component
@@ -84,7 +85,7 @@ public class OntologySearchSource implements SearchSource {
          *
          * But if they put in Parkinson's disease we don't want to do two queries.
          */
-        Set<Set<String>> subclauses = extractDnf( settings );
+        Set<Set<String>> subclauses = extractTermsDnf( settings );
         for ( Set<String> subclause : subclauses ) {
             Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause );
             if ( !classResults.isEmpty() ) {
@@ -121,7 +122,16 @@ public class OntologySearchSource implements SearchSource {
 
         OntologySearchSource.log.debug( "Starting characteristic search for: " + settings + " matching " + String.join( " AND ", clause ) );
         for ( String subClause : clause ) {
-            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClause ) );
+            // at this point, subclauses have already been parsed, so if they contain special characters, those must be
+            // escaped
+            String subClauseQuery = QueryParser.escape( subClause );
+            // spaces should be quoted
+            if ( subClauseQuery.contains( " " ) ) {
+                subClauseQuery = "\"" + subClauseQuery + "\"";
+            }
+            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment(
+                    settings.withQuery( subClauseQuery )
+            );
             if ( results.isEmpty() ) {
                 results.addAll( subqueryResults );
             } else {
