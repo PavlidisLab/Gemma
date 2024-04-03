@@ -7,23 +7,18 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -32,7 +27,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -62,7 +56,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -99,6 +93,10 @@ public class SearchWebService {
 
         private int highlightedDocuments = 0;
 
+        public Highlighter() {
+            super( new SimpleMarkdownFormatter() );
+        }
+
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
             String searchUrl = ServletUriComponentsBuilder.fromRequest( request )
@@ -110,17 +108,12 @@ public class SearchWebService {
         }
 
         @Override
-        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer, fields );
+            return super.highlightDocument( document, highlighter, analyzer );
         }
     }
 
@@ -133,14 +126,16 @@ public class SearchWebService {
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma")
-    public SearchResultsResponseDataObject search( @QueryParam("query") String query,
+    public SearchResultsResponseDataObject search(
+            @QueryParam("query") QueryArg query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
-            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg ) {
-        if ( StringUtils.isBlank( query ) ) {
-            throw new BadRequestException( "A non-empty query must be supplied." );
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg
+    ) {
+        if ( query == null ) {
+            throw new BadRequestException( "A query must be supplied." );
         }
         Map<String, Class<? extends Identifiable>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
                 .collect( Collectors.toMap( Class::getName, identity() ) );
@@ -167,7 +162,7 @@ public class SearchWebService {
         }
 
         SearchSettings searchSettings = SearchSettings.builder()
-                .query( query )
+                .query( query.getValue() )
                 .taxon( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
@@ -179,8 +174,10 @@ public class SearchWebService {
         List<SearchResult<?>> searchResults;
         try {
             searchResults = searchService.search( searchSettings ).toList();
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new BadRequestException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCauseMessage( e ) ), e );
+            throw new InternalServerErrorException( e );
         }
 
         List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;
@@ -190,7 +187,7 @@ public class SearchWebService {
             searchResultVos = searchService.loadValueObjects( searchResults );
         } else {
             searchResultVos = searchResults.stream()
-                    .map( sr -> SearchResult.from( sr, ( IdentifiableValueObject<?> ) null ) )
+                    .map( sr -> sr.withResultObject( ( IdentifiableValueObject<?> ) null ) )
                     .collect( Collectors.toList() );
         }
 

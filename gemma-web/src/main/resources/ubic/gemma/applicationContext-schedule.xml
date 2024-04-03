@@ -26,18 +26,14 @@
                 <ref local="ee2cExperimentUpdateTrigger"/>
                 <ref local="ee2cSampleUpdateTrigger"/>
                 <ref local="ee2cExperimentalDesignUpdateTrigger"/>
+                <ref local="ee2adUpdateTrigger"/>
+                <ref local="indexExperimentsTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
         </property>
         <property name="autoStartup" value="${quartzOn}"/>
     </bean>
-
-    <bean id="expressionExperimentReportService"
-          class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
-    <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
-    <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
-    <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
 
     <!-- Triggers -->
     <!-- Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L
@@ -110,8 +106,8 @@
                 <property name="targetMethod" value="updateExpressionExperiment2CharacteristicEntries"/>
                 <property name="arguments">
                     <array>
-                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExpressionExperiment
-                        </value>
+                        <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExpressionExperiment</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
@@ -128,6 +124,7 @@
                 <property name="arguments">
                     <array>
                         <value type="java.lang.Class">ubic.gemma.model.expression.biomaterial.BioMaterial</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
@@ -145,6 +142,7 @@
                 <property name="arguments">
                     <array>
                         <value type="java.lang.Class">ubic.gemma.model.expression.experiment.ExperimentalDesign</value>
+                        <value>false</value>
                     </array>
                 </property>
                 <property name="concurrent" value="false"/>
@@ -165,6 +163,22 @@
         <!-- every hour during working hours (mostly when new datasets are added & RNA-Seq data is imported which produce a platform switch) -->
         <!-- datasets are only made public during working hours, so even if they are imported by the pipeline, that will not be reflected until it is made public -->
         <property name="cronExpression" value="0 0 9-17 ? * MON-FRI"/>
+    </bean>
+    <bean id="indexExperimentsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                <property name="targetObject" ref="indexerService"/>
+                <property name="targetMethod" value="index"/>
+                <property name="arguments">
+                    <set>
+                        <value>ubic.gemma.model.expression.experiment.ExpressionExperiment</value>
+                    </set>
+                </property>
+                <property name="concurrent" value="false"/>
+            </bean>
+        </property>
+        <!-- at 23:00 PM, every working day -->
+        <property name="cronExpression" value="0 0 23 ? * MON-FRI"/>
     </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">

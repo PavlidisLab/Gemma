@@ -19,15 +19,11 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -43,6 +39,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -169,6 +168,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      * batch info.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE156689NoBatchinfo() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );

@@ -39,6 +39,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  *
  * @author paul
@@ -142,7 +144,7 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
         if ( !deIds.isEmpty() ) {
             removedDe = getSessionFactory().getCurrentSession()
                     .createQuery( "delete from DatabaseEntry where id in :deIds" )
-                    .setParameterList( "deIds", deIds )
+                    .setParameterList( "deIds", optimizeParameterList( deIds ) )
                     .executeUpdate();
         } else {
             removedDe = 0;

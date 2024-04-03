@@ -216,7 +216,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // convert result object to a value object
             List<SearchResult<DatabaseBackedGeneSetValueObject>> dbsgvo = taxonCheckedSets.stream()
                     .filter( Objects::nonNull )
-                    .map( sr -> SearchResult.from( sr, geneSetValueObjectHelper.convertToValueObject( sr.getResultObject() ) ) )
+                    .map( sr -> sr.withResultObject( geneSetValueObjectHelper.convertToValueObject( sr.getResultObject() ) ) )
                     .collect( Collectors.toList() );
             geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( dbsgvo );
 

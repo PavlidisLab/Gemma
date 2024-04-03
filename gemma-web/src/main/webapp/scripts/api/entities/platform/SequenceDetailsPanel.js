@@ -105,8 +105,8 @@ Gemma.SequenceDetailsPanel = Ext
                                                 html: {
                                                     tag: 'div',
                                                     html: seq.sequence,
-                                                    cls: 'clob',
-                                                    style: 'word-wrap: break-word;width:500px;height:100px;padding:4px;margin:3px;font-size:0.9em;font-family:monospace'
+                                                    cls: 'clob smaller',
+                                                    style: 'word-wrap: break-word;width:500px;height:100px;padding:4px;margin:3px;font-family:monospace'
                                                 }
                                             });
                                     }

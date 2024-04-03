@@ -23,18 +23,16 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
 
-import java.sql.Connection;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -79,7 +77,7 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
                                 + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
                                 + " left join fetch s.externalDatabase"
                                 + " where b in :blatResults" )
-                .setParameterList( "blatResults", blatResults )
+                .setParameterList( "blatResults", optimizeIdentifiableParameterList( blatResults ) )
                 .list();
     }
 

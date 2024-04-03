@@ -3,6 +3,7 @@ package ubic.gemma.core.search;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -20,6 +21,11 @@ import java.util.HashSet;
  * @author poirigui
  */
 public interface SearchSource {
+
+    /**
+     * Indicate if this source accepts the given search settings.
+     */
+    boolean accepts( SearchSettings settings );
 
     default Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         return Collections.emptyList();
@@ -48,7 +54,10 @@ public interface SearchSource {
     @Deprecated
     default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
             @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
-        return Collections.emptyList();
+        Collection<SearchResult<?>> results = new HashSet<>();
+        results.addAll( this.searchBioSequence( settings ) );
+        results.addAll( this.searchGene( settings ) );
+        return results;
     }
 
     default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
@@ -66,7 +75,7 @@ public interface SearchSource {
     @Deprecated
     default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
         Collection<SearchResult<?>> results = new HashSet<>();
-        results.addAll( this.searchBioSequence( settings ) );
+        results.addAll( this.searchCompositeSequence( settings ) );
         results.addAll( this.searchGene( settings ) );
         return results;
     }
@@ -80,6 +89,10 @@ public interface SearchSource {
     }
 
     default Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
+        return Collections.emptyList();
+    }
+
+    default Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings ) throws SearchException {
         return Collections.emptyList();
     }
 }

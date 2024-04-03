@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.common.measurement.Measurement" table="MEASUREMENT">
@@ -12,27 +12,30 @@
             </generator>
         </id>
         <property name="type">
-            <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)" index="MEASUREMENT_TYPE"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementType</param>
                 <param name="useNamed">true</param>
             </type>
         </property>
         <property name="value" type="java.lang.String">
-            <column name="`VALUE`" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="`VALUE`" not-null="false" unique="false" sql-type="VARCHAR(255)" index="MEASUREMENT_VALUE"/>
         </property>
         <property name="kindCV">
-            <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"
+                    index="MEASUREMENT_KIND_CV"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementKind</param>
                 <param name="useNamed">true</param>
             </type>
         </property>
         <property name="otherKind" type="java.lang.String">
-            <column name="OTHER_KIND" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="OTHER_KIND" not-null="false" unique="false" sql-type="VARCHAR(255)"
+                    index="MEASUREMENT_OTHER_KIND"/>
         </property>
         <property name="representation">
-            <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+            <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"
+                    index="MEASUREMENT_REPRESENTATION"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.quantitationtype.PrimitiveType</param>
                 <param name="useNamed">true</param>

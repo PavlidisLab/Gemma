@@ -59,10 +59,12 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -200,12 +202,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
                 return Collections.emptyMap();
             }
             highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer, fields )
+            return super.highlightDocument( document, highlighter, analyzer )
                     .entrySet().stream()
                     .collect( Collectors.toMap( e -> localizeField( StringUtils.substringAfterLast( document.get( "_hibernate_class" ), '.' ), e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
         }
@@ -223,13 +225,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         ModelAndView mav = new ModelAndView( "generalSearch" );
 
-        if ( !this.searchStringValidator( command.getQuery() ) && StringUtils.isBlank( command.getTermUri() ) ) {
+        if ( !searchStringValidator( command.getQuery() ) ) {
             throw new IllegalArgumentException( "Invalid query" );
         }
 
         // Need this for the bookmarkable links
         mav.addObject( "SearchString", command.getQuery() );
-        mav.addObject( "SearchURI", command.getTermUri() );
+        try {
+            URI termUri = prepareTermUriQuery( command );
+            mav.addObject( "SearchURI", termUri != null ? termUri.toString() : null );
+        } catch ( SearchException e ) {
+            mav.addObject( "SearchURI", null );
+        }
         if ( ( command.getTaxon() != null ) && ( command.getTaxon().getId() != null ) )
             mav.addObject( "searchTaxon", command.getTaxon().getScientificName() );
 

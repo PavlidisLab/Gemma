@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author pavlidis
  */
-public class AuditEventDaoImplTest extends BaseSpringContextTest {
+public class AuditEventServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private ArrayDesignService ads;

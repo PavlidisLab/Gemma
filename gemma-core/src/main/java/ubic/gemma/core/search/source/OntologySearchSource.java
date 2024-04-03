@@ -1,11 +1,14 @@
 package ubic.gemma.core.search.source;
 
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.lucene.queryParser.QueryParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import ubic.basecode.ontology.model.*;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -22,9 +25,29 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import java.net.URI;
 import java.util.*;
 
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
+
 @Component
 @CommonsLog
 public class OntologySearchSource implements SearchSource {
+
+    /**
+     * Penalty applied on a full-text result.
+     */
+    private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
+
+    /**
+     * Penalty for indirect hits.
+     */
+    private static final double INDIRECT_HIT_PENALTY = 0.9;
+
+
+    /**
+     * Special indicator for exact matches. Those are stripped out when computing summary statistics and then assigned
+     * the value of exactly 1.0.
+     */
+    private static final double EXACT_MATCH_SCORE = -1.0;
 
     @Autowired
     private OntologyService ontologyService;
@@ -32,53 +55,156 @@ public class OntologySearchSource implements SearchSource {
     @Autowired
     private CharacteristicService characteristicService;
 
+    @Override
+    public boolean accepts( SearchSettings settings ) {
+        return settings.isUseCharacteristics();
+    }
+
+    /**
+     * Search via characteristics i.e. ontology terms.
+     * <p>
+     * This is an important type of search but also a point of performance issues. Searches for "specific" terms are
+     * generally not a big problem (yielding less than 100 results); searches for "broad" terms can return numerous
+     * (thousands)
+     * results.
+     */
+    @Override
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( final SearchSettings settings ) throws SearchException {
+        Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>( settings );
+
+        StopWatch watch = StopWatch.createStarted();
+
+        log.debug( "Starting EE search for " + settings );
+        /*
+         * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
+         * level.
+         *
+         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
+         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
+         * single characteristics that match both.
+         *
+         * But if they put in Parkinson's disease we don't want to do two queries.
+         */
+        Set<Set<String>> subclauses = extractTermsDnf( settings );
+        for ( Set<String> subclause : subclauses ) {
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause );
+            if ( !classResults.isEmpty() ) {
+                log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
+            }
+            results.addAll( classResults );
+            // this is an OR query, so we can stop as soon as we've retrieved enough results
+            if ( isFilled( results, settings ) ) {
+                break;
+            }
+        }
+
+        OntologySearchSource.log.debug( String.format( "ExpressionExperiment search: %s -> %d characteristic-based hits %d ms",
+                settings, results.size(), watch.getTime() ) );
+
+        return results;
+    }
+
+    /**
+     * Search for the Experiment query in ontologies, including items that are associated with children of matching
+     * query terms. That is, 'brain' should return entities tagged as 'hippocampus'. It can handle AND in searches, so
+     * Parkinson's
+     * AND neuron finds items tagged with both of those terms. The use of OR is handled by the caller.
+     *
+     * @param settings   search settings
+     * @param clause     a conjunctive clause
+     * @return SearchResults of Experiments
+     */
+    private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, Set<String> clause ) throws SearchException {
+        StopWatch watch = StopWatch.createStarted();
+
+        // we would have to first deal with the separate queries, and then apply the logic.
+        SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
+
+        OntologySearchSource.log.debug( "Starting characteristic search for: " + settings + " matching " + String.join( " AND ", clause ) );
+        for ( String subClause : clause ) {
+            // at this point, subclauses have already been parsed, so if they contain special characters, those must be
+            // escaped
+            String subClauseQuery = QueryParser.escape( subClause );
+            // spaces should be quoted
+            if ( subClauseQuery.contains( " " ) ) {
+                subClauseQuery = "\"" + subClauseQuery + "\"";
+            }
+            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment(
+                    settings.withQuery( subClauseQuery )
+            );
+            if ( results.isEmpty() ) {
+                results.addAll( subqueryResults );
+            } else {
+                // this is our Intersection operation.
+                results.retainAll( subqueryResults );
+            }
+            if ( watch.getTime() > 1000 ) {
+                OntologySearchSource.log.warn( String.format( "Characteristic EE search for '%s': %d hits retained so far; %dms",
+                        subClause, results.size(), watch.getTime() ) );
+                watch.reset();
+                watch.start();
+            }
+        }
+
+        return results;
+    }
+
     /**
      * Perform a Experiment search based on annotations (anchored in ontology terms) - it does not have to be one word,
      * it could be "parkinson's disease"; it can also be a URI.
      *
      * @return collection of SearchResults (Experiments)
      */
-    @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings ) throws SearchException {
         // overall timer
         StopWatch watch = StopWatch.createStarted();
         // per-step timer
         StopWatch timer = StopWatch.create();
 
-        Set<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>();
+        SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
-        Collection<OntologyTerm> terms = new HashSet<>();
+        Collection<OntologyResult> ontologyResults = new HashSet<>();
 
-        // f the query is a term, find it
-        if ( settings.isTermQuery() ) {
-            String termUri = settings.getQuery();
-            OntologyTerm resource;
-            OntologyTerm r2 = ontologyService.getTerm( termUri );
+        Collection<OntologyTerm> matchingTerms;
+
+        // if the query is a term, find it directly
+        URI termUri = prepareTermUriQuery( settings );
+        if ( termUri != null ) {
+            OntologyResult resource;
+            OntologyTerm r2 = ontologyService.getTerm( termUri.toString() );
             if ( r2 != null ) {
-                resource = new SimpleOntologyTermWithScore( r2, 1.0 );
+                assert r2.getUri() != null;
+                resource = new OntologyResult( r2, EXACT_MATCH_SCORE );
+                matchingTerms = Collections.singleton( r2 );
             } else {
                 // attempt to guess a label from othe database
-                Characteristic c = characteristicService.findBestByUri( settings.getQuery() );
+                Characteristic c = characteristicService.findBestByUri( termUri.toString() );
                 if ( c != null ) {
                     assert c.getValueUri() != null;
-                    resource = new SimpleOntologyTermWithScore( c.getValueUri(), c.getValue(), 1.0 );
+                    resource = new OntologyResult( c.getValueUri(), c.getValue(), EXACT_MATCH_SCORE );
                 } else {
-                    resource = new SimpleOntologyTermWithScore( termUri, getLabelFromTermUri( termUri ), 1.0 );
+                    resource = new OntologyResult( termUri.toString(), getLabelFromTermUri( termUri ), EXACT_MATCH_SCORE );
                 }
+                matchingTerms = Collections.emptySet();
             }
-            terms.add( resource );
-        }
-
-        // Search ontology classes matches to the query
-        timer.reset();
-        timer.start();
-        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( settings.getQuery() );
-        terms.addAll( matchingTerms );
-        timer.stop();
-
-        if ( timer.getTime() > 100 ) {
-            log.warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
-                    matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+            ontologyResults.add( resource );
+        } else {
+            // Search ontology classes matches to the full-text query
+            timer.reset();
+            timer.start();
+            matchingTerms = ontologyService.findTerms( settings.getQuery() );
+            matchingTerms.stream()
+                    // ignore bnodes
+                    .filter( t -> t.getUri() != null )
+                    // the only possibility for being no score is that the query is an URI and the search didn't go through
+                    // the search index
+                    .map( t -> new OntologyResult( t, t.getScore() != null ? t.getScore() : EXACT_MATCH_SCORE ) )
+                    .forEach( ontologyResults::add );
+            timer.stop();
+            if ( timer.getTime() > 1000 ) {
+                log.warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
+                        matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+            }
         }
 
         // Search for child terms.
@@ -86,28 +212,42 @@ public class OntologySearchSource implements SearchSource {
             // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
             timer.reset();
             timer.start();
-            terms.addAll( ontologyService.getChildren( matchingTerms, false, true ) );
+            // we don't know parent/child relation, so the best we can do is assigne the average full-text score
+            double avgScore = matchingTerms.stream()
+                    .mapToDouble( t -> t.getScore() != null ? t.getScore() : 0 )
+                    .filter( s -> s != EXACT_MATCH_SCORE )
+                    .average()
+                    .orElse( 0 );
+            ontologyService.getChildren( matchingTerms, false, true )
+                    .stream()
+                    // ignore bnodes
+                    .filter( c -> c.getUri() != null )
+                    // small penalty for being indirectly matched
+                    .map( c -> new OntologyResult( c, INDIRECT_HIT_PENALTY * avgScore ) )
+                    // if a children was already in terms, it will not be added again and thus its original score will
+                    // be reflected in the results
+                    .forEach( ontologyResults::add );
             timer.stop();
 
-            if ( timer.getTime() > 200 ) {
+            if ( timer.getTime() > 1000 ) {
                 log.warn( String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
-                        terms.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
+                        ontologyResults.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
             }
         }
 
         timer.reset();
         timer.start();
-        findExperimentsByTerms( terms, settings, results );
+        findExperimentsByOntologyResults( ontologyResults, settings, results );
         timer.stop();
 
-        if ( timer.getTime() > 100 ) {
+        if ( timer.getTime() > 1000 ) {
             log.warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
-                    results.size(), terms.size(), timer.getTime() ) );
+                    results.size(), ontologyResults.size(), timer.getTime() ) );
         }
 
         String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms",
-                results.size(), terms.size(), settings.getQuery(), watch.getTime() );
-        if ( watch.getTime() > 300 ) {
+                results.size(), ontologyResults.size(), settings.getQuery(), watch.getTime() );
+        if ( watch.getTime() > 1000 ) {
             log.warn( message );
         } else {
             log.debug( message );
@@ -116,32 +256,35 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    private void findExperimentsByTerms( Collection<OntologyTerm> terms, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
+    private void findExperimentsByOntologyResults( Collection<OntologyResult> terms, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         Map<String, Double> uri2score = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
-        // renormalize the scores in a [0, 1] range
+        // rescale the scores in a [0, 1] range
         DoubleSummaryStatistics summaryStatistics = terms.stream()
-                .map( OntologyTerm::getScore )
-                .filter( Objects::nonNull )
+                .map( OntologyResult::getScore )
                 .mapToDouble( s -> s )
+                .filter( s -> s != EXACT_MATCH_SCORE )
                 .summaryStatistics();
 
-        for ( OntologyTerm term : terms ) {
-            // bnodes can have null URIs, how annoying...
-            if ( term.getUri() != null ) {
-                uris.add( term.getUri() );
-                uri2value.put( term.getUri(), term.getLabel() );
-                uri2score.put( term.getUri(), term.getScore() != null ? term.getScore() / summaryStatistics.getMax() : summaryStatistics.getAverage() / summaryStatistics.getMax() );
+        for ( OntologyResult term : terms ) {
+            uris.add( term.getUri() );
+            uri2value.put( term.getUri(), term.getLabel() );
+            if ( term.getScore() == EXACT_MATCH_SCORE ) {
+                uri2score.put( term.getUri(), 1.0 );
+            } else if ( summaryStatistics.getMax() == summaryStatistics.getMin() ) {
+                uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY );
+            } else {
+                uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY * ( term.getScore() - summaryStatistics.getMin() ) / ( summaryStatistics.getMax() - summaryStatistics.getMin() ) );
             }
         }
 
         findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, results );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
+    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
         if ( isFilled( results, settings ) )
             return;
 
@@ -152,21 +295,21 @@ public class OntologySearchSource implements SearchSource {
 
         // collect all direct tags
         if ( hits.containsKey( ExpressionExperiment.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, settings, results );
         }
 
         // collect experimental design-related terms
         if ( hits.containsKey( ExperimentalDesign.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9 * 0.9, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
         }
 
         // collect samples-related terms
         if ( hits.containsKey( BioMaterial.class ) ) {
-            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9 * 0.9, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
         }
     }
 
-    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, Set<SearchResult<ExpressionExperiment>> results ) {
+    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
         for ( Map.Entry<String, Set<ExpressionExperiment>> entry : hits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
@@ -204,12 +347,11 @@ public class OntologySearchSource implements SearchSource {
     /**
      * Extract a label for a term URI as per {@link OntologyTerm#getLabel()}.
      */
-    static String getLabelFromTermUri( String termUri ) {
-        URI components = URI.create( termUri );
-        String[] segments = components.getPath().split( "/" );
+    static String getLabelFromTermUri( URI termUri ) {
+        String[] segments = termUri.getPath().split( "/" );
         // use the fragment
-        if ( !StringUtils.isEmpty( components.getFragment() ) ) {
-            return partToTerm( components.getFragment() );
+        if ( !StringUtils.isEmpty( termUri.getFragment() ) ) {
+            return partToTerm( termUri.getFragment() );
         }
         // pick the last non-empty segment
         for ( int i = segments.length - 1; i >= 0; i-- ) {
@@ -218,121 +360,34 @@ public class OntologySearchSource implements SearchSource {
             }
         }
         // as a last resort, return the parsed URI
-        return components.toString();
+        return termUri.toString();
     }
 
     private static String partToTerm( String part ) {
         return part.replaceFirst( "_", ":" ).toUpperCase();
     }
 
-    /**
-     * Simple ontology resource with a score.
-     */
-    private static class SimpleOntologyTermWithScore implements OntologyTerm {
+    @Value
+    @EqualsAndHashCode(of = { "uri" })
+    private static class OntologyResult {
+        String uri;
+        String label;
+        double score;
 
-        private static final Comparator<OntologyResource> COMPARATOR = Comparator
-                .comparing( OntologyResource::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) )
-                .thenComparing( OntologyResource::getUri, Comparator.nullsLast( Comparator.naturalOrder() ) );
-
-        private final String uri;
-        private final String label;
-        private final double score;
-
-        private SimpleOntologyTermWithScore( String uri, String label, double score ) {
+        private OntologyResult( String uri, String label, double score ) {
             this.uri = uri;
             this.label = label;
             this.score = score;
         }
 
-        public SimpleOntologyTermWithScore( OntologyTerm resource, double score ) {
+        public OntologyResult( OntologyTerm resource, double score ) {
             this.uri = resource.getUri();
-            this.label = resource.getLabel();
+            if ( resource.getLabel() != null ) {
+                this.label = resource.getLabel();
+            } else {
+                this.label = resource.getLocalName();
+            }
             this.score = score;
-        }
-
-        @Override
-        public String getUri() {
-            return uri;
-        }
-
-        @Override
-        public String getLabel() {
-            return label;
-        }
-
-        @Override
-        public boolean isObsolete() {
-            return false;
-        }
-
-        @Override
-        public Double getScore() {
-            return score;
-        }
-
-        @Override
-        public int compareTo( OntologyResource ontologyResource ) {
-            return Objects.compare( this, ontologyResource, COMPARATOR );
-        }
-
-        @Override
-        public Collection<String> getAlternativeIds() {
-            return null;
-        }
-
-        @Override
-        public Collection<AnnotationProperty> getAnnotations() {
-            return null;
-        }
-
-        @Override
-        public Collection<OntologyTerm> getChildren( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
-            return null;
-        }
-
-        @Override
-        public String getComment() {
-            return null;
-        }
-
-        @Override
-        public Collection<OntologyIndividual> getIndividuals( boolean direct ) {
-            return null;
-        }
-
-        @Override
-        public String getLocalName() {
-            return null;
-        }
-
-        @Override
-        public Object getModel() {
-            return null;
-        }
-
-        @Override
-        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
-            return null;
-        }
-
-        @Override
-        public Collection<OntologyRestriction> getRestrictions() {
-            return null;
-        }
-
-        @Override
-        public String getTerm() {
-            return null;
-        }
-
-        @Override
-        public boolean isRoot() {
-            return false;
-        }
-
-        @Override
-        public boolean isTermObsolete() {
-            return false;
         }
     }
 }

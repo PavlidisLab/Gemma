@@ -126,7 +126,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         ee.setId( 1L );
         SearchService.SearchResultMap mockedSrMap = mock( SearchService.SearchResultMap.class );
         when( mockedSrMap.getByResultObjectType( ExpressionExperiment.class ) )
-                .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
+                .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "test object" ) ) );
         when( searchService.search( any( SearchSettings.class ) ) )
                 .thenReturn( mockedSrMap );
         when( taxonService.getFilter( eq( "commonName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )

@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -33,6 +35,8 @@ import ubic.gemma.persistence.util.BusinessKey;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -112,7 +116,7 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
                 Collections.emptySet() :
                 this.getSessionFactory().getCurrentSession()
                         .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
-                        .setParameterList( "gps", gps ).list();
+                        .setParameterList( "gps", optimizeIdentifiableParameterList( gps ) ).list();
     }
 
 }

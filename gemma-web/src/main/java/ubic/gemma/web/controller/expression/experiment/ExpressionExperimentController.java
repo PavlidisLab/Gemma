@@ -474,7 +474,7 @@ public class ExpressionExperimentController {
         countTimer.start();
         long bioMaterialCount = expressionExperimentService.countBioMaterials( null );
         long arrayDesignCount = arrayDesignService.countWithCache( null );
-        long expressionExperimentCount = expressionExperimentService.countWithCache( null );
+        long expressionExperimentCount = expressionExperimentService.countWithCache( null, null );
         Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
         countTimer.stop();
 

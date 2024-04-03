@@ -1,6 +1,7 @@
 package ubic.gemma.core.search;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.AbstractSet;
 import java.util.HashMap;
@@ -12,15 +13,25 @@ import java.util.Map;
  * <p>
  * If a better result is added to the set, it replaces the existing one. If the original result had a non-null
  * {@link SearchResult#getResultObject()}, it is transferred over so that it won't need to be filled later on if needed.
- *
+ * <p>
+ * The collection also honor the {@link SearchSettings#getMaxResults()} value, rejecting any new result unless replacing
+ * an existing one.
  * @author poirigui
  */
 public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchResult<T>> {
 
+    private final SearchSettings settings;
+
     private final Map<SearchResult<T>, SearchResult<T>> results;
 
-    public SearchResultSet() {
-        results = new HashMap<>();
+    public SearchResultSet( SearchSettings settings ) {
+        this.settings = settings;
+        this.results = new HashMap<>();
+    }
+
+    public SearchResultSet( SearchSettings settings, int initialCapacity ) {
+        this.settings = settings;
+        this.results = new HashMap<>( initialCapacity );
     }
 
     @Override
@@ -36,22 +47,45 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
     @Override
     public boolean add( SearchResult<T> t ) {
         SearchResult<T> previousValue = results.get( t );
-        if ( previousValue == null || t.getScore() > previousValue.getScore() ) {
-            results.put( t, t );
-            // retain the result object to avoid fetching it again in the future
-            if ( previousValue != null && previousValue.getResultObject() != null && t.getResultObject() == null ) {
-                t.setResultObject( previousValue.getResultObject() );
-            }
-            // merge highlights
-            if ( previousValue != null && previousValue.getHighlights() != null ) {
-                Map<String, String> mergedHighlights = new HashMap<>( previousValue.getHighlights() );
-                if ( t.getHighlights() != null ) {
-                    mergedHighlights.putAll( t.getHighlights() );
-                }
-                t.setHighlights( mergedHighlights );
-            }
-            return true;
+        if ( previousValue == t ) {
+            // no need to copy or merge anything if its the same object
+            return false;
         }
-        return false;
+        SearchResult<T> newValue;
+        boolean replaced;
+        if ( previousValue == null ) {
+            if ( settings.getMaxResults() > 0 && size() >= settings.getMaxResults() ) {
+                // max size reached and not replacing a previous value
+                return false;
+            }
+            newValue = t;
+            replaced = true;
+        } else {
+            if ( t.getScore() > previousValue.getScore() ) {
+                newValue = t;
+                replaced = true;
+            } else {
+                // new value is unchanged, so treat the passed argument as the previous value for copy-over purposes
+                newValue = previousValue;
+                previousValue = t;
+                replaced = false;
+            }
+            // copy-over the previous result object if necessary
+            if ( previousValue.getResultObject() != null && newValue.getResultObject() == null ) {
+                newValue = newValue.withResultObject( previousValue.getResultObject() );
+            }
+            // merge highlights if necessary
+            if ( previousValue.getHighlights() != null ) {
+                if ( newValue.getHighlights() != null ) {
+                    Map<String, String> mergedHighlights = new HashMap<>( previousValue.getHighlights() );
+                    mergedHighlights.putAll( newValue.getHighlights() );
+                    newValue = newValue.withHighlights( mergedHighlights );
+                } else {
+                    newValue = newValue.withHighlights( previousValue.getHighlights() );
+                }
+            }
+        }
+        results.put( newValue, newValue );
+        return replaced;
     }
 }

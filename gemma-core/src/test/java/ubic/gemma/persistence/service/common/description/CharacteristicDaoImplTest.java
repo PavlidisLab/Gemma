@@ -61,7 +61,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         @Bean
         public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
             Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
-            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath, "gemma.admin.email=gemma" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath );
         }
 
         /**
@@ -174,7 +174,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         acl.insertAce( 0, BasePermission.READ, new AclPrincipalSid( "bob" ), false );
         aclService.updateAcl( acl );
 
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
@@ -201,7 +201,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         aclService.updateAcl( acl );
         sessionFactory.getCurrentSession().flush();
 
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
 
@@ -233,7 +233,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
         aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported

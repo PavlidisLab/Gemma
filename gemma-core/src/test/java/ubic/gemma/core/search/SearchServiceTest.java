@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
@@ -21,10 +24,12 @@ import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
 
     private static final Taxon rat = Taxon.Factory.newInstance( "Rattus norvegicus", "rat", 192, false );
@@ -47,6 +52,11 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
             when( ts.loadAll() ).thenReturn( Collections.singletonList( rat ) );
             return ts;
         }
+
+        @Bean
+        public SearchSource fieldAwareSearchSource() {
+            return mock( FieldAwareSearchSource.class );
+        }
     }
 
     @Autowired
@@ -55,6 +65,10 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     @Qualifier("databaseSearchSource")
     private SearchSource databaseSearchSource;
+
+    @Autowired
+    @Qualifier("fieldAwareSearchSource")
+    private SearchSource fieldAwareSearchSource;
 
     @Autowired
     private OntologyService ontologyService;
@@ -68,12 +82,23 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
+    public void testGetFields() {
+        when( ( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class ) )
+                .thenReturn( Collections.singleton( "shortName" ) );
+        assertThat( searchService.getFields( ExpressionExperiment.class ) )
+                .contains( "shortName" );
+        verify( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class );
+    }
+
+    @Test
     public void test_whenTaxonIsNameIsUsedInQuery_thenAddTaxonToSearchSettings() throws SearchException {
+        when( databaseSearchSource.accepts( any() ) ).thenReturn( true );
         SearchSettings settings = SearchSettings.builder()
                 .resultType( Gene.class )
                 .query( "the best rat in the universe" )
                 .build();
         searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings.withTaxon( rat ) );
         verify( databaseSearchSource ).searchGene( settings.withTaxon( rat ) );
     }
 
@@ -94,13 +119,14 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .build();
         searchService.search( settings );
         verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/DOID_14602" );
-        verify( ontologyService ).findTerms( "http://purl.obolibrary.org/obo/DOID_14602" );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );
     }
 
     @Test
+    @WithMockUser
     public void searchExpressionExperiment() throws SearchException {
+        when( databaseSearchSource.accepts( any() ) ).thenReturn( true );
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/DOID_14602" )
                 .resultType( ExpressionExperiment.class )
@@ -111,6 +137,8 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "test", Collections.singleton( ee ) ) ) );
         SearchService.SearchResultMap results = searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings );
+        verify( databaseSearchSource ).searchExpressionExperiment( settings );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false, false );
         assertNull( results.getByResultObjectType( ExpressionExperiment.class ).iterator().next().getResultObject() );
         // since EE is a proxy, only its ID should be accessed

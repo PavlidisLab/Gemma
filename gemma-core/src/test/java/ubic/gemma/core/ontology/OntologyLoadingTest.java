@@ -70,6 +70,12 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private UberonOntologyService uberon;
 
+    @Autowired
+    private ObiService obi;
+
+    @Autowired
+    private MouseDevelopmentOntologyService mdo;
+
     @Test
     public void testThatChebiDoesNotHaveInferenceEnabled() {
         assertThat( chebi.getInferenceMode() ).isEqualTo( OntologyService.InferenceMode.NONE );
@@ -84,7 +90,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Category(SlowTest.class)
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
-        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon );
+        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo );
         List<OntologyService> services = new ArrayList<>();
         List<Future<?>> futures = new ArrayList<>();
         for ( OntologyService os : ontologyServices ) {

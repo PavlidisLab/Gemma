@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -88,7 +90,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
             //noinspection unchecked
             result = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select fv.id, size(fv.oldStyleCharacteristics) from FactorValue fv where fv.id not in :ids group by fv order by id" )
-                    .setParameterList( "ids", excludedIds )
+                    .setParameterList( "ids", optimizeParameterList( excludedIds ) )
                     .list();
         }
         return result.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Integer ) row[1] ) );

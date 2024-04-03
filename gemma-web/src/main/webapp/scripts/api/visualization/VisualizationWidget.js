@@ -169,9 +169,10 @@ Gemma.prepareProfiles = function( data, showPValues ) {
          pvalueLabel = sprintf( "%.2e ", pvalue );
       }
 
-      var labelStyle = '';
+      // use a fixed font size that matches the heatmap row height
+      var labelStyle = 'font-size: 12px';
       if ( factor && factor < 2 ) {
-         labelStyle = "font-style:italic";
+         labelStyle += ";font-style:italic";
          // qtip = qtip + " [Not significant]";
       }
 
