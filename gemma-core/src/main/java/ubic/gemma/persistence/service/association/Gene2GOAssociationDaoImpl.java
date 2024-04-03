@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.association;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -31,9 +30,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.HibernateUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author pavlidis
@@ -42,9 +45,12 @@ import java.util.*;
 @Repository
 public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> implements Gene2GOAssociationDao {
 
+    private final int geneBatchSize;
+
     @Autowired
     protected Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( Gene2GOAssociation.class, sessionFactory );
+        this.geneBatchSize = HibernateUtils.getBatchSize( sessionFactory, sessionFactory.getClassMetadata( Gene.class ) );
     }
 
     @Override
@@ -79,22 +85,25 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         Map<Gene, Collection<Characteristic>> result = new HashMap<>();
         StopWatch timer = new StopWatch();
         timer.start();
-        int batchSize = 200;
-        Set<Gene> batch = new HashSet<>();
         int i = 0;
-        for ( Gene gene : needToFind ) {
-            batch.add( gene );
-            if ( batch.size() == batchSize ) {
-                result.putAll( this.fetchBatch( batch ) );
-                batch.clear();
+        for ( Collection<Gene> batch : batchIdentifiableParameterList( needToFind, geneBatchSize ) ) {
+            Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
+            //noinspection unchecked
+            List<Object[]> o = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select g.id, geneAss.ontologyEntry from Gene2GOAssociation as geneAss join geneAss.gene g where g.id in (:genes)" )
+                    .setParameterList( "genes", giMap.keySet() )
+                    .list();
+            for ( Object[] object : o ) {
+                Long g = ( Long ) object[0];
+                Characteristic vc = ( Characteristic ) object[1];
+                Gene gene = giMap.get( g );
+                assert gene != null;
+                result.computeIfAbsent( gene, k -> new HashSet<>() ).add( vc );
             }
             if ( ++i % 1000 == 0 ) {
                 AbstractDao.log.info( "Fetched GO associations for " + i + "/" + needToFind.size() + " genes" );
             }
         }
-        if ( !batch.isEmpty() )
-            result.putAll( this.fetchBatch( batch ) );
-
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log
                     .info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + " ms" );
@@ -131,7 +140,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
                                 + "where geneAss.ontologyEntry.value in ( :goIDs)" )
-                .setParameterList( "goIDs", ids ).list();
+                .setParameterList( "goIDs", optimizeParameterList( ids ) ).list();
     }
 
     @Override
@@ -141,9 +150,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct  " + "  gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                        "select distinct gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
                                 + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
-                .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
+                .setParameterList( "goIDs", optimizeParameterList( ids ) )
+                .setParameter( "tax", taxon )
+                .list();
     }
 
     @Override
@@ -159,7 +170,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         if ( !cIds.isEmpty() ) {
             removedCharacteristics = getSessionFactory().getCurrentSession()
                     .createQuery( "delete from Characteristic where id in :cIds" )
-                    .setParameterList( "cIds", cIds )
+                    .setParameterList( "cIds", optimizeParameterList( cIds ) )
                     .executeUpdate();
         } else {
             removedCharacteristics = 0;
@@ -168,30 +179,4 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                 removedAssociations, removedCharacteristics ) );
         return removedAssociations;
     }
-
-    private Map<? extends Gene, ? extends Collection<Characteristic>> fetchBatch( Set<Gene> batch ) {
-        Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
-        //language=HQL
-        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociation as geneAss join geneAss.gene g where g.id in (:genes)";
-        Map<Gene, Collection<Characteristic>> results = new HashMap<>();
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        query.setFetchSize( batch.size() );
-        query.setParameterList( "genes", giMap.keySet() );
-        List<?> o = query.list();
-
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            Long g = ( Long ) oa[0];
-            Characteristic vc = ( Characteristic ) oa[1];
-            Gene gene = giMap.get( g );
-            assert gene != null;
-            if ( !results.containsKey( gene ) ) {
-                results.put( gene, new HashSet<Characteristic>() );
-            }
-            results.get( gene ).add( vc );
-        }
-
-        return results;
-    }
-
 }

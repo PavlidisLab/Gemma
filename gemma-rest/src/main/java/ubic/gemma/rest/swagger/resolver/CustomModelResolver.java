@@ -14,25 +14,32 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+
 /**
  * Resolve {@link Arg} parameters' schema.
- *
+ * <p>
  * This should always be added last with {@link ModelConverters#addConverter(ModelConverter)} to take priority as it
  * addresses a glitch in the original {@link ModelResolver}.
  *
@@ -43,6 +50,12 @@ import java.util.stream.Collectors;
 public class CustomModelResolver extends ModelResolver {
 
     private final SearchService searchService;
+
+    @Autowired
+    private List<EntityArgService<?, ?>> entityArgServices;
+
+    @Autowired
+    private MessageSource messageSource;
 
     @Autowired
     public CustomModelResolver( @Qualifier("swaggerObjectMapper") ObjectMapper objectMapper, SearchService searchService ) {
@@ -60,7 +73,7 @@ public class CustomModelResolver extends ModelResolver {
         }
         if ( t.isTypeOrSubTypeOf( FilterArg.Filter.class ) || t.isTypeOrSubTypeOf( SortArg.Sort.class ) ) {
             return null; // ignore those...
-        } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) ) {
+        } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) || t.isTypeOrSubTypeOf( QueryArg.class ) ) {
             Schema resolved = super.resolve( type, context, chain );
             String ref = resolved.get$ref();
             // FilterArg and SortArg schemas in parameters are refs to globally-defined schemas and those are
@@ -76,7 +89,7 @@ public class CustomModelResolver extends ModelResolver {
             // definitions in the class's Schema annotation
             Schema resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
             // There's a bug with abstract class such as TaxonArg and GeneArg that result in the schema containing 'type'
-            // and 'properties' fields instead of solely emiting the oneOf
+            // and 'properties' fields instead of solely emitting the oneOf
             if ( t.isAbstract() ) {
                 return resolvedSchema.type( null ).properties( null );
             } else {
@@ -88,7 +101,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(String, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as
@@ -112,6 +125,20 @@ public class CustomModelResolver extends ModelResolver {
             return description == null ? availableProperties : description + "\n\n" + availableProperties;
         }
 
+        if ( a != null && QueryArg.class.isAssignableFrom( a.getRawType() ) ) {
+            try {
+                return ( description != null ? description + "\n\n" : "" )
+                        + IOUtils.toString( new ClassPathResource( "/restapidocs/fragments/QueryType.md" ).getInputStream(), StandardCharsets.UTF_8 )
+                        // this part of the template is using embedded HTML in Markdown
+                        .replace( "{searchableProperties}", getSearchableProperties().entrySet().stream()
+                                .map( e -> "<h2>" + escapeHtml4( e.getKey() ) + "</h2>"
+                                        + "<ul>" + e.getValue().stream().map( v -> "<li>" + escapeHtml4( v ) + "</li>" ).collect( Collectors.joining() ) + "</ul>" )
+                                .collect( Collectors.joining() ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
         return description;
     }
 
@@ -123,11 +150,28 @@ public class CustomModelResolver extends ModelResolver {
             extensions.put( "x-gemma-filterable-properties", resolveAvailableProperties( a ) );
             extensions = Collections.unmodifiableMap( extensions );
         }
+        if ( a != null && QueryArg.class.isAssignableFrom( a.getRawType() ) ) {
+            extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
+            extensions.put( "x-gemma-searchable-properties", getSearchableProperties() );
+            extensions = Collections.unmodifiableMap( extensions );
+        }
         return extensions;
     }
 
-    @Autowired
-    private List<EntityArgService<?, ?>> entityArgServices;
+    private final Comparator<String> FIELD_COMPARATOR = Comparator
+            .comparing( ( String s ) -> StringUtils.countOccurrencesOf( s, "." ), Comparator.naturalOrder() )
+            .thenComparing( s -> s );
+
+    private Map<String, List<String>> getSearchableProperties() {
+        Map<String, List<String>> sp = new HashMap<>();
+        for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
+            List<String> fields = searchService.getFields( resultType ).stream().sorted( FIELD_COMPARATOR ).collect( Collectors.toList() );
+            if ( !fields.isEmpty() ) {
+                sp.put( resultType.getName(), fields );
+            }
+        }
+        return sp;
+    }
 
     @Value
     private static class FilterablePropMeta {
@@ -149,8 +193,6 @@ public class CustomModelResolver extends ModelResolver {
         String label;
     }
 
-    @Autowired
-    private MessageSource messageSource;
 
     private List<FilterablePropMeta> resolveAvailableProperties( Annotated a ) {
         // this is the case for FilterArg and SortArg

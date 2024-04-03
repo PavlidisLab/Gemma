@@ -12,7 +12,7 @@
          </generator>
       </id>
       <property name="alias" type="java.lang.String">
-         <column name="ALIAS" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+         <column name="ALIAS" not-null="true" unique="false" sql-type="VARCHAR(255)" index="ALIAS"/>
       </property>
    </class>
 </hibernate-mapping>

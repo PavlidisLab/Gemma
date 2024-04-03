@@ -16,13 +16,13 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.SecuredNotChild;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -130,7 +130,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
-    @Field
+    @Field(store = Store.YES)
     public String getName() {
         return super.getName();
     }
@@ -145,6 +145,13 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @IndexedEmbedded
     public Set<BioAssay> getBioAssays() {
         return super.getBioAssays();
+    }
+
+    @Nullable
+    @Override
+    @IndexedEmbedded
+    public DatabaseEntry getAccession() {
+        return super.getAccession();
     }
 
     @Override

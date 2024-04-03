@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.31.2</version>
+        <version>1.31.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -216,8 +216,9 @@
                                 <srcFile>${project.build.directory}/schema/gemma/gsec/sql/gsec-acl-ddl.sql</srcFile>
                                 <scrFile>${project.build.directory}/schema/gemma/gsec/sql/init-acl-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
-                                <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/mysql/init-entities.sql</srcFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/init-data.sql</srcFile>
                             </srcFiles>
                             <!--suppress MavenModelInspection -->
                             <skip>${skipIntegrationTests}</skip>

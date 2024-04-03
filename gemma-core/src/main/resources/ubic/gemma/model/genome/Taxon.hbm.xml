@@ -4,31 +4,34 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.genome.Taxon" table="TAXON">
-      <cache usage="nonstrict-read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="scientificName" type="java.lang.String">
-         <column name="SCIENTIFIC_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="commonName" type="java.lang.String">
-         <column name="COMMON_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="ncbiId" type="java.lang.Integer">
-         <column name="NCBI_ID" not-null="false" unique="true" sql-type="INTEGER"/>
-      </property>
-      <property name="isGenesUsable" type="java.lang.Boolean">
-         <column name="IS_GENES_USABLE" not-null="true" unique="false" sql-type="TINYINT"/>
-      </property>
-      <property name="secondaryNcbiId" type="java.lang.Integer">
-         <column name="SECONDARY_NCBI_ID" not-null="false" unique="false" sql-type="INTEGER"/>
-      </property>
-      <!-- this must be eager because TaxonValueObject assumes it is readily available -->
-      <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  cascade="none" lazy="false" fetch="select">
-         <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-   </class>
+    <class name="ubic.gemma.model.genome.Taxon" table="TAXON">
+        <cache usage="nonstrict-read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <property name="scientificName" type="java.lang.String">
+            <column name="SCIENTIFIC_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"
+                    index="taxonscientificname"/>
+        </property>
+        <property name="commonName" type="java.lang.String">
+            <column name="COMMON_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)" index="taxoncommonname"/>
+        </property>
+        <property name="ncbiId" type="java.lang.Integer">
+            <column name="NCBI_ID" not-null="false" unique="true" sql-type="INTEGER" index="taxonncbiid"/>
+        </property>
+        <property name="isGenesUsable" type="java.lang.Boolean">
+            <column name="IS_GENES_USABLE" not-null="true" unique="false" sql-type="TINYINT"/>
+        </property>
+        <property name="secondaryNcbiId" type="java.lang.Integer">
+            <column name="SECONDARY_NCBI_ID" not-null="false" unique="false" sql-type="INTEGER"
+                    index="taxonsecondncbiid"/>
+        </property>
+        <!-- this must be eager because TaxonValueObject assumes it is readily available -->
+        <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase" cascade="none"
+                     lazy="false" fetch="select">
+            <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+    </class>
 </hibernate-mapping>

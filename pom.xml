@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.31.2</version>
+	<version>1.31.3</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -140,7 +140,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.20</version>
+			<version>1.1.21</version>
 		</dependency>
 
 		<dependency>
@@ -496,7 +496,7 @@
 				<version>2.22.2</version>
 				<configuration>
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -511,7 +511,7 @@
 				<version>2.22.2</version>
 				<configuration>
 					<argLine>-Dlog4j1.compatibility=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -646,5 +646,6 @@
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<!--suppress UnresolvedMavenProperty -->
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
+		<redirectTestOutputToFile>true</redirectTestOutputToFile>
 	</properties>
 </project>

@@ -100,6 +100,10 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         }
     }
 
+    public StringAssert entityAsString() {
+        return new StringAssert( actual.readEntity( String.class ) );
+    }
+
     public InputStreamAssert entityAsStream() {
         return new InputStreamAssert( actual.readEntity( InputStream.class ) );
     }

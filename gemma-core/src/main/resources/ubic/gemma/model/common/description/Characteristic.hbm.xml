@@ -23,11 +23,11 @@
         </property>
         <property name="value" type="java.lang.String">
             <column name="`VALUE`" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_VALUE"/>
         </property>
         <property name="category" type="java.lang.String">
             <column name="CATEGORY" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_CATEGORY"/>
         </property>
         <property name="categoryUri" type="java.lang.String">
             <column name="CATEGORY_URI" not-null="false" unique="false"
@@ -35,7 +35,7 @@
         </property>
         <property name="evidenceCode">
             <column name="EVIDENCE_CODE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_EVIDENCE_CODE"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.association.GOEvidenceCode</param>
                 <param name="useNamed">true</param>

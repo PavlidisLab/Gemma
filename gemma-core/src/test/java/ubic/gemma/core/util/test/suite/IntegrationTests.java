@@ -5,6 +5,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import ubic.gemma.core.util.test.category.IntegrationTest;
 
+/**
+ * Integration tests.
+ */
 @RunWith(Categories.class)
 @Categories.IncludeCategory(IntegrationTest.class)
 @Suite.SuiteClasses({ AllTests.class })

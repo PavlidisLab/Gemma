@@ -127,7 +127,6 @@ Bone marrow sample	bone marrow	http://purl.obolibrary.org/obo/UBERON_0002371	org
 bone marrow-derived macrophages	bone marrow macrophage	http://purl.obolibrary.org/obo/CL_0002476	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Borrelia burgdorferi	Borreliella burgdorferi	http://purl.obolibrary.org/obo/NCBITaxon_139	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 brain	brain	http://purl.obolibrary.org/obo/UBERON_0000955	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-brain 	brain	http://purl.obolibrary.org/obo/UBERON_0000955	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Brain - Cerebellum	cerebellum	http://purl.obolibrary.org/obo/UBERON_0002037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Brain - Hippocampus	Ammon's horn	http://purl.obolibrary.org/obo/UBERON_0001954	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 brain (cortex)	cerebral cortex	http://purl.obolibrary.org/obo/UBERON_0000956	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -1271,8 +1270,8 @@ synovial membrane	synovial membrane of synovial joint	http://purl.obolibrary.org
 Synovial sarcoma tumor tissue	synovial sarcoma	http://purl.obolibrary.org/obo/MONDO_0010434	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 T cell	T cell	http://purl.obolibrary.org/obo/CL_0000084	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 T cells	T cell	http://purl.obolibrary.org/obo/CL_0000084	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
-T-ALL	T-cell adult acute lymphocytic leukemia	http://purl.obolibrary.org/obo/MONDO_0003539	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-T-ALL diagnostic sample	acute T cell leukemia	http://purl.obolibrary.org/obo/MONDO_0003540	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+T-ALL	T-cell acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/MONDO_0004963	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+T-ALL diagnostic sample	T-cell acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/MONDO_0004963	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 T-cell lymphoblasts	T cell	http://purl.obolibrary.org/obo/CL_0000084	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 T47D	T-47D cell	http://purl.obolibrary.org/obo/CLO_0009251	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 tamoxifen	tamoxifen	http://purl.obolibrary.org/obo/CHEBI_41774	treatment	http://www.ebi.ac.uk/efo/EFO_0000727

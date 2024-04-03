@@ -27,7 +27,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.Highlighter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -39,6 +39,7 @@ import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringExcept
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
@@ -102,6 +103,7 @@ public class DatasetsWebService {
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
+    private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
 
     @Autowired
@@ -124,6 +126,8 @@ public class DatasetsWebService {
     private GeneArgService geneArgService;
     @Autowired
     private QuantitationTypeArgService quantitationTypeArgService;
+    @Autowired
+    private OntologyService ontologyService;
 
     @Autowired
     private HttpServletRequest request;
@@ -134,6 +138,7 @@ public class DatasetsWebService {
         private final Set<Long> documentIdsToHighlight;
 
         private Highlighter( Set<Long> documentIdsToHighlight ) {
+            super( new SimpleMarkdownFormatter() );
             this.documentIdsToHighlight = documentIdsToHighlight;
         }
 
@@ -152,18 +157,13 @@ public class DatasetsWebService {
         }
 
         @Override
-        public org.apache.lucene.search.highlight.Highlighter createLuceneHighlighter( QueryScorer queryScorer ) {
-            return new org.apache.lucene.search.highlight.Highlighter( new SimpleMarkdownFormatter(), queryScorer );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Set<String> fields ) {
+        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
             long id = Long.parseLong( document.get( "id" ) );
             // TODO: maybe use a filter in the Lucene query?
             if ( !documentIdsToHighlight.contains( id ) ) {
                 return Collections.emptyMap();
             }
-            return super.highlightDocument( document, highlighter, analyzer, fields );
+            return super.highlightDocument( document, highlighter, analyzer );
         }
     }
 
@@ -174,7 +174,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets")
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
-            @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
@@ -185,9 +185,9 @@ public class DatasetsWebService {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         if ( query != null ) {
+            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
             Map<Long, Double> scoreById = new HashMap<>();
-            Filters filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, scoreById ) );
-            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filtersWithQuery, sort ) );
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query, scoreById ) );
             // sort is stable, so the order of IDs with the same score is preserved
             ids.sort( Comparator.comparingDouble( i -> -scoreById.get( i ) ) );
 
@@ -207,7 +207,7 @@ public class DatasetsWebService {
             return Responder.queryAndPaginate(
                     new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
                             .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
-                    query, filters, new String[] { "id" } );
+                    query.getValue(), filters, new String[] { "id" } );
         } else {
             return Responder.queryAndPaginate(
                     expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) ),
@@ -226,7 +226,7 @@ public class DatasetsWebService {
         public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo, @Nullable SearchResult<ExpressionExperiment> result ) {
             super( vo );
             if ( result != null ) {
-                this.searchResult = new SearchWebService.SearchResultValueObject<>( SearchResult.from( result, null ) );
+                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ) );
             } else {
                 this.searchResult = null;
             }
@@ -236,15 +236,19 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count datasets matching the provided query and  filter")
+    @Operation(summary = "Count datasets matching the provided query and filter")
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @QueryParam("query") String query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter ) {
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+    ) {
         Filters filters = datasetArgService.getFilters( filter );
+        Set<Long> extraIds;
         if ( query != null ) {
-            filters.and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+        } else {
+            extraIds = null;
         }
-        return Responder.respond( expressionExperimentService.countWithCache( filters ) );
+        return Responder.respond( expressionExperimentService.countWithCache( filters, extraIds ) );
     }
 
     public interface UsageStatistics {
@@ -260,19 +264,20 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
-            @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") @DefaultValue("50") LimitArg limit ) {
+            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+    ) {
         Filters filters = datasetArgService.getFilters( filter );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
         Integer l = limit.getValueNoMaximum();
-        Map<TechnologyType, Long> tts = expressionExperimentService.getTechnologyTypeUsageFrequency( filtersWithQuery );
-        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filtersWithQuery, l );
+        Map<TechnologyType, Long> tts = expressionExperimentService.getTechnologyTypeUsageFrequency( filters, extraIds );
+        Map<ArrayDesign, Long> ads = expressionExperimentService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, extraIds, l );
         List<ArrayDesignValueObject> adsVos = arrayDesignService.loadValueObjects( ads.keySet() );
         Map<Long, Long> countsById = ads.entrySet().stream().collect( Collectors.toMap( e -> e.getKey().getId(), Map.Entry::getValue ) );
         List<ArrayDesignWithUsageStatisticsValueObject> results =
@@ -280,7 +285,7 @@ public class DatasetsWebService {
                         .map( e -> new ArrayDesignWithUsageStatisticsValueObject( e, countsById.get( e.getId() ), tts.getOrDefault( TechnologyType.valueOf( e.getTechnologyType() ), 0L ) ) )
                         .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                         .collect( Collectors.toList() );
-        return Responder.limit( results, query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
+        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
     }
 
     @Value
@@ -298,8 +303,9 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
-            @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
             @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
@@ -310,23 +316,26 @@ public class DatasetsWebService {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
+        int maxResults = limit.getValue( MAX_DATASETS_CATEGORIES );
         List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
-                        filtersWithQuery,
+                        filters,
+                        extraIds,
                         datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
                         datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                        mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null )
+                        mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                        maxResults )
                 .entrySet()
                 .stream()
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.queryAndFilter( results, query, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+        return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
     @Value
@@ -354,7 +363,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
-            @QueryParam("query") String query,
+            @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
@@ -375,31 +384,31 @@ public class DatasetsWebService {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
         if ( category != null && category.isEmpty() ) {
             category = ExpressionExperimentService.UNCATEGORIZED;
         }
-        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
-        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
-                filtersWithQuery,
-                limit,
-                minFrequency != null ? minFrequency : 0,
+                filters,
+                extraIds,
                 category,
                 datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
                 datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null );
+                minFrequency != null ? minFrequency : 0,
+                mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                limit );
+        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
+        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<AnnotationWithUsageStatisticsValueObject> results = initialResults
                 .stream()
                 .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
-                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.limit( results, query, filters, new String[] { "classUri", "className", "termUri", "termName" },
+        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
                 limit );
     }
@@ -415,25 +424,31 @@ public class DatasetsWebService {
         return new HashSet<>( exclude.getValue() );
     }
 
-
-    private static Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        return c.getParents( true, false ).stream()
-                .map( t -> toTermVo( t, visited ) )
-                .collect( Collectors.toSet() );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
+        return getParentTerms( c, new LinkedHashSet<>(), visited );
     }
 
-    private static OntologyTermValueObject toTermVo( OntologyTerm ontologyTerm, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        Set<OntologyTermValueObject> parentVos;
-        if ( visited.containsKey( ontologyTerm ) ) {
-            parentVos = visited.get( ontologyTerm );
-        } else {
-            visited.put( ontologyTerm, Collections.emptySet() );
-            parentVos = ontologyTerm.getParents( true, false ).stream()
-                    .map( t -> toTermVo( t, visited ) )
-                    .collect( Collectors.toSet() );
-            visited.put( ontologyTerm, parentVos );
-        }
-        return new OntologyTermValueObject( ontologyTerm, parentVos );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
+        return ontologyService.getParents( Collections.singleton( c ), true, true ).stream()
+                .map( t -> {
+                    Set<OntologyTermValueObject> parentVos;
+                    if ( stack.contains( t ) ) {
+                        log.debug( "Detected a cycle when visiting " + t + ": " + stack.stream()
+                                .map( ot -> ot.equals( t ) ? ot + "*" : ot.toString() )
+                                .collect( Collectors.joining( " -> " ) ) + " -> " + t + "*" );
+                        return null;
+                    } else if ( visited.containsKey( t ) ) {
+                        parentVos = visited.get( t );
+                    } else {
+                        stack.add( t );
+                        parentVos = getParentTerms( t, stack, visited );
+                        stack.remove( t );
+                        visited.put( t, parentVos );
+                    }
+                    return new OntologyTermValueObject( t, parentVos );
+                } )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
     }
 
     @Value
@@ -465,7 +480,7 @@ public class DatasetsWebService {
         Long numberOfExpressionExperiments;
 
         /**
-         * URIs of parent terms.
+         * URIs of parent terms, or null if excluded.
          */
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -485,18 +500,21 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
-            @QueryParam("query") String query, @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg ) {
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
+    ) {
         Filters filters = datasetArgService.getFilters( filterArg );
-        Filters filtersWithQuery;
+        Set<Long> extraIds;
         if ( query != null ) {
-            filtersWithQuery = Filters.by( filters ).and( datasetArgService.getFilterForSearchQuery( query, null ) );
+            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
         } else {
-            filtersWithQuery = filters;
+            extraIds = null;
         }
-        return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filtersWithQuery )
+        return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filters, extraIds )
                 .entrySet().stream()
+                .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
-                .collect( Collectors.toList() ), query, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+                .collect( Collectors.toList() ), query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
     @Value

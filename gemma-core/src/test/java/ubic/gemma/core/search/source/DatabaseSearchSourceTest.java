@@ -14,7 +14,9 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -74,6 +76,16 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
         public ExpressionExperimentSetService experimentSetService() {
             return mock( ExpressionExperimentSetService.class );
         }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock( ArrayDesignService.class );
+        }
+
+        @Bean
+        public BlacklistedEntityService blacklistedEntityService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -98,18 +110,32 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void test_whenQueryContainsLikePatterns_thenEscape() throws SearchException {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA%", null ) );
+        verify( geneService ).findByAccession( "BRCA%", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA\\%%" );
     }
 
     @Test
     public void test_whenQueryContainsAsterisk_thenSubstituteForPercent() throws SearchException {
         databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA?*", null ) );
-        verify( geneService ).findByOfficialSymbolInexact( "BRCA_%" );
+        verify( geneService ).findByOfficialSymbolInexact( "brca_%" );
     }
 
     @Test
     public void test_quotedTerms() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1\" \"BRCA2\"", null ) );
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1 BRCA2\"", null ) );
         verify( geneService ).findByOfficialSymbol( "BRCA1 BRCA2" );
+    }
+
+    @Test
+    public void testSearchGeneByUri() throws SearchException {
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "http://purl.org/commons/record/ncbi_gene/1234", null ) );
+        verify( geneService ).findByNCBIId( 1234 );
+        verify( geneService ).findByOfficialSymbol( "http://purl.org/commons/record/ncbi_gene/1234" );
+    }
+
+    @Test
+    public void testSearchGeneByUriInexact() throws SearchException {
+        databaseSearchSource.searchGene( SearchSettings.geneSearch( "http://purl.org/commons/record/ncbi_gene/123?", null ) );
+        verify( geneService ).findByOfficialSymbolInexact( "http://purl.org/commons/record/ncbi\\_gene/123_" );
     }
 }

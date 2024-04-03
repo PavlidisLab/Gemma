@@ -14,7 +14,6 @@ import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -31,7 +30,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
@@ -90,7 +88,6 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     private ExpressionExperiment ee;
     private ExpressionExperimentValueObject eevo;
     private GeneSet gs;
-    private CharacteristicValueObject phenotypeAssociation;
 
     @Before
     public void setUp() {
@@ -106,7 +103,6 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         eevo.setId( 12L );
         gs = new GeneSet();
         gs.setId( 13L );
-        phenotypeAssociation = new CharacteristicValueObject( 14L );
         when( arrayDesignService.loadValueObject( any( ArrayDesign.class ) ) ).thenAnswer( a -> new ArrayDesignValueObject( a.getArgument( 0, ArrayDesign.class ) ) );
         //noinspection unchecked
         when( arrayDesignService.loadValueObjects( anyCollection() ) ).thenAnswer( a -> ( ( Collection<ArrayDesign> ) a.getArgument( 0, Collection.class ) )
@@ -129,14 +125,14 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     @Test
     @WithMockUser
     public void testConvertArrayDesign() {
-        searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ArrayDesign.class, ad, 1.0, null, "test object" ) );
         verify( arrayDesignService ).loadValueObject( ad );
     }
 
     @Test
     @WithMockUser
     public void testConvertArrayDesignCollection() {
-        searchService.loadValueObjects( Collections.singleton( SearchResult.from( ArrayDesign.class, ad, 1.0, "test object" ) ) );
+        searchService.loadValueObjects( Collections.singleton( SearchResult.from( ArrayDesign.class, ad, 1.0, null, "test object" ) ) );
         verify( arrayDesignService ).loadValueObjects( Collections.singletonList( ad ) );
     }
 
@@ -146,14 +142,14 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         when( bibliographicReferenceService.loadValueObject( any( BibliographicReference.class ) ) )
                 .thenAnswer( arg -> new BibliographicReferenceValueObject( arg.getArgument( 0, BibliographicReference.class ) ) );
         br.setId( 13L );
-        searchService.loadValueObject( SearchResult.from( BibliographicReference.class, br, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( BibliographicReference.class, br, 1.0, null, "test object" ) );
         verify( bibliographicReferenceService ).loadValueObject( br );
     }
 
     @Test
     @WithMockUser
     public void testConvertCompositeSequence() {
-        searchService.loadValueObject( SearchResult.from( CompositeSequence.class, cs, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( CompositeSequence.class, cs, 1.0, null, "test object" ) );
         verify( compositeSequenceService ).loadValueObject( cs );
     }
 
@@ -162,32 +158,21 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     public void testConvertCompositeSequenceCollection() {
         when( compositeSequenceService.loadValueObjects( any() ) ).thenReturn( Collections.singletonList( new CompositeSequenceValueObject( cs ) ) );
         // this is a special case because of how it's implemented
-        searchService.loadValueObjects( Collections.singleton( SearchResult.from( CompositeSequence.class, cs, 1.0, "test object" ) ) );
+        searchService.loadValueObjects( Collections.singleton( SearchResult.from( CompositeSequence.class, cs, 1.0, null, "test object" ) ) );
         verify( compositeSequenceService ).loadValueObjects( Collections.singletonList( cs ) );
     }
 
     @Test
     @WithMockUser
     public void testConvertExpressionExperiment() {
-        searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "test object" ) );
         verify( expressionExperimentService ).loadValueObject( ee );
-    }
-
-    @Test
-    public void testConvertPhenotypeAssociation() {
-        // this is a complicated one because the result type does not match the entity
-        assertThat( searchService.loadValueObject( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, 1.0, "test object" ) ) )
-                .extracting( "resultObject" )
-                .isSameAs( phenotypeAssociation );
-        assertThat( searchService.loadValueObjects( Collections.singleton( SearchResult.from( PhenotypeAssociation.class, phenotypeAssociation, 1.0, "test object" ) ) ) )
-                .extracting( "resultObject" )
-                .containsExactly( phenotypeAssociation );
     }
 
     @Test
     public void testConvertGeneSet() {
         // this is another complicated one because GeneSetService does not implement BaseVoEnabledService
-        searchService.loadValueObject( SearchResult.from( GeneSet.class, gs, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( GeneSet.class, gs, 1.0, null, "test object" ) );
         verify( geneSetService ).loadValueObject( gs );
     }
 
@@ -195,7 +180,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     public void testConvertUninitializedResult() {
         DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs, new Taxon(), 1L );
         when( geneSetService.loadValueObjectById( 13L ) ).thenReturn( gsvo );
-        SearchResult<IdentifiableValueObject<Identifiable>> sr = searchService.loadValueObject( SearchResult.from( GeneSet.class, 13L, 1.0, "test object" ) );
+        SearchResult<IdentifiableValueObject<Identifiable>> sr = searchService.loadValueObject( SearchResult.from( GeneSet.class, 13L, 1.0, null, "test object" ) );
         assertThat( sr )
                 .isNotNull()
                 .hasFieldOrPropertyWithValue( "resultType", GeneSet.class )
@@ -210,18 +195,18 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
     public void testUnsupportedResultTypeRaisesIllegalArgumentException() {
         ContrastResult cr = new ContrastResult();
         cr.setId( 1L );
-        searchService.loadValueObject( SearchResult.from( ContrastResult.class, cr, 1.0, "test object" ) );
+        searchService.loadValueObject( SearchResult.from( ContrastResult.class, cr, 1.0, null, "test object" ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnsupportedResultTypeInCollectionRaisesIllegalArgumentException() {
-        searchService.loadValueObjects( Collections.singleton( SearchResult.from( ContrastResult.class, new ContrastResult(), 0.0f, "test object" ) ) );
+        searchService.loadValueObjects( Collections.singleton( SearchResult.from( ContrastResult.class, new ContrastResult(), 0.0f, null, "test object" ) ) );
     }
 
     @Test
     public void testConvertAlreadyConvertedCollection() {
         searchService.loadValueObjects( Collections.singletonList(
-                SearchResult.from( ExpressionExperiment.class, eevo, 0.0f, "test value object" ) ) );
+                SearchResult.from( ExpressionExperiment.class, eevo, 0.0f, null, "test value object" ) ) );
         verify( expressionExperimentService ).loadValueObjectsByIds( Collections.singletonList( eevo.getId() ) );
     }
 
@@ -239,9 +224,9 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         when( expressionExperimentService.loadValueObjects( any() ) ).thenReturn( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) );
         when( blacklistedEntityService.loadValueObjects( any() ) ).thenReturn( Arrays.asList( BlacklistedValueObject.fromEntity( bp ), BlacklistedValueObject.fromEntity( be ) ) );
         List<SearchResult<? extends IdentifiableValueObject<?>>> vos = searchService.loadValueObjects( Arrays.asList(
-                SearchResult.from( BlacklistedEntity.class, be, 0.0, "test blacklisted object" ),
-                SearchResult.from( BlacklistedEntity.class, bp, 0.0, "test blacklisted object" ),
-                SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
+                SearchResult.from( BlacklistedEntity.class, be, 0.0, null, "test blacklisted object" ),
+                SearchResult.from( BlacklistedEntity.class, bp, 0.0, null, "test blacklisted object" ),
+                SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "test object" ) ) );
         verify( expressionExperimentService ).loadValueObjects( Collections.singletonList( ee ) );
         assertThat( vos )
                 .extracting( "resultType", "resultId" )

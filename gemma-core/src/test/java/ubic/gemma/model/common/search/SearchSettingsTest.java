@@ -2,8 +2,10 @@ package ubic.gemma.model.common.search;
 
 import org.junit.Test;
 import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.SearchException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
 public class SearchSettingsTest {
 
@@ -11,51 +13,23 @@ public class SearchSettingsTest {
     public void testSetQueryWhenQueryContainsBlankThenTrimAccordingly() {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setQuery( " " );
-        assertThat( searchSettings.getQuery() ).isEqualTo( "" );
-        assertThat( searchSettings.getRawQuery() ).isEqualTo( " " );
+        assertThat( searchSettings.getQuery() ).isEqualTo( " " );
     }
 
     @Test
-    public void testSetQueryWhenQueryIsNull() {
-        SearchSettings searchSettings = SearchSettings.builder().build();
-        searchSettings.setQuery( null );
-        assertThat( searchSettings.getQuery() ).isNull();
-        assertThat( searchSettings.getRawQuery() ).isNull();
-    }
-
-    @Test
-    public void testSetQueryWhenQueryIsATermUri() {
+    public void testSetQueryWhenQueryIsATermUri() throws SearchException {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setQuery( "http://example.ca/" );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( searchSettings.getRawQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( searchSettings.isTermQuery() ).isTrue();
-        assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
+        assertThat( prepareTermUriQuery( searchSettings ) ).isNotNull().hasToString( "http://example.ca/" );
     }
 
     @Test
-    public void testSetQueryWhenQueryIsATermUriWithTrailingBlanks() {
+    public void testSetQueryWhenQueryIsATermUriWithTrailingBlanks() throws SearchException {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setQuery( " http://example.ca/ " );
-        assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( searchSettings.getRawQuery() ).isEqualTo( " http://example.ca/ " );
-        assertThat( searchSettings.isTermQuery() ).isTrue();
-        assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
-    }
-
-
-    @Test
-    public void testSetTermUriWhenUriIsBlank() {
-        SearchSettings searchSettings = SearchSettings.builder().build();
-        searchSettings.setTermUri( "" );
-        assertThat( searchSettings.isTermQuery() ).isFalse();
-    }
-
-    @Test
-    public void testSetTermUriWhenUriIsNull() {
-        SearchSettings searchSettings = SearchSettings.builder().build();
-        searchSettings.setTermUri( null );
-        assertThat( searchSettings.isTermQuery() ).isFalse();
+        assertThat( searchSettings.getQuery() ).isEqualTo( " http://example.ca/ " );
+        assertThat( prepareTermUriQuery( searchSettings ) ).isNotNull().hasToString( "http://example.ca/" );
     }
 
     @Test

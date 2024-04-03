@@ -32,6 +32,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+
 /**
  * @author paul
  */
@@ -117,6 +119,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b from AnnotationAssociation b join b.geneProduct gp where gp in (:gps)" )
-                .setParameterList( "gps", gps ).list();
+                .setParameterList( "gps", optimizeIdentifiableParameterList( gps ) ).list();
     }
 }
