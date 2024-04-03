@@ -1,33 +1,18 @@
 package ubic.gemma.core.search.lucene;
 
 import org.apache.lucene.queryParser.ParseException;
-import ubic.gemma.core.search.SearchException;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.search.ParseSearchException;
 
 /**
  * @author poirigui
  */
-public class LuceneParseSearchException extends SearchException {
+public class LuceneParseSearchException extends ParseSearchException {
 
-    @Nullable
-    private final ParseException originalParseException;
-
-    public LuceneParseSearchException( String message, ParseException cause ) {
+    public LuceneParseSearchException( String query, String message, ParseException cause ) {
         super( message, cause );
-        this.originalParseException = null;
     }
 
-    public LuceneParseSearchException( String message, ParseException cause, ParseException originalParseException ) {
-        super( message, cause );
-        this.originalParseException = originalParseException;
-    }
-
-    /**
-     * The original {@link ParseException} if this query was reparsed without special characters.
-     */
-    @Nullable
-    public ParseException getOriginalParseException() {
-        return originalParseException;
+    public LuceneParseSearchException( String query, String message, ParseException cause, LuceneParseSearchException originalParseException ) {
+        super( message, cause, originalParseException );
     }
 }

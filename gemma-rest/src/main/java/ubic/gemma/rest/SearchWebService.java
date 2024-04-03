@@ -7,17 +7,13 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
@@ -178,8 +174,10 @@ public class SearchWebService {
         List<SearchResult<?>> searchResults;
         try {
             searchResults = searchService.search( searchSettings ).toList();
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new BadRequestException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCauseMessage( e ) ), e );
+            throw new InternalServerErrorException( e );
         }
 
         List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;

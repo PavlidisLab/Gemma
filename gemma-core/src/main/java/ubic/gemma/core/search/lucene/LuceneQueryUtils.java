@@ -1,6 +1,7 @@
 package ubic.gemma.core.search.lucene;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
@@ -41,11 +42,15 @@ public class LuceneQueryUtils {
             return queryParser.parse( query );
         } catch ( ParseException e ) {
             String strippedQuery = LUCENE_RESERVED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
-            log.debug( String.format( "Failed to parse '%s'; will attempt to parse it without special characters '%s'.", query, strippedQuery ), e );
+            log.debug( String.format( "Failed to parse '%s': %s.", query, ExceptionUtils.getRootCauseMessage( e ) ), e );
             try {
                 return queryParser.parse( strippedQuery );
             } catch ( ParseException e2 ) {
-                throw new LuceneParseSearchException( String.format( "Failed to parse '%s' after attempting to parse it without special characters as '%s'.", query, strippedQuery ), e2, e );
+                throw new LuceneParseSearchException(
+                        strippedQuery,
+                        ExceptionUtils.getRootCauseMessage( e2 ),
+                        e2,
+                        new LuceneParseSearchException( query, ExceptionUtils.getRootCauseMessage( e ), e ) );
             }
         }
     }

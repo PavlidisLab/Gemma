@@ -28,6 +28,7 @@ import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -40,6 +41,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.ws.rs.InternalServerErrorException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -139,8 +141,10 @@ public class AnnotationController {
             }
 
             return sortedResults;
+        } catch ( ParseSearchException e ) {
+            throw new IllegalArgumentException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search query.", e );
+            throw new InternalServerErrorException( e );
         }
     }
 

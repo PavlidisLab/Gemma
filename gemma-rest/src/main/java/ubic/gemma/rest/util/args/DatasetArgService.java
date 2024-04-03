@@ -1,16 +1,12 @@
 package ubic.gemma.rest.util.args;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.search.Highlighter;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -28,6 +24,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,8 +113,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                     .fillResults( false )
                     .build();
             return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
+        } catch ( ParseSearchException e ) {
+            throw new MalformedArgException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new MalformedArgException( "Invalid search query.", e );
+            throw new InternalServerErrorException(  e );
         }
     }
 
