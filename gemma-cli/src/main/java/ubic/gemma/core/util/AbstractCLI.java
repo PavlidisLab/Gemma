@@ -400,7 +400,7 @@ public abstract class AbstractCLI implements CLI {
         }
         String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
                 message.replaceAll( "\n", "\nWARNING: " ) );
-        if ( "YES" .equals( line.trim() ) ) {
+        if ( "YES".equals( line.trim() ) ) {
             return;
         }
         throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );
@@ -525,23 +525,26 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Execute batch tasks using a preconfigured {@link ExecutorService} and return all the resulting tasks results.
-     *
+     * Execute the given batch tasks.
+     * <p>
+     * Errors will be reported with {@link #addErrorObject(Object, String, Throwable)}. However, reporting successes is
+     * the responsibility of the caller.
      */
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
-        List<Future<T>> futures = executorService.invokeAll( tasks );
-        List<T> futureResults = new ArrayList<>( futures.size() );
-        int i = 1;
-        for ( Future<T> future : futures ) {
+    protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
+        ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( executorService );
+        List<Future<?>> futures = new ArrayList<>( tasks.size() );
+        for ( Runnable task : tasks ) {
+            futures.add( completionService.submit( task, null ) );
+        }
+        for ( int i = 1; i <= futures.size(); i++ ) {
             try {
-                futureResults.add( future.get() );
+                completionService.take().get();
             } catch ( ExecutionException e ) {
                 addErrorObject( null, String.format( "Batch task #%d failed", i ), e.getCause() );
             } finally {
                 i++;
             }
         }
-        return futureResults;
     }
 
     private enum BatchFormat {
