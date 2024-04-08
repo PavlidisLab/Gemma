@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -33,8 +34,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 /**
@@ -166,9 +165,9 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
      * context set up by {@link #authenticate()}.
      */
     @Override
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
-        return super.executeBatchTasks( tasks.stream()
-                .map( DelegatingSecurityContextCallable::new )
+    protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
+        super.executeBatchTasks( tasks.stream()
+                .map( DelegatingSecurityContextRunnable::new )
                 .collect( Collectors.toList() ) );
     }
 }
