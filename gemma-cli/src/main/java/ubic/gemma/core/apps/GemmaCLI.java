@@ -76,7 +76,6 @@ public class GemmaCLI {
         Option logOpt = Option.builder( VERBOSITY_OPTION )
                 .longOpt( "verbosity" ).hasArg()
                 .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" )
-                .type( Number.class )
                 .build();
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
@@ -113,8 +112,8 @@ public class GemmaCLI {
 
         if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
             try {
-                loggingConfigurer.configureAllLoggers( ( ( Number ) commandLine.getParsedOptionValue( VERBOSITY_OPTION ) ).intValue() );
-            } catch ( ParseException | IllegalArgumentException e ) {
+                loggingConfigurer.configureAllLoggers( parseVerbosityLevel( commandLine.getOptionValue( VERBOSITY_OPTION ) ) );
+            } catch ( IllegalArgumentException e ) {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
                 GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
@@ -132,7 +131,7 @@ public class GemmaCLI {
                 }
                 String loggerName = vals[0];
                 try {
-                    loggingConfigurer.configureLogger( loggerName, Integer.parseInt( vals[1] ) );
+                    loggingConfigurer.configureLogger( loggerName, parseVerbosityLevel( vals[1] ) );
                 } catch ( IllegalArgumentException e ) {
                     System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION,
                             loggerName,
@@ -218,6 +217,27 @@ public class GemmaCLI {
         }
 
         exit( statusCode );
+    }
+
+    private static int parseVerbosityLevel( String s ) {
+        try {
+            return Integer.parseInt( s );
+        } catch ( NumberFormatException e ) {
+            if ( s.equalsIgnoreCase( "off" ) ) {
+                return 0;
+            } else if ( s.equalsIgnoreCase( "fatal" ) ) {
+                return 1;
+            } else if ( s.equalsIgnoreCase( "error" ) ) {
+                return 2;
+            } else if ( s.equalsIgnoreCase( "warn" ) ) {
+                return 3;
+            } else if ( s.equalsIgnoreCase( "info" ) ) {
+                return 4;
+            } else if ( s.equalsIgnoreCase( "debug" ) ) {
+                return 5;
+            }
+        }
+        throw new IllegalArgumentException( "Invalid verbosity level " + s );
     }
 
     /**
