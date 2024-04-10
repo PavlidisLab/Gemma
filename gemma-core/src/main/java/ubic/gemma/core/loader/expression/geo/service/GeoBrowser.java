@@ -837,7 +837,7 @@ public class GeoBrowser {
             if ( isCausedByAnEmptyXmlDocument( e ) ) {
                 throw new EmptyXmlDocumentException( e );
             } else {
-                throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", url ), e );
+                throw new IOException( String.format( "Failed to parse MINiML from URL %s", url ), e );
             }
         } catch ( IOException ioe ) {
             if ( maxRetries > 0 && isEligibleForRetry( ioe ) ) {
