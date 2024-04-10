@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -537,6 +538,11 @@ public abstract class AbstractCLI implements CLI {
      * the responsibility of the caller.
      */
     protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
+        Assert.isTrue( !tasks.isEmpty(), "At least one batch task must be submitted." );
+        if ( tasks.size() == 1 ) {
+            tasks.iterator().next().run();
+            return;
+        }
         ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( executorService );
         List<Future<?>> futures = new ArrayList<>( tasks.size() );
         for ( Runnable task : tasks ) {
