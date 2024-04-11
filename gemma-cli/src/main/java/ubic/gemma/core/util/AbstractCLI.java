@@ -273,7 +273,9 @@ public abstract class AbstractCLI implements CLI {
      * threads to use.
      */
     protected void addThreadsOption( Options options ) {
-        options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
+        options.addOption( Option.builder( THREADS_OPTION )
+                .longOpt( "threads" )
+                .argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
                 .type( Number.class )
                 .build() );
@@ -315,8 +317,16 @@ public abstract class AbstractCLI implements CLI {
         AbstractCLI.log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
         options.addOption( TESTING_OPTION, "testing", false, "Use the test environment. This option must be passed before the command." );
-        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
-        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( File.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+        options.addOption( Option.builder( BATCH_FORMAT_OPTION )
+                .longOpt( "batch-format" )
+                .hasArg()
+                .desc( "Format to use to the batch summary" ).build() );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION )
+                .longOpt( "batch-output-file" )
+                .hasArg()
+                .type( File.class )
+                .desc( "Output file to use for the batch summary (default is standard output)" )
+                .build() );
     }
 
     /**
