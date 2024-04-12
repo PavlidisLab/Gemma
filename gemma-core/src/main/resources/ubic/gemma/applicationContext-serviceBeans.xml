@@ -9,6 +9,7 @@
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="threadNamePrefix" value="gemma-local-tasks-thread-"/>
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
     </bean>
 
