@@ -257,6 +257,17 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                 .hasMessage( "MEX files were found, but single-cell data is not supported at the series level." );
     }
 
+    /**
+     * This is a case of a MEX dataset that has matrix and barcodes at the sample-level (as we support it!), but genes
+     * at the series level.
+     */
+    @Test
+    public void testGSE242423() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE242423" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+    }
+
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {

@@ -24,6 +24,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 public class MexDetector extends AbstractSingleCellDetector implements SingleCellDetector {
@@ -92,6 +95,10 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             log.info( String.format( "%s: Found MEX files in supplementary materials:\n\t%s\n\t%s\n\t%s",
                     geoAccession, barcodes, features, matrix ) );
             return true;
+        } else if ( barcodes != null || features != null || matrix != null ) {
+            log.warn( String.format( "%s: Found incomplete MEX files in supplementary materials:\n\t%s",
+                    geoAccession,
+                    Stream.of( barcodes, features, matrix ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
 
         // detect MEX (1 TAR archive per GEO sample)
@@ -127,9 +134,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             }
                         }
                         if ( barcodes != null && features != null && matrix != null ) {
-                            log.info( String.format( "%s: Found MEX files bundled in a TAR archive:\n\t%s\n\t\t%s\n\t\t%s\n\t\t%s",
+                            log.info( String.format( "%s: Found MEX files bundled in a TAR archive %s:\n\t\t%s\n\t\t%s\n\t\t%s",
                                     geoAccession, file, barcodes, features, matrix ) );
                             return true;
+                        } else if ( barcodes != null || features != null || matrix != null ) {
+                            log.warn( String.format( "%s: Found incomplete MEX files bundled in a TAR archive %s:\n\t%s",
+                                    geoAccession, file,
+                                    Stream.of( barcodes, features, matrix ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
                         }
                     } catch ( Exception e ) {
                         log.warn( String.format( "%s: MEX files could not be retrieved successfully.", geoAccession ), e );
