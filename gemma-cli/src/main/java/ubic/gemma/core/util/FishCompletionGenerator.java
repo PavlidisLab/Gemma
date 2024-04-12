@@ -3,26 +3,30 @@ package ubic.gemma.core.util;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.apps.GemmaCLI;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.stream.Collectors;
 
 /**
  * Generates fish completion script.
  * @author poirigui
  */
-public class FishCompletionGenerator implements CompletionGenerator {
+public class FishCompletionGenerator extends AbstractCompletionGenerator {
 
     private final String allSubcommands;
 
-    public FishCompletionGenerator( Set<String> allSubcommands ) {
-        this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).collect( Collectors.joining( " " ) );
+    public FishCompletionGenerator( Options generalOptions, SortedMap<GemmaCLI.CommandGroup, SortedMap<String, CLI>> commands ) {
+        super( generalOptions, commands );
+        this.allSubcommands = commands.values().stream().map( Map::keySet ).flatMap( Collection::stream ).filter( StringUtils::isNotBlank ).collect( Collectors.joining( " " ) );
     }
 
     @Override
-    public void generateCompletion( Options options, PrintWriter writer ) {
+    protected void generateGeneralCompletion( Options options, PrintWriter writer ) {
         for ( Option o : options.getOptions() ) {
             writer.printf( "complete -c gemma-cli -n %s %s%s%s%s%n",
                     // prevents global options from being suggested after a subcommand
@@ -35,7 +39,7 @@ public class FishCompletionGenerator implements CompletionGenerator {
     }
 
     @Override
-    public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
+    protected void generateSubcommandCompletion( String subcommand, Options subcommandOptions, String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         // -f prevents files from being suggested as subcommand
         // FIXME: add -k, but the order has to be reversed
         writer.printf( "complete -c gemma-cli -n %s -f -a %s%s%n",
