@@ -358,10 +358,11 @@ public abstract class AbstractCLI implements CLI {
             this.numThreads = 1;
         }
 
+        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
         if ( this.numThreads > 1 ) {
-            this.executorService = Executors.newFixedThreadPool( this.numThreads );
+            this.executorService = Executors.newFixedThreadPool( this.numThreads, threadFactory );
         } else {
-            this.executorService = Executors.newSingleThreadExecutor();
+            this.executorService = Executors.newSingleThreadExecutor( threadFactory );
         }
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {

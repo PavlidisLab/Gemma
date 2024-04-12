@@ -32,6 +32,8 @@ import ubic.gemma.core.job.executor.common.ExecutingTask;
 import ubic.gemma.core.job.executor.common.TaskCommandToTaskMatcher;
 import ubic.gemma.core.job.executor.common.TaskPostProcessing;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 import java.util.Date;
@@ -47,7 +49,7 @@ import java.util.concurrent.*;
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService, DisposableBean {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
-    private final ExecutorService executorService = Executors.newFixedThreadPool( 20 );
+    private final ExecutorService executorService = Executors.newFixedThreadPool( Settings.getInt( "gemma.backgroundTasks.numberOfThreads" ), new SimpleThreadFactory( "gemma-background-tasks-thread-" ) );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Autowired
