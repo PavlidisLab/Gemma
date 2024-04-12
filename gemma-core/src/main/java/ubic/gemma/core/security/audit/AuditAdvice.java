@@ -25,6 +25,7 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -154,7 +155,17 @@ public class AuditAdvice {
             AuditAdvice.log.warn( String.format( "Cannot audit a null object passed as first argument of %s.", signature ) );
             return;
         }
-        User user = userManager.getCurrentUser();
+        // Hibernate might decide to flush the session when retrieving the current user. This is not desirable because
+        // the entity being updated might not be fully initialized.
+        // See https://github.com/PavlidisLab/Gemma/issues/1093 for an example of this happening.
+        User user;
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
+        try {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            user = userManager.getCurrentUser();
+        } finally {
+            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
+        }
         if ( user == null ) {
             AuditAdvice.log.info( String.format( "User could not be determined (anonymous?), audit will be skipped for %s.", signature ) );
             return;
