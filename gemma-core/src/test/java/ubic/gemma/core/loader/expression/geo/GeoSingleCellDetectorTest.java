@@ -268,6 +268,27 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
     }
 
+    /**
+     * This is an AnnData dataset that uses the {@code .h5ad.h5} extension.
+     */
+    @Test
+    public void testGSE132188() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE132188" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.ANNDATA );
+    }
+
+    /**
+     * This is a custom H5 attachment that is unsupported.
+     */
+    @Test
+    public void testGSE162807() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE162807" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+    }
+
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {

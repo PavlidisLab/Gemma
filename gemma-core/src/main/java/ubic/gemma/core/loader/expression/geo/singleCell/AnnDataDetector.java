@@ -14,8 +14,13 @@ public class AnnDataDetector extends AbstractSingleFileInSeriesSingleCellDetecto
     }
 
     @Override
+    protected boolean accepts( String supplementaryFile ) {
+        return super.accepts( supplementaryFile ) || supplementaryFile.endsWith( ".h5ad.h5" ) || supplementaryFile.endsWith( ".h5ad.h5.gz" );
+    }
+
+    @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
-        Path annDataFile = getDest( series);
+        Path annDataFile = getDest( series );
         if ( Files.exists( annDataFile ) ) {
             // TODO: retrieve the file
             AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( annDataFile );

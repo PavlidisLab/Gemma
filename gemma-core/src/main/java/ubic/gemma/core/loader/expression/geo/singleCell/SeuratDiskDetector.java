@@ -14,6 +14,11 @@ public class SeuratDiskDetector extends AbstractSingleFileInSeriesSingleCellDete
     }
 
     @Override
+    protected boolean accepts( String supplementaryFile ) {
+        return super.accepts( supplementaryFile ) || supplementaryFile.endsWith( ".h5Seurat.h5" ) || supplementaryFile.endsWith( ".h5Seurat.h5.gz" );
+    }
+
+    @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
         Path seuratFile = getDest( series );
         if ( Files.exists( seuratFile ) ) {
