@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -61,7 +62,7 @@ public class LuceneQueryUtils {
      * Prohibited terms are excluded.
      */
     public static Set<String> extractTerms( SearchSettings settings ) throws SearchException {
-        Set<String> terms = new HashSet<>();
+        Set<String> terms = new LinkedHashSet<>();
         extractTerms( parseSafely( settings, createQueryParser() ), terms );
         return terms;
     }
@@ -90,7 +91,7 @@ public class LuceneQueryUtils {
         Query q = parseSafely( settings, createQueryParser() );
         Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {
-            Set<Set<String>> ds = new HashSet<>();
+            Set<Set<String>> ds = new LinkedHashSet<>();
             if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds ) ) {
                 result = ds;
             } else {
@@ -106,7 +107,7 @@ public class LuceneQueryUtils {
 
     private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms ) {
         if ( query.clauses().stream().anyMatch( BooleanClause::isRequired ) ) {
-            Set<String> subClause = new HashSet<>();
+            Set<String> subClause = new LinkedHashSet<>();
             terms.add( subClause );
             return extractNestedConjunctions( query, subClause );
         }

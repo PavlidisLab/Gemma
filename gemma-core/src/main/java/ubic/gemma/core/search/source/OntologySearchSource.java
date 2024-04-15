@@ -52,7 +52,7 @@ public class OntologySearchSource implements SearchSource {
     private static final double EXACT_MATCH_SCORE = -1.0;
 
     /**
-     * Amount of time to dedicate to inferring children terms. Once that time is elapsed for a search
+     * Amount of time to dedicate to inferring children terms.
      */
     private static final long ONTOLOGY_INFERENCE_TIMEOUT_MILLIS = 30000;
 
@@ -145,8 +145,8 @@ public class OntologySearchSource implements SearchSource {
                 watch.reset();
                 watch.start();
             }
-            // if one subquery has no results, the intersection will be empty
-            if ( subqueryResults.isEmpty() ) {
+            // if one subquery has no results, the intersection will be empty and we can return early
+            if ( results.isEmpty() ) {
                 return results;
             }
         }

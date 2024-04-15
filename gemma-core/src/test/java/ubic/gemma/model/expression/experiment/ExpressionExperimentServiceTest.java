@@ -170,7 +170,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, 30, TimeUnit.SECONDS );
         verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
-        verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
+        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
