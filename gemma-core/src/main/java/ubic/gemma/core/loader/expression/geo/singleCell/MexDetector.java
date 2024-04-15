@@ -29,6 +29,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Detects 10X MEX data from GEO series and samples.
+ * <p>
+ * Older MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
+ * naming scheme into the download directory.
+ * <p>
+ * MEX data is only supported at the sample-level. However, we do support detecting its presence at the series-level,
+ * but not downloading.
+ * @author poirigui
+ */
 public class MexDetector extends AbstractSingleCellDetector implements SingleCellDetector {
 
     /**
@@ -52,13 +62,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     /**
      * {@inheritDoc}
      * <p>
-     * MEX data detection is not supported at the series level, so while this method can return true,
-     * {@link #downloadSingleCellData(GeoSeries)} will fail.
-     * <p>
-     * Don't bother looking up MEX files in TAR archives.
+     * MEX data detection is not supported at the series level, so while this method can return true if barcodes/genes/matrices
+     * are present in the series supplementary files, {@link #downloadSingleCellData(GeoSeries)} will subsequently fail.
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
+        // don't bother looking up MEX files in TAR archives at the series-level, it's just wasteful since we cannot
+        // download them
         return hasSingleCellData( series.getGeoAccession(), series.getSupplementaryFiles(), false );
     }
 
@@ -75,6 +85,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowTarLookup );
     }
 
+    /**
+     * Check if a sample or series has single-cell data.
+     * @param geoAccession       GEO accession of the sample or series
+     * @param supplementaryFiles list of supplementary file
+     * @param allowTarLookup     allow looking up TAR archives for MEX data, use this with parsimony because it requires
+     *                           partially downloading the archive
+     */
     private boolean hasSingleCellData( String geoAccession, Collection<String> supplementaryFiles, boolean allowTarLookup ) {
         // detect MEX (3 files per GEO sample)
         String barcodes = null, features = null, matrix = null;
@@ -170,6 +187,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         throw new NoSingleCellDataFoundException( "MEX does not support single-cell data at the series level." );
     }
 
+    /**
+     * Download a GEO sample within the context of its series.
+     * <p>
+     * This will first download the sample with {@link #downloadSingleCellData(GeoSample)}, then create a {@code series/sample}
+     * folder structure and  finally hard-link all the sample files in there. This ensures that if two series mention
+     * the same sample, they can reuse the same files.
+     */
     public void downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         downloadSingleCellData( sample );
         Path sampleDir = downloadDirectory.resolve( sample.getGeoAccession() );
@@ -195,6 +219,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             }
         } catch ( IOException e ) {
             log.warn( sample.getGeoAccession() + ": An I/O error occurred, cleaning up " + destDir + "...", e );
+            // note here that the series directory is kept since it might contain other samples
             PathUtils.deleteDirectory( destDir );
             throw e;
         }

@@ -334,7 +334,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 series.getGeoAccession(), futures.size() ) );
         try {
             for ( Future<?> ignore : futures ) {
-                anySampleDownloaded |= ( boolean ) resolveDownloadFuture( completionService.take() );
+                anySampleDownloaded |= resolveDownloadFuture( completionService.take() );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
