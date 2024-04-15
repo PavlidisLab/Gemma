@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.lucene.queryParser.QueryParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -14,6 +13,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -123,12 +123,8 @@ public class OntologySearchSource implements SearchSource {
         OntologySearchSource.log.debug( "Starting characteristic search for: " + settings + " matching " + String.join( " AND ", clause ) );
         for ( String subClause : clause ) {
             // at this point, subclauses have already been parsed, so if they contain special characters, those must be
-            // escaped
-            String subClauseQuery = QueryParser.escape( subClause );
-            // spaces should be quoted
-            if ( subClauseQuery.contains( " " ) ) {
-                subClauseQuery = "\"" + subClauseQuery + "\"";
-            }
+            // escaped, spaces must be quoted
+            String subClauseQuery = LuceneQueryUtils.quote( subClause );
             SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment(
                     settings.withQuery( subClauseQuery )
             );

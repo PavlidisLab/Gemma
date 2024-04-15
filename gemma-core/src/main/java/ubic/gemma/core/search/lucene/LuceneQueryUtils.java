@@ -280,4 +280,16 @@ public class LuceneQueryUtils {
         }
         return query instanceof WildcardQuery || query instanceof PrefixQuery;
     }
+
+    /**
+     * Quote the given Lucene query to be used for an exact match.
+     */
+    public static String quote( String query ) {
+        query = QueryParser.escape( query );
+        // spaces should be quoted
+        if ( query.contains( " " ) ) {
+            query = "\"" + query + "\"";
+        }
+        return query;
+    }
 }
