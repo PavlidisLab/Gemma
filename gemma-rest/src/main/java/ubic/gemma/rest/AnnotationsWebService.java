@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,8 @@ import ubic.gemma.rest.util.args.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * RESTful interface for annotations.
@@ -108,7 +111,8 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
-            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE) @QueryParam("query") @DefaultValue("") StringArrayArg query
@@ -117,9 +121,11 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Search query cannot be empty." );
         }
         try {
-            return Responder.respond( this.getTerms( query ) );
+            return Responder.respond( this.getTerms( query, 30, TimeUnit.SECONDS ) );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         } catch ( ParseSearchException e ) {
-            throw new BadRequestException( e.getMessage(), e );
+            throw new BadRequestException( "Invalid search query.", e );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
@@ -340,7 +346,7 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) throws SearchException {
+    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
         List<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
@@ -348,7 +354,7 @@ public class AnnotationsWebService {
                 this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) ) );
             } else {
-                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, true ) );
+                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, true, timeout, timeUnit ) );
             }
         }
         return vos;

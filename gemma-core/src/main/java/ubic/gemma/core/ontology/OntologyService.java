@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Paul
@@ -41,17 +43,37 @@ public interface OntologyService {
      */
     Map<Characteristic, Long> findObsoleteTermUsage();
 
+    @Deprecated
+    default Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
+            boolean useNeuroCartaOntology ) throws SearchException {
+        try {
+            return findExperimentsCharacteristicTags( searchQuery, useNeuroCartaOntology, 5, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
      * of possible choices
      *
-     * @param  searchQuery           search query
-     * @param  useNeuroCartaOntology use neurocarta ontology
+     * @param searchQuery           search query
+     * @param useNeuroCartaOntology use neurocarta ontology
+     * @param timeout
+     * @param timeUnit
      * @return characteristic vos
      */
     @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology ) throws SearchException;
+            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+
+    default Collection<OntologyTerm> findTerms( String query ) throws SearchException {
+        try {
+            return findTerms( query, 5, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -61,7 +83,15 @@ public interface OntologyService {
      * @param  query search query
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String query ) throws SearchException;
+    Collection<OntologyTerm> findTerms( String query, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+
+    default Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
+        try {
+            return findTermsInexact( givenQueryString, taxon, 5, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a
@@ -74,7 +104,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
 
     /**
      * Obtain terms which are allowed for use in the category of a {@link ubic.gemma.model.common.description.Characteristic}.
@@ -86,17 +116,35 @@ public interface OntologyService {
      */
     Set<OntologyProperty> getRelationTerms();
 
+    default Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
+        try {
+            return getParents( terms, direct, includeAdditionalProperties, 5, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Obtain the parents of a collection of terms.
      * @see OntologyTerm#getParents(boolean, boolean)
+     * @throws TimeoutException if the timeout is exceeded
      */
-    Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties );
+    Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    default Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties ) {
+        try {
+            return getChildren( matchingTerms, direct, includeAdditionalProperties, 30, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Obtain the children of a collection of terms.
      * @see OntologyTerm#getChildren(boolean, boolean)
+     * @throws TimeoutException if the timeout is exceeded
      */
-    Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties );
+    Set<OntologyTerm> getChildren( Collection<OntologyTerm> matchingTerms, boolean direct, boolean includeAdditionalProperties, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * Obtain a definition for the given URI.
@@ -110,10 +158,20 @@ public interface OntologyService {
     @Nullable
     OntologyTerm getTerm( String uri );
 
+    default Set<OntologyTerm> getTerms( Collection<String> uris ) {
+        try {
+            return getTerms( uris, 5, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Return all the terms matching the given URIs.
+     * @throws TimeoutException if the timeout is exceeded
      */
-    Set<OntologyTerm> getTerms( Collection<String> uris );
+    Set<OntologyTerm> getTerms( Collection<String> uris, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
 
     /**
      * Recreate the search indices, for ontologies that are loaded.

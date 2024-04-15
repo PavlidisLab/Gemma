@@ -35,6 +35,7 @@ import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
 import java.util.Collections;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -121,7 +122,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
 
     @Test
     @WithMockUser
-    public void testSearchTaxonDatasets() throws SearchException {
+    public void testSearchTaxonDatasets() throws SearchException, TimeoutException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );
         SearchService.SearchResultMap mockedSrMap = mock( SearchService.SearchResultMap.class );
@@ -138,7 +139,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
         when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),

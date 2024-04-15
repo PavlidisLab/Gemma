@@ -28,6 +28,8 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
@@ -162,33 +164,33 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     }
 
     @Test
-    public void testGetFiltersWithInferredAnnotations() {
+    public void testGetFiltersWithInferredAnnotations() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, 30, TimeUnit.SECONDS );
         verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
         verify( ontologyService ).getChildren( Collections.singleton( term ), false, true );
     }
 
     @Test
-    public void testGetFiltersWithCategories() {
+    public void testGetFiltersWithCategories() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
-        expressionExperimentService.getFiltersWithInferredAnnotations( f, null );
+        expressionExperimentService.getFiltersWithInferredAnnotations( f, null, 30, TimeUnit.SECONDS );
         verifyNoInteractions( ontologyService );
     }
 
     @Test
-    public void testGetAnnotationsUsageFrequency() {
+    public void testGetAnnotationsUsageFrequency() throws TimeoutException {
         expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1 );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
-    public void testGetAnnotationsUsageFrequencyWithFilters() {
+    public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1 );
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
