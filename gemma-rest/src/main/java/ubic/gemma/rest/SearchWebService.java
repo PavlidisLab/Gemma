@@ -175,7 +175,7 @@ public class SearchWebService {
         try {
             searchResults = searchService.search( searchSettings ).toList();
         } catch ( ParseSearchException e ) {
-            throw new BadRequestException( e.getMessage(), e );
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }

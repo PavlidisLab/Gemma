@@ -8,11 +8,15 @@ import ubic.gemma.core.search.ParseSearchException;
  */
 public class LuceneParseSearchException extends ParseSearchException {
 
+    public LuceneParseSearchException( String query, ParseException cause ) {
+        super( query, cause );
+    }
+
     public LuceneParseSearchException( String query, String message, ParseException cause ) {
-        super( message, cause );
+        super( query, message, cause );
     }
 
     public LuceneParseSearchException( String query, String message, ParseException cause, LuceneParseSearchException originalParseException ) {
-        super( message, cause, originalParseException );
+        super( query, message, cause, originalParseException );
     }
 }

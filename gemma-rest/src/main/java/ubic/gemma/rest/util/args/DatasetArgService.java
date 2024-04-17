@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,7 +98,12 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerm ) {
-        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerm );
+        try {
+            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerm, 30, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            log.warn( "Ontology inference timed out, will return a filter without inferred annotations." );
+            return super.getFilters( filterArg );
+        }
     }
 
     /**
@@ -114,9 +121,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                     .build();
             return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
         } catch ( ParseSearchException e ) {
-            throw new MalformedArgException( e.getMessage(), e );
+            throw new MalformedArgException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
-            throw new InternalServerErrorException(  e );
+            throw new InternalServerErrorException( e );
         }
     }
 

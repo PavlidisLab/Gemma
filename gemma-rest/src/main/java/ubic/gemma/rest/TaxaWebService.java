@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -192,8 +193,10 @@ public class TaxaWebService {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         try {
             return Responder.respond( geneArgService.getGeneEvidence( geneArg, taxon ) );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
+            throw new InternalServerErrorException( e );
         }
     }
 

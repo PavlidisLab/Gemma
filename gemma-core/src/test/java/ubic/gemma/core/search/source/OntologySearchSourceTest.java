@@ -25,6 +25,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,7 +72,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void test() throws SearchException, OntologySearchException {
+    public void test() throws SearchException, OntologySearchException, TimeoutException {
         OntologyTerm term = new OntologyTermSimple( "http://purl.obolibrary.org/obo/CL_0000129", "microglial cell" );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
@@ -92,7 +94,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                     }
                 } ) );
         verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
-        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ) );
+        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
@@ -140,7 +142,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d OR \"a quoted string containing an escaped quote \\\"\"" ) );
         verify( ontologyService ).findTerms( "a" );
         verify( ontologyService ).findTerms( "b" );
-        verify( ontologyService ).findTerms( "c" );
+        // b returns no result, so c should not be queried
         verify( ontologyService ).getTerm( "http://example.com/d" );
         verify( ontologyService ).findTerms( "\"a quoted string containing an escaped quote \\\"\"" );
         verifyNoMoreInteractions( ontologyService );

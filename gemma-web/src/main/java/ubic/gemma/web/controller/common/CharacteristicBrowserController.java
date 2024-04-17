@@ -150,7 +150,7 @@ public class CharacteristicBrowserController {
             chars = characteristicService.findByUri( queryString );
         } else {
 
-            chars = characteristicService.findByValue( queryString );
+            chars = characteristicService.findByValueStartingWith( queryString );
 
             if ( searchCategories ) {
                 chars.addAll( characteristicService.findByCategory( queryString ) );

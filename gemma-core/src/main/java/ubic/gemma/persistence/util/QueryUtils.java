@@ -150,4 +150,8 @@ public class QueryUtils {
                 .map( batch -> ( List<T> ) query.setParameterList( batchParam, batch ).list() )
                 .flatMap( List::stream );
     }
+
+    public static String escapeLike( String s ) {
+        return s.replaceAll( "[%_\\\\]", "\\\\$0" );
+    }
 }

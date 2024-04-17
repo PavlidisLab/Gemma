@@ -233,13 +233,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByUri( String searchString ) {
-        if ( StringUtils.isBlank( searchString ) )
+    public Collection<Characteristic> findByUri( String uri ) {
+        if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
-                .setParameter( "search", searchString ).list();
+                .createQuery( "select char from Characteristic as char where  char.valueUri = :uri" )
+                .setParameter( "uri", uri ).list();
     }
 
     @Override
@@ -257,18 +257,14 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris ) {
-        List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
-        if ( uniqueUris.isEmpty() )
+        if ( uris.isEmpty() )
             return Collections.emptyMap();
-        //noinspection unchecked
-        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+        Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select lower(coalesce(char.valueUri, char.value)), count(char) from Characteristic char "
                         + "where char.valueUri in :uris "
-                        + "group by coalesce(char.valueUri, char.value)" )
-                .setParameterList( "uris", optimizeParameterList( uniqueUris ) )
-                .list() )
-                .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Long ) row[1] ) );
+                        + "group by coalesce(char.valueUri, char.value)" );
+        return streamByBatch( q, "uris", uris, 2048, Object[].class )
+                .collect( Collectors.groupingBy( row -> ( String ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
@@ -300,7 +296,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )
-                .setParameter( "search", search.endsWith( "%" ) ? search : search + "%" ).list();
+                .setParameter( "search", search )
+                .list();
     }
 
     @Override

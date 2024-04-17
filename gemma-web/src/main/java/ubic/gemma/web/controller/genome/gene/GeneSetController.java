@@ -39,7 +39,6 @@ import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.InternalServerErrorException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -195,7 +194,7 @@ public class GeneSetController {
         } catch ( ParseSearchException e ) {
             throw new IllegalArgumentException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
+            throw new RuntimeException( e );
         }
     }
 

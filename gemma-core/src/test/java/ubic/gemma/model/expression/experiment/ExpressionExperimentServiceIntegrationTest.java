@@ -48,6 +48,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Subquery;
 
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -419,7 +420,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
-    public void testCacheInvalidationWhenACharacteristicIsDeleted() {
+    public void testCacheInvalidationWhenACharacteristicIsDeleted() throws TimeoutException {
         ExpressionExperiment ee = createExpressionExperiment();
         Characteristic c = new Characteristic();
         c.setCategory( "bar" );

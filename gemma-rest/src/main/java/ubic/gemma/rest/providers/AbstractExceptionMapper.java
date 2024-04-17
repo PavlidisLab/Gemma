@@ -42,16 +42,16 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
     }
 
     /**
-     * Indicate if the exception should be logged.
+     * Indicate if the given exception should be logged.
      */
-    protected boolean logException() {
+    protected boolean logException( E exception ) {
         return false;
     }
 
 
     @Override
     public final Response toResponse( E exception ) {
-        if ( logException() ) {
+        if ( logException( exception ) ) {
             // FIXME: request is null in tests
             log.error( String.format( "Unhandled exception was raised%s.",
                     request != null ? " for " + ServletUtils.summarizeRequest( request ).replaceAll( "[\r\n]", "" ) : "" ), exception );

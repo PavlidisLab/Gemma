@@ -11,17 +11,31 @@ import javax.annotation.Nullable;
  */
 public class ParseSearchException extends SearchException {
 
+    private final String query;
+
     @Nullable
     private final ParseSearchException originalParseException;
 
-    public ParseSearchException( String message, Throwable cause ) {
-        super( message, cause );
+    public ParseSearchException( String query, Throwable cause ) {
+        super( cause );
+        this.query = query;
         this.originalParseException = null;
     }
 
-    public ParseSearchException( String message, Throwable cause, ParseSearchException originalParseException ) {
+    public ParseSearchException( String query, String message, Throwable cause ) {
         super( message, cause );
+        this.query = query;
+        this.originalParseException = null;
+    }
+
+    public ParseSearchException( String query, String message, Throwable cause, ParseSearchException originalParseException ) {
+        super( message, cause );
+        this.query = query;
         this.originalParseException = originalParseException;
+    }
+
+    public String getQuery() {
+        return query;
     }
 
     /**

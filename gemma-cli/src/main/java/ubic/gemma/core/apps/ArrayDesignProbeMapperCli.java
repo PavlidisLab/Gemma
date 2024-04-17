@@ -25,7 +25,6 @@ import ubic.gemma.persistence.util.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -515,7 +514,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         // TODO: process array designs in order of how many experiments they use (most first)
 
-        Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+        Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
             arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
@@ -676,10 +675,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    private class ProcessADProbeMapper implements Callable<Void> {
+    private class ProcessADProbeMapper implements Runnable {
 
-        private ArrayDesign arrayDesign;
-        private Date skipIfLastRunLaterThan;
+        private final ArrayDesign arrayDesign;
+        private final Date skipIfLastRunLaterThan;
 
         private ProcessADProbeMapper( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
             this.arrayDesign = arrayDesign;
@@ -687,12 +686,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         @Override
-        public Void call() {
+        public void run() {
 
             if ( arrayDesign.getCurationDetails().getTroubled() ) {
                 AbstractCLI.log.warn( "Skipping troubled platform: " + arrayDesign );
                 addErrorObject( arrayDesign, "Skipped because it is troubled; run in non-batch-mode" );
-                return null;
+                return;
             }
 
             /*
@@ -700,8 +699,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
              * just the ones from the taxon specified.
              */
             ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, arrayDesign );
-
-            return null;
         }
     }
 

@@ -234,8 +234,8 @@ public class BioMaterialController {
         OntologyTerm resource = ontologyService.getTerm( uri );
         if ( resource != null )
             return resource.getLabel();
-
         return null;
     }
 
 }
+

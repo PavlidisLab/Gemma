@@ -22,6 +22,7 @@ import gemma.gsec.SecurityService;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,8 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -595,7 +598,8 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms ) {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         Filters f2 = Filters.empty();
         // apply inference to terms
         // collect clauses mentioning terms
@@ -626,7 +630,7 @@ public class ExpressionExperimentServiceImpl
                 Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
                 Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
                 termAndChildrenUris.addAll( e.getValue() );
-                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true ).stream()
+                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
                 if ( termAndChildrenUris.size() > QueryUtils.MAX_PARAMETER_LIST_SIZE ) {
@@ -753,7 +757,11 @@ public class ExpressionExperimentServiceImpl
             }
         }
         if ( excludedTermUris != null ) {
-            excludedTermUris = inferTermsUris( excludedTermUris );
+            try {
+                excludedTermUris = inferTermsUris( excludedTermUris, 30000 );
+            } catch ( TimeoutException e ) {
+                log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
+            }
         }
         return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris, maxResults );
     }
@@ -766,7 +774,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults ) {
         if ( excludedTermUris != null ) {
-            excludedTermUris = inferTermsUris( excludedTermUris );
+            try {
+                excludedTermUris = inferTermsUris( excludedTermUris, 30000 );
+            } catch ( TimeoutException e ) {
+                log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
+            }
         }
 
         Collection<Long> eeIds;
@@ -816,15 +828,16 @@ public class ExpressionExperimentServiceImpl
     /**
      * Infer all the implied terms from the given collection of term URIs.
      */
-    private Set<String> inferTermsUris( Collection<String> termUris ) {
+    private Set<String> inferTermsUris( Collection<String> termUris, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         Set<String> excludedTermUris = new HashSet<>( termUris );
         // null is a special indicator for free-text terms or categories
         boolean removedFreeText = excludedTermUris.remove( FREE_TEXT );
         boolean removedUncategorized = excludedTermUris.remove( UNCATEGORIZED );
         // expand exclusions with implied terms via subclass relation
-        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris );
+        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
         // exclude terms using the subClass relation
-        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false );
+        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
         for ( OntologyTerm t : impliedTerms ) {
             excludedTermUris.add( t.getUri() );
         }

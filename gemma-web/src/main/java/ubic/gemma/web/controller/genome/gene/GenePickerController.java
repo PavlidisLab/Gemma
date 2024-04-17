@@ -23,10 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -203,8 +203,10 @@ public class GenePickerController {
         results.addAll( sessionSets );
         try {
             results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
+        } catch ( ParseSearchException e ) {
+            throw new IllegalArgumentException( "Invalid search query: " + query, e );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search settings.", e );
+            throw new RuntimeException( e );
         }
 
         for ( SearchResultDisplayObject r : results ) {
