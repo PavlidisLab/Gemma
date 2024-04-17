@@ -125,7 +125,7 @@ public class RootWebService {
 
     private UserValueObject getUserVo( User user ) {
         // Convert to a VO and check for admin
-        String group = userManager.findGroupsForUser( user.getUserName() ).iterator().next();
+        String group = userManager.findGroupsForUser( user.getUserName() ).stream().findFirst().orElse( null );
         return new UserValueObject( user, group );
     }
 
