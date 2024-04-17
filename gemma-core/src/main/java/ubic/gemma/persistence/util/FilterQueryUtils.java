@@ -9,6 +9,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -228,10 +229,5 @@ public class FilterQueryUtils {
 
     private static String formParamName( PropertyMapping mapping, int i ) {
         return formProperty( mapping ).replaceAll( "\\W", "_" ) + i;
-    }
-
-    private static String escapeLike( String s ) {
-        return s.replace( "%", "\\%" )
-                .replace( "_", "\\_" );
     }
 }

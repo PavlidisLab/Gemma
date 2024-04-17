@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
@@ -90,13 +90,17 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     Characteristic findBestByUri( String uri );
 
     /**
-     * Returns a collection of characteristics that have a Value that match the given search string. The value is
-     * usually a human readable form of the termURI
-     *
-     * @param  search search
-     * @return characteristics
+     * Returns a collection of characteristics that have a value starting with the given string.
+     * <p>
+     * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use
+     * {@link #findByValueLike(String)} to do wildcard searches instead.
      */
-    Collection<Characteristic> findByValue( String search );
+    Collection<Characteristic> findByValueStartingWith( String search );
+
+    /**
+     * Returns a collection of characteristics that have a value matching the given SQL {@code LIKE} pattern.
+     */
+    Collection<Characteristic> findByValueLike( String search );
 
     /**
      * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String)

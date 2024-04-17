@@ -38,7 +38,6 @@ import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
-import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -46,6 +45,7 @@ import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -188,34 +188,31 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * of possible choices
      */
     @Override
-    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
+    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
 
-        String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
-
-        if ( searchQuery.length() < 3 ) {
+        if ( searchQuery.trim().length() < 3 ) {
             return new HashSet<>();
         }
-
-        // this will do like %search%
-        Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
-                .characteristic2CharacteristicVO( this.characteristicService.findByValue( "%" + searchQuery ) );
 
         Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri = new HashMap<>();
         Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<>();
 
-        for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
-
-            // flag to let know that it was found in the database
-            characteristicInDatabase.setAlreadyPresentInDatabase( true );
-
-            if ( characteristicInDatabase.getValueUri() != null && !characteristicInDatabase.getValueUri()
-                    .equals( "" ) ) {
-                characteristicFromDatabaseWithValueUri
-                        .put( characteristicInDatabase.getValueUri(), characteristicInDatabase );
-            } else {
-                // free txt, no value uri
-                characteristicFromDatabaseFreeText.add( characteristicInDatabase );
+        // this will do like 'search%'
+        String wildcardQuery = LuceneQueryUtils.prepareDatabaseQuery( searchQuery, true );
+        if ( wildcardQuery != null ) {
+            Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
+                    .characteristic2CharacteristicVO( this.characteristicService.findByValueLike( wildcardQuery ) );
+            for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
+                // flag to let know that it was found in the database
+                characteristicInDatabase.setAlreadyPresentInDatabase( true );
+                if ( characteristicInDatabase.getValueUri() != null && !characteristicInDatabase.getValueUri().isEmpty() ) {
+                    characteristicFromDatabaseWithValueUri
+                            .put( characteristicInDatabase.getValueUri(), characteristicInDatabase );
+                } else {
+                    // free txt, no value uri
+                    characteristicFromDatabaseFreeText.add( characteristicInDatabase );
+                }
             }
         }
 
@@ -261,6 +258,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public Collection<OntologyTerm> findTerms( String search, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
+        Collection<OntologyTerm> results = new HashSet<>();
+
+        if ( StringUtils.isBlank( search ) ) {
+            return results;
+        }
 
         /*
          * URI input: just retrieve the term.
@@ -269,18 +271,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return Collections.singleton( findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) ) );
         }
 
-        Collection<OntologyTerm> results = new HashSet<>();
-
-        /*
-         * Other queries:
-         */
-        String query = OntologySearch.stripInvalidCharacters( search );
-
-        if ( StringUtils.isBlank( query ) ) {
-            return results;
-        }
-
-        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, query ), query, 5000 );
+        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search ), search, 5000 );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
@@ -296,16 +287,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
-        if ( StringUtils.isBlank( givenQueryString ) )
+    public Collection<CharacteristicValueObject> findTermsInexact( String queryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
+        if ( StringUtils.isBlank( queryString ) )
             return Collections.emptySet();
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
         if ( StringUtils.isBlank( queryString ) ) {
-            OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
+            OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + queryString );
             return Collections.emptySet();
         }
 
@@ -378,7 +368,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         if ( watch.getTime() > 1000 ) {
             OntologyServiceImpl.log
-                    .info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + " ms "
+                    .info( "Ontology term query for: " + queryString + ": " + watch.getTime() + " ms "
                             + "count occurrences: " + searchForCharacteristics.getTime() + " ms "
                             + "search for genes: " + searchForGenesTimer.getTime() + " ms "
                             + "count occurrences (after ont): " + countOccurrencesTimerAfter.getTime() + " ms "

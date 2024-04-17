@@ -141,7 +141,7 @@ public class OntologySearchSource implements SearchSource {
             }
             if ( watch.getTime() > 1000 ) {
                 OntologySearchSource.log.warn( String.format( "Characteristic EE search for '%s': %d hits retained so far; %dms",
-                        subClause, results.size(), watch.getTime() ) );
+                        subClauseQuery, results.size(), watch.getTime() ) );
                 watch.reset();
                 watch.start();
             }

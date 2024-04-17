@@ -10,12 +10,12 @@ import org.apache.lucene.util.Version;
 import org.hibernate.search.util.impl.PassThroughAnalyzer;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -38,11 +38,18 @@ public class LuceneQueryUtils {
      * escaped if necessary.
      */
     public static Query parseSafely( SearchSettings settings, QueryParser queryParser ) throws SearchException {
-        String query = settings.getQuery();
+        return parseSafely( settings.getQuery(), queryParser );
+    }
+
+    /**
+     * Safely parse the given search query into a Lucene query, falling back on a query with special characters
+     * escaped if necessary.
+     */
+    public static Query parseSafely( String query, QueryParser queryParser ) throws SearchException {
         try {
             return queryParser.parse( query );
         } catch ( ParseException e ) {
-            String strippedQuery = LUCENE_RESERVED_CHARS.matcher( settings.getQuery() ).replaceAll( "\\\\$0" );
+            String strippedQuery = LUCENE_RESERVED_CHARS.matcher( query ).replaceAll( "\\\\$0" );
             log.debug( String.format( "Failed to parse '%s': %s.", query, ExceptionUtils.getRootCauseMessage( e ) ), e );
             try {
                 return queryParser.parse( strippedQuery );
@@ -182,6 +189,11 @@ public class LuceneQueryUtils {
     }
 
     @Nullable
+    public static String prepareDatabaseQuery( String query, boolean allowWildcards ) throws SearchException {
+        return prepareDatabaseQueryInternal( parseSafely( query, createQueryParser() ), allowWildcards );
+    }
+
+    @Nullable
     private static String prepareDatabaseQueryInternal( Query query, boolean allowWildcards ) {
         if ( query instanceof BooleanQuery ) {
             // pick the first, non-prohibited term
@@ -191,17 +203,30 @@ public class LuceneQueryUtils {
                 }
             }
         } else if ( allowWildcards && query instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) query ).getTerm() ) ) {
-            return escapeLike( termToString( ( ( WildcardQuery ) query ).getTerm() ) )
+            String s = termToString( ( ( WildcardQuery ) query ).getTerm() );
+            return QueryUtils.escapeLike( s )
                     .replace( '?', '_' )
                     .replace( '*', '%' );
         } else if ( allowWildcards && query instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) query ).getPrefix() ) ) {
-            return escapeLike( termToString( ( ( PrefixQuery ) query ).getPrefix() ) ) + "%";
+            String s = termToString( ( ( PrefixQuery ) query ).getPrefix() );
+            return QueryUtils.escapeLike( s ) + "%";
         } else if ( query instanceof TermQuery && isTermGlobal( ( ( TermQuery ) query ).getTerm() ) ) {
             if ( allowWildcards ) {
-                return escapeLike( termToString( ( ( TermQuery ) query ).getTerm() ) );
+                String s = termToString( ( ( TermQuery ) query ).getTerm() );
+                return QueryUtils.escapeLike( s );
             } else {
                 return termToString( ( ( TermQuery ) query ).getTerm() );
             }
+        }
+        return null;
+    }
+
+    @Nullable
+    public static URI prepareTermUriQuery( String s ) throws SearchException {
+        Query query = parseSafely( s, createQueryParser() );
+        if ( query instanceof TermQuery ) {
+            Term term = ( ( TermQuery ) query ).getTerm();
+            return tryParseUri( term );
         }
         return null;
     }
@@ -253,10 +278,6 @@ public class LuceneQueryUtils {
             }
         }
         return null;
-    }
-
-    private static String escapeLike( String s ) {
-        return s.replaceAll( "[%_\\\\]", "\\\\$0" );
     }
 
     /**

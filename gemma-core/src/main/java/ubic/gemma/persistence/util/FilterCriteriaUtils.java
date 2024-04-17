@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -96,10 +97,5 @@ public class FilterCriteriaUtils {
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }
-    }
-
-    private static String escapeLike( String s ) {
-        return s.replace( "%", "\\%" )
-                .replace( "_", "\\_" );
     }
 }

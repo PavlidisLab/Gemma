@@ -30,7 +30,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -140,7 +140,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
-        FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
+        QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
                 TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),
                 FilterArg.valueOf( "" ),
@@ -148,7 +148,8 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 LimitArg.valueOf( "20" ),
                 SortArg.valueOf( "+id" ) );
         assertThat( payload )
-                .hasFieldOrPropertyWithValue( "filter", "commonName = human or scientificName = human and id in (1)" )
+                .hasFieldOrPropertyWithValue( "query", "bipolar" )
+                .hasFieldOrPropertyWithValue( "filter", "commonName = human or scientificName = human" )
                 .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ) )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )

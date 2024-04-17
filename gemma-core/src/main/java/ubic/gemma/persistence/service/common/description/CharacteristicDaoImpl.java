@@ -233,13 +233,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByUri( String searchString ) {
-        if ( StringUtils.isBlank( searchString ) )
+    public Collection<Characteristic> findByUri( String uri ) {
+        if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
-                .setParameter( "search", searchString ).list();
+                .createQuery( "select char from Characteristic as char where  char.valueUri = :uri" )
+                .setParameter( "uri", uri ).list();
     }
 
     @Override
@@ -296,7 +296,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )
-                .setParameter( "search", search.endsWith( "%" ) ? search : search + "%" ).list();
+                .setParameter( "search", search )
+                .list();
     }
 
     @Override
