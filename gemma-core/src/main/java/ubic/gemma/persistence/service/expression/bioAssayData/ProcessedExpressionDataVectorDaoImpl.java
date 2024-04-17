@@ -1070,14 +1070,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         q.setMaxResults( segmentSize );
 
         int k = 0;
-        while ( result.size() < limit ) {
-            //   int firstResult = new Random().nextInt( availableVectorCount - segmentSize );
-            //  q.setFirstResult( firstResult );
-            List list = q.list();
-            //   log.info( list.size() + " retrieved this time firstResult=" + 0 );
-            result.addAll( list );
-            k++;
-        }
+        //  while ( result.size() < limit ) {
+        //   int firstResult = new Random().nextInt( availableVectorCount - segmentSize );
+        //  q.setFirstResult( firstResult );
+        List list = q.list();
+        //   log.info( list.size() + " retrieved this time firstResult=" + 0 );
+        result.addAll( list );
+        //   if (result.isEmpty()) break;
+        //  k++;
+        //   }
 
         if ( result.size() > limit ) {
             result = result.stream().limit( limit ).collect( Collectors.toSet() );

@@ -107,7 +107,8 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
         SearchSettings settings = SearchSettings.expressionExperimentSearch( "cancer AND liver" );
         searchService.search( settings );
         verify( ontologyService ).findTerms( "cancer" );
-        verify( ontologyService ).findTerms( "liver" );
+        // cancer returns no result, so we should not bother querying liver
+        verifyNoMoreInteractions( ontologyService );
     }
 
     @Test

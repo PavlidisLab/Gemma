@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.lucene.queryParser.QueryParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -14,6 +13,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -24,6 +24,8 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
@@ -48,6 +50,11 @@ public class OntologySearchSource implements SearchSource {
      * the value of exactly 1.0.
      */
     private static final double EXACT_MATCH_SCORE = -1.0;
+
+    /**
+     * Amount of time to dedicate to inferring children terms.
+     */
+    private static final long ONTOLOGY_INFERENCE_TIMEOUT_MILLIS = 30000;
 
     @Autowired
     private OntologyService ontologyService;
@@ -87,7 +94,7 @@ public class OntologySearchSource implements SearchSource {
          */
         Set<Set<String>> subclauses = extractTermsDnf( settings );
         for ( Set<String> subclause : subclauses ) {
-            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause );
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause, Math.max( ONTOLOGY_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
                 log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
             }
@@ -110,11 +117,11 @@ public class OntologySearchSource implements SearchSource {
      * Parkinson's
      * AND neuron finds items tagged with both of those terms. The use of OR is handled by the caller.
      *
-     * @param settings   search settings
-     * @param clause     a conjunctive clause
+     * @param settings search settings
+     * @param clause   a conjunctive clause
      * @return SearchResults of Experiments
      */
-    private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, Set<String> clause ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, Set<String> clause, long timeoutMs ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         // we would have to first deal with the separate queries, and then apply the logic.
@@ -123,15 +130,9 @@ public class OntologySearchSource implements SearchSource {
         OntologySearchSource.log.debug( "Starting characteristic search for: " + settings + " matching " + String.join( " AND ", clause ) );
         for ( String subClause : clause ) {
             // at this point, subclauses have already been parsed, so if they contain special characters, those must be
-            // escaped
-            String subClauseQuery = QueryParser.escape( subClause );
-            // spaces should be quoted
-            if ( subClauseQuery.contains( " " ) ) {
-                subClauseQuery = "\"" + subClauseQuery + "\"";
-            }
-            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment(
-                    settings.withQuery( subClauseQuery )
-            );
+            // escaped, spaces must be quoted
+            String subClauseQuery = LuceneQueryUtils.quote( subClause );
+            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), timeoutMs );
             if ( results.isEmpty() ) {
                 results.addAll( subqueryResults );
             } else {
@@ -140,9 +141,13 @@ public class OntologySearchSource implements SearchSource {
             }
             if ( watch.getTime() > 1000 ) {
                 OntologySearchSource.log.warn( String.format( "Characteristic EE search for '%s': %d hits retained so far; %dms",
-                        subClause, results.size(), watch.getTime() ) );
+                        subClauseQuery, results.size(), watch.getTime() ) );
                 watch.reset();
                 watch.start();
+            }
+            // if one subquery has no results, the intersection will be empty and we can return early
+            if ( results.isEmpty() ) {
+                return results;
             }
         }
 
@@ -155,7 +160,7 @@ public class OntologySearchSource implements SearchSource {
      *
      * @return collection of SearchResults (Experiments)
      */
-    private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings, long timeoutMs ) throws SearchException {
         // overall timer
         StopWatch watch = StopWatch.createStarted();
         // per-step timer
@@ -208,7 +213,7 @@ public class OntologySearchSource implements SearchSource {
         }
 
         // Search for child terms.
-        if ( !matchingTerms.isEmpty() ) {
+        if ( !matchingTerms.isEmpty() && timeoutMs > 0 ) {
             // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
             timer.reset();
             timer.start();
@@ -218,17 +223,20 @@ public class OntologySearchSource implements SearchSource {
                     .filter( s -> s != EXACT_MATCH_SCORE )
                     .average()
                     .orElse( 0 );
-            ontologyService.getChildren( matchingTerms, false, true )
-                    .stream()
-                    // ignore bnodes
-                    .filter( c -> c.getUri() != null )
-                    // small penalty for being indirectly matched
-                    .map( c -> new OntologyResult( c, INDIRECT_HIT_PENALTY * avgScore ) )
-                    // if a children was already in terms, it will not be added again and thus its original score will
-                    // be reflected in the results
-                    .forEach( ontologyResults::add );
+            try {
+                ontologyService.getChildren( matchingTerms, false, true, timeoutMs, TimeUnit.MILLISECONDS )
+                        .stream()
+                        // ignore bnodes
+                        .filter( c -> c.getUri() != null )
+                        // small penalty for being indirectly matched
+                        .map( c -> new OntologyResult( c, INDIRECT_HIT_PENALTY * avgScore ) )
+                        // if a children was already in terms, it will not be added again and thus its original score will
+                        // be reflected in the results
+                        .forEach( ontologyResults::add );
+            } catch ( TimeoutException e ) {
+                log.warn( String.format( "Obtaining children for terms matching %s timed out, those will be ignored.", settings ), e );
+            }
             timer.stop();
-
             if ( timer.getTime() > 1000 ) {
                 log.warn( String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
                         ontologyResults.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );

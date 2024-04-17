@@ -22,6 +22,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+<<<<<<< HEAD
+=======
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.search.ParseSearchException;
+>>>>>>> hotfix-1.31.4
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;

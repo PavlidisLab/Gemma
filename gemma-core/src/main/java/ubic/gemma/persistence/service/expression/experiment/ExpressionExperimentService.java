@@ -49,6 +49,8 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 /**
@@ -266,7 +268,7 @@ public interface ExpressionExperimentService
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
      *                       The returned filter might contain terms that have been inferred.
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms );
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -310,7 +312,7 @@ public interface ExpressionExperimentService
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
      */
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) throws SearchException;
 
     /**
      * Obtain annotation usage frequency for datasets matching the given filters.

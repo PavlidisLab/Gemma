@@ -124,7 +124,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( !geneOntologyService.isOntologyLoaded() ) {
             return Collections.emptySet();
         }
-        Collection<OntologyTerm> matches = null;
+        Collection<OntologyTerm> matches;
         try {
             matches = this.geneOntologyService
                     .findTerm( StringUtils.strip( goTermName ) );

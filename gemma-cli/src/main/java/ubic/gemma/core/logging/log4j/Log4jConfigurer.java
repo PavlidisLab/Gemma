@@ -43,7 +43,7 @@ public class Log4jConfigurer implements LoggingConfigurer {
 
     private void configureLogger( String loggerName, LoggerConfig loggerConfig, Level newLevel ) {
         if ( loggerName.equals( loggerConfig.getName() ) ) {
-            log.info( String.format( "Setting logging level of '%s' to %s.", loggerConfig.getName(), newLevel ) );
+            log.debug( String.format( "Setting logging level of '%s' to %s.", loggerConfig.getName(), newLevel ) );
         } else {
             // effective logger differs, this means that there no configuration
             log.warn( String.format( "Setting logging level of '%s' to %s since there's no logger named '%s'. To prevent this, add an entry for '%s' in log4j.properties.",

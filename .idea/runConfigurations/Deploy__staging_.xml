@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Deploy (staging)" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="rsync $PROJECT_DIR$/gemma-web/target/Gemma.war poirigui@chalmers.msl.ubc.ca:/var/local/tomcat/gemma-staging/Gemma.war" />
+    <option name="SCRIPT_TEXT" value="rsync $PROJECT_DIR$/gemma-web/target/Gemma.war chalmers.msl.ubc.ca:/var/local/tomcat/gemma-staging/Gemma.war" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
@@ -9,7 +9,7 @@
     <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
     <option name="INTERPRETER_PATH" value="/usr/bin/fish" />
     <option name="INTERPRETER_OPTIONS" value="" />
-    <option name="EXECUTE_IN_TERMINAL" value="true" />
+    <option name="EXECUTE_IN_TERMINAL" value="false" />
     <option name="EXECUTE_SCRIPT_FILE" value="false" />
     <envs />
     <method v="2">

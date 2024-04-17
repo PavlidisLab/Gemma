@@ -41,6 +41,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
@@ -148,14 +150,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     private ExpressionExperiment ee;
 
     @Before
-    public void setUpMocks() {
+    public void setUpMocks() throws TimeoutException {
         ee = ExpressionExperiment.Factory.newInstance();
         //noinspection unchecked
         Set<String> universe = mock( Set.class );
         when( universe.contains( any( String.class ) ) ).thenReturn( true );
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
     }
 
@@ -273,7 +275,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsPlatformsUsageStatistics() {
+    public void testGetDatasetsWhenInferenceTimeoutThenIgnoreChildrenTerms() throws TimeoutException {
+        //noinspection unchecked
+        when( expressionExperimentService.getFilter( eq( "allCharacteristic.valueUri" ), eq( Filter.Operator.in ), anyCollection() ) )
+                .thenAnswer( a -> Filter.by( "c", "valueUri", String.class, Filter.Operator.in, a.getArgument( 2, Collection.class ) ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) )
+                .thenThrow( new TimeoutException( "Inference timed out!" ) );
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
+                .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
+        assertThat( target( "/datasets" ).queryParam( "filter", "allCharacteristic.valueUri in (a, b, c)" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetsPlatformsUsageStatistics() throws TimeoutException {
         Filter f = Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
                 .thenReturn( f );
@@ -282,12 +298,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null, 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), null, 50 );
     }
 
     @Test
-    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() {
+    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "retainMentionedTerms", "true" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -298,12 +314,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
     }
 
     @Test
-    public void testGetDatasetsAnnotations() {
+    public void testGetDatasetsAnnotations() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -314,7 +330,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
     }
 
@@ -327,13 +343,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsAnnotationsWhenMaxFrequencyIsSuppliedLimitMustUseMaximum() {
+    public void testGetDatasetsAnnotationsWhenMaxFrequencyIsSuppliedLimitMustUseMaximum() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "minFrequency", "10" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000 );
     }
 
@@ -358,7 +374,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsCategories() {
+    public void testGetDatasetsCategories() throws SearchException {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );

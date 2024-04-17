@@ -41,7 +41,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.ws.rs.InternalServerErrorException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -144,7 +143,7 @@ public class AnnotationController {
         } catch ( ParseSearchException e ) {
             throw new IllegalArgumentException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
+            throw new RuntimeException( e );
         }
     }
 

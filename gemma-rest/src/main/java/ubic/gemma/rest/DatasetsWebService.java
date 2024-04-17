@@ -25,9 +25,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.highlight.Highlighter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -41,6 +41,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.ParseSearchException;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -87,6 +89,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -301,7 +305,12 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
-            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject"))),
+                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -323,18 +332,25 @@ public class DatasetsWebService {
             extraIds = null;
         }
         int maxResults = limit.getValue( MAX_DATASETS_CATEGORIES );
-        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
-                        filters,
-                        extraIds,
-                        datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
-                        datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                        mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
-                        maxResults )
-                .entrySet()
-                .stream()
-                .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
-                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
-                .collect( Collectors.toList() );
+        List<CategoryWithUsageStatisticsValueObject> results;
+        try {
+            results = expressionExperimentService.getCategoriesUsageFrequency(
+                            filters,
+                            extraIds,
+                            datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                            datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
+                            mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                            maxResults )
+                    .entrySet()
+                    .stream()
+                    .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
+                    .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                    .collect( Collectors.toList() );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
+        } catch ( SearchException e ) {
+            throw new InternalServerErrorException( e );
+        }
         return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
@@ -361,7 +377,12 @@ public class DatasetsWebService {
     @Path("/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
-            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "LimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject"))),
+                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -404,10 +425,17 @@ public class DatasetsWebService {
                 limit );
         // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
         Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
-        List<AnnotationWithUsageStatisticsValueObject> results = initialResults
-                .stream()
-                .map( e -> new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null ) )
-                .collect( Collectors.toList() );
+        List<AnnotationWithUsageStatisticsValueObject> results = new ArrayList<>();
+        for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
+            AnnotationWithUsageStatisticsValueObject annotationWithUsageStatisticsValueObject;
+            try {
+                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null );
+            } catch ( TimeoutException ex ) {
+                log.warn( "Populating parent terms timed out.", ex );
+                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null );
+            }
+            results.add( annotationWithUsageStatisticsValueObject );
+        }
         return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
                 limit );
@@ -424,31 +452,30 @@ public class DatasetsWebService {
         return new HashSet<>( exclude.getValue() );
     }
 
-    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        return getParentTerms( c, new LinkedHashSet<>(), visited );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) throws TimeoutException {
+        return getParentTerms( c, new LinkedHashSet<>(), visited, 5000, StopWatch.createStarted() );
     }
 
-    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) {
-        return ontologyService.getParents( Collections.singleton( c ), true, true ).stream()
-                .map( t -> {
-                    Set<OntologyTermValueObject> parentVos;
-                    if ( stack.contains( t ) ) {
-                        log.debug( "Detected a cycle when visiting " + t + ": " + stack.stream()
-                                .map( ot -> ot.equals( t ) ? ot + "*" : ot.toString() )
-                                .collect( Collectors.joining( " -> " ) ) + " -> " + t + "*" );
-                        return null;
-                    } else if ( visited.containsKey( t ) ) {
-                        parentVos = visited.get( t );
-                    } else {
-                        stack.add( t );
-                        parentVos = getParentTerms( t, stack, visited );
-                        stack.remove( t );
-                        visited.put( t, parentVos );
-                    }
-                    return new OntologyTermValueObject( t, parentVos );
-                } )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs, StopWatch timer ) throws TimeoutException {
+        Set<OntologyTermValueObject> results = new HashSet<>();
+        for ( OntologyTerm t : ontologyService.getParents( Collections.singleton( c ), true, true, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) ) {
+            Set<OntologyTermValueObject> parentVos;
+            if ( stack.contains( t ) ) {
+                log.debug( "Detected a cycle when visiting " + t + ": " + stack.stream()
+                        .map( ot -> ot.equals( t ) ? ot + "*" : ot.toString() )
+                        .collect( Collectors.joining( " -> " ) ) + " -> " + t + "*" );
+                continue;
+            } else if ( visited.containsKey( t ) ) {
+                parentVos = visited.get( t );
+            } else {
+                stack.add( t );
+                parentVos = getParentTerms( t, stack, visited, timeoutMs, timer );
+                stack.remove( t );
+                visited.put( t, parentVos );
+            }
+            results.add( new OntologyTermValueObject( t, parentVos ) );
+        }
+        return results;
     }
 
     @Value
@@ -833,7 +860,7 @@ public class DatasetsWebService {
         try {
             return this.outputDesignFile( ee );
         } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
+            throw new InternalServerErrorException( e.getMessage(), e );
         }
     }
 

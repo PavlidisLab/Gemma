@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 
 /**
  * @author paul
@@ -69,7 +68,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        Collection<Callable<Void>> tasks = new ArrayList<>( queue.size() );
+        Collection<Runnable> tasks = new ArrayList<>( queue.size() );
         for ( BioAssaySet ee : queue ) {
             tasks.add( new ProcessBioAssaySet( ee ) );
         }
@@ -123,7 +122,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     // Inner class for processing the experiments
-    private class ProcessBioAssaySet implements Callable<Void> {
+    private class ProcessBioAssaySet implements Runnable {
         private SecurityContext context;
         private BioAssaySet bioAssaySet;
 
@@ -132,14 +131,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
 
         @Override
-        public Void call() {
+        public void run() {
             BioAssaySet ee = bioAssaySet;
             if ( ee == null ) {
-                return null;
+                return;
             }
             AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
             ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
-            return null;
         }
     }
 }

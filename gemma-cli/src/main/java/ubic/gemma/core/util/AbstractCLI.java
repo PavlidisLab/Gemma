@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -357,10 +358,11 @@ public abstract class AbstractCLI implements CLI {
             this.numThreads = 1;
         }
 
+        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
         if ( this.numThreads > 1 ) {
-            this.executorService = Executors.newFixedThreadPool( this.numThreads );
+            this.executorService = Executors.newFixedThreadPool( this.numThreads, threadFactory );
         } else {
-            this.executorService = Executors.newSingleThreadExecutor();
+            this.executorService = Executors.newSingleThreadExecutor( threadFactory );
         }
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
@@ -531,23 +533,31 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Execute batch tasks using a preconfigured {@link ExecutorService} and return all the resulting tasks results.
-     *
+     * Execute the given batch tasks.
+     * <p>
+     * Errors will be reported with {@link #addErrorObject(Object, String, Throwable)}. However, reporting successes is
+     * the responsibility of the caller.
      */
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
-        List<Future<T>> futures = executorService.invokeAll( tasks );
-        List<T> futureResults = new ArrayList<>( futures.size() );
-        int i = 1;
-        for ( Future<T> future : futures ) {
+    protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
+        Assert.isTrue( !tasks.isEmpty(), "At least one batch task must be submitted." );
+        if ( tasks.size() == 1 ) {
+            tasks.iterator().next().run();
+            return;
+        }
+        ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( executorService );
+        List<Future<?>> futures = new ArrayList<>( tasks.size() );
+        for ( Runnable task : tasks ) {
+            futures.add( completionService.submit( task, null ) );
+        }
+        for ( int i = 1; i <= futures.size(); i++ ) {
             try {
-                futureResults.add( future.get() );
+                completionService.take().get();
             } catch ( ExecutionException e ) {
                 addErrorObject( null, String.format( "Batch task #%d failed", i ), e.getCause() );
             } finally {
                 i++;
             }
         }
-        return futureResults;
     }
 
     private enum BatchFormat {
