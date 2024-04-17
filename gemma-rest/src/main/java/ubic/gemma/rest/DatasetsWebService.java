@@ -41,6 +41,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
@@ -345,6 +346,8 @@ public class DatasetsWebService {
                     .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                     .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                     .collect( Collectors.toList() );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }

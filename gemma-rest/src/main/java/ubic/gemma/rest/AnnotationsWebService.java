@@ -134,7 +134,7 @@ public class AnnotationsWebService {
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         } catch ( ParseSearchException e ) {
-            throw new BadRequestException( "Invalid search query.", e );
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
@@ -188,8 +188,10 @@ public class AnnotationsWebService {
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue(), null );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
+            throw new InternalServerErrorException( e );
         }
 
         Filters filters = datasetArgService.getFilters( filterArg );
@@ -267,8 +269,10 @@ public class AnnotationsWebService {
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue(), taxon );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
+            throw new InternalServerErrorException( e );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -113,8 +114,10 @@ public class GeneWebService {
     ) {
         try {
             return Responder.respond( geneArgService.getGeneEvidence( geneArg, null ) );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
         } catch ( SearchException e ) {
-            throw new BadRequestException( "Invalid search settings.", e );
+            throw new InternalServerErrorException( e );
         }
     }
 

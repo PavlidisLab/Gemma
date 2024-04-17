@@ -20,9 +20,11 @@ package ubic.gemma.core.ontology;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryParser.ParseException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,9 +44,11 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -277,7 +281,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             try {
                 results.addAll( ontologyCache.findTerm( geneOntologyService, search ) );
             } catch ( OntologySearchException e ) {
-                throw new SearchException( e.getMessage(), e );
+                throw convertBaseCodeOntologySearchExceptionToSearchException( e, search );
             }
         }
 
@@ -317,8 +321,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get ontology terms
         Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
         ontologySearchResults.addAll( searchInThreads( service -> {
-            Collection<OntologyTerm> results2;
-            results2 = ontologyCache.findTerm( service, queryString );
+            Collection<OntologyTerm> results2 = ontologyCache.findTerm( service, queryString );
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
@@ -331,7 +334,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
                         this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString ) ) ) );
             } catch ( OntologySearchException e ) {
-                throw new SearchException( e.getMessage(), e );
+                throw convertBaseCodeOntologySearchExceptionToSearchException( e, queryString );
             }
         }
         findGoTerms.stop();
@@ -911,7 +914,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }, ontologyServices, query, timeoutMs );
         } catch ( OntologySearchExceptionWrapper e ) {
-            throw new SearchException( e.getMessage(), e );
+            // unwrap the exception
+            throw convertBaseCodeOntologySearchExceptionToSearchException( e.getCause(), query );
         }
     }
 
@@ -1025,6 +1029,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( !incompleteTasks.isEmpty() ) {
             log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
                     + String.join( "\n\t", incompleteTasks ) );
+        }
+    }
+
+    private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
+        ParseException pe = ExceptionUtils.throwableOfType( e, ParseException.class );
+        if ( pe != null ) {
+            return new LuceneParseSearchException( query, pe );
+        } else {
+            return new BaseCodeOntologySearchException( e );
         }
     }
 }

@@ -121,7 +121,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                     .build();
             return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
         } catch ( ParseSearchException e ) {
-            throw new MalformedArgException( e.getMessage(), e );
+            throw new MalformedArgException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
