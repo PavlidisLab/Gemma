@@ -2,6 +2,7 @@ package ubic.gemma.rest.providers;
 
 import ubic.gemma.rest.util.ResponseErrorObject;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
@@ -13,6 +14,11 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebApplicationException> {
+
+    @Override
+    protected boolean logException( WebApplicationException e ) {
+        return e instanceof InternalServerErrorException;
+    }
 
     @Override
     protected Response.Status getStatus( WebApplicationException exception ) {

@@ -346,7 +346,7 @@ public class DatasetsWebService {
                     .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                     .collect( Collectors.toList() );
         } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e.getMessage(), e.getCause() );
+            throw new InternalServerErrorException( e );
         }
         return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
@@ -857,7 +857,7 @@ public class DatasetsWebService {
         try {
             return this.outputDesignFile( ee );
         } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
+            throw new InternalServerErrorException( e.getMessage(), e );
         }
     }
 
