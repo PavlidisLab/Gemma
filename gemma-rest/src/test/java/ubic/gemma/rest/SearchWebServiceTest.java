@@ -242,6 +242,6 @@ public class SearchWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.BAD_REQUEST )
                 .entity()
                 .hasFieldOrPropertyWithValue( "error.code", 400 )
-                .hasFieldOrPropertyWithValue( "error.message", "Cannot parse '\"': Lexical error at line 1, column 2.  Encountered: <EOF> after : \"\"" );
+                .hasFieldOrPropertyWithValue( "error.message", "Invalid search query: \"" );
     }
 }
