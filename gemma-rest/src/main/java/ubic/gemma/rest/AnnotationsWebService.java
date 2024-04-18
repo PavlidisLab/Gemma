@@ -31,6 +31,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.ParseSearchException;
@@ -61,6 +62,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * RESTful interface for annotations.
@@ -105,6 +107,64 @@ public class AnnotationsWebService {
         this.expressionExperimentService = expressionExperimentService;
         this.datasetArgService = datasetArgService;
         this.taxonArgService = taxonArgService;
+    }
+
+    /*https://www.w3.org/TR/owl-ref/#subClassOf-def*
+     * Obtain the parent of a given annotation.
+     * <p>
+     * This is plural as we might add support for querying multiple annotations at once in the future.
+     */
+    @GET
+    @Path("/parents")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the parents of the given annotations",
+            description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively.",
+            responses = {
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "No term matched the given URI."),
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.") })
+    public List<AnnotationSearchResultValueObject> getAnnotationsParents(
+            @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
+            @Parameter(description = "Only include direct children.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
+        return getAnnotationsParentsOrChildren( termUri, direct, true );
+    }
+
+    /**
+     * Obtain the children of a given annotation.
+     * <p>
+     * This is plural as we might add support for querying multiple annotations at once in the future.
+     */
+    @GET
+    @Path("/children")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the children of the given annotations",
+            description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively.",
+            responses = {
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "No term matched the given URI."),
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.") })
+    public List<AnnotationSearchResultValueObject> getAnnotationsChildren(
+            @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
+            @Parameter(description = "Only include direct parents.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
+        return getAnnotationsParentsOrChildren( termUri, direct, false );
+    }
+
+    private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {
+        if ( StringUtils.isBlank( termUri ) ) {
+            throw new BadRequestException( "The 'uri' parameter must not be blank." );
+        }
+        OntologyTerm term = ontologyService.getTerm( termUri );
+        if ( term == null ) {
+            throw new NotFoundException( "No ontology term with URI " + termUri );
+        }
+        try {
+            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, 30, TimeUnit.SECONDS ) :
+                    ontologyService.getChildren( Collections.singleton( term ), direct, true, 30, TimeUnit.SECONDS ) ).stream()
+                    .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null ) )
+                    .collect( Collectors.toList() );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+        }
     }
 
     /**

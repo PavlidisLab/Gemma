@@ -6,13 +6,13 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
@@ -30,27 +30,33 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.rest.analytics.AnalyticsProvider;
+import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.rest.util.Assertions.assertThat;
 
 /**
  * @author poirigui
  */
-@ActiveProfiles("web")
-@WebAppConfiguration
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests {
+@TestExecutionListeners({ WithSecurityContextTestExecutionListener.class })
+public class AnnotationsWebServiceTest extends BaseJerseyTest {
 
     @Configuration
     @TestComponent
+    @Import(JacksonConfig.class)
     public static class AnnotationsWebServiceContextConfiguration {
 
         @Bean
@@ -94,6 +100,16 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 DatasetArgService datasetRestService, TaxonArgService taxonArgService ) {
             return new AnnotationsWebService( ontologyService, searchService, characteristicService, expressionExperimentService, datasetRestService, taxonArgService );
         }
+
+        @Bean
+        public AnalyticsProvider analyticsProvider() {
+            return mock();
+        }
+
+        @Bean
+        public AccessDecisionManager accessDecisionManager() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -108,16 +124,19 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private OntologyService ontologyService;
+
     @Before
-    public void setUp() {
+    public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setId( 1L );
         when( taxonService.findByCommonName( "human" ) ).thenReturn( taxon );
     }
 
     @After
-    public void tearDown() {
-        reset( searchService, taxonService );
+    public void resetMocks() {
+        reset( searchService, taxonService, ontologyService );
     }
 
     @Test
@@ -162,4 +181,48 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
     }
 
+    @Test
+    public void testParents() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( ontologyService ).getTerm( "http://example.com/test" );
+        verify( ontologyService ).getParents( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+    }
+
+    @Test
+    public void testParentsWhenTermIsNotFound() {
+        assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( ontologyService ).getTerm( "http://example.com/test" );
+        verifyNoMoreInteractions( ontologyService );
+    }
+
+    @Test
+    public void testParentsWhenInferenceTimeout() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        when( ontologyService.getParents( any(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenThrow( new TimeoutException( "Ontology inference timed out!" ) );
+        assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "error.code", 503 )
+                .hasFieldOrPropertyWithValue( "error.message", "HTTP 503 Service Unavailable" );
+        verify( ontologyService ).getTerm( "http://example.com/test" );
+        verify( ontologyService ).getParents( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+    }
+
+    @Test
+    public void testChildren() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        assertThat( target( "/annotations/children" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( ontologyService ).getTerm( "http://example.com/test" );
+        verify( ontologyService ).getChildren( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+    }
 }

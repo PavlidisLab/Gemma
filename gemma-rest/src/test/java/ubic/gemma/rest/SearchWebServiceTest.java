@@ -127,7 +127,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     }
 
     @After
-    public void tearDown() {
+    public void resetMocks() {
         reset( searchService, taxonService, arrayDesignService );
     }
 

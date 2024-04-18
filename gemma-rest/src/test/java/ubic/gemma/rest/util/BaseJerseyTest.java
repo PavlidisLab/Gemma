@@ -14,7 +14,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
+import org.springframework.test.context.web.ServletTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
@@ -28,8 +32,10 @@ import javax.ws.rs.core.Application;
  * @author poirigui
  */
 @ActiveProfiles({ "web", EnvironmentProfiles.TEST })
-@RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
+// from AbstractJUnit4SpringContextTests, we cannot subclass it unfortunately
+@RunWith(SpringJUnit4ClassRunner.class)
+@TestExecutionListeners({ ServletTestExecutionListener.class, DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class })
 public abstract class BaseJerseyTest extends JerseyTest implements InitializingBean {
 
     private ResourceConfig application;
@@ -77,7 +83,7 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
 
     @After
     @Override
-    public void tearDown() throws Exception {
+    public final void tearDown() throws Exception {
         super.tearDown();
     }
 }
