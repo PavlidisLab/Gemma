@@ -171,7 +171,7 @@ public class AnnotationsWebService {
     @Path("/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search",
-            description = "This is deprecated in favour of the getDatasets() endpoint.",
+            description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint. Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
@@ -248,7 +248,7 @@ public class AnnotationsWebService {
     @Path("/{taxon}/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search",
-            description = "Use getDatasets() with a `query` parameter and a `filter` parameter with `taxon.id = {taxon} or taxon.commonName = {taxon} or taxon.scientificName = {taxon}` to restrict the taxon instead.",
+            description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint with a `query` parameter and a `filter` parameter with `taxon.id = {taxon} or taxon.commonName = {taxon} or taxon.scientificName = {taxon}` to restrict the taxon instead.  Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
