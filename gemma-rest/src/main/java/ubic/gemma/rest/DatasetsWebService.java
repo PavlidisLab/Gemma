@@ -421,18 +421,30 @@ public class DatasetsWebService {
                 minFrequency != null ? minFrequency : 0,
                 mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
                 limit );
-        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
-        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<AnnotationWithUsageStatisticsValueObject> results = new ArrayList<>();
-        for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
-            AnnotationWithUsageStatisticsValueObject annotationWithUsageStatisticsValueObject;
-            try {
-                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null );
-            } catch ( TimeoutException ex ) {
-                log.warn( "Populating parent terms timed out.", ex );
-                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null );
+        if ( !excludeParentTerms ) {
+            int timeoutMs = 30000;
+            StopWatch timer = StopWatch.createStarted();
+            // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
+            Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
+            for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
+                Set<OntologyTermValueObject> parentTerms;
+                if ( e.getTerm() != null && timer.getTime() < timeoutMs ) {
+                    try {
+                        parentTerms = getParentTerms( e.getTerm(), visited, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    } catch ( TimeoutException ex ) {
+                        log.warn( "Populating parent terms timed out, will stop populating those for the remaining results.", ex );
+                        parentTerms = null;
+                    }
+                } else {
+                    parentTerms = null;
+                }
+                results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), parentTerms ) );
             }
-            results.add( annotationWithUsageStatisticsValueObject );
+        } else {
+            for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
+                results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null ) );
+            }
         }
         return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
@@ -450,8 +462,8 @@ public class DatasetsWebService {
         return new HashSet<>( exclude.getValue() );
     }
 
-    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) throws TimeoutException {
-        return getParentTerms( c, new LinkedHashSet<>(), visited, 5000, StopWatch.createStarted() );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs ) throws TimeoutException {
+        return getParentTerms( c, new LinkedHashSet<>(), visited, timeoutMs, StopWatch.createStarted() );
     }
 
     private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs, StopWatch timer ) throws TimeoutException {
