@@ -38,7 +38,7 @@ public class OntologyCacheTest {
     }
 
     @Test
-    public void testLookupByMaximalSubset() {
+    public void testLookupByMaximalSubset() throws InterruptedException {
         ontologyCache.getChildren( ontologyService, Collections.singleton( term1 ), true, true );
         verify( ontologyService ).getChildren( Collections.singleton( term1 ), true, true );
 
@@ -60,7 +60,7 @@ public class OntologyCacheTest {
     }
 
     @Test
-    public void testLookupByMaximalSubsetWhenMinSubsetSizeIsSet() {
+    public void testLookupByMaximalSubsetWhenMinSubsetSizeIsSet() throws InterruptedException {
         ontologyCache.getChildren( ontologyService, Collections.singleton( term1 ), true, true );
         verify( ontologyService ).getChildren( Collections.singleton( term1 ), true, true );
 

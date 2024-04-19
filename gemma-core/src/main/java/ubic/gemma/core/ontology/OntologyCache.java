@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.persistence.cache.CacheKeyLock;
 import ubic.gemma.persistence.util.CacheUtils;
 
 import javax.annotation.Nullable;
@@ -45,18 +46,26 @@ class OntologyCache {
     public Collection<OntologyTerm> findTerm( OntologyService ontology, String query ) throws OntologySearchException {
         SearchCacheKey key = new SearchCacheKey( ontology, query );
 
-        try ( CacheUtils.Lock ignored = CacheUtils.acquireReadLock( searchCache, key ) ) {
+        try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireReadLock( searchCache, key ) ) {
             Cache.ValueWrapper value = searchCache.get( key );
             if ( value != null ) {
                 //noinspection unchecked
                 return ( Collection<OntologyTerm> ) value.get();
             }
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            log.warn( "Current thread was interrupted while querying terms matching " + query + ", will return nothing instead.", e );
+            return Collections.emptySet();
         }
 
-        try ( CacheUtils.Lock ignored = CacheUtils.acquireWriteLock( searchCache, key ) ) {
+        try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireWriteLock( searchCache, key ) ) {
             Collection<OntologyTerm> results = ontology.findTerm( query );
             searchCache.put( key, results );
             return results;
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            log.warn( "Current thread was interrupted while querying terms matching " + query + ", will return nothing instead.", e );
+            return Collections.emptySet();
         }
     }
 
@@ -101,13 +110,18 @@ class OntologyCache {
 
         // there might be a thread computing this cache entry
         long initialLockAcquisitionMs = timer.getTime();
-        try ( CacheUtils.Lock ignored = CacheUtils.acquireReadLock( cache, key ) ) {
+        try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireReadLock( cache, key ) ) {
             initialLockAcquisitionMs = timer.getTime() - initialLockAcquisitionMs;
             Cache.ValueWrapper value = cache.get( key );
             if ( value != null ) {
                 //noinspection unchecked
                 return ( Set<OntologyTerm> ) value.get();
             }
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            log.warn( String.format( "Current thread was interrupted while retrieving %s for %s, will return nothing.",
+                    ancestors ? "parents" : "children", key ), e );
+            return Collections.emptySet();
         }
 
         long lookupSubsetMs = 0;
@@ -148,7 +162,7 @@ class OntologyCache {
 
         long acquireMs = timer.getTime();
         long computingMs = 0;
-        try ( CacheUtils.Lock ignored = CacheUtils.acquireWriteLock( cache, key ) ) {
+        try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireWriteLock( cache, key ) ) {
             acquireMs = timer.getTime() - acquireMs;
             // lookup the cache in case another thread computed the result while we were enumerating subsets
             Cache.ValueWrapper value = cache.get( key );
@@ -171,6 +185,11 @@ class OntologyCache {
             }
             cache.put( key, newVal );
             return newVal;
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            log.warn( String.format( "Current thread was interrupted while retrieving %s for %s, will return nothing.",
+                    ancestors ? "parents" : "children", key ), e );
+            return Collections.emptySet();
         } finally {
             if ( timer.getTime() > 500 ) {
                 log.warn( String.format( "Retrieving %s for %s took %d ms (acquiring locks: %d ms, enumerating subsets: %d ms, computing: %d ms)",

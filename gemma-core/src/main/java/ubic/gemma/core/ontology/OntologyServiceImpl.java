@@ -879,8 +879,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
             return null;
         } catch ( InterruptedException e ) {
-            log.warn( "Current thread was interrupted while waiting, will return null.", e );
             Thread.currentThread().interrupt();
+            log.warn( "Current thread was interrupted while finding first result for " + query + ", will return null.", e );
             return null;
         } catch ( ExecutionException e ) {
             if ( e.getCause() instanceof RuntimeException ) {
@@ -893,51 +893,34 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
-    @FunctionalInterface
-    private interface SearchFunction<T> {
-        Collection<T> apply( ubic.basecode.ontology.providers.OntologyService service ) throws OntologySearchException;
-    }
-
     /**
-     * Similar to {@link #combineInThreads(Function, String, long)}, but also handles {@link OntologySearchException}.
+     * Similar to {@link #combineInThreads(CallableWithOntologyService, String, long)}, but also handles {@link OntologySearchException}.
      */
-    private <T> List<T> searchInThreads( SearchFunction<T> function, String query, long timeoutMs ) throws SearchException {
+    private <T> List<T> searchInThreads( CallableWithOntologyService<Collection<T>> function, String query, long timeoutMs ) throws SearchException {
         return searchInThreads( function, ontologyServices, query, timeoutMs );
     }
 
-    private <T> List<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException {
+    private <T> List<T> searchInThreads( CallableWithOntologyService<Collection<T>> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException {
         try {
-            return combineInThreads( os -> {
-                try {
-                    return function.apply( os );
-                } catch ( OntologySearchException e ) {
-                    throw new OntologySearchExceptionWrapper( e );
-                }
-            }, ontologyServices, query, timeoutMs );
-        } catch ( OntologySearchExceptionWrapper e ) {
-            // unwrap the exception
-            throw convertBaseCodeOntologySearchExceptionToSearchException( e.getCause(), query );
+            return combineInThreads( function, ontologyServices, query, timeoutMs );
         } catch ( TimeoutException e ) {
             throw new SearchTimeoutException( "Ontology search timed out for querying " + query, e );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof OntologySearchException ) {
+                // unwrap the exception
+                throw convertBaseCodeOntologySearchExceptionToSearchException( ( OntologySearchException ) e.getCause(), query );
+            } else {
+                throw e;
+            }
         }
     }
 
-    private static class OntologySearchExceptionWrapper extends RuntimeException {
-
-        private final OntologySearchException cause;
-
-        public OntologySearchExceptionWrapper( OntologySearchException e ) {
-            super( e );
-            this.cause = e;
-        }
-
-        @Override
-        public synchronized OntologySearchException getCause() {
-            return cause;
-        }
+    @FunctionalInterface
+    private interface CallableWithOntologyService<T> {
+        T call( ubic.basecode.ontology.providers.OntologyService service ) throws Exception;
     }
 
-    private <T> List<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, String query, long timeoutMs ) throws TimeoutException {
+    private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, String query, long timeoutMs ) throws TimeoutException {
         return combineInThreads( work, ontologyServices, query, timeoutMs );
     }
 
@@ -946,13 +929,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * <p>
      * The functions are evaluated using Gemma's short-lived task executor.
      */
-    private <T> List<T> combineInThreads( Function<ubic.basecode.ontology.providers.OntologyService, Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
+    private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
         for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
-                futures.add( completionService.submit( () -> work.apply( os ) ) );
+                futures.add( completionService.submit( () -> work.call( os ) ) );
                 objects.add( os );
             }
         }
@@ -962,8 +945,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, timeoutMs ) );
             }
         } catch ( InterruptedException e ) {
-            log.warn( "Current thread was interrupted while waiting, will only return results collected so far.", e );
             Thread.currentThread().interrupt();
+            log.warn( "Current thread was interrupted while finding first result for " + query + ", will return nothing.", e );
             return children;
         } catch ( ExecutionException e ) {
             if ( e.getCause() instanceof RuntimeException ) {
