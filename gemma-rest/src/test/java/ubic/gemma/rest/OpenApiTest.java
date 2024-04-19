@@ -8,7 +8,7 @@ import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
-import org.assertj.core.api.Assertions;
+import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,6 +139,54 @@ public class OpenApiTest extends BaseJerseyTest {
     private static class OpenApiConfiguration {
         private String[] resourcePackages;
         private OpenAPI openAPI;
+    }
+
+    @Test
+    public void testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection() {
+        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
+            assertThat( operations.getGet().getResponses() )
+                    .describedAs( "GET %s", path )
+                    .hasEntrySatisfying( new Condition<>( entry -> {
+                        if ( entry.getKey().startsWith( "3" ) ) {
+                            // a redirection, no need for a default response
+                        } else {
+                            assertThat( entry.getKey() ).isEqualTo( "default" );
+                            assertThat( entry.getValue().getContent() )
+                                    .describedAs( "GET %s -> default", path )
+                                    .isNotEmpty()
+                                    .doesNotContainKey( "*/*" );
+                        }
+                        return true;
+                    }, "" ) );
+        } );
+    }
+
+    @Test
+    public void testEnsureThatAllErrorResponsesUseResponseErrorObjectWithJsonMediaType() {
+        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
+            assertThat( operations.getGet().getResponses() ).allSatisfy( ( code, response ) -> {
+                if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
+                    assertThat( response.getContent() )
+                            .describedAs( "GET %s -> %s", path, code )
+                            .hasEntrySatisfying( "application/json", content -> {
+                                assertThat( content.getSchema().get$ref() ).isEqualTo( "#/components/schemas/ResponseErrorObject" );
+                            } );
+                }
+            } );
+        } );
+    }
+
+    @Test
+    public void testGetDatasetsCategories() {
+        assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
+                .hasEntrySatisfying( "default", response -> {
+                    assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
+                            .isEqualTo( "#/components/schemas/QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject" );
+                } )
+                .hasEntrySatisfying( "400", response -> {
+                    assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
+                            .isEqualTo( "#/components/schemas/ResponseErrorObject" );
+                } );
     }
 
     @Test

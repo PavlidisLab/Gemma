@@ -119,7 +119,7 @@ public class AnnotationsWebService {
     @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
@@ -150,7 +150,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
@@ -172,7 +172,7 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject"))),
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
@@ -224,7 +224,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject"))),
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
@@ -247,7 +247,7 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject"))),
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
@@ -300,7 +300,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject"))),
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
