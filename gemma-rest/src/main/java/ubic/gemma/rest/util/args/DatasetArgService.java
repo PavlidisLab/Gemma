@@ -1,6 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -17,7 +18,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -25,6 +25,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -97,12 +98,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
     }
 
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerm ) {
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerm ) throws ServiceUnavailableException {
         try {
             return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerm, 30, TimeUnit.SECONDS );
         } catch ( TimeoutException e ) {
-            log.warn( "Ontology inference timed out, will return a filter without inferred annotations." );
-            return super.getFilters( filterArg );
+            throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
         }
     }
 
@@ -110,8 +110,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * Obtain the search results for a given query and highlighter.
      * @param highlighter a highlighter to use for the query or null to ignore
      * @throws BadRequestException if the query is empty
+     * @throws ServiceUnavailableException if the search times out
+     * @throws InternalServerErrorException for any other search-related exceptions
      */
-    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter ) throws BadRequestException {
+    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter ) throws BadRequestException, ServiceUnavailableException, InternalServerErrorException {
         try {
             SearchSettings settings = SearchSettings.builder()
                     .query( query.getValue() )
@@ -122,21 +124,18 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
         } catch ( ParseSearchException e ) {
             throw new MalformedArgException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
     }
 
     /**
-     * Obtain a {@link Filter} for the result of a {@link ExpressionExperiment} search.
-     * <p>
-     * The filter is a restriction over the EE IDs.
-     *
-     * @param query     query
-     * @param scoreById if non-null, a destination for storing the scores by result ID
-     * @throws BadRequestException if the query is empty
+     * Shortcut for extracting the result IDs and scores from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
+     * @see #getResultsForSearchQuery(QueryArg, Highlighter)
      */
-    public Set<Long> getIdsForSearchQuery( QueryArg query, @Nullable Map<Long, Double> scoreById ) throws BadRequestException {
+    public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById ) {
         List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
         if ( scoreById != null ) {
             for ( SearchResult<ExpressionExperiment> result : _results ) {
@@ -144,6 +143,14 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             }
         }
         return _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
+    }
+
+    /**
+     * Shortcut for extracting the result IDs from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
+     * @see #getResultsForSearchQuery(QueryArg, Highlighter)
+     */
+    public Set<Long> getIdsForSearchQuery( QueryArg query ) {
+        return getResultsForSearchQuery( query, null ).stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
     }
 
     /**

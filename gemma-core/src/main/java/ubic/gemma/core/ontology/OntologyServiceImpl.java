@@ -44,10 +44,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
-import ubic.gemma.core.search.BaseCodeOntologySearchException;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
@@ -193,7 +190,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
+            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
         if ( searchQuery.trim().length() < 3 ) {
             return new HashSet<>();
@@ -261,7 +258,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Collection<OntologyTerm> findTerms( String search, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
+    public Collection<OntologyTerm> findTerms( String search, long timeout, TimeUnit timeUnit ) throws SearchException {
         Collection<OntologyTerm> results = new HashSet<>();
 
         if ( StringUtils.isBlank( search ) ) {
@@ -272,7 +269,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
          * URI input: just retrieve the term.
          */
         if ( search.startsWith( "http://" ) ) {
-            return Collections.singleton( findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) ) );
+            try {
+                return Collections.singleton( findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) ) );
+            } catch ( TimeoutException e ) {
+                throw new SearchTimeoutException( "Ontology search timed out for querying terms matching " + search, e );
+            }
         }
 
         results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search ), search, 5000 );
@@ -291,7 +292,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String queryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException {
+    public Collection<CharacteristicValueObject> findTermsInexact( String queryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException {
         if ( StringUtils.isBlank( queryString ) )
             return Collections.emptySet();
 
@@ -680,7 +681,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology,
-            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException, TimeoutException {
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
         // in neurocarta we don't need to search all Ontologies
         List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
@@ -900,11 +901,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Similar to {@link #combineInThreads(Function, String, long)}, but also handles {@link OntologySearchException}.
      */
-    private <T> List<T> searchInThreads( SearchFunction<T> function, String query, long timeoutMs ) throws SearchException, TimeoutException {
+    private <T> List<T> searchInThreads( SearchFunction<T> function, String query, long timeoutMs ) throws SearchException {
         return searchInThreads( function, ontologyServices, query, timeoutMs );
     }
 
-    private <T> List<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException, TimeoutException {
+    private <T> List<T> searchInThreads( SearchFunction<T> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException {
         try {
             return combineInThreads( os -> {
                 try {
@@ -916,6 +917,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         } catch ( OntologySearchExceptionWrapper e ) {
             // unwrap the exception
             throw convertBaseCodeOntologySearchExceptionToSearchException( e.getCause(), query );
+        } catch ( TimeoutException e ) {
+            throw new SearchTimeoutException( "Ontology search timed out for querying " + query, e );
         }
     }
 

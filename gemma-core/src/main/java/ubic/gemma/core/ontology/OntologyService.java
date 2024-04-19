@@ -46,11 +46,7 @@ public interface OntologyService {
     @Deprecated
     default Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology ) throws SearchException {
-        try {
-            return findExperimentsCharacteristicTags( searchQuery, useNeuroCartaOntology, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+        return findExperimentsCharacteristicTags( searchQuery, useNeuroCartaOntology, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -65,14 +61,10 @@ public interface OntologyService {
      */
     @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     default Collection<OntologyTerm> findTerms( String query ) throws SearchException {
-        try {
-            return findTerms( query, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+        return findTerms( query, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -83,14 +75,10 @@ public interface OntologyService {
      * @param  query search query
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String query, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+    Collection<OntologyTerm> findTerms( String query, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     default Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
-        try {
-            return findTermsInexact( givenQueryString, taxon, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+        return findTermsInexact( givenQueryString, taxon, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -104,7 +92,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Obtain terms which are allowed for use in the category of a {@link ubic.gemma.model.common.description.Characteristic}.

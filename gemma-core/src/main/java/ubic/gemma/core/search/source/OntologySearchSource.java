@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultSet;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -234,7 +231,12 @@ public class OntologySearchSource implements SearchSource {
                         // be reflected in the results
                         .forEach( ontologyResults::add );
             } catch ( TimeoutException e ) {
-                log.warn( String.format( "Obtaining children for terms matching %s timed out, those will be ignored.", settings ), e );
+                if ( settings.getMode().equals( SearchSettings.SearchMode.FAST ) ) {
+                    // in fast mode, we don't really care if the inference is incomplete
+                    log.warn( String.format( "Obtaining children for terms matching %s timed out, those will be ignored.", settings ), e );
+                } else {
+                    throw new SearchTimeoutException( String.format( "Obtaining children for terms matching '%s' timed out.", settings.getQuery() ), e );
+                }
             }
             timer.stop();
             if ( timer.getTime() > 1000 ) {

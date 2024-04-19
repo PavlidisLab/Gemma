@@ -33,10 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.ParseSearchException;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -60,7 +57,6 @@ import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * RESTful interface for annotations.
@@ -73,6 +69,8 @@ public class AnnotationsWebService {
 
 
     private static final String SEARCH_QUERY_DESCRIPTION = "A comma-delimited list of keywords to find annotations.";
+
+    private static final String FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION = "The search for annotations has timed out. It can generally be resolved by reattempting the search 30 seconds later. Lookup the `Retry-After` header for the recommended delay.";
 
     /**
      * Amout of time allowed to spend on finding characteristics.
@@ -121,7 +119,7 @@ public class AnnotationsWebService {
     @Operation(summary = "Search for annotation tags", responses = {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query
@@ -130,9 +128,9 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Search query cannot be empty." );
         }
         try {
-            return Responder.respond( new ArrayList<>( this.getTerms( query ) ) );
-        } catch ( TimeoutException e ) {
-            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+            return Responder.respond( new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) ) );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchException e ) {
@@ -175,7 +173,8 @@ public class AnnotationsWebService {
             deprecated = true,
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.") @QueryParam("query") @DefaultValue("") StringArrayArg query,
@@ -192,6 +191,8 @@ public class AnnotationsWebService {
             foundIds = this.searchEEs( query.getValue(), null );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
@@ -205,7 +206,9 @@ public class AnnotationsWebService {
         } else if ( filters.isEmpty()
                 && offset.getValue() == 0
                 && foundIds.size() <= limit.getValue()
-                && sort.getPropertyName().equals( "id" )
+                && sort.getPropertyName().
+
+                equals( "id" )
                 && sort.getDirection() == Sort.Direction.ASC ) {
             slice = new Slice<>( expressionExperimentService.loadValueObjectsByIds( foundIds ), sort, 0, limit.getValue(), ( long ) foundIds.size() );
 
@@ -216,7 +219,11 @@ public class AnnotationsWebService {
             slice = expressionExperimentService.loadValueObjects( filtersWithQuery, sort, offset.getValue(), limit.getValue() );
         }
 
-        return Responder.queryAndPaginate( slice, String.join( " AND ", query.getValue() ), filters, new String[] { "id" } );
+        return Responder.queryAndPaginate( slice, String.join( " AND ", query.getValue() ), filters, new String[]
+
+                {
+                        "id"
+                } );
     }
 
     @GET
@@ -252,7 +259,8 @@ public class AnnotationsWebService {
             deprecated = true,
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
@@ -275,6 +283,8 @@ public class AnnotationsWebService {
             foundIds = this.searchEEs( query.getValue(), taxon );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
@@ -362,7 +372,7 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) throws SearchException, TimeoutException {
+    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
         for ( String query : arg.getValue() ) {
@@ -372,7 +382,7 @@ public class AnnotationsWebService {
                 this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringUtils.strip( query ) ) ) );
             } else {
-                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, false, Math.max( FIND_CHARACTERISTICS_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
+                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
         }
         return vos;
