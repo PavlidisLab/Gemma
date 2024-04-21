@@ -49,9 +49,9 @@ public class OntologySearchSource implements SearchSource {
     private static final double EXACT_MATCH_SCORE = -1.0;
 
     /**
-     * Amount of time to dedicate to inferring children terms.
+     * Amount of time to dedicate to searching and inferring terms.
      */
-    private static final long ONTOLOGY_INFERENCE_TIMEOUT_MILLIS = 30000;
+    private static final long ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS = 30000L;
 
     @Autowired
     private OntologyService ontologyService;
@@ -91,7 +91,7 @@ public class OntologySearchSource implements SearchSource {
          */
         Set<Set<String>> subclauses = extractTermsDnf( settings );
         for ( Set<String> subclause : subclauses ) {
-            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause, Math.max( ONTOLOGY_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
                 log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
             }
@@ -194,7 +194,7 @@ public class OntologySearchSource implements SearchSource {
             // Search ontology classes matches to the full-text query
             timer.reset();
             timer.start();
-            matchingTerms = ontologyService.findTerms( settings.getQuery() );
+            matchingTerms = ontologyService.findTerms( settings.getQuery(), Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
             matchingTerms.stream()
                     // ignore bnodes
                     .filter( t -> t.getUri() != null )
@@ -221,7 +221,7 @@ public class OntologySearchSource implements SearchSource {
                     .average()
                     .orElse( 0 );
             try {
-                ontologyService.getChildren( matchingTerms, false, true, timeoutMs, TimeUnit.MILLISECONDS )
+                ontologyService.getChildren( matchingTerms, false, true, Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS )
                         .stream()
                         // ignore bnodes
                         .filter( c -> c.getUri() != null )
