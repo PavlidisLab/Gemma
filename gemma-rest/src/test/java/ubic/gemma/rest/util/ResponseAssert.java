@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 /**
  * Assertions for jax-rs {@link Response}.
@@ -61,6 +62,7 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         return new MapAssert<>( actual.getStringHeaders() );
     }
 
+
     /**
      * Asserts that the response has the given header.
      * <p>
@@ -69,6 +71,11 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
     public ResponseAssert hasHeader( String name, String value ) {
         maps.assertHasEntrySatisfying( info, actual.getStringHeaders(), name,
                 new Condition<>( l -> l.contains( value ), "associated to %s", name ) );
+        return myself;
+    }
+
+    public ResponseAssert hasHeaderSatisfying( String name, Consumer<List<String>> consumer ) {
+        maps.assertHasEntrySatisfying( info, actual.getStringHeaders(), name, consumer );
         return myself;
     }
 

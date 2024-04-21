@@ -285,6 +285,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets" ).queryParam( "filter", "allCharacteristic.valueUri in (a, b, c)" ).request().get() )
                 .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
+                .hasHeaderSatisfying( "Retry-After", values -> {
+                    assertThat( values ).isNotEmpty();
+                } )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
