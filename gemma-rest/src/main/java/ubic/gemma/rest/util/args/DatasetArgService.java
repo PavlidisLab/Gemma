@@ -79,7 +79,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     @Override
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) throws BadRequestException {
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) throws BadRequestException, ServiceUnavailableException {
         return getFilters( filterArg, null );
     }
 
