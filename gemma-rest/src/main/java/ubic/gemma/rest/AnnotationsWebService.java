@@ -382,7 +382,7 @@ public class AnnotationsWebService {
                 this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringUtils.strip( query ) ) ) );
             } else {
-                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
+                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, 100, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
         }
         return vos;

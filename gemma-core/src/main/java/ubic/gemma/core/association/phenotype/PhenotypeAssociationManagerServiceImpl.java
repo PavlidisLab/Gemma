@@ -397,7 +397,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws SearchException {
-        return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
+        return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, 100, true );
     }
 
     @Override

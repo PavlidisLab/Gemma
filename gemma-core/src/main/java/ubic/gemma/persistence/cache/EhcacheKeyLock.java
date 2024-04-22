@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 @EqualsAndHashCode(of = { "cache", "key", "readOnly" })
 public class EhcacheKeyLock implements CacheKeyLock {
 
-    private static final long DEFAULT_LOCK_CHECK_INTERVAL_MS = 100;
+    private static final long DEFAULT_LOCK_CHECK_INTERVAL_MS = 30000L;
 
     private final Ehcache cache;
     private final Object key;
@@ -34,7 +34,7 @@ public class EhcacheKeyLock implements CacheKeyLock {
     /**
      * Set the interval to check for lock acquisition in milliseconds when {@link #lockInterruptibly()} is used.
      * <p>
-     * This defaults to 100 ms.
+     * This defaults to 30000 ms.
      */
     public void setLockCheckIntervalMillis( long lockCheckIntervalMillis ) {
         Assert.isTrue( lockCheckIntervalMillis >= 0 );
@@ -54,10 +54,6 @@ public class EhcacheKeyLock implements CacheKeyLock {
     @Override
     public LockAcquisition lockInterruptibly() throws InterruptedException {
         while ( true ) {
-            if ( Thread.interrupted() ) {
-                throw new InterruptedException( String.format( "Thread was interrupted while trying to acquire a %s lock on %s[%s].",
-                        readOnly ? "read-only" : "read-write", cache, key ) );
-            }
             if ( readOnly ) {
                 if ( cache.tryReadLockOnKey( key, lockCheckIntervalMillis ) ) {
                     return acquisition;

@@ -38,6 +38,13 @@ public class SettingsConfig {
         return configurer;
     }
 
+    @Bean
+    public static BaseCodeConfigurer baseCodeConfigurer() throws IOException {
+        BaseCodeConfigurer configurer = new BaseCodeConfigurer();
+        configurer.setPropertySources( propertySources() );
+        return configurer;
+    }
+
     /**
      * The default Spring conversion service has limited support for Java 8 types.
      * <p>

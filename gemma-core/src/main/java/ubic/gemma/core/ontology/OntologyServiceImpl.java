@@ -41,6 +41,7 @@ import ubic.basecode.ontology.model.*;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
@@ -189,7 +190,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * of possible choices
      */
     @Override
-    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
+    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
         if ( searchQuery.trim().length() < 3 ) {
@@ -219,7 +220,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         // search the ontology for the given searchTerm, but if already found in the database dont add it again
         Collection<CharacteristicValueObject> characteristicsFromOntology = this
-                .findCharacteristicsFromOntology( searchQuery, useNeuroCartaOntology,
+                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology,
                         characteristicFromDatabaseWithValueUri, timeUnit.toMillis( timeout ) );
 
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
@@ -250,16 +251,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         allCharacteristicsFound.addAll( characteristicsNoRuleFound );
 
         // limit the size of the returned phenotypes to 100 terms
-        if ( allCharacteristicsFound.size() > 100 ) {
-            return allCharacteristicsFound.subList( 0, 100 );
+        if ( allCharacteristicsFound.size() > maxResults ) {
+            return allCharacteristicsFound.subList( 0, maxResults );
         }
 
         return allCharacteristicsFound;
     }
 
     @Override
-    public Collection<OntologyTerm> findTerms( String search, long timeout, TimeUnit timeUnit ) throws SearchException {
-        Collection<OntologyTerm> results = new HashSet<>();
+    public Collection<OntologySearchResult<OntologyTerm>> findTerms( String search, int maxResults, long timeout, TimeUnit timeUnit ) throws SearchException {
+        Collection<OntologySearchResult<OntologyTerm>> results = new HashSet<>();
 
         if ( StringUtils.isBlank( search ) ) {
             return results;
@@ -270,29 +271,33 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
          */
         if ( search.startsWith( "http://" ) ) {
             try {
-                return Collections.singleton( findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) ) );
+                OntologyTerm foundByUri = findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) );
+                if ( foundByUri != null ) {
+                    return Collections.singleton( new ubic.basecode.ontology.search.OntologySearchResult<>( foundByUri, 1.0 ) );
+                }
             } catch ( TimeoutException e ) {
                 throw new SearchTimeoutException( "Ontology search timed out for querying terms matching " + search, e );
             }
         }
 
-        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search ), search, 5000 );
+        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), search, 5000 );
 
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
-                results.addAll( ontologyCache.findTerm( geneOntologyService, search ) );
+                results.addAll( ontologyCache.findTerm( geneOntologyService, search, maxResults ) );
             } catch ( OntologySearchException e ) {
                 throw convertBaseCodeOntologySearchExceptionToSearchException( e, search );
             }
         }
 
         return results.stream()
-                .sorted( Comparator.comparing( OntologyTerm::getScore, Comparator.nullsLast( Comparator.reverseOrder() ) ) )
+                .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                .limit( maxResults )
                 .collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String queryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException {
+    public Collection<CharacteristicValueObject> findTermsInexact( String queryString, int maxResults, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException {
         if ( StringUtils.isBlank( queryString ) )
             return Collections.emptySet();
 
@@ -322,7 +327,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // get ontology terms
         Set<CharacteristicValueObject> ontologySearchResults = new HashSet<>();
         ontologySearchResults.addAll( searchInThreads( service -> {
-            Collection<OntologyTerm> results2 = ontologyCache.findTerm( service, queryString );
+            Collection<OntologySearchResult<OntologyTerm>> results2 = ontologyCache.findTerm( service, queryString, maxResults );
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
@@ -333,7 +338,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( geneOntologyService.isOntologyLoaded() ) {
             try {
                 ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                        this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString ) ) ) );
+                        this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString, maxResults ) ) ) );
             } catch ( OntologySearchException e ) {
                 throw convertBaseCodeOntologySearchExceptionToSearchException( e, queryString );
             }
@@ -366,6 +371,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // Sort the results rather elaborately.
         LinkedHashSet<CharacteristicValueObject> sortedResults = results.values().stream()
                 .sorted( getCharacteristicComparator( queryString ) )
+                .limit( maxResults )
                 .collect( Collectors.toCollection( LinkedHashSet::new ) );
 
         watch.stop();
@@ -531,7 +537,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     ontologyTaskExecutor.execute( () -> {
                         OntologyServiceImpl.log.info( "Reinitializing " + serv + "..." );
                         serv.initialize( true, isSearchEnabled );
-                        ontologyCache.clearByOntology( serv );
+                        ontologyCache.clearParentsAndChildrenCachesByOntology( serv );
                         if ( isSearchEnabled ) {
                             ontologyCache.clearSearchCacheByOntology( serv );
                         }
@@ -544,26 +550,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Convert raw ontology resources into Characteristics.
      */
-    private Collection<Characteristic> termsToCharacteristics( Collection<OntologyTerm> terms ) {
-
+    private Collection<Characteristic> termsToCharacteristics( Collection<OntologySearchResult<OntologyTerm>> terms ) {
         Collection<Characteristic> results = new HashSet<>();
-
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
-
-        for ( OntologyTerm term : terms ) {
-
-            if ( term == null )
+        for ( OntologySearchResult<OntologyTerm> term : terms ) {
+            if ( term == null || term.getResult() == null )
                 continue;
-
-            Characteristic vc = this.termToCharacteristic( term );
+            Characteristic vc = this.termToCharacteristic( term.getResult() );
             if ( vc == null )
                 continue;
             results.add( vc );
-
         }
         OntologyServiceImpl.log.debug( "returning " + results.size() + " terms after filter" );
-
         return results;
     }
 
@@ -679,7 +678,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * given a collection of characteristics add them to the correct List
      */
-    private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
+    private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
@@ -695,16 +694,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
 
         return searchInThreads( ontologyService -> {
-            Collection<OntologyTerm> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery );
+            Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
             Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
-            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+            for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
-                if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
-                    if ( ontologyTerm.getLabel() == null ) {
-                        log.warn( "Term with null label: " + ontologyTerm.getUri() + "; it cannot be converted to a CharacteristicValueObject" );
+                if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getResult().getUri() ) == null ) {
+                    if ( ontologyTerm.getResult().getLabel() == null ) {
+                        log.warn( "Term with null label: " + ontologyTerm.getResult().getUri() + "; it cannot be converted to a CharacteristicValueObject" );
                         continue;
                     }
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult().getUri() );
                     characteristicsFromOntology.add( phenotype );
                 }
             }

@@ -5,6 +5,7 @@ import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
 
 import java.io.IOException;
@@ -19,9 +20,9 @@ public class DiseaseOntologyTest {
         DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
         assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, diseaseOntologyService.getLanguageLevel() );
         assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, diseaseOntologyService.getInferenceMode() );
-        diseaseOntologyService.initialize( new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream(), false );
+        diseaseOntologyService.initialize( new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream(), true );
 
-        Collection<OntologyTerm> name = diseaseOntologyService.findTerm( "diarrhea" );
+        Collection<OntologySearchResult<OntologyTerm>> name = diseaseOntologyService.findTerm( "diarrhea", 100 );
 
         assertFalse( name.isEmpty() );
 

@@ -23,6 +23,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -106,7 +107,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     public void searchExpressionExperiment_whenQueryHasMultipleClauses_thenParseAccordingly() throws SearchException {
         SearchSettings settings = SearchSettings.expressionExperimentSearch( "cancer AND liver" );
         searchService.search( settings );
-        verify( ontologyService ).findTerms( "cancer" );
+        verify( ontologyService ).findTerms( "cancer", 5000, 30000L, TimeUnit.MILLISECONDS );
         // cancer returns no result, so we should not bother querying liver
         verifyNoMoreInteractions( ontologyService );
     }

@@ -1,6 +1,5 @@
 package ubic.gemma.core.ontology;
 
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
@@ -9,11 +8,12 @@ import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.persistence.cache.CacheKeyLock;
 import ubic.gemma.persistence.util.CacheUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * High-level cache abstraction for retrieving parents and children of a set of terms.
@@ -29,7 +29,7 @@ class OntologyCache {
 
     private int minSubsetSize = 1;
 
-    OntologyCache( Cache searchCache, Cache parentsCache, Cache childrenCache ) {
+    public OntologyCache( Cache searchCache, Cache parentsCache, Cache childrenCache ) {
         this.searchCache = searchCache;
         this.parentsCache = parentsCache;
         this.childrenCache = childrenCache;
@@ -38,19 +38,19 @@ class OntologyCache {
     /**
      * Minimum size of subsets to consider when enumerating cache keys.
      */
-    void setMinSubsetSize( int minSubsetSize ) {
+    public void setMinSubsetSize( int minSubsetSize ) {
         Assert.isTrue( minSubsetSize > 0 );
         this.minSubsetSize = minSubsetSize;
     }
 
-    public Collection<OntologyTerm> findTerm( OntologyService ontology, String query ) throws OntologySearchException {
+    public Collection<OntologySearchResult<OntologyTerm>> findTerm( OntologyService ontology, String query, int maxResults ) throws OntologySearchException {
         SearchCacheKey key = new SearchCacheKey( ontology, query );
 
         try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireReadLock( searchCache, key ) ) {
             Cache.ValueWrapper value = searchCache.get( key );
             if ( value != null ) {
                 //noinspection unchecked
-                return ( Collection<OntologyTerm> ) value.get();
+                return ( Collection<OntologySearchResult<OntologyTerm>> ) value.get();
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
@@ -59,7 +59,7 @@ class OntologyCache {
         }
 
         try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireWriteLock( searchCache, key ) ) {
-            Collection<OntologyTerm> results = ontology.findTerm( query );
+            Collection<OntologySearchResult<OntologyTerm>> results = ontology.findTerm( query, maxResults );
             searchCache.put( key, results );
             return results;
         } catch ( InterruptedException e ) {
@@ -72,20 +72,19 @@ class OntologyCache {
     /**
      * Obtain the parents of a given set of terms.
      */
-    Set<OntologyTerm> getParents( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
+    public Set<OntologyTerm> getParents( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
         return getParentsOrChildren( os, terms, direct, includeAdditionalProperties, parentsCache, true );
     }
 
     /**
      * Obtain the children of a given set of terms.
      */
-    Set<OntologyTerm> getChildren( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
+    public Set<OntologyTerm> getChildren( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
         return getParentsOrChildren( os, terms, direct, includeAdditionalProperties, childrenCache, false );
     }
 
     /**
      * Clear the search  cache for all entries related to a given ontology service.
-     * @param serv
      */
     public void clearSearchCacheByOntology( OntologyService serv ) {
         CacheUtils.evictIf( searchCache, key -> ( ( SearchCacheKey ) key ).getOntologyService().equals( serv ) );
@@ -94,9 +93,9 @@ class OntologyCache {
     /**
      * Clear the cache for all entries related to a given ontology service.
      */
-    void clearByOntology( OntologyService serv ) {
-        CacheUtils.evictIf( parentsCache, key -> ( ( ParentsOrChildrenCacheKey ) key ).getOntologyService().equals( serv ) );
-        CacheUtils.evictIf( childrenCache, key -> ( ( ParentsOrChildrenCacheKey ) key ).getOntologyService().equals( serv ) );
+    public void clearParentsAndChildrenCachesByOntology( OntologyService serv ) {
+        CacheUtils.evictIf( parentsCache, key -> ( ( ParentsOrChildrenCacheKey ) key ).ontologyService.equals( serv ) );
+        CacheUtils.evictIf( childrenCache, key -> ( ( ParentsOrChildrenCacheKey ) key ).ontologyService.equals( serv ) );
     }
 
     private Set<OntologyTerm> getParentsOrChildren( OntologyService os, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties, Cache cache, boolean ancestors ) {
@@ -105,8 +104,9 @@ class OntologyCache {
         }
         StopWatch timer = StopWatch.createStarted();
 
-        Set<OntologyTerm> termsSet = new HashSet<>( terms );
-        ParentsOrChildrenCacheKey key = new ParentsOrChildrenCacheKey( os, termsSet, direct, includeAdditionalProperties );
+        ParentsOrChildrenCacheKey key = new ParentsOrChildrenCacheKey( os, terms, direct, includeAdditionalProperties );
+
+        String interruptedMessage = String.format( "Current thread was interrupted while retrieving %s for %s, will return nothing.", ancestors ? "parents" : "children", key );
 
         // there might be a thread computing this cache entry
         long initialLockAcquisitionMs = timer.getTime();
@@ -114,118 +114,125 @@ class OntologyCache {
             initialLockAcquisitionMs = timer.getTime() - initialLockAcquisitionMs;
             Cache.ValueWrapper value = cache.get( key );
             if ( value != null ) {
+                if ( timer.getTime() > 500 ) {
+                    log.warn( String.format( "Retrieving %s for %s took %d ms (acquiring read lock: %d ms)", ancestors ? "parents" : "children", key, timer.getTime(), initialLockAcquisitionMs ) );
+                }
                 //noinspection unchecked
                 return ( Set<OntologyTerm> ) value.get();
+            } else if ( initialLockAcquisitionMs > 100 ) {
+                // this is a problem, if we've been waiting, there should be a value computed by another thread.
+                log.warn( String.format( "Waited %d ms for a lock on %s[%s], but no value was found in the cache.", initialLockAcquisitionMs, cache, key ) );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
-            log.warn( String.format( "Current thread was interrupted while retrieving %s for %s, will return nothing.",
-                    ancestors ? "parents" : "children", key ), e );
+            log.warn( interruptedMessage, e );
             return Collections.emptySet();
         }
 
-        long lookupSubsetMs = 0;
-        ParentsOrChildrenCacheKey keyForSubset;
-        // enough terms to make it worth looking for subsets...
-        if ( termsSet.size() >= minSubsetSize + 1 ) {
-            lookupSubsetMs = timer.getTime();
-            keyForSubset = lookupMaximalSubsetByEnumeratingKeys( cache, os, termsSet, direct, includeAdditionalProperties );
-            lookupSubsetMs = timer.getTime() - lookupSubsetMs;
-            if ( lookupSubsetMs > 100 ) {
-                log.warn( String.format( "Enumerating cache keys for finding a maximal subset for %s of %s took %d ms and %s",
-                        ancestors ? "parents" : "children", key, lookupSubsetMs, keyForSubset != null ? "succeeded with " + keyForSubset + " terms" : "failed" ) );
-            }
-        } else {
-            // we used to enumerate all possible k-1, k-2 subsets, but that's just too slow compared to enumerating
-            // cache keys, other strategies can be implemented here if necessary
-            keyForSubset = null;
-        }
-
-        if ( keyForSubset != null ) {
-            Cache.ValueWrapper valueForSubset = cache.get( keyForSubset );
-            if ( valueForSubset != null ) {
+        // first, check if there are subsets of the key in the cache, this can save substantial time, and it's very cheap to do
+        long subsetLookupMs = timer.getTime();
+        Set<OntologyTerm> keysForSubsets = new HashSet<>();
+        Set<OntologyTerm> resultsForSubset = new HashSet<>();
+        for ( ParentsOrChildrenCacheKey k : lookupSubsetsByEnumeratingKeys( cache, key ) ) {
+            Cache.ValueWrapper v = cache.get( k );
+            if ( v != null ) {
+                keysForSubsets.addAll( k.terms );
                 //noinspection unchecked
-                Set<OntologyTerm> resultsForSubset = ( Set<OntologyTerm> ) valueForSubset.get();
-                // only query the difference
-                Set<OntologyTerm> remainingTerms = new HashSet<>( termsSet );
-                remainingTerms.removeAll( keyForSubset.terms );
-                Set<OntologyTerm> remainingResults = getParentsOrChildren( os, remainingTerms, direct, includeAdditionalProperties, cache, ancestors );
-                // recombine the results
-                Set<OntologyTerm> results = new HashSet<>( resultsForSubset );
-                results.addAll( remainingResults );
-                cache.put( key, results );
-                return results;
+                resultsForSubset.addAll( ( Set<OntologyTerm> ) v.get() );
             } else {
-                log.warn( "Missing expected key from the " + ( ancestors ? "parents" : "children" ) + " cache: " + keyForSubset );
+                log.warn( "Missing expected key " + k + " from the " + ( ancestors ? "parents" : "children" ) + " cache." );
             }
         }
+        subsetLookupMs = timer.getTime() - subsetLookupMs;
 
         long acquireMs = timer.getTime();
-        long computingMs = 0;
+        long computingMs = 0L;
         try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireWriteLock( cache, key ) ) {
             acquireMs = timer.getTime() - acquireMs;
-            // lookup the cache in case another thread computed the result while we were enumerating subsets
-            Cache.ValueWrapper value = cache.get( key );
-            if ( value != null ) {
+            Set<OntologyTerm> newVal;
+            if ( cache.get( key ) != null ) {
+                // another thread has computed the value in the meantime, it happens if multiple threads were trying to
+                // acquire the write lock at the same time
                 //noinspection unchecked
-                return ( Set<OntologyTerm> ) value.get();
+                newVal = ( Set<OntologyTerm> ) cache.get( key ).get();
+            } else {
+                computingMs = timer.getTime();
+                if ( !keysForSubsets.isEmpty() ) {
+                    // only query the difference
+                    Set<OntologyTerm> remainingTerms = new HashSet<>( terms );
+                    remainingTerms.removeAll( keysForSubsets );
+                    Set<OntologyTerm> remainingResults = ancestors ? os.getParents( remainingTerms, direct, includeAdditionalProperties ) : os.getChildren( remainingTerms, direct, includeAdditionalProperties );
+                    // recombine the results
+                    newVal = new HashSet<>( resultsForSubset );
+                    newVal.addAll( remainingResults );
+                } else {
+                    // no subset found in the cache, just compute it from scratch
+                    newVal = ancestors ? os.getParents( terms, direct, includeAdditionalProperties ) : os.getChildren( terms, direct, includeAdditionalProperties );
+                }
+                computingMs = timer.getTime() - computingMs;
+                cache.put( key, newVal );
             }
-            computingMs = timer.getTime();
-            // no subset found in the cache, just compute it from scratch
-            Set<OntologyTerm> newVal = ancestors ?
-                    os.getParents( termsSet, direct, includeAdditionalProperties ) :
-                    os.getChildren( termsSet, direct, includeAdditionalProperties );
-            computingMs = timer.getTime() - computingMs;
-            // ignore empty newVal, it might just be that the ontology is not initialized yet
-            if ( !newVal.isEmpty() && computingMs < lookupSubsetMs ) {
-                log.warn( String.format( "Computing %d %s terms for %s took less time than looking up subsets, increasing the minSubsetSize might be beneficial",
-                        newVal.size(),
-                        ancestors ? "parents" : "children",
-                        key ) );
+            if ( timer.getTime() > 500 ) {
+                log.warn( String.format( "Retrieving %s for %s took %d ms (acquiring locks: %d ms, subset lookup: %d ms, computing: %d ms)", ancestors ? "parents" : "children", key, timer.getTime(), initialLockAcquisitionMs + acquireMs, subsetLookupMs, computingMs ) );
             }
-            cache.put( key, newVal );
             return newVal;
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
-            log.warn( String.format( "Current thread was interrupted while retrieving %s for %s, will return nothing.",
-                    ancestors ? "parents" : "children", key ), e );
+            log.warn( interruptedMessage, e );
             return Collections.emptySet();
-        } finally {
-            if ( timer.getTime() > 500 ) {
-                log.warn( String.format( "Retrieving %s for %s took %d ms (acquiring locks: %d ms, enumerating subsets: %d ms, computing: %d ms)",
-                        ancestors ? "parents" : "children", key, timer.getTime(), initialLockAcquisitionMs + acquireMs, lookupSubsetMs, computingMs ) );
-            }
         }
     }
 
     /**
-     * Enumerate the cache's keys to find the maximal subset.
+     * Lookup the cache for subsets of the given key.
      */
-    @Nullable
-    private ParentsOrChildrenCacheKey lookupMaximalSubsetByEnumeratingKeys( Cache cache, OntologyService os, Set<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
-        return CacheUtils.getKeys( cache ).stream()
-                .map( o -> ( ParentsOrChildrenCacheKey ) o )
-                .filter( k -> k.direct == direct && k.includeAdditionalProperties == includeAdditionalProperties && k.ontologyService.equals( os ) )
+    private List<ParentsOrChildrenCacheKey> lookupSubsetsByEnumeratingKeys( Cache cache, ParentsOrChildrenCacheKey key ) {
+        //noinspection unchecked
+        return ( ( Collection<ParentsOrChildrenCacheKey> ) CacheUtils.getKeys( cache ) ).stream()
                 // ignore empty subsets, those will cause an infinite loop
-                // skip sets which are larger or equal in size, those cannot be subsets
-                .filter( k -> k.terms.size() >= minSubsetSize && k.terms.size() < terms.size() && terms.containsAll( k.terms ) )
-                .max( Comparator.comparingInt( k1 -> k1.terms.size() ) )
-                .orElse( null );
+                .filter( k1 -> k1.terms.size() >= minSubsetSize ).filter( k1 -> k1.isSubsetOf( key ) ).collect( Collectors.toList() );
     }
 
-    @Value
-    @EqualsAndHashCode(cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY)
     private static class ParentsOrChildrenCacheKey {
-        OntologyService ontologyService;
-        Set<OntologyTerm> terms;
-        boolean direct;
-        boolean includeAdditionalProperties;
+        private final OntologyService ontologyService;
+        private final Set<OntologyTerm> terms;
+        private final int termsHash;
+        private final boolean direct;
+        private final boolean includeAdditionalProperties;
+
+        public ParentsOrChildrenCacheKey( OntologyService ontologyService, Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties ) {
+            this.ontologyService = ontologyService;
+            // baseCode implementation lookups labels, which is very inefficient
+            this.terms = Collections.unmodifiableSet( new HashSet<>( terms ) );
+            this.termsHash = this.terms.hashCode();
+            this.direct = direct;
+            this.includeAdditionalProperties = includeAdditionalProperties;
+        }
+
+        public boolean isSubsetOf( ParentsOrChildrenCacheKey other ) {
+            return direct == other.direct && includeAdditionalProperties == other.includeAdditionalProperties && ontologyService.equals( other.ontologyService ) && terms.size() <= other.terms.size() && other.terms.containsAll( terms );
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash( ontologyService, termsHash, direct, includeAdditionalProperties );
+        }
+
+        @Override
+        public boolean equals( Object other ) {
+            if ( this == other ) {
+                return true;
+            }
+            if ( !( other instanceof ParentsOrChildrenCacheKey ) ) {
+                return false;
+            }
+            ParentsOrChildrenCacheKey that = ( ParentsOrChildrenCacheKey ) other;
+            return direct == that.direct && includeAdditionalProperties == that.includeAdditionalProperties && ontologyService.equals( that.ontologyService ) && termsHash == that.termsHash && terms.equals( that.terms );
+        }
 
         @Override
         public String toString() {
-            return String.format( "%d terms from %s [%s] [%s]", terms.size(), ontologyService,
-                    direct ? "direct" : "all",
-                    includeAdditionalProperties ? "subClassOf and " + ontologyService.getAdditionalPropertyUris().size() + " additional properties" : "only subClassOf" );
+            return String.format( "%d terms from %s [%s] [%s]", terms.size(), ontologyService, direct ? "direct" : "all", includeAdditionalProperties ? "subClassOf and " + ontologyService.getAdditionalPropertyUris().size() + " additional properties" : "only subClassOf" );
         }
     }
 

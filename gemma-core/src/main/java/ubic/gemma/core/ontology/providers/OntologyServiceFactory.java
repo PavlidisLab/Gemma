@@ -27,6 +27,8 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private OntologyService.LanguageLevel languageLevel = OntologyService.LanguageLevel.FULL;
     private OntologyService.InferenceMode inferenceMode = OntologyService.InferenceMode.TRANSITIVE;
     private boolean enableSearch = true;
+    @Nullable
+    private Set<String> excludedWordsFromStemming = null;
     private boolean processImports = true;
     @Nullable
     private Set<String> additionalPropertyUris = null;
@@ -107,6 +109,14 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     /**
+     * Set the list of words that should be excluded from stemming.
+     * @see OntologyService#setExcludedWordsFromStemming(Set)
+     */
+    public void setExcludedWordsFromStemming( @Nullable Set<String> excludedWordsFromStemming ) {
+        this.excludedWordsFromStemming = excludedWordsFromStemming;
+    }
+
+    /**
      * Enable import processing for the ontology.
      * @see OntologyService#setProcessImports(boolean)
      */
@@ -140,6 +150,9 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         service.setLanguageLevel( languageLevel );
         service.setInferenceMode( inferenceMode );
         service.setSearchEnabled( enableSearch );
+        if ( excludedWordsFromStemming != null ) {
+            service.setExcludedWordsFromStemming( excludedWordsFromStemming );
+        }
         service.setProcessImports( processImports );
         if ( additionalPropertyUris != null ) {
             service.setAdditionalPropertyUris( additionalPropertyUris );
@@ -147,7 +160,9 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         if ( autoLoad ) {
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {
-                    ontologyTaskExecutor.execute( () -> service.initialize( forceLoad, forceIndexing ) );
+                    ontologyTaskExecutor.execute( () -> {
+                        service.initialize( forceLoad, forceIndexing );
+                    } );
                 } else {
                     service.startInitializationThread( forceLoad, forceIndexing );
                 }

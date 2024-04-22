@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
@@ -23,6 +24,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
@@ -160,16 +162,16 @@ public class OntologySearchSource implements SearchSource {
     private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings, long timeoutMs ) throws SearchException {
         // overall timer
         StopWatch watch = StopWatch.createStarted();
-        // per-step timer
-        StopWatch timer = StopWatch.create();
+        long searchMs, childrenMs, retrievedMs;
 
         SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
         Collection<OntologyResult> ontologyResults = new HashSet<>();
 
-        Collection<OntologyTerm> matchingTerms;
+        Collection<OntologySearchResult<OntologyTerm>> matchingTerms;
 
         // if the query is a term, find it directly
+        searchMs = watch.getTime();
         URI termUri = prepareTermUriQuery( settings );
         if ( termUri != null ) {
             OntologyResult resource;
@@ -177,7 +179,7 @@ public class OntologySearchSource implements SearchSource {
             if ( r2 != null ) {
                 assert r2.getUri() != null;
                 resource = new OntologyResult( r2, EXACT_MATCH_SCORE );
-                matchingTerms = Collections.singleton( r2 );
+                matchingTerms = Collections.singleton( new OntologySearchResult<>( r2, EXACT_MATCH_SCORE ) );
             } else {
                 // attempt to guess a label from othe database
                 Characteristic c = characteristicService.findBestByUri( termUri.toString() );
@@ -192,36 +194,29 @@ public class OntologySearchSource implements SearchSource {
             ontologyResults.add( resource );
         } else {
             // Search ontology classes matches to the full-text query
-            timer.reset();
-            timer.start();
-            matchingTerms = ontologyService.findTerms( settings.getQuery(), Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
+            matchingTerms = ontologyService.findTerms( settings.getQuery(), 5000, Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
             matchingTerms.stream()
                     // ignore bnodes
-                    .filter( t -> t.getUri() != null )
+                    .filter( t -> t.getResult().getUri() != null )
                     // the only possibility for being no score is that the query is an URI and the search didn't go through
                     // the search index
-                    .map( t -> new OntologyResult( t, t.getScore() != null ? t.getScore() : EXACT_MATCH_SCORE ) )
+                    .map( t -> new OntologyResult( t.getResult(), t.getScore() ) )
                     .forEach( ontologyResults::add );
-            timer.stop();
-            if ( timer.getTime() > 1000 ) {
-                log.warn( String.format( "Found %d ontology classes matching '%s' in %d ms",
-                        matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
-            }
         }
+        searchMs = watch.getTime() - searchMs;
 
         // Search for child terms.
+        childrenMs = watch.getTime();
         if ( !matchingTerms.isEmpty() && timeoutMs > 0 ) {
             // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
-            timer.reset();
-            timer.start();
             // we don't know parent/child relation, so the best we can do is assigne the average full-text score
             double avgScore = matchingTerms.stream()
-                    .mapToDouble( t -> t.getScore() != null ? t.getScore() : 0 )
+                    .mapToDouble( OntologySearchResult::getScore )
                     .filter( s -> s != EXACT_MATCH_SCORE )
                     .average()
                     .orElse( 0 );
             try {
-                ontologyService.getChildren( matchingTerms, false, true, Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS )
+                ontologyService.getChildren( matchingTerms.stream().map( OntologySearchResult::getResult ).collect( Collectors.toSet() ), false, true, Math.max( timeoutMs - watch.getTime(), 1L ), TimeUnit.MILLISECONDS )
                         .stream()
                         // ignore bnodes
                         .filter( c -> c.getUri() != null )
@@ -238,25 +233,15 @@ public class OntologySearchSource implements SearchSource {
                     throw new SearchTimeoutException( String.format( "Obtaining children for terms matching '%s' timed out.", settings.getQuery() ), e );
                 }
             }
-            timer.stop();
-            if ( timer.getTime() > 1000 ) {
-                log.warn( String.format( "Found %d ontology subclasses or related terms for %d terms matching '%s' in %d ms",
-                        ontologyResults.size() - matchingTerms.size(), matchingTerms.size(), settings.getQuery(), timer.getTime() ) );
-            }
         }
+        childrenMs = watch.getTime() - childrenMs;
 
-        timer.reset();
-        timer.start();
+        retrievedMs = watch.getTime();
         findExperimentsByOntologyResults( ontologyResults, settings, results );
-        timer.stop();
+        retrievedMs = watch.getTime() - retrievedMs;
 
-        if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieved %d datasets via %d characteristics in %d ms",
-                    results.size(), ontologyResults.size(), timer.getTime() ) );
-        }
-
-        String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms",
-                results.size(), ontologyResults.size(), settings.getQuery(), watch.getTime() );
+        String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms (ontology class search: %s ms, ontology inference: %s ms, retrieving matching datasets: %d ms)",
+                results.size(), ontologyResults.size(), settings.getQuery(), watch.getTime(), searchMs, childrenMs, retrievedMs );
         if ( watch.getTime() > 1000 ) {
             log.warn( message );
         } else {
