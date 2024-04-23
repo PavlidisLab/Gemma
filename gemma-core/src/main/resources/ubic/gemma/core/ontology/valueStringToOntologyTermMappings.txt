@@ -100,6 +100,7 @@ Benign	benign	http://www.ebi.ac.uk/efo/EFO_0002751	phenotype	http://www.ebi.ac.u
 Biceps	biceps brachii	http://purl.obolibrary.org/obo/UBERON_0001507	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 biopsy	biopsy	http://purl.obolibrary.org/obo/OBI_0002650	collection of material	http://www.ebi.ac.uk/efo/EFO_0005066
 Biotin	biotin	http://purl.obolibrary.org/obo/CHEBI_15956	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+Biotin-labeled	biotin	http://purl.obolibrary.org/obo/CHEBI_15956	labelling	http://www.ebi.ac.uk/efo/EFO_0000562
 bipolar	bipolar disorder	http://purl.obolibrary.org/obo/MONDO_0004985	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Bipolar disorder	bipolar disorder	http://purl.obolibrary.org/obo/MONDO_0004985	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 bisphenol A	bisphenol A	http://purl.obolibrary.org/obo/CHEBI_33216	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
