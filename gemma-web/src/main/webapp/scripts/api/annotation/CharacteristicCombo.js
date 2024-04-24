@@ -103,12 +103,21 @@ Gemma.CharacteristicCombo = Ext.extend( Ext.form.ComboBox, {
       };
 
       this.on( "select", function( combo, record, index ) {
+
+         var o = record.data.value;
+         var sameValue = this.characteristic.value === o;
+
          this.characteristic.value = record.data.value;
          this.characteristic.valueUri = record.data.valueUri;
          this.characteristic.isSelection = true;
 
-         combo.setValue( record.data.value );
-
+         // ensure this gets marked as dirty. I can't find a cleaner way.
+         // but the value is only used for display.
+         if (sameValue) {
+            combo.setValue( record.data.value + " ");
+         } else {
+            combo.setValue( record.data.value );
+         }
       } );
 
       // happens when we are doing free text or when combo loses focus
