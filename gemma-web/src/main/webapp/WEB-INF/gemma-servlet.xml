@@ -118,6 +118,8 @@
                         </props>
                     </property>
                 </bean>
+                <!-- handle Tomcat's ClientAbortException, only needed for Tomact deployments -->
+                <bean class="ubic.gemma.web.util.ClientAbortExceptionResolver"/>
                 <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
                     <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
