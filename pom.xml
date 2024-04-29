@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.11</version>
+		<version>1.2.13</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -486,8 +486,6 @@
 				<configuration>
 					<skipTestProject>true</skipTestProject>
 					<versionDigitToIncrement>1</versionDigitToIncrement>
-					<useSnapshotInHotfix>true</useSnapshotInHotfix>
-					<useSnapshotInRelease>true</useSnapshotInRelease>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -538,7 +536,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<!-- with lombok, some references are invalid in the original source code -->
@@ -606,12 +603,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>3.1.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<doclint>all,-reference,-missing</doclint>
