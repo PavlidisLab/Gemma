@@ -22,6 +22,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -60,6 +61,11 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
             return new GeneOntologyServiceImpl();
+        }
+
+        @Bean
+        public TaskExecutor ontologyTaskExecutor() {
+            return mock( TaskExecutor.class );
         }
 
         @Bean
