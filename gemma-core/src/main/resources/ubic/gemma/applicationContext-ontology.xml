@@ -10,6 +10,7 @@
         <!-- executor used for loading ontologies in background -->
         <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
             <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
+            <property name="threadNamePrefix" value="gemma-ontology-loader-thread-"/>
         </bean>
 
         <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
