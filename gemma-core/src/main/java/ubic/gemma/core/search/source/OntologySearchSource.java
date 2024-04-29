@@ -91,7 +91,7 @@ public class OntologySearchSource implements SearchSource {
          *
          * But if they put in Parkinson's disease we don't want to do two queries.
          */
-        Set<Set<String>> subclauses = extractTermsDnf( settings );
+        Set<Set<String>> subclauses = extractTermsDnf( settings, true );
         for ( Set<String> subclause : subclauses ) {
             Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
