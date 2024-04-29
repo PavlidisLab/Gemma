@@ -22,12 +22,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -55,7 +56,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @ParametersAreNonnullByDefault
-public class GeneOntologyServiceImpl extends AbstractOntologyService implements GeneOntologyService, InitializingBean, DisposableBean {
+public class GeneOntologyServiceImpl extends AbstractOntologyService implements GeneOntologyService, InitializingBean {
 
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
@@ -127,6 +128,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    @Qualifier("ontologyTaskExecutor")
+    private TaskExecutor ontologyTaskExecutor;
+
     @Value("${load.ontologies}")
     private boolean autoLoadOntologies;
 
@@ -152,14 +157,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
         goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
         term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
         if ( autoLoadOntologies ) {
-            startInitializationThread( false, false );
-        }
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        if ( isInitializationThreadAlive() ) {
-            cancelInitializationThread();
+            ontologyTaskExecutor.execute( () -> {
+                initialize( false, false );
+            } );
         }
     }
 
