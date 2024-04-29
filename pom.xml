@@ -559,6 +559,17 @@
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<!-- a newer version with better filters can be enabled with -Pdepcheck, but it's incompatible with the Maven minimum requirement -->
+				<version>2.11.0</version>
+				<configuration>
+					<allowMajorUpdates>false</allowMajorUpdates>
+					<processDependencyManagement>false</processDependencyManagement>
+					<processPluginDependencies>false</processPluginDependencies>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<repositories>
@@ -603,7 +614,6 @@
 						<artifactId>versions-maven-plugin</artifactId>
 						<version>2.16.2</version>
 						<configuration>
-							<allowMajorUpdates>false</allowMajorUpdates>
 							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
 							<dependencyExcludes>
 								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
@@ -619,8 +629,9 @@
 								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
 								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
 							</dependencyExcludes>
-							<processDependencyManagement>false</processDependencyManagement>
-							<processPluginDependencies>false</processPluginDependencies>
+							<pluginDependencyExcludes>
+								<pluginDependencyExclude>org.antlr:antlr4-maven-plugin:*</pluginDependencyExclude>
+							</pluginDependencyExcludes>
 						</configuration>
 					</plugin>
 				</plugins>
