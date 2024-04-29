@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
-			<version>1.9.20.1</version>
+			<version>1.9.22</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -286,7 +286,7 @@
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
-			<version>1.10.13</version>
+			<version>1.10.14</version>
 		</dependency>
 
 		<!-- Plotting -->
@@ -300,12 +300,12 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.12.0</version>
+			<version>3.14.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.10.0</version>
+			<version>1.12.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -329,7 +329,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.13.0</version>
+			<version>2.16.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -443,7 +443,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>2.2.220</version>
+			<version>2.2.224</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -554,7 +554,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>8.4.3</version>
+				<version>9.1.0</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -591,6 +591,38 @@
 				</site>
 			</distributionManagement>
 		</profile>
+		<profile>
+			<id>depcheck</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>versions-maven-plugin</artifactId>
+						<version>2.16.2</version>
+						<configuration>
+							<allowMajorUpdates>false</allowMajorUpdates>
+							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
+							<dependencyExcludes>
+								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
+								<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
+								<dependencyExclude>com.googlecode.javaewah:JavaEWAH:*</dependencyExclude>
+								<dependencyExclude>org.springframework.retry:spring-retry:*</dependencyExclude>
+								<dependencyExclude>org.springframework.social:spring-social-core:*</dependencyExclude>
+								<dependencyExclude>org.springframework.ws:spring-ws-core:*</dependencyExclude>
+								<dependencyExclude>org.glassfish.jersey.*:*:*</dependencyExclude>
+								<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
+								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
+								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
+							</dependencyExcludes>
+							<processDependencyManagement>false</processDependencyManagement>
+							<processPluginDependencies>false</processPluginDependencies>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
@@ -624,17 +656,19 @@
 		</plugins>
 	</reporting>
 	<properties>
+		<maven.version>3.1.1</maven.version>
 		<gsec.version>0.0.16</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.15.3</jackson.version>
-		<swagger.version>2.2.11</swagger.version>
+		<jackson.version>2.17.0</jackson.version>
+		<swagger.version>2.2.21</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.29.2</slack.version>
-		<micrometer.version>1.11.0</micrometer.version>
+		<slack.version>1.39.0</slack.version>
+		<micrometer.version>1.12.5</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
+		<mysql.version>8.3.0</mysql.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
