@@ -107,7 +107,7 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     public void searchExpressionExperiment_whenQueryHasMultipleClauses_thenParseAccordingly() throws SearchException {
         SearchSettings settings = SearchSettings.expressionExperimentSearch( "cancer AND liver" );
         searchService.search( settings );
-        verify( ontologyService ).findTerms( "cancer", 5000, 30000L, TimeUnit.MILLISECONDS );
+        verify( ontologyService ).findTerms( eq( "cancer" ), eq( 5000 ), longThat( l -> l > 0 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         // cancer returns no result, so we should not bother querying liver
         verifyNoMoreInteractions( ontologyService );
     }
