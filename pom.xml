@@ -668,8 +668,18 @@
 				</configuration>
 				<reportSets>
 					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
 						<reports>
 							<report>aggregate</report>
+							<report>test-aggregate</report>
+						</reports>
+					</reportSet>
+					<reportSet>
+						<id>default</id>
+						<reports>
+							<report>javadoc</report>
+							<report>test-javadoc</report>
 						</reports>
 					</reportSet>
 				</reportSets>
@@ -683,6 +693,7 @@
 				</configuration>
 				<reportSets>
 					<reportSet>
+						<inherited>false</inherited>
 						<reports>
 							<report>aggregate</report>
 						</reports>
