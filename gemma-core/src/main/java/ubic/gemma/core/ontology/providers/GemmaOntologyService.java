@@ -35,7 +35,7 @@ public class GemmaOntologyService extends AbstractOntologyService {
 
     @Override
     public String getOntologyName() {
-        return "gemmaOntology";
+        return "Gemma Ontology";
     }
 
     @Override
