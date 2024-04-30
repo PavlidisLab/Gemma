@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -143,7 +144,7 @@ public class ExpressionDataDoubleMatrixUtil {
                     quantitationType.getRepresentation() ) ) );
         }
 
-        InferredQuantitationType inferredQuantitationType = infer( dmatrix );
+        InferredQuantitationType inferredQuantitationType = infer( dmatrix, quantitationType );
 
         if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
             String message = String.format( "The type %s differs from the one inferred from data: %s.",
@@ -305,7 +306,7 @@ public class ExpressionDataDoubleMatrixUtil {
      */
     public static QuantitationType inferQuantitationType( ExpressionDataDoubleMatrix expressionDataDoubleMatrix ) {
         QuantitationType qt = new QuantitationType();
-        InferredQuantitationType iqt = infer( expressionDataDoubleMatrix );
+        InferredQuantitationType iqt = infer( expressionDataDoubleMatrix, null );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( iqt.type );
         qt.setScale( iqt.scale );
@@ -314,7 +315,7 @@ public class ExpressionDataDoubleMatrixUtil {
         return qt;
     }
 
-    private static InferredQuantitationType infer( ExpressionDataDoubleMatrix expressionData ) {
+    private static InferredQuantitationType infer( ExpressionDataDoubleMatrix expressionData, @Nullable QuantitationType qt ) {
         DoubleMatrix2D matrix = new DenseDoubleMatrix2D( expressionData.getMatrix().asArray() );
 
         boolean isMicroarray;
@@ -331,7 +332,12 @@ public class ExpressionDataDoubleMatrixUtil {
 
         // no data, there's nothing we can do
         if ( matrix.rows() == 0 || matrix.columns() == 0 ) {
-            throw new IllegalArgumentException( "Cannot infer quantitation type without data." );
+            if ( qt == null ) {
+                throw new IllegalArgumentException( "Cannot infer quantitation type without data." );
+            } else {
+                log.warn( String.format( "There is no data to infer quantitation type from, but a fallback QT was provided: %s", qt ) );
+                return new InferredQuantitationType( qt.getType(), qt.getScale(), qt.getIsRatio() );
+            }
         }
 
         boolean ip = isPercent( matrix );
