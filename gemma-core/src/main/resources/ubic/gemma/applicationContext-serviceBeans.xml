@@ -75,6 +75,7 @@
                         <constructor-arg ref="taskExecutor"/>
                         <property name="poolName" value="gemmaLocalTasks"/>
                     </bean>
+                    <ref bean="taskRunningService"/>
                 </list>
             </constructor-arg>
         </bean>
