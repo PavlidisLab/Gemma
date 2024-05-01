@@ -290,6 +290,10 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        AuditEvent ev1 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
+        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, FailedBatchInformationMissingEvent.class );
+        if ( ev1 != null || ev2 != null ) return false;
+
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
         return ev.getEventType().getClass().isAssignableFrom( BatchInformationFetchingEvent.class )
@@ -298,7 +302,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
+    public BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
         if ( ee.getExperimentalDesign() == null )
             return null;
 
@@ -306,6 +310,11 @@ public class ExpressionExperimentServiceImpl
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 return new BatchInformationFetchingEvent(); // signal success
             }
+        }
+
+        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
+        if ( ev2 != null ) {
+            return ( BatchInformationMissingEvent ) ev2.getEventType();
         }
 
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );

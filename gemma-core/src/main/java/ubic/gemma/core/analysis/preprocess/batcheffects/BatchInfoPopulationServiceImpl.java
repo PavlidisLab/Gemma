@@ -127,12 +127,17 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             files = this.fetchRawDataFiles( ee );
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService
-                        .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found" );
+                        .addUpdateEvent( ee, BatchInformationMissingEvent.class, "No files were found" );
                 throw new BatchInfoPopulationException( ee, "No file were found." );
             }
             this.getBatchDataFromRawFiles( ee, files );
 
         } catch ( Exception e ) {
+
+            if ( BatchInfoPopulationException.class.isAssignableFrom( e.getClass() ) ) {
+                throw ( BatchInfoPopulationException ) e;
+            }
+
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
             throw new BatchInfoPopulationException( ee, e );
         } finally {
@@ -206,13 +211,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             headers = getFastqHeaders( ee );
         } catch ( IOException e ) {
             this.auditTrailService
-                    .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "Failed to locate FASTQ header information", e.getMessage() );
+                    .addUpdateEvent( ee, BatchInformationMissingEvent.class, "Failed to locate FASTQ header information", e.getMessage() );
             throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
         }
 
         if ( headers == null || headers.isEmpty() ) {
             this.auditTrailService
-                    .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No FASTQ headers found", "" );
+                    .addUpdateEvent( ee, BatchInformationMissingEvent.class, "No FASTQ headers found", "" );
             throw new IOException( "No FASTQ headers found for " + ee );
         }
 
@@ -247,16 +252,17 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             throw new IllegalArgumentException(
                     "The experiment does not seem to be from an external source that would have batch information available." );
         }
-
-        Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
+        Map<BioMaterial, Date> dates = null;
+        try {
+            dates = batchInfoParser.getBatchInfo( ee, files );
+        } catch ( BatchInfoPopulationException e ) {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationMissingEvent.class, e.getMessage(), e );
+            throw e;
+        }
 
         this.removeExistingBatchFactor( ee );
 
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
-
-        if ( dates.isEmpty() ) {
-            throw new BatchInfoPopulationException( ee, "No biomaterials were associated" );
-        }
 
         // we don't make a batch factor if there is just one batch.
         int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 1 : factor.getFactorValues().size();
@@ -367,7 +373,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         // again perhaps
 
         // on occasions the files appear or were missed the first time ...? GSE20842
-        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getEventType().getClass() ) ) {
+        if ( BatchInformationMissingEvent.class.isAssignableFrom( e.getEventType().getClass() ) ) {
             RawDataFetcher fetcher = new RawDataFetcher();
             return fetcher.checkForFile( ee.getAccession().getAccession() );
         }

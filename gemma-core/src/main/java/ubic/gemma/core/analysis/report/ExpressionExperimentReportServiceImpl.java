@@ -70,7 +70,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @SuppressWarnings("unchecked")
     private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
-            DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+            DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
+            PCAAnalysisEvent.class , BatchInformationMissingEvent.class};
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -205,6 +206,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
+        Map<Auditable, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
         Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = this.getSampleRemovalEvents( ees );
@@ -272,6 +274,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateBatchFetch( date );
 
+                    eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                }
+            } else if (batchMissingEvents.containsKey( ee )) { // we use date.
+                AuditEvent event = batchMissingEvents.get( ee );
+                if ( event != null ) {
+                    Date date = event.getDate();
+                    eeVo.setDateBatchFetch( date );
                     eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
