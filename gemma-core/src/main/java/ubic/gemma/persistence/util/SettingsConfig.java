@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -14,10 +15,12 @@ import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.format.support.DefaultFormattingConversionService;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -32,16 +35,16 @@ public class SettingsConfig {
      * Allow for substitution placeholders with values from the settings.
      */
     @Bean
-    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() throws IOException {
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer( @Qualifier("settingsPropertySources") PropertySources ps ) {
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-        configurer.setPropertySources( propertySources() );
+        configurer.setPropertySources( ps );
         return configurer;
     }
 
     @Bean
-    public static BaseCodeConfigurer baseCodeConfigurer() throws IOException {
+    public static BaseCodeConfigurer baseCodeConfigurer( @Qualifier("settingsPropertySources") PropertySources ps ) {
         BaseCodeConfigurer configurer = new BaseCodeConfigurer();
-        configurer.setPropertySources( propertySources() );
+        configurer.setPropertySources( ps );
         return configurer;
     }
 
@@ -57,14 +60,21 @@ public class SettingsConfig {
         return service;
     }
 
-    private static PropertySources propertySources() throws IOException {
+    /**
+     * Property sources populated from various settings files.
+     * <p>
+     * This is mainly used by {@link #propertySourcesPlaceholderConfigurer(PropertySources)} for substituting
+     * {@code ${...}} placeholders.
+     */
+    @Bean
+    public static PropertySources settingsPropertySources() throws IOException {
         MutablePropertySources result = new MutablePropertySources();
 
-        result.addLast( new PropertiesPropertySource( "system", System.getProperties() ) );
+        result.addLast( new PropertiesPropertySource( "system", filteredSystemProperties() ) );
 
         boolean userConfigLoaded = false;
 
-        String gemmaConfig = System.getProperty( "gemma.config" );
+        String gemmaConfig = System.getProperty( SettingsConstants.GEMMA_CONFIG_SYSTEM_PROPERTY );
         if ( gemmaConfig != null ) {
             Path p = Paths.get( gemmaConfig );
             log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since -Dgemma.config is defined." );
@@ -73,7 +83,7 @@ public class SettingsConfig {
                 throw new RuntimeException( p + " could not be loaded." );
             }
             warnIfReadableByGroupOrOthers( p );
-            result.addLast( new ResourcePropertySource( r ) );
+            result.addLast( new ResourcePropertySource( r.getDescription() + " specified by -Dgemma.config", r ) );
             userConfigLoaded = true;
         }
 
@@ -81,35 +91,36 @@ public class SettingsConfig {
         // TODO: move this in Gemma Web
         String catalinaBase;
         if ( !userConfigLoaded && ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
-            Path p = Paths.get( catalinaBase, "Gemma.properties" );
+            Path p = Paths.get( catalinaBase, SettingsConstants.USER_CONFIGURATION );
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( r.exists() ) {
                 log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
                 warnIfReadableByGroupOrOthers( p );
-                result.addLast( new ResourcePropertySource( r ) );
+                result.addLast( new ResourcePropertySource( r.getDescription() + " in $CATALINA_BASE", r ) );
                 userConfigLoaded = true;
             }
         }
 
         // load configuration from the home directory
         // TODO: move this in Gemma CLI
-        Path p = Paths.get( System.getProperty( "user.home" ), "Gemma.properties" );
+        Path p = Paths.get( System.getProperty( "user.home" ), SettingsConstants.USER_CONFIGURATION );
         FileSystemResource r = new FileSystemResource( p.toFile() );
         if ( !userConfigLoaded && r.exists() ) {
             log.debug( "Loading user configuration from " + p.toAbsolutePath() + "." );
             warnIfReadableByGroupOrOthers( p );
-            result.addLast( new ResourcePropertySource( r ) );
+            result.addLast( new ResourcePropertySource( r.getDescription() + " in $HOME", r ) );
             userConfigLoaded = true;
         }
 
         // at least one user configuration should be loaded
         if ( !userConfigLoaded ) {
-            throw new RuntimeException( "Gemma.properties could not be loaded and no other user configuration were supplied." );
+            throw new RuntimeException( SettingsConstants.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied." );
         }
 
         log.debug( "Loading default configuration files from classpath." );
-        result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
-        result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
+        for ( String loc : SettingsConstants.DEFAULT_CONFIGURATIONS ) {
+            result.addLast( new ResourcePropertySource( new ClassPathResource( loc ) ) );
+        }
 
         ClassPathResource versionResource = new ClassPathResource( "ubic/gemma/version.properties" );
         if ( versionResource.exists() ) {
@@ -119,6 +130,37 @@ public class SettingsConfig {
         }
 
         return result;
+    }
+
+    /**
+     * Filter system properties that are declared in the default locations.
+     */
+    private static Properties filteredSystemProperties() throws IOException {
+        Properties props = new Properties();
+        for ( String loc : SettingsConstants.DEFAULT_CONFIGURATIONS ) {
+            try ( InputStream is = new ClassPathResource( loc ).getInputStream() ) {
+                Properties defaultProperties = new Properties();
+                defaultProperties.load( is );
+                for ( String key : defaultProperties.stringPropertyNames() ) {
+                    String val;
+                    if ( key.startsWith( SettingsConstants.SYSTEM_PROPERTY_PREFIX ) ) {
+                        val = System.getProperty( key );
+                    } else {
+                        val = System.getProperty( key );
+                        if ( val != null ) {
+                            // allow unprefixed keys for backward-compatibility
+                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SettingsConstants.SYSTEM_PROPERTY_PREFIX ) );
+                        } else {
+                            val = System.getProperty( SettingsConstants.SYSTEM_PROPERTY_PREFIX + key );
+                        }
+                    }
+                    if ( val != null ) {
+                        props.setProperty( key, val );
+                    }
+                }
+            }
+        }
+        return props;
     }
 
     private static void warnIfReadableByGroupOrOthers( Path path ) throws IOException {

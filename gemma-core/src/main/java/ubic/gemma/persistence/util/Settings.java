@@ -58,25 +58,13 @@ public class Settings {
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
-    /**
-     * Name of the resource that is used to configure Gemma internally.
-     */
-    private static final String BUILTIN_CONFIGURATION = "project.properties";
-    /**
-     * Name of the resource containing defaults that the user can override (classpath)
-     */
-    private static final String DEFAULT_CONFIGURATION = "default.properties";
-    /**
-     * The name of the file users can use to configure Gemma.
-     */
-    private static final String USER_CONFIGURATION = "Gemma.properties";
     private static final CompositeConfiguration config;
     private static final Log log = LogFactory.getLog( Settings.class.getName() );
 
     static {
         config = new CompositeConfiguration();
 
-        Settings.config.addConfiguration( new SystemConfiguration() );
+        Settings.config.addConfiguration( new MapConfiguration( filteredSystemProperties() ) );
 
         /*
          * the order matters - first come, first serve. Items added later do not overwrite items defined earlier. Thus
@@ -88,7 +76,7 @@ public class Settings {
 
         boolean userConfigLoaded = false;
 
-        String gemmaConfig = System.getProperty( "gemma.config" );
+        String gemmaConfig = System.getProperty( SettingsConstants.GEMMA_CONFIG_SYSTEM_PROPERTY );
         if ( gemmaConfig != null ) {
             File f = Paths.get( gemmaConfig ).toFile();
             try {
@@ -102,7 +90,7 @@ public class Settings {
 
         String catalinaBase;
         if ( !userConfigLoaded && ( catalinaBase = System.getenv( "CATALINA_BASE" ) ) != null ) {
-            File f = Paths.get( catalinaBase, Settings.USER_CONFIGURATION ).toFile();
+            File f = Paths.get( catalinaBase, SettingsConstants.USER_CONFIGURATION ).toFile();
             if ( f.exists() ) {
                 try {
                     log.debug( "Loading user configuration from " + f.getAbsolutePath() + " since $CATALINA_BASE is defined." );
@@ -114,7 +102,7 @@ public class Settings {
             }
         }
 
-        File f = Paths.get( System.getProperty( "user.home" ), Settings.USER_CONFIGURATION ).toFile();
+        File f = Paths.get( System.getProperty( "user.home" ), SettingsConstants.USER_CONFIGURATION ).toFile();
         if ( !userConfigLoaded && f.exists() ) {
             try {
                 log.debug( "Loading user configuration from " + f.getAbsolutePath() + "." );
@@ -126,20 +114,20 @@ public class Settings {
         }
 
         if ( !userConfigLoaded ) {
-            throw new RuntimeException( Settings.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied." );
+            throw new RuntimeException( SettingsConstants.USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied." );
         }
 
         log.debug( "Loading default configurations from classpath." );
 
         try {
             // Default comes first.
-            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( Settings.DEFAULT_CONFIGURATION ) );
+            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( SettingsConstants.DEFAULT_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( "Default configuration could not be loaded.", e );
         }
 
         try {
-            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( Settings.BUILTIN_CONFIGURATION ) );
+            Settings.config.addConfiguration( ConfigUtils.loadClasspathConfig( SettingsConstants.BUILTIN_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( "Extra built-in configuration could not be loaded.", e );
         }
@@ -170,6 +158,35 @@ public class Settings {
             Settings.log.trace( "********** End of configuration details ***********" );
         }
 
+    }
+
+    private static Properties filteredSystemProperties() {
+        Properties props = new Properties();
+        for ( String loc : SettingsConstants.DEFAULT_CONFIGURATIONS ) {
+            try {
+                PropertiesConfiguration defaultProperties;
+                defaultProperties = ConfigUtils.loadClasspathConfig( loc );
+                for ( String key : defaultProperties.getLayout().getKeys() ) {
+                    String val;
+                    if ( key.startsWith( SettingsConstants.SYSTEM_PROPERTY_PREFIX ) ) {
+                        val = System.getProperty( key );
+                    } else {
+                        val = System.getProperty( key );
+                        // allow unprefixed keys for backward-compatibility
+                        // there's already a warning in SettingsConfig
+                        if ( val == null ) {
+                            val = System.getProperty( SettingsConstants.SYSTEM_PROPERTY_PREFIX + key );
+                        }
+                    }
+                    if ( val != null ) {
+                        props.setProperty( key, val );
+                    }
+                }
+            } catch ( ConfigurationException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return props;
     }
 
     /**
