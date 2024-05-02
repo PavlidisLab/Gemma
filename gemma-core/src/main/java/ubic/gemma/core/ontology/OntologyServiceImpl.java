@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.ontology;
 
+import io.micrometer.core.annotation.Timed;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -389,11 +390,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
+    @Timed
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         return getParentsOrChildren( terms, direct, includeAdditionalProperties, true, timeUnit.toMillis( timeout ) );
     }
 
     @Override
+    @Timed
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct, boolean includeAdditionalProperties, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         return getParentsOrChildren( terms, direct, includeAdditionalProperties, false, timeUnit.toMillis( timeout ) );
     }
