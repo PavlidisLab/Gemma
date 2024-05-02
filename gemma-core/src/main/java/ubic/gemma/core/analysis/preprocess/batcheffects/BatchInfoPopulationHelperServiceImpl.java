@@ -485,7 +485,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
 
             if ( !result.containsKey( updated ) ) {
-                log.info( "Adding: " + updated );
+                log.debug( "Adding: " + updated );
                 result.put( updated, new HashSet<String>() );
             }
 
