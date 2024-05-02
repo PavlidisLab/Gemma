@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
@@ -160,7 +161,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .build();
 
-        Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
+        Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100 );
         assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
         SearchService.SearchResultMap found = this.searchService.search( settings );

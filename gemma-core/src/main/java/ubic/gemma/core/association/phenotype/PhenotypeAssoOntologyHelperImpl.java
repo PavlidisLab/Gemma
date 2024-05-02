@@ -23,6 +23,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.search.BaseCodeOntologySearchException;
@@ -72,12 +73,12 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
             // format the query for lucene to look for ontology terms with an exact match for the value
             String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
-            Collection<OntologyTerm> ontologyTerms;
+            Collection<OntologySearchResult<OntologyTerm>> ontologyTerms;
             try {
-                ontologyTerms = this.ontologyService.findTerms( value );
-                for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-                    if ( StringUtils.equalsIgnoreCase( ontologyTerm.getLabel(), characteristicValueObject.getValue() ) ) {
-                        characteristic.setValueUri( ontologyTerm.getUri() );
+                ontologyTerms = this.ontologyService.findTerms( value, 5000 );
+                for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
+                    if ( StringUtils.equalsIgnoreCase( ontologyTerm.getResult().getLabel(), characteristicValueObject.getValue() ) ) {
+                        characteristic.setValueUri( ontologyTerm.getResult().getUri() );
                         break;
                     }
                 }
@@ -111,16 +112,16 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
-            Collection<OntologyTerm> hits;
+            Collection<OntologySearchResult<OntologyTerm>> hits;
             try {
-                hits = ontology.findTerm( searchQuery );
+                hits = ontology.findTerm( searchQuery, 500 );
             } catch ( OntologySearchException e ) {
                 throw new BaseCodeOntologySearchException( e );
             }
 
-            for ( OntologyTerm ontologyTerm : hits ) {
-                if ( ontologyTerm.getLabel() != null && uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
-                    uniqueValueTerm.put( ontologyTerm.getLabel().toLowerCase(), ontologyTerm );
+            for ( OntologySearchResult<OntologyTerm> ontologyTerm : hits ) {
+                if ( ontologyTerm.getResult().getLabel() != null && uniqueValueTerm.get( ontologyTerm.getResult().getLabel().toLowerCase() ) == null ) {
+                    uniqueValueTerm.put( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult() );
                 }
             }
         }
@@ -134,14 +135,14 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
         Collection<OntologyTerm> results = new TreeSet<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             if ( ontology.isOntologyLoaded() ) {
-                Collection<OntologyTerm> found;
+                Collection<OntologySearchResult<OntologyTerm>> found;
                 try {
-                    found = ontology.findTerm( searchQuery );
+                    found = ontology.findTerm( searchQuery, 500 );
                 } catch ( OntologySearchException e ) {
                     throw new BaseCodeOntologySearchException( e );
                 }
                 if ( found != null && !found.isEmpty() )
-                    results.addAll( found );
+                    found.stream().map( OntologySearchResult::getResult ).forEach( results::add );
             }
         }
 

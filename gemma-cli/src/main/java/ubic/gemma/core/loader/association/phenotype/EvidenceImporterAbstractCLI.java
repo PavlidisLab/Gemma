@@ -18,7 +18,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.UberonOntologyService;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -322,17 +326,17 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractAuthenticatedC
      * @param  search        The value we are interested in finding
      * @return OntologyTerm the exact match value found
      */
-    OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
+    OntologyTerm findExactTerm( Collection<OntologySearchResult<OntologyTerm>> ontologyTerms, String search ) {
 
         // list of OntologyTerms found
         Collection<OntologyTerm> ontologyKept = new HashSet<>();
         OntologyTerm termFound = null;
 
-        for ( OntologyTerm ot : ontologyTerms ) {
-            if ( ot.getLabel() != null ) {
-                if ( ot.getLabel().equalsIgnoreCase( search ) ) {
-                    ontologyKept.add( ot );
-                    termFound = ot;
+        for ( OntologySearchResult<OntologyTerm> ot : ontologyTerms ) {
+            if ( ot.getResult().getLabel() != null ) {
+                if ( ot.getResult().getLabel().equalsIgnoreCase( search ) ) {
+                    ontologyKept.add( ot.getResult() );
+                    termFound = ot.getResult();
                 }
             }
         }

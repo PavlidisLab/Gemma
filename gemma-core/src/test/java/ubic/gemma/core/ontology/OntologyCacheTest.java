@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.assertj.core.util.Sets.set;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
 
@@ -29,7 +30,7 @@ public class OntologyCacheTest {
         term1 = new OntologyTermSimple( "http://example.com/term1", "term1" );
         term2 = new OntologyTermSimple( "http://example.com/term2", "term2" );
         term3 = new OntologyTermSimple( "http://example.com/term3", "term3" );
-        term4 = new OntologyTermSimple( "http://example.com/term3", "term4" );
+        term4 = new OntologyTermSimple( "http://example.com/term4", "term4" );
     }
 
     @After
@@ -68,6 +69,6 @@ public class OntologyCacheTest {
 
         // a subset of size 1 exists, but it cannot be used
         ontologyCache.getChildren( ontologyService, Arrays.asList( term1, term2, term3, term4 ), true, true );
-        verify( ontologyService ).getChildren( new HashSet<>( Arrays.asList( term1, term2, term3, term4 ) ), true, true );
+        verify( ontologyService ).getChildren( Arrays.asList( term1, term2, term3, term4 ), true, true );
     }
 }

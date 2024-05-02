@@ -17,6 +17,7 @@ package ubic.gemma.core.loader.association.phenotype;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
@@ -264,7 +265,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String valueUri = "";
 
             if ( ontologyUsed != null ) {
-                Collection<OntologyTerm> ontologyTerms = ontologyUsed.findTerm( term );
+                Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyUsed.findTerm( term, 500 );
                 OntologyTerm ot = this.findExactTerm( ontologyTerms, term );
 
                 if ( ot != null ) {
@@ -352,19 +353,19 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // value found
         else {
             // search disease
-            Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( phenotypeToSearch );
+            Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = this.diseaseOntologyService.findTerm( phenotypeToSearch, 500 );
 
             ot = this.findExactTerm( ontologyTerms, phenotypeToSearch );
 
             if ( ot == null ) {
                 // search hp
-                ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch );
+                ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch, 500 );
                 ot = this.findExactTerm( ontologyTerms, phenotypeToSearch );
 
             }
             if ( ot == null ) {
                 // search mammalian
-                ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( phenotypeToSearch );
+                ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( phenotypeToSearch, 500 );
                 this.findExactTerm( ontologyTerms, phenotypeToSearch );
             }
         }

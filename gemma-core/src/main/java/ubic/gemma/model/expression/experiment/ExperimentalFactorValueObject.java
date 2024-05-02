@@ -51,6 +51,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     private String factorValues;
 
     private String name;
+    @Schema(allowableValues = { "categorical", "continuous" })
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 

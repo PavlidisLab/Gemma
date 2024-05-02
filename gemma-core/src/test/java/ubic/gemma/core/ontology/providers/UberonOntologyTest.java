@@ -16,7 +16,7 @@ public class UberonOntologyTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSubstantiaNigraInUberon() throws InterruptedException {
+    public void testSubstantiaNigraInUberon() {
         UberonOntologyService uberonOntologyService = new UberonOntologyService();
         assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
         assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );

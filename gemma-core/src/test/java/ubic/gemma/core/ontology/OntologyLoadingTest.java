@@ -77,6 +77,11 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     private MouseDevelopmentOntologyService mdo;
 
     @Test
+    public void testThatConnectivityAndConnectiveAreExcludedFromStemmingInClo() {
+        assertThat( clo.getExcludedWordsFromStemming() ).contains( "connectivity", "connective" );
+    }
+
+    @Test
     public void testThatChebiDoesNotHaveInferenceEnabled() {
         assertThat( chebi.getInferenceMode() ).isEqualTo( OntologyService.InferenceMode.NONE );
     }

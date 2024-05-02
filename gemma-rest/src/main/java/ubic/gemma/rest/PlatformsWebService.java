@@ -266,7 +266,7 @@ public class PlatformsWebService {
     @Path("/{platform}/annotations")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the annotations of a given platform", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string", format = "binary"))) })
+            @ApiResponse(content = @Content(schema = @Schema(type = "string", format = "binary"))) })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {

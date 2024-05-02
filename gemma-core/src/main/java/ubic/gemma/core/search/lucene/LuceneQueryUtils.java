@@ -86,6 +86,10 @@ public class LuceneQueryUtils {
         }
     }
 
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings ) throws SearchException {
+        return extractTermsDnf( settings, false );
+    }
+
     /**
      * Extract a DNF (Disjunctive Normal Form) from the terms of a query.
      * <p>
@@ -93,17 +97,22 @@ public class LuceneQueryUtils {
      * interleaved.
      * <p>
      * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
+     * @param allowWildcards allow {@link PrefixQuery} and {@link WildcardQuery} clauses
      */
-    public static Set<Set<String>> extractTermsDnf( SearchSettings settings ) throws SearchException {
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards ) throws SearchException {
         Query q = parseSafely( settings, createQueryParser() );
         Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {
             Set<Set<String>> ds = new LinkedHashSet<>();
-            if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds ) ) {
+            if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds, allowWildcards ) ) {
                 result = ds;
             } else {
                 result = Collections.emptySet();
             }
+        } else if ( allowWildcards && q instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) q ).getPrefix() ) ) {
+            result = Collections.singleton( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
+        } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
+            result = Collections.singleton( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
         } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
             result = Collections.singleton( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
         } else {
@@ -112,7 +121,7 @@ public class LuceneQueryUtils {
         return result;
     }
 
-    private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms ) {
+    private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms, boolean allowWildcards ) {
         if ( query.clauses().stream().anyMatch( BooleanClause::isRequired ) ) {
             Set<String> subClause = new LinkedHashSet<>();
             terms.add( subClause );
@@ -124,10 +133,15 @@ public class LuceneQueryUtils {
                 continue;
             }
             assert !clause.isRequired();
-            if ( clause.getQuery() instanceof BooleanQuery ) {
-                if ( !extractNestedDisjunctions( ( BooleanQuery ) clause.getQuery(), terms ) ) {
+            Query q = clause.getQuery();
+            if ( q instanceof BooleanQuery ) {
+                if ( !extractNestedDisjunctions( ( BooleanQuery ) q, terms, allowWildcards ) ) {
                     return false;
                 }
+            } else if ( allowWildcards && q instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) q ).getPrefix() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
+            } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
             } else if ( clause.getQuery() instanceof TermQuery && isTermGlobal( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) {
                 terms.add( Collections.singleton( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
             }
@@ -307,7 +321,7 @@ public class LuceneQueryUtils {
      * Quote the given Lucene query to be used for an exact match.
      */
     public static String quote( String query ) {
-        query = QueryParser.escape( query );
+        query = query.replaceAll( "\"", "\\\\\"" );
         // spaces should be quoted
         if ( query.contains( " " ) ) {
             query = "\"" + query + "\"";

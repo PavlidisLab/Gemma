@@ -71,6 +71,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * subclass for tests that need the container and use the database
  *
@@ -148,11 +150,13 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * @param commonName e.g. mouse,human,rat
-     * @return taxon
+     * Obtain a taxon by its common name.
+     * <p>
+     * See {@code sql/init-data.sql} for a list of available taxa to use in tests.
      */
     public Taxon getTaxon( String commonName ) {
-        return this.taxonService.findByCommonName( commonName );
+        return requireNonNull( this.taxonService.findByCommonName( commonName ),
+                String.format( "Unknown taxa with common name %s, has the test data been loaded?", commonName ) );
     }
 
     public Gene getTestPersistentGene( Taxon taxon ) {
@@ -170,17 +174,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     public String randomName() {
         return RandomStringUtils.randomAlphabetic( 10 );
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     /**

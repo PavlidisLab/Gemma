@@ -141,4 +141,12 @@ public class LuceneQueryUtilsTest {
         // an interesting case: a fielded search for a URI
         assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "http:\"http://example.com\"", null ) ) );
     }
+
+    @Test
+    public void testQuote() {
+        assertEquals( "\"alpha beta\"", quote( "alpha beta" ) );
+        assertEquals( "BRCA1", quote( "BRCA1" ) );
+        assertEquals( "BRCA?", quote( "BRCA?" ) );
+        assertEquals( "BRCA1\\\"", quote( "BRCA1\"" ) );
+    }
 }

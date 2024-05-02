@@ -275,7 +275,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsWhenInferenceTimeoutThenIgnoreChildrenTerms() throws TimeoutException {
+    public void testGetDatasetsWhenInferenceTimeoutThenProduce503ServiceUnavailable() throws TimeoutException {
         //noinspection unchecked
         when( expressionExperimentService.getFilter( eq( "allCharacteristic.valueUri" ), eq( Filter.Operator.in ), anyCollection() ) )
                 .thenAnswer( a -> Filter.by( "c", "valueUri", String.class, Filter.Operator.in, a.getArgument( 2, Collection.class ) ) );
@@ -284,7 +284,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets" ).queryParam( "filter", "allCharacteristic.valueUri in (a, b, c)" ).request().get() )
-                .hasStatus( Response.Status.OK )
+                .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
+                .hasHeaderSatisfying( "Retry-After", values -> {
+                    assertThat( values ).isNotEmpty();
+                } )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 

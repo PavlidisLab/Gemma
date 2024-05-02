@@ -24,4 +24,10 @@ public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebAp
     protected Response.Status getStatus( WebApplicationException exception ) {
         return Response.Status.fromStatusCode( exception.getResponse().getStatus() );
     }
+
+    @Override
+    protected Response.ResponseBuilder getResponseBuilder( WebApplicationException exception ) {
+        return super.getResponseBuilder( exception )
+                .replaceAll( exception.getResponse().getHeaders() );
+    }
 }

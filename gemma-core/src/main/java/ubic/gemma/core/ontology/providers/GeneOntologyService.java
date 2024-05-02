@@ -16,7 +16,6 @@ package ubic.gemma.core.ontology.providers;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -66,14 +65,6 @@ public interface GeneOntologyService extends OntologyService {
             Collection<OntologyTerm> comparisonOntos );
 
     /**
-     * Search by inexact string
-     *
-     * @param  queryString query string
-     * @return ontology terms
-     */
-    Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException;
-
-    /**
      * @param  entries NOTE terms that are in this collection are NOT explicitly included; however, some of them may be
      *                 included incidentally if they are parents of other terms in the collection.
      * @return ontology terms
@@ -106,7 +97,7 @@ public interface GeneOntologyService extends OntologyService {
      * @param  goAspect      limit only to the given aspect (pass null to use all)
      * @return ontology terms
      */
-    Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, @Nullable  GOAspect goAspect );
+    Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, @Nullable GOAspect goAspect );
 
     /**
      *

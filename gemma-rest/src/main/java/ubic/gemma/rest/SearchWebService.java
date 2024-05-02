@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,7 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
@@ -125,7 +129,11 @@ public class SearchWebService {
     @GET
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Search everything in Gemma")
+    @Operation(summary = "Search everything in Gemma", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "400", description = "Invalid search query, taxon, platform result type or exclusion specification.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The search timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public SearchResultsResponseDataObject search(
             @QueryParam("query") QueryArg query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
@@ -176,6 +184,8 @@ public class SearchWebService {
             searchResults = searchService.search( searchSettings ).toList();
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }

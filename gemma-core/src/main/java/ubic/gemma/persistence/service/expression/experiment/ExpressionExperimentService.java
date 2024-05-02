@@ -24,6 +24,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -94,7 +95,7 @@ public interface ExpressionExperimentService
     List<ExpressionExperiment> browse( int start, int limit );
 
     @Nullable
-    BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee );
+    BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee );
 
     boolean checkHasBatchInfo( ExpressionExperiment ee );
 
@@ -312,7 +313,7 @@ public interface ExpressionExperimentService
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
      */
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) throws SearchException;
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * Obtain annotation usage frequency for datasets matching the given filters.

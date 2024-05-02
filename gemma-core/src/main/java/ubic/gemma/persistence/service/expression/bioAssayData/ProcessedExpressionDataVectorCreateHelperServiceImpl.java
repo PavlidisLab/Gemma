@@ -24,7 +24,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math3.analysis.function.Exp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -261,7 +260,10 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
-        assert !arrayDesignsUsed.isEmpty();
+        if ( arrayDesignsUsed.isEmpty() ) {
+            log.warn( String.format( "%s does not have any associated platform, cannot compute intensities for two-color data.", ee ) );
+            return null;
+        }
         ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
         assert arrayDesign != null && arrayDesign.getTechnologyType() != null;
 

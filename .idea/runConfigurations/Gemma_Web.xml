@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Gemma Web" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 9.0.80" ALTERNATIVE_JRE_ENABLED="false">
-    <option name="COMMON_VM_ARGUMENTS" value="-Dspring.profiles.active=dev -Dlog4j.configuration=$PROJECT_DIR$/gemma-web/src/main/config/log4j-dev.properties -Dcom.mysql.cj.disableAbandonedConnectionCleanup=true" />
+    <option name="COMMON_VM_ARGUMENTS" value="-Dspring.profiles.active=dev -Dlog4j.configuration=$PROJECT_DIR$/gemma-web/src/main/config/log4j-dev.properties" />
     <option name="UPDATE_ON_FRAME_DEACTIVATION" value="true" />
     <option name="UPDATING_POLICY" value="redeploy-artifacts" />
     <deployment>

@@ -15,10 +15,7 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 
 import javax.annotation.Nullable;
 
@@ -86,10 +83,24 @@ public class BatchEffectDetails {
     private int component;
     private double componentVarianceProportion;
 
-    public BatchEffectDetails( @Nullable BatchInformationFetchingEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
+    public BatchEffectDetails( @Nullable BatchInformationEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
+
+        if ( infoEvent != null && ( BatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) ) {
+            this.hasBatchInformation = false;
+            this.hasProblematicBatchInformation = false;
+            this.hasSingletonBatches = false;
+            this.hasUninformativeBatchInformation = false;
+            this.dataWasBatchCorrected = false;
+            this.singleBatch = false;
+            this.pvalue = 1.0;
+            return;
+        }
+
         this.hasBatchInformation = infoEvent != null;
         if ( infoEvent != null ) {
+            // FIXME hasProblematicBatchInformation should not be assigned when there is no batch information available.
             this.hasProblematicBatchInformation = FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) );
+
             this.hasSingletonBatches = SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() );
             this.hasUninformativeBatchInformation = UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() );
         } else {

@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +30,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -48,18 +49,17 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * @author Paul
  */
 public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
 
-    private Collection<ExpressionExperiment> ees;
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
     @Autowired
@@ -73,22 +73,81 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
-    TwoChannelMissingValues tcmv;
+    private TwoChannelMissingValues tcmv;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    /* fixtures */
+    private final Collection<ExpressionExperiment> ees = new ArrayList<>();
+    private final Collection<ArrayDesign> ads = new ArrayList<>();
 
     @After
     public void after() {
-        if ( ees == null || ees.isEmpty() )
-            return;
-
         for ( ExpressionExperiment ee : ees ) {
             expressionExperimentService.remove( ee );
         }
-
+        for ( ArrayDesign ad : ads ) {
+            arrayDesignService.remove( ad );
+        }
     }
 
-    @Before
-    public void before() throws Exception {
-        ees = this.getDataset();
+    @Test
+    public void testReplaceProcessedDataVectors() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee = expressionExperimentService.create( ee );
+        ees.add( ee );
+        ArrayDesign platform = new ArrayDesign();
+        platform.setPrimaryTaxon( getTaxon( "human" ) );
+        for ( int i = 0; i < 10; i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i, platform );
+            platform.getCompositeSequences().add( cs );
+        }
+        platform = arrayDesignService.create( platform );
+        ads.add( platform );
+        assertThat( platform.getCompositeSequences() ).hasSize( 10 );
+        BioAssayDimension bad = new BioAssayDimension();
+        bad = bioAssayDimensionService.create( bad );
+        QuantitationType rawQt = QuantitationType.Factory.newInstance();
+        rawQt.setGeneralType( GeneralType.QUANTITATIVE );
+        rawQt.setType( StandardQuantitationType.AMOUNT );
+        rawQt.setScale( ScaleType.LOG2 );
+        rawQt.setRepresentation( PrimitiveType.DOUBLE );
+        rawQt.setIsPreferred( true );
+        ee.getQuantitationTypes().add( rawQt );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector vec = new RawExpressionDataVector();
+            vec.setExpressionExperiment( ee );
+            vec.setDesignElement( cs );
+            vec.setBioAssayDimension( bad );
+            vec.setQuantitationType( rawQt );
+            vec.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( vec );
+        }
+        expressionExperimentService.update( ee );
+        Set<ProcessedExpressionDataVector> createdVectors = processedDataVectorService.createProcessedDataVectors( ee );
+        assertThat( createdVectors ).hasSize( 10 );
+        ee = expressionExperimentService.thaw( ee );
+        assertThat( ee.getNumberOfDataVectors() )
+                .isEqualTo( 10 );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .containsExactlyInAnyOrderElementsOf( createdVectors );
+        // effectively transform the processed vectors
+        List<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setBioAssayDimension( bad );
+            newVector.setQuantitationType( v.getQuantitationType() );
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setData( v.getData() );
+            newVectors.add( newVector );
+        }
+        processedDataVectorService.replaceProcessedDataVectors( ee, newVectors );
+        ee = expressionExperimentService.thaw( ee );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .containsExactlyInAnyOrderElementsOf( newVectors );
+        assertThat( ee.getNumberOfDataVectors() )
+                .isEqualTo( 10 );
     }
 
     /**
@@ -98,14 +157,18 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
      */
     @Test
     @Category(SlowTest.class)
-    public void testGetProcessedDataMatrices() {
-
-        if ( ees == null ) {
-            log.error( "Test skipped because of failure to fetch data." );
-            return;
+    public void testGetProcessedDataMatrices() throws Exception {
+        ExpressionExperiment ee;
+        try {
+            ee = this.getDataset();
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
+                assumeNoException( "Test skipped because of failure to fetch data.", e );
+                return;
+            } else {
+                throw e;
+            }
         }
-
-        ExpressionExperiment ee = ees.iterator().next();
 
         Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService.createProcessedDataVectors( ee );
 
@@ -117,14 +180,14 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
 
-        v = processedDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
+        v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
 
         processedDataVectorService.clearCache();
 
     }
 
-    private Collection<ExpressionExperiment> getDataset() throws Exception {
+    private ExpressionExperiment getDataset() throws Exception {
         // Dataset uses spotted arrays, 11 samples.
 
         ExpressionExperiment ee;
@@ -134,8 +197,8 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             //noinspection unchecked
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( "GSE432", false, true, false );
+            ees.addAll( results );
             ee = results.iterator().next();
-
             tcmv.computeMissingValues( ee, 1.5, null );
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {
@@ -144,20 +207,13 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             } else {
                 ee = ( ExpressionExperiment ) e.getData();
             }
-        } catch ( Exception e ) {
-            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
-                return null;
-            }
-            throw e;
         }
 
         ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( ee );
         ee = expressionExperimentService.thawLite( ee );
         processedDataVectorService.createProcessedDataVectors( ee );
-        Collection<ExpressionExperiment> e = new HashSet<>();
-        e.add( ee );
-        return e;
+        return ee;
     }
 
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {

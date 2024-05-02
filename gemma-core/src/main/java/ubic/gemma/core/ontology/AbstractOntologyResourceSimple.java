@@ -4,7 +4,6 @@ import ubic.basecode.ontology.model.OntologyResource;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.Objects;
 
 public abstract class AbstractOntologyResourceSimple implements OntologyResource, Serializable {
@@ -41,17 +40,6 @@ public abstract class AbstractOntologyResourceSimple implements OntologyResource
     @Override
     public boolean isObsolete() {
         return false;
-    }
-
-    @Nullable
-    @Override
-    public Double getScore() {
-        return null;
-    }
-
-    @Override
-    public int compareTo( OntologyResource other ) {
-        return Objects.compare( getUri(), other.getUri(), Comparator.nullsLast( Comparator.naturalOrder() ) );
     }
 
     @Override

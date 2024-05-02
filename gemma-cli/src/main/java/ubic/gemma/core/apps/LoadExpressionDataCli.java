@@ -66,7 +66,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     // Command line Options
     private String accessionFile = null;
     private String accessions = null;
-    private boolean doMatching = true;
+    private boolean doMatching = false;
     private boolean force = false;
     private boolean platformOnly = false;
     private boolean allowSubSeriesLoad = false;
@@ -105,13 +105,13 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                 .longOpt( "platforms" ).build();
         options.addOption( platformOnlyOption );
 
-        Option noBioAssayMatching = Option.builder( "n" ).desc( "Do not try to match samples across platforms" )
-                .longOpt( "nomatch" ).build();
+        Option noBioAssayMatching = Option.builder( "m" ).desc( "Try to match samples across platforms (e.g. multi-part microarray platforms)" )
+                .longOpt( "match" ).build();
 
         options.addOption( noBioAssayMatching );
 
         Option splitByPlatformOption = Option.builder( "splitByPlatform" )
-                .desc( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
+                .desc( "Force data from each platform into a separate experiment" )
                 .build();
         options.addOption( splitByPlatformOption );
 
@@ -234,7 +234,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
             this.doMatching = false; // defensive
         } else {
             this.splitByPlatform = false;
-            this.doMatching = !commandLine.hasOption( 'n' );
+            this.doMatching = commandLine.hasOption( 'm' );
         }
 
         this.suppressPostProcessing = commandLine.hasOption( "nopost" );

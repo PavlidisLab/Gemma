@@ -41,8 +41,6 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.ParseSearchException;
-import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -106,6 +104,8 @@ public class DatasetsWebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+
+    private static final String SEARCH_TIMEOUT_DESCRIPTION = "The search has timed out. This can only occur if the `search` parameter is provided. It can generally be resolved by reattempting the search 30 seconds later. Lookup the `Retry-After` header for the recommended delay.";
 
     private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
@@ -176,7 +176,10 @@ public class DatasetsWebService {
     @CacheControl(maxAge = 1200)
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all datasets")
+    @Operation(summary = "Retrieve all datasets", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
@@ -240,7 +243,10 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count datasets matching the provided query and filter")
+    @Operation(summary = "Count datasets matching the provided query and filter", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
@@ -248,7 +254,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -266,7 +272,10 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
-            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -275,7 +284,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -307,9 +316,8 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject"))),
-                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -327,30 +335,23 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
         int maxResults = limit.getValue( MAX_DATASETS_CATEGORIES );
-        List<CategoryWithUsageStatisticsValueObject> results;
-        try {
-            results = expressionExperimentService.getCategoriesUsageFrequency(
-                            filters,
-                            extraIds,
-                            datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
-                            datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                            mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
-                            maxResults )
-                    .entrySet()
-                    .stream()
-                    .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
-                    .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
-                    .collect( Collectors.toList() );
-        } catch ( ParseSearchException e ) {
-            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
-        } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
-        }
+        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
+                        filters,
+                        extraIds,
+                        datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                        datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
+                        mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                        maxResults )
+                .entrySet()
+                .stream()
+                .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
+                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
         return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
@@ -379,9 +380,8 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "LimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject"))),
-                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "The ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -407,7 +407,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -423,18 +423,30 @@ public class DatasetsWebService {
                 minFrequency != null ? minFrequency : 0,
                 mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
                 limit );
-        // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
-        Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
         List<AnnotationWithUsageStatisticsValueObject> results = new ArrayList<>();
-        for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
-            AnnotationWithUsageStatisticsValueObject annotationWithUsageStatisticsValueObject;
-            try {
-                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), !excludeParentTerms && e.getTerm() != null ? getParentTerms( e.getTerm(), visited ) : null );
-            } catch ( TimeoutException ex ) {
-                log.warn( "Populating parent terms timed out.", ex );
-                annotationWithUsageStatisticsValueObject = new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null );
+        if ( !excludeParentTerms ) {
+            int timeoutMs = 30000;
+            StopWatch timer = StopWatch.createStarted();
+            // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
+            Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
+            for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
+                Set<OntologyTermValueObject> parentTerms;
+                if ( e.getTerm() != null && timer.getTime() < timeoutMs ) {
+                    try {
+                        parentTerms = getParentTerms( e.getTerm(), visited, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    } catch ( TimeoutException ex ) {
+                        log.warn( "Populating parent terms timed out, will stop populating those for the remaining results.", ex );
+                        parentTerms = null;
+                    }
+                } else {
+                    parentTerms = null;
+                }
+                results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), parentTerms ) );
             }
-            results.add( annotationWithUsageStatisticsValueObject );
+        } else {
+            for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {
+                results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null ) );
+            }
         }
         return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
@@ -452,8 +464,8 @@ public class DatasetsWebService {
         return new HashSet<>( exclude.getValue() );
     }
 
-    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited ) throws TimeoutException {
-        return getParentTerms( c, new LinkedHashSet<>(), visited, 5000, StopWatch.createStarted() );
+    private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs ) throws TimeoutException {
+        return getParentTerms( c, new LinkedHashSet<>(), visited, timeoutMs, StopWatch.createStarted() );
     }
 
     private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, LinkedHashSet<OntologyTerm> stack, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs, StopWatch timer ) throws TimeoutException {
@@ -525,7 +537,10 @@ public class DatasetsWebService {
     @CacheControl(maxAge = 1200)
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
+    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
@@ -533,7 +548,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filterArg );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -613,7 +628,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the platforms of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListArrayDesignValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
@@ -632,7 +647,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the samples of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListBioAssayValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
@@ -651,7 +666,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListDifferentialExpressionAnalysisValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
@@ -677,7 +692,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/analyses/differential/resultSets")
     @Operation(summary = "Retrieve the result sets of all differential analyses of a dataset", responses = {
             @ApiResponse(responseCode = "302", description = "If the dataset is found, a redirection to the corresponding getResultSets operation."),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDifferentialExpressionAnalysesResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context HttpServletRequest request ) {
@@ -710,7 +725,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectSetAnnotationValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
@@ -759,7 +774,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"))),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -791,7 +806,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/data/processed")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+            @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -817,7 +832,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/data/raw")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve raw expression data of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+            @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -849,7 +864,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+            @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -892,7 +907,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectSimpleSVDValueObject"))),
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
