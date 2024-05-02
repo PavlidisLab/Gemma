@@ -704,7 +704,7 @@
 		<slack.version>1.39.0</slack.version>
 		<micrometer.version>1.12.5</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
-		<mysql.version>8.3.0</mysql.version>
+		<mysql.version>8.4.0</mysql.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
