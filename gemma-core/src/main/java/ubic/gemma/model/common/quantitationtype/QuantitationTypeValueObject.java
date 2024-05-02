@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -27,7 +28,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 
 /**
  * Value object for the {@link QuantitationType}.
@@ -46,6 +46,7 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
 
     private static final long serialVersionUID = 7537853492100102404L;
     private String description;
+    @Schema(implementation = GeneralType.class)
     private String generalType;
     private Boolean isBackground;
     private Boolean isBackgroundSubtracted;
@@ -56,8 +57,11 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     private Boolean isRatio;
     private Boolean isRecomputedFromRawData = false;
     private String name;
+    @Schema(implementation = PrimitiveType.class)
     private String representation;
+    @Schema(implementation = ScaleType.class)
     private String scale;
+    @Schema(implementation = StandardQuantitationType.class)
     private String type;
 
     /**
