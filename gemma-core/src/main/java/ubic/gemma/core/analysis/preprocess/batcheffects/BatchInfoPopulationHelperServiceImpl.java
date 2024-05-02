@@ -45,7 +45,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     /**
      * For RNA-seq, the minimum number of samples per batch, if possible
      */
-    private static final double MINIMUM_SAMPLES_PER_RNASEQ_BATCH = 2.0;
+    private static final int MINIMUM_SAMPLES_PER_RNASEQ_BATCH = 2;
 
     /**
      * For microarrays (that come with scan timestamps): How many hours do we allow to pass between samples, before we
@@ -372,13 +372,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         }
 
         // DEBUG CODE
-        //        log.info( "--------------------------" );
-        //        for ( String b : result.keySet() ) {
-        //            log.info( "Batch: " + b );
-        //            for ( String batchmember : result.get( b ) ) {
-        //                log.info( "   " + batchmember );
-        //            }
-        //        }
+//        log.info( "--------------------------" );
+//        for ( String b : result.keySet() ) {
+//            log.info( "Batch: " + b );
+//            for ( String batchmember : result.get( b ) ) {
+//                log.info( "   " + batchmember );
+//            }
+//        }
 
         /*
          * Finalize
@@ -436,6 +436,14 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
         int numBatches = batchInfos.size();
 
+        boolean anyTooSmallBatches = false;
+        for ( FastqHeaderData hd : batchInfos.keySet() ) {
+            if ( batchInfos.get( hd ).size() < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+                anyTooSmallBatches = true;
+                break;
+            }
+        }
+
         /*
          * There's two problems. First, it could be there are no batches at all. Second, there could be too many
          * batches.
@@ -443,31 +451,22 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         if ( numBatches == 1 ) {
             // no batches - this will get sorted out later, proceed
             return batchInfos;
-        } else if ( numBatches == numSamples || ( double ) numBatches / numSamples < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+        } else if ( anyTooSmallBatches ) {
 
-            for ( FastqHeaderData hd : batchInfos.keySet() ) {
-                assert batchInfos.containsKey( hd );
 
-                int batchSize = batchInfos.get( hd ).size();
-                if ( batchSize < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+            // too few samples for at least one batch. Try to reduce resolution and recount.
+            log.info( "Too few samples for at least one batch. Reducing resolution." );
+            Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
 
-                    // too few samples for at least one batch. Try to reduce resolution and recount.
-                    Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
-
-                    if ( updatedBatchInfos.size() == batchInfos.size() ) {
-                        // we've reached the bottom
-
-                        return updatedBatchInfos;
-                    }
-
-                    batch( updatedBatchInfos, numSamples ); // recurse
-                }
+            if ( updatedBatchInfos.size() == batchInfos.size() ) {
+                // we've reached the bottom
+                return updatedBatchInfos;
             }
 
+            return batch( updatedBatchInfos, numSamples ); // start over with lower resolution
         }
         // reasonable number of samples per batch -- proceed. 
         return batchInfos;
-
     }
 
     /*
@@ -479,23 +478,21 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         Map<FastqHeaderData, Collection<String>> result = new HashMap<>();
         for ( FastqHeaderData fhd : batchInfos.keySet() ) {
 
-            //            if ( !fhd.hadUseableHeader() ) {
-            //                // cannot drop resolution.
-            //                result.put( fhd, batchInfos.get( fhd ) );
-            //                continue;
-            //            }
-
             FastqHeaderData updated = fhd.dropResolution();
 
             if ( updated.equals( fhd ) ) { // we can reduce resolution no more
                 return batchInfos;
             }
 
-            log.info( "Adding: " + updated );
             if ( !result.containsKey( updated ) ) {
+                log.info( "Adding: " + updated );
                 result.put( updated, new HashSet<String>() );
             }
+
+            // reassociate the samples with the new batch info
             result.get( updated ).addAll( batchInfos.get( fhd ) );
+            // make sure the old one is gone.
+            result.remove( fhd );
         }
 
         return result;
@@ -671,10 +668,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         private FastqHeaderData dropResolution() {
             // note that 'device' is the GPL if the header wasn't usable
             if ( this.lane != null ) {
+                log.debug( "Dropping lane" );
                 return new FastqHeaderData( this.device, this.run, this.flowCell, null );
             } else if ( this.flowCell != null ) {
+                log.debug( "Dropping flowCell" );
                 return new FastqHeaderData( this.device, this.run, null, null );
             } else if ( this.run != null ) {
+                log.debug( "Dropping device / GPL" );
                 return new FastqHeaderData( this.device, null, null, null );
             } else if ( this.unusableHeader != null ) {
                 // fallback

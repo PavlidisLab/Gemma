@@ -409,13 +409,24 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         s.convertHeadersToBatches( h.values() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchQ() throws Exception {
         //GSE173137 - 
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE173137" );
         s.convertHeadersToBatches( h.values() );
+    }
+
+    @Test
+    public void testBatchR() throws Exception {
+        // GSE83115 - singleton batches if we use lane, dropping to device gives two batches.
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE83115" );
+
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 2, batches.size() );
     }
 
     @After
