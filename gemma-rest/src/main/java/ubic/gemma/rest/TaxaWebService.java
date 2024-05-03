@@ -222,7 +222,7 @@ public class TaxaWebService {
     }
 
     /**
-     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(String, FilterArg, OffsetArg, LimitArg, SortArg)}.
+     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(QueryArg, FilterArg, OffsetArg, LimitArg, SortArg)}.
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.

@@ -319,6 +319,7 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
+     * Thaw a given platform.
      * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
@@ -326,7 +327,8 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
-     * @see ArrayDesignDao#thaw(Collection)
+     * Thaw a collection of platforms.
+     * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

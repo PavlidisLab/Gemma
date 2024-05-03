@@ -56,8 +56,6 @@ public interface OntologyService {
      *
      * @param searchQuery           search query
      * @param useNeuroCartaOntology use neurocarta ontology
-     * @param timeout
-     * @param timeUnit
      * @return characteristic vos
      */
     @Deprecated

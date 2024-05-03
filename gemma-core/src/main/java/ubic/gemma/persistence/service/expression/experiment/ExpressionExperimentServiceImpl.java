@@ -180,10 +180,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
+    public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        Map<BioMaterial, FactorValue> result = new HashMap<>();
         int count = 0;
         for ( BioMaterial bm : fvs.keySet() ) {
             FactorValue fv = fvs.get( bm );
@@ -197,7 +196,6 @@ public class ExpressionExperimentServiceImpl
                 }
             }
             bm.getFactorValues().add( fv );
-            result.put( bm, fv );
             ++count;
             if ( count % 50 == 0 ) {
                 log.info( "Processed: " + count + " biomaterials for new factor values" );
@@ -205,9 +203,7 @@ public class ExpressionExperimentServiceImpl
         }
         log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
         //  expressionExperimentDao.update( experiment );
-        bioMaterialService.update( result.keySet() );
-
-        return result;
+        bioMaterialService.update( fvs.keySet() );
     }
 
     @Override

@@ -110,7 +110,7 @@ public class AnnotationsWebService {
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
-     * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
+     * @see OntologyService#findTermsInexact(String, int, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
      */
     @GET

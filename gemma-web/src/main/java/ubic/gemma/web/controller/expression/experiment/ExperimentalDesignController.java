@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -74,6 +73,7 @@ import java.util.*;
  */
 @Controller
 @RequestMapping("/experimentalDesign")
+@SuppressWarnings("unused")
 public class ExperimentalDesignController extends BaseController {
 
     @Autowired
@@ -126,11 +126,11 @@ public class ExperimentalDesignController extends BaseController {
     }
 
     /**
+     * Create an experimental factor.
      *
-     *
-     * @param e experimentalDesign to add the factor to
+     * @param e    experimentalDesign to add the factor to
      * @param efvo non-null if we are pre-populating the factor values based on an existing set of BioMaterialCharacteristic,
-     *             see https://github.com/PavlidisLab/Gemma/issues/987
+     *             see <a href="https://github.com/PavlidisLab/Gemma/issues/987">#987</a>
      */
     public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueWebUIObject efvo ) {
         if ( e == null || e.getId() == null ) return;
@@ -149,7 +149,7 @@ public class ExperimentalDesignController extends BaseController {
          */
         // experimentalFactorService.create( ef );
 
-        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<>() );
         ed.getExperimentalFactors().add( ef );
 
         experimentalDesignService.update( ed );
@@ -196,7 +196,7 @@ public class ExperimentalDesignController extends BaseController {
                                 Double.parseDouble( cvo.getValue() );
                             } catch ( NumberFormatException err ) {
                                 // try to handle missing data reasonably.
-                                if ( cvo.getValue().toUpperCase().equals( "NA" ) || cvo.getValue().toUpperCase().equals( "N/A" ) ) {
+                                if ( cvo.getValue().equalsIgnoreCase( "NA" ) || cvo.getValue().equalsIgnoreCase( "N/A" ) ) {
                                     cvo.setValue( null );
                                 } else {
                                     // clean up after ourselves.
@@ -364,12 +364,12 @@ public class ExperimentalDesignController extends BaseController {
         return getBioMaterialValueObjects( ee );
     }
 
-    @NotNull
     /**
      * This filters the characteristics through filterCharacteristics()
      *
      * @param ee experiment to get biomaterials for
-     */ private Collection<BioMaterialValueObject> getBioMaterialValueObjects( ExpressionExperiment ee ) {
+     */
+    private Collection<BioMaterialValueObject> getBioMaterialValueObjects( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -386,14 +386,13 @@ public class ExperimentalDesignController extends BaseController {
 
     /**
      * Extract just the categories from the biomaterial's characteristics.
-     * @param experimentalDesignID
      * @return Collection of CharacteristicValueObjects but all we care about is the category
      */
     public Collection<CharacteristicValueObject> getBioMaterialCharacteristicCategories( Long experimentalDesignID ) {
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesignService.loadOrFail( experimentalDesignID ) );
 
         Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( ee );
-        if ( bmvos == null || bmvos.isEmpty() ) {
+        if ( bmvos.isEmpty() ) {
             return Collections.emptyList();
         }
 
@@ -413,9 +412,6 @@ public class ExperimentalDesignController extends BaseController {
      *
      */
     private void filterCharacteristics( Collection<BioMaterialValueObject> result ) {
-
-        int c = result.size();
-
         Collection<String> toremove = new HashSet<>();
 
         // build map of categories to bmos. No category: can't use.
@@ -438,7 +434,7 @@ public class ExperimentalDesignController extends BaseController {
                 }
 
                 if ( !map.containsKey( category ) ) {
-                    map.put( category, new HashSet<BioMaterialValueObject>() );
+                    map.put( category, new HashSet<>() );
                 }
 
                 if ( map.get( category ).contains( bmo ) ) {
@@ -469,7 +465,6 @@ public class ExperimentalDesignController extends BaseController {
             }
 
             Collection<String> vals = new HashSet<>();
-            boolean keeper = false;
             bms:
             for ( BioMaterialValueObject bm : map.get( category ) ) {
                 // log.info( "inspecting " + bm );
@@ -637,7 +632,7 @@ public class ExperimentalDesignController extends BaseController {
 
         Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
 
-        log.info( String.format( "Updating biomaterials took %.2f seconds", (double)w.getTime() / 1000.0 ) );
+        log.info( String.format( "Updating biomaterials took %.2f seconds", ( double ) w.getTime() / 1000.0 ) );
 
         if ( biomaterials.isEmpty() ) return;
 
@@ -846,7 +841,6 @@ public class ExperimentalDesignController extends BaseController {
 
     public void markFactorValuesAsNeedsAttention( Long[] fvvos, String note ) {
         Set<FactorValue> fvs = new HashSet<>( fvvos.length );
-        int i = 0;
         for ( Long fvo : fvvos ) {
             FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new, String.format( "No FactorValue with ID %d", fvo ) );
             if ( fv.getNeedsAttention() ) {
@@ -866,7 +860,6 @@ public class ExperimentalDesignController extends BaseController {
 
     public void clearFactorValuesNeedsAttention( Long[] fvvos, String note ) {
         Set<FactorValue> fvs = new HashSet<>( fvvos.length );
-        int i = 0;
         for ( Long fvo : fvvos ) {
             FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new, String.format( "No FactorValue with ID %d", fvo ) );
             if ( !fv.getNeedsAttention() ) {

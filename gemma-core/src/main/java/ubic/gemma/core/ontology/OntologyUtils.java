@@ -1,12 +1,7 @@
 package ubic.gemma.core.ontology;
 
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
-import ubic.gemma.model.common.description.Characteristic;
-
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Utilities for working with ontologies.
