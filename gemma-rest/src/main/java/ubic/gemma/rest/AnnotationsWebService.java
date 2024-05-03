@@ -120,8 +120,8 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively.",
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "404", description = "No term matched the given URI."),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.") })
+                    @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public List<AnnotationSearchResultValueObject> getAnnotationsParents(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct children.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
@@ -140,8 +140,8 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively.",
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "404", description = "No term matched the given URI."),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.") })
+                    @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public List<AnnotationSearchResultValueObject> getAnnotationsChildren(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct parents.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
