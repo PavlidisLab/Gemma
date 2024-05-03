@@ -3,12 +3,14 @@ package ubic.gemma.persistence.util;
 import net.sf.ehcache.Ehcache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import ubic.gemma.persistence.cache.CacheKeyLock;
+import ubic.gemma.persistence.cache.EhcacheKeyLock;
+import ubic.gemma.persistence.cache.StaticCacheKeyLock;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -78,106 +80,29 @@ public class CacheUtils {
         }
     }
 
-    public static Lock acquireReadLock( Cache cache, Object key ) {
-        if ( cache.getNativeCache() instanceof Ehcache ) {
-            return new EhcacheLock( ( Ehcache ) cache.getNativeCache(), key, true );
-        } else {
-            return new CacheLock( cache, key, true );
-        }
+    /**
+     * Acquire a read-only lock on the given key in the cache.
+     * @return an acquired read lock on the given cache key
+     * @throws InterruptedException if the current thread is interrupted while waiting for the lock
+     */
+    public static CacheKeyLock.LockAcquisition acquireReadLock( Cache cache, Object key ) throws InterruptedException {
+        return createLock( cache, key, true ).lockInterruptibly();
     }
 
     /**
      * Acquire an exclusive write lock on the given key in the cache.
-     * <p>
-     * This can be used for preventing other threads from performing the same expensive operations.
+     * @return an acquired write lock on the given cache key
+     * @throws InterruptedException if the current thread is interrupted while waiting for the lock
      */
-    public static Lock acquireWriteLock( Cache cache, Object key ) {
+    public static CacheKeyLock.LockAcquisition acquireWriteLock( Cache cache, Object key ) throws InterruptedException {
+        return createLock( cache, key, false ).lockInterruptibly();
+    }
+
+    private static CacheKeyLock createLock( Cache cache, Object key, boolean readOnly ) {
         if ( cache.getNativeCache() instanceof Ehcache ) {
-            return new EhcacheLock( ( Ehcache ) cache.getNativeCache(), key, false );
+            return new EhcacheKeyLock( ( Ehcache ) cache.getNativeCache(), key, readOnly );
         } else {
-            return new CacheLock( cache, key, false );
-        }
-    }
-
-    public interface Lock extends AutoCloseable {
-
-        @Override
-        void close();
-    }
-
-    private static class EhcacheLock implements Lock {
-
-        private final Ehcache cache;
-        private final Object key;
-        private final boolean readOnly;
-
-        public EhcacheLock( Ehcache cache, Object key, boolean readOnly ) {
-            this.cache = cache;
-            this.key = key;
-            this.readOnly = readOnly;
-            lock();
-        }
-
-        @Override
-        public void close() {
-            unlock();
-        }
-
-        private void lock() {
-            if ( readOnly ) {
-                cache.acquireReadLockOnKey( key );
-            } else {
-                cache.acquireWriteLockOnKey( key );
-            }
-        }
-
-        private void unlock() {
-            if ( readOnly ) {
-                cache.releaseReadLockOnKey( key );
-            } else {
-                cache.releaseWriteLockOnKey( key );
-            }
-        }
-    }
-
-    private static class CacheLock implements Lock {
-
-        /**
-         * Using a WeakHashMap to avoid memory leaks when a cache key is no longer used.
-         */
-        private static final Map<Cache, Map<Object, ReadWriteLock>> lockByKey = new WeakHashMap<>();
-
-        private final ReadWriteLock lock;
-        private final boolean readOnly;
-
-        public CacheLock( Cache cache, Object key, boolean readOnly ) {
-            synchronized ( lockByKey ) {
-                this.lock = lockByKey.computeIfAbsent( cache, k -> new WeakHashMap<>() )
-                        .computeIfAbsent( key, k -> new ReentrantReadWriteLock() );
-            }
-            this.readOnly = readOnly;
-            lock();
-        }
-
-        @Override
-        public void close() {
-            unlock();
-        }
-
-        private void lock() {
-            if ( readOnly ) {
-                lock.readLock().lock();
-            } else {
-                lock.writeLock().lock();
-            }
-        }
-
-        private void unlock() {
-            if ( readOnly ) {
-                lock.readLock().unlock();
-            } else {
-                lock.writeLock().unlock();
-            }
+            return new StaticCacheKeyLock( cache, key, readOnly );
         }
     }
 }

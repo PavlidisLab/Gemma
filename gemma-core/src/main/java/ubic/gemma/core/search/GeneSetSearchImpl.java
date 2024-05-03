@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
@@ -124,19 +125,18 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( !geneOntologyService.isOntologyLoaded() ) {
             return Collections.emptySet();
         }
-        Collection<OntologyTerm> matches;
+        Collection<OntologySearchResult<OntologyTerm>> matches;
         try {
-            matches = this.geneOntologyService
-                    .findTerm( StringUtils.strip( goTermName ) );
+            matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ), 500 );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( e );
         }
 
         Collection<GeneSet> results = new HashSet<>();
 
-        for ( OntologyTerm t : matches ) {
+        for ( OntologySearchResult<OntologyTerm> t : matches ) {
             if ( taxon == null ) {
-                Collection<GeneSet> sets = this.goTermToGeneSets( t, maxGeneSetSize );
+                Collection<GeneSet> sets = this.goTermToGeneSets( t.getResult(), maxGeneSetSize );
                 results.addAll( sets );
 
                 // noinspection StatementWithEmptyBody // FIXME should we count each species as one go?
@@ -145,7 +145,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 }
             } else {
 
-                GeneSet converted = this.goTermToGeneSet( t, taxon, maxGeneSetSize );
+                GeneSet converted = this.goTermToGeneSet( t.getResult(), taxon, maxGeneSetSize );
                 // converted will be null if its size is more than maxGeneSetSize
                 if ( converted != null ) {
                     results.add( converted );

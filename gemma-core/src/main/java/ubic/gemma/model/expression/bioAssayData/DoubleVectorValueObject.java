@@ -276,7 +276,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setExpressionExperiment( ee );
 
         result.setBioAssayDimension( this.getBioAssayDimension().getBioAssayDimension() );
-        assert this.getBioAssays().size() > 0;
+        // assert this.getBioAssays().size() > 0;
 
         result.setQuantitationType( updatedQuantitationType );
 

@@ -1,5 +1,9 @@
 ## Updates
 
+### Update 2.7.4
+
+- indicate 503 status codes for endpoints that could timeout due to a long-running search
+
 ### Update 2.7.3
 
 - fix double-gzipping for the `getPlatformAnnotations` endpoint

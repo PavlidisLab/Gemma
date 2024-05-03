@@ -859,7 +859,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         // use existing QT if possible 
         for ( QuantitationType oldqt : ee.getQuantitationTypes() ) {
-            if ( oldqt.getName().equals( present.getName() ) ) { // FIXME make this a more stringent check for a match
+            if ( oldqt.getName() != null && oldqt.getName().equals( present.getName() ) ) { // FIXME make this a more stringent check for a match
                 present = oldqt;
                 break;
             }

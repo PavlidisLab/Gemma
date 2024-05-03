@@ -102,6 +102,15 @@ public class GeoCharacteristicParseTest {
         c = t.getCharacteristics().iterator().next();
         assertEquals( "lithium use (non-user=0, user = 1)", c.getCategory() );
         assertEquals( "0", c.getValue() );
+
+        // test empty value
+        // happens in GSM270278
+        t = BioMaterial.Factory.newInstance();
+        g.parseGEOSampleCharacteristicString( "Strain:", t );
+        c = t.getCharacteristics().iterator().next();
+        assertEquals( "strain", c.getCategory() );
+        assertEquals( "", c.getValue() );
+        assertEquals( "Strain:", c.getOriginalValue() );
     }
 
     /**

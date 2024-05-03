@@ -18,6 +18,6 @@ public class PatoOntologyServiceTest {
         PatoOntologyService pato = new PatoOntologyService();
         pato.initialize( true, true );
         assertTrue( pato.isOntologyLoaded() );
-        assertFalse( pato.findTerm( "left" ).isEmpty() );
+        assertFalse( pato.findTerm( "left", 10 ).isEmpty() );
     }
 }

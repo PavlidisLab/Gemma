@@ -126,7 +126,7 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         try {
-            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, taxon );
+            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon );
             /*
              * Populate the definition for the top hits.
              */

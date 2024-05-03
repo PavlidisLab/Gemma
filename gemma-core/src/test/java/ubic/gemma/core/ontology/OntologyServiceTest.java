@@ -139,7 +139,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.emptyList() );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
-        ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", null );
+        ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000, null );
         verify( characteristicService ).findCharacteristicsByValueUriOrValueLike( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
         verify( searchService ).search( captor.capture() );
@@ -148,7 +148,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         assertTrue( settings.getResultTypes().contains( Gene.class ) );
         assertTrue( settings.isFillResults() );
         verify( chebiOntologyService ).isOntologyLoaded();
-        verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
+        verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000 );
     }
 
     @Test

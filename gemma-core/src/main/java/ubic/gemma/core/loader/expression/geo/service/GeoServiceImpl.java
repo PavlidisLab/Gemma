@@ -364,8 +364,8 @@ public class GeoServiceImpl extends AbstractGeoService {
                  */
                 Set<Characteristic> bmchars = bm.getCharacteristics();
                 int numOldChars = bmchars.size();
-                characteristicService.remove( bmchars );
                 bmchars.clear();
+                characteristicService.remove( bmchars );
                 Collection<Characteristic> freshCharacteristics = characteristicsByGSM.get( gsmID );
                 if ( log.isDebugEnabled() )
                     log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );

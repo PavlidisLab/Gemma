@@ -14,8 +14,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
-import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.EnvironmentProfiles;
+import ubic.gemma.persistence.util.MailEngine;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -36,6 +36,12 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
 
         @Bean
         public HandlerExceptionResolver exceptionResolver() {
+            HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
+            compositeResolver.setExceptionResolvers( Arrays.asList( new DefaultHandlerExceptionResolver(), simpleMappingExceptionResolver(), clientAbortExceptionResolver(), unhandledExceptionResolver() ) );
+            return compositeResolver;
+        }
+
+        private SimpleMappingExceptionResolver simpleMappingExceptionResolver() {
             SimpleMappingExceptionResolver resolver = new SimpleMappingExceptionResolver();
             resolver.setDefaultErrorView( "error/500" );
             resolver.addStatusCode( "error/400", 400 );
@@ -49,9 +55,11 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests imple
             mappings.setProperty( ServiceUnavailableException.class.getName(), "error/503" );
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
-            HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
-            compositeResolver.setExceptionResolvers( Arrays.asList( new DefaultHandlerExceptionResolver(), resolver, unhandledExceptionResolver() ) );
-            return compositeResolver;
+            return resolver;
+        }
+
+        private ClientAbortExceptionResolver clientAbortExceptionResolver() {
+            return new ClientAbortExceptionResolver();
         }
 
         private UnhandledExceptionResolver unhandledExceptionResolver() {

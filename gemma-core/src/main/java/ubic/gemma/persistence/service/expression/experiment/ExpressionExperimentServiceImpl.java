@@ -290,6 +290,10 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        AuditEvent ev1 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
+        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, FailedBatchInformationMissingEvent.class );
+        if ( ev1 != null || ev2 != null ) return false;
+
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
         return ev.getEventType().getClass().isAssignableFrom( BatchInformationFetchingEvent.class )
@@ -298,7 +302,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
+    public BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
         if ( ee.getExperimentalDesign() == null )
             return null;
 
@@ -306,6 +310,11 @@ public class ExpressionExperimentServiceImpl
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 return new BatchInformationFetchingEvent(); // signal success
             }
+        }
+
+        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
+        if ( ev2 != null ) {
+            return ( BatchInformationMissingEvent ) ev2.getEventType();
         }
 
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
@@ -628,39 +637,32 @@ public class ExpressionExperimentServiceImpl
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
                 Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                if ( mentionedTerms != null ) {
+                    mentionedTerms.addAll( terms );
+                }
                 Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
                 termAndChildrenUris.addAll( e.getValue() );
                 termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
-                if ( termAndChildrenUris.size() > QueryUtils.MAX_PARAMETER_LIST_SIZE ) {
-                    log.warn( String.format( "There too many terms for the clause %s, will pick top %d terms.",
-                            e.getKey().getOriginalProperty(), QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
-                    termAndChildrenUris = termAndChildrenUris.stream()
-                            // favour terms that are mentioned in the filter
-                            .sorted( Comparator.comparing( e.getValue()::contains, Comparator.reverseOrder() ) )
-                            .limit( QueryUtils.MAX_PARAMETER_LIST_SIZE )
-                            .collect( Collectors.toSet() );
+                for ( List<String> termAndChildrenUrisBatch : org.apache.commons.collections4.ListUtils.partition( new ArrayList<>( termAndChildrenUris ), QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
+                    Filter g;
+                    if ( termAndChildrenUrisBatch.size() == 1 ) {
+                        g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUrisBatch.iterator().next(), e.getKey().getOriginalProperty() );
+                    } else if ( termAndChildrenUris.size() > 1 ) {
+                        g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUrisBatch, e.getKey().getOriginalProperty() );
+                    } else {
+                        continue; // empty clause, is that even possible?
+                    }
+                    // this is the case for all the properties declared in PROPERTY_USED_FOR_ANNOTATIONS
+                    assert g.getOriginalProperty() != null;
+                    assert g.getObjectAlias() != null;
+                    // nest the filter in a subquery, all the applicable properties are one-to-many
+                    String prefix = g.getOriginalProperty().substring( 0, g.getOriginalProperty().lastIndexOf( '.' ) + 1 );
+                    String objectAlias = g.getObjectAlias();
+                    clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
+                            Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
                 }
-                if ( mentionedTerms != null ) {
-                    mentionedTerms.addAll( terms );
-                }
-                Filter g;
-                if ( termAndChildrenUris.size() == 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUris.iterator().next(), e.getKey().getOriginalProperty() );
-                } else if ( termAndChildrenUris.size() > 1 ) {
-                    g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUris, e.getKey().getOriginalProperty() );
-                } else {
-                    continue; // empty clause, is that even possible?
-                }
-                // this is the case for all the properties declared in PROPERTY_USED_FOR_ANNOTATIONS
-                assert g.getOriginalProperty() != null;
-                assert g.getObjectAlias() != null;
-                // nest the filter in a subquery, all the applicable properties are one-to-many
-                String prefix = g.getOriginalProperty().substring( 0, g.getOriginalProperty().lastIndexOf( '.' ) + 1 );
-                String objectAlias = g.getObjectAlias();
-                clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
-                        Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
             }
             f2 = clauseBuilder.build();
             termUrisBySubClause.clear();

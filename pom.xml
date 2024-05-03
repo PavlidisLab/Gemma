@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.12</version>
+		<version>1.2.13</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -140,7 +140,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.21</version>
+			<version>1.1.22</version>
 		</dependency>
 
 		<dependency>
@@ -305,7 +305,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.11.0</version>
+			<version>1.12.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -329,7 +329,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.16.0</version>
+			<version>2.16.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -486,8 +486,6 @@
 				<configuration>
 					<skipTestProject>true</skipTestProject>
 					<versionDigitToIncrement>1</versionDigitToIncrement>
-					<useSnapshotInHotfix>true</useSnapshotInHotfix>
-					<useSnapshotInRelease>true</useSnapshotInRelease>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -538,7 +536,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<!-- with lombok, some references are invalid in the original source code -->
@@ -558,6 +555,20 @@
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
 				<version>9.1.0</version>
+				<configuration>
+					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<!-- a newer version with better filters can be enabled with -Pdepcheck, but it's incompatible with the Maven minimum requirement -->
+				<version>2.11.0</version>
+				<configuration>
+					<allowMajorUpdates>false</allowMajorUpdates>
+					<processDependencyManagement>false</processDependencyManagement>
+					<processPluginDependencies>false</processPluginDependencies>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -594,6 +605,38 @@
 				</site>
 			</distributionManagement>
 		</profile>
+		<profile>
+			<id>depcheck</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>versions-maven-plugin</artifactId>
+						<version>2.16.2</version>
+						<configuration>
+							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
+							<dependencyExcludes>
+								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
+								<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
+								<dependencyExclude>com.googlecode.javaewah:JavaEWAH:*</dependencyExclude>
+								<dependencyExclude>org.springframework.retry:spring-retry:*</dependencyExclude>
+								<dependencyExclude>org.springframework.social:spring-social-core:*</dependencyExclude>
+								<dependencyExclude>org.springframework.ws:spring-ws-core:*</dependencyExclude>
+								<dependencyExclude>org.glassfish.jersey.*:*:*</dependencyExclude>
+								<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
+								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
+								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
+							</dependencyExcludes>
+							<pluginDependencyExcludes>
+								<pluginDependencyExclude>org.antlr:antlr4-maven-plugin:*</pluginDependencyExclude>
+							</pluginDependencyExcludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
@@ -606,12 +649,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>3.1.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<doclint>all,-reference,-missing</doclint>
@@ -625,10 +666,44 @@
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
 				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+							<report>test-aggregate</report>
+						</reports>
+					</reportSet>
+					<reportSet>
+						<id>default</id>
+						<reports>
+							<report>javadoc</report>
+							<report>test-javadoc</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>9.1.0</version>
+				<configuration>
+					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
 			</plugin>
 		</plugins>
 	</reporting>
 	<properties>
+		<maven.version>3.1.1</maven.version>
 		<gsec.version>0.0.16</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
@@ -638,9 +713,9 @@
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.39.0</slack.version>
-		<micrometer.version>1.12.4</micrometer.version>
+		<micrometer.version>1.12.5</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
-		<mysql.version>8.3.0</mysql.version>
+		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.87</tomcat.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>

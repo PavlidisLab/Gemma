@@ -14,9 +14,9 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
+import io.micrometer.core.instrument.binder.MeterBinder;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 import java.util.Collection;
@@ -24,7 +24,7 @@ import java.util.Collection;
 /**
  * @author paul, anton
  */
-public interface TaskRunningService {
+public interface TaskRunningService extends MeterBinder {
 
     SubmittedTask getSubmittedTask( String taskId );
 

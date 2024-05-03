@@ -15,6 +15,10 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
@@ -22,6 +26,7 @@ import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchSe
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
@@ -32,11 +37,13 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**

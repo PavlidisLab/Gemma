@@ -48,22 +48,24 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         return false;
     }
 
+    protected Response.ResponseBuilder getResponseBuilder( E exception ) {
+        // FIXME: request is null in tests
+        return Response.status( request != null && isXmlHttpRequest( request ) ? Response.Status.OK : getStatus( exception ) );
+    }
 
     @Override
     public final Response toResponse( E exception ) {
         if ( logException( exception ) ) {
-            // FIXME: request is null in tests
             log.error( String.format( "Unhandled exception was raised%s.",
                     request != null ? " for " + ServletUtils.summarizeRequest( request ).replaceAll( "[\r\n]", "" ) : "" ), exception );
         }
-        Response.Status code = getStatus( exception );
-        MediaType mediaType;
-        Object entity;
+        Response.ResponseBuilder responseBuilder = getResponseBuilder( exception );
         if ( acceptsJson( headers ) ) {
-            mediaType = MediaType.APPLICATION_JSON_TYPE;
-            entity = new ResponseErrorObject( getWellComposedErrorBody( exception ), OpenApiUtils.getOpenApi( servletConfig ) );
+            return responseBuilder
+                    .type( MediaType.APPLICATION_JSON_TYPE )
+                    .entity( new ResponseErrorObject( getWellComposedErrorBody( exception ), OpenApiUtils.getOpenApi( servletConfig ) ) )
+                    .build();
         } else {
-            mediaType = MediaType.TEXT_PLAIN_TYPE;
             WellComposedErrorBody body = getWellComposedErrorBody( exception );
             StringBuilder builder = new StringBuilder();
             builder.append( "Message: " ).append( body.getMessage() );
@@ -72,13 +74,11 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
                     builder.append( '\n' ).append( k ).append( ": " ).append( v );
                 } );
             }
-            entity = builder.toString();
+            return responseBuilder
+                    .type( MediaType.TEXT_PLAIN_TYPE )
+                    .entity( builder.toString() )
+                    .build();
         }
-        // FIXME: request is null in tests (like above)
-        return Response.status( request != null && isXmlHttpRequest( request ) ? Response.Status.OK : code )
-                .type( mediaType )
-                .entity( entity )
-                .build();
     }
 
     private boolean isXmlHttpRequest( HttpServletRequest request ) {

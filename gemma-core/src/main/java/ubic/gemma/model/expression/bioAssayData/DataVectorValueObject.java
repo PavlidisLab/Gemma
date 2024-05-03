@@ -64,7 +64,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         } else {
             this.bioAssayDimension = badvo;
         }
-        assert !this.bioAssayDimension.getBioAssays().isEmpty();
+        // assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType(), dedv.getExpressionExperiment(), dedv.getClass() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );

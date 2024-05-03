@@ -1,7 +1,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 import java.io.Serializable;
@@ -9,6 +9,7 @@ import java.io.Serializable;
 /**
  * @see SequenceType
  */
+@Schema(implementation = SequenceType.class)
 public class SequenceTypeValueObject implements Serializable {
 
     private String value;

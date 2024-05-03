@@ -28,10 +28,12 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -58,12 +60,17 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "url.geneOntology=dummy" );
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "load.geneOntology=true", "url.geneOntology=dummy" );
         }
 
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
             return new GeneOntologyServiceImpl();
+        }
+
+        @Bean
+        public TaskExecutor ontologyTaskExecutor() {
+            return mock( TaskExecutor.class );
         }
 
         @Bean
@@ -100,19 +107,19 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
 
     @Test
     public void testFindTerm() throws OntologySearchException {
-        Collection<OntologyTerm> matches = gos.findTerm( "toxin" );
+        Collection<OntologySearchResult<OntologyTerm>> matches = gos.findTerm( "toxin", 500 );
         assertEquals( 4, matches.size() );
     }
 
     @Test
     public void testFindTermWithMultipleTerms() throws OntologySearchException {
-        Collection<OntologyTerm> matches = gos.findTerm( "toxin transporter activity" );
+        Collection<OntologySearchResult<OntologyTerm>> matches = gos.findTerm( "toxin transporter activity", 500 );
         assertEquals( 1, matches.size() );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testFindTermWithEmptyQuery() throws OntologySearchException {
-        gos.findTerm( " " );
+        gos.findTerm( " ", 500 );
     }
 
     @Test

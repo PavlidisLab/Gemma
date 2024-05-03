@@ -59,6 +59,7 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
         @Bean
         public GemmaOntologyService gemmaOntologyService() {
             GemmaOntologyService ontology = new GemmaOntologyService();
+            ontology.setSearchEnabled( false );
             ontology.setProcessImports( false ); // FIXME: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged in TGEMO
             ontology.initialize( true, false );
             return ontology;
@@ -121,7 +122,6 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
     private OntologyService ontologyService;
 
     @Test
-    @Category(SlowTest.class)
     public void testInferenceInGemma() {
         OntologyTerm overexpression = ontologyService.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00004" );
         assertNotNull( overexpression );

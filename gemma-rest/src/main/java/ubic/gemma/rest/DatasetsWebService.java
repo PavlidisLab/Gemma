@@ -41,8 +41,6 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.ParseSearchException;
-import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -106,6 +104,8 @@ public class DatasetsWebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+
+    private static final String SEARCH_TIMEOUT_DESCRIPTION = "The search has timed out. This can only occur if the `search` parameter is provided. It can generally be resolved by reattempting the search 30 seconds later. Lookup the `Retry-After` header for the recommended delay.";
 
     private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
@@ -176,7 +176,10 @@ public class DatasetsWebService {
     @CacheControl(maxAge = 1200)
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all datasets")
+    @Operation(summary = "Retrieve all datasets", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
@@ -240,7 +243,10 @@ public class DatasetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count datasets matching the provided query and filter")
+    @Operation(summary = "Count datasets matching the provided query and filter", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
@@ -248,7 +254,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -266,7 +272,10 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
-            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.")
+            description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -275,7 +284,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -308,7 +317,7 @@ public class DatasetsWebService {
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -326,30 +335,23 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
         int maxResults = limit.getValue( MAX_DATASETS_CATEGORIES );
-        List<CategoryWithUsageStatisticsValueObject> results;
-        try {
-            results = expressionExperimentService.getCategoriesUsageFrequency(
-                            filters,
-                            extraIds,
-                            datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
-                            datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                            mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
-                            maxResults )
-                    .entrySet()
-                    .stream()
-                    .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
-                    .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
-                    .collect( Collectors.toList() );
-        } catch ( ParseSearchException e ) {
-            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
-        } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
-        }
+        List<CategoryWithUsageStatisticsValueObject> results = expressionExperimentService.getCategoriesUsageFrequency(
+                        filters,
+                        extraIds,
+                        datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                        datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
+                        mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                        maxResults )
+                .entrySet()
+                .stream()
+                .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
+                .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
+                .collect( Collectors.toList() );
         return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
     }
 
@@ -379,7 +381,7 @@ public class DatasetsWebService {
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -405,7 +407,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
@@ -535,7 +537,10 @@ public class DatasetsWebService {
     @CacheControl(maxAge = 1200)
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter")
+    @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter", responses = {
+            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
     public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
@@ -543,7 +548,7 @@ public class DatasetsWebService {
         Filters filters = datasetArgService.getFilters( filterArg );
         Set<Long> extraIds;
         if ( query != null ) {
-            extraIds = datasetArgService.getIdsForSearchQuery( query, null );
+            extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }

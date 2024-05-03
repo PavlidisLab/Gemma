@@ -18,10 +18,12 @@
  */
 package ubic.gemma.model.common.description;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -38,6 +40,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String termName;
     @GemmaWebOnly
     private String description;
+    @Schema(implementation = GOEvidenceCode.class)
     private String evidenceCode;
     private String objectClass;
     @GemmaWebOnly

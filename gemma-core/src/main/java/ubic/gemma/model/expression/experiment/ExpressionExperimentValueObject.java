@@ -8,6 +8,7 @@ import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -38,6 +39,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     /**
      * Batch effect type. See {@link BatchEffectType} enum for possible values.
      */
+    @Schema(implementation = BatchEffectType.class)
     private String batchEffect;
     /**
      * Summary statistics of a batch effect is present.

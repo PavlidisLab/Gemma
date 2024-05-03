@@ -8,6 +8,7 @@ import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Test;
@@ -183,8 +184,8 @@ public class OpenApiTest extends BaseJerseyTest {
                     assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
                             .isEqualTo( "#/components/schemas/QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject" );
                 } )
-                .hasEntrySatisfying( "400", response -> {
-                    assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
+                .hasEntrySatisfying( "503", response -> {
+                    Assertions.assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
                             .isEqualTo( "#/components/schemas/ResponseErrorObject" );
                 } );
     }

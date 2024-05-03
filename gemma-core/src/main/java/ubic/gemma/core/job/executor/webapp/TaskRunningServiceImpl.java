@@ -18,10 +18,13 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -31,10 +34,11 @@ import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.common.ExecutingTask;
 import ubic.gemma.core.job.executor.common.TaskCommandToTaskMatcher;
 import ubic.gemma.core.job.executor.common.TaskPostProcessing;
+import ubic.gemma.core.metrics.binder.ThreadPoolExecutorMetrics;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.core.util.SimpleThreadFactory;
-import ubic.gemma.persistence.util.Settings;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -46,16 +50,26 @@ import java.util.concurrent.*;
  * @author pavlidis
  */
 // Valid, inspection is not parsing the context file for some reason
-@Component
-public class TaskRunningServiceImpl implements TaskRunningService, DisposableBean {
+@Component("taskRunningService")
+@ParametersAreNonnullByDefault
+public class TaskRunningServiceImpl implements TaskRunningService, InitializingBean, DisposableBean {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
-    private final ExecutorService executorService = Executors.newFixedThreadPool( Settings.getInt( "gemma.backgroundTasks.numberOfThreads" ), new SimpleThreadFactory( "gemma-background-tasks-thread-" ) );
-    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
     @Autowired
     private TaskPostProcessing taskPostProcessing;
+
+    @Value("${gemma.backgroundTasks.numberOfThreads}")
+    private int numberOfThreads;
+
+    private ExecutorService executorService;
+    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        executorService = Executors.newFixedThreadPool( numberOfThreads, new SimpleThreadFactory( "gemma-background-tasks-thread-" ) );
+    }
 
     @Override
     public void destroy() throws Exception {
@@ -162,5 +176,15 @@ public class TaskRunningServiceImpl implements TaskRunningService, DisposableBea
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
         Assert.notNull( taskCommand.getTaskId(), "Must have taskId." );
+    }
+
+    @Override
+    public void bindTo( MeterRegistry meterRegistry ) {
+        if ( executorService instanceof ThreadPoolExecutor ) {
+            new ThreadPoolExecutorMetrics( ( ThreadPoolExecutor ) executorService, "gemmaBackgroundTasks" )
+                    .bindTo( meterRegistry );
+        } else {
+            log.warn( "The background task executor is not a ThreadPoolExecutor, cannot bind metrics." );
+        }
     }
 }

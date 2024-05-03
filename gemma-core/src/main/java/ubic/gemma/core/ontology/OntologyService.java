@@ -16,6 +16,7 @@ package ubic.gemma.core.ontology;
 
 import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -44,13 +45,9 @@ public interface OntologyService {
     Map<Characteristic, Long> findObsoleteTermUsage();
 
     @Deprecated
-    default Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
+    default Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology ) throws SearchException {
-        try {
-            return findExperimentsCharacteristicTags( searchQuery, useNeuroCartaOntology, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+        return findExperimentsCharacteristicTags( searchQuery, maxResults, useNeuroCartaOntology, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -64,15 +61,11 @@ public interface OntologyService {
      * @return characteristic vos
      */
     @Deprecated
-    Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+    Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
+            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
 
-    default Collection<OntologyTerm> findTerms( String query ) throws SearchException {
-        try {
-            return findTerms( query, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+    default Collection<OntologySearchResult<OntologyTerm>> findTerms( String query, int maxResults ) throws SearchException {
+        return findTerms( query, maxResults, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -83,14 +76,10 @@ public interface OntologyService {
      * @param  query search query
      * @return returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String query, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+    Collection<OntologySearchResult<OntologyTerm>> findTerms( String query, int maxResults, long timeout, TimeUnit timeUnit ) throws SearchException;
 
-    default Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon ) throws SearchException {
-        try {
-            return findTermsInexact( givenQueryString, taxon, 5, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( e );
-        }
+    default Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, int maxResults, @Nullable Taxon taxon ) throws SearchException {
+        return findTermsInexact( givenQueryString, maxResults, taxon, 5, TimeUnit.SECONDS );
     }
 
     /**
@@ -104,7 +93,7 @@ public interface OntologyService {
      * @param  givenQueryString query string
      * @return characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException, TimeoutException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, int maxResults, @Nullable Taxon taxon, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Obtain terms which are allowed for use in the category of a {@link ubic.gemma.model.common.description.Characteristic}.
