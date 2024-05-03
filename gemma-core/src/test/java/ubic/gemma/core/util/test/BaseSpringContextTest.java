@@ -395,10 +395,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences() {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( true );
     }
 
     protected ExpressionExperiment getNewTestPersistentCompleteExpressionExperiment() {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( false );
     }
 
@@ -408,6 +410,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences(
             ExpressionExperiment prototype ) {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( prototype );
     }
 
