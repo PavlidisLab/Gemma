@@ -49,7 +49,7 @@ public class LuceneQueryUtils {
         try {
             return queryParser.parse( query );
         } catch ( ParseException e ) {
-            String strippedQuery = LUCENE_RESERVED_CHARS.matcher( query ).replaceAll( "\\\\$0" );
+            String strippedQuery = escape( query );
             log.debug( String.format( "Failed to parse '%s': %s.", query, ExceptionUtils.getRootCauseMessage( e ) ), e );
             try {
                 return queryParser.parse( strippedQuery );
@@ -61,6 +61,13 @@ public class LuceneQueryUtils {
                         new LuceneParseSearchException( query, ExceptionUtils.getRootCauseMessage( e ), e ) );
             }
         }
+    }
+
+    /**
+     * Escape all reserved Lucene characters in the given query.
+     */
+    public static String escape( String query ) {
+        return LUCENE_RESERVED_CHARS.matcher( query ).replaceAll( "\\\\$0" );
     }
 
     /**
