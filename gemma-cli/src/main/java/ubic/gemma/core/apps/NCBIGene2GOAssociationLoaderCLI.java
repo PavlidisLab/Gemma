@@ -63,9 +63,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
-    @Autowired
-    private GeneOntologyService goService;
-
     private String filePath = null;
 
     @Override
@@ -84,7 +81,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Override
     protected void doWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        OntologyUtils.ensureInitialized( goService );
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
         Collection<Taxon> taxa = taxonService.loadAll();
