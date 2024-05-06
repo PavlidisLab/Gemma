@@ -308,6 +308,11 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        AuditEvent ev3 = this.auditEventService.getLastEvent( ee, SingletonBatchInvalidEvent.class );
+        if ( ev3 != null ) {
+            return ( SingletonBatchInvalidEvent ) ev3.getEventType();
+        }
+
         AuditEvent ev2 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
         if ( ev2 != null ) {
             return ( BatchInformationMissingEvent ) ev2.getEventType();
@@ -1105,20 +1110,19 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
         BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
 
-        if ( !beDetails.hasBatchInformation() ) {
-            return BatchEffectType.NO_BATCH_INFO;
-        } else if ( beDetails.getHasSingletonBatches() ) {
+        if ( beDetails.getHasSingletonBatches() ) {
             return BatchEffectType.SINGLETON_BATCHES_FAILURE;
         } else if ( beDetails.getHasUninformativeBatchInformation() ) {
             return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
+        } else if ( !beDetails.hasBatchInformation() ) {
+            return BatchEffectType.NO_BATCH_INFO;
+        } else if ( beDetails.hasProblematicBatchInformation() ) {
+            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
             return BatchEffectType.SINGLE_BATCH_SUCCESS;
         } else if ( beDetails.getDataWasBatchCorrected() ) {
             // Checked for in ExpressionExperimentDetails.js::renderStatus()
             return BatchEffectType.BATCH_CORRECTED_SUCCESS;
-        } else if ( beDetails.hasProblematicBatchInformation() ) {
-            // sort of generic
-            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
         } else {
             if ( batchEffectStatistics == null ) {
                 return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;

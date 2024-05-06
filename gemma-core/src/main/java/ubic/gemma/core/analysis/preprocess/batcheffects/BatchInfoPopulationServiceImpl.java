@@ -256,6 +256,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         try {
             dates = batchInfoParser.getBatchInfo( ee, files );
         } catch ( BatchInfoPopulationException e ) {
+            BatchInfoPopulationServiceImpl.log
+                    .info( "No batch informatino for: " + ee.getShortName() );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationMissingEvent.class, e.getMessage(), e );
             throw e;
         }

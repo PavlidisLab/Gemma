@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.beans.Expression;
 import java.text.DateFormat;
 import java.util.*;
 
@@ -81,15 +82,14 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<String, Collection<String>> batchIdToHeaders;
         try {
-            batchIdToHeaders = this
-                    .convertHeadersToBatches( ee, headers.values() );
+            batchIdToHeaders = this.convertHeadersToBatches( ee, headers.values() );
         } catch ( FASTQHeadersPresentButNotUsableException e ) {
-            this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined",
-                    "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
+            log.info( "Batches unable to be determined from headers: " + ee );
+            this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined", "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
             return null;
         } catch ( SingletonBatchesException e ) {
-            this.auditTrailService.addUpdateEvent( ee, SingletonBatchInvalidEvent.class, "At least one singleton batch",
-                    "RNA-seq experiment, FASTQ headers indicate at least one batch of just one sample" );
+            log.info( "At least one singleton batch: " + ee + " " + e.getMessage() );
+            this.auditTrailService.addUpdateEvent( ee, SingletonBatchInvalidEvent.class, "At least one singleton batch", "RNA-seq experiment, FASTQ headers indicate at least one batch of just one sample" );
             return null;
         }
 
@@ -216,12 +216,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                      * We're at the last sample, and it's a singleton. We fall through and allow adding it to the end of
                      * the last batch.
                      */
-                    BatchInfoPopulationHelperServiceImpl.log
-                            .warn( "Singleton at the end of the series, combining with the last batch: gap is " + String
-                                    .format( "%.2f",
-                                            ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60
-                                                    * 24 ) )
-                                    + " hours." );
+                    BatchInfoPopulationHelperServiceImpl.log.warn( "Singleton at the end of the series, combining with the last batch: gap is " + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
                     mergedAnySingletons = true;
                 } else if ( this.gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -233,23 +228,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
                     if ( forwards < backwards ) {
                         // Start a new batch.
-                        BatchInfoPopulationHelperServiceImpl.log
-                                .warn( "Singleton resolved by waiting for the next batch: gap is " + String
-                                        .format( "%.2f",
-                                                ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) )
-                                        + " hours." );
+                        BatchInfoPopulationHelperServiceImpl.log.warn( "Singleton resolved by waiting for the next batch: gap is " + String.format( "%.2f", ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
                         batchNum++;
                         batchDateString = this.formatBatchName( batchNum, df, currentDate );
                         result.put( batchDateString, new HashSet<Date>() );
                         mergedAnySingletons = true;
                     } else {
-                        BatchInfoPopulationHelperServiceImpl.log
-                                .warn( "Singleton resolved by adding to the last batch: gap is " + String
-                                        .format( "%.2f",
-                                                ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) )
-                                        + " hours." );
+                        BatchInfoPopulationHelperServiceImpl.log.warn( "Singleton resolved by adding to the last batch: gap is " + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
                         // don't start a new batch, fall through.
                     }
 
@@ -267,8 +252,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             // This detection of a final singleton can fail if it contains one usable and one unusable sample, but it's just a logging statement.
             if ( result.get( batchDateString ).size() == 1 && this.gapIsLarge( lastDate, currentDate ) ) {
                 mergedAnySingletons = true;
-                BatchInfoPopulationHelperServiceImpl.log
-                        .warn( "Stranded singleton automatically being merged into a larger batch" );
+                BatchInfoPopulationHelperServiceImpl.log.warn( "Stranded singleton automatically being merged into a larger batch" );
             }
 
             result.get( batchDateString ).add( currentDate );
@@ -295,8 +279,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * batch. It will be empty if batches
      * couldn't be determined.
      */
-    private Map<String, Collection<String>> convertHeadersToBatches( ExpressionExperiment ee, Collection<String> headers )
-            throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
+    private Map<String, Collection<String>> convertHeadersToBatches( ExpressionExperiment ee, Collection<String> headers ) throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
         Map<FastqHeaderData, Collection<String>> goodHeaderSampleInfos = new HashMap<>();
@@ -351,7 +334,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<FastqHeaderData, Collection<String>> batchInfos = new HashMap<>();
         if ( !goodHeaderSampleInfos.isEmpty() ) {
-            goodHeaderSampleInfos = batch( goodHeaderSampleInfos, headers.size() );
+            goodHeaderSampleInfos = batch( ee, goodHeaderSampleInfos, headers.size() );
             batchInfos.putAll( goodHeaderSampleInfos );
         }
 
@@ -427,12 +410,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * and involves recreating the map multiple times
      *
      *
+     * @param  ee experiment
      * @param  batchInfos only of samples that have "good" headers
      * @param  numSamples how many samples
      * @return Map of batches (represented by the appropriate FastqHeaderData) to samples that are in the
      *                    batch.
      */
-    private Map<FastqHeaderData, Collection<String>> batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
+    private Map<FastqHeaderData, Collection<String>> batch( ExpressionExperiment ee, Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
 
         int numBatches = batchInfos.size();
 
@@ -458,12 +442,17 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             log.info( "Too few samples for at least one batch. Reducing resolution." );
             Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
 
+            if ( updatedBatchInfos.size() == 1 ) {
+                log.info( "Could not resolve singleton batches despite dropping resolution" );
+                return batchInfos; // return the previous one.
+            }
+
             if ( updatedBatchInfos.size() == batchInfos.size() ) {
                 // we've reached the bottom
                 return updatedBatchInfos;
             }
 
-            return batch( updatedBatchInfos, numSamples ); // start over with lower resolution
+            return batch( ee, updatedBatchInfos, numSamples ); // start over with lower resolution
         }
         // reasonable number of samples per batch -- proceed. 
         return batchInfos;
@@ -872,8 +861,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * for microarrays, it a map of batchids to dates
      * d2fv is populated by this call to be a map of headers or dates to factor values
      */
-    private <T> ExperimentalFactor createExperimentalFactor( ExpressionExperiment ee,
-            Map<String, Collection<T>> descriptorsToBatch, Map<T, FactorValue> d2fv ) {
+    private <T> ExperimentalFactor createExperimentalFactor( ExpressionExperiment ee, Map<String, Collection<T>> descriptorsToBatch, Map<T, FactorValue> d2fv ) {
         ExperimentalFactor ef = null;
         if ( descriptorsToBatch == null || descriptorsToBatch.size() < 2 ) {
             if ( descriptorsToBatch != null ) {
@@ -939,8 +927,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setCategory( this.getBatchFactorCategory() );
         ef.setExperimentalDesign( ed );
         ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        ef.setDescription(
-                "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
+        ef.setDescription( "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
 
         ef = this.persistFactor( ee, ef );
         return ef;
@@ -959,10 +946,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
-        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
-                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
-                + df
-                .format( DateUtils.truncate( d, Calendar.HOUR ) );
+        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
@@ -974,9 +958,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      *                     separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
-        return !DateUtils.isSameDay( date, earlierDate ) && DateUtils
-                .addHours( earlierDate, BatchInfoPopulationHelperServiceImpl.MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH )
-                .before( date );
+        return !DateUtils.isSameDay( date, earlierDate ) && DateUtils.addHours( earlierDate, BatchInfoPopulationHelperServiceImpl.MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( date );
     }
 
     private Characteristic getBatchFactorCategory() {

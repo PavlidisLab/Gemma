@@ -429,6 +429,16 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
+    @Test(expected = SingletonBatchesException.class)
+    public void testBatchS() throws Exception {
+        // GSE173615
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE173615" );
+
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+    }
+
     @After
     public void teardown() {
         if ( ee != null )
