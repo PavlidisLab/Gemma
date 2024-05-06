@@ -45,4 +45,10 @@ public abstract class Gene2OntologyEntryAssociation implements Identifiable, Ser
         return this.ontologyEntry;
     }
 
+    @Override
+    public String toString() {
+        if ( gene == null || ontologyEntry == null ) return "?";
+        return gene + " ---> " + ontologyEntry.getValue() + " [" + ontologyEntry.getValueUri() + "]";
+    }
+
 }
