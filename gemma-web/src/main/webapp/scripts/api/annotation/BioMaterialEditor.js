@@ -116,7 +116,14 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
          width : 40,
          dataIndex : "baDate",
          sortable : true,
-         tooltip : 'BioAssay processing date (primarily available for microarrays only)'
+         tooltip : 'BioAssay processing date (available for microarrays only, may be absent)'
+      }, {
+         id : "fastq-column",
+         header : "BA FASTQ",
+         width : 40,
+         dataIndex : "baFastq",
+         sortable : true,
+         tooltip : 'BioAssay FASTQ header exemplar (available for RNA-seq only, may be absent)'
       } ];
 
       this.factorValueEditors = [];
@@ -262,6 +269,9 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
       }, {
          name : "baDate",
          type : "string"
+      }, {
+         name : "baFastq",
+         type : "string"
       } ];
 
       // Add one slot in the record per factor. The name of the fields will be like
@@ -305,11 +315,11 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
    changeNonFactorDisplay : function( hide ) {
       var colModel = this.getColumnModel();
       var columns = colModel.config;
-     // Ext.suspendLayouts(); alas, this is a extjs 4 feature
+      // Ext.suspendLayouts(); alas, this is a extjs 4 feature
       for ( var i = 0; i < columns.length; i++ ) {
          var column = columns[i];
-         if (!hide) {
-            colModel.setHidden(i, false);
+         if ( !hide ) {
+            colModel.setHidden( i, false );
             continue;
          }
          if ( column.isRaw ) {
@@ -519,7 +529,7 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
           * This order must match the record!
           */
          data[i] = [ bmvo.id, bmvo.name, bmvo.description, chars, bmvo.assayName,
-            bmvo.assayDescription, Gemma.Renderers.dateRenderer( bmvo.assayProcessingDate ) ];
+            bmvo.assayDescription, Gemma.Renderers.dateRenderer( bmvo.assayProcessingDate ), bmvo.fastqHeaders ];
 
          var factors = bmvo.factors;
 
@@ -545,7 +555,7 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
             }
 
             var cval = bmvo.characteristicValues[c];
-             if ( cval ) {
+            if ( cval ) {
                data[i].push( cval );
             } else {
                data[i].push( "" ); // shouldn't happen if we picked useful characteristics well.

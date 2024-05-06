@@ -53,6 +53,10 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private String assayName;
     @GemmaWebOnly
     private String assayDescription;
+
+    @GemmaWebOnly
+    private String fastqHeaders = null;
+
     /**
      * Related {@link BioAssay} IDs.
      */
@@ -178,6 +182,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayProcessingDate = ba.getProcessingDate();
+        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
     }
 
     @JsonProperty("factorValues")
