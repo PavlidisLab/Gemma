@@ -21,10 +21,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -46,6 +43,7 @@ import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -660,6 +658,63 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
         return r;
 
+    }
+
+    @Override
+    public List<DifferentialExpressionAnalysisResult> findResultsByGene( Gene gene, @Nullable Collection<Long> experimentIds, @Nullable Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentId ) {
+        if ( experimentIds != null && experimentIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        List<Long> probeIds = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select CS from GENE2CS where GENE = :geneId" )
+                .addScalar( "CS", StandardBasicTypes.LONG )
+                .setParameter( "geneId", gene.getId() )
+                .list();
+        if ( probeIds.isEmpty() ) {
+            log.warn( String.format( "%s has no associated probes in the GENE2CS table, no differential expression results will be returned.", gene ) );
+            return Collections.emptyList();
+        }
+        Set<Long> bioAssaySetIds = null;
+        Map<Long, Long> subsetIdToExperimentId = null;
+        if ( experimentIds != null ) {
+            subsetIdToExperimentId = streamByBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess"
+                                    + " where eess.sourceExperiment.id in :eeIds" ), "eeIds", experimentIds, 2048, Object[].class )
+                    .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+            bioAssaySetIds = new HashSet<>( experimentIds );
+            bioAssaySetIds.addAll( subsetIdToExperimentId.keySet() );
+        } else if ( result2ExperimentId != null ) {
+            // fetch all subset -> source mappings
+            //noinspection unchecked
+            List<Object[]> r2 = getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess where eess.sourceExperiment in :eeIds" )
+                    .list();
+            subsetIdToExperimentId = r2.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        }
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysis dea "
+                        + "join dea.resultSets dears "
+                        + "join dears.results dear "
+                        + "where dear.probe.id in :probeIds"
+                        + ( experimentIds != null ? " and dea.experimentAnalyzed.id in :bioAssaySetIds" : "" ) )
+                .setParameterList( "probeIds", probeIds );
+        List<Object[]> result;
+        if ( bioAssaySetIds != null ) {
+            result = listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
+        } else {
+            //noinspection unchecked
+            result = query.list();
+        }
+        List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
+        for ( Object[] row : result ) {
+            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+            rs.add( r );
+            if ( result2ExperimentId != null ) {
+                result2ExperimentId.put( r, subsetIdToExperimentId.getOrDefault( ( Long ) row[1], ( Long ) row[1] ) );
+            }
+        }
+        return rs;
     }
 
     @Override

@@ -26,10 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -38,6 +35,7 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -115,6 +113,17 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Transactional(readOnly = true)
     public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
         return this.differentialExpressionAnalysisDao.findExperimentsWithAnalyses( gene );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DifferentialExpressionAnalysisResult> findResultsByGene( Gene gene, @Nullable Collection<Long> experimentIds, @Nullable Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentId ) {
+        List<DifferentialExpressionAnalysisResult> results = differentialExpressionAnalysisDao.findResultsByGene( gene, experimentIds, result2ExperimentId );
+        for ( DifferentialExpressionAnalysisResult result : results ) {
+            Hibernate.initialize( result.getProbe() );
+            Hibernate.initialize( result.getContrasts() );
+        }
+        return results;
     }
 
     @Override

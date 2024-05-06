@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -28,6 +29,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,18 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
 
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
+
+    /**
+     * Retrieve differential expression results for a given gene across all the given datasets.
+     * <p>
+     * If experiment IDs are provided, analysis of their subsets will also be included and the results will be attached
+     * to the corresponding source experiment in the {@code result2ExperimentId} mapping.
+     *
+     * @param gene                a specific gene to retrieve differential expression for
+     * @param experimentIds       list of IDs of experiments to consider, or all experiments if null
+     * @param result2ExperimentId mapping of result to experiment ID they belong, ignored if null
+     */
+    List<DifferentialExpressionAnalysisResult> findResultsByGene( Gene gene, @Nullable Collection<Long> experimentIds, @Nullable Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentId );
 
     Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
