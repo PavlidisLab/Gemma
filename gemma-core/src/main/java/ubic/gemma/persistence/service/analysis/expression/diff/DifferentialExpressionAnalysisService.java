@@ -20,17 +20,20 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +86,15 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * Retrieve differential expression results for a given gene.
+     * <p>
+     * Probes and contrasts are initialized.
+     * @see DifferentialExpressionAnalysisDao#findResultsByGene(Gene, Collection, Map)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    List<DifferentialExpressionAnalysisResult> findResultsByGene( Gene gene, @Nullable Collection<Long> experimentIds, Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentId );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );

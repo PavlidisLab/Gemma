@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
@@ -33,6 +34,7 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
 
     private Long probeId;
     private String probeName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<GeneValueObject> genes;
     private Double pValue;
     private Double correctedPvalue;
@@ -43,11 +45,12 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         super();
     }
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result ) {
         super( result );
-        this.probeId = result.getProbe().getId();
-        this.probeName = result.getProbe().getName();
-        this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
+        if ( Hibernate.isInitialized( result.getProbe() ) ) {
+            this.probeId = result.getProbe().getId();
+            this.probeName = result.getProbe().getName();
+        }
         this.pValue = result.getPvalue();
         this.correctedPvalue = result.getCorrectedPvalue();
         this.rank = result.getRank();
@@ -58,5 +61,10 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         } else {
             this.contrasts = null;
         }
+    }
+
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
+        this( result );
+        this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
     }
 }
