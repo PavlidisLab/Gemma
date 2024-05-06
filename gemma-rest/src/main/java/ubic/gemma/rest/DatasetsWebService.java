@@ -1076,14 +1076,12 @@ public class DatasetsWebService {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
         if ( ids.isEmpty() ) {
-            Responder.respond( Collections.emptyList() );
+            return Responder.respond( Collections.emptyList() );
         }
         Map<DifferentialExpressionAnalysisResult, Long> datasetByResult = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultWithDatasetIdValueObject> rs = differentialExpressionAnalysisService.findResultsByGene( gene, ids, datasetByResult ).stream()
+        return Responder.respond( differentialExpressionAnalysisService.findResultsByGene( gene, ids, datasetByResult, false, true, true ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultWithDatasetIdValueObject( r, datasetByResult.get( r ) ) )
-                .collect( Collectors.toList() );
-        // TODO: pick one result per gene and dataset
-        return Responder.respond( rs );
+                .collect( Collectors.toList() ) );
     }
 
     @Data

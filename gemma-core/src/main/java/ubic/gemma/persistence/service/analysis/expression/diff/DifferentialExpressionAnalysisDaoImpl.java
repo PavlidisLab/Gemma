@@ -689,19 +689,21 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
             // fetch all subset -> source mappings
             //noinspection unchecked
             List<Object[]> r2 = getSessionFactory().getCurrentSession()
-                    .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess where eess.sourceExperiment in :eeIds" )
+                    .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess" )
                     .list();
             subsetIdToExperimentId = r2.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         }
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysis dea "
-                        + "join dea.resultSets dears "
-                        + "join dears.results dear "
+                .createQuery( "select dear, e.id from DifferentialExpressionAnalysisResult dear "
+                        + "join dear.resultSet dears "
+                        + "join dears.analysis dea "
+                        + "join dea.experimentAnalyzed e "
                         + "where dear.probe.id in :probeIds"
-                        + ( experimentIds != null ? " and dea.experimentAnalyzed.id in :bioAssaySetIds" : "" ) )
-                .setParameterList( "probeIds", probeIds );
+                        + ( bioAssaySetIds != null ? " and e.id in :bioAssaySetIds" : "" ) )
+                .setParameterList( "probeIds", optimizeParameterList( probeIds ) );
         List<Object[]> result;
         if ( bioAssaySetIds != null ) {
+            // this batch size has been optimized on the *fetch everything* worst case scenario
             result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
         } else {
             //noinspection unchecked
