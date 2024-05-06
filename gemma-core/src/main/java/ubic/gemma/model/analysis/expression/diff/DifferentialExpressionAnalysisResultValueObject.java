@@ -32,13 +32,16 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = { "probeId" }, callSuper = true)
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long probeId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String probeName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<GeneValueObject> genes;
     private Double pValue;
     private Double correctedPvalue;
     private Double rank;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ContrastResultValueObject> contrasts;
 
     public DifferentialExpressionAnalysisResultValueObject() {
