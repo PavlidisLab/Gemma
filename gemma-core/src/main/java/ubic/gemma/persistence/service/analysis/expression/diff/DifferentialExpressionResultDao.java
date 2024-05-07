@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +42,11 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param experimentAnalyzedIds   list of IDs of experiments or experiment subsets to consider
      * @param includeSubsets          include results from experiment subsets
      * @param groupBySourceExperiment if true, results part of a subset are grouped by their source experiment
+     * @param experimentAnalyzedIdMap a mapping of results to experiment analyzed ID, only valid if grouping results by
+     *                                source experiment
      * @return differential expression results, grouped by experiment ID
      */
-    Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment );
+    Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the

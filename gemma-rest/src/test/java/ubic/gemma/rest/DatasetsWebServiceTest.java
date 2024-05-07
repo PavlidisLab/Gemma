@@ -559,7 +559,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
                 .hasFieldOrPropertyWithValue( "sort", "+pValue" );
-        verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any() );
+        verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any(), any() );
     }
 
     @Autowired

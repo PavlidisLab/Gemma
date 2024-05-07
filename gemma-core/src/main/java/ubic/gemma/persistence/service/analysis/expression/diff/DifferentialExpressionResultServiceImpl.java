@@ -48,9 +48,9 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds ) {
+    public Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap ) {
         StopWatch timer = StopWatch.createStarted();
-        Map<Long, List<DifferentialExpressionAnalysisResult>> resultsBySourceExperiment = DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, true );
+        Map<Long, List<DifferentialExpressionAnalysisResult>> resultsBySourceExperiment = DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, bioAssaySetIdMap, true, true );
         Map<Long, DifferentialExpressionAnalysisResult> bestResults = new HashMap<>();
         for ( Map.Entry<Long, List<DifferentialExpressionAnalysisResult>> e : resultsBySourceExperiment.entrySet() ) {
             DifferentialExpressionAnalysisResult bestResult = e.getValue().stream()
