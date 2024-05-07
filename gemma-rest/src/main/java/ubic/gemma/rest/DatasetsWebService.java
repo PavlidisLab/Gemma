@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,6 +69,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -775,6 +777,24 @@ public class DatasetsWebService {
             super( result );
             this.datasetId = datasetId;
             this.resultSetId = result.getResultSet().getId();
+        }
+
+        @Override
+        @JsonIgnore
+        public Long getProbeId() {
+            return super.getProbeId();
+        }
+
+        @Override
+        @JsonIgnore
+        public String getProbeName() {
+            return super.getProbeName();
+        }
+
+        @Override
+        @JsonIgnore
+        public List<GeneValueObject> getGenes() {
+            return super.getGenes();
         }
     }
 
