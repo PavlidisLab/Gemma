@@ -16,6 +16,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
@@ -51,10 +52,14 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                 .setParameter( 1, cs.getId() )
                 .setParameter( 2, ad.getId() )
                 .executeUpdate();
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, 1.0 );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, 1.0 );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, 1.0 );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, 1.0 );
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, 1.2 ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, -1 ) )
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test
