@@ -22,6 +22,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -37,6 +38,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
 import ubic.gemma.rest.util.args.QuantitationTypeArgService;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -119,6 +121,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public TaxonArgService taxonArgService() {
+            return mock( TaxonArgService.class );
+        }
+
+        @Bean
         public GeneArgService geneArgService() {
             return mock( GeneArgService.class );
         }
@@ -155,6 +162,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     private SearchService searchService;
 
     @Autowired
+    private TaxonArgService taxonArgService;
+
+    @Autowired
     private GeneArgService geneArgService;
 
     @Autowired
@@ -177,7 +187,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @After
     public void resetMocks() throws Exception {
         super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService );
     }
 
     @Test
@@ -505,6 +515,24 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         Gene brca1 = new Gene();
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
         assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any() );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa() {
+        Taxon human = new Taxon();
+        Gene brca1 = new Gene();
+        when( taxonArgService.getEntity( any() ) ).thenReturn( human );
+        when( geneArgService.getEntityWithTaxon( any(), eq( human ) ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/taxa/human/gene/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
