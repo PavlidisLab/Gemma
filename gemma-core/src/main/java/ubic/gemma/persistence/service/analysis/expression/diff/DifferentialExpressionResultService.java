@@ -39,15 +39,10 @@ import java.util.Map;
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
 
     /**
-     * Retrieve the best differential expression results for a given gene.
-     * <p>
-     * If a source experiment has more than one result for a given gene (i.e. multiple probe for the gene or multiple
-     * result sets), the best is picked according to its corrected P-value.
-     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, boolean, Map)
-     * @return the best analysis results grouped by source experiment ID
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap );
+    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given

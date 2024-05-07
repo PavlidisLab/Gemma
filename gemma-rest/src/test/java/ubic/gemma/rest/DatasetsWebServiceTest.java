@@ -562,8 +562,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "filter", "" )
                 .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "sourceExperimentId" );
-        verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any(), any() );
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any() );
     }
 
     @Autowired
