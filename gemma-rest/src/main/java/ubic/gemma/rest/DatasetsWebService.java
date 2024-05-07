@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
@@ -43,6 +45,8 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -57,10 +61,14 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -127,11 +135,15 @@ public class DatasetsWebService {
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
+    private TaxonArgService taxonArgService;
+    @Autowired
     private GeneArgService geneArgService;
     @Autowired
     private QuantitationTypeArgService quantitationTypeArgService;
     @Autowired
     private OntologyService ontologyService;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private HttpServletRequest request;
@@ -715,6 +727,109 @@ public class DatasetsWebService {
     }
 
     /**
+     * Obtain differential expression analysis results for a given gene.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene")
+    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+    ) {
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold );
+    }
+
+    /**
+     * Obtain differential expression analysis results for a given gene in a given taxa.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/taxa/{taxa}/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa")
+    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
+            @PathParam("taxa") TaxonArg<?> taxonArg,
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+    ) {
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold );
+    }
+
+    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
+        Gene gene;
+        if ( taxonArg != null ) {
+            Taxon taxon = taxonArgService.getEntity( taxonArg );
+            gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
+        } else {
+            gene = geneArgService.getEntity( geneArg );
+        }
+        Filters filters = datasetArgService.getFilters( filter );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, threshold ).entrySet().stream()
+                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), sourceExperimentIdMap.get( e.getValue() ), e.getKey() ) )
+                .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+        return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ) );
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
+
+        /**
+         * The ID of the source experiment, which differs only if this result is from a subset. This is always referring
+         * to an {@link ExpressionExperiment}.
+         */
+        private Long sourceExperimentId;
+        /**
+         * The ID of the experiment analyzed which is either an {@link ExpressionExperiment} or an {@link ExpressionExperimentSubSet}.
+         */
+        private Long experimentAnalyzedId;
+        /**
+         * The result set ID to which this result belong.
+         */
+        private Long resultSetId;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
+            super( result );
+            this.sourceExperimentId = sourceExperimentId;
+            this.experimentAnalyzedId = experimentAnalyzedId;
+            this.resultSetId = result.getResultSet().getId();
+        }
+
+        @Override
+        @JsonIgnore
+        public Long getProbeId() {
+            return super.getProbeId();
+        }
+
+        @Override
+        @JsonIgnore
+        public String getProbeName() {
+            return super.getProbeName();
+        }
+
+        @Override
+        @JsonIgnore
+        public List<GeneValueObject> getGenes() {
+            return super.getGenes();
+        }
+    }
+
+    /**
      * Retrieves the annotations for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
@@ -741,7 +856,8 @@ public class DatasetsWebService {
     @Path("/{dataset}/quantitationTypes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve quantitation types of a dataset")
-    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes
+    ( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         return Responder.respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
@@ -957,8 +1073,10 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return Responder.respond( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
@@ -998,8 +1116,10 @@ public class DatasetsWebService {
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return Responder.respond( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
@@ -1036,13 +1156,16 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression
+    ( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
@@ -1054,7 +1177,8 @@ public class DatasetsWebService {
         );
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws
+            FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filter ).orElse( null );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );

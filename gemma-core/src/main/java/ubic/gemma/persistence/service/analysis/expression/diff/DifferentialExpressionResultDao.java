@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,20 @@ import java.util.Map;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  */
 public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
+
+    /**
+     * Retrieve differential expression results for a given gene across all the given datasets.
+     * <p>
+     * If a gene maps to more than one probe, the result with the lowest corrected P-value is selected.
+     *
+     * @param gene                  a specific gene to retrieve differential expression for
+     * @param experimentAnalyzedIds list of IDs of experiments or experiment subsets to consider
+     * @param includeSubsets        include results from experiment subsets
+     * @param sourceExperimentIdMap a mapping of results to source experiment ID
+     * @param threshold             a maximum threshold on the corrected P-value, between 0 and 1 inclusively
+     * @return differential expression results, grouped by analyzed experiment ID
+     */
+    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the

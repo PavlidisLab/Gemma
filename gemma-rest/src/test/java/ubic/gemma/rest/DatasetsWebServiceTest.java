@@ -1,6 +1,5 @@
 package ubic.gemma.rest;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +21,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -36,6 +38,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
 import ubic.gemma.rest.util.args.QuantitationTypeArgService;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
@@ -87,6 +91,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public DifferentialExpressionResultService differentialExpressionResultService() {
+            return mock( DifferentialExpressionResultService.class );
+        }
+
+        @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
         }
@@ -109,6 +118,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public QuantitationTypeArgService quantitationTypeArgService( QuantitationTypeService quantitationTypeService ) {
             return new QuantitationTypeArgService( quantitationTypeService );
+        }
+
+        @Bean
+        public TaxonArgService taxonArgService() {
+            return mock( TaxonArgService.class );
         }
 
         @Bean
@@ -147,6 +161,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private SearchService searchService;
 
+    @Autowired
+    private TaxonArgService taxonArgService;
+
+    @Autowired
+    private GeneArgService geneArgService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -164,7 +187,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @After
     public void resetMocks() throws Exception {
         super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService );
     }
 
     @Test
@@ -315,7 +338,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
@@ -331,7 +354,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
@@ -363,7 +386,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 50 )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 50 );
     }
@@ -485,5 +508,39 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotationsById( 1L );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
+        Gene brca1 = new Gene();
+        when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), anyDouble() );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa() {
+        Taxon human = new Taxon();
+        Gene brca1 = new Gene();
+        when( taxonArgService.getEntity( any() ) ).thenReturn( human );
+        when( geneArgService.getEntityWithTaxon( any(), eq( human ) ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/taxa/human/gene/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), anyDouble() );
     }
 }

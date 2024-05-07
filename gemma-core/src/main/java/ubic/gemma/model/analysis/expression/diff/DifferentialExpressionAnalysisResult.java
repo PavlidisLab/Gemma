@@ -22,7 +22,6 @@ import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 

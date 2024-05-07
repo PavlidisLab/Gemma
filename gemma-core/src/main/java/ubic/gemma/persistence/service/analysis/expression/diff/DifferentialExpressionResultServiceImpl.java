@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -46,6 +45,12 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao ) {
         super( DERDao );
         this.DERDao = DERDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
+        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap, threshold );
     }
 
     @Override
