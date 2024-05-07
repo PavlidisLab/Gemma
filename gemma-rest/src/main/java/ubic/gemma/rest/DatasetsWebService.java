@@ -742,9 +742,9 @@ public class DatasetsWebService {
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload;
-        payload = differentialExpressionResultService.findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( gene, ids ).entrySet().stream()
-                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey() ) )
+        Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( gene, ids, bioAssaySetIdMap ).entrySet().stream()
+                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey(), bioAssaySetIdMap.get( e.getValue() ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
         return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "datasetId" }, Sort.by( null, "pValue", Sort.Direction.ASC, "pValue" ) );
@@ -754,12 +754,14 @@ public class DatasetsWebService {
     @EqualsAndHashCode(callSuper = true)
     public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
 
-        private Long datasetId;
+        private Long sourceExperimentId;
+        private Long experimentAnalyzedId;
         private Long resultSetId;
 
-        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long datasetId ) {
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
             super( result );
-            this.datasetId = datasetId;
+            this.sourceExperimentId = sourceExperimentId;
+            this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();
         }
 

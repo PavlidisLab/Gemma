@@ -40,6 +40,7 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.QueryUtils;
 import ubic.gemma.persistence.util.TaskCancelledException;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -88,8 +89,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment ) {
+    public Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
+        Assert.isTrue( groupBySourceExperiment || experimentAnalyzedIdMap == null,
+                "The experiment analyzed ID mapping is only useful if results are grouped by source experiment." );
         if ( experimentAnalyzedIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -132,9 +135,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Map<Long, List<DifferentialExpressionAnalysisResult>> rs = new HashMap<>();
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+            Long bioAssaySetId = ( Long ) row[1];
             Long key;
             if ( groupBySourceExperiment ) {
-                key = subsetIdToExperimentId.getOrDefault( ( Long ) row[1], ( Long ) row[1] );
+                key = subsetIdToExperimentId.getOrDefault( bioAssaySetId, bioAssaySetId );
+                if ( experimentAnalyzedIdMap != null ) {
+                    experimentAnalyzedIdMap.put( r, bioAssaySetId );
+                }
             } else {
                 key = ( Long ) row[1];
             }

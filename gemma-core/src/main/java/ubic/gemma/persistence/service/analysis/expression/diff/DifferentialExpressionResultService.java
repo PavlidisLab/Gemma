@@ -47,7 +47,7 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
      * @return the best analysis results grouped by source experiment ID
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds );
+    Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
