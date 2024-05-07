@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,8 +49,8 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap ) {
-        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap );
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
+        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap, threshold );
     }
 
     @Override

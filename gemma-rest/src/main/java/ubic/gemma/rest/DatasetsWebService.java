@@ -737,9 +737,10 @@ public class DatasetsWebService {
     public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter );
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold );
     }
 
     /**
@@ -754,12 +755,13 @@ public class DatasetsWebService {
             @PathParam("taxa") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter );
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold );
     }
 
-    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter ) {
+    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
         Gene gene;
         if ( taxonArg != null ) {
             Taxon taxon = taxonArgService.getEntity( taxonArg );
@@ -768,12 +770,15 @@ public class DatasetsWebService {
             gene = geneArgService.getEntity( geneArg );
         }
         Filters filters = datasetArgService.getFilters( filter );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
         Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap ).entrySet().stream()
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, threshold ).entrySet().stream()
                 .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), sourceExperimentIdMap.get( e.getValue() ), e.getKey() ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );

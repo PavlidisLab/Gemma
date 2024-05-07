@@ -39,10 +39,10 @@ import java.util.Map;
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
 
     /**
-     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map)
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, double)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap );
+    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap, double threshold );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given

@@ -89,8 +89,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap ) {
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
+        Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -128,10 +129,11 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
                         + "join dea.experimentAnalyzed e "
-                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds "
+                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
                         + "group by e order by dear.correctedPvalue" )
-                .setParameterList( "probeIds", optimizeParameterList( probeIds ) );
+                .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
+                .setParameter( "threshold", threshold );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
         Map<Long, DifferentialExpressionAnalysisResult> rs = new HashMap<>();
         for ( Object[] row : result ) {
