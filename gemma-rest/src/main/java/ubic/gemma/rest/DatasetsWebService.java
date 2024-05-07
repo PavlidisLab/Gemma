@@ -764,7 +764,7 @@ public class DatasetsWebService {
                 .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey(), bioAssaySetIdMap.get( e.getValue() ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
-        return Responders.all( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId" }, Sort.by( null, "pValue", Sort.Direction.ASC, "pValue" ) );
+        return Responders.all( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ) );
     }
 
     @Data
