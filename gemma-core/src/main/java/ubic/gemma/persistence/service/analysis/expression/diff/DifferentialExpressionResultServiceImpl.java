@@ -54,7 +54,7 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         Map<Long, DifferentialExpressionAnalysisResult> bestResults = new HashMap<>();
         for ( Map.Entry<Long, List<DifferentialExpressionAnalysisResult>> e : resultsBySourceExperiment.entrySet() ) {
             DifferentialExpressionAnalysisResult bestResult = e.getValue().stream()
-                    .min( Comparator.comparing( DifferentialExpressionAnalysisResult::getPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                    .min( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                     .orElseThrow( IllegalStateException::new );
             bestResults.put( e.getKey(), bestResult );
         }

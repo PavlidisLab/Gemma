@@ -510,7 +510,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort", "+pValue" )
+                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId" );
         verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any(), any() );
