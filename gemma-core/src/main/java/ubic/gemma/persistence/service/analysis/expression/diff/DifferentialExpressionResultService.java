@@ -43,7 +43,7 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
      * <p>
      * If a source experiment has more than one result for a given gene (i.e. multiple probe for the gene or multiple
      * result sets), the best is picked according to its P-value.
-     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, boolean)
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, boolean, Map)
      * @return the best analysis results grouped by source experiment ID
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
