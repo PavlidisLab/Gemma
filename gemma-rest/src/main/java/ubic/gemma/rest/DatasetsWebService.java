@@ -65,6 +65,7 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -763,15 +764,25 @@ public class DatasetsWebService {
                 .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey(), bioAssaySetIdMap.get( e.getValue() ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
-        return Responders.all( payload, query != null ? query.getValue() : null, filters, new String[] { "datasetId" }, Sort.by( null, "pValue", Sort.Direction.ASC, "pValue" ) );
+        return Responders.all( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId" }, Sort.by( null, "pValue", Sort.Direction.ASC, "pValue" ) );
     }
 
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
 
+        /**
+         * The ID of the source experiment, which differs only if this result is from a subset. This is always referring
+         * to an {@link ExpressionExperiment}.
+         */
         private Long sourceExperimentId;
+        /**
+         * The ID of the experiment analyzed which is either an {@link ExpressionExperiment} or an {@link ExpressionExperimentSubSet}.
+         */
         private Long experimentAnalyzedId;
+        /**
+         * The result set ID to which this result belong.
+         */
         private Long resultSetId;
 
         public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
