@@ -1,6 +1,5 @@
 package ubic.gemma.rest;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
@@ -328,7 +328,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
@@ -344,7 +344,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
@@ -376,7 +376,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 50 )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 50 );
     }
@@ -506,9 +506,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
         assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort", "+pValue" );
+                .hasFieldOrPropertyWithValue( "sort", "+pValue" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId" );
         verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any(), any() );
     }
 }
