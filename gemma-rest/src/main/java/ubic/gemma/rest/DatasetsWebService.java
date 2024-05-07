@@ -753,7 +753,34 @@ public class DatasetsWebService {
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
     ) {
-        Gene gene = geneArgService.getEntity( geneArg );
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter );
+    }
+
+    /**
+     * Obtain differential expression analysis results for a given gene in a given taxa.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/taxa/{taxa}/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa")
+    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
+            @PathParam("taxa") TaxonArg<?> taxonArg,
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+    ) {
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter );
+    }
+
+    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter ) {
+        Gene gene;
+        if ( taxonArg != null ) {
+            Taxon taxon = taxonArgService.getEntity( taxonArg );
+            gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
+        } else {
+            gene = geneArgService.getEntity( geneArg );
+        }
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
         if ( query != null ) {
@@ -1075,8 +1102,10 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return respond( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
@@ -1116,8 +1145,10 @@ public class DatasetsWebService {
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return respond( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
@@ -1154,13 +1185,16 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression
+    ( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
