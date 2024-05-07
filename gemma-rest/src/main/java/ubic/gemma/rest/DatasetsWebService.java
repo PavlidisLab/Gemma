@@ -65,6 +65,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -136,6 +137,8 @@ public class DatasetsWebService {
     private QuantitationTypeArgService quantitationTypeArgService;
     @Autowired
     private OntologyService ontologyService;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private HttpServletRequest request;
@@ -719,6 +722,47 @@ public class DatasetsWebService {
     }
 
     /**
+     * Obtain differential expression analysis results for a given gene.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene")
+    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+    ) {
+        Gene gene = geneArgService.getEntity( geneArg );
+        Filters filters = datasetArgService.getFilters( filter );
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload;
+        payload = differentialExpressionResultService.findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( gene, ids ).entrySet().stream()
+                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey() ) )
+                .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+        return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "datasetId" }, Sort.by( null, "pValue", Sort.Direction.ASC, "pValue" ) );
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
+
+        private Long datasetId;
+        private Long resultSetId;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long datasetId ) {
+            super( result );
+            this.datasetId = datasetId;
+            this.resultSetId = result.getResultSet().getId();
+        }
+    }
+
+    /**
      * Retrieves the annotations for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
@@ -1056,46 +1100,6 @@ public class DatasetsWebService {
                         diffExSet, threshold, limit.getValueNoMaximum(), keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
         );
-    }
-
-    /**
-     * Obtain differential expression results for a given gene.
-     */
-    @GET
-    @Path("/differential/genes/{gene}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential expression results for a given gene")
-    public ResponseDataObject<List<DifferentialExpressionAnalysisResultWithDatasetIdValueObject>> getDatasetsDifferentialExpressionForGene(
-            @PathParam("gene") GeneArg<?> geneArg,
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
-    ) {
-        Gene gene = geneArgService.getEntity( geneArg );
-        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( datasetArgService.getFilters( filter ), null ) );
-        if ( query != null ) {
-            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
-        }
-        if ( ids.isEmpty() ) {
-            return Responder.respond( Collections.emptyList() );
-        }
-        Map<DifferentialExpressionAnalysisResult, Long> datasetByResult = new HashMap<>();
-        return Responder.respond( differentialExpressionAnalysisService.findResultsByGene( gene, ids, datasetByResult, false, true, true ).stream()
-                .map( r -> new DifferentialExpressionAnalysisResultWithDatasetIdValueObject( r, datasetByResult.get( r ) ) )
-                .collect( Collectors.toList() ) );
-    }
-
-    @Data
-    @EqualsAndHashCode(callSuper = true)
-    public static class DifferentialExpressionAnalysisResultWithDatasetIdValueObject extends DifferentialExpressionAnalysisResultValueObject {
-
-        private Long datasetId;
-        private Long resultSetId;
-
-        public DifferentialExpressionAnalysisResultWithDatasetIdValueObject( DifferentialExpressionAnalysisResult result, Long datasetId ) {
-            super( result );
-            this.datasetId = datasetId;
-            this.resultSetId = result.getResultSet().getId();
-        }
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {

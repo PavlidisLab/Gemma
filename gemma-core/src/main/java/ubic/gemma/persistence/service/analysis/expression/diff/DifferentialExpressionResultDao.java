@@ -35,6 +35,17 @@ import java.util.Map;
 public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
 
     /**
+     * Retrieve differential expression results for a given gene across all the given datasets.
+     *
+     * @param gene                    a specific gene to retrieve differential expression for
+     * @param experimentAnalyzedIds   list of IDs of experiments or experiment subsets to consider
+     * @param includeSubsets          include results from experiment subsets
+     * @param groupBySourceExperiment if true, results part of a subset are grouped by their source experiment
+     * @return differential expression results, grouped by experiment ID
+     */
+    Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment );
+
+    /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
      * corrected pvalue field)
      */

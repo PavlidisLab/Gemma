@@ -22,7 +22,9 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -87,6 +89,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public DifferentialExpressionResultService differentialExpressionResultService() {
+            return mock( DifferentialExpressionResultService.class );
+        }
+
+        @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
         }
@@ -146,6 +153,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private GeneArgService geneArgService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     private ExpressionExperiment ee;
 
@@ -485,5 +498,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotationsById( 1L );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
+        Gene brca1 = new Gene();
+        when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort", "+pValue" );
+        verify( differentialExpressionResultService ).findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( eq( brca1 ), any() );
     }
 }

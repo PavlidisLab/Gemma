@@ -20,17 +20,12 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
-import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +37,17 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
+
+    /**
+     * Retrieve the best differential expression results for a given gene.
+     * <p>
+     * If a source experiment has more than one result for a given gene (i.e. multiple probe for the gene or multiple
+     * result sets), the best is picked according to its P-value.
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, boolean)
+     * @return the best analysis results grouped by source experiment ID
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
