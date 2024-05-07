@@ -89,13 +89,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap ) {
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
-        Assert.isTrue( groupBySourceExperiment || experimentAnalyzedIdMap == null,
-                "The experiment analyzed ID mapping is only useful if results are grouped by source experiment." );
         if ( experimentAnalyzedIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<Long> probeIds = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select CS from GENE2CS where GENE = :geneId" )
@@ -109,7 +108,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Set<Long> bioAssaySetIds = new HashSet<>( experimentAnalyzedIds );
         Map<Long, Long> subsetIdToExperimentId = null;
         // create a mapping of subset ID to source experiment ID
-        if ( groupBySourceExperiment ) {
+        if ( sourceExperimentIdMap != null ) {
             subsetIdToExperimentId = QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
                             .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess"
                                     + " where eess.sourceExperiment.id in :eeIds or eess.id in :eeIds" ), "eeIds", experimentAnalyzedIds, 2048, Object[].class )
@@ -129,23 +128,24 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
                         + "join dea.experimentAnalyzed e "
-                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds" )
+                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds "
+                        // if more than one probe is found, pick the one with the lowest corrected p-value
+                        + "group by e order by dear.correctedPvalue" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
-        Map<Long, List<DifferentialExpressionAnalysisResult>> rs = new HashMap<>();
+        Map<Long, DifferentialExpressionAnalysisResult> rs = new HashMap<>();
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Long bioAssaySetId = ( Long ) row[1];
-            Long key;
-            if ( groupBySourceExperiment ) {
-                key = subsetIdToExperimentId.getOrDefault( bioAssaySetId, bioAssaySetId );
-                if ( experimentAnalyzedIdMap != null ) {
-                    experimentAnalyzedIdMap.put( r, bioAssaySetId );
-                }
-            } else {
-                key = ( Long ) row[1];
+            rs.put( bioAssaySetId, r );
+            if ( sourceExperimentIdMap != null ) {
+                sourceExperimentIdMap.put( r, subsetIdToExperimentId.getOrDefault( bioAssaySetId, bioAssaySetId ) );
             }
-            rs.computeIfAbsent( key, k -> new ArrayList<>() ).add( r );
+        }
+        // pick the best result by experiment
+        if ( timer.getTime() > 1000 ) {
+            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms",
+                    rs.size(), gene, timer.getTime() ) );
         }
         return rs;
     }

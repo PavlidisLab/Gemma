@@ -15,9 +15,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
 
 import java.util.Collections;
-import java.util.HashMap;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
@@ -53,12 +51,10 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                 .setParameter( 1, cs.getId() )
                 .setParameter( 2, ad.getId() )
                 .executeUpdate();
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, true, null );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, false, null );
-        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, false, new HashMap<>() ) )
-                .isInstanceOf( IllegalArgumentException.class );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, true, null );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, false, null );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null );
     }
 
     @Test

@@ -37,16 +37,15 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
 
     /**
      * Retrieve differential expression results for a given gene across all the given datasets.
-     *
-     * @param gene                    a specific gene to retrieve differential expression for
-     * @param experimentAnalyzedIds   list of IDs of experiments or experiment subsets to consider
-     * @param includeSubsets          include results from experiment subsets
-     * @param groupBySourceExperiment if true, results part of a subset are grouped by their source experiment
-     * @param experimentAnalyzedIdMap a mapping of results to experiment analyzed ID, only valid if grouping results by
-     *                                source experiment
-     * @return differential expression results, grouped by experiment ID
+     * <p>
+     * If a gene maps to more than one probe, the result with the lowest corrected P-value is selected.
+     * @param gene                  a specific gene to retrieve differential expression for
+     * @param experimentAnalyzedIds list of IDs of experiments or experiment subsets to consider
+     * @param includeSubsets        include results from experiment subsets
+     * @param sourceExperimentIdMap a mapping of results to source experiment ID
+     * @return differential expression results, grouped by analyzed experiment ID
      */
-    Map<Long, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, boolean groupBySourceExperiment, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap );
+    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the

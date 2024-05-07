@@ -28,7 +28,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author keshav
@@ -48,21 +50,8 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap ) {
-        StopWatch timer = StopWatch.createStarted();
-        Map<Long, List<DifferentialExpressionAnalysisResult>> resultsBySourceExperiment = DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, true, bioAssaySetIdMap );
-        Map<Long, DifferentialExpressionAnalysisResult> bestResults = new HashMap<>();
-        for ( Map.Entry<Long, List<DifferentialExpressionAnalysisResult>> e : resultsBySourceExperiment.entrySet() ) {
-            DifferentialExpressionAnalysisResult bestResult = e.getValue().stream()
-                    .min( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
-                    .orElseThrow( IllegalStateException::new );
-            bestResults.put( e.getKey(), bestResult );
-        }
-        if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms",
-                    bestResults.size(), gene, timer.getTime() ) );
-        }
-        return bestResults;
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap ) {
+        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap );
     }
 
     @Override

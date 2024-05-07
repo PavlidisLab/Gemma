@@ -743,12 +743,12 @@ public class DatasetsWebService {
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
-        Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( gene, ids, bioAssaySetIdMap ).entrySet().stream()
-                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), e.getKey(), bioAssaySetIdMap.get( e.getValue() ) ) )
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap ).entrySet().stream()
+                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), sourceExperimentIdMap.get( e.getValue() ), e.getKey() ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
-        return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ) );
+        return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ) );
     }
 
     @Data
