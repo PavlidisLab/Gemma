@@ -18,19 +18,17 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractService;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author keshav
@@ -46,6 +44,25 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao ) {
         super( DERDao );
         this.DERDao = DERDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, DifferentialExpressionAnalysisResult> findBestResultByGeneAndExperimentAnalyzedGroupedBySourceExperimentId( Gene gene, Collection<Long> experimentAnalyzedIds ) {
+        StopWatch timer = StopWatch.createStarted();
+        Map<Long, List<DifferentialExpressionAnalysisResult>> resultsBySourceExperiment = DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, true );
+        Map<Long, DifferentialExpressionAnalysisResult> bestResults = new HashMap<>();
+        for ( Map.Entry<Long, List<DifferentialExpressionAnalysisResult>> e : resultsBySourceExperiment.entrySet() ) {
+            DifferentialExpressionAnalysisResult bestResult = e.getValue().stream()
+                    .min( Comparator.comparing( DifferentialExpressionAnalysisResult::getPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                    .orElseThrow( IllegalStateException::new );
+            bestResults.put( e.getKey(), bestResult );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms",
+                    bestResults.size(), gene, timer.getTime() ) );
+        }
+        return bestResults;
     }
 
     @Override

@@ -118,51 +118,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findResultsByGene( Gene gene, @Nullable Collection<Long> experimentIds, @Nullable Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentId, boolean initializeProbes, boolean initializeContrasts, boolean pickBestByDataset ) {
-        StopWatch timer = StopWatch.createStarted();
-        if ( pickBestByDataset && result2ExperimentId == null ) {
-            result2ExperimentId = new HashMap<>();
-        }
-        List<DifferentialExpressionAnalysisResult> results = differentialExpressionAnalysisDao.findResultsByGene( gene, experimentIds, result2ExperimentId );
-        long queryingMs = timer.getTime();
-        if ( pickBestByDataset ) {
-            results = pickBestByDataset( results, result2ExperimentId );
-        }
-        long probesMs = timer.getTime();
-        if ( initializeProbes ) {
-            for ( DifferentialExpressionAnalysisResult result : results ) {
-                Hibernate.initialize( result.getProbe() );
-            }
-        }
-        probesMs = timer.getTime() - probesMs;
-        long contrastsMs = timer.getTime();
-        if ( initializeContrasts ) {
-            for ( DifferentialExpressionAnalysisResult result : results ) {
-                Hibernate.initialize( result.getContrasts() );
-            }
-        }
-        contrastsMs = timer.getTime() - contrastsMs;
-        if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (querying results: %d ms, initializing probes: %d ms, initializing contrasts: %d ms)",
-                    results.size(), gene, timer.getTime(), queryingMs, probesMs, contrastsMs ) );
-        }
-        return results;
-    }
-
-    /**
-     * Pick the best analysis result per dataset.
-     */
-    private List<DifferentialExpressionAnalysisResult> pickBestByDataset( List<DifferentialExpressionAnalysisResult> rs, Map<DifferentialExpressionAnalysisResult, Long> result2ExperimentIdMap ) {
-        Map<Long, DifferentialExpressionAnalysisResult> bestByDataset = rs.stream()
-                .collect( Collectors.groupingBy(
-                        result2ExperimentIdMap::get,
-                        Collectors.collectingAndThen( Collectors.toList(), ( List<DifferentialExpressionAnalysisResult> l ) ->
-                                l.stream().min( Comparator.comparing( DifferentialExpressionAnalysisResult::getPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) ).orElseThrow( IllegalStateException::new ) ) ) );
-        return new ArrayList<>( bestByDataset.values() );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
         return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment );
     }
