@@ -726,6 +726,9 @@ public class DatasetsWebService {
                 .build();
     }
 
+    private static final String GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION = "If a dataset has more than one probe for a given gene, the result corresponding to the lowest corrected P-value is retained. Results for non-specific probes (i.e. probes that map to more than one genes) are excluded.";
+    private static final String PVALUE_THRESHOLD_DESCRIPTION = "Maximum threshold on the corrected P-value to retain a result. The threshold is inclusive (i.e. 0.05 will match results with corrected P-values lower or equal to 0.05).";
+
     /**
      * Obtain differential expression analysis results for a given gene.
      */
@@ -733,12 +736,12 @@ public class DatasetsWebService {
     @GZIP
     @Path("/analyses/differential/results/gene/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential expression results for a given gene")
+    @Operation(summary = "Retrieve the differential expression results for a given gene", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
     public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
         return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold );
     }
@@ -750,13 +753,13 @@ public class DatasetsWebService {
     @GZIP
     @Path("/analyses/differential/results/taxa/{taxa}/gene/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa")
+    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
     public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
             @PathParam("taxa") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
         return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold );
     }
@@ -1160,12 +1163,10 @@ public class DatasetsWebService {
     ( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
-            @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION) @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
-                    keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg
-                    consolidate // Optional, default everything is returned
+            @Parameter(description = "Keep results from non-specific probes.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @Parameter(description = "Strategy for consolidating expression of multiple probes for a given gene.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
