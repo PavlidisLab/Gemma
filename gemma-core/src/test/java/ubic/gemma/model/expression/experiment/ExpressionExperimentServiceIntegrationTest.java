@@ -430,7 +430,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
             assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
         };
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
                 .noneSatisfy( consumer );
 
@@ -444,7 +444,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .noneSatisfy( consumer );
 
         // update the pivot table
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
                 .satisfiesOnlyOnce( consumer );
 
