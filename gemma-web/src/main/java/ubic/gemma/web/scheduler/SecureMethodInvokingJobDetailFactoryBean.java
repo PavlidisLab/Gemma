@@ -19,6 +19,9 @@
 package ubic.gemma.web.scheduler;
 
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -31,20 +34,21 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 
-    private final SecureInvoker secureInvoker;
+    private final SecurityContext securityContext;
 
-    public SecureMethodInvokingJobDetailFactoryBean( SecureInvoker secureInvoker ) {
-        this.secureInvoker = secureInvoker;
+    public SecureMethodInvokingJobDetailFactoryBean( SecurityContext securityContext ) {
+        Assert.notNull( securityContext, "A security context must be provided." );
+        this.securityContext = securityContext;
     }
 
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {
         try {
-            return secureInvoker.invoke( super::invoke );
-        } catch ( InvocationTargetException | IllegalAccessException | RuntimeException e ) {
+            return DelegatingSecurityContextCallable.create( super::invoke, securityContext ).call();
+        } catch ( InvocationTargetException | RuntimeException e ) {
             throw e;
         } catch ( Exception e ) {
-            throw new InvocationTargetException( e );
+            throw new RuntimeException( e );
         }
     }
 }
