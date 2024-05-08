@@ -89,13 +89,18 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
                     + "group by AOI.ID), 0)";
 
+    /**
+     * Clause for selecting entities updated since a given date.
+     */
+    private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
+
     private static final String EE2C_EE_QUERY =
             "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "and COALESCE(CD.LAST_UPDATED, 0) >= COALESCE(:since, 0) "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_BM_QUERY =
@@ -106,7 +111,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join BIO_MATERIAL BM on BA.SAMPLE_USED_FK = BM.ID "
                     + "join CHARACTERISTIC C on BM.ID = C.BIO_MATERIAL_FK "
                     + "where I.class = 'ExpressionExperiment' "
-                    + "and COALESCE(CD.LAST_UPDATED, 0) >= COALESCE(:since, 0) "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_ED_QUERY =
@@ -120,7 +125,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "where I.class = 'ExpressionExperiment' "
                     // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
                     + "and C.class = 'Statement' "
-                    + "and COALESCE(CD.LAST_UPDATED, 0) >= COALESCE(:since, 0) "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
@@ -137,7 +142,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
             + "join ARRAY_DESIGN AD on BA.ORIGINAL_PLATFORM_FK = AD.ID "
             + "where I.class = 'ExpressionExperiment' "
-            + "and COALESCE(CD.LAST_UPDATED, 0) >= COALESCE(:since, 0) "
+            + "and " + CD_LAST_UPDATED_SINCE + " "
             + "group by I.ID, AD.ID "
             + "on duplicate key update ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK)";
 
