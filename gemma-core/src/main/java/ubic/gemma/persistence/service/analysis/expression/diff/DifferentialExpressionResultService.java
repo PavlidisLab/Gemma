@@ -39,7 +39,7 @@ import java.util.Map;
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
 
     /**
-     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, double)
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, double, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> bioAssaySetIdMap, double threshold );

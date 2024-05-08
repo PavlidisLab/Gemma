@@ -89,7 +89,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold, boolean keepNonSpecificProbes ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
@@ -98,7 +98,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<Long> probeIds = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select CS from GENE2CS where GENE = :geneId" )
+                .createSQLQuery( "select CS from GENE2CS where GENE = :geneId"
+                        // only retain probes that map to a single gene in the platform
+                        + ( keepNonSpecificProbes ? "" : " and (select count(distinct gene2cs2.GENE) from GENE2CS gene2cs2 where gene2cs2.AD = GENE2CS.AD and gene2cs2.CS = GENE2CS.CS) = 1" ) )
                 .addScalar( "CS", StandardBasicTypes.LONG )
                 .setParameter( "geneId", gene.getId() )
                 .list();
