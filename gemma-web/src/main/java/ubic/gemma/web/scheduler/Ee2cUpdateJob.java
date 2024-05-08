@@ -17,7 +17,7 @@ public class Ee2cUpdateJob extends SecureQuartzJobBean implements StatefulJob {
     private Class<?> level = null;
 
     @Override
-    public void executeAsAgent( JobExecutionContext context ) {
+    public void executeAs( JobExecutionContext context ) {
         Assert.notNull( tableMaintenanceUtil, "The tableMaintenanceUtil bean was not set." );
         if ( level == null ) {
             tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( context.getPreviousFireTime(), false );

@@ -15,7 +15,7 @@ public class Ee2AdUpdateJob extends SecureQuartzJobBean implements StatefulJob {
     private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Override
-    protected void executeAsAgent( JobExecutionContext context ) {
+    protected void executeAs( JobExecutionContext context ) {
         Assert.notNull( tableMaintenanceUtil, "The tableMaintenanceUtil bean was not set." );
         tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( context.getPreviousFireTime() );
     }

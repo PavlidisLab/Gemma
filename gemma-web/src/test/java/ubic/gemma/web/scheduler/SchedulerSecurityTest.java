@@ -26,6 +26,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
@@ -35,6 +36,7 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.lang.reflect.InvocationTargetException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -56,8 +58,8 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
     private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Autowired
-    @Qualifier("groupAgentSecureInvoker")
-    private SecureInvoker secureInvoker;
+    @Qualifier("groupAgentSecurityContext")
+    private SecurityContext securityContext;
 
     /*
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT
@@ -68,7 +70,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
 
         String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
 
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
         jobDetail.setTargetMethod( "generateWeeklyReport" );
         jobDetail.setTargetObject( whatsNewService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
@@ -88,7 +90,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
 
         String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
 
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
         jobDetail.setTargetMethod( "findByUpdatedLimit" );
         jobDetail.setArguments( new Object[] { 10 } );
         jobDetail.setTargetObject( expressionExperimentService ); // access should be ok for GROUP_AGENT.
@@ -112,7 +114,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         /*
          * Mimics configuration in xml.
          */
-        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.secureInvoker );
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
         jobDetail.setTargetMethod( "remove" );
         jobDetail.setArguments( new Object[] { null } );
         jobDetail.setTargetObject( expressionExperimentService ); // no access
@@ -129,7 +131,7 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         private TableMaintenanceUtil tableMaintenanceUtil;
 
         @Override
-        protected void executeAsAgent( JobExecutionContext context ) {
+        protected void executeAs( JobExecutionContext context ) {
             assertNotNull( tableMaintenanceUtil );
             assertNotNull( SecurityContextHolder.getContext().getAuthentication() );
             assertTrue( SecurityContextHolder.getContext().getAuthentication().isAuthenticated() );
@@ -152,10 +154,12 @@ public class SchedulerSecurityTest extends BaseSpringWebTest {
         JobExecutionContext context = mock();
         JobDataMap jdm = new JobDataMap();
         jdm.put( "tableMaintenanceUtil", tableMaintenanceUtil );
-        jdm.put( "secureInvoker", secureInvoker );
+        jdm.put( "securityContext", securityContext );
         when( context.getScheduler() ).thenReturn( mock() );
         when( context.getMergedJobDataMap() ).thenReturn( jdm );
+        SecurityContext previousContext = SecurityContextHolder.getContext();
         testSecureJob.execute( context );
+        assertThat( SecurityContextHolder.getContext() ).isSameAs( previousContext );
         verify( context ).setResult( "Hello world!" );
     }
 }
