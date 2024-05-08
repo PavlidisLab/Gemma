@@ -35,6 +35,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
@@ -43,9 +45,11 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author Paul
@@ -134,6 +138,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
     }
+
+    @Override
+    protected void postProcessValueObjects( List<DifferentialExpressionAnalysisResultSetValueObject> differentialExpressionAnalysisResultSetValueObjects ) {
+        populateBaselines( differentialExpressionAnalysisResultSetValueObjects );
+    }
+
 
     @Override
     public void thaw( ExpressionAnalysisResultSet ears ) {
@@ -270,5 +280,81 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )
                                         .collect( Collectors.toList() ) ) ) );
+    }
+
+    /**
+     * Populate baseline groups for results sets with interactions.
+     * <p>
+     * Those are not being populated in the database because there is no storage for a "second" baseline group. For more
+     * details, read <a href="https://github.com/PavlidisLab/Gemma/issues/1119">#1119</a>.
+     */
+    private void populateBaselines( List<DifferentialExpressionAnalysisResultSetValueObject> vos ) {
+        Collection<DifferentialExpressionAnalysisResultSetValueObject> vosWithMissingBaselines = vos.stream()
+                .filter( vo -> vo.getBaselineGroup() == null )
+                .collect( Collectors.toList() );
+        if ( vosWithMissingBaselines.isEmpty() ) {
+            return;
+        }
+        // pick baseline groups from other result sets from the same analysis
+        Collection<Long> rsIds = optimizeParameterList( EntityUtils.getIds( vosWithMissingBaselines ) );
+        //noinspection unchecked
+        List<Object[]> otherBaselineGroups = getSessionFactory().getCurrentSession()
+                .createQuery( "select rs.id, otherBg from ExpressionAnalysisResultSet rs "
+                        + "join rs.analysis a "
+                        + "join a.resultSets otherRs "
+                        + "join otherRs.baselineGroup otherBg "
+                        + "where rs.id in :rsIds and otherRs.id not in :rsIds" )
+                .setParameterList( "rsIds", rsIds )
+                .list();
+        // pick one representative contrasts to order the first and second baseline group consistently
+        //noinspection unchecked
+        List<Object[]> representativeContrasts = getSessionFactory().getCurrentSession()
+                .createQuery( "select rs.id, c from ExpressionAnalysisResultSet rs "
+                        + "join rs.results r join r.contrasts c "
+                        + "where rs.id in :rsIds "
+                        + "group by rs" )
+                .setParameterList( "rsIds", rsIds )
+                .list();
+        Map<Long, Set<FactorValue>> baselineMapping = otherBaselineGroups.stream()
+                .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> ( FactorValue ) row[1], Collectors.toSet() ) ) );
+        Map<Long, ContrastResult> contrastsMapping = representativeContrasts.stream()
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( ContrastResult ) row[1] ) );
+        for ( DifferentialExpressionAnalysisResultSetValueObject vo : vosWithMissingBaselines ) {
+            ContrastResult contrast = contrastsMapping.get( vo.getId() );
+            if ( contrast == null ) {
+                log.warn( "Could ont find a representative contrast for " + vo + " to populate its baseline groups." );
+                continue;
+            }
+            if ( contrast.getFactorValue() == null || contrast.getSecondFactorValue() == null ) {
+                log.warn( "Could not populate baselines for " + vo + " as its contrasts lack factor values. This is likely a continuous factor." );
+                // very likely a continuous factor, it does not have a baseline
+                continue;
+            }
+            // I don't think this is allowed
+            if ( contrast.getFactorValue().getExperimentalFactor().equals( contrast.getSecondFactorValue().getExperimentalFactor() ) ) {
+                log.warn( "Could not populate baselines for " + vo + ", its representative contrast uses the same experimental factor for its first and second factor value." );
+                continue;
+            }
+            Set<FactorValue> baselines = baselineMapping.get( vo.getId() );
+            if ( baselines == null || baselines.size() != 2 ) {
+                log.warn( "Could not find two other result sets with baseline for " + vo + " to populate its baseline groups." );
+                continue;
+            }
+            FactorValue firstBaseline = null, secondBaseline = null;
+            for ( FactorValue fv : baselines ) {
+                if ( fv.getExperimentalFactor().equals( contrast.getFactorValue().getExperimentalFactor() ) ) {
+                    firstBaseline = fv;
+                }
+                if ( fv.getExperimentalFactor().equals( contrast.getSecondFactorValue().getExperimentalFactor() ) ) {
+                    secondBaseline = fv;
+                }
+            }
+            if ( firstBaseline != null && secondBaseline != null ) {
+                vo.setBaselineGroup( new FactorValueBasicValueObject( firstBaseline ) );
+                vo.setSecondBaselineGroup( new FactorValueBasicValueObject( secondBaseline ) );
+            } else {
+                log.warn( "Could not fill the baseline groups for " + vo + ": one or more baselines were not found in other result sets from the same analysis." );
+            }
+        }
     }
 }

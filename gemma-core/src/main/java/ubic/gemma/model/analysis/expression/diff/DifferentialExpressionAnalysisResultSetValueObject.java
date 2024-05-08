@@ -3,6 +3,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -20,6 +21,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private FactorValueBasicValueObject baselineGroup;
+    private FactorValueBasicValueObject secondBaselineGroup;
 
     /**
      * Related analysis results.
@@ -51,8 +53,20 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     }
 
     /**
+     * Create a simple analysis results set VO for a result set containing an interaction term.
+     * <p>
+     * The baseline group is not populated for result sets containing an interaction term, so it has to be provided.
+     * See <a href="https://github.com/PavlidisLab/Gemma/issues/1119">#1119</a> for details
+     */
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, FactorValue baselineGroup, FactorValue secondBaselineGroup ) {
+        this( analysisResultSet );
+        this.baselineGroup = new FactorValueBasicValueObject( baselineGroup );
+        this.secondBaselineGroup = new FactorValueBasicValueObject( secondBaselineGroup );
+    }
+
+    /**
      * Create an expression analysis result set VO with all its associated results.
-     *
+     * <p>
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
      */
     public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
@@ -87,6 +101,14 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.baselineGroup = baselineGroup;
     }
 
+    public FactorValueBasicValueObject getSecondBaselineGroup() {
+        return secondBaselineGroup;
+    }
+
+    public void setSecondBaselineGroup( FactorValueBasicValueObject secondBaselineGroup ) {
+        this.secondBaselineGroup = secondBaselineGroup;
+    }
+
     @Override
     public Collection<DifferentialExpressionAnalysisResultValueObject> getResults() {
         return results;
@@ -94,5 +116,10 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     public void setResults( Collection<DifferentialExpressionAnalysisResultValueObject> results ) {
         this.results = results;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " Id=" + getId();
     }
 }
