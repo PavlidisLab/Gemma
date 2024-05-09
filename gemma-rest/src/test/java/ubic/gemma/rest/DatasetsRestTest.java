@@ -75,7 +75,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrProperty( "totalElements" ); // FIXME: cannot test because of leftovers from other tests but should be 10
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 5 );
+                .hasSize( 5 );
     }
 
     @Test
@@ -89,7 +89,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 2 )
+                .hasSize( 2 )
                 .first()
                 .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
                 .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
@@ -107,7 +107,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 2 )
+                .hasSize( 2 )
                 .first()
                 .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
                 .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
@@ -127,7 +127,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 1 )
+                .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() );
     }
@@ -150,7 +150,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 1 )
+                .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
                 .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
@@ -174,7 +174,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 1 )
+                .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
                 .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
@@ -198,7 +198,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 1 )
+                .hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
                 .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
@@ -230,7 +230,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 2 );
+                .hasSize( 2 );
         assertThat( response.getData() )
                 .extracting( "id" )
                 .containsExactlyInAnyOrder( ees.get( 0 ).getId(), ees.get( 1 ).getId() );
