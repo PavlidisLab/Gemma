@@ -95,7 +95,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
 
     private static final String EE2C_EE_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:eeClass as char(255)) "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
@@ -104,7 +104,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_BM_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:bmClass as char(255)) "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
@@ -115,7 +115,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_ED_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(? as char(255)) "
+            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:edClass as char(255)) "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
@@ -255,9 +255,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + EE2C_ED_QUERY + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                .setParameter( 0, ExpressionExperiment.class )
-                .setParameter( 1, BioMaterial.class )
-                .setParameter( 2, ExperimentalDesign.class )
+                .setParameter( "eeClass", ExpressionExperiment.class )
+                .setParameter( "bmClass", BioMaterial.class )
+                .setParameter( "edClass", ExperimentalDesign.class )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
         log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated%s.",
@@ -271,12 +271,16 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     public int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        String levelParamName;
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
+            levelParamName = "eeClass";
             query = EE2C_EE_QUERY;
         } else if ( level.equals( BioMaterial.class ) ) {
+            levelParamName = "bmClass";
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
+            levelParamName = "edClass";
             query = EE2C_ED_QUERY;
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
@@ -297,7 +301,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + query + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                .setParameter( 0, level )
+                .setParameter( levelParamName, level )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
         log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated%s.",
