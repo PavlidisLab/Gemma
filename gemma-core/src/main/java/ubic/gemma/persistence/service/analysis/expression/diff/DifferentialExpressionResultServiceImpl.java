@@ -50,7 +50,7 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     @Override
     @Transactional(readOnly = true)
     public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
-        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap, threshold );
+        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, true, sourceExperimentIdMap, threshold, false );
     }
 
     @Override
