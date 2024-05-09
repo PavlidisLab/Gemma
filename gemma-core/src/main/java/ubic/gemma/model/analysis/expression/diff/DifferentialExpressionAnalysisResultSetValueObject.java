@@ -3,7 +3,6 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -50,18 +49,6 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         if ( analysisResultSet.getBaselineGroup() != null ) {
             this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
         }
-    }
-
-    /**
-     * Create a simple analysis results set VO for a result set containing an interaction term.
-     * <p>
-     * The baseline group is not populated for result sets containing an interaction term, so it has to be provided.
-     * See <a href="https://github.com/PavlidisLab/Gemma/issues/1119">#1119</a> for details
-     */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, FactorValue baselineGroup, FactorValue secondBaselineGroup ) {
-        this( analysisResultSet );
-        this.baselineGroup = new FactorValueBasicValueObject( baselineGroup );
-        this.secondBaselineGroup = new FactorValueBasicValueObject( secondBaselineGroup );
     }
 
     /**
