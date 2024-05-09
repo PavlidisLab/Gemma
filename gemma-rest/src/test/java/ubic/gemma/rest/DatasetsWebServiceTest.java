@@ -162,8 +162,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @After
-    public void tearDown() throws Exception {
-        super.tearDown();
+    public void resetMocks() throws Exception {
         reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
     }
 

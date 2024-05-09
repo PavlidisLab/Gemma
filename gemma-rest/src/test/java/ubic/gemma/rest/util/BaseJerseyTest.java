@@ -69,15 +69,21 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
         config.register( GZipEncoder.class );
     }
 
+    /**
+     * This is intentionally made final to prevent subclasses from overriding.
+     */
     @Before
     @Override
     public final void setUp() throws Exception {
         super.setUp();
     }
 
+    /**
+     * This is intentionally made final to prevent subclasses from overriding.
+     */
     @After
     @Override
-    public void tearDown() throws Exception {
+    public final void tearDown() throws Exception {
         super.tearDown();
     }
 }

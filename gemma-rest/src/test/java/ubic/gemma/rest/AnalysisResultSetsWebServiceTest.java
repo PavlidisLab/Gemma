@@ -9,7 +9,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.web.WebAppConfiguration;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -17,10 +17,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -40,9 +41,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
-@ActiveProfiles("web")
-@WebAppConfiguration
-public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
+public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Autowired
     private AnalysisResultSetsWebService service;
@@ -59,6 +58,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
     /* fixtures */
     private ArrayDesign arrayDesign;
     private ExpressionExperiment ee;
@@ -66,10 +68,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     private ExpressionAnalysisResultSet dears;
     private DatabaseEntry databaseEntry2;
 
-    @Before
-    public void setUp() throws Exception {
+    @Autowired
+    private PersistentDummyObjectHelper testHelper;
 
-        ee = getTestPersistentBasicExpressionExperiment();
+    @Before
+    public void setupMocks() {
+
+        ee = testHelper.getTestPersistentBasicExpressionExperiment();
 
         arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
         CompositeSequence probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
@@ -112,7 +117,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown() {
+    public void removeFixtures() {
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
         databaseEntryService.remove( databaseEntry2 );

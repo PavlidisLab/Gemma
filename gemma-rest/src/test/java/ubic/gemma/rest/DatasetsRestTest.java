@@ -5,14 +5,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.web.WebAppConfiguration;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -34,9 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author tesarst
  */
 @Category(SlowTest.class)
-@ActiveProfiles("web")
-@WebAppConfiguration
-public class DatasetsRestTest extends BaseSpringContextTest {
+public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Autowired
     private DatasetsWebService datasetsWebService;
@@ -47,18 +44,22 @@ public class DatasetsRestTest extends BaseSpringContextTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private PersistentDummyObjectHelper testHelper;
+
     /* fixtures */
     private final ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
     @Before
-    public void setUp() throws Exception {
+    public void setUpMocks() {
         for ( int i = 0; i < 10; i++ ) {
-            ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
+            testHelper.resetSeed();
+            ees.add( testHelper.getTestExpressionExperimentWithAllDependencies( false ) );
         }
     }
 
     @After
-    public void tearDown() {
+    public void resetMocks() {
         expressionExperimentService.remove( ees );
     }
 

@@ -49,8 +49,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("web")
-@WebAppConfiguration
 @ContextConfiguration
 public class SearchWebServiceTest extends BaseJerseyTest {
 
@@ -127,7 +125,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     }
 
     @After
-    public void tearDown() {
+    public void resetMocks() {
         reset( searchService, taxonService, arrayDesignService );
     }
 

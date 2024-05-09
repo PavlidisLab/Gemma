@@ -43,7 +43,7 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
     }
 
     @After
-    public void tearDown() {
+    public void removeFixtures() {
         expressionExperimentService.remove( ee );
     }
 
