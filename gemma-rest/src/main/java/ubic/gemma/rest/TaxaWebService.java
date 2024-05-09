@@ -27,8 +27,10 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -37,9 +39,11 @@ import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -58,26 +62,19 @@ import java.util.*;
 public class TaxaWebService {
 
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
-    private TaxonService taxonService;
-    private ExpressionExperimentService expressionExperimentService;
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    private TaxonArgService taxonArgService;
-    private DatasetArgService datasetArgService;
-    private GeneArgService geneArgService;
 
-    /**
-     * Required by spring
-     */
-    public TaxaWebService() {
-    }
+    private final TaxonService taxonService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private final TaxonArgService taxonArgService;
+    private final DatasetArgService datasetArgService;
+    private final GeneArgService geneArgService;
 
     /**
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService, TaxonArgService taxonArgService,
-            DatasetArgService datasetArgService, GeneArgService geneArgService ) {
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, PhenotypeAssociationManagerService phenotypeAssociationManagerService, TaxonArgService taxonArgService, DatasetArgService datasetArgService, GeneArgService geneArgService ) {
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
@@ -153,6 +150,18 @@ public class TaxaWebService {
         return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
     }
 
+    @GET
+    @Path("/{taxon}/genes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all genes in a given taxon")
+    public PaginatedResponseDataObject<GeneValueObject> getTaxonGenes(
+            @PathParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        return Responder.paginate( geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+    }
+
     /**
      * Retrieves genes matching the identifier on the given taxon.
      *
@@ -160,16 +169,39 @@ public class TaxaWebService {
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @see GeneWebService#getGenes(GeneArrayArg)
      */
     @GET
     @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes in a given taxon")
-    public ResponseDataObject<List<GeneValueObject>> getTaxonGenes( // Params:
+    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon")
+    public ResponseDataObject<List<GeneValueObject>> getTaxonGenesByIds( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @PathParam("gene") GeneArrayArg geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGenesOnTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        return Responder.respond( geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+    }
+
+    /**
+     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg)
+     */
+    @GET
+    @Path("/{taxon}/genes/{gene}/probes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
+        return Responder.paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+    }
+
+    /**
+     * @see GeneWebService#getGeneGoTerms(GeneArg)
+     */
+    @GET
+    @Path("/{taxon}/genes/{gene}/goTerms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon")
+    public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg ) {
+        return Responder.respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -213,12 +245,11 @@ public class TaxaWebService {
     @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve physical locations for a given gene and taxon")
-    public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocationsInTaxon( // Params:
+    public ResponseDataObject<List<PhysicalLocationValueObject>> getTaxonGeneLocations( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        Taxon taxon = taxonArgService.getEntity( taxonArg );
-        return Responder.respond( geneArgService.getGeneLocation( geneArg, taxon ) );
+        return Responder.respond( geneArgService.getGeneLocationInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -236,14 +267,13 @@ public class TaxaWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         // will raise a NotFoundException if the taxon is not found
-        taxonArgService.getEntity( taxonArg );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
         Filters filters = datasetArgService.getFilters( filter )
-                .and( taxonArgService.getFilters( taxonArg ) );
-        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
-                taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+                .and( expressionExperimentService.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
+        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -272,11 +302,9 @@ public class TaxaWebService {
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         if ( tree ) {
-            return Responder.respond( phenotypeAssociationManagerService
-                    .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
+            return Responder.respond( phenotypeAssociationManagerService.loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
         }
-        return Responder.respond( phenotypeAssociationManagerService
-                .loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
+        return Responder.respond( phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
     }
 
     /**
@@ -298,9 +326,7 @@ public class TaxaWebService {
             @QueryParam("editableOnly") @DefaultValue("false") Boolean editableOnly // Optional, default false
     ) {
         Set<GeneEvidenceValueObject> response;
-        response = this.phenotypeAssociationManagerService.findCandidateGenes(
-                new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ),
-                new HashSet<>( phenotypes.getValue() ) );
+        response = this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ), new HashSet<>( phenotypes.getValue() ) );
         return Responder.respond( response );
     }
 

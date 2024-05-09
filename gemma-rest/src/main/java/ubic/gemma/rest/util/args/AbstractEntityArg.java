@@ -4,7 +4,6 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.BadRequestException;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,7 +54,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
     List<O> getEntities( S service ) {
         O entity = getEntity( service );
         if ( entity != null ) {
-            return Collections.singletonList( getEntity( service ) );
+            return Collections.singletonList( entity );
         } else {
             return Collections.emptyList();
         }

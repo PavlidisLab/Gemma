@@ -125,13 +125,16 @@ public class DatasetsWebService {
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
+    private QuantitationTypeArgService quantitationTypeArgService;
+    @Autowired
+    private OntologyService ontologyService;
+
+    @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
     @Autowired
-    private QuantitationTypeArgService quantitationTypeArgService;
-    @Autowired
-    private OntologyService ontologyService;
+    private TaxonArgService taxonArgService;
 
     @Autowired
     private HttpServletRequest request;
@@ -928,6 +931,7 @@ public class DatasetsWebService {
      *                        You can combine various identifiers in one query, but an invalid identifier will cause the
      *                        call to yield an error.
      *                        </p>
+     * @param taxonArg        a taxon to retrieve gene identifiers from
      * @param genes           a list of gene identifiers, separated by commas (','). Identifiers can be one of
      *                        NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
      *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use
@@ -951,7 +955,26 @@ public class DatasetsWebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets}/expressions/genes/{genes: [^/]+}")
+    @Path("/{datasets}/expressions/taxa/{taxa}/genes/{genes}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenesInTaxa( // Params:
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @PathParam("taxa") TaxonArg<?> taxonArg, // Required
+            @PathParam("genes") GeneArrayArg genes, // Required
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+    ) {
+        return Responder.respond( processedExpressionDataVectorService
+                .getExpressionLevels( datasetArgService.getEntities( datasets ),
+                        geneArgService.getEntitiesWithTaxon( genes, taxonArgService.getEntity( taxonArg ) ),
+                        keepNonSpecific,
+                        consolidate == null ? null : consolidate.getValue() )
+        );
+    }
+
+    @GET
+    @Path("/{datasets}/expressions/genes/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:

@@ -36,6 +36,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
 import ubic.gemma.rest.util.args.QuantitationTypeArgService;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -109,6 +110,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public QuantitationTypeArgService quantitationTypeArgService( QuantitationTypeService quantitationTypeService ) {
             return new QuantitationTypeArgService( quantitationTypeService );
+        }
+
+        @Bean
+        public TaxonArgService taxonArgService() {
+            return mock();
         }
 
         @Bean

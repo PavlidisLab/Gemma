@@ -15,9 +15,6 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,12 +30,10 @@ import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
-import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -59,27 +54,29 @@ import java.util.List;
 @Path("/genes")
 public class GeneWebService {
 
-    private GeneService geneService;
-    private CompositeSequenceService compositeSequenceService;
-    private GeneCoexpressionSearchService geneCoexpressionSearchService;
-    private GeneArgService geneArgService;
-
-    /**
-     * Required by spring
-     */
-    public GeneWebService() {
-    }
+    private final GeneService geneService;
+    private final GeneCoexpressionSearchService geneCoexpressionSearchService;
+    private final GeneArgService geneArgService;
 
     /**
      * Constructor for service autowiring
      */
     @Autowired
-    public GeneWebService( GeneService geneService, CompositeSequenceService compositeSequenceService,
-            GeneCoexpressionSearchService geneCoexpressionSearchService, GeneArgService geneArgService ) {
+    public GeneWebService( GeneService geneService, GeneCoexpressionSearchService geneCoexpressionSearchService, GeneArgService geneArgService ) {
         this.geneService = geneService;
-        this.compositeSequenceService = compositeSequenceService;
         this.geneCoexpressionSearchService = geneCoexpressionSearchService;
         this.geneArgService = geneArgService;
+    }
+
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all genes")
+    public PaginatedResponseDataObject<GeneValueObject> getGenes(
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        return Responder.paginate( geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -156,14 +153,12 @@ public class GeneWebService {
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
-    public FilteredAndPaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( compositeSequenceService
-                .loadValueObjectsForGene( geneArgService.getEntity( geneArg ), offset.getValue(),
-                        limit.getValue() ), geneArgService.getFilters( geneArg ), new String[] { "id" } );
+        return Responder.paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -179,7 +174,7 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGoTerms( geneArg ) );
+        return Responder.respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
 
     /**
@@ -206,5 +201,4 @@ public class GeneWebService {
                     this.add( geneArgService.getEntity( with ).getId() );
                 }}, 1, limit.getValueNoMaximum(), false ).getResults() );
     }
-
 }

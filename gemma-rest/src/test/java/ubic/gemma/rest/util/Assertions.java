@@ -15,6 +15,6 @@ public class Assertions extends org.assertj.core.api.Assertions {
     }
 
     public static ErrorsAssert assertThat( Errors errors ) {
-        return new ErrorsAssert(errors);
+        return new ErrorsAssert( errors );
     }
 }

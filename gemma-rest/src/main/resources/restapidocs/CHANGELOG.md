@@ -1,5 +1,11 @@
 ## Updates
 
+### Update 2.7.5
+
+- fix a bug in `getTaxonDatasets` sorting parameter, it was indicating `Taxon` instead of `ExpressionExperiment`
+- disambiguate all endpoints that expect a gene identifier with a taxon argument
+- add endpoints to retrieve all genes with pagination
+
 ### Update 2.7.4
 
 - indicate 503 status codes for endpoints that could timeout due to a long-running search
