@@ -734,7 +734,7 @@ public class DatasetsWebService {
      */
     @GET
     @GZIP
-    @Path("/analyses/differential/results/gene/{gene}")
+    @Path("/analyses/differential/results/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the differential expression results for a given gene", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
     public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
@@ -747,15 +747,15 @@ public class DatasetsWebService {
     }
 
     /**
-     * Obtain differential expression analysis results for a given gene in a given taxa.
+     * Obtain differential expression analysis results for a given gene in a given taxon.
      */
     @GET
     @GZIP
-    @Path("/analyses/differential/results/taxa/{taxa}/gene/{gene}")
+    @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the differential expression results for a given gene and taxa", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
     public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
-            @PathParam("taxa") TaxonArg<?> taxonArg,
+            @PathParam("taxon") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,

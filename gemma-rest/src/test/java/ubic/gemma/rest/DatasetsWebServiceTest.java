@@ -514,7 +514,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
         Gene brca1 = new Gene();
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
-        assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
+        assertThat( target( "/datasets/analyses/differential/results/genes/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
@@ -532,7 +532,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         Gene brca1 = new Gene();
         when( taxonArgService.getEntity( any() ) ).thenReturn( human );
         when( geneArgService.getEntityWithTaxon( any(), eq( human ) ) ).thenReturn( brca1 );
-        assertThat( target( "/datasets/analyses/differential/results/taxa/human/gene/BRCA1" ).request().get() )
+        assertThat( target( "/datasets/analyses/differential/results/taxa/human/genes/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
