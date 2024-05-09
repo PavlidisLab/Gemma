@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assertj.core.api.*;
 import org.assertj.core.internal.Maps;
@@ -8,10 +9,15 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Assertions for jax-rs {@link Response}.
@@ -23,6 +29,27 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
 
     public ResponseAssert( Response actual ) {
         super( actual, ResponseAssert.class );
+        info.description( "\nHTTP/1.1 %d %s\n%s\n\n%s\n",
+                actual.getStatus(), actual.getStatusInfo().getReasonPhrase(),
+                actual.getStringHeaders().entrySet().stream()
+                        .sorted( Map.Entry.comparingByKey() )
+                        .map( e -> e.getKey() + ": " + String.join( ", ", e.getValue() ) )
+                        .collect( Collectors.joining( "\n" ) ),
+                formatEntity( actual.getEntity() ) );
+    }
+
+    private String formatEntity( Object entity ) {
+        if ( entity instanceof ByteArrayInputStream ) {
+            try {
+                return IOUtils.toString( ( InputStream ) entity, StandardCharsets.UTF_8 );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            } finally {
+                ( ( ByteArrayInputStream ) entity ).reset();
+            }
+        } else {
+            return entity.toString();
+        }
     }
 
     /**
