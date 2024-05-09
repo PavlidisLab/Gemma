@@ -89,11 +89,11 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold, boolean keepNonSpecificProbes ) {
+    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, double threshold, boolean keepNonSpecificProbes ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
@@ -106,7 +106,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .list();
         if ( probeIds.isEmpty() ) {
             log.warn( String.format( "%s has no associated probes in the GENE2CS table, no differential expression results will be returned.", gene ) );
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         Set<Long> bioAssaySetIds = new HashSet<>( experimentAnalyzedIds );
         Map<Long, Long> subsetIdToExperimentId = null;
@@ -133,17 +133,20 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                         + "join dea.experimentAnalyzed e "
                         + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
-                        + "group by e order by dear.correctedPvalue" )
+                        + "group by dears order by dear.correctedPvalue" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                 .setParameter( "threshold", threshold );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
-        Map<Long, DifferentialExpressionAnalysisResult> rs = new HashMap<>();
+        List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Long bioAssaySetId = ( Long ) row[1];
-            rs.put( bioAssaySetId, r );
+            rs.add( r );
             if ( sourceExperimentIdMap != null ) {
                 sourceExperimentIdMap.put( r, subsetIdToExperimentId.getOrDefault( bioAssaySetId, bioAssaySetId ) );
+            }
+            if ( experimentAnalyzedIdMap != null ) {
+                experimentAnalyzedIdMap.put( r, bioAssaySetId );
             }
         }
         // pick the best result by experiment
