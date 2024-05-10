@@ -69,7 +69,6 @@ public class GeneWebService {
     }
 
     @GET
-    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all genes")
     public PaginatedResponseDataObject<GeneValueObject> getGenes(
