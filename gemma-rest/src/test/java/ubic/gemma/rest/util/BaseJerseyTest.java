@@ -12,9 +12,12 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
+import org.springframework.test.context.web.ServletTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
@@ -25,11 +28,16 @@ import javax.ws.rs.core.Application;
 /**
  * Base class for Jersey-based tests that needs a {@link WebApplicationContext} for loading and configuring or mocking
  * Spring components.
+ * <p>
+ * Unfortunately, it is not possible to inherit from {@link org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests},
+ * so we have to borrow some its annotations here.
  * @author poirigui
  */
 @ActiveProfiles({ "web", EnvironmentProfiles.TEST })
-@RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@TestExecutionListeners({ ServletTestExecutionListener.class, DependencyInjectionTestExecutionListener.class,
+        DirtiesContextTestExecutionListener.class })
 public abstract class BaseJerseyTest extends JerseyTest implements ApplicationContextAware {
 
     private ResourceConfig application;
