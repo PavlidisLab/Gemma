@@ -209,7 +209,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getComponents().getSchemas() )
                 // FIXME: remove the dangling 'Sort'
                 // .doesNotContainKey( "Sort" )
-                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet", "SortArgTaxon" );
+                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet" );
         Schema<?> schema = spec.getComponents().getSchemas().get( "SortArgExpressionExperiment" );
         assertThat( schema.getType() )
                 .isEqualTo( "string" );
