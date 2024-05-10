@@ -40,7 +40,6 @@ class SpringSupport {
     }
 
     SpringSupport(String userName, String password, List<String> activeProfiles) {
-        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL)
         ctx = SpringContextUtil.getApplicationContext(activeProfiles as String[])
         authenticate(userName, password);
     }

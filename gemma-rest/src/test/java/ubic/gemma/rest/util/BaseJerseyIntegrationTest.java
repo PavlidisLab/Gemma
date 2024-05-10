@@ -2,7 +2,6 @@ package ubic.gemma.rest.util;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,11 +24,6 @@ public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
 
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
-
-    @BeforeClass
-    public static void setUpSecurityContextHolderStrategy() {
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-    }
 
     @Before
     public final void setUpAuthentication() {

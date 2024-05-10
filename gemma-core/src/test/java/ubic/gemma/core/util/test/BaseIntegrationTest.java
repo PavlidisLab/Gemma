@@ -2,7 +2,6 @@ package ubic.gemma.core.util.test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,11 +22,6 @@ public abstract class BaseIntegrationTest extends AbstractJUnit4SpringContextTes
 
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
-
-    @BeforeClass
-    public static void setUpSecurityContextHolderStrategy() {
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-    }
 
     /**
      * Setup the authentication for the test.

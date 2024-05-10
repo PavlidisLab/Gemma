@@ -41,7 +41,6 @@ public abstract class BaseJerseyTest extends JerseyTest implements ApplicationCo
 
     @Override
     protected final Application configure() {
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         application = new ResourceConfig()
                 .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
                 .registerClasses( GZipEncoder.class )
