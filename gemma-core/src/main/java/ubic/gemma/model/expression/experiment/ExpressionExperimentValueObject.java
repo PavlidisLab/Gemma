@@ -69,6 +69,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String source;
     @JsonIgnore
     private Boolean suitableForDEA = true;
+
     /**
      * FIXME: this should be named simply "taxon", but that field is already taken for Gemma Web, see {@link #getTaxon()}.
      */
@@ -187,7 +188,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
         this.metadata = vo.getMetadata();
-        this.shortName = vo.getShortName();
+        if ( vo.getShortName() == null && ExpressionExperimentSubsetValueObject.class.isAssignableFrom( vo.getClass() ) ) {
+            this.setShortName( ( ( ExpressionExperimentSubsetValueObject ) vo ).getSourceExperimentShortName() );
+        } else {
+            this.shortName = vo.getShortName();
+        }
         this.source = vo.getSource();
         this.taxonObject = vo.getTaxonObject();
         this.technologyType = vo.getTechnologyType();

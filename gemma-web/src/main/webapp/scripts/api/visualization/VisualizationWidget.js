@@ -430,10 +430,10 @@ Gemma.VisualizationZoomPanel = Ext
                   + " '>"
                   + eevo.shortName
                   + "</a> ("
-                  + Ext.util.Format.ellipsis( eevo.name, 35 ) + ")";
+                  + Ext.util.Format.ellipsis( eevo.name, 65 ) + ")";
 
                if ( this.vizWindow && this.vizWindow.originalTitle ) {
-                  this.vizWindow.setTitle( this.vizWindow.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle );
+                  this.vizWindow.setTitle( this.vizWindow.originalTitle + "&nbsp;in:&nbsp;" + eeInfoTitle );
                } else {
                   this.setTitle( eeInfoTitle );
                }
