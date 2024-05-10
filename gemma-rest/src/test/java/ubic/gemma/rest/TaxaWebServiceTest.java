@@ -7,17 +7,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
-import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
-import ubic.gemma.rest.util.args.*;
+import ubic.gemma.rest.util.args.TaxonArrayArg;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -85,13 +85,14 @@ public class TaxaWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testTaxonDatasetsByNcbiId() {
-        FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> response = taxaWebService.getTaxonDatasets(
-                TaxonArg.valueOf( taxon.getNcbiId().toString() ),
-                FilterArg.valueOf( "" ),
-                OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "20" ),
-                SortArg.valueOf( "+id" ) );
-        assertThat( response.getData() ).isEmpty();
+        assertThat( target( "/taxa/" + taxon.getNcbiId() + "/datasets" ).queryParam( "filter", "id > 100" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "id > 100 and taxon.id = " + taxon.getId() )
+                .hasFieldOrPropertyWithValue( "offset", 0 )
+                .hasFieldOrPropertyWithValue( "limit", 20 )
+                .hasFieldOrPropertyWithValue( "data", Collections.emptyList() );
     }
 
     @Test
