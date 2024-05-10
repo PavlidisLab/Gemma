@@ -21,6 +21,7 @@ package ubic.gemma.model.common.quantitationtype;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable implements Serializable {
 
@@ -213,80 +214,26 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             return false;
         }
         final QuantitationType that = ( QuantitationType ) object;
-
-        if ( that.getName() != null && this.getName() != null && !this.getName().equals( that.getName() ) ) {
-            return false;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
         }
-
-        if ( this.getScale() != null && that.getScale() != null && !this.getScale().equals( that.getScale() ) ) {
-            return false;
-        }
-
-        if ( this.getIsPreferred() != that.getIsPreferred() ) {
-            return false;
-        }
-
-        if ( this.getIsRatio() != that.getIsRatio() ) {
-            return false;
-        }
-
-        if ( this.getIsNormalized() != that.getIsNormalized() ) {
-            return false;
-        }
-
-        if ( this.getIsBackground() != that.getIsBackground() ) {
-            return false;
-        }
-
-        if ( this.getIsBackgroundSubtracted() != that.getIsBackgroundSubtracted() ) {
-            return false;
-        }
-
-        if ( this.getGeneralType() != null && that.getGeneralType() != null && !this.getGeneralType()
-                .equals( that.getGeneralType() ) ) {
-            return false;
-        }
-
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( this.getRepresentation() != null && that.getRepresentation() != null && !this.getRepresentation()
-                .equals( that.getRepresentation() ) ) {
-            return false;
-        }
-
-        return this.getType() == null || that.getRepresentation() == null || this.getType().equals( that.getType() );
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getGeneralType(), that.getGeneralType() )
+                && Objects.equals( getType(), that.getType() )
+                && Objects.equals( getRepresentation(), that.getRepresentation() )
+                && Objects.equals( getScale(), that.getScale() )
+                && Objects.equals( getIsPreferred(), that.getIsPreferred() )
+                && Objects.equals( getIsRatio(), that.getIsRatio() )
+                && Objects.equals( getIsNormalized(), that.getIsNormalized() )
+                && Objects.equals( getIsBackground(), that.getIsBackground() )
+                && Objects.equals( getIsBackgroundSubtracted(), that.getIsBackgroundSubtracted() )
+                && Objects.equals( getIsRecomputedFromRawData(), that.getIsRecomputedFromRawData() );
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() );
-        return hashCode;
-    }
-
-    private int computeHashCode() {
-        int hashCode = 0;
-        if ( this.getName() != null ) {
-            hashCode = hashCode + this.getName().hashCode();
-        }
-        if ( this.getType() != null ) {
-            hashCode = hashCode + this.getType().hashCode();
-        }
-        if ( this.getRepresentation() != null ) {
-            hashCode = hashCode + this.getRepresentation().hashCode();
-        }
-        if ( this.getGeneralType() != null ) {
-            hashCode = hashCode + this.getGeneralType().hashCode();
-        }
-        if ( this.getScale() != null ) {
-            hashCode = hashCode + this.getScale().hashCode();
-        }
-        hashCode += Boolean.hashCode( this.getIsBackground() );
-        hashCode += Boolean.hashCode( this.getIsBackgroundSubtracted() );
-        hashCode += Boolean.hashCode( this.getIsNormalized() );
-        hashCode += Boolean.hashCode( this.getIsPreferred() );
-        hashCode += Boolean.hashCode( this.getIsRatio() );
-
-        return hashCode;
+        return Objects.hash( getName(), getGeneralType(), getType(), getRepresentation(), getScale(), getIsPreferred(),
+                getIsRatio(), getIsNormalized(), getIsBackground(), getIsBackgroundSubtracted(), getIsRecomputedFromRawData() );
     }
 
     @Override

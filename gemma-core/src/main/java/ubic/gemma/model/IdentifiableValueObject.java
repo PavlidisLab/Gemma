@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Base implementations for value objects representing persistent objects
@@ -62,5 +61,11 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
      */
     final public void setId( Long id ) {
         this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "%s%s", getClass().getSimpleName(),
+                id != null ? " Id=" + id : "" );
     }
 }

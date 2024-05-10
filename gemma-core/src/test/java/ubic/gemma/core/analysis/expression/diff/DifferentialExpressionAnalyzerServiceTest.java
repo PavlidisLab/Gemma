@@ -43,7 +43,6 @@ import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
@@ -405,8 +404,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        Set<ProcessedExpressionDataVector> vectors = processedDataVectorService.createProcessedDataVectors( ee );
-        assertEquals( 100, vectors.size() );
+        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee ) );
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );

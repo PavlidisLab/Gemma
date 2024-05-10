@@ -60,6 +60,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -208,12 +209,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment addRawVectors( ExpressionExperiment ee,
+    public int addRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
-
-        // reload to ensure it is in the session
-        ee = loadOrFail( ee.getId() );
-
         Collection<BioAssayDimension> BADs = new HashSet<>();
         Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
@@ -231,15 +228,9 @@ public class ExpressionExperimentServiceImpl
         }
 
         BioAssayDimension bad = BADs.iterator().next();
-
         if ( bad.getId() == null ) {
+            log.info( "Creating " + bad + "..." );
             bad = this.bioAssayDimensionService.findOrCreate( bad );
-        }
-        assert bad.getBioAssays().size() > 0;
-
-        QuantitationType newQt = qts.iterator().next();
-        if ( newQt.getId() == null ) { // we try to re-use QTs, but if not:
-            newQt = this.quantitationTypeService.create( newQt );
         }
 
         /*
@@ -250,21 +241,78 @@ public class ExpressionExperimentServiceImpl
             ba.setArrayDesignUsed( vectorAd );
         }
 
-        for ( RawExpressionDataVector vec : newVectors ) {
-            vec.setBioAssayDimension( bad );
-            vec.setQuantitationType( newQt );
+        QuantitationType qt = newVectors.iterator().next().getQuantitationType();
+
+        return expressionExperimentDao.addRawDataVectors( ee, qt, newVectors );
+    }
+
+    @Override
+    @Transactional
+    public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
+        return expressionExperimentDao.replaceRawDataVectors( ee, qt, vectors );
+    }
+
+    @Override
+    @Transactional
+    public int replaceAllRawDataVectors( ExpressionExperiment ee,
+            Collection<RawExpressionDataVector> newVectors ) {
+        if ( newVectors.isEmpty() ) {
+            throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
-        ee.getRawExpressionDataVectors().addAll( newVectors );
+        Set<QuantitationType> newQts = newVectors.stream()
+                .map( RawExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
 
-        // this is a denormalization; easy to forget to update this.
-        ee.getQuantitationTypes().add( newQt );
+        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
+        if ( preferredQts.size() != 1 ) {
+            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
+                    ee ) );
+        }
 
-        update( ee );
+        // remove the vectors
+        removeAllRawDataVectors( ee );
 
-        AbstractService.log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
+        // group the vectors up by QT
+        Map<QuantitationType, Set<RawExpressionDataVector>> BADs = newVectors.stream()
+                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
 
-        return ee;
+        int added = 0;
+        for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
+            added += this.addRawVectors( ee, vectors );
+        }
+
+        return added;
+    }
+
+    @Override
+    @Transactional
+    public int removeAllRawDataVectors( ExpressionExperiment ee ) {
+        return expressionExperimentDao.removeAllRawDataVectors( ee );
+    }
+
+    @Override
+    @Transactional
+    public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.removeRawDataVectors( ee, qt );
+    }
+
+    @Override
+    @Transactional
+    public void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        expressionExperimentDao.createProcessedDataVectors( ee, vectors );
+    }
+
+    @Override
+    @Transactional
+    public int removeProcessedDataVectors( ExpressionExperiment ee ) {
+        return expressionExperimentDao.removeProcessedDataVectors( ee );
+    }
+
+    @Override
+    @Transactional
+    public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
     }
 
     @Override
@@ -1394,49 +1442,6 @@ public class ExpressionExperimentServiceImpl
         }
 
         return results;
-    }
-
-    @Override
-    @Transactional
-    public ExpressionExperiment replaceRawVectors( ExpressionExperiment ee,
-            Collection<RawExpressionDataVector> newVectors ) {
-
-        if ( newVectors.isEmpty() ) {
-            throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
-        }
-
-        Set<QuantitationType> newQts = newVectors.stream()
-                .map( RawExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-
-        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
-        if ( preferredQts.size() != 1 ) {
-            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
-                    ee ) );
-        }
-
-        // to attach to session correctly.
-        ExpressionExperiment eeToUpdate = this.loadOrFail( ee.getId() );
-
-        // remove existing QTs attached to raw vectors
-        Collection<QuantitationType> qtsToRemove = eeToUpdate.getRawExpressionDataVectors().stream()
-                .map( RawExpressionDataVector::getQuantitationType )
-                // These QTs might still be getting used by the replaced vectors.
-                .filter( q -> !newQts.contains( q ) )
-                .collect( Collectors.toSet() );
-        ee.getQuantitationTypes().removeAll( qtsToRemove );
-
-        // remove the vectors
-        eeToUpdate.getRawExpressionDataVectors().clear();
-
-        // group the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
-        Map<BioAssayDimension, Set<RawExpressionDataVector>> BADs = newVectors.stream()
-                .collect( Collectors.groupingBy( RawExpressionDataVector::getBioAssayDimension, Collectors.toSet() ) );
-
-        for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
-            ee = this.addRawVectors( eeToUpdate, vectors );
-        }
-        return ee;
     }
 
     /**

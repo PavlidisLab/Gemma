@@ -12,6 +12,8 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -315,4 +317,50 @@ public interface ExpressionExperimentDao
      * The result is stored in the standard query cache.
      */
     long countBioMaterials( @Nullable Filters filters );
+
+    /**
+     * Add raw data vectors with the given quantitation type.
+     * @return the number of raw data vectors created
+     */
+    int addRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> newVectors );
+
+    /**
+     * Remove all raw data vectors.
+     * <p>
+     * All affected QTs are removed.
+     */
+    int removeAllRawDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Remove raw data vectors for a given quantitation type.
+     * @return the number of removed raw vectors
+     */
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Replace raw data vectors for a given quantitation type.
+     * @return the number of replaced raw vectors
+     */
+    int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Create processed data vectors
+     * @return the number of created processed vectors
+     */
+    int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    /**
+     * Remove processed data vectors.
+     * <p>
+     * Their corresponding QT is removed and the number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
+     * is set to zero.
+     * @return the number of removed processed vectors
+     */
+    int removeProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Replace processed data vectors.
+     * @return the number of vectors replaced
+     */
+    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 }

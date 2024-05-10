@@ -229,12 +229,11 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         log.info( String.format( "Creating %d merged raw data vectors; removing %d old ones",
                 newVectors.size(), ee.getRawExpressionDataVectors().size() ) );
         // replace raw vectors with
-        ee.getRawExpressionDataVectors().clear();
+        expressionExperimentService.removeAllRawDataVectors( ee );
         ee.getRawExpressionDataVectors().addAll( newVectors );
 
         // remove processed vectors
-        ee.getProcessedExpressionDataVectors().clear();
-        ee.setNumberOfDataVectors( 0 );
+        expressionExperimentService.removeProcessedDataVectors( ee );
 
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 

@@ -238,7 +238,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
     }
 
     @Test
-    public void testReplaceRawVectors() {
+    public void testReplaceAllRawDataVectors() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( eeDao.load( 1L ) ).thenReturn( ee );
@@ -250,16 +250,14 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         when( bioAssayDimensionService.findOrCreate( bad ) ).thenReturn( bad );
         when( quantitationTypeService.create( qt ) ).thenReturn( qt );
         Set<RawExpressionDataVector> vectors = createRawVectors( ee, qt, bad, ad );
-        svc.replaceRawVectors( ee, vectors );
-        verify( eeDao ).update( ee );
-        assertThat( ee.getQuantitationTypes() )
-                .containsExactly( qt );
-        assertThat( ee.getRawExpressionDataVectors() )
-                .hasSize( 10 );
+        svc.replaceAllRawDataVectors( ee, vectors );
+        verify( bioAssayDimensionService ).findOrCreate( bad );
+        verify( eeDao ).removeAllRawDataVectors( ee );
+        verify( eeDao ).addRawDataVectors( ee, qt, vectors );
     }
 
     @Test
-    public void testReplaceRawVectorsWithoutPreferredQt() {
+    public void testReplaceAllRawDataVectorsWithoutPreferredQt() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( eeDao.load( 1L ) ).thenReturn( ee );
@@ -267,7 +265,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         BioAssayDimension bad = new BioAssayDimension();
         ArrayDesign ad = new ArrayDesign();
         Set<RawExpressionDataVector> vectors = createRawVectors( ee, qt, bad, ad );
-        assertThatThrownBy( () -> svc.replaceRawVectors( ee, vectors ) )
+        assertThatThrownBy( () -> svc.replaceAllRawDataVectors( ee, vectors ) )
                 .isInstanceOf( IllegalArgumentException.class );
         verifyNoInteractions( eeDao );
     }

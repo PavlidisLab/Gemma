@@ -248,7 +248,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         }
         TwoChannelMissingValuesImpl.log.info( "Finished: " + count + " vectors examined for missing values" );
 
-        log.info( "Persisting " + results.size() + " vectors ... " );
+        log.info( "Persisting " + results.size() + " vectors... " );
         // saving twice is needed to get the QT filled in properly. ??Why??
         source = expressionExperimentService.save( source );
         source.getRawExpressionDataVectors().addAll( results );

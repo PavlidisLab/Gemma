@@ -25,9 +25,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author paul
@@ -44,13 +44,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     private QuantitationTypeValueObject quantitationType;
     private Collection<Long> genes;
     private BioAssayDimensionValueObject bioAssayDimension;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    protected DataVectorValueObject() {
-        super();
-    }
 
     protected DataVectorValueObject( Long id ) {
         super( id );
@@ -76,33 +69,46 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         this.genes = genes;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        final DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( id == null ) {
-            return false;
-        } else
-            return id.equals( other.id );
+    /**
+     * Copy constructor
+     */
+    public DataVectorValueObject( DoubleVectorValueObject dvvo ) {
+        this.expressionExperiment = dvvo.getExpressionExperiment();
+        this.designElement = dvvo.getDesignElement();
+        this.quantitationType = dvvo.getQuantitationType();
+        this.genes = dvvo.getGenes();
+        this.bioAssayDimension = dvvo.getBioAssayDimension();
     }
 
     @Override
-    public String toString() {
-        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
+    public boolean equals( Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof DataVectorValueObject ) ) {
+            return false;
+        }
+        DataVectorValueObject that = ( DataVectorValueObject ) o;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        // genes do not really matter here
+        return Objects.equals( expressionExperiment, that.expressionExperiment )
+                && Objects.equals( quantitationType, that.quantitationType )
+                && Objects.equals( bioAssayDimension, that.bioAssayDimension )
+                && Objects.equals( designElement, that.designElement );
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
+        return Objects.hash( expressionExperiment, quantitationType, bioAssayDimension, designElement );
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( this.expressionExperiment != null ? " EE=" + this.expressionExperiment.getId() : "" )
+                + ( this.designElement != null ? " Probe=" + this.designElement.getId() : "" );
     }
 
     /**

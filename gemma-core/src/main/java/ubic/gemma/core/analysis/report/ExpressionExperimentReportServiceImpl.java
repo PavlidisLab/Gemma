@@ -42,7 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorByGeneCache;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -71,7 +71,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
-            PCAAnalysisEvent.class , BatchInformationMissingEvent.class};
+            PCAAnalysisEvent.class, BatchInformationMissingEvent.class };
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -86,7 +86,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedDataVectorCache processedDataVectorCache;
+    private ProcessedDataVectorByGeneCache processedDataVectorCache;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -109,10 +109,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-
-        processedDataVectorCache.clearCache( id );
+        processedDataVectorCache.evictById( id );
         experimentalDesignVisualizationService.clearCaches( id );
-
     }
 
     @Override
@@ -276,7 +274,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
                     eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
                 }
-            } else if (batchMissingEvents.containsKey( ee )) { // we use date.
+            } else if ( batchMissingEvents.containsKey( ee ) ) { // we use date.
                 AuditEvent event = batchMissingEvents.get( ee );
                 if ( event != null ) {
                     Date date = event.getDate();

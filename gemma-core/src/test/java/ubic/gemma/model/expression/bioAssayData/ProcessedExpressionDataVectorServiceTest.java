@@ -124,7 +124,8 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ee.getRawExpressionDataVectors().add( vec );
         }
         expressionExperimentService.update( ee );
-        Set<ProcessedExpressionDataVector> createdVectors = processedDataVectorService.createProcessedDataVectors( ee );
+        assertEquals( 10, processedDataVectorService.createProcessedDataVectors( ee ) );
+        Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
         ee = expressionExperimentService.thaw( ee );
         assertThat( ee.getNumberOfDataVectors() )
@@ -170,9 +171,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             }
         }
 
-        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService.createProcessedDataVectors( ee );
-
-        assertEquals( 40, createProcessedDataVectors.size() );
+        assertEquals( 40, processedDataVectorService.createProcessedDataVectors( ee ) );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 40, v.size() );
 
@@ -180,6 +179,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
 
+        assertEquals( 100, genes.size() );
         v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
 

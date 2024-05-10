@@ -89,7 +89,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
-        ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step

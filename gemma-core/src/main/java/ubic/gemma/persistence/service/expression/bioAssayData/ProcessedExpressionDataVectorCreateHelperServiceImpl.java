@@ -76,38 +76,29 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Override
     @Transactional
-    public void replaceProcessedDataVectors( ExpressionExperiment ee,
+    public int replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
-
-        ee = eeService.thaw( ee );
-
         // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
         QuantitationType qt = vecs.iterator().next().getQuantitationType();
         if ( qt.getId() == null ) {
             QuantitationType existingQt = quantitationTypeService.find( ee, qt );
             if ( existingQt != null ) {
+                log.info( "Reusing existing QT for replacement vectors: " + existingQt );
                 qt = existingQt;
             } else {
+                log.info( "Creating a new QT for replacement vectors: " + qt );
                 qt = quantitationTypeService.create( qt );
             }
+            for ( ProcessedExpressionDataVector v : vecs ) {
+                v.setQuantitationType( qt );
+            }
         }
-        for ( ProcessedExpressionDataVector v : vecs ) {
-            v.setQuantitationType( qt );
-        }
-
-        ee.getProcessedExpressionDataVectors().clear();
-        ee.getProcessedExpressionDataVectors().addAll( vecs );
-        ee.setNumberOfDataVectors( vecs.size() );
-
-        eeService.update( ee );
-
-        assert ee.getNumberOfDataVectors() != null;
+        return eeService.replaceProcessedDataVectors( ee, vecs );
     }
 
     @Override
     @Transactional
     public void reorderByDesign( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log
                     .info( ee.getShortName() + " does not have a populated experimental design, skipping" );
@@ -228,27 +219,22 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Override
     @Transactional
-    public Set<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
+    public void updateRanks( ExpressionExperiment ee ) {
         Set<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = this.loadIntensities( ee, processedVectors );
 
         if ( intensities == null ) {
-            return processedVectors;
+            return;
         }
 
         ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Load intensities: " + timer.getTime() + "ms" );
 
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks data for " + processedVectors.size() + " vectors..." );
         this.computeRanks( processedVectors, intensities );
-
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
-                .info( "Updating ranks data for " + processedVectors.size() + " vectors ..." );
-        this.processedExpressionDataVectorService.update( processedVectors );
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Done" );
-
-        return processedVectors;
+        eeService.update( ee );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks is done" );
     }
 
     /**
@@ -418,5 +404,4 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
         ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
     }
-
 }

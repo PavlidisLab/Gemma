@@ -111,7 +111,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assumeNoException( "Test skipped because GSE37646 was not removed from the system prior to test", e );
         }
 
-        ee = experimentService.thawLite( ee );
+        ee = experimentService.thaw( ee );
 
         List<BioAssay> bioAssays = new ArrayList<>( ee.getBioAssays() );
         assertEquals( 31, bioAssays.size() );
@@ -151,7 +151,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         /*
          * Replace it.
          */
-        ee = dataUpdater.replaceData( ee, targetArrayDesign, data );
+        dataUpdater.replaceData( ee, targetArrayDesign, data );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
@@ -188,7 +188,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          */
         qt = this.makeQt( false );
         ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
-        ee = dataUpdater.addData( ee, targetArrayDesign, moreData );
+        dataUpdater.addData( ee, targetArrayDesign, moreData );
 
         ee = experimentService.thaw( ee );
         try {
@@ -291,7 +291,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
         assertNotNull( ee );
         ee = this.experimentService.thawLite( ee );
-        assertEquals( 6, ee.getQuantitationTypes().size() );
+        assertEquals( 4, ee.getQuantitationTypes().size() );
 
     }
 

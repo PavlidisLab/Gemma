@@ -16,22 +16,37 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
- * Cache of data vectors
- *
+ * Cache of data vectors by {@link Gene}.
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface ProcessedDataVectorCache {
+public interface ProcessedDataVectorByGeneCache {
 
-    void addToCache( Long eeid, Long g, Collection<DoubleVectorValueObject> collection );
+    @Nullable
+    Collection<DoubleVectorValueObject> get( BioAssaySet bas, Gene g );
 
-    void clearCache();
+    @Nullable
+    Collection<DoubleVectorValueObject> getById( Long basId, Long gId );
 
-    void clearCache( Long eeid );
+    void put( BioAssaySet bas, Gene gene, Collection<DoubleVectorValueObject> collection );
 
-    Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g );
+    void putById( Long basId, Long geneId, Collection<DoubleVectorValueObject> collection );
+
+    /**
+     * Evict all the vectors attached to the given experiment.
+     */
+    void evict( BioAssaySet bas );
+
+    void evictById( Long basId );
+
+    /**
+     * Evict all the vectors stored in the cache.
+     */
+    void clear();
 }

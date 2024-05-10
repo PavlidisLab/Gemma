@@ -160,7 +160,7 @@ public class DataUpdaterImpl implements DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceRawVectors( ee, vectors );
+        experimentService.replaceAllRawDataVectors( ee, vectors );
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
@@ -176,7 +176,6 @@ public class DataUpdaterImpl implements DataUpdater {
                 true );
 
         this.postprocess( ee );
-
     }
 
     /**
@@ -203,6 +202,7 @@ public class DataUpdaterImpl implements DataUpdater {
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
 
+        ee = experimentService.thaw( ee );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -215,9 +215,7 @@ public class DataUpdaterImpl implements DataUpdater {
              */
         }
 
-        ee = experimentService.thawLite( ee );
-
-        ee = this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
+        this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = this
                 .matchElementsToRowNames( targetArrayDesign, countMatrix );
@@ -245,7 +243,7 @@ public class DataUpdaterImpl implements DataUpdater {
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
-        ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
 
         QuantitationType countqt = this.makeCountQt();
         for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
@@ -256,7 +254,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
-        ee = this.addData( ee, targetArrayDesign, countEEMatrix );
+        this.addData( ee, targetArrayDesign, countEEMatrix );
 
         this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
 
@@ -356,7 +354,7 @@ public class DataUpdaterImpl implements DataUpdater {
     public void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
-        ee = this.experimentService.thawLite( ee );
+        ee = this.experimentService.thaw( ee );
 
         DoubleMatrix<CompositeSequence, BioMaterial> rdata = this.matchElementsToRowNames( targetPlatform, data );
         this.matchBioMaterialsToColNames( ee, data, rdata );
@@ -489,7 +487,7 @@ public class DataUpdaterImpl implements DataUpdater {
             }
         }
 
-        ee = experimentService.replaceRawVectors( ee, vectors );
+        experimentService.replaceAllRawDataVectors( ee, vectors );
         this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
         DataUpdaterImpl.log.info( "------  Done with reanalyzed data; cleaning up and postprocessing -----" );
@@ -555,7 +553,7 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+    public void addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
             throw new IllegalArgumentException( "Data had no rows" );
@@ -592,7 +590,7 @@ public class DataUpdaterImpl implements DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        ee = experimentService.addRawVectors( ee, vectors );
+        experimentService.addRawVectors( ee, vectors );
 
         this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
@@ -600,11 +598,9 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( qt.getIsPreferred() ) {
             DataUpdaterImpl.log.info( "Postprocessing preferred data" );
-            ee = this.postprocess( ee );
+            this.postprocess( ee );
             assert ee.getNumberOfDataVectors() != null;
         }
-
-        return ee;
     }
 
     /**
@@ -621,7 +617,7 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+    public void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -654,7 +650,7 @@ public class DataUpdaterImpl implements DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        ee = experimentService.replaceRawVectors( ee, vectors );
+        experimentService.replaceAllRawDataVectors( ee, vectors );
 
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
 
@@ -667,11 +663,9 @@ public class DataUpdaterImpl implements DataUpdater {
 
         this.audit( ee, "Data vector replacement for " + targetPlatform, true );
         experimentService.update( ee );
-        ee = this.postprocess( ee );
+        this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
-
-        return ee;
     }
 
     /**
@@ -730,7 +724,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  allowMissingSamples allow missing samples
      * @return experiment
      */
-    private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
+    private void dealWithMissingSamples( ExpressionExperiment ee,
             DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
         if ( ee.getBioAssays().size() > countMatrix.columns() ) {
             if ( allowMissingSamples ) {
@@ -758,8 +752,6 @@ public class DataUpdaterImpl implements DataUpdater {
                 if ( !toRemove.isEmpty() ) {
                     ee.getBioAssays().removeAll( toRemove );
                     experimentService.update( ee );
-                    ee = experimentService.loadOrFail( ee.getId() );
-                    ee = experimentService.thawLite( ee );
 
                     if ( ee.getBioAssays().size() != countMatrix.columns() ) {
                         throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
@@ -782,7 +774,6 @@ public class DataUpdaterImpl implements DataUpdater {
                     "Extra data provided: The experiment has " + ee.getBioAssays().size() + " samples but the data has "
                             + countMatrix.columns() + " columns." );
         }
-        return ee;
     }
 
     /**
@@ -1160,14 +1151,13 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param  ee experiment
      * @return experiment
      */
-    private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
+    private void postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
             preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
             DataUpdaterImpl.log.error( "Error during postprocessing", e );
         }
-        return ee;
     }
 
     //    /**

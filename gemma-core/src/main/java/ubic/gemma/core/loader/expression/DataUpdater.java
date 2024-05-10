@@ -23,8 +23,8 @@ public interface DataUpdater {
 
     void reprocessAffyDataFromCel( ExpressionExperiment ee );
 
-    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data );
+    void addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data );
 
-    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+    void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data );
 }
