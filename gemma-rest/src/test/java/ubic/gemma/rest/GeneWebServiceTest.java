@@ -26,7 +26,7 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
 
     /* fixtures */
     private Taxon taxon;
-    private Gene gene;
+    private Gene gene, gene2;
 
     @Before
     public void createFixtures() {
@@ -47,6 +47,9 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     @After
     public void removeFixtures() {
         geneService.remove( gene );
+        if ( gene2 != null ) {
+            geneService.remove( gene2 );
+        }
         taxonService.remove( taxon );
     }
 
@@ -66,6 +69,17 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     public void testGeneProbes() {
         assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/probes" ).request().get() )
                 .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneProbesWhenIdentifierIsAmbiguous() {
+        gene2 = new Gene();
+        gene2.setOfficialSymbol( gene.getOfficialSymbol() );
+        gene2 = geneService.create( gene2 );
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/probes" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .entity()
+                .hasFieldOrPropertyWithValue( "error.message", "Gene identifier " + gene.getOfficialSymbol() + " matches more than one gene, supply a taxon to disambiguate or use a different type of identifier such as an NCBI or Ensembl ID." );
     }
 
     @Test
