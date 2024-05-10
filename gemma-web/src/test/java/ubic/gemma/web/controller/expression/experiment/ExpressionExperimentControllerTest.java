@@ -99,7 +99,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
         ExpressionExperiment ee = getTestPersistentExpressionExperiment();
         ees.add( ee );
 
-        mvc.perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
+        perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
                 .andExpect( callback().exist() )
                 .andDo( getCallback( ( String taskId ) -> {
                     SubmittedTask st = taskRunningService.getSubmittedTask( taskId );
@@ -114,7 +114,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
                 } ) );
 
 
-        mvc.perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "2" ) )
+        perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "2" ) )
                 .andExpect( callback().exist() )
                 .andDo( getCallback( ( String taskId ) -> {
                     SubmittedTask st = taskRunningService.getSubmittedTask( taskId );
@@ -135,7 +135,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
         ees.add( ee );
         runAsAnonymous();
         try {
-            mvc.perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
+            perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
                     .andExpect( status().isOk() )
                     .andExpect( exception().exist() )
                     .andExpect( callback().doesNotExist() )

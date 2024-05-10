@@ -1,4 +1,4 @@
-package ubic.gemma.rest.util;
+package ubic.gemma.core.util.test;
 
 import org.junit.After;
 import org.junit.Before;
@@ -6,22 +6,20 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.util.test.category.IntegrationTest;
+import ubic.gemma.persistence.util.EnvironmentProfiles;
 
 /**
- * Base class for Jersey-based integration tests.
- * <p>
- * Unfortunately, it's not possible to inherit from {@link ubic.gemma.core.util.test.BaseIntegrationTest} so we have to
- * duplicate some of the setup and teardown code.
- *
+ * Base class for integration tests.
  * @author poirigui
- * @see ubic.gemma.core.util.test.BaseIntegrationTest
  */
+@ActiveProfiles(EnvironmentProfiles.TEST)
 @Category(IntegrationTest.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
-public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
+public abstract class BaseIntegrationTest extends AbstractJUnit4SpringContextTests {
 
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
@@ -31,6 +29,11 @@ public abstract class BaseJerseyIntegrationTest extends BaseJerseyTest {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
+    /**
+     * Setup the authentication for the test.
+     * <p>
+     * The default is to grant an administrator authority to the current user.
+     */
     @Before
     public final void setUpAuthentication() {
         testAuthenticationUtils.runAsAdmin();

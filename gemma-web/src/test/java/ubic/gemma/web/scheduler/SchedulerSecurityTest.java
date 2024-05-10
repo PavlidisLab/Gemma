@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -46,7 +46,7 @@ import static org.mockito.Mockito.*;
  *
  * @author keshav
  */
-public class SchedulerSecurityTest extends BaseSpringWebTest {
+public class SchedulerSecurityTest extends BaseWebIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

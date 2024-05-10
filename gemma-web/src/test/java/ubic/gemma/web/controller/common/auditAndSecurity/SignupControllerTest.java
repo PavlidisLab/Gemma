@@ -18,6 +18,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
@@ -25,7 +26,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptchaResponse;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Paul
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class SignupControllerTest extends BaseSpringWebTest {
+public class SignupControllerTest extends BaseWebIntegrationTest implements InitializingBean {
 
     @Autowired
     private SignupController suc;
@@ -55,7 +56,6 @@ public class SignupControllerTest extends BaseSpringWebTest {
 
     @Override
     public void afterPropertiesSet() {
-        super.afterPropertiesSet();
         suc.setRecaptchaTester( mockReCaptcha );
     }
 
@@ -76,12 +76,12 @@ public class SignupControllerTest extends BaseSpringWebTest {
         String uname = RandomStringUtils.randomAlphabetic( 10 );
         String password = RandomStringUtils.randomAlphabetic( 40 );
         String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-        mvc.perform( post( "/signup.html" )
-                        .param( "password", password )
-                        .param( "passwordConfirm", password )
-                        .param( "username", uname )
-                        .param( "email", email )
-                        .param( "emailConfirm", email ) )
+        perform( post( "/signup.html" )
+                .param( "password", password )
+                .param( "passwordConfirm", password )
+                .param( "username", uname )
+                .param( "email", email )
+                .param( "emailConfirm", email ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
                 .andExpect( jsonPath( "$.success" ).value( true ) );
@@ -102,12 +102,12 @@ public class SignupControllerTest extends BaseSpringWebTest {
         String uname = RandomStringUtils.randomAlphabetic( 10 );
         String password = RandomStringUtils.randomAlphabetic( 40 );
         String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-        mvc.perform( post( "/signup.html" )
-                        .param( "password", password )
-                        .param( "passwordConfirm", password )
-                        .param( "username", uname )
-                        .param( "email", email )
-                        .param( "emailConfirm", email ) )
+        perform( post( "/signup.html" )
+                .param( "password", password )
+                .param( "passwordConfirm", password )
+                .param( "username", uname )
+                .param( "email", email )
+                .param( "emailConfirm", email ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
                 .andExpect( jsonPath( "$.success" ).value( true ) );
@@ -129,12 +129,12 @@ public class SignupControllerTest extends BaseSpringWebTest {
         String uname = RandomStringUtils.randomAlphabetic( 10 );
         String password = RandomStringUtils.randomAlphabetic( 40 );
         String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-        mvc.perform( post( "/signup.html" )
-                        .param( "password", password )
-                        .param( "passwordConfirm", password )
-                        .param( "username", uname )
-                        .param( "email", email )
-                        .param( "emailConfirm", email ) )
+        perform( post( "/signup.html" )
+                .param( "password", password )
+                .param( "passwordConfirm", password )
+                .param( "username", uname )
+                .param( "email", email )
+                .param( "emailConfirm", email ) )
                 .andExpect( status().isBadRequest() )
                 .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
                 .andExpect( jsonPath( "$.success" ).value( false ) );
@@ -151,12 +151,12 @@ public class SignupControllerTest extends BaseSpringWebTest {
         String uname = RandomStringUtils.randomAlphabetic( 10 );
         String password = RandomStringUtils.randomAlphabetic( 40 );
         String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
-        mvc.perform( post( "/signup.html" )
-                        .param( "password", password )
-                        .param( "passwordConfirm", password )
-                        .param( "username", uname )
-                        .param( "email", email )
-                        .param( "emailConfirm", email ) )
+        perform( post( "/signup.html" )
+                .param( "password", password )
+                .param( "passwordConfirm", password )
+                .param( "username", uname )
+                .param( "email", email )
+                .param( "emailConfirm", email ) )
                 .andExpect( status().isBadRequest() )
                 .andExpect( content().contentTypeCompatibleWith( MediaType.APPLICATION_JSON ) )
                 .andExpect( jsonPath( "$.success" ).value( false ) );

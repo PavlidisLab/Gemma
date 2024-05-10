@@ -10,8 +10,8 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -30,25 +30,13 @@ import javax.ws.rs.core.Application;
 @ActiveProfiles({ "web", EnvironmentProfiles.TEST })
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-public abstract class BaseJerseyTest extends JerseyTest implements InitializingBean {
+public abstract class BaseJerseyTest extends JerseyTest implements ApplicationContextAware {
 
     private ResourceConfig application;
-
-    /**
-     * The {@link WebApplicationContext} that is being used by the container. You can use it to inject specific beans
-     * for testing purposes.
-     */
-    @Autowired
-    private WebApplicationContext applicationContext;
 
     @Override
     protected final TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new InMemoryTestContainerFactory();
-    }
-
-    @Override
-    public final void afterPropertiesSet() {
-        application.property( "contextConfig", applicationContext );
     }
 
     @Override
@@ -57,10 +45,15 @@ public abstract class BaseJerseyTest extends JerseyTest implements InitializingB
         application = new ResourceConfig()
                 .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
                 .registerClasses( GZipEncoder.class )
-                // use a generic context for now, it will be replaced when this bean is fully initialized in afterPropertiesSet()
+                // use a generic context for now, it will be replaced when this bean is fully initialized in setApplicationContext()
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" );
         return application;
+    }
+
+    @Override
+    public final void setApplicationContext( ApplicationContext applicationContext ) {
+        application.property( "contextConfig", applicationContext );
     }
 
     @Override
