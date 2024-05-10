@@ -52,7 +52,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
         if ( matchedGenes.isEmpty() ) {
             return checkEntity( entityArg, null );
         } else if ( matchedGenes.size() > 1 ) {
-            throw new BadRequestException( "Gene identifier " + entityArg + " matches more than one gene, supply a taxon to disambiguate." );
+            throw new BadRequestException( "Gene identifier " + entityArg + " matches more than one gene, supply a taxon to disambiguate or use a different type of identifier such as an NCBI or Ensembl ID." );
         } else {
             return matchedGenes.iterator().next();
         }
