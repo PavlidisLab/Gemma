@@ -262,10 +262,12 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
+     *
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
-     *                       The returned filter might contain terms that have been inferred.
+     * @param inferredTerms  if non-null, all the terms inferred from those mentioned in the filters are added to the
+     *                       collection
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {

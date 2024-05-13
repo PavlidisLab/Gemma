@@ -44,13 +44,15 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
+
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for taxa.
@@ -91,7 +93,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all available taxa")
     public ResponseDataObject<List<TaxonValueObject>> getTaxa() {
-        return Responder.respond( taxonService.loadAllValueObjects() );
+        return respond( taxonService.loadAllValueObjects() );
     }
 
     /**
@@ -113,7 +115,7 @@ public class TaxaWebService {
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
         Filters filters = taxonArgService.getFilters( taxaArg );
         Sort sort = taxonService.getSort( "id", null );
-        return Responder.respond( taxonService.loadValueObjects( filters, sort ) );
+        return respond( taxonService.loadValueObjects( filters, sort ) );
     }
 
     /**
@@ -147,7 +149,7 @@ public class TaxaWebService {
         if ( strand != null && !( strand.equals( "+" ) || strand.equals( "-" ) ) ) {
             throw new BadRequestException( "The 'strand' query parameter must be either '+', '-' or left unspecified." );
         }
-        return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
+        return respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
     }
 
     @GET
@@ -159,7 +161,7 @@ public class TaxaWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
-        return Responder.paginate( geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+        return paginate( geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -179,7 +181,7 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArrayArg geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        return respond( geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -190,7 +192,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
-        return Responder.paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -201,7 +203,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon")
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg ) {
-        return Responder.respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        return respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -223,7 +225,7 @@ public class TaxaWebService {
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         try {
-            return Responder.respond( geneArgService.getGeneEvidence( geneArg, taxon ) );
+            return respond( geneArgService.getGeneEvidence( geneArg, taxon ) );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {
@@ -249,7 +251,7 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGeneLocationInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        return respond( geneArgService.getGeneLocationInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -275,7 +277,7 @@ public class TaxaWebService {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         Filters filters = datasetArgService.getFilters( filter )
                 .and( expressionExperimentService.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
-        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        return paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
     /**
@@ -304,9 +306,9 @@ public class TaxaWebService {
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         if ( tree ) {
-            return Responder.respond( phenotypeAssociationManagerService.loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
+            return respond( phenotypeAssociationManagerService.loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
         }
-        return Responder.respond( phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
+        return respond( phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly ) ) );
     }
 
     /**
@@ -329,7 +331,7 @@ public class TaxaWebService {
     ) {
         Set<GeneEvidenceValueObject> response;
         response = this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonArgService.getEntity( taxonArg ).getId(), editableOnly ), new HashSet<>( phenotypes.getValue() ) );
-        return Responder.respond( response );
+        return respond( response );
     }
 
 }

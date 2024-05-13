@@ -11,10 +11,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
-import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -65,7 +62,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testAll() {
-        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService
                 .getDatasets( null, FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ) );
         assertThat( response )
@@ -118,7 +115,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testAllFilterById() {
-        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
@@ -141,7 +138,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
-        ResponseDataObject<List<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject>> response = datasetsWebService.getDatasets(
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
@@ -165,7 +162,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
-        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
@@ -189,7 +186,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
-        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),
@@ -221,7 +218,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
          */
-        QueriedAndFilteredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
+        DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DatasetsWebService.ExpressionExperimentWithSearchResultValueObject> response = datasetsWebService.getDatasets(
                 null,
                 filterArg,
                 OffsetArg.valueOf( "0" ),

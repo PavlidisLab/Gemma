@@ -17,7 +17,6 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.rest.util.OpenApiUtils;
-import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import javax.annotation.Nullable;
@@ -31,6 +30,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * Handles calls to the root API url and user info api
@@ -84,7 +85,7 @@ public class RootWebService {
                 .path( "/resources/restapidocs/" )
                 .build()
                 .toUri();
-        return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), apiDocsUrl, versioned ) );
+        return respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), apiDocsUrl, versioned ) );
     }
 
     /**
@@ -96,7 +97,7 @@ public class RootWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
     public ResponseDataObject<UserValueObject> getMyself() {
-        return Responder.respond( getUserVo( userManager.getCurrentUser() ) );
+        return respond( getUserVo( userManager.getCurrentUser() ) );
     }
 
     /**
@@ -120,7 +121,7 @@ public class RootWebService {
         if ( user == null ) {
             throw new NotFoundException( String.format( "No user with username %s.", username ) );
         }
-        return Responder.respond( getUserVo( user ) );
+        return respond( getUserVo( user ) );
     }
 
     private UserValueObject getUserVo( User user ) {
@@ -150,7 +151,6 @@ public class RootWebService {
 
     /**
      * @author keshav
-     *
      */
     @Value
     public static class UserValueObject {

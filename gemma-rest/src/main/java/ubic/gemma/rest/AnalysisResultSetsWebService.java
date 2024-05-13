@@ -51,6 +51,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
+
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
  */
@@ -107,7 +110,7 @@ public class AnalysisResultSetsWebService {
             des = databaseEntryArgService.getEntities( databaseEntries );
         }
         Filters filters2 = expressionAnalysisResultSetArgService.getFilters( filters );
-        return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
+        return paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
                         bas, des, filters2, offset.getValue(), limit.getValue(), expressionAnalysisResultSetArgService.getSort( sort ) ),
                 filters2, new String[] { "id" } );
     }
@@ -118,7 +121,7 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Count result sets matching the provided filter")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
-        return Responder.respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
+        return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
@@ -152,13 +155,13 @@ public class AnalysisResultSetsWebService {
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
             ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
-            return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
+            return respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
         } else {
             ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
             if ( ears == null ) {
                 throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
             }
-            return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
+            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
         }
     }
 

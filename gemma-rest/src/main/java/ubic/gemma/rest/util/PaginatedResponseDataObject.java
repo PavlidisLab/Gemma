@@ -14,29 +14,25 @@
  */
 package ubic.gemma.rest.util;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import ubic.gemma.persistence.util.Filters;
+import lombok.Getter;
 import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
 
 import java.util.List;
 
 /**
  * Represents paginated results with offset and limit.
  *
- * @see ubic.gemma.persistence.service.FilteringVoEnabledService#loadValueObjects(Filters, Sort, int, int)
  * @author poirigui
+ * @see Responders#paginate
  */
-@Value
-@EqualsAndHashCode(callSuper = true)
+@Getter
 public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
-    String[] groupBy;
-    SortValueObject sort;
-    Integer offset;
-    Integer limit;
-    Long totalElements;
+    private final String[] groupBy;
+    private final SortValueObject sort;
+    private final Integer offset;
+    private final Integer limit;
+    private final Long totalElements;
 
     /**
      * @param payload the data to be serialised and returned as the response payload.

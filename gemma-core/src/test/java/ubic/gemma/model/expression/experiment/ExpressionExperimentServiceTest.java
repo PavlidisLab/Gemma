@@ -168,7 +168,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, 30, TimeUnit.SECONDS );
+        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
         verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
     }
@@ -178,7 +178,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
-        expressionExperimentService.getFiltersWithInferredAnnotations( f, null, 30, TimeUnit.SECONDS );
+        expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
         verifyNoInteractions( ontologyService );
     }
 

@@ -608,7 +608,7 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         Filters f2 = Filters.empty();
         // apply inference to terms
@@ -641,9 +641,14 @@ public class ExpressionExperimentServiceImpl
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
+                Set<OntologyTerm> c = ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                if ( inferredTerms != null ) {
+                    inferredTerms.addAll( terms );
+                    inferredTerms.addAll( c );
+                }
                 Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
                 termAndChildrenUris.addAll( e.getValue() );
-                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
+                termAndChildrenUris.addAll( c.stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
                 for ( List<String> termAndChildrenUrisBatch : org.apache.commons.collections4.ListUtils.partition( new ArrayList<>( termAndChildrenUris ), QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {

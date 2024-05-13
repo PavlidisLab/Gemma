@@ -1,34 +1,21 @@
 package ubic.gemma.rest.util;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
-@Value
-@EqualsAndHashCode(callSuper = true)
-public class FilteredAndPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
+@Getter
+public class FilteredAndPaginatedResponseDataObject<T> extends PaginatedResponseDataObject<T> {
 
-    String filter;
-    String[] groupBy;
-    SortValueObject sort;
-    Integer offset;
-    Integer limit;
-    Long totalElements;
+    private final String filter;
 
     /**
      * @param payload the data to be serialised and returned as the response payload.
      */
     public FilteredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy ) {
-        super( payload );
-        this.offset = payload.getOffset();
-        this.limit = payload.getLimit();
-        this.totalElements = payload.getTotalElements();
-        this.sort = payload.getSort() != null ? new SortValueObject( payload.getSort() ) : null;
-        this.groupBy = groupBy;
+        super( payload, groupBy );
         this.filter = filters != null ? filters.toOriginalString() : null;
     }
 }

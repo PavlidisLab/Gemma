@@ -32,7 +32,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -41,6 +40,9 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for genes.
@@ -75,7 +77,7 @@ public class GeneWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
-        return Responder.paginate( geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+        return paginate( geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -98,7 +100,7 @@ public class GeneWebService {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
-        return Responder.respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
+        return respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
     }
 
     /**
@@ -116,7 +118,7 @@ public class GeneWebService {
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         try {
-            return Responder.respond( geneArgService.getGeneEvidence( geneArg, null ) );
+            return respond( geneArgService.getGeneEvidence( geneArg, null ) );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery() );
         } catch ( SearchTimeoutException e ) {
@@ -139,7 +141,7 @@ public class GeneWebService {
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGeneLocation( geneArg ) );
+        return respond( geneArgService.getGeneLocation( geneArg ) );
     }
 
     /**
@@ -157,7 +159,7 @@ public class GeneWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
+        return paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -173,7 +175,7 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGeneGoTerms( geneArg ) );
+        return respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
 
     /**
@@ -194,10 +196,9 @@ public class GeneWebService {
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") Integer stringency // Optional, default 1
     ) {
-        return Responder
-                .respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
-                    this.add( geneArgService.getEntity( geneArg ).getId() );
-                    this.add( geneArgService.getEntity( with ).getId() );
-                }}, 1, limit.getValueNoMaximum(), false ).getResults() );
+        return respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
+            this.add( geneArgService.getEntity( geneArg ).getId() );
+            this.add( geneArgService.getEntity( with ).getId() );
+        }}, 1, limit.getValueNoMaximum(), false ).getResults() );
     }
 }

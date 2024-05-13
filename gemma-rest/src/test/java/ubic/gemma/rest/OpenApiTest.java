@@ -182,7 +182,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
                 .hasEntrySatisfying( "default", response -> {
                     assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
-                            .isEqualTo( "#/components/schemas/QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject" );
+                            .isEqualTo( "#/components/schemas/QueriedAndFilteredAndInferredAndLimitedResponseDataObjectCategoryWithUsageStatisticsValueObject" );
                 } )
                 .hasEntrySatisfying( "503", response -> {
                     Assertions.assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
