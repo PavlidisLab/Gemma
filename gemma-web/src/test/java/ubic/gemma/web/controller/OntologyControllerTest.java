@@ -118,7 +118,7 @@ public class OntologyControllerTest extends BaseWebTest {
                 .andExpect( content().string( containsString( "instance of" ) ) )
                 .andExpect( content().string( containsString( "TGEMO_0000001" ) ) )
                 .andExpect( content().string( containsString( "bar" ) ) )
-                .andExpect( content().string( containsString( "curl -X Accept:application/rdf+xml https://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) );
+                .andExpect( content().string( containsString( "curl -H Accept:application/rdf+xml https://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
         verify( factorValueOntologyService ).getFactorValueAnnotations( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
     }

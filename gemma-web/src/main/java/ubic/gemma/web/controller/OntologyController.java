@@ -115,7 +115,7 @@ public class OntologyController {
         }
         s.append( "</ul>" );
         s.append( "<p>Retrieve this in RDF/XML:</p>" );
-        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
+        s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
         s.append( "</div>" );
         return s.toString();
     }
@@ -152,7 +152,7 @@ public class OntologyController {
         }
         s.append( "</ul>" );
         s.append( "<p>Retrieve this in RDF/XML:</p>" );
-        s.append( String.format( "<pre>curl -X Accept:application/rdf+xml %s/ont/TGFVO/%d/%d</pre>", hostUrl, factorValueId, annotationId ) );
+        s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d/%d</pre>", hostUrl, factorValueId, annotationId ) );
         s.append( "</div>" );
         return s.toString();
     }
