@@ -20,6 +20,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private FactorValueBasicValueObject baselineGroup;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject secondBaselineGroup;
 
     /**
