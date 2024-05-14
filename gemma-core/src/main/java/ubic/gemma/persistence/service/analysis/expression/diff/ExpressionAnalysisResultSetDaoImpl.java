@@ -27,6 +27,7 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -42,10 +43,7 @@ import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
@@ -90,6 +88,74 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 // this is efficient because of batch loading and second-level caching
                 Hibernate.initialize( r.getProbe() );
             }
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
+        }
+        return ears;
+    }
+
+    @Override
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id, int offset, int limit ) {
+        if ( offset == 0 && id == -1 ) {
+            return loadWithResultsAndContrasts( id );
+        }
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = load( id );
+        if ( ears != null ) {
+            //noinspection unchecked
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select res from DifferentialExpressionAnalysisResult res "
+                            + "where res.resultSet = :ears "
+                            + "order by res.correctedPvalue" )
+                    .setParameter( "ears", ears )
+                    .setFirstResult( offset )
+                    .setMaxResults( limit )
+                    .list();
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                Hibernate.initialize( r.getProbe() );
+            }
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                Hibernate.initialize( r.getContrasts() );
+            }
+            // preserve order of results
+            ears.setResults( new LinkedHashSet<>( results ) );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
+                    elementClass.getName(), id, timer.getTime() ) );
+        }
+        return ears;
+    }
+
+    @Override
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id, double threshold, int offset, int limit ) {
+        Assert.isTrue( threshold >= 0 && threshold <= 1, "Corrected P-value threshold must be in the [0, 1] interval." );
+        if ( offset == 0 && id == -1 ) {
+            return loadWithResultsAndContrasts( id );
+        }
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionAnalysisResultSet ears = load( id );
+        if ( ears != null ) {
+            //noinspection unchecked
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select res from DifferentialExpressionAnalysisResult res "
+                            + "where res.resultSet = :ears and res.correctedPvalue <= :threshold "
+                            + "order by res.correctedPvalue" )
+                    .setParameter( "ears", ears )
+                    .setParameter( "threshold", threshold )
+                    .setFirstResult( offset )
+                    .setMaxResults( limit )
+                    .list();
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                Hibernate.initialize( r.getProbe() );
+            }
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                Hibernate.initialize( r.getContrasts() );
+            }
+            // preserve order of results
+            ears.setResults( new LinkedHashSet<>( results ) );
         }
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -164,6 +230,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
         }
+    }
+
+    @Override
+    public long countResults( ExpressionAnalysisResultSet ears ) {
+        return ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results where ears = :ears" )
+                .setParameter( "ears", ears )
+                .uniqueResult();
+    }
+
+    @Override
+    public long countResults( ExpressionAnalysisResultSet ears, double threshold ) {
+        return ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results r where ears = :ears and r.correctedPvalue <= :threshold" )
+                .setParameter( "ears", ears )
+                .setParameter( "threshold", threshold )
+                .uniqueResult();
     }
 
     @Override

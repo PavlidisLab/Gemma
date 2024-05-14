@@ -25,15 +25,11 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     /**
      * Related analysis results.
-     *
+     * <p>
      * Note that this field is excluded from the JSON serialization if left unset.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<DifferentialExpressionAnalysisResultValueObject> results;
-
-    public DifferentialExpressionAnalysisResultSetValueObject() {
-        super();
-    }
 
     /**
      * Create a simple analysis results set VO with limited data.

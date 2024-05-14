@@ -12,4 +12,16 @@ public class ExpressionAnalysisResultSetArgService extends AbstractEntityArgServ
     public ExpressionAnalysisResultSetArgService( ExpressionAnalysisResultSetService service ) {
         super( service );
     }
+
+    public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetArg analysisResultSet ) {
+        return service.loadWithResultsAndContrasts( analysisResultSet.getValue() );
+    }
+
+    public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetArg analysisResultSet, int offset, int limit ) {
+        return service.loadWithResultsAndContrasts( analysisResultSet.getValue(), offset, limit );
+    }
+
+    public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
+        return service.loadWithResultsAndContrasts( analysisResultSet.getValue(), threshold, offset, limit );
+    }
 }
