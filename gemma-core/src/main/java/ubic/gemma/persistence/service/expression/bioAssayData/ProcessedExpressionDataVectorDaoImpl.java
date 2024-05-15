@@ -1053,32 +1053,24 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
-        /*
-         * To help ensure we get a good random set of items, we can do several queries with different random offsets.
-         */
-        //    int numSegments = 2;
-        //  int segmentSize = ( int ) Math.ceil( limit / numSegments );
-        int segmentSize = limit;
-//        if ( limit < numSegments ) {
-//            segmentSize = limit;
-//        }
-
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( " from ProcessedExpressionDataVector dedv "
                         + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ); // order by rand() works?
         q.setParameter( "ee", ee );
-        q.setMaxResults( segmentSize );
+        q.setMaxResults( limit );
 
-        int k = 0;
-        //  while ( result.size() < limit ) {
-        //   int firstResult = new Random().nextInt( availableVectorCount - segmentSize );
-        //  q.setFirstResult( firstResult );
         List list = q.list();
-        //   log.info( list.size() + " retrieved this time firstResult=" + 0 );
+
+        if ( list.isEmpty() ) { // maybe ranks are not set for some reason. 
+            q = this.getSessionFactory().getCurrentSession()
+                    .createQuery( " from ProcessedExpressionDataVector dedv "
+                            + "where dedv.expressionExperiment = :ee order by RAND()" ); // order by rand() works?
+            q.setParameter( "ee", ee );
+            q.setMaxResults( limit );
+            list = q.list();
+        }
+
         result.addAll( list );
-        //   if (result.isEmpty()) break;
-        //  k++;
-        //   }
 
         if ( result.size() > limit ) {
             result = result.stream().limit( limit ).collect( Collectors.toSet() );
@@ -1086,10 +1078,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         if ( timer.getTime() > 1000 )
             AbstractDao.log
-                    .info( "Fetch " + result.size() + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms, " + k + " queries were run." );
+                    .info( "Fetch " + result.size() + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms "   );
 
         if ( result.isEmpty() ) {
-            AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
+            AbstractDao.log.warn( "Experiment does not have any processed data vectors to display? " + ee );
             return result;
         }
 
