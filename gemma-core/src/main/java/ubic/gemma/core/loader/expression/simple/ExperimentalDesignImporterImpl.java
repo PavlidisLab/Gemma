@@ -153,7 +153,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         // make sure that EFO is initialized
         try {
-            OntologyUtils.ensureInitialized( efoService );
+            OntologyUtils.ensureInitializedLite( efoService );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );
