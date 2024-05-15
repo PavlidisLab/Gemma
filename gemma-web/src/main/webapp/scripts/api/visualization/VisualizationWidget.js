@@ -47,13 +47,13 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
    name : "vectorDV",
 
    singleSelect : true,
-   showPValues: true,
+   showPValues : true,
 
    itemSelector : 'div.vizWrap',
 
    /**
     * The data get from the server is not compatible with flotr out-of-the box. A little transformation is needed.
-    * 
+    *
     * @param data for one record.
     * @memberOf Gemma.DataVectorThumbnailsView
     */
@@ -64,7 +64,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
    /**
     * Gets the selected node's record; or, if no node is selected, returns the first record; or null if there are no
     * nodes.
-    * 
+    *
     * @return {record}
     */
    getSelectedOrFirst : function() {
@@ -105,7 +105,7 @@ Gemma.prepareProfiles = function( data, showPValues ) {
    var preparedData = [];
    var geneExpressionProfile = data.profiles;
 
-   for (var i = 0; i < geneExpressionProfile.length; i++) {
+   for ( var i = 0; i < geneExpressionProfile.length; i++ ) {
       var profile = geneExpressionProfile[i].profile;
 
       var probeId = geneExpressionProfile[i].probe.id;
@@ -133,7 +133,7 @@ Gemma.prepareProfiles = function( data, showPValues ) {
       if ( genes !== undefined && genes.length > 0 ) {
          var k, gene, link, geneName;
 
-         for (k = 0; k < genes.length; k++) {
+         for ( k = 0; k < genes.length; k++ ) {
             gene = genes[k];
             geneName = genes[k].officialName;
             link = '<a href="' + Gemma.LinkRoots.genePage + gene.id + '" target="_blank" ext:qtip="' + qtip + '">'
@@ -158,7 +158,7 @@ Gemma.prepareProfiles = function( data, showPValues ) {
        * Turn a flat vector into an array of points (that's what flotr needs)
        */
       var points = [];
-      for (var j = 0; j < profile.length; j++) {
+      for ( var j = 0; j < profile.length; j++ ) {
          var point = [ j, profile[j] ];
          points.push( point );
       }
@@ -251,7 +251,7 @@ Gemma.ProfileTemplate = Ext.extend( Ext.XTemplate, {
 
       Gemma.ProfileTemplate.superclass.overwrite.call( this, el, values, ret );
 
-      for (var i = 0; i < values.length; i++) {
+      for ( var i = 0; i < values.length; i++ ) {
          var randomnumber = Math.floor( Math.random() * 101 );
          var record = values[i];
          var shortName = record.eevo.id; // can be a subset, which has no shortName.
@@ -284,13 +284,13 @@ Gemma.HeatmapTemplate = Ext.extend( Ext.XTemplate, {
       forceFit : true,
       maxBoxHeight : 3,
       allowTargetSizeAdjust : true
-   // make the rows smaller in the thumbnails
+      // make the rows smaller in the thumbnails
    },
 
    overwrite : function( el, values, ret ) {
       Gemma.HeatmapTemplate.superclass.overwrite.call( this, el, values, ret );
 
-      for (var i = 0; i < values.length; i++) {
+      for ( var i = 0; i < values.length; i++ ) {
          var randomnumber = Math.floor( Math.random() * 101 );
          var record = values[i];
          var shortName = record.eevo.id;
@@ -329,18 +329,18 @@ Gemma.getProfileThumbnailTemplate = function( heatmap, havePvalues, smooth, cmpI
       var tmpl = new Gemma.HeatmapTemplate(
          '<tpl for="."><tpl for="eevo">',
          '<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{id}_vizwrap_'
-            + cmpID
-            + '" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
-            + pvalueString + '</i></div>', '</tpl></tpl>' );
+         + cmpID
+         + '" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
+         + pvalueString + '</i></div>', '</tpl></tpl>' );
       tmpl.cmpID = cmpID;
       return tmpl;
    } else {
       var tmpl = new Gemma.ProfileTemplate(
          '<tpl for="."><tpl for="eevo">',
          '<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{id}_vizwrap_'
-            + cmpID
-            + '" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
-            + pvalueString + '</i></div>', '</tpl></tpl>', {
+         + cmpID
+         + '" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
+         + pvalueString + '</i></div>', '</tpl></tpl>', {
             smooth : smooth
          } );
       tmpl.cmpID = cmpID;
@@ -424,9 +424,11 @@ Gemma.VisualizationZoomPanel = Ext
             }
 
             if ( eevo ) {
+               var eeInfoTitle = "";
 
-               var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
-                  + (eevo.sourceExperiment ? eevo.sourceExperiment : eevo.id)
+               eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='"
+                  + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?shortName="
+                  + eevo.shortName
                   + " '>"
                   + eevo.shortName
                   + "</a> ("
@@ -471,7 +473,7 @@ Gemma.VisualizationZoomPanel = Ext
                      return k[0] + "</a>" + Ext.util.Format.ellipsis( k[1], Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR );
                   },
                   position : "sw" // best to be west, if we're expanded...applies
-               // to linecharts.
+                  // to linecharts.
                },
                conditionLegend : false,
                label : true
@@ -522,7 +524,7 @@ Gemma.VisualizationZoomPanel = Ext
                      var conditionLabels = record.get( "factorValuesToNames" );
                      var conditionLabelKey = record.get( "factorNames" );
 
-                     for (var i = 0; i < profiles.length; i++) {
+                     for ( var i = 0; i < profiles.length; i++ ) {
 
                         if ( profiles[i].labelID == probeId ) {
                            if ( profiles[i].selected ) {
@@ -570,7 +572,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend( Ext.Window, {
          delete config.title;
       }
       var panelConfigParam = {
-          havePvalues: true
+         havePvalues : true
       };
 
       // add extra config params to panel
@@ -591,7 +593,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend( Ext.Window, {
    },
 
    /**
-    * 
+    *
     */
    initComponent : function() {
 
@@ -704,9 +706,9 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
    getReturnedGeneCount : function( records ) {
       var returnedGeneIds = {};
       var returnedGeneCount = 0;
-      for (var i = 0; i < records.length; i++) {
-         for (var j = 0; j < records[i].get( 'profiles' ).length; j++) {
-            for (var k = 0; k < records[i].get( 'profiles' )[j].genes.length; k++) {
+      for ( var i = 0; i < records.length; i++ ) {
+         for ( var j = 0; j < records[i].get( 'profiles' ).length; j++ ) {
+            for ( var k = 0; k < records[i].get( 'profiles' )[j].genes.length; k++ ) {
                if ( returnedGeneIds[records[i].get( 'profiles' )[j].genes[k].id] === undefined ) {
                   returnedGeneIds[records[i].get( 'profiles' )[j].genes[k].id] = true;
                   returnedGeneCount++;
@@ -769,7 +771,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
 
       // force a refresh of the thumbnails.
       var template = Gemma.getProfileThumbnailTemplate( this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-      false, Ext.id() );
+         false, Ext.id() );
       this.dv.setTemplate( template );
 
       // force a refresh of the zoom.
@@ -795,7 +797,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
 
       // force a refresh of the thumbnails.
       var template = Gemma.getProfileThumbnailTemplate( this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-      false, Ext.id() );
+         false, Ext.id() );
       this.dv.setTemplate( template );
 
       // force a refresh of the zoom.
@@ -812,7 +814,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
 
    updateTemplate : function() {
       var template = Gemma.getProfileThumbnailTemplate( this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-      false, this.id );
+         false, this.id );
       this.dv.setTemplate( template ); // causes update of thumbnails.
    },
 
@@ -950,7 +952,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
 
             this.removeAll();
             var factorCount = 0;
-            for (factorCategory in conditionLabelKey) {
+            for ( factorCategory in conditionLabelKey ) {
                factorCount++;
                break;
             }
@@ -1034,7 +1036,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
                ref : 'toggleViewBtn',
                disabled : true,
                handler : this.switchView.createDelegate( this )
-            }]
+            } ]
          } )
       } );
 
@@ -1141,7 +1143,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend( Gemma.VisualizationWithThumb
 
 /**
  * Specialization for coexpression display
- * 
+ *
  * @class Gemma.CoexpressionVisualizationWindow
  * @extends Gemma.VisualizationWithThumbsWindow
  */
@@ -1156,7 +1158,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend( Gemma.VisualizationWithThumb
 
 /**
  * Represents a VisualizationValueObject.
- * 
+ *
  * @extends Ext.data.Store
  */
 Gemma.VisualizationStore = function( config ) {
@@ -1203,7 +1205,7 @@ Gemma.VisualizationStore = function( config ) {
 };
 
 /**
- * 
+ *
  * @class Gemma.VisualizationStore
  * @extends Ext.data.Store
  */
@@ -1218,7 +1220,7 @@ Ext.extend( Gemma.VisualizationStore, Ext.data.Store, {} );
  * Sort in this order: 1. Query probes that show coexpression or sig. diff ex., ordered by pvalue 2. Target probes that
  * show coexp or sig diff ex. 3. Query probes that do not show coexpression or sig. diff ex. (faded) 4. Target probes
  * that do not show coexp or sig diff ex.
- * 
+ *
  * @param {}
  *           a
  * @param {}
@@ -1298,9 +1300,9 @@ var FactorValueLegend = (function() {
          Ext.DomHelper.append( target, {
             id : id,
             tag : 'div'
-         // ,
-         // width: legendWidth,
-         // height: legendHeight
+            // ,
+            // width: legendWidth,
+            // height: legendHeight
          } );
          var legendDiv = Ext.get( id );
 
@@ -1315,13 +1317,13 @@ var FactorValueLegend = (function() {
          // var ctxDummy = this.el.dom.getContext("2d");
          // CanvasTextFunctions.enable(ctxDummy);
          // ctxDummy.font = fontSize + "px sans-serif";
-         for ( var factorCategory in conditionLabelKey) {
+         for ( var factorCategory in conditionLabelKey ) {
             factorCount++;
             // compute the room needed for the labels.
             if ( ctx.measureText( factorCategory ).width > maxColumnWidth ) {
                maxColumnWidth = ctx.measureText( factorCategory ).width;
             }
-            for ( var factorValue in conditionLabelKey[factorCategory]) {
+            for ( var factorValue in conditionLabelKey[factorCategory] ) {
                factorValueCount++;
                // compute the room needed for the labels.
                var dim = ctx.measureText( factorValue );
@@ -1347,7 +1349,7 @@ var FactorValueLegend = (function() {
          ctx.translate( 10, 20 );
          x = 0;
          y = 0;
-         for ( var factorCategory in conditionLabelKey) {
+         for ( var factorCategory in conditionLabelKey ) {
             facCat = Ext.util.Format.ellipsis( factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR );
             var maxLabelWidthInCategory = 0;
             dim = ctx.measureText( facCat );
@@ -1357,7 +1359,7 @@ var FactorValueLegend = (function() {
             }
             ctx.fillText( facCat, x, y );
             y += PER_CONDITION_LABEL_HEIGHT + 2;
-            for ( var factorValue in conditionLabelKey[factorCategory]) {
+            for ( var factorValue in conditionLabelKey[factorCategory] ) {
                var facVal = Ext.util.Format.ellipsis( factorValue, FACTOR_VALUE_LABEL_MAX_CHAR );
                colour = conditionLabelKey[factorCategory][factorValue];
                ctx.fillStyle = colour;
@@ -1382,11 +1384,11 @@ var FactorValueLegend = (function() {
 
       /**
        * Function: (private) constructCanvas
-       * 
+       *
        * Initializes a canvas. When the browser is IE, we make use of excanvas.
-       * 
+       *
        * Parameters: none
-       * 
+       *
        * Returns: ctx
        */
       function constructCanvas( div, canvasWidth, canvasHeight ) {
