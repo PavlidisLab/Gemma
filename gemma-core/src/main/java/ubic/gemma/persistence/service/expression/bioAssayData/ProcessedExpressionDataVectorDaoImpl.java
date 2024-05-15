@@ -1061,10 +1061,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         List list = q.list();
 
-        if ( list.isEmpty() ) { // maybe ranks are not set for some reason. 
+        if ( list.isEmpty() ) { // maybe ranks are not set for some reason; can happen e.g. GeneSpring mangled data.
             q = this.getSessionFactory().getCurrentSession()
                     .createQuery( " from ProcessedExpressionDataVector dedv "
-                            + "where dedv.expressionExperiment = :ee order by RAND()" ); // order by rand() works?
+                            + "where dedv.expressionExperiment = :ee order by RAND()" );
             q.setParameter( "ee", ee );
             q.setMaxResults( limit );
             list = q.list();
