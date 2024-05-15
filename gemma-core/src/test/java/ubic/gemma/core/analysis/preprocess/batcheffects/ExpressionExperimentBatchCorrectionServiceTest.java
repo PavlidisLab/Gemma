@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -31,7 +32,9 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -39,6 +42,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -57,6 +61,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
 
     @Autowired
     private GeoService geoService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -86,15 +93,29 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
+
         assertNotNull( newee );
         newee = expressionExperimentService.thawLite( newee );
+        // add an outlier to excerise batch correction dealing with that.
+        for ( BioAssay ba : newee.getBioAssays() ) {
+            if ( ba.getName().equals( "070314_ETOH-20" ) ) {
+                ba.setIsOutlier( true );
+                bioAssayService.update( ba ); // save it jusut in case ...
+                break;
+            }
+        }
+        newee = expressionExperimentService.thawLite( newee );
+
         processedExpressionDataVectorService.computeProcessedExpressionData( newee );
+
         try ( InputStream deis = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" ) ) {
             experimentalDesignImporter.importDesign( newee, deis );
         }
         ExpressionDataDoubleMatrix comBat = correctionService.comBat( newee );
         assertNotNull( comBat );
+
+        assertEquals( newee.getBioAssays().size(), comBat.columns() );
 
     }
 
