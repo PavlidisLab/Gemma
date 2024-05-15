@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 public class TaxaWebServiceTest extends BaseJerseyIntegrationTest {
