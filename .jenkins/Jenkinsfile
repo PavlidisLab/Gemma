@@ -6,7 +6,7 @@ def siteDir = '/space/web/maven-sites'
 def dataDir = '/space/gemmaData'
 def deployDir = '/var/local/tomcat/gemma'
 def cliDir = '/space/grp/gemma-cli'
-def forceIntegrationTests = false
+def forceIntegrationTests = true
 
 // either hotfix or release, we only have one staging server
 def stagingBranch = 'hotfix'
