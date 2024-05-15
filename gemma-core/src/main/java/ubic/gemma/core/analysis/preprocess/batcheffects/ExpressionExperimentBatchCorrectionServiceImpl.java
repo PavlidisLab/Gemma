@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -159,8 +160,53 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee, finalMatrix );
 
-        return this.doComBat( ee, finalMatrix, design );
+        ExpressionDataDoubleMatrix correctedMatrix = this.doComBat( ee, finalMatrix, design );
 
+        return restoreOutliers( originalDataMatrix, correctedMatrix );
+
+    }
+
+    /**
+     * Restore the outliers by basically overwriting the original matrix with the corrected values, leaving outlier samples as they were.
+     * This is a lot easier than starting over with a new matrix.
+     * @param originalDataMatrix
+     * @param correctedMatrix
+     * @return the originalDataMatrix with the correctedvalues now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
+     */
+    private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
+        if ( originalDataMatrix.getBestBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
+            return correctedMatrix;
+        }
+
+        Set<Integer> outlierColumns = new HashSet<>();
+        for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
+            if ( originalDataMatrix.getBioAssaysForColumn( j ).iterator().next().getIsOutlier() ) {
+                outlierColumns.add( j );
+            }
+        }
+
+        if ( outlierColumns.isEmpty() ) {
+            throw new IllegalStateException( "Was expecting some outliers to be present since the corrected matrix is smaller than the original matrix" );
+        }
+
+        log.info( "Restoring " + outlierColumns.size() + " outlier columns" );
+
+        /*
+        Iterate over the rows and columns of the original matrix and copy the values from the corrected matrix.
+        If the column is an outlier in the original matrix, just skip it.
+         */
+        for ( int i = 0; i < originalDataMatrix.rows(); i++ ) {
+            int skip = 0;
+            for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
+                if ( outlierColumns.contains( j ) ) {
+                    skip++;
+                    continue; // leave it alone; normally this will be an NaN.
+                }
+                originalDataMatrix.set( i, j, correctedMatrix.get( i, j - skip ) );
+            }
+        }
+
+        return originalDataMatrix;
     }
 
     /**
