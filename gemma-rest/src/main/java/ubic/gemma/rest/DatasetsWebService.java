@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
@@ -51,6 +52,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -100,6 +102,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.rest.util.Responders.respond;
+
 /**
  * RESTful interface for datasets.
  *
@@ -133,15 +137,16 @@ public class DatasetsWebService {
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
+    private QuantitationTypeArgService quantitationTypeArgService;
+    @Autowired
+    private OntologyService ontologyService;
+
+    @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
     private TaxonArgService taxonArgService;
     @Autowired
     private GeneArgService geneArgService;
-    @Autowired
-    private QuantitationTypeArgService quantitationTypeArgService;
-    @Autowired
-    private OntologyService ontologyService;
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
@@ -192,17 +197,19 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
+    public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
-        Filters filters = datasetArgService.getFilters( filterArg );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Sort sort = datasetArgService.getSort( sortArg );
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
+        Slice<ExpressionExperimentWithSearchResultValueObject> payload;
         if ( query != null ) {
             List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
             Map<Long, Double> scoreById = new HashMap<>();
@@ -223,15 +230,13 @@ public class DatasetsWebService {
             Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
-            return Responder.queryAndPaginate(
-                    new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
-                            .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) ),
-                    query.getValue(), filters, new String[] { "id" } );
+            payload = new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
+                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) );
         } else {
-            return Responder.queryAndPaginate(
-                    expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit ).map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) ),
-                    null, filters, new String[] { "id" } );
+            payload = expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit )
+                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) );
         }
+        return paginate( payload, query != null ? query.getValue() : null, filters, new String[] { "id" }, inferredTerms );
     }
 
     @Value
@@ -270,7 +275,7 @@ public class DatasetsWebService {
         } else {
             extraIds = null;
         }
-        return Responder.respond( expressionExperimentService.countWithCache( filters, extraIds ) );
+        return respond( expressionExperimentService.countWithCache( filters, extraIds ) );
     }
 
     public interface UsageStatistics {
@@ -288,12 +293,13 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public LimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("50") LimitArg limit
     ) {
-        Filters filters = datasetArgService.getFilters( filter );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query );
@@ -310,7 +316,7 @@ public class DatasetsWebService {
                         .map( e -> new ArrayDesignWithUsageStatisticsValueObject( e, countsById.get( e.getId() ), tts.getOrDefault( TechnologyType.valueOf( e.getTechnologyType() ), 0L ) ) )
                         .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                         .collect( Collectors.toList() );
-        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l );
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l, inferredTerms );
     }
 
     @Value
@@ -331,7 +337,7 @@ public class DatasetsWebService {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public QueriedAndFilteredResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
@@ -344,7 +350,8 @@ public class DatasetsWebService {
     ) {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
-        Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms );
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query );
@@ -364,7 +371,7 @@ public class DatasetsWebService {
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return Responder.queryAndFilter( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), maxResults, inferredTerms );
     }
 
     @Value
@@ -395,7 +402,7 @@ public class DatasetsWebService {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public LimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
@@ -416,7 +423,8 @@ public class DatasetsWebService {
         }
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
-        Filters filters = datasetArgService.getFilters( filter, mentionedTerms );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms );
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query );
@@ -460,9 +468,14 @@ public class DatasetsWebService {
                 results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null ) );
             }
         }
-        return Responder.limit( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
+        return top(
+                results,
+                query != null ? query.getValue() : null,
+                filters,
+                new String[] { "classUri", "className", "termUri", "termName" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
-                limit );
+                limit,
+                inferredTerms );
     }
 
     private Set<String> getExcludedFields( @Nullable ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude ) {
@@ -553,22 +566,30 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public QueriedAndFilteredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
+    public QueriedAndFilteredAndInferredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
     ) {
-        Filters filters = datasetArgService.getFilters( filterArg );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query );
         } else {
             extraIds = null;
         }
-        return Responder.queryAndFilter( expressionExperimentService.getTaxaUsageFrequency( filters, extraIds )
+        List<TaxonWithUsageStatisticsValueObject> payload = expressionExperimentService.getTaxaUsageFrequency( filters, extraIds )
                 .entrySet().stream()
                 .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
-                .collect( Collectors.toList() ), query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ) );
+                .collect( Collectors.toList() );
+        return all(
+                payload,
+                query != null ? query.getValue() : null,
+                filters,
+                new String[] { "id" },
+                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
+                inferredTerms );
     }
 
     @Value
@@ -600,16 +621,17 @@ public class DatasetsWebService {
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
+    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
-        Filters filters = datasetArgService.getFilters( filter ).and( datasetArgService.getFilters( datasetsArg ) );
-        return Responder.paginate( expressionExperimentService::loadValueObjectsWithCache, filters, new String[] { "id" },
-                datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms ).and( datasetArgService.getFilters( datasetsArg ) );
+        return paginate( expressionExperimentService::loadValueObjectsWithCache, filters, new String[] { "id" },
+                datasetArgService.getSort( sort ), offset.getValue(), limit.getValue(), inferredTerms );
     }
 
     /**
@@ -620,14 +642,15 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured("GROUP_ADMIN")
     @Operation(summary = "Retrieve all blacklisted datasets", hidden = true)
-    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
-        return Responder.paginate( expressionExperimentService::loadBlacklistedValueObjects,
-                datasetArgService.getFilters( filterArg ), new String[] { "id" }, datasetArgService.getSort( sortArg ),
-                offset.getValue(), limit.getValue() );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        return paginate( expressionExperimentService::loadBlacklistedValueObjects,
+                datasetArgService.getFilters( filterArg, null, inferredTerms ), new String[] { "id" }, datasetArgService.getSort( sortArg ),
+                offset.getValue(), limit.getValue(), inferredTerms );
     }
 
     /**
@@ -646,7 +669,7 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArgService.getPlatforms( datasetArg ) );
+        return respond( datasetArgService.getPlatforms( datasetArg ) );
     }
 
     /**
@@ -665,7 +688,7 @@ public class DatasetsWebService {
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArgService.getSamples( datasetArg ) );
+        return respond( datasetArgService.getSamples( datasetArg ) );
     }
 
     /**
@@ -686,7 +709,7 @@ public class DatasetsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.respond(
+        return respond(
                 this.getDiffExVos( datasetArgService.getEntity( datasetArg ).getId(),
                         offset.getValue(), limit.getValue() )
         );
@@ -772,7 +795,8 @@ public class DatasetsWebService {
         } else {
             gene = geneArgService.getEntity( geneArg );
         }
-        Filters filters = datasetArgService.getFilters( filter );
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
@@ -786,7 +810,7 @@ public class DatasetsWebService {
                 .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e, sourceExperimentIdMap.get( e ), experimentAnalyzedIdMap.get( e ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );
-        return Responder.queryAndFilter( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ) );
+        return all( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ), inferredTerms );
     }
 
     @Data
@@ -850,7 +874,7 @@ public class DatasetsWebService {
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        return Responder.respond( datasetArgService.getAnnotations( datasetArg ) );
+        return respond( datasetArgService.getAnnotations( datasetArg ) );
     }
 
     /**
@@ -860,9 +884,8 @@ public class DatasetsWebService {
     @Path("/{dataset}/quantitationTypes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve quantitation types of a dataset")
-    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes
-    ( @PathParam("dataset") DatasetArg<?> datasetArg ) {
-        return Responder.respond( datasetArgService.getQuantitationTypes( datasetArg ) );
+    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
     /**
@@ -1014,7 +1037,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return Responder.respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
+        return respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
     }
 
     /**
@@ -1034,7 +1057,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArgService.getEntity( datasetArg ).getId() );
-        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
+        return respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
         );
     }
 
@@ -1048,6 +1071,7 @@ public class DatasetsWebService {
      *                        You can combine various identifiers in one query, but an invalid identifier will cause the
      *                        call to yield an error.
      *                        </p>
+     * @param taxonArg        a taxon to retrieve gene identifiers from
      * @param genes           a list of gene identifiers, separated by commas (','). Identifiers can be one of
      *                        NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
      *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use
@@ -1071,7 +1095,26 @@ public class DatasetsWebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets}/expressions/genes/{genes: [^/]+}")
+    @Path("/{datasets}/expressions/taxa/{taxa}/genes/{genes}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenesInTaxa( // Params:
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @PathParam("taxa") TaxonArg<?> taxonArg, // Required
+            @PathParam("genes") GeneArrayArg genes, // Required
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+    ) {
+        return respond( processedExpressionDataVectorService
+                .getExpressionLevels( datasetArgService.getEntities( datasets ),
+                        geneArgService.getEntitiesWithTaxon( genes, taxonArgService.getEntity( taxonArg ) ),
+                        keepNonSpecific,
+                        consolidate == null ? null : consolidate.getValue() )
+        );
+    }
+
+    @GET
+    @Path("/{datasets}/expressions/genes/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:
@@ -1082,7 +1125,7 @@ public class DatasetsWebService {
             @QueryParam("consolidate") ExpLevelConsolidationArg
                     consolidate // Optional, default everything is returned
     ) {
-        return Responder.respond( processedExpressionDataVectorService
+        return respond( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
                         geneArgService.getEntities( genes ), keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
@@ -1125,7 +1168,7 @@ public class DatasetsWebService {
             @QueryParam("consolidate") ExpLevelConsolidationArg
                     consolidate // Optional, default everything is returned
     ) {
-        return Responder.respond( processedExpressionDataVectorService
+        return respond( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
                         component, keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
@@ -1172,7 +1215,7 @@ public class DatasetsWebService {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
         }
-        return Responder.respond( processedExpressionDataVectorService
+        return respond( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasetArgService.getEntities( datasets ),
                         diffExSet, threshold, limit.getValueNoMaximum(), keepNonSpecific,
                         consolidate == null ? null : consolidate.getValue() )
@@ -1224,5 +1267,77 @@ public class DatasetsWebService {
          */
         double[] variances;
         double[][] vMatrix;
+    }
+
+    private <T> QueriedAndFilteredAndInferredResponseDataObject<T> all( List<T> results, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort by, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredResponseDataObject<>( results, query, filters, groupBy, by, inferredTerms );
+    }
+
+    private <T> QueriedAndFilteredAndInferredAndLimitedResponseDataObject<T> top( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredAndLimitedResponseDataObject<>( payload, query, filters, groupBy, sort, limit, inferredTerms );
+    }
+
+    private <T> FilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
+        return new FilteredAndInferredAndPaginatedResponseDataObject<>( payload, filters, groupBy, inferredTerms );
+    }
+
+    private <T> QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, String query, Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<>( payload, query, filters, groupBy, inferredTerms );
+    }
+
+    private <T> FilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Responders.FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
+        return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy, inferredTerms );
+    }
+
+    @Getter
+    public static class QueriedAndFilteredAndInferredResponseDataObject<T> extends QueriedAndFilteredResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public QueriedAndFilteredAndInferredResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, sort );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    @Getter
+    public static class QueriedAndFilteredAndInferredAndLimitedResponseDataObject<T> extends QueriedAndFilteredAndLimitedResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public QueriedAndFilteredAndInferredAndLimitedResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, sort, limit );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    @Getter
+    public static class FilteredAndInferredAndPaginatedResponseDataObject<T> extends FilteredAndPaginatedResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public FilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, filters, groupBy );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    @Getter
+    public static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<T> extends QueriedAndFilteredAndPaginatedResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
     }
 }

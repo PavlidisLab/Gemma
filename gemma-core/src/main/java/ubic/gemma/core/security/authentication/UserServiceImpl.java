@@ -20,12 +20,14 @@ import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
@@ -34,18 +36,19 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author pavlidis
  */
-@SuppressWarnings("CollectionAddAllCanBeReplacedWithConstructor") // Not possible due to type safety
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    UserDao userDao;
+    private UserDao userDao;
 
     @Autowired
-    UserGroupDao userGroupDao;
+    private UserGroupDao userGroupDao;
 
     @Autowired
     private AclService aclService;
@@ -56,26 +59,35 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void addGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
-        this.userGroupDao.addAuthority( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group, authority );
+        group = requireNonNull( userGroupDao.load( group.getId() ) );
+        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
+            if ( ga.getAuthority().equals( authority ) ) {
+                return;
+            }
+        }
+        GroupAuthority ga = GroupAuthority.Factory.newInstance();
+        ga.setAuthority( authority );
+        group.getAuthorities().add( ga );
+        update( group );
     }
 
     @Override
     @Transactional
     public void addUserToGroup( gemma.gsec.model.UserGroup group, gemma.gsec.model.User user ) {
+        group = requireNonNull( userGroupDao.load( group.getId() ) );
+        user = requireNonNull( userDao.load( user.getId() ) );
         // add user to list of members
         group.getGroupMembers().add( user );
-        this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
     }
 
     @Override
     @Transactional
     public User create( final gemma.gsec.model.User user ) throws UserExistsException {
-
-        if ( user.getUserName() == null ) {
-            throw new IllegalArgumentException( "UserName cannot be null" );
+        if ( StringUtils.isBlank( user.getUserName() ) ) {
+            throw new IllegalArgumentException( "Username cannot be blank" );
         }
 
-        if ( this.userDao.findByUserName( user.getUserName() ) != null ) {
+        if ( this.findByUserName( user.getUserName() ) != null ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
@@ -84,38 +96,34 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            return this.userDao.create( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
+            return this.userDao.create( ( User ) user );
         } catch ( DataIntegrityViolationException | InvalidDataAccessResourceUsageException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
-
     }
 
     @Override
     @Transactional
     public UserGroup create( gemma.gsec.model.UserGroup group ) {
-        return this.userGroupDao.create( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        return this.userGroupDao.create( ( UserGroup ) group );
     }
 
     @Override
     @Transactional
     public void delete( gemma.gsec.model.User user ) {
-        for ( UserGroup group : this.userDao.loadGroups( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) ) {
+        user = requireNonNull( userDao.load( user.getId() ), "No user with ID: " + user.getId() );
+        for ( UserGroup group : this.userDao.loadGroups( ( User ) user ) ) {
             group.getGroupMembers().remove( user );
-            this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
         }
-
-        this.userDao.remove( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
+        this.userDao.remove( ( User ) user );
     }
 
     @Override
     @Transactional
     public void delete( gemma.gsec.model.UserGroup group ) {
-        String groupName = group.getName();
+        group = requireNonNull( userGroupDao.load( group.getId() ), "No group with that name: " + group.getName() );
 
-        if ( !this.groupExists( groupName ) ) {
-            throw new IllegalArgumentException( "No group with that name: " + groupName );
-        }
+        String groupName = group.getName();
 
         /*
          * make sure this isn't one of the special groups
@@ -169,17 +177,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Collection<gemma.gsec.model.UserGroup> findGroupsForUser( gemma.gsec.model.User user ) {
-        Collection<gemma.gsec.model.UserGroup> ret = new ArrayList<>();
-        ret.addAll( this.userGroupDao.findGroupsForUser( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
-        return ret;
+        return new ArrayList<>( this.userGroupDao.findGroupsForUser( ( User ) user ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<gemma.gsec.model.UserGroup> listAvailableGroups() {
-        Collection<gemma.gsec.model.UserGroup> ret = new ArrayList<>();
-        ret.addAll( this.userGroupDao.loadAll() );
-        return ret;
+        return new ArrayList<>( this.userGroupDao.loadAll() );
     }
 
     @Override
@@ -191,28 +195,27 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Collection<gemma.gsec.model.User> loadAll() {
-        Collection<gemma.gsec.model.User> ret = new ArrayList<>();
-        ret.addAll( this.userDao.loadAll() );
-        return ret;
+        return new ArrayList<>( this.userDao.loadAll() );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<gemma.gsec.model.GroupAuthority> loadGroupAuthorities( gemma.gsec.model.User user ) {
-        Collection<gemma.gsec.model.GroupAuthority> ret = new ArrayList<>();
-        ret.addAll( this.userDao.loadGroupAuthorities( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
-        return ret;
+        return new ArrayList<>( this.userDao.loadGroupAuthorities( ( User ) user ) );
     }
 
     @Override
+    @Transactional
     public void removeGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
-        this.userGroupDao.removeAuthority( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group, authority );
+        group = requireNonNull( userGroupDao.load( group.getId() ) );
+        group.getAuthorities().removeIf( ga -> ga.getAuthority().equals( authority ) );
     }
 
     @Override
     @Transactional
     public void removeUserFromGroup( gemma.gsec.model.User user, gemma.gsec.model.UserGroup group ) {
-        group.getGroupMembers().remove( user );
+        group = requireNonNull( userGroupDao.load( group.getId() ) );
+        user = requireNonNull( userDao.load( user.getId() ) );
 
         String userName = user.getUserName();
         String groupName = group.getName();
@@ -225,7 +228,8 @@ public class UserServiceImpl implements UserService {
         if ( AuthorityConstants.USER_GROUP_NAME.equals( groupName ) ) {
             throw new IllegalArgumentException( "You cannot remove users from the USER group!" );
         }
-        this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+
+        group.getGroupMembers().remove( user );
 
         /*
          * TODO: if the group is empty, should we remove it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
@@ -235,13 +239,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void update( final gemma.gsec.model.User user ) {
-        this.userDao.update( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
+        this.userDao.update( ( User ) user );
     }
 
     @Override
     @Transactional
     public void update( gemma.gsec.model.UserGroup group ) {
-        this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        this.userGroupDao.update( ( UserGroup ) group );
     }
-
 }

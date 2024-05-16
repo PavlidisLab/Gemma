@@ -61,11 +61,10 @@ pipeline {
         stage('Build') {
             steps {
                 setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
+                sh 'mvn -B compile'
             }
             post {
                 success {
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
                 unsuccessful {
@@ -87,6 +86,21 @@ pipeline {
                 }
                 unsuccessful {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+                sh 'mvn -B package -DskipTests'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                }
+                unsuccessful {
+                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
         }

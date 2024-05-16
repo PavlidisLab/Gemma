@@ -1,6 +1,6 @@
 package ubic.gemma.core.util;
 
-import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.io.Resource;
 
 import java.io.BufferedReader;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * Lines starting with '#' are ignored.
  * @author poirigui
  */
-public class TextResourceToSetOfLinesFactoryBean implements FactoryBean<Set<String>> {
+public class TextResourceToSetOfLinesFactoryBean extends AbstractFactoryBean<Set<String>> {
 
     private final Resource resource;
 
@@ -24,7 +24,7 @@ public class TextResourceToSetOfLinesFactoryBean implements FactoryBean<Set<Stri
     }
 
     @Override
-    public Set<String> getObject() throws Exception {
+    protected Set<String> createInstance() throws Exception {
         return new BufferedReader( new InputStreamReader( resource.getInputStream(), StandardCharsets.UTF_8 ) )
                 .lines()
                 .filter( line -> !line.startsWith( "#" ) )
@@ -34,10 +34,5 @@ public class TextResourceToSetOfLinesFactoryBean implements FactoryBean<Set<Stri
     @Override
     public Class<?> getObjectType() {
         return Set.class;
-    }
-
-    @Override
-    public boolean isSingleton() {
-        return true;
     }
 }

@@ -71,7 +71,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         ExperimentalDesign ed = ee.getExperimentalDesign();
         assertNotNull( ed );
         assertNotNull( ed.getId() );
-        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+        perform( get( "/experimentalDesign/showExperimentalDesign.html" )
                         .param( "edid", ed.getId().toString() ) )
                 .andExpect( status().isOk() )
                 .andExpect( request().attribute( "id", ed.getId() ) )
@@ -84,7 +84,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
     public void testShowExperimentalDesignByExperimentId() throws Exception {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         assertTrue( ed != null && ee.getId() != null );
-        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+        perform( get( "/experimentalDesign/showExperimentalDesign.html" )
                         .param( "eeid", ee.getId().toString() ) )
                 .andExpect( status().isOk() )
                 .andExpect( request().attribute( "id", ed.getId() ) )
@@ -96,7 +96,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         ExperimentalDesign ed = ee.getExperimentalDesign();
         assertNotNull( ee.getShortName() );
         assertTrue( ed != null && ee.getId() != null );
-        mvc.perform( get( "/experimentalDesign/showExperimentalDesign.html" )
+        perform( get( "/experimentalDesign/showExperimentalDesign.html" )
                         .param( "shortName", ee.getShortName() ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "experimentalDesign.detail" ) );

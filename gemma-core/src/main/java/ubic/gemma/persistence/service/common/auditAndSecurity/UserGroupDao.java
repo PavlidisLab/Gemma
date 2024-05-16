@@ -29,12 +29,7 @@ import java.util.Collection;
  */
 public interface UserGroupDao extends BaseDao<UserGroup> {
 
-    void addAuthority( UserGroup group, String authority );
-
     UserGroup findByName( java.lang.String name );
 
     Collection<UserGroup> findGroupsForUser( User user );
-
-    void removeAuthority( UserGroup group, String authority );
-
 }

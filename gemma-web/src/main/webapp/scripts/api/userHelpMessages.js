@@ -445,7 +445,7 @@ Gemma.HelpText.WidgetDefaults = {
 		dataReprocessed: "Reprocessed from raw data by Gemma.",
 		dataExternal: "Data are from external source.",
 		noBatchInfo: "Information on sample batching was not available",
-		noBatchesSingletons: "Gemma was unable to form a reasonable sample batching structure",
+		noBatchesSingletons: "Gemma was unable to form a reasonable batching structure due to batch(es) with one sample",
 		noBatchesBadHeaders: "Information on sample batching was not extractable from the available data",
 		statusUnsuitableForDEA: "Data or experimental design not suitable for differential expression analysis."
 	},

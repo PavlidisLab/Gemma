@@ -174,7 +174,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     }
 
     private void checkUnsupportedLinksHaveNoSupport() {
-        JdbcTemplate jt = jdbcTemplate;
+        JdbcTemplate jt = getJdbcTemplate();
 
         // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
         // position 12 is important.
@@ -306,7 +306,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                         .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                                 EntityUtils.getIds( ees ), 100, false );
 
-                if( !multiGeneResults.isEmpty() ) {
+                if ( !multiGeneResults.isEmpty() ) {
 
                     for ( Long id : multiGeneResults.keySet() ) {
                         for ( CoexpressionValueObject coex : multiGeneResults.get( id ) ) {

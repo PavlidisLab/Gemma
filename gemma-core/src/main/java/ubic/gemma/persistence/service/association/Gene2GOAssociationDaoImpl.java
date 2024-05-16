@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.association;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -31,6 +32,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.HibernateUtils;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -168,10 +170,9 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                 .executeUpdate();
         int removedCharacteristics;
         if ( !cIds.isEmpty() ) {
-            removedCharacteristics = getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from Characteristic where id in :cIds" )
-                    .setParameterList( "cIds", optimizeParameterList( cIds ) )
-                    .executeUpdate();
+            Query query = getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from Characteristic where id in :cIds" );
+            removedCharacteristics = QueryUtils.executeUpdateByBatch( query, "cIds", cIds, 2048 );
         } else {
             removedCharacteristics = 0;
         }

@@ -8,7 +8,7 @@ import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
-public class MessageSourceTest extends BaseSpringWebTest {
+public class MessageSourceTest extends BaseWebIntegrationTest {
 
     @Autowired
     private MessageSource messageSource;

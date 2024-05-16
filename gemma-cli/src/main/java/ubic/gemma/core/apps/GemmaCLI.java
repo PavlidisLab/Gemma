@@ -143,11 +143,6 @@ public class GemmaCLI {
 
         loggingConfigurer.apply();
 
-        /*
-         * Guarantee that the security settings are uniform throughout the application (all threads).
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
 

@@ -131,14 +131,6 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> getCompositeSequencesById( Long id );
 
-    /**
-     * Gets all the genes for a given taxon
-     *
-     * @param taxon taxon
-     * @return genes for given taxon
-     */
-    Collection<Gene> getGenesByTaxon( Taxon taxon );
-
     List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
     /**

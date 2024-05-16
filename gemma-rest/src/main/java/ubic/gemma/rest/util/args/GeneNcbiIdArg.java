@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
  */
 @Schema(type = "string", description = "An NCBI gene identifier.",
         externalDocs = @ExternalDocumentation(url = "https://www.ncbi.nlm.nih.gov/gene"))
-public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
+public class GeneNcbiIdArg extends GeneArg<Integer> {
 
     /**
      * @param l intentionally primitive type, so the value property can never be null.

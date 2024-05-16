@@ -1,6 +1,7 @@
 package ubic.gemma.core.util;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -40,11 +41,11 @@ public class BuildInfo implements InitializingBean {
         }
     }
 
-    @Value("${gemma.version}")
+    @Value("${gemma.version:#{null}}")
     private String version;
-    @Value("${gemma.build.timestamp}")
+    @Value("${gemma.build.timestamp:#{null}}")
     private String timestampAsString;
-    @Value("${gemma.build.gitHash}")
+    @Value("${gemma.build.gitHash:#{null}}")
     private String gitHash;
 
     private Date timestamp;

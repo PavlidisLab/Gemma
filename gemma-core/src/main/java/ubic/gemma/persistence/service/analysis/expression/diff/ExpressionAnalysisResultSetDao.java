@@ -43,13 +43,42 @@ import java.util.Map;
  */
 public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
+    /**
+     * Load an analysis result set with its all of its associated results.
+     *
+     * @param id the ID of the analysis result set
+     * @return the analysis result set with its associated results, or null if not found
+     */
     @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
+
+    /**
+     * Load a slice of an analysis result set.
+     * <p>
+     * Results are sorted by ascending correct P-value.
+     *
+     * @param offset    an offset of results to load
+     * @param limit     a limit of results to load, or -1 to load all results starting at offset
+     * @see #loadWithResultsAndContrasts(Long)
+     */
+    @Nullable
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id, int offset, int limit );
+
+    /**
+     * Load a slice of an analysis result set with a corrected P-value threshold.
+     * <p>
+     * <b>Important note:</b> when using a threshold, results with null P-values will not be included, thus setting the
+     * threshold to {@code 1.0} <b>is not equivalent</b> to {@link #loadWithResultsAndContrasts(Long, int, int)}.
+     * @param threshold corrected P-value maximum threshold (inclusive)
+     */
+    @Nullable
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id, double threshold, int offset, int limit );
 
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
      * Load an analysis result set with its all of its associated results.
+     *
      * @see #loadValueObject(Identifiable)
      */
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
@@ -68,11 +97,11 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
      *
-     * @param bioAssaySets related {@link BioAssaySet}, or any if null
+     * @param bioAssaySets    related {@link BioAssaySet}, or any if null
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
-     * @param filters filters for restricting results
-     * @param limit maximum number of results to return
-     * @param sort field and direction by which the collection is ordered
+     * @param filters         filters for restricting results
+     * @param limit           maximum number of results to return
+     * @param sort            field and direction by which the collection is ordered
      */
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 
@@ -80,4 +109,14 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Initialize the analysis and subset factor vale.
      */
     void thaw( ExpressionAnalysisResultSet ears );
+
+    /**
+     * Count the number of results in a given result set.
+     */
+    long countResults( ExpressionAnalysisResultSet ears );
+
+    /**
+     * Count the number of results in a given result set below a given corrected P-value threshold.
+     */
+    long countResults( ExpressionAnalysisResultSet ears, double threshold );
 }

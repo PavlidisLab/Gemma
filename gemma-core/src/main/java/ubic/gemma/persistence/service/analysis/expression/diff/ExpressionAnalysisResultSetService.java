@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
@@ -21,6 +21,14 @@ import java.util.Map;
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
+
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit );
+
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit );
+
+    long countResults( ExpressionAnalysisResultSet ears );
+
+    long countResults( ExpressionAnalysisResultSet ears, double threshold );
 
     @CheckReturnValue
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );

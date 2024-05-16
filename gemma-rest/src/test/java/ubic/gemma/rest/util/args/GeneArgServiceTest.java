@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TestComponent;
@@ -26,7 +26,7 @@ public class GeneArgServiceTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public GeneArgService geneArgService( GeneService geneService ) {
-            return new GeneArgService( geneService, mock( GeneOntologyService.class ) );
+            return new GeneArgService( geneService, mock(), mock() );
         }
 
         @Bean
@@ -47,6 +47,11 @@ public class GeneArgServiceTest extends AbstractJUnit4SpringContextTests {
         when( geneService.findByEnsemblId( any() ) ).thenReturn( new Gene() );
         when( geneService.findByOfficialSymbol( any() ) ).thenReturn( Collections.singleton( new Gene() ) );
         when( geneService.findByOfficialSymbol( any(), any() ) ).thenReturn( new Gene() );
+    }
+
+    @After
+    public void resetMocks() {
+        reset( geneService );
     }
 
     @Test

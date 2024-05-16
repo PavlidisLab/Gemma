@@ -42,7 +42,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
 import java.awt.*;
 import java.io.File;
@@ -64,7 +63,7 @@ import java.util.concurrent.Future;
  * </p>
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ComBat<R, C> {
+class ComBat<R, C> {
 
     private static final String BATCH_COLUMN_NAME = "batch";
     private static final Log log = LogFactory.getLog( ComBat.class );
@@ -79,7 +78,7 @@ public class ComBat<R, C> {
     private LinkedHashMap<String, Collection<C>> batches;
     private Map<String, Map<C, Integer>> originalLocationsInMatrix;
 
-    private Algebra solver;
+    private final Algebra solver;
     private DoubleMatrix2D varpooled;
     private DoubleMatrix2D standMean;
     private DoubleMatrix2D gammaHat = null;
@@ -106,8 +105,6 @@ public class ComBat<R, C> {
 
     /**
      * Constructor that can be used just for testing correctability (data is not provided) - FIXME refactor so it's not a constructor.
-     * @param sampleInfo
-     * @throws ComBatException
      */
     public ComBat( ObjectMatrix<C, String, ?> sampleInfo ) throws ComBatException {
         this.sampleInfo = sampleInfo;
@@ -426,15 +423,12 @@ public class ComBat<R, C> {
             final int firstBatch = i * batchesPerThread;
             final int lastBatch = i == ( numThreads - 1 ) ? batches.size() : firstBatch + batchesPerThread;
 
-            futures[i] = service.submit( new Runnable() {
-                @Override
-                public void run() {
-                    for ( int k = firstBatch; k < lastBatch; k++ ) {
-                        String batchId = batchIds[k];
-                        DoubleMatrix2D batchData = ComBat.this.getBatchData( sdata, batchId );
-                        DoubleMatrix1D[] batchResults = ComBat.this.nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat.viewRow( k ) );
-                        results.put( batchId, batchResults );
-                    }
+            futures[i] = service.submit( () -> {
+                for ( int k = firstBatch; k < lastBatch; k++ ) {
+                    String batchId = batchIds[k];
+                    DoubleMatrix2D batchData = ComBat.this.getBatchData( sdata, batchId );
+                    DoubleMatrix1D[] batchResults = ComBat.this.nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat.viewRow( k ) );
+                    results.put( batchId, batchResults );
                 }
             } );
         }
@@ -657,8 +651,8 @@ public class ComBat<R, C> {
             C sampleName = sampleInfo.getRowName( i );
             String batchId = ( String ) sampleInfo.get( i, batchColumnIndex );
             if ( !batches.containsKey( batchId ) ) {
-                batches.put( batchId, new ArrayList<C>() );
-                originalLocationsInMatrix.put( batchId, new LinkedHashMap<C, Integer>() );
+                batches.put( batchId, new ArrayList<>() );
+                originalLocationsInMatrix.put( batchId, new LinkedHashMap<>() );
             }
             batches.get( batchId ).add( sampleName );
 

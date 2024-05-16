@@ -11,7 +11,9 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Assertions for jax-rs {@link Response}.
@@ -23,6 +25,21 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
 
     public ResponseAssert( Response actual ) {
         super( actual, ResponseAssert.class );
+        info.description( "\nHTTP/1.1 %d %s\n%s\n\n%s\n",
+                actual.getStatus(), actual.getStatusInfo().getReasonPhrase(),
+                actual.getStringHeaders().entrySet().stream()
+                        .sorted( Map.Entry.comparingByKey() )
+                        .map( e -> e.getKey() + ": " + String.join( ", ", e.getValue() ) )
+                        .collect( Collectors.joining( "\n" ) ),
+                formatEntity( actual ) );
+    }
+
+    private String formatEntity( Response response ) {
+        if ( response.bufferEntity() ) {
+            return response.readEntity( String.class );
+        } else {
+            return response.getEntity().toString();
+        }
     }
 
     /**

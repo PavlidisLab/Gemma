@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -403,27 +402,22 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public Collection<ProcessedExpressionDataVector> toProcessedDataVectors() {
         Collection<ProcessedExpressionDataVector> result = new HashSet<>();
         QuantitationType qt = this.getQuantitationTypes().iterator().next();
-
         ByteArrayConverter bac = new ByteArrayConverter();
         if ( this.getQuantitationTypes().size() > 1 ) {
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
-
+        BioAssayDimension bad = this.getBestBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
-
             Double[] data = this.getRow( i );
-
             ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
-            v.setBioAssayDimension( this.getBestBioAssayDimension() );
+            v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
             v.setData( bac.doubleArrayToBytes( data ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
-
             result.add( v );
         }
-
         return result;
     }
 
@@ -441,18 +435,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
 
+        BioAssayDimension bad = this.getBestBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
-
             Double[] data = this.getRow( i );
-
             RawExpressionDataVector v = RawExpressionDataVector.Factory.newInstance();
-            v.setBioAssayDimension( this.getBestBioAssayDimension() );
+            v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
             v.setData( bac.doubleArrayToBytes( data ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
-
             result.add( v );
         }
 

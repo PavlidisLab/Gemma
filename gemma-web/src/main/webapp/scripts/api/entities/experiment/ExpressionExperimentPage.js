@@ -88,7 +88,7 @@ function getBatchInfoBadges(ee) {
     if (!hasBatchConfound && ee.batchEffect !== null) {
 		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
-		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
+		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE" || ee.batchEffect === "PROBLEMATIC_BATCH_INFO_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
 		} else if (ee.batchEffect === "BATCH_CORRECTED_SUCCESS") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
             result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffectStatistics)
@@ -110,7 +110,7 @@ function getBatchInfoBadges(ee) {
             result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect could not be determined.');
         } else {
             // unsupported batch effect type
-            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Unsupported batch effect type')
+            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Some other batch effect situation')
         }
     }
 

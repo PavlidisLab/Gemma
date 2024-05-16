@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -38,11 +39,15 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
@@ -51,6 +56,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static ubic.gemma.rest.util.MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8;
+import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
+
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
  */
@@ -58,7 +68,9 @@ import java.util.Map;
 @Path("/resultSets")
 public class AnalysisResultSetsWebService {
 
-    private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9";
+    private static final String TEXT_TAB_SEPARATED_VALUES_Q9 = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9";
+
+    private static final MediaType TEXT_TAB_SEPARATED_VALUES_Q9_TYPE = MediaTypeUtils.withQuality( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 );
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -107,7 +119,7 @@ public class AnalysisResultSetsWebService {
             des = databaseEntryArgService.getEntities( databaseEntries );
         }
         Filters filters2 = expressionAnalysisResultSetArgService.getFilters( filters );
-        return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
+        return paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
                         bas, des, filters2, offset.getValue(), limit.getValue(), expressionAnalysisResultSetArgService.getSort( sort ) ),
                 filters2, new String[] { "id" } );
     }
@@ -118,7 +130,7 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Count result sets matching the provided filter")
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
-        return Responder.respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
+        return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
@@ -142,46 +154,94 @@ public class AnalysisResultSetsWebService {
     @GZIP
     @GET
     @Path("/{resultSet}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve a single analysis result set by its identifier", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSet(
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_Q9 })
+    @Operation(summary = "Retrieve a single analysis result set by its identifier",
+            description = "A slice or results can be retrieved by specifying the `offset` and `limit` parameters. This is only applicable to the JSON representation.",
+            responses = {
+                    @ApiResponse(content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, /* no need to expose the q-value */
+                                    schema = @Schema(type = "string", format = "binary"),
+                                    examples = { @ExampleObject(value = TSV_EXAMPLE) })
+                    }),
+                    @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Object getResultSet(
             @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
-        if ( excludeResults ) {
-            ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
-            return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
-        } else {
-            ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
-            if ( ears == null ) {
-                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            @QueryParam("threshold") Double threshold,
+            @QueryParam("offset") OffsetArg offsetArg,
+            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults,
+            @Context HttpHeaders headers ) {
+        MediaType acceptedMediaType = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_Q9_TYPE );
+        if ( acceptedMediaType.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            if ( offsetArg != null || limitArg != null || threshold != null ) {
+                if ( excludeResults ) {
+                    throw new BadRequestException( "The excludeResults parameter cannot be used with offset/limit or threshold parameters." );
+                }
+                int offset = 0, limit = LimitArg.MAXIMUM;
+                if ( offsetArg != null ) {
+                    offset = offsetArg.getValue();
+                }
+                if ( limitArg != null ) {
+                    limit = limitArg.getValue();
+                }
+                if ( threshold != null ) {
+                    if ( threshold < 0.0 || threshold > 1.0 ) {
+                        throw new BadRequestException( "The threshold must be between 0 and 1." );
+                    }
+                    return getResultSetAsJson( analysisResultSet, threshold, offset, limit );
+                } else {
+                    return getResultSetAsJson( analysisResultSet, offset, limit );
+                }
+            } else {
+                return getResultSetAsJson( analysisResultSet, excludeResults );
             }
-            return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
+        } else {
+            if ( excludeResults ) {
+                throw new BadRequestException( "The excludeResults parameter cannot be used with the TSV representation." );
+            }
+            if ( threshold != null ) {
+                throw new BadRequestException( "The threshold parameter cannot be used with the TSV representation." );
+            }
+            return getResultSetAsTsv( analysisResultSet );
         }
     }
 
-    /**
-     * Retrieve an {@link AnalysisResultSet} in a tabular format.
-     * <p>
-     * This is intentionally using a slightly different parameter name for the {@link Path} to create a distinct entry
-     * in the OpenAPI specification as a workaround to Swagger's codegen incapability to treat multiple media types per
-     * endpoint.
-     */
-    @GZIP
-    @GET
-    @Path("/{resultSet_}")
-    @Produces(TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE)
-    @Operation(summary = "Retrieve a single analysis result set by its identifier as a tab-separated values", responses = {
-            @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, /* no need to show the q-value in the endpoint */
-                    schema = @Schema(type = "string", format = "binary"),
-                    examples = { @ExampleObject(value = TSV_EXAMPLE) })),
-            @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public StreamingOutput getResultSetAsTsv(
-            @PathParam("resultSet_") ExpressionAnalysisResultSetArg analysisResultSet ) {
-        final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
+    private ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, boolean excludeResults ) {
+        if ( excludeResults ) {
+            ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
+            return respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
+        } else {
+            ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet );
+            if ( ears == null ) {
+                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            }
+            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
+        }
+    }
+
+    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, int offset, int limit ) {
+        ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, offset, limit );
+        if ( ears == null ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        }
+        long totalElements = expressionAnalysisResultSetService.countResults( ears );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), null, offset, limit, totalElements );
+    }
+
+    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
+        ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, threshold, offset, limit );
+        if ( ears == null ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        }
+        long totalElements = expressionAnalysisResultSetService.countResults( ears, threshold );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), threshold, offset, limit, totalElements );
+    }
+
+    private StreamingOutput getResultSetAsTsv( ExpressionAnalysisResultSetArg analysisResultSet ) {
+        final ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
@@ -191,5 +251,34 @@ public class AnalysisResultSetsWebService {
                 expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, resultId2Genes, writer );
             }
         };
+    }
+
+    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
+        return new PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject( resultSet, threshold, offset, limit, totalElements );
+    }
+
+    /**
+     * Similar to {@link ubic.gemma.rest.util.PaginatedResponseDataObject}, but the {@code data.results} is paginated
+     * instead of {@code data}
+     */
+    @Getter
+    public static class PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject extends ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> {
+
+        private final String filter;
+        private final SortValueObject sort;
+        private final String[] groupBy;
+        private final Integer offset;
+        private final Integer limit;
+        private final Long totalElements;
+
+        public PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
+            super( resultSet );
+            this.filter = threshold != null ? "results.correctedPvalue <= " + threshold : "";
+            this.sort = new SortValueObject( Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "results.correctedPvalue" ) );
+            this.groupBy = new String[] { "results.id" };
+            this.offset = offset;
+            this.limit = limit;
+            this.totalElements = totalElements;
+        }
     }
 }

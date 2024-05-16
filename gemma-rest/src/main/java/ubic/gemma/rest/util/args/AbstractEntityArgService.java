@@ -78,15 +78,19 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
 
     @Override
     public List<T> getEntities( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
-        return entityArg.getEntities( service );
+        List<T> result = entityArg.getEntities( service );
+        if ( result.isEmpty() ) {
+            // will raise a NotFoundException
+            checkEntity( entityArg, null );
+        }
+        return result;
     }
 
     @Override
     public List<T> getEntities( AbstractEntityArrayArg<T, S> entitiesArg ) throws NotFoundException, BadRequestException {
         List<T> objects = new ArrayList<>( entitiesArg.getValue().size() );
         for ( String s : entitiesArg.getValue() ) {
-            AbstractEntityArg<?, T, S> arg = entityArgValueOf( entitiesArg.getEntityArgClass(), s );
-            objects.add( checkEntity( arg, arg.getEntity( service ) ) );
+            objects.add( getEntity( entityArgValueOf( entitiesArg.getEntityArgClass(), s ) ) );
         }
         return objects;
     }

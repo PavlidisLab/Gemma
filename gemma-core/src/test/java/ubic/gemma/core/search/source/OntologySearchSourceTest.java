@@ -15,6 +15,7 @@ import ubic.gemma.core.search.OntologyHighlighter;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -146,6 +147,17 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         verify( ontologyService ).getTerm( "http://example.com/d" );
         verify( ontologyService ).findTerms( eq( "\"a quoted string containing an escaped quote \\\"\"" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).findTerms( eq( "test*" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        verifyNoMoreInteractions( ontologyService );
+    }
+
+    @Test
+    public void setInvalidSearchSyntax() throws SearchException {
+        when( ontologyService.findTerms( eq( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), anyInt(), anyLong(), any() ) )
+                .thenThrow( LuceneParseSearchException.class );
+        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ) );
+        verify( ontologyService ).findTerms( eq( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        // fallback to an escaped query
+        verify( ontologyService ).findTerms( eq(  "1\\-\\[\\(2S\\)\\-butan\\-2\\-yl\\]\\-N\\-\\[\\(4,6\\-dimethyl\\-2\\-oxo\\-1H\\-pyridin\\-3\\-yl\\)methyl\\]\\-3\\-methyl\\-6\\-\\[6\\-\\(1\\-piperazinyl\\)\\-3\\-pyridinyl\\]\\-4\\-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
     }
 

@@ -180,10 +180,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
+    public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        Map<BioMaterial, FactorValue> result = new HashMap<>();
         int count = 0;
         for ( BioMaterial bm : fvs.keySet() ) {
             FactorValue fv = fvs.get( bm );
@@ -197,7 +196,6 @@ public class ExpressionExperimentServiceImpl
                 }
             }
             bm.getFactorValues().add( fv );
-            result.put( bm, fv );
             ++count;
             if ( count % 50 == 0 ) {
                 log.info( "Processed: " + count + " biomaterials for new factor values" );
@@ -205,9 +203,7 @@ public class ExpressionExperimentServiceImpl
         }
         log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
         //  expressionExperimentDao.update( experiment );
-        bioMaterialService.update( result.keySet() );
-
-        return result;
+        bioMaterialService.update( fvs.keySet() );
     }
 
     @Override
@@ -310,6 +306,11 @@ public class ExpressionExperimentServiceImpl
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 return new BatchInformationFetchingEvent(); // signal success
             }
+        }
+
+        AuditEvent ev3 = this.auditEventService.getLastEvent( ee, SingletonBatchInvalidEvent.class );
+        if ( ev3 != null ) {
+            return ( SingletonBatchInvalidEvent ) ev3.getEventType();
         }
 
         AuditEvent ev2 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
@@ -607,7 +608,7 @@ public class ExpressionExperimentServiceImpl
      * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
      */
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         Filters f2 = Filters.empty();
         // apply inference to terms
@@ -640,9 +641,14 @@ public class ExpressionExperimentServiceImpl
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
+                Set<OntologyTerm> c = ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                if ( inferredTerms != null ) {
+                    inferredTerms.addAll( terms );
+                    inferredTerms.addAll( c );
+                }
                 Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
                 termAndChildrenUris.addAll( e.getValue() );
-                termAndChildrenUris.addAll( ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
+                termAndChildrenUris.addAll( c.stream()
                         .map( OntologyTerm::getUri )
                         .collect( Collectors.toList() ) );
                 for ( List<String> termAndChildrenUrisBatch : org.apache.commons.collections4.ListUtils.partition( new ArrayList<>( termAndChildrenUris ), QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
@@ -1109,20 +1115,19 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
         BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
 
-        if ( !beDetails.hasBatchInformation() ) {
-            return BatchEffectType.NO_BATCH_INFO;
-        } else if ( beDetails.getHasSingletonBatches() ) {
+        if ( beDetails.getHasSingletonBatches() ) {
             return BatchEffectType.SINGLETON_BATCHES_FAILURE;
         } else if ( beDetails.getHasUninformativeBatchInformation() ) {
             return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
+        } else if ( !beDetails.hasBatchInformation() ) {
+            return BatchEffectType.NO_BATCH_INFO;
+        } else if ( beDetails.hasProblematicBatchInformation() ) {
+            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
             return BatchEffectType.SINGLE_BATCH_SUCCESS;
         } else if ( beDetails.getDataWasBatchCorrected() ) {
             // Checked for in ExpressionExperimentDetails.js::renderStatus()
             return BatchEffectType.BATCH_CORRECTED_SUCCESS;
-        } else if ( beDetails.hasProblematicBatchInformation() ) {
-            // sort of generic
-            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
         } else {
             if ( batchEffectStatistics == null ) {
                 return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;

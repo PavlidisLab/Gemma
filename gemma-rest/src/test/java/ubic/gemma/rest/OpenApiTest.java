@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -182,7 +183,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
                 .hasEntrySatisfying( "default", response -> {
                     assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
-                            .isEqualTo( "#/components/schemas/QueriedAndFilteredResponseDataObjectCategoryWithUsageStatisticsValueObject" );
+                            .isEqualTo( "#/components/schemas/QueriedAndFilteredAndInferredAndLimitedResponseDataObjectCategoryWithUsageStatisticsValueObject" );
                 } )
                 .hasEntrySatisfying( "503", response -> {
                     Assertions.assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
@@ -209,7 +210,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getComponents().getSchemas() )
                 // FIXME: remove the dangling 'Sort'
                 // .doesNotContainKey( "Sort" )
-                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet", "SortArgTaxon" );
+                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet" );
         Schema<?> schema = spec.getComponents().getSchemas().get( "SortArgExpressionExperiment" );
         assertThat( schema.getType() )
                 .isEqualTo( "string" );
