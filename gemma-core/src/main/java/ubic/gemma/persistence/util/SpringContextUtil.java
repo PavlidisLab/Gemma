@@ -25,6 +25,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.BuildInfo;
 
 import java.util.ArrayList;
@@ -93,12 +94,17 @@ public class SpringContextUtil {
      * <p>
      * Perform the following steps:
      * <ul>
+     * <li>ensure that the security context holder strategy is set to {@link SecurityContextHolder#MODE_INHERITABLETHREADLOCAL}</li>
      * <li>activate the {@code dev} profile as a fallback if no profile are active</li>
      * <li>verify that exactly one environment profile is active (see {@link EnvironmentProfiles})</li>
      * <li>log an informative message with the context version and active profiles</li>
      * </ul>
      */
     public static void prepareContext( ApplicationContext context ) {
+        if ( !SecurityContextHolder.getContextHolderStrategy().getClass().getName().equals( "org.springframework.security.core.context.InheritableThreadLocalSecurityContextHolderStrategy" ) ) {
+            throw new IllegalStateException( String.format( "The security context holder strategy is not set to be inherited in new threads, make sure -D%s=%s is set in your JVM options.",
+                    SecurityContextHolder.SYSTEM_PROPERTY, SecurityContextHolder.MODE_INHERITABLETHREADLOCAL ) );
+        }
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
             if ( !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) ) {

@@ -89,8 +89,6 @@ public class StartupListener extends ContextLoaderListener {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-
         // call Spring's context ContextLoaderListener to initialize
         // all the context files specified in web.xml
         super.contextInitialized( event );

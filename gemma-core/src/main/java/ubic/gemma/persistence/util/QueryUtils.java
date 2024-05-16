@@ -151,6 +151,19 @@ public class QueryUtils {
                 .flatMap( List::stream );
     }
 
+    /**
+     * Execute an update query by a fixed batch size.
+     * @see Query#executeUpdate()
+     * @return the sum of all performed update executions
+     */
+    public static <S extends Comparable<S>> int executeUpdateByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+        int updated = 0;
+        for ( List<S> batch : batchParameterList( list, batchSize ) ) {
+            updated += query.setParameterList( batchParam, batch ).executeUpdate();
+        }
+        return updated;
+    }
+
     public static String escapeLike( String s ) {
         return s.replaceAll( "[%_\\\\]", "\\\\$0" );
     }

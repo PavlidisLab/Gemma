@@ -14,12 +14,15 @@
  */
 package ubic.gemma.rest.util;
 
+import lombok.Getter;
+
 /**
  * Wrapper for a non-error response payload compliant with the
  * <a href="https://google.github.io/styleguide/jsoncstyleguide.xml?showone=error#error">Google JSON style-guide</a>
  *
  * @author tesarst
  */
+@Getter
 public class ResponseDataObject<T> {
 
     private final T data;
@@ -29,9 +32,5 @@ public class ResponseDataObject<T> {
      */
     public ResponseDataObject( T payload ) {
         this.data = payload;
-    }
-
-    public T getData() {
-        return data;
     }
 }

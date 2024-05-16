@@ -20,18 +20,16 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private FactorValueBasicValueObject baselineGroup;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private FactorValueBasicValueObject secondBaselineGroup;
 
     /**
      * Related analysis results.
-     *
+     * <p>
      * Note that this field is excluded from the JSON serialization if left unset.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<DifferentialExpressionAnalysisResultValueObject> results;
-
-    public DifferentialExpressionAnalysisResultSetValueObject() {
-        super();
-    }
 
     /**
      * Create a simple analysis results set VO with limited data.
@@ -52,7 +50,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     /**
      * Create an expression analysis result set VO with all its associated results.
-     *
+     * <p>
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
      */
     public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
@@ -87,6 +85,14 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.baselineGroup = baselineGroup;
     }
 
+    public FactorValueBasicValueObject getSecondBaselineGroup() {
+        return secondBaselineGroup;
+    }
+
+    public void setSecondBaselineGroup( FactorValueBasicValueObject secondBaselineGroup ) {
+        this.secondBaselineGroup = secondBaselineGroup;
+    }
+
     @Override
     public Collection<DifferentialExpressionAnalysisResultValueObject> getResults() {
         return results;
@@ -94,5 +100,10 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     public void setResults( Collection<DifferentialExpressionAnalysisResultValueObject> results ) {
         this.results = results;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " Id=" + getId();
     }
 }

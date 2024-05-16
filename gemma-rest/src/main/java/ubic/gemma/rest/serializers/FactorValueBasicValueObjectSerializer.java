@@ -19,7 +19,9 @@ public class FactorValueBasicValueObjectSerializer extends AbstractFactorValueVa
         jsonGenerator.writeObjectField( "id", factorValueBasicValueObject.getId() );
         jsonGenerator.writeStringField( "ontologyId", FactorValueOntologyUtils.getUri( factorValueBasicValueObject.getId() ) );
         jsonGenerator.writeObjectField( "experimentalFactorId", factorValueBasicValueObject.getExperimentalFactorId() );
-        jsonGenerator.writeObjectField( "experimentalFactorCategory", factorValueBasicValueObject.getExperimentalFactorCategory() );
+        if ( factorValueBasicValueObject.getExperimentalFactorCategory() != null ) {
+            jsonGenerator.writeObjectField( "experimentalFactorCategory", factorValueBasicValueObject.getExperimentalFactorCategory() );
+        }
         if ( factorValueBasicValueObject.getMeasurement() != null ) {
             jsonGenerator.writeObjectField( "measurement", factorValueBasicValueObject.getMeasurement() );
         }

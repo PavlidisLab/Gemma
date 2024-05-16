@@ -3,6 +3,7 @@ package ubic.gemma.core.search.source;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -194,7 +196,15 @@ public class OntologySearchSource implements SearchSource {
             ontologyResults.add( resource );
         } else {
             // Search ontology classes matches to the full-text query
-            matchingTerms = ontologyService.findTerms( settings.getQuery(), 5000, Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
+            try {
+                matchingTerms = ontologyService.findTerms( settings.getQuery(), 5000,
+                        Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
+            } catch ( LuceneParseSearchException e ) {
+                log.debug( String.format( "Failed to parse '%s': %s.", settings.getQuery(), ExceptionUtils.getRootCauseMessage( e ) ), e );
+                // reattempt it without escaped
+                matchingTerms = ontologyService.findTerms( LuceneQueryUtils.escape( settings.getQuery() ), 5000,
+                        Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
+            }
             matchingTerms.stream()
                     // ignore bnodes
                     .filter( t -> t.getResult().getUri() != null )

@@ -45,6 +45,9 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
+
 /**
  * RESTful interface for platforms.
  *
@@ -94,7 +97,7 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter );
-        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -104,7 +107,7 @@ public class PlatformsWebService {
     @Operation(summary = "Count platforms matching the provided filter")
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
-        return Responder.respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
+        return respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
     }
 
     /**
@@ -133,7 +136,7 @@ public class PlatformsWebService {
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter )
                 .and( arrayDesignArgService.getFilters( platformsArg ) );
-        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -148,7 +151,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit
     ) {
-        return Responder.paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
+        return paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
                 new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -170,7 +173,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -191,7 +194,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -220,7 +223,7 @@ public class PlatformsWebService {
     ) {
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
-        return Responder.paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
                 compositeSequenceService.getSort( "id", Sort.Direction.ASC ), offset.getValue(), limit.getValue() );
     }
 
@@ -249,7 +252,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         // FIXME: deal with potential null return value of loadValueObject
-        return Responder.paginate( compositeSequenceService
+        return paginate( compositeSequenceService
                 .getGenes( probeArgService.getEntityWithPlatform( probeArg, arrayDesignArgService.getEntity( platformArg ) ), offset.getValue(),
                         limit.getValue() )
                 .map( geneService::loadValueObject ), probeArgService.getFilters( probeArg ), new String[] { "id" } );

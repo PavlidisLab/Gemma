@@ -17,6 +17,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -60,24 +61,26 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2CharacteristicEntries() {
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment.class, false );
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( BioMaterial.class, false );
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExperimentalDesign.class, false );
-        assertThatThrownBy( () -> {
-            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( FactorValue.class, false );
-        } ).isInstanceOf( IllegalArgumentException.class );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment.class, null, false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( BioMaterial.class, null, false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ExperimentalDesign.class, null, false );
+        assertThatThrownBy( () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( FactorValue.class, null, false ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), false );
+        assertThatThrownBy( () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), true ) )
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test(expected = AccessDeniedException.class)
     public void testUpdateEE2CAsUser() {
         this.runAsAnonymous();
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( false );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2ArrayDesignEntries() {
-        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null );
     }
 }

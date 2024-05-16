@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
@@ -62,7 +61,6 @@ public interface GeoService {
 
     /**
      * Refetch and reprocess the GEO series, updating select information. Currently only implemented for experiments (GSEs)
-     * @param geoAccession
      */
     void updateFromGEO( String geoAccession );
 
@@ -83,5 +81,5 @@ public interface GeoService {
      * @param softFile the full path to the SOFT file. The file name has to be [accession].soft.gz
      * @return a single experiment.
      */
-    Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform  );
+    Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform );
 }

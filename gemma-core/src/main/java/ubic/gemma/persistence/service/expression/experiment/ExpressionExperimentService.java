@@ -25,7 +25,6 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -73,12 +72,9 @@ public interface ExpressionExperimentService
 
     /**
      * Intended with the case of a continuous factor being added.
-     * @param ee
-     * @param fvs
-     * @return
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public Map<BioMaterial, FactorValue> addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+    void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
@@ -266,10 +262,12 @@ public interface ExpressionExperimentService
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
+     *
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
-     *                       The returned filter might contain terms that have been inferred.
+     * @param inferredTerms  if non-null, all the terms inferred from those mentioned in the filters are added to the
+     *                       collection
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -352,7 +350,6 @@ public interface ExpressionExperimentService
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
      * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
-     * @param extraIds
      * @param maxResults the maximum of results, or unlimited if less than 1
      */
     Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults );
@@ -451,7 +448,7 @@ public interface ExpressionExperimentService
     Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 
     /**
-     * @return a count of expression experiments, grouped by Taxon
+     * @return counts of expression experiments grouped by taxon
      */
     Map<Taxon, Long> getPerTaxonCount();
 
@@ -489,7 +486,7 @@ public interface ExpressionExperimentService
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     /**
-     * @return count of an expressionExperiment's design element data vectors, grouped by quantitation type
+     * @return counts design element data vectors grouped by quantitation type
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );

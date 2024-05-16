@@ -46,7 +46,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
@@ -57,6 +56,9 @@ import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for annotations.
@@ -110,7 +112,7 @@ public class AnnotationsWebService {
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
-     * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
+     * @see OntologyService#findTermsInexact(String, int, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
      */
     @GET
@@ -128,7 +130,7 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Search query cannot be empty." );
         }
         try {
-            return Responder.respond( new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) ) );
+            return respond( new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) ) );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -219,11 +221,7 @@ public class AnnotationsWebService {
             slice = expressionExperimentService.loadValueObjects( filtersWithQuery, sort, offset.getValue(), limit.getValue() );
         }
 
-        return Responder.queryAndPaginate( slice, String.join( " AND ", query.getValue() ), filters, new String[]
-
-                {
-                        "id"
-                } );
+        return paginate( slice, String.join( " AND ", query.getValue() ), filters, new String[] { "id" } );
     }
 
     @GET
@@ -301,7 +299,7 @@ public class AnnotationsWebService {
             slice = expressionExperimentService.loadValueObjects( filtersWithQuery, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
         }
 
-        return Responder.queryAndPaginate( slice, String.join( " AND ", query.getValue() ), filters, new String[] { "id" } );
+        return paginate( slice, String.join( " AND ", query.getValue() ), filters, new String[] { "id" } );
     }
 
     /**

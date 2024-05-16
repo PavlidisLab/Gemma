@@ -164,7 +164,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
     @Test
     public void testShowAllForExperiments() {
         ModelAndView mv = brc
-                .showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
+                .showAllForExperiments( new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
         @SuppressWarnings("unchecked") Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
                 .getModel().get( "citationToEEs" );
         assertNotNull( citationToEEs );

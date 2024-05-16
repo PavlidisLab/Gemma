@@ -80,7 +80,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     @Override
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg ) throws BadRequestException, ServiceUnavailableException {
-        return getFilters( filterArg, null );
+        return getFilters( filterArg, null, null );
     }
 
     @Override
@@ -98,9 +98,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
     }
 
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerm ) throws ServiceUnavailableException {
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
         try {
-            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerm, 30, TimeUnit.SECONDS );
+            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
         }

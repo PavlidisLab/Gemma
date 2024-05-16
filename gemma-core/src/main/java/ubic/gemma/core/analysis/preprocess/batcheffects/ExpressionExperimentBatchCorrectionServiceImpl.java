@@ -24,7 +24,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
-import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -33,6 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -45,6 +45,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Methods for correcting batch effects.
@@ -128,7 +130,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee );
         ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
         try {
-            new ComBat( designU ); // without data, just to check
+            new ComBat<>( designU ); // without data, just to check
         } catch ( ComBatException c ) { // probably because it's not full rank.
             log.info( c.getMessage() );
             return false;
@@ -140,7 +142,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     @Override
     public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix ) {
 
-        ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
+        ExpressionExperiment ee = requireNonNull( originalDataMatrix.getExpressionExperiment(),
+                "The data matrix must have an associated experiment to perform ComBat." );
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -157,14 +160,57 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee, finalMatrix );
 
-        return this.doComBat( ee, finalMatrix, design );
+        ExpressionDataDoubleMatrix correctedMatrix = this.doComBat( ee, finalMatrix, design );
+
+        return restoreOutliers( originalDataMatrix, correctedMatrix );
 
     }
 
     /**
-     * Remove outlier samples from the data matrix, based on outliers that were flagged in the experiment (not just candidate outliers)
+     * Restore the outliers by basically overwriting the original matrix with the corrected values, leaving outlier samples as they were.
+     * This is a lot easier than starting over with a new matrix.
      * @param originalDataMatrix
-     * @param ee
+     * @param correctedMatrix
+     * @return the originalDataMatrix with the correctedvalues now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
+     */
+    private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
+        if ( originalDataMatrix.getBestBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
+            return correctedMatrix;
+        }
+
+        Set<Integer> outlierColumns = new HashSet<>();
+        for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
+            if ( originalDataMatrix.getBioAssaysForColumn( j ).iterator().next().getIsOutlier() ) {
+                outlierColumns.add( j );
+            }
+        }
+
+        if ( outlierColumns.isEmpty() ) {
+            throw new IllegalStateException( "Was expecting some outliers to be present since the corrected matrix is smaller than the original matrix" );
+        }
+
+        log.info( "Restoring " + outlierColumns.size() + " outlier columns" );
+
+        /*
+        Iterate over the rows and columns of the original matrix and copy the values from the corrected matrix.
+        If the column is an outlier in the original matrix, just skip it.
+         */
+        for ( int i = 0; i < originalDataMatrix.rows(); i++ ) {
+            int skip = 0;
+            for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
+                if ( outlierColumns.contains( j ) ) {
+                    skip++;
+                    continue; // leave it alone; normally this will be an NaN.
+                }
+                originalDataMatrix.set( i, j, correctedMatrix.get( i, j - skip ) );
+            }
+        }
+
+        return originalDataMatrix;
+    }
+
+    /**
+     * Remove outlier samples from the data matrix, based on outliers that were flagged in the experiment (not just candidate outliers)
      * @return the original matrix, or if outliers were present, a new matrix with the outliers removed
      */
     public static ExpressionDataDoubleMatrix removeOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionExperiment ee ) {
@@ -323,10 +369,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     /**
      * Extract sample information, format into something ComBat can use.
-     *
+     * <p>
      * Certain factors are removed at this stage, notably "DE_Exclude/Include" factors.
      *
-     * @param ee
      * @param mat only used to get sample ordering?
      * @return design matrix
      */
@@ -336,7 +381,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         /* remove experimental factors that are for DE_Exclude */
-        List<ExperimentalFactor> retainedFactors = experimentalFactors.stream().filter( ef -> retainForBatchCorrection( ef ) ).collect( Collectors.toList() );
+        List<ExperimentalFactor> retainedFactors = experimentalFactors.stream().filter( this::retainForBatchCorrection ).collect( Collectors.toList() );
 
         List<BioMaterial> orderedSamples = new ArrayList<>();
         if ( mat == null ) {
@@ -376,6 +421,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         newQt.setIsBackground( oldQt.getIsBackground() );
         newQt.setIsBackgroundSubtracted( oldQt.getIsBackgroundSubtracted() );
         newQt.setGeneralType( oldQt.getGeneralType() );
+        //noinspection deprecation
         newQt.setIsMaskedPreferred( oldQt.getIsMaskedPreferred() );
         newQt.setIsPreferred( oldQt.getIsPreferred() );
         newQt.setIsRatio( oldQt.getIsRatio() );

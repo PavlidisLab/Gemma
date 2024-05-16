@@ -1,5 +1,14 @@
 ## Updates
 
+### Update 2.7.5
+
+- fix a bug in `getTaxonDatasets` sorting parameter, it was indicating `Taxon` instead of `ExpressionExperiment`
+- disambiguate all endpoints that expect a gene identifier with a taxon argument, the previous endpoints still exist but
+  will now raise `400 Bad Request` when an ambiguous identifier is supplied instead of returning an arbitrary result
+- add endpoints to retrieve all genes with pagination
+- merge `getResultSets` and `getResultSetsAsTsv` endpoints in the OpenAPI specification
+- add support for offset/limit and threshold arguments for retrieving DE results and retaining most significant probes
+
 ### Update 2.7.4
 
 - indicate 503 status codes for endpoints that could timeout due to a long-running search

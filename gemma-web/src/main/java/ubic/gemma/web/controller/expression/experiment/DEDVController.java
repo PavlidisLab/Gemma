@@ -406,7 +406,7 @@ public class DEDVController {
      *
      * @param resultSetId The resultset we're specifically interested. Note that this is what is used to choose the
      *                    vectors, since it could be a subset of an experiment.
-     * @param givenThreshold
+     * @param givenThreshold   If non-null, a P-value threshold for retrieving associated vectors
      * @param primaryFactorID  If non-null, the factor to use for sorting the samples before other factors are considered
      * @return collection of visualization value objects
      */

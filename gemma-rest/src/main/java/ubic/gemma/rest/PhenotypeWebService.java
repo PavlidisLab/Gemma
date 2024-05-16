@@ -22,13 +22,16 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
-import ubic.gemma.rest.util.Responder;
 import ubic.gemma.rest.util.ResponseDataObject;
-import ubic.gemma.rest.util.args.*;
+import ubic.gemma.rest.util.args.LimitArg;
+import ubic.gemma.rest.util.args.OffsetArg;
+import ubic.gemma.rest.util.args.TaxonArg;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Set;
+
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for phenotypes.
@@ -78,7 +81,7 @@ public class PhenotypeWebService {
         if ( database == null ) {
             throw new BadRequestException( "The 'database' query parameter must be supplied." );
         }
-        return Responder.respond( this.phenotypeAssociationManagerService
+        return respond( this.phenotypeAssociationManagerService
                 .loadEvidenceWithExternalDatabaseName( database, limit.getValueNoMaximum(), offset.getValue() ) );
     }
 
@@ -93,7 +96,7 @@ public class PhenotypeWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all phenotype data dumps", hidden = true)
     public ResponseDataObject<Set<DumpsValueObject>> getPhenotypeDumps() {
-        return Responder.respond( this.phenotypeAssociationManagerService.helpFindAllDumps() );
+        return respond( this.phenotypeAssociationManagerService.helpFindAllDumps() );
     }
 
 }

@@ -34,6 +34,7 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -44,7 +45,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -228,12 +228,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
         return this.geneDao.getCompositeSequencesById( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
-        return this.geneDao.getGenesByTaxon( taxon );
     }
 
     @Override

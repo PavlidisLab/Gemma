@@ -36,6 +36,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.GeneArgService;
 import ubic.gemma.rest.util.args.QuantitationTypeArgService;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
@@ -112,6 +114,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public TaxonArgService taxonArgService() {
+            return mock();
+        }
+
+        @Bean
         public GeneArgService geneArgService() {
             return mock( GeneArgService.class );
         }
@@ -157,13 +164,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( universe.contains( any( String.class ) ) ).thenReturn( true );
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
     }
 
     @After
-    public void tearDown() throws Exception {
-        super.tearDown();
+    public void resetMocks() throws Exception {
         reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
     }
 
@@ -279,7 +285,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         //noinspection unchecked
         when( expressionExperimentService.getFilter( eq( "allCharacteristic.valueUri" ), eq( Filter.Operator.in ), anyCollection() ) )
                 .thenAnswer( a -> Filter.by( "c", "valueUri", String.class, Filter.Operator.in, a.getArgument( 2, Collection.class ) ) );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), anyLong(), any() ) )
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) )
                 .thenThrow( new TimeoutException( "Inference timed out!" ) );
         when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
@@ -301,7 +307,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null, 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null, new HashSet<>(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), null, 50 );
     }
 
@@ -317,7 +323,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
     }
 
@@ -333,7 +339,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
     }
 
@@ -352,7 +358,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000 );
     }
 

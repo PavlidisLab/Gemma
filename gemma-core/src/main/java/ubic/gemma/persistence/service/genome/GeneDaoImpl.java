@@ -282,17 +282,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Collection<Gene> getGenesByTaxon( Taxon taxon ) {
-        //language=HQL
-        final String queryString = "select gene from Gene as gene where gene.taxon = :taxon ";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameter( "taxon", taxon )
-                .list();
-    }
-
-    @Override
     public Collection<Gene> getMicroRnaByTaxon( Taxon taxon ) {
         //language=HQL
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon"

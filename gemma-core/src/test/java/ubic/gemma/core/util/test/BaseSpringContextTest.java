@@ -22,25 +22,15 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.junit.experimental.categories.Category;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
-import ubic.gemma.core.util.test.category.IntegrationTest;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -62,9 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EnvironmentProfiles;
 
-import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -74,15 +62,13 @@ import java.util.Set;
 import static java.util.Objects.requireNonNull;
 
 /**
- * subclass for tests that need the container and use the database
- *
+ * Add a few utilities on top of {@link BaseIntegrationTest}.
  * @author pavlidis
+ * @deprecated favour the simpler {@link BaseIntegrationTest} for new tests
  */
-@ActiveProfiles(EnvironmentProfiles.TEST)
-@Category(IntegrationTest.class)
+@Deprecated
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })
-public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
+public abstract class BaseSpringContextTest extends BaseIntegrationTest {
 
     /* shared fixtures */
     private static ArrayDesign readOnlyAd = null;
@@ -95,11 +81,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
-
-    /**
-     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
-     */
-    protected JdbcTemplate jdbcTemplate;
 
     /**
      * The data source as defined in ubic/gemma/applicationContext-dataSource.xml
@@ -120,33 +101,16 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
 
-    @Override
-    @OverridingMethodsMustInvokeSuper
-    public void afterPropertiesSet() {
-        this.jdbcTemplate = new JdbcTemplate( dataSource );
-    }
-
-    @BeforeClass
-    public static void setUpSecurityContextHolderStrategy() {
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-    }
-
     /**
-     * Setup the authentication for the test.
-     * <p>
-     * The default is to grant an administrator authority to the current user.
+     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
      */
-    @Before
-    public void setUpAuthentication() {
-        testAuthenticationUtils.runAsAdmin();
-    }
+    private JdbcTemplate jdbcTemplate;
 
-    /**
-     * Clear the {@link SecurityContextHolder} so that subsequent tests don't inherit authentication.
-     */
-    @After
-    public final void tearDownSecurityContext() {
-        SecurityContextHolder.clearContext();
+    protected JdbcTemplate getJdbcTemplate() {
+        if ( jdbcTemplate == null ) {
+            jdbcTemplate = new JdbcTemplate( dataSource );
+        }
+        return jdbcTemplate;
     }
 
     /**
@@ -395,10 +359,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences() {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( true );
     }
 
     protected ExpressionExperiment getNewTestPersistentCompleteExpressionExperiment() {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( false );
     }
 
@@ -408,6 +374,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences(
             ExpressionExperiment prototype ) {
+        testHelper.resetSeed();
         return testHelper.getTestExpressionExperimentWithAllDependencies( prototype );
     }
 

@@ -26,6 +26,8 @@ import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.core.ontology.OntologyUtils;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -79,7 +81,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Override
     protected void doWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
         Collection<Taxon> taxa = taxonService.loadAll();

@@ -18,17 +18,10 @@
  */
 package ubic.gemma.web.scheduler;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.security.audit.AuditAdvice;
-import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.persistence.util.Settings;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -37,56 +30,25 @@ import java.lang.reflect.InvocationTargetException;
  * thread where Quartz is being run is authenticated as GROUP_AGENT.
  *
  * @author paul
+ * @see SecureQuartzJobBean
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 
-    private static final Log log = LogFactory.getLog( AuditAdvice.class.getName() );
-    @Autowired
-    ManualAuthenticationService manualAuthenticationService;
-    @Autowired
-    UserManager userManager;
+    private final SecurityContext securityContext;
+
+    public SecureMethodInvokingJobDetailFactoryBean( SecurityContext securityContext ) {
+        Assert.notNull( securityContext, "A security context must be provided." );
+        this.securityContext = securityContext;
+    }
 
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {
-
-        String serverUserName = Settings.getString( "gemma.agent.userName" );
-        String serverPassword = Settings.getString( "gemma.agent.password" );
-        Object result;
-        SecurityContext previousSecurityContext = SecurityContextHolder.getContext();
-
         try {
-            try {
-                assert manualAuthenticationService != null;
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication( manualAuthenticationService.attemptAuthentication( serverUserName, serverPassword ) );
-                SecurityContextHolder.setContext( securityContext );
-            } catch ( AuthenticationException e ) {
-                SecureMethodInvokingJobDetailFactoryBean.log
-                        .error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous" );
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                SecurityContextHolder.setContext( securityContext );
-                // gsec will call SecurityContextHolder.getContext().setAuthentication()
-                manualAuthenticationService.authenticateAnonymously();
-            }
-            assert SecurityContextHolder.getContext().getAuthentication() != null;
-            return super.invoke();
-        } finally {
-            SecurityContextHolder.setContext( previousSecurityContext );
+            return DelegatingSecurityContextCallable.create( super::invoke, securityContext ).call();
+        } catch ( InvocationTargetException | RuntimeException e ) {
+            throw e;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
         }
-    }
-
-    /**
-     * @param manualAuthenticationService the manualAuthenticationService to set
-     */
-    public void setManualAuthenticationService( ManualAuthenticationService manualAuthenticationService ) {
-        this.manualAuthenticationService = manualAuthenticationService;
-    }
-
-    /**
-     * @param userManager the userManager to set
-     */
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
     }
 }

@@ -3,6 +3,7 @@ package ubic.gemma.persistence.retry;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.internal.verification.VerificationModeFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -13,7 +14,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-public class RetryTest extends BaseSpringContextTest {
+public class RetryTest extends BaseSpringContextTest implements InitializingBean {
 
     public interface TestRetryDao {
 
@@ -54,7 +55,6 @@ public class RetryTest extends BaseSpringContextTest {
 
     @Override
     public void afterPropertiesSet() {
-        super.afterPropertiesSet();
         testRetryDao = mock( TestRetryDao.class );
         testRetryService.setTestRetryDao( testRetryDao );
         // 10 is too slow for testing

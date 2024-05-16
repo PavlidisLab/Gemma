@@ -74,14 +74,14 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
     @Test
     public void testIndex() throws Exception {
-        mvc.perform( dwrStaticPage( "/index.html" ) )
+        perform( dwrStaticPage( "/index.html" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.TEXT_HTML ) );
     }
 
     @Test
     public void testDiffExAnalysisControllerTestPage() throws Exception {
-        mvc.perform( dwrStaticPage( "/test/DifferentialExpressionAnalysisController" ) )
+        perform( dwrStaticPage( "/test/DifferentialExpressionAnalysisController" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.TEXT_HTML ) );
     }
@@ -92,13 +92,13 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
      */
     @Test
     public void testUndefinedTestPage() throws Exception {
-        mvc.perform( dwrStaticPage( "/test/bleh" ) )
+        perform( dwrStaticPage( "/test/bleh" ) )
                 .andExpect( status().isNotImplemented() );
     }
 
     @Test
     public void testJsEngine() throws Exception {
-        mvc.perform( dwrStaticPage( "/engine.js" ) )
+        perform( dwrStaticPage( "/engine.js" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( "text/javascript;charset=utf-8" ) );
     }
@@ -109,7 +109,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( taskRunningService.submitTaskCommand( any() ) ).thenReturn( "23" );
-        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
+        perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
                 .andExpect( callback().value( "23" ) );
         verify( taskRunningService ).submitTaskCommand( any() );
     }
@@ -119,7 +119,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
-        mvc.perform( dwrBatch( 1 ).dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
+        perform( dwrBatch( 1 ).dwr( DifferentialExpressionAnalysisController.class, "run", 1L ) )
                 .andExpect( batch( 0 ).callback().doesNotExist() )
                 .andExpect( batch( 1 ).callback().value( nullValue() ) );
         verify( taskRunningService ).submitTaskCommand( any() );
@@ -131,7 +131,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 2L ), any(), any() ) ).thenReturn( ee );
-        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
+        perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
                         .and( 2L ) )
                 .andExpect( callback( 0 ).value( nullValue() ) )
                 .andExpect( callback( 1 ).value( nullValue() ) )
@@ -142,7 +142,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
     @Test
     public void testMissingEndpoint() throws Exception {
-        mvc.perform( dwr( DifferentialExpressionAnalysisController.class, "run2", 1L ) )
+        perform( dwr( DifferentialExpressionAnalysisController.class, "run2", 1L ) )
                 .andExpect( exception().javaClassName( "java.lang.Throwable" ) )
                 .andExpect( exception().message( "Error" ) );
         verifyNoInteractions( taskRunningService );
