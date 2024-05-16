@@ -284,6 +284,9 @@
 
     <session-config>
         <session-timeout>60</session-timeout>
+        <cookie-config>
+            <secure>true</secure>
+        </cookie-config>
     </session-config>
 
     <error-page>
