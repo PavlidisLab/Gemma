@@ -4,9 +4,9 @@ import gemma.gsec.authentication.ManualAuthenticationService;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.Assert;
 
 /**
  * Creates a security context based using manual authentication.
@@ -21,11 +21,6 @@ public class ManualAuthenticationServiceBasedSecurityContextFactory extends Abst
     private String userName;
     private String password;
 
-    /**
-     * Fallback to an anonymous authentication if the authentication fails.
-     */
-    private boolean fallbackToAnonymous = false;
-
     public ManualAuthenticationServiceBasedSecurityContextFactory( ManualAuthenticationService manualAuthenticationService ) {
         this.manualAuthenticationService = manualAuthenticationService;
     }
@@ -37,27 +32,16 @@ public class ManualAuthenticationServiceBasedSecurityContextFactory extends Abst
 
     @Override
     protected SecurityContext createInstance() {
+        Assert.notNull( userName, "A username must be supplied." );
+        Assert.notNull( password, "A password must be supplied." );
         try {
+            log.debug( "Attempting manual authentication as " + userName + "." );
             SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
             securityContext.setAuthentication( manualAuthenticationService.attemptAuthentication( userName, password ) );
             return securityContext;
-        } catch ( AuthenticationException e ) {
-            if ( fallbackToAnonymous ) {
-                log.error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous." );
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                SecurityContextHolder.setContext( securityContext );
-                // gsec will call SecurityContextHolder.getContext().setAuthentication()
-                SecurityContext previousSecurityContext = SecurityContextHolder.getContext();
-                try {
-                    manualAuthenticationService.authenticateAnonymously();
-                    return securityContext;
-                } finally {
-                    SecurityContextHolder.clearContext();
-                    SecurityContextHolder.setContext( previousSecurityContext );
-                }
-            } else {
-                throw e;
-            }
+        } finally {
+            log.debug( "Erasing credentials for manual authentication." );
+            this.password = null;
         }
     }
 }

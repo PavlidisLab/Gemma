@@ -40,7 +40,6 @@
         <constructor-arg ref="manualAuthenticationService"/>
         <property name="userName" value="${gemma.agent.userName}"/>
         <property name="password" value="${gemma.agent.password}"/>
-        <property name="fallbackToAnonymous" value="true"/>
     </bean>
 
     <!-- Triggers -->
