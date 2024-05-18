@@ -41,6 +41,7 @@ public class ManualAuthenticationServiceBasedSecurityContextFactory extends Abst
             return securityContext;
         } finally {
             log.debug( "Erasing credentials for manual authentication." );
+            this.userName = null;
             this.password = null;
         }
     }

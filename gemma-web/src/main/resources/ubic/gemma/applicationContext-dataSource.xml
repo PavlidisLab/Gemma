@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd"
+       profile="web">
+    <!-- Provide a SecurityContext for Quartz jobs such that they can run with the GROUP_AGENT role. -->
+    <beans profile="production,dev">
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.web.scheduler.ManualAuthenticationServiceBasedSecurityContextFactory">
+            <constructor-arg ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.agent.userName}"/>
+            <property name="password" value="${gemma.agent.password}"/>
+        </bean>
+    </beans>
+    <beans profile="test,testdb">
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.web.scheduler.ManualAuthenticationServiceBasedSecurityContextFactory">
+            <constructor-arg ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.testdb.agent.userName}"/>
+            <property name="password" value="${gemma.testdb.agent.password}"/>
+        </bean>
+    </beans>
+</beans>
