@@ -35,6 +35,8 @@
 
 	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint">
 		<constructor-arg ref="objectMapper"/>
+		<constructor-arg ref="openApi"/>
+		<constructor-arg ref="buildInfo"/>
 	</bean>
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"

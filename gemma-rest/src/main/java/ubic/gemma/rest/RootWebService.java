@@ -10,21 +10,22 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.rest.util.OpenApiUtils;
+import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import javax.annotation.Nullable;
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,6 +61,16 @@ public class RootWebService {
     @Autowired
     private UserManager userManager;
 
+    @Autowired
+    private OpenAPI openApi;
+
+    @Autowired
+    private BuildInfo buildInfo;
+
+    @Nullable
+    @Autowired(required = false)
+    private ServletContext servletContext;
+
     /**
      * Returns an object with API information.
      */
@@ -67,10 +78,7 @@ public class RootWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an object with basic API information",
             description = "The payload contains a list of featured external databases that Gemma uses under the `externalDatabases` field. Those are mainly genomic references and sources of gene annotations.")
-    public ResponseDataObject<ApiInfoValueObject> getApiInfo( // Params:
-            // The servlet response, needed for response code setting.
-            @Context final HttpServletRequest request,
-            @Context final ServletConfig servletConfig ) {
+    public ResponseDataObject<ApiInfoValueObject> getApiInfo( @Context UriInfo uriInfo ) {
         // collect various versioned entities to display on the main endpoint
         List<ExternalDatabaseValueObject> versioned;
         if ( EXTERNAL_DATABASE_NAMES != null && EXTERNAL_DATABASE_NAMES.length > 0 ) {
@@ -80,12 +88,15 @@ public class RootWebService {
         } else {
             versioned = Collections.emptyList();
         }
-        URI apiDocsUrl = ServletUriComponentsBuilder.fromContextPath( request )
-                .scheme( null ).host( null ).port( -1 )
+        // API docs are hosted in a different servlet mapping, so we need to create an URL relative to the servlet context path
+        URI apiDocsUrl = UriBuilder.fromPath( servletContext != null ? servletContext.getContextPath() : "" )
                 .path( "/resources/restapidocs/" )
-                .build()
-                .toUri();
-        return respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), apiDocsUrl, versioned ) );
+                .build();
+        URI specUrl = uriInfo.getBaseUriBuilder()
+                .scheme( null ).host( null ).port( -1 )
+                .path( "/openapi.json" )
+                .build();
+        return respond( new ApiInfoValueObject( MSG_WELCOME, openApi, apiDocsUrl, specUrl, versioned, buildInfo ) );
     }
 
     /**
@@ -134,18 +145,27 @@ public class RootWebService {
     public static class ApiInfoValueObject {
         String welcome;
         String version;
-        URI docs;
+        URI documentationUrl;
+        URI specificationUrl;
         List<ExternalDatabaseValueObject> externalDatabases;
+        BuildInfoValueObject buildInfo;
 
-        public ApiInfoValueObject( String msgWelcome, OpenAPI openApi, URI apiDocsUrl, List<ExternalDatabaseValueObject> externalDatabases ) {
+        public ApiInfoValueObject( String msgWelcome, OpenAPI openApi, URI apiDocsUrl, URI specUrl, List<ExternalDatabaseValueObject> externalDatabases, BuildInfo buildInfo ) {
             this.welcome = msgWelcome;
             if ( openApi.getInfo() != null ) {
                 this.version = openApi.getInfo().getVersion();
             } else {
                 this.version = null;
             }
-            this.docs = apiDocsUrl;
+            this.documentationUrl = apiDocsUrl;
+            this.specificationUrl = specUrl;
             this.externalDatabases = externalDatabases;
+            this.buildInfo = new BuildInfoValueObject( buildInfo );
+        }
+
+        @Deprecated
+        public URI getDocs() {
+            return documentationUrl;
         }
     }
 

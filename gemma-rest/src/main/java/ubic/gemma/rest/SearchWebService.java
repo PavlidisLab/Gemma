@@ -15,7 +15,6 @@ import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -42,8 +41,10 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,8 +87,8 @@ public class SearchWebService {
     @Autowired
     private PlatformArgService platformArgService;
 
-    @Autowired
-    private HttpServletRequest request;
+    @Context
+    private UriInfo uriInfo;
 
     /**
      * Highlights search result.
@@ -103,11 +104,10 @@ public class SearchWebService {
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
-            String searchUrl = ServletUriComponentsBuilder.fromRequest( request )
+            URI searchUrl = uriInfo.getBaseUriBuilder()
                     .scheme( null ).host( null ).port( -1 )
                     .replaceQueryParam( "query", uri != null ? uri : label )
-                    .build()
-                    .toUriString();
+                    .build();
             return Collections.singletonMap( field, String.format( "**[%s](%s)**", label, searchUrl ) );
         }
 

@@ -16,16 +16,16 @@ package ubic.gemma.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.ServletConfigAware;
-import ubic.gemma.rest.util.OpenApiUtils;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
@@ -38,27 +38,36 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * This is used in applicationContext-ws-rest.xml as part of Spring Security HTTP configuration.
  */
-@Component
-public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConfigAware {
+@CommonsLog
+public class RestAuthEntryPoint implements AuthenticationEntryPoint {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
 
     private final ObjectMapper objectMapper;
+    private final OpenAPI openAPI;
+    private final BuildInfo buildInfo;
 
-    private ServletConfig servletConfig;
-
-    @Autowired
-    public RestAuthEntryPoint( ObjectMapper objectMapper ) {
+    public RestAuthEntryPoint( ObjectMapper objectMapper, OpenAPI openAPI, BuildInfo buildInfo ) {
         this.objectMapper = objectMapper;
+        this.openAPI = openAPI;
+        this.buildInfo = buildInfo;
     }
 
     @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
             final AuthenticationException authException ) throws IOException {
-        OpenAPI openAPI = OpenApiUtils.getOpenApi( servletConfig );
-        String realm = openAPI.getInfo().getTitle();
+        String realm;
+        String version;
+        if ( openAPI.getInfo() != null ) {
+            realm = openAPI.getInfo().getTitle();
+            version = openAPI.getInfo().getVersion();
+        } else {
+            log.error( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
+            realm = "Gemma RESTful API";
+            version = null;
+        }
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );
-        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, openAPI );
+        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, version, new BuildInfoValueObject( buildInfo ) );
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );
@@ -66,11 +75,6 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConf
         response.setCharacterEncoding( StandardCharsets.UTF_8.name() );
         objectMapper.writeValue( response.getWriter(), errorObject );
         response.flushBuffer();
-    }
-
-    @Override
-    public void setServletConfig( ServletConfig servletConfig ) {
-        this.servletConfig = servletConfig;
     }
 
     private boolean isXmlHttpRequest( HttpServletRequest request ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.rest.providers;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -7,9 +8,15 @@ import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
-import org.springframework.mock.web.MockServletConfig;
-import org.springframework.web.context.support.GenericWebApplicationContext;
-import ubic.gemma.rest.util.OpenApiUtils;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.rest.util.JacksonConfig;
+import ubic.gemma.rest.util.OpenApiFactory;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.GET;
@@ -22,6 +29,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class WebApplicationExceptionMapperTest extends JerseyTest {
+
+    @Configuration
+    @TestComponent
+    @Import(JacksonConfig.class)
+    static class WebApplicationExceptionMapperTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.version=1.0.0", "gemma.build.timestamp=2024-05-20T04:41:58Z", "gemma.build.gitHash=1234" );
+        }
+
+        @Bean
+        public OpenApiFactory openApiFactory() {
+            return new OpenApiFactory();
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return new BuildInfo();
+        }
+    }
 
     /**
      * This is a very simplisitc example that produces two representation for the same resource.
@@ -46,6 +74,8 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
         }
     }
 
+    private AnnotationConfigWebApplicationContext ctx;
+
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new InMemoryTestContainerFactory();
@@ -53,30 +83,37 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     @Override
     public Application configure() {
+        ctx = new AnnotationConfigWebApplicationContext();
+        ctx.register( WebApplicationExceptionMapperTestContextConfiguration.class );
+        ctx.refresh();
         return new ResourceConfig( CustomResource.class )
                 .register( WebApplicationExceptionMapper.class )
+                .register( ObjectMapperResolver.class )
                 // otherwise jersey-spring3 will attempt to load the full Spring context
-                .property( "contextConfig", new GenericWebApplicationContext() );
+                .property( "contextConfig", ctx );
     }
 
     @Test
     public void testTextRepresentation() {
+        String version = ctx.getBean( OpenAPI.class ).getInfo().getVersion();
+        BuildInfo buildInfo = ctx.getBean( BuildInfo.class );
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.TEXT_PLAIN ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( "Message: test" );
+                .hasContent( String.format( "Version: %s\nBuild info: %s\nMessage: test", version, buildInfo ) );
     }
 
     @Test
-    public void testJsonRepresentation() {
-        String version = OpenApiUtils.getOpenApi( new MockServletConfig() ).getInfo().getVersion();
+    public void testJsonRepresentation() throws Exception {
+        String version = ctx.getBean( OpenAPI.class ).getInfo().getVersion();
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\"}", version ) );
+                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\",\"buildInfo\":{\"version\":\"1.0.0\",\"timestamp\":\"2024-05-20T11:41:58.000+00:00\",\"gitHash\":\"1234\"}}",
+                        version ) );
     }
 }

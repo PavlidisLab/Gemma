@@ -1,21 +1,23 @@
 package ubic.gemma.rest.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.OpenApiUtils;
-import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
-import javax.servlet.ServletConfig;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-@CommonsLog
+@Component
 public class MalformedArgExceptionMapper extends AbstractExceptionMapper<MalformedArgException> {
+
+    @Autowired
+    public MalformedArgExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
+        super( spec, buildInfo );
+    }
 
     @Override
     protected Response.Status getStatus( MalformedArgException exception ) {

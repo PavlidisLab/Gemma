@@ -32,8 +32,6 @@ import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -79,12 +77,8 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -142,8 +136,8 @@ public class DatasetsWebService {
     @Autowired
     private TaxonArgService taxonArgService;
 
-    @Autowired
-    private HttpServletRequest request;
+    @Context
+    private UriInfo uriInfo;
 
     @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
@@ -157,15 +151,14 @@ public class DatasetsWebService {
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
-            String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
+            URI reconstructedUri = uriInfo.getBaseUriBuilder()
                     .scheme( null ).host( null ).port( -1 )
                     // replace the query with the term URI and only retain the filter
                     .replaceQueryParam( "query", termUri != null ? termUri : termLabel )
                     .replaceQueryParam( "offset" )
                     .replaceQueryParam( "limit" )
                     .replaceQueryParam( "sort" )
-                    .build()
-                    .toUriString();
+                    .build();
             return Collections.singletonMap( field, String.format( "**[%s](%s)**", termLabel, reconstructedUri ) );
         }
 
@@ -722,20 +715,13 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDifferentialExpressionAnalysesResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Context HttpServletRequest request ) {
+            @Context UriInfo uriInfo ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        UriComponentsBuilder uriComponents;
-        // this is only for testing because Jersey in-memory container lacks a servlet context
-        if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromContextPath( request )
-                    .scheme( null ).host( null ).port( -1 );
-        } else {
-            uriComponents = UriComponentsBuilder.newInstance();
-        }
-        URI resultSetUri = uriComponents
+        URI resultSetUri = uriInfo.getBaseUriBuilder()
+                .scheme( null ).host( null ).port( -1 )
                 .path( "/resultSets" )
                 .queryParam( "datasets", "{datasetId}" )
-                .buildAndExpand( ee.getId() ).toUri();
+                .build( ee.getId() );
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();

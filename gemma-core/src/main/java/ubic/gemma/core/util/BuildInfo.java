@@ -1,12 +1,11 @@
 package ubic.gemma.core.util;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.format.datetime.DateFormatter;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
@@ -18,8 +17,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 
+@Component
 @CommonsLog
-@Configuration
 public class BuildInfo implements InitializingBean {
 
     private static final String MAVEN_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";

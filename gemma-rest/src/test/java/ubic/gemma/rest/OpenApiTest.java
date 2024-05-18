@@ -1,7 +1,6 @@
 package ubic.gemma.rest;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
@@ -13,10 +12,8 @@ import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
@@ -30,7 +27,6 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
-import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -46,14 +42,13 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 public class OpenApiTest extends BaseJerseyTest {
 
-    @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
 
         @Bean
         public CustomModelResolver customModelResolver( SearchService searchService ) {
-            return new CustomModelResolver( Json.mapper(), searchService );
+            return new CustomModelResolver( searchService );
         }
 
         @Bean
@@ -105,10 +100,6 @@ public class OpenApiTest extends BaseJerseyTest {
     @Autowired
     private SearchService searchService;
 
-    @Autowired
-    @Qualifier("swaggerObjectMapper")
-    private ObjectMapper objectMapper;
-
     private OpenAPI spec;
 
     @Before
@@ -121,7 +112,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( response )
                 .hasStatus( Response.Status.OK )
                 .hasEncoding( "gzip" );
-        spec = objectMapper.readValue( response.readEntity( InputStream.class ), OpenAPI.class );
+        spec = Json.mapper().readValue( response.readEntity( InputStream.class ), OpenAPI.class );
     }
 
     @Test

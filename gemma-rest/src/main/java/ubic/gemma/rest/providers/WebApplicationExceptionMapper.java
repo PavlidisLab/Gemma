@@ -1,5 +1,10 @@
 package ubic.gemma.rest.providers;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
 import javax.ws.rs.InternalServerErrorException;
@@ -9,11 +14,19 @@ import javax.ws.rs.ext.Provider;
 
 /**
  * Map {@link WebApplicationException} so that it always expose a {@link ResponseErrorObject} entity.
+ * <p>
+ * By default, {@link InternalServerErrorException} are logged.
  *
  * @author poirigui
  */
 @Provider
+@Component
 public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebApplicationException> {
+
+    @Autowired
+    public WebApplicationExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
+        super( spec, buildInfo );
+    }
 
     @Override
     protected boolean logException( WebApplicationException e ) {
@@ -26,8 +39,8 @@ public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebAp
     }
 
     @Override
-    protected Response.ResponseBuilder getResponseBuilder( WebApplicationException exception ) {
-        return super.getResponseBuilder( exception )
+    protected Response.ResponseBuilder getResponseBuilder( ContainerRequest request, WebApplicationException exception ) {
+        return super.getResponseBuilder( request, exception )
                 .replaceAll( exception.getResponse().getHeaders() );
     }
 }

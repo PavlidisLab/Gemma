@@ -6,33 +6,29 @@ import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 @Provider
+@Component
 public class MetricsApplicationEventListener implements ApplicationEventListener {
 
     private static final String METRIC_NAME = "gemmaRestServlet";
 
-    @Context
-    private ServletContext servletContext;
+    @Autowired(required = false)
+    private MeterRegistry registry;
 
     private ApplicationEventListener delegate;
 
     @PostConstruct
     public void init() {
-        WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
-        try {
-            MeterRegistry registry = ctx.getBean( MeterRegistry.class );
+        if ( registry != null ) {
             delegate = new io.micrometer.core.instrument.binder.jersey.server.MetricsApplicationEventListener(
                     registry, new DefaultJerseyTagsProvider(), METRIC_NAME, true );
-        } catch ( NoSuchBeanDefinitionException e ) {
+        } else {
             delegate = new org.glassfish.jersey.server.monitoring.ApplicationEventListener() {
 
                 @Override
