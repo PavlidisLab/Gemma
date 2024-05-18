@@ -132,4 +132,20 @@ public class CorsFilterTest extends AbstractJUnit4SpringContextTests {
         assertNull( res.getHeader( "Access-Control-Allow-Headers" ) );
         assertNull( res.getHeader( "Access-Control-Allow-Credentials" ) );
     }
+
+    @Test
+    public void testPreflightRequestWithMaxAge() throws ServletException, IOException {
+        corsFilter.setAllowedOrigins( "*" );
+        corsFilter.setAllowedHeaders( "Authorization,Content-Type,X-Gemma-Client-ID" );
+        corsFilter.setMaxAge( 1200 );
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setMethod( "OPTIONS" );
+        req.addHeader( "Origin", "localhost" );
+        HttpServletResponse res = new MockHttpServletResponse();
+        FilterChain filterChain = new MockFilterChain();
+        corsFilter.doFilter( req, res, filterChain );
+        assertEquals( HttpStatus.NO_CONTENT.value(), res.getStatus() );
+        assertEquals( "Authorization,Content-Type,X-Gemma-Client-ID", res.getHeader( "Access-Control-Allow-Headers" ) );
+        assertEquals( "1200", res.getHeader( "Access-Control-Max-Age" ) );
+    }
 }
