@@ -43,7 +43,7 @@ public class ManualAuthenticationServiceBasedSecurityContextFactory extends Abst
             return securityContext;
         } catch ( AuthenticationException e ) {
             if ( fallbackToAnonymous ) {
-                log.error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous." );
+                log.error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous.", e );
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 SecurityContextHolder.setContext( securityContext );
                 // gsec will call SecurityContextHolder.getContext().setAuthentication()

@@ -36,7 +36,11 @@
     </bean>
 
     <!-- invoke methods as a member of the GROUP_AGENT -->
-    <bean id="groupAgentSecurityContext" class="ubic.gemma.web.scheduler.ManualAuthenticationServiceBasedSecurityContextFactory">
+    <!-- This requires a depends-on because the UserManager is not fully initialized when attempting authentication
+    during initialization https://github.com/PavlidisLab/Gemma/issues/1130 -->
+    <bean id="groupAgentSecurityContext"
+          class="ubic.gemma.web.scheduler.ManualAuthenticationServiceBasedSecurityContextFactory"
+          depends-on="userManager">
         <constructor-arg ref="manualAuthenticationService"/>
         <property name="userName" value="${gemma.agent.userName}"/>
         <property name="password" value="${gemma.agent.password}"/>
