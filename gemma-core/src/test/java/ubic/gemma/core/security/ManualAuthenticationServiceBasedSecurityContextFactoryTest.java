@@ -1,4 +1,4 @@
-package ubic.gemma.web.scheduler;
+package ubic.gemma.core.security;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.Test;
@@ -20,6 +20,6 @@ public class ManualAuthenticationServiceBasedSecurityContextFactoryTest {
         verify( s ).attemptAuthentication( "groupAgent", "1234" );
         assertThatThrownBy( factory::createInstance )
                 .isInstanceOf( IllegalArgumentException.class );
-        verifyNoInteractions( s );
+        verifyNoMoreInteractions( s );
     }
 }

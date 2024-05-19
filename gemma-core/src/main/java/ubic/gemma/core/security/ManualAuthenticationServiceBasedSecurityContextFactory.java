@@ -1,4 +1,4 @@
-package ubic.gemma.web.scheduler;
+package ubic.gemma.core.security;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import lombok.Setter;
@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
 
 /**
- * Creates a security context based using manual authentication.
+ * Creates a security context using manual authentication.
  * @author poirigui
  */
 @Setter
