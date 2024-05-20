@@ -25,12 +25,11 @@
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
         </bean>
         <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
-        <!-- This requires a depends-on because the UserManager is not fully initialized when attempting authentication
-        during initialization https://github.com/PavlidisLab/Gemma/issues/1130 -->
+        <!-- This is lazily initialized because we only need it for scheduled jobs -->
         <bean id="groupAgentSecurityContext"
               class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
-              depends-on="userManager">
-            <constructor-arg ref="manualAuthenticationService"/>
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
             <property name="userName" value="${gemma.agent.userName}"/>
             <property name="password" value="${gemma.agent.password}"/>
         </bean>
@@ -47,8 +46,8 @@
         </bean>
         <bean id="groupAgentSecurityContext"
               class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
-              depends-on="userManager">
-            <constructor-arg ref="manualAuthenticationService"/>
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
             <property name="userName" value="${gemma.testdb.agent.userName}"/>
             <property name="password" value="${gemma.testdb.agent.password}"/>
         </bean>

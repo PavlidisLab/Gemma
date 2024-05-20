@@ -124,6 +124,4 @@
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 
-    <bean id="userManager" class="ubic.gemma.core.security.authentication.UserManagerImpl"/>
-
 </beans>

@@ -16,14 +16,10 @@ import org.springframework.util.Assert;
 @CommonsLog
 public class ManualAuthenticationServiceBasedSecurityContextFactory extends AbstractFactoryBean<SecurityContext> {
 
-    private final ManualAuthenticationService manualAuthenticationService;
+    private ManualAuthenticationService manualAuthenticationService;
 
     private String userName;
     private String password;
-
-    public ManualAuthenticationServiceBasedSecurityContextFactory( ManualAuthenticationService manualAuthenticationService ) {
-        this.manualAuthenticationService = manualAuthenticationService;
-    }
 
     @Override
     public Class<?> getObjectType() {

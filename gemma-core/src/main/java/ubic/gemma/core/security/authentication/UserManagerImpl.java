@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
  * @author pavlidis
  */
 @SuppressWarnings("unused")
-@Service
+@Service("userManager")
 public class UserManagerImpl implements UserManager {
 
     private final Log logger = LogFactory.getLog( this.getClass() );
