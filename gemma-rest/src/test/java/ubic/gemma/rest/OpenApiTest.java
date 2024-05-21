@@ -18,6 +18,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,6 +28,7 @@ import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.OpenApiFactory;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -45,6 +47,11 @@ public class OpenApiTest extends BaseJerseyTest {
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
+
+        @Bean
+        public OpenApiFactory openApi() {
+            return new OpenApiFactory();
+        }
 
         @Bean
         public CustomModelResolver customModelResolver( SearchService searchService ) {
@@ -84,6 +91,11 @@ public class OpenApiTest extends BaseJerseyTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
         }
 
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {

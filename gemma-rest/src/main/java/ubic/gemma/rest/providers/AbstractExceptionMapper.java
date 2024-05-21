@@ -17,19 +17,14 @@ import javax.ws.rs.ext.ExceptionMapper;
 @CommonsLog
 public abstract class AbstractExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {
 
-    private final String version;
+    private final OpenAPI spec;
     private final BuildInfo buildInfo;
 
     @Context
     private ResourceContext ctx;
 
     protected AbstractExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
-        if ( spec.getInfo() != null ) {
-            version = spec.getInfo().getVersion();
-        } else {
-            log.error( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
-            version = null;
-        }
+        this.spec = spec;
         this.buildInfo = buildInfo;
     }
 
@@ -68,6 +63,13 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
                 m = "Unhandled exception was raised, but there is no current request.";
             }
             log.error( m, exception );
+        }
+        String version;
+        if ( spec.getInfo() != null ) {
+            version = spec.getInfo().getVersion();
+        } else {
+            log.warn( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
+            version = null;
         }
         Response.ResponseBuilder responseBuilder = getResponseBuilder( request, exception );
         if ( request == null || acceptsJson( request ) ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.rest;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
@@ -18,6 +19,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -57,6 +59,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Configuration
     @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
+
+        @Bean
+        public OpenAPI openApi() {
+            return mock();
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
 
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
