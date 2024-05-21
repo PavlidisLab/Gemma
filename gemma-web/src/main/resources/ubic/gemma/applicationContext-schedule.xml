@@ -127,7 +127,7 @@
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
                         <entry key="level" value="ubic.gemma.model.expression.biomaterial.BioMaterial"/>
-                        <entry key="secureInvoker" value-ref="groupAgentSecurityContext"/>
+                        <entry key="securityContext" value-ref="groupAgentSecurityContext"/>
                     </map>
                 </property>
             </bean>
