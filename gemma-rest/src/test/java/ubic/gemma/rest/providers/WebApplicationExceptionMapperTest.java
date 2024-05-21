@@ -8,6 +8,7 @@ import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -41,8 +42,8 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
         }
 
         @Bean
-        public OpenApiFactory openApiFactory() {
-            return new OpenApiFactory();
+        public FactoryBean<OpenAPI> openApi() {
+            return new OpenApiFactory( "ubic.gemma.rest.WebApplicationExceptionMapperTest" );
         }
 
         @Bean
@@ -74,7 +75,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
         }
     }
 
-    private AnnotationConfigWebApplicationContext ctx;
+    private static AnnotationConfigWebApplicationContext ctx;
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
@@ -83,9 +84,11 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     @Override
     public Application configure() {
-        ctx = new AnnotationConfigWebApplicationContext();
-        ctx.register( WebApplicationExceptionMapperTestContextConfiguration.class );
-        ctx.refresh();
+        if ( ctx == null ) {
+            ctx = new AnnotationConfigWebApplicationContext();
+            ctx.register( WebApplicationExceptionMapperTestContextConfiguration.class );
+            ctx.refresh();
+        }
         return new ResourceConfig( CustomResource.class )
                 .register( WebApplicationExceptionMapper.class )
                 .register( ObjectMapperResolver.class )
@@ -106,7 +109,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
     }
 
     @Test
-    public void testJsonRepresentation() throws Exception {
+    public void testJsonRepresentation() {
         String version = ctx.getBean( OpenAPI.class ).getInfo().getVersion();
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )

@@ -1,31 +1,59 @@
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
+import io.swagger.v3.oas.integration.OpenApiContextLocator;
+import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.util.Assert;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 public class OpenApiFactory extends AbstractFactoryBean<OpenAPI> implements ServletConfigAware {
 
+    private final String contextId;
+
+    /**
+     * A list of additional model converters to register.
+     */
+    private List<ModelConverter> modelConverters;
+
+    /**
+     * A servlet configuration from which the jax-rs endpoints and resources are discovered.
+     */
     private ServletConfig servletConfig;
+
+    public OpenApiFactory( String contextId ) {
+        this.contextId = contextId;
+    }
 
     @Override
     protected OpenAPI createInstance() throws Exception {
-        return new JaxrsOpenApiContextBuilder<>()
+        Assert.isNull( OpenApiContextLocator.getInstance().getOpenApiContext( contextId ),
+                "There's already an OpenAPI context registered with ID " + contextId );
+        OpenApiContext ctx = new JaxrsOpenApiContextBuilder<>()
+                .ctxId( contextId )
+                // Swagger will automatically discover our application's resources and register them
                 .servletConfig( servletConfig )
-                // if we don't set that, it will reuse the default context which is already built, but for some very
-                // obscure reason ignores the 'openApi.configuration.location' init parameter. Using a different
-                // context identifier will result in a newly, built-from-scratch context.
-                .ctxId( "ubic.gemma.web.services.rest" )
-                .buildContext( true )
-                .read();
+                .buildContext( false );
+        if ( modelConverters != null ) {
+            ctx.setModelConverters( new LinkedHashSet<>( modelConverters ) );
+        }
+        ctx.init();
+        return ctx.read();
     }
 
     @Override
     public Class<?> getObjectType() {
         return OpenAPI.class;
+    }
+
+    public void setModelConverters( List<ModelConverter> modelConverters ) {
+        this.modelConverters = modelConverters;
     }
 
     public void setServletConfig( ServletConfig servletConfig ) {

@@ -1,7 +1,6 @@
 package ubic.gemma.rest;
 
 
-import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -11,6 +10,7 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,8 +49,10 @@ public class OpenApiTest extends BaseJerseyTest {
     static class OpenApiTestContextConfiguration {
 
         @Bean
-        public OpenApiFactory openApi() {
-            return new OpenApiFactory();
+        public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+            OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
+            factory.setModelConverters( Collections.singletonList( customModelResolver ) );
+            return factory;
         }
 
         @Bean
@@ -107,9 +109,6 @@ public class OpenApiTest extends BaseJerseyTest {
     }
 
     @Autowired
-    private CustomModelResolver customModelResolver;
-
-    @Autowired
     private SearchService searchService;
 
     private OpenAPI spec;
@@ -118,8 +117,6 @@ public class OpenApiTest extends BaseJerseyTest {
     public void setUpSpec() throws IOException {
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
         when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
-        // FIXME: this is normally initialized in the servlet
-        ModelConverters.getInstance().addConverter( customModelResolver );
         Response response = target( "/openapi.json" ).request().get();
         assertThat( response )
                 .hasStatus( Response.Status.OK )

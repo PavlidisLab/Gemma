@@ -190,6 +190,11 @@
             <param-name>jersey.config.server.provider.classnames</param-name>
             <param-value>org.glassfish.jersey.message.GZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
         </init-param>
+        <!-- see ubic.gemma.rest.util.OpenApiConfig -->
+        <init-param>
+            <param-name>openapi.context.id</param-name>
+            <param-value>ubic.gemma.rest</param-value>
+        </init-param>
         <init-param>
             <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->
             <param-name>openApi.configuration.location</param-name>
