@@ -10,16 +10,16 @@
       new Gemma.GemmaViewPort( {
          centerPanelConfig : new Ext.Panel( {
             items : [ new Gemma.GenePage( {
-               geneId : Ext.get( "geneId" ).getValue(),
-               geneNcbiId : Ext.get( "geneNcbiId" ).getValue(),
-               geneSymbol : Ext.get( "geneSymbol" ).getValue(),
-               geneName : Ext.get( "geneName" ).getValue(),
-               geneTaxonName : Ext.get( "geneTaxonName" ).getValue(),
-               geneTaxonId : Ext.get( "geneTaxonId" ).getValue()
+               geneId : "${geneId}",
+               geneNcbiId : "${geneNcbiId}",
+               geneSymbol : "${geneOfficialSymbol}",
+               geneName : "${geneOfficialName}",
+               geneTaxonName : "${geneTaxonCommonName}",
+               geneTaxonId : "${geneTaxonId}"
             } ) ],
             layout : 'fit',
-            title : 'Gene details: ' + Ext.get( "geneSymbol" ).getValue() + ' ('
-               + Ext.get( "geneTaxonName" ).getValue() + ')'
+            title : 'Gene details: ' + "${geneOfficialSymbol}" + ' ('
+               + "${geneTaxonCommonName}" + ')'
          //title:Ext.get("geneSymbol").getValue() + ' - ' + Ext.get("geneName").getValue() + ' (' + Ext.get("geneTaxonName").getValue() + ')'
          } )
       } );
