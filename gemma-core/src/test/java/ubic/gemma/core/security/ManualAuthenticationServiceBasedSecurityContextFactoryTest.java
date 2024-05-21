@@ -12,7 +12,8 @@ public class ManualAuthenticationServiceBasedSecurityContextFactoryTest {
     @Test
     public void test() throws Exception {
         ManualAuthenticationService s = mock();
-        ManualAuthenticationServiceBasedSecurityContextFactory factory = new ManualAuthenticationServiceBasedSecurityContextFactory( );
+        ManualAuthenticationServiceBasedSecurityContextFactory factory = new ManualAuthenticationServiceBasedSecurityContextFactory();
+        factory.setManualAuthenticationService( s );
         factory.setUserName( "groupAgent" );
         factory.setPassword( "1234" );
         assertThat( factory.isSingleton() ).isTrue();
