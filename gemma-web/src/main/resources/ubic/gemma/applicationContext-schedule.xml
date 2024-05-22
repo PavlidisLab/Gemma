@@ -6,7 +6,7 @@
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/task
             http://www.springframework.org/schema/task/spring-task.xsd"
-       profile="web">
+       profile="scheduler">
 
     <!-- author: keshav -->
 
@@ -32,7 +32,6 @@
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
         </property>
-        <property name="autoStartup" value="${quartzOn}"/>
     </bean>
 
     <!-- Triggers -->

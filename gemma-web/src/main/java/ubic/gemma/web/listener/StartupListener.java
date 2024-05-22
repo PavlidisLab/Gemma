@@ -24,12 +24,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.EnvironmentProfiles;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.ServletContext;
@@ -76,6 +75,11 @@ public class StartupListener extends ContextLoaderListener {
                 for ( String activeProfile : servletContext.getInitParameter( "spring.profiles.active" ).split( "," ) ) {
                     cac.getEnvironment().addActiveProfile( activeProfile.trim() );
                 }
+            }
+            // enable the scheduler profile if quartzOn is set to true
+            if ( Settings.getBoolean( "quartzOn" ) && !cac.getEnvironment().acceptsProfiles( "scheduler" ) ) {
+                log.warn( "Enabling the Quartz scheduler since quartzOn is set. You should add 'scheduler' to the active profiles instead." );
+                cac.getEnvironment().addActiveProfile( "scheduler" );
             }
         }
 
