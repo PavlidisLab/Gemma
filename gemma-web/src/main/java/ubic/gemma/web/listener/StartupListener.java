@@ -76,11 +76,6 @@ public class StartupListener extends ContextLoaderListener {
                     cac.getEnvironment().addActiveProfile( activeProfile.trim() );
                 }
             }
-            // enable the scheduler profile if quartzOn is set to true
-            if ( Settings.getBoolean( "quartzOn" ) && !cac.getEnvironment().acceptsProfiles( "scheduler" ) ) {
-                log.warn( "Enabling the Quartz scheduler since quartzOn is set. You should add 'scheduler' to the active profiles instead." );
-                cac.getEnvironment().addActiveProfile( "scheduler" );
-            }
         }
 
         prepareContext( ctx );

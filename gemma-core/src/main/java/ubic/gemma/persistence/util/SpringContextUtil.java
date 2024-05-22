@@ -96,6 +96,7 @@ public class SpringContextUtil {
      * <ul>
      * <li>ensure that the security context holder strategy is set to {@link SecurityContextHolder#MODE_INHERITABLETHREADLOCAL}</li>
      * <li>activate the {@code dev} profile as a fallback if no profile are active</li>
+     * <li>activate the {@code scheduler} profile if {@code quartzOn} is set</li>
      * <li>verify that exactly one environment profile is active (see {@link EnvironmentProfiles})</li>
      * <li>log an informative message with the context version and active profiles</li>
      * </ul>
@@ -110,6 +111,11 @@ public class SpringContextUtil {
             if ( !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) ) {
                 log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
                 cac.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
+            }
+            // enable the scheduler profile if quartzOn is set to true
+            if ( Settings.getBoolean( "quartzOn" ) && !cac.getEnvironment().acceptsProfiles( "scheduler" ) ) {
+                log.warn( "Enabling the Quartz scheduler since quartzOn is set. You should add 'scheduler' to the active profiles instead." );
+                cac.getEnvironment().addActiveProfile( "scheduler" );
             }
         }
         long numberOfActiveEnvironmentProfiles = Stream.of( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST )
