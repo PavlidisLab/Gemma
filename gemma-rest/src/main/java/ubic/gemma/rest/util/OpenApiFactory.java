@@ -7,12 +7,16 @@ import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.Setter;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;
+import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Factory for {@link OpenAPI}.
@@ -20,7 +24,7 @@ import java.util.List;
  * The singleton is managed by {@link OpenApiContextLocator} and identified by the contextId argument.
  */
 @Setter
-public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware {
+public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware, DisposableBean {
 
     /**
      * A unique context identifier for retrieving the OpenAPI context from {@link OpenApiContextLocator}.
@@ -76,5 +80,13 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware 
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    @Override
+    public void destroy() {
+        Field map = ReflectionUtils.findField( OpenApiContextLocator.class, "map" );
+        ReflectionUtils.makeAccessible( map );
+        ( ( Map<?, ?> ) ReflectionUtils.getField( map, OpenApiContextLocator.getInstance() ) )
+                .remove( contextId );
     }
 }
