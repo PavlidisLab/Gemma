@@ -6,15 +6,21 @@ import io.swagger.v3.oas.integration.OpenApiContextLocator;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.util.Assert;
+import lombok.Setter;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-public class OpenApiFactory extends AbstractFactoryBean<OpenAPI> implements ServletConfigAware {
+/**
+ * Factory for {@link OpenAPI}.
+ * <p>
+ * The singleton is managed by {@link OpenApiContextLocator} and identified by the contextId argument.
+ */
+@Setter
+public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware {
 
     /**
      * A unique context identifier for retrieving the OpenAPI context from {@link OpenApiContextLocator}.
@@ -41,10 +47,12 @@ public class OpenApiFactory extends AbstractFactoryBean<OpenAPI> implements Serv
     }
 
     @Override
-    protected OpenAPI createInstance() throws Exception {
-        Assert.isNull( OpenApiContextLocator.getInstance().getOpenApiContext( contextId ),
-                "There's already an OpenAPI context registered with ID " + contextId );
-        OpenApiContext ctx = new JaxrsOpenApiContextBuilder<>()
+    public OpenAPI getObject() throws Exception {
+        OpenApiContext ctx = OpenApiContextLocator.getInstance().getOpenApiContext( contextId );
+        if ( ctx != null ) {
+            return ctx.read();
+        }
+        ctx = new JaxrsOpenApiContextBuilder<>()
                 .ctxId( contextId )
                 // Swagger will automatically discover our application's resources and register them
                 .servletConfig( servletConfig )
@@ -65,15 +73,8 @@ public class OpenApiFactory extends AbstractFactoryBean<OpenAPI> implements Serv
         return OpenAPI.class;
     }
 
-    public void setServers( List<Server> servers ) {
-        this.servers = servers;
-    }
-
-    public void setModelConverters( List<ModelConverter> modelConverters ) {
-        this.modelConverters = modelConverters;
-    }
-
-    public void setServletConfig( ServletConfig servletConfig ) {
-        this.servletConfig = servletConfig;
+    @Override
+    public boolean isSingleton() {
+        return true;
     }
 }
