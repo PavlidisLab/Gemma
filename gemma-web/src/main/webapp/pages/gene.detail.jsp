@@ -41,3 +41,5 @@
 	<input type="hidden" name="geneTaxonId" id="geneTaxonId" value="${geneTaxonId}" />
 
 	<div id="newGenePageWidget"></div>
+
+</body>
