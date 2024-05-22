@@ -64,7 +64,7 @@ public class PubMedXMLFetcher {
         }
     }
 
-    public BibliographicReference retrieveByHTTP( int pubMedId ) {
+    public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException {
         Collection<BibliographicReference> results = null;
 
         for ( int i = 0; i < MAX_TRIES; i++ ) {
@@ -75,7 +75,7 @@ public class PubMedXMLFetcher {
                 try ( InputStream is = toBeGotten.openStream() ) {
                     results = pmxp.parse( is );
                 }
-                if ( results != null && results.size() > 0 )
+                if ( results != null && !results.isEmpty() )
                     break;
                 try {
                     Thread.sleep( 500 );
@@ -91,11 +91,11 @@ public class PubMedXMLFetcher {
                         // noop
                     }
                 } else {
-                    throw new RuntimeException( e );
+                    throw e;
                 }
             }
         }
-        if ( results == null || results.size() == 0 ) {
+        if ( results == null || results.isEmpty() ) {
             return null;
         }
         assert results.size() == 1;

@@ -43,6 +43,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -77,7 +78,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         BibliographicReferenceValueObject vo;
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
@@ -218,7 +223,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException(
                         "Could not locate reference with pubmed id=" + pubMedId + ", either in Gemma or at NCBI" );

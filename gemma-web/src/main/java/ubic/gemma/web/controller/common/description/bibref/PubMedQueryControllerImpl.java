@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.controller.BaseController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
  * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
@@ -73,22 +74,27 @@ public class PubMedQueryControllerImpl extends BaseController implements PubMedQ
             this.saveMessage( request, "bibliographicReference.alreadyInSystem", accession, "Already in Gemma" );
         } else {
             request.setAttribute( "existsInSystem", Boolean.FALSE );
+            int pubMedId;
             try {
-                bibRefFound = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
-
-                if ( bibRefFound == null ) {
-                    log.debug( accession + " not found in NCBI" );
-
-                    result.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
-                    return new ModelAndView( "bibRefSearch", result.getModel() );
-                }
-
-                this.saveMessage( request, "bibliographicReference.found", accession, "Found" );
-
+                pubMedId = Integer.parseInt( accession );
             } catch ( NumberFormatException e ) {
                 result.rejectValue( "accession", "error.integer", "Not a number" );
                 return new ModelAndView( "bibRefSearch", result.getModel() );
             }
+            try {
+                bibRefFound = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
+            } catch ( IOException e ) {
+                log.error( "Failed to retrieve bibliographic reference from PubMed with ID: " + accession, e );
+            }
+
+            if ( bibRefFound == null ) {
+                log.debug( accession + " not found in NCBI" );
+
+                result.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
+                return new ModelAndView( "bibRefSearch", result.getModel() );
+            }
+
+            this.saveMessage( request, "bibliographicReference.found", accession, "Found" );
         }
 
         status.setComplete();

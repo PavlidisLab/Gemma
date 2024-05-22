@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,10 +69,10 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
-                "A text file which contains the list of pubmed IDs associated with each experiment ID. "
-                        + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
-                        + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
-                        + "e.g. 22438826<TAB>GSE27715" )
+                        "A text file which contains the list of pubmed IDs associated with each experiment ID. "
+                                + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
+                                + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
+                                + "e.g. 22438826<TAB>GSE27715" )
                 .build();
 
         options.addOption( pubmedOption );
@@ -114,7 +114,12 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
                     log.warn( "Pubmed ID for " + experiment.getShortName() + " was not found in "
                             + this.pubmedIdFilename );
                 }
-                ref = finder.locatePrimaryReference( experiment );
+                try {
+                    ref = finder.locatePrimaryReference( experiment );
+                } catch ( IOException e ) {
+                    log.error( e );
+                    continue;
+                }
 
                 if ( ref == null ) {
                     log.error( "No ref for " + experiment );
@@ -179,7 +184,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private Map<String, Integer> parsePubmedIdFile( String filename ) throws IOException {
         Map<String, Integer> ids = new HashMap<>();
         final int COL_COUNT = 2;
-        try (BufferedReader br = new BufferedReader( new FileReader( filename ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( filename ) ) ) {
             String row;
             while ( ( row = br.readLine() ) != null ) {
                 String[] col = row.split( "\t" );

@@ -202,7 +202,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblems() throws SearchException {
+    public void testSearchByBibRefIdProblems() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -237,7 +237,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblemsB() throws SearchException {
+    public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );

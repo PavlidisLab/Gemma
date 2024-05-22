@@ -37,8 +37,8 @@ import ubic.gemma.persistence.service.common.description.BibliographicReferenceD
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.IOException;
 import java.util.*;
-import java.util.function.Supplier;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -203,7 +203,12 @@ public class BibliographicReferenceServiceImpl
         }
 
         existingBibRef.getPubAccession().setAccession( pubMedId );
-        BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        BibliographicReference fresh;
+        try {
+            fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Unable to retrieve record from pubmed for id=" + pubMedId, e );
+        }
 
         if ( fresh == null || fresh.getPublicationDate() == null ) {
             throw new IllegalStateException( "Unable to retrieve record from pubmed for id=" + pubMedId );

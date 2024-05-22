@@ -201,7 +201,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // find the Bibliographic on PubMed
-        bibliographicReference = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        try {
+            bibliographicReference = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        } catch ( IOException e ) {
+            log.error( "Failed to find bibliographic reference for PubMed ID: " + pubMedId, e );
+            return null;
+        }
 
         // the pudmedId doesn't exists in PudMed
         if ( bibliographicReference == null ) {
