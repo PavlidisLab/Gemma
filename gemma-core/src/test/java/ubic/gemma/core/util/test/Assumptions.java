@@ -56,7 +56,7 @@ public class Assumptions {
             checkIOException( ( IOException ) e );
         }
         if ( e.getCause() instanceof IOException ) {
-            checkIOException( ( IOException ) e.getCause() );
+            assumeThatExceptionIsDueToNetworkIssue( ( IOException ) e.getCause() );
         }
         throw new RuntimeException( e );
     }
@@ -68,6 +68,8 @@ public class Assumptions {
             assumeNoException( "Test skipped due to unknown host exception", e );
         } else if ( e instanceof SSLException ) {
             assumeNoException( "SSL issue attempting to connect.", e );
+        } else if ( e.getMessage() != null && e.getMessage().contains( "504" ) ) {
+            assumeNoException( "Test skipped due to a 504 error", e );
         } else if ( e.getMessage() != null && e.getMessage().contains( "503" ) ) {
             assumeNoException( "Test skipped due to a 503 error", e );
         } else if ( e.getMessage() != null && e.getMessage().contains( "502" ) ) {
