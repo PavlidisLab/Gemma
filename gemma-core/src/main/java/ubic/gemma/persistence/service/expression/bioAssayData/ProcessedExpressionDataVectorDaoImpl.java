@@ -113,16 +113,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         removeDuplicateElements( rawPreferredDataVectors );
 
         RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
-        BioAssayDimension bad = preferredDataVectorExemplar.getBioAssayDimension();
         QuantitationType preferredMaskedDataQuantitationType = this
                 .getPreferredMaskedDataQuantitationType( expressionExperiment, preferredDataVectorExemplar.getQuantitationType() );
 
         /* log-transform if necessary */
-        Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors,
+        // this will also consolidate sets of raw vectors that have multiple BADs
+        Collection<RawExpressionDataVector> consolidatedRawVectors = consolidateRawVectors( rawPreferredDataVectors,
                 preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
 
+        BioAssayDimension preferredMaskedDataDimension = consolidatedRawVectors.iterator().next().getBioAssayDimension();
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
-                .maskAndUnpack( preferredDataVectors, missingValueVectors );
+                .maskAndUnpack( consolidatedRawVectors, missingValueVectors );
 
         /*
          * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
@@ -165,7 +166,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             vec.setExpressionExperiment( expressionExperiment );
             // assert this.getBioAssays().size() > 0;
             vec.setQuantitationType( preferredMaskedDataQuantitationType );
-            vec.setBioAssayDimension( bad );
+            vec.setBioAssayDimension( preferredMaskedDataDimension );
             vec.setDesignElement( cs );
             // assert this.getBioAssays().size() > 0;
             vec.setData( byteArrayConverter.doubleArrayToBytes( dvvo.getData() ) );
@@ -451,13 +452,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     /**
-     * Make sure the data are on a log2 scale
+     * Consolidate raw vectors that have multiple BADs and log-transform them if necessary.
      *
      * @param  rawPreferredDataVectors             raw preferred data vectors
      * @param  preferredMaskedDataQuantitationType preferred masked data QT
      * @return collection containing the vectors
      */
-    private Collection<RawExpressionDataVector> ensureLog2Scale(
+    private Collection<RawExpressionDataVector> consolidateRawVectors(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
             boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
