@@ -3,6 +3,8 @@ package ubic.gemma.core.util.test;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
@@ -36,7 +38,7 @@ public class Assumptions {
                 HttpURLConnection httpCon = ( HttpURLConnection ) con;
                 assumeTrue( String.format( "The resource at %s responded with a %d %s HTTP status code.",
                                 url, httpCon.getResponseCode(), httpCon.getResponseMessage() ),
-                        httpCon.getResponseCode() < 400 );
+                        httpCon.getResponseCode() < 500 );
             }
         } catch ( UnknownHostException | ConnectException e ) {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
@@ -61,6 +63,11 @@ public class Assumptions {
         throw new RuntimeException( e );
     }
 
+    /**
+     * Matches {@link IOException} due to an HTTP 5xx errors.
+     */
+    private static final Pattern IO_EXCEPTION_MESSAGE_WITH_HTTP_500_ERROR = Pattern.compile( "^Server returned HTTP response code: (5\\d\\d) for URL: (.+)$" );
+
     private static void checkIOException( IOException e ) {
         if ( e instanceof ConnectException ) {
             assumeNoException( "Test skipped due to connection exception", e );
@@ -68,12 +75,11 @@ public class Assumptions {
             assumeNoException( "Test skipped due to unknown host exception", e );
         } else if ( e instanceof SSLException ) {
             assumeNoException( "SSL issue attempting to connect.", e );
-        } else if ( e.getMessage() != null && e.getMessage().contains( "504" ) ) {
-            assumeNoException( "Test skipped due to a 504 error", e );
-        } else if ( e.getMessage() != null && e.getMessage().contains( "503" ) ) {
-            assumeNoException( "Test skipped due to a 503 error", e );
-        } else if ( e.getMessage() != null && e.getMessage().contains( "502" ) ) {
-            assumeNoException( "Test skipped due to a 502 error", e );
+        } else if ( e.getMessage() != null ) {
+            Matcher m = IO_EXCEPTION_MESSAGE_WITH_HTTP_500_ERROR.matcher( e.getMessage() );
+            if ( m.matches() ) {
+                assumeNoException( "Test skipped due to a " + m.group( 1 ) + " error for URL " + m.group( 2 ), e );
+            }
         }
     }
 }
