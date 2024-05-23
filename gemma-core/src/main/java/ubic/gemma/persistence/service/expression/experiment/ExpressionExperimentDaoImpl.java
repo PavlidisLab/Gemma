@@ -2476,6 +2476,15 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * Perform a few sanity checks on a collection of vectors to create.
+     * <p>
+     * In particular, we ensure that the followings are true:
+     * <ul>
+     *     <li>all vectors are transient</li>
+     *     <li>all vectors are linked to the expression experiment</li>
+     *     <li>all vectors share the same bioassay dimension</li>
+     *     <li>all vectors share the same quantitation type</li>
+     *     <li>all vectors have expected size as per the bioassay dimension and storage requirement</li>
+     * </ul>
      */
     private void checkVectors( ExpressionExperiment ee, QuantitationType qt, Collection<? extends DesignElementDataVector> vectors ) {
         BioAssayDimension bad = vectors.iterator().next().getBioAssayDimension();
@@ -2485,5 +2494,10 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( vectors.stream().map( DataVector::getExpressionExperiment ).allMatch( e -> e == ee ), "All vectors must belong to " + ee );
         Assert.isTrue( vectors.stream().map( DesignElementDataVector::getQuantitationType ).allMatch( q -> q == qt ), "All vectors must use " + qt );
         Assert.isTrue( vectors.stream().map( DesignElementDataVector::getBioAssayDimension ).allMatch( b -> b == bad ), "All vectors must use " + bad );
+        if ( qt.getRepresentation().getSizeInBytes() != -1 ) {
+            int expectedVectorSizeInBytes = bad.getBioAssays().size() * qt.getRepresentation().getSizeInBytes();
+            Assert.isTrue( vectors.stream().map( DesignElementDataVector::getData ).allMatch( b -> b.length == expectedVectorSizeInBytes ),
+                    "All vectors must contain " + bad.getBioAssays().size() + " values, expected size is " + expectedVectorSizeInBytes + " B." );
+        }
     }
 }
