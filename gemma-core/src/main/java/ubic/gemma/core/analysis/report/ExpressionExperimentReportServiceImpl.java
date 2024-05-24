@@ -42,7 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorByGeneCache;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -86,7 +86,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedDataVectorByGeneCache processedDataVectorCache;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -109,7 +109,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-        processedDataVectorCache.evictById( id );
         experimentalDesignVisualizationService.clearCaches( id );
     }
 

@@ -45,7 +45,7 @@ import java.util.Collections;
  */
 @Component
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCache {
+class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCache {
 
     private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
 

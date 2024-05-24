@@ -22,11 +22,11 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
- * Cache of data vectors by {@link Gene}.
+ * Cache of processed data vectors by {@link Gene}.
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface ProcessedDataVectorByGeneCache {
+interface ProcessedDataVectorByGeneCache {
 
     @Nullable
     Collection<DoubleVectorValueObject> get( BioAssaySet bas, Gene g );
@@ -34,9 +34,9 @@ public interface ProcessedDataVectorByGeneCache {
     @Nullable
     Collection<DoubleVectorValueObject> getById( Long basId, Long gId );
 
-    void put( BioAssaySet bas, Gene gene, Collection<DoubleVectorValueObject> collection );
+    void put( BioAssaySet bas, Gene gene, Collection<DoubleVectorValueObject> vectors );
 
-    void putById( Long basId, Long geneId, Collection<DoubleVectorValueObject> collection );
+    void putById( Long basId, Long geneId, Collection<DoubleVectorValueObject> vectors );
 
     /**
      * Evict all the vectors attached to the given experiment.
