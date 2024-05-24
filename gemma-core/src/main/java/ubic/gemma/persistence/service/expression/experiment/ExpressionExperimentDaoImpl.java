@@ -102,6 +102,13 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment load( Long id, CacheMode cacheMode ) {
+        Session session = getSessionFactory().getCurrentSession();
+        session.setCacheMode( cacheMode );
+        return super.load( id );
+    }
+
+    @Override
     public List<ExpressionExperiment> browse( int start, int limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
         query.setMaxResults( limit );

@@ -50,6 +50,14 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
+     * Retrieve an ID for a given dataset argument.
+     */
+    @Nullable
+    public Long getEntityId( DatasetArg<?> datasetArg ) {
+        return datasetArg.getEntityId( service );
+    }
+
+    /**
      * Obtain a list of exclude URIs from an argument containing excluded URIs.
      * @param excludedUrisArg    argument containing excluded URIs or null if unspecified
      * @param excludeFreeText if true, null will be included in the returned list which will result in the exclusion of

@@ -137,6 +137,16 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadAndThaw( Long id );
 
     /**
+     * Load an experiment without cache and thaw it as per {@link #thaw(ExpressionExperiment)} with {@link org.hibernate.CacheMode#REFRESH}.
+     * <p>
+     * This has the side effect of refreshing the cache with the latest data. Since this can be expensive, only
+     * administrators are allowed to do this.
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
+
+    /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
      * and message.
      */
