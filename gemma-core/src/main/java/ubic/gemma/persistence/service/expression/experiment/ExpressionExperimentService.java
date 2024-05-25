@@ -60,6 +60,15 @@ import java.util.function.Function;
 public interface ExpressionExperimentService
         extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    ExpressionExperiment loadReference( Long id );
+
+    /**
+     * Load references for all experiments.
+     * <p>
+     * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
+     */
+    Collection<ExpressionExperiment> loadAllReferences();
+
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 

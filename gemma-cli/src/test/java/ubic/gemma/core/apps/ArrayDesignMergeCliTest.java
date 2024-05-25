@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -61,6 +62,11 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         @Bean
         public ArrayDesignService arrayDesignService() {
             return mock( ArrayDesignService.class );
+        }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
+            return mock();
         }
     }
 

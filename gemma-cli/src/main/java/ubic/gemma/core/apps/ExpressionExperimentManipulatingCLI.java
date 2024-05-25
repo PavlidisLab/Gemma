@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -32,6 +33,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -41,6 +43,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -49,7 +52,10 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,12 +100,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     @Autowired
     protected AuditEventService auditEventService;
 
-    protected final Set<BioAssaySet> expressionExperiments = new HashSet<>();
+    // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
+    protected final Set<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+
     /**
      * Taxon used for filtering EEs.
      */
     private Taxon taxon = null;
     protected boolean force = false;
+    private boolean useReferencesIfPossible = false;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -166,8 +175,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( commandLine.hasOption( "all" ) ) {
-            log.warn( "Loading all expression experiments, this might take a while..." );
-            this.expressionExperiments.addAll( eeService.loadAll() );
+            if ( useReferencesIfPossible ) {
+                log.info( "Loading all expression experiments, by reference..." );
+                this.expressionExperiments.addAll( eeService.loadAllReferences() );
+            } else {
+                log.warn( "Loading all expression experiments, this might take a while..." );
+                this.expressionExperiments.addAll( eeService.loadAll() );
+            }
         } else if ( commandLine.hasOption( "eeset" ) ) {
             this.experimentsFromEeSet( commandLine.getOptionValue( "eeset" ) );
         } else if ( commandLine.hasOption( 'e' ) ) {
@@ -206,7 +220,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                 auditEventService.retainLackingEvent( this.expressionExperiments, this.getAutoSeekEventType() );
             }
 
-            Set<BioAssaySet> troubledExpressionExperiments = this.getTroubledExpressionExperiments();
+            Set<ExpressionExperiment> troubledExpressionExperiments = this.getTroubledExpressionExperiments();
 
             // only retain non-troubled experiments
             expressionExperiments.removeAll( troubledExpressionExperiments );
@@ -236,7 +250,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
 
     private void excludeFromFile( CommandLine commandLine ) {
         String excludeEeFileName = commandLine.getOptionValue( 'x' );
-        Collection<BioAssaySet> excludeExperiments;
+        Collection<ExpressionExperiment> excludeExperiments;
         try {
             excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
         } catch ( IOException e ) {
@@ -254,19 +268,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     }
 
     private void experimentsFromCliList( CommandLine commandLine ) {
-        String experimentShortNames = commandLine.getOptionValue( 'e' );
-        String[] shortNames = experimentShortNames.split( "," );
-
-        for ( String shortName : shortNames ) {
-            ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( shortName );
+        String[] identifiers = commandLine.getOptionValue( 'e' ).split( "," );
+        for ( String identifier : identifiers ) {
+            ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( identifier );
             if ( expressionExperiment == null ) {
-                AbstractCLI.log.warn( shortName + " not found" );
+                log.warn( "No experiment " + identifier + " found either by ID or short name." );
                 continue;
             }
             expressionExperiments.add( eeService.thawLite( expressionExperiment ) );
         }
         if ( expressionExperiments.isEmpty() ) {
-            throw new RuntimeException( "There were no valid experimnents specified" );
+            throw new RuntimeException( "There were no valid experiments specified." );
         }
     }
 
@@ -290,8 +302,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     /**
      * Use the search engine to locate expression experiments.
      */
-    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) throws SearchException {
-        Set<BioAssaySet> ees = new HashSet<>();
+    private Set<ExpressionExperiment> findExpressionExperimentsByQuery( String query ) throws SearchException {
+        Set<ExpressionExperiment> ees = new HashSet<>();
 
         // explicitly support one case
         if ( query.matches( "GPL[0-9]+" ) ) {
@@ -325,52 +337,53 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
 
     }
 
-    private ExpressionExperiment locateExpressionExperiment( String name ) {
-
-        if ( name == null ) {
-            addErrorObject( null, "Expression experiment short name must be provided" );
+    /**
+     * Attempt to locate an experiment using the given identifier.
+     */
+    @Nullable
+    private ExpressionExperiment locateExpressionExperiment( String identifier ) {
+        if ( identifier == null ) {
+            addErrorObject( null, "Expression experiment ID or short name must be provided" );
             return null;
         }
 
-        ExpressionExperiment experiment = eeService.findByShortName( name );
-
-        if ( experiment == null ) {
-            throw new RuntimeException( "No experiment " + name + " found" );
+        ExpressionExperiment ee;
+        try {
+            Long id = Long.parseLong( identifier );
+            if ( useReferencesIfPossible ) {
+                ee = eeService.loadReference( id );
+            } else {
+                ee = eeService.load( id );
+            }
+        } catch ( NumberFormatException e ) {
+            // can be safely ignored, we'll attempt to use it as a short name
+            ee = null;
         }
-        return experiment;
+
+        if ( ee == null ) {
+            ee = eeService.findByShortName( identifier );
+        }
+
+        return ee;
     }
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file. Only the first column of the file is
      * used, comments (#) are allowed.
      */
-    private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
-        Set<BioAssaySet> ees = new HashSet<>();
+    private Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
         List<String> idlist = FileUtils.readListFileToStrings( fileName );
+        List<ExpressionExperiment> ees = new ArrayList<>( idlist.size() );
         log.info( "Found " + idlist.size() + " experiment identifiers in file " + fileName );
         int count = 0;
         for ( String eeName : idlist ) {
-            ExpressionExperiment ee = eeService.findByShortName( eeName );
+            ExpressionExperiment ee = locateExpressionExperiment( eeName );
             if ( ee == null ) {
-
-                try {
-                    Long id = Long.parseLong( eeName );
-                    ee = eeService.load( id );
-                    if ( ee == null ) {
-                        log.error( "No experiment " + eeName + " found" );
-                        continue;
-                    }
-                } catch ( NumberFormatException e ) {
-                    log.error( "No experiment " + eeName + " found" );
-                    continue;
-
-                }
-
+                log.warn( "No experiment " + eeName + " found either by ID or short name." );
+                continue;
             }
-
             count++;
             ees.add( ee );
-
             if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
                 AbstractCLI.log.info( "Loaded " + count + " experiments ..." );
             }
@@ -381,18 +394,27 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
 
     /**
      * Obtain EEs that are troubled among {@link ExpressionExperimentManipulatingCLI#expressionExperiments}.
+     *
      * @return a collection of troubled experiemnt, or an empty set of non are
      */
-    private Set<BioAssaySet> getTroubledExpressionExperiments() {
+    private Set<ExpressionExperiment> getTroubledExpressionExperiments() {
         if ( expressionExperiments.isEmpty() ) {
             AbstractCLI.log.warn( "No experiments to remove troubled from" );
             return Collections.emptySet();
         }
-
+        // it's not possible to check the curation details directly as that might trigger proxy initialization
+        List<Long> troubledIds = eeService.loadIds( Filters.by( eeService.getFilter( "curationDetails.troubled", Boolean.class, Filter.Operator.eq, true ) ), null );
         return expressionExperiments.stream()
-                .map( ExpressionExperiment.class::cast )
-                .filter( ee -> ee.getCurationDetails().getTroubled() )
-                .collect( Collectors.toSet() );
+                .map( ee -> {
+                    // for subsets, check source experiment troubled flag
+                    if ( ee instanceof ExpressionExperimentSubSet ) {
+                        return ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment();
+                    } else {
+                        return ( ExpressionExperiment ) ee;
+                    }
+                } )
+                .filter( ee -> troubledIds.contains( ee.getId() ) )
+                .collect( Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) ) ) );
     }
 
     /**
@@ -461,5 +483,40 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
         }
         return taxon;
+    }
+
+    /**
+     * Refresh a dataset for Gemma Web.
+     */
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee ) throws Exception {
+        StopWatch timer = StopWatch.createStarted();
+        // using IDs here to prevent proxy initialization
+        GemmaRestApiClient.Response response = getGemmaRestApiClient()
+                .perform( "/datasets/" + ee.getId() + "/refresh" );
+        if ( response instanceof GemmaRestApiClient.DataResponse ) {
+            log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
+        } else if ( response instanceof GemmaRestApiClient.ErrorResponse ) {
+            GemmaRestApiClient.ErrorResponse errorResponse = ( GemmaRestApiClient.ErrorResponse ) response;
+            throw new RuntimeException( String.format( "Unexpected reply from refreshing datasets with ID %d: got status code %d with message: %s",
+                    ee.getId(),
+                    errorResponse.getError().getCode(),
+                    errorResponse.getError().getMessage() ) );
+        } else {
+            throw new RuntimeException( "Unknown response from the REST API: " + response );
+        }
+    }
+
+    /**
+     * Set this to true to allow reference to be retrieved instead of actual entities.
+     * <p>
+     * This only works for entities retrieved by ID.
+     * <p>
+     * When this is enabled, do not access anything but {@link ExpressionExperiment#getId()}, or else proxy-initialization
+     * will be triggered, and you will have to deal with a {@link org.hibernate.LazyInitializationException}.
+     * <p>
+     * The default is false.
+     */
+    protected void setUseReferencesIfPossible( boolean useReferencesIfPossible ) {
+        this.useReferencesIfPossible = useReferencesIfPossible;
     }
 }
