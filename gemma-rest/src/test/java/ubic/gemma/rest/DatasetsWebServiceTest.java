@@ -1,6 +1,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +15,7 @@ import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -25,6 +27,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -35,10 +38,7 @@ import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
-import ubic.gemma.rest.util.args.DatasetArgService;
-import ubic.gemma.rest.util.args.GeneArgService;
-import ubic.gemma.rest.util.args.QuantitationTypeArgService;
-import ubic.gemma.rest.util.args.TaxonArgService;
+import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -62,7 +62,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public OpenAPI openApi() {
-            return mock();
+            return new OpenAPI()
+                    .info( new Info().version( "1.0.0" ) );
         }
 
         @Bean
@@ -149,6 +150,26 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         public OntologyService ontologyService() {
             return mock();
         }
+
+        @Bean
+        public ExpressionAnalysisResultSetService expressionAnalysisResultSetService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionAnalysisResultSetArgService expressionAnalysisResultSetArgService() {
+            return mock();
+        }
+
+        @Bean
+        public DatabaseEntryArgService databaseEntryArgService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -165,6 +186,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     private ExpressionExperiment ee;
 
@@ -503,5 +527,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotationsById( 1L );
+    }
+
+    @Test
+    public void testGetDatasetsAnalysisResultSets() {
+        ee.setId( 1L );
+        when( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit( any(), isNull(), isNull(), anyInt(), anyInt(), isNull() ) )
+                .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
+        assertThat( target( "/datasets/1/analyses/differential/resultSets" ).request().get() )
+                .hasStatus( Response.Status.OK );
     }
 }
