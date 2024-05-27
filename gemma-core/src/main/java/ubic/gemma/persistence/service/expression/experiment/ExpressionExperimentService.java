@@ -60,6 +60,15 @@ import java.util.function.Function;
 public interface ExpressionExperimentService
         extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    ExpressionExperiment loadReference( Long id );
+
+    /**
+     * Load references for all experiments.
+     * <p>
+     * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
+     */
+    Collection<ExpressionExperiment> loadAllReferences();
+
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 
@@ -135,6 +144,16 @@ public interface ExpressionExperimentService
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThaw( Long id );
+
+    /**
+     * Load an experiment without cache and thaw it as per {@link #thaw(ExpressionExperiment)} with {@link org.hibernate.CacheMode#REFRESH}.
+     * <p>
+     * This has the side effect of refreshing the cache with the latest data. Since this can be expensive, only
+     * administrators are allowed to do this.
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
 
     /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception

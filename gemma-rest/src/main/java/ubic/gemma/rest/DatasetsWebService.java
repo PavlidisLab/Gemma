@@ -1088,6 +1088,30 @@ public class DatasetsWebService {
         );
     }
 
+    /**
+     * Retrieve a "refreshed" dataset.
+     * <p>
+     * This has the main side effect of refreshing the second-level cache with the contents of the database.
+     */
+    @GET
+    @Secured("GROUP_ADMIN")
+    @Path("/{dataset}/refresh")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve a refreshed dataset", hidden = true)
+    public Response getDataset( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        Long id = datasetArgService.getEntityId( datasetArg );
+        if ( id == null ) {
+            throw new NotFoundException( "No dataset matches " + datasetArg );
+        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
+        if ( ee == null ) {
+            throw new NotFoundException( "No dataset with ID " + id );
+        }
+        return Response.created( URI.create( "/datasets/" + ee.getId() ) )
+                .entity( expressionExperimentService.loadValueObject( ee ) )
+                .build();
+    }
+
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filter ).orElse( null );

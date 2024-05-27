@@ -12,6 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -56,6 +57,11 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
         @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
             return mock();
         }
     }

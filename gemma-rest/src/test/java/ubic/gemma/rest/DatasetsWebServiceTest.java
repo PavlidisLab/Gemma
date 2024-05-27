@@ -12,7 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -26,6 +29,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -53,6 +57,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Import(JacksonConfig.class)
@@ -536,5 +541,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets/1/analyses/differential/resultSets" ).request().get() )
                 .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDataset() {
+        ee.setId( 1L );
+        when( expressionExperimentService.loadAndThawWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
+        assertThat( target( "/datasets/1/refresh" ).request().get() )
+                .hasStatus( Response.Status.CREATED )
+                .hasHeaderSatisfying( "Location", locations -> {
+                    assertThat( locations )
+                            .hasSize( 1 )
+                            .first()
+                            .asString()
+                            .endsWith( "/datasets/1" );
+                } )
+                .entity();
     }
 }

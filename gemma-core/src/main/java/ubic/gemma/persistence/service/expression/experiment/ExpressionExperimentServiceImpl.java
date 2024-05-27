@@ -24,6 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
@@ -142,6 +143,18 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
         super( expressionExperimentDao );
         this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadReference( Long id ) {
+        return expressionExperimentDao.loadReference( id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> loadAllReferences() {
+        return expressionExperimentDao.loadReference( expressionExperimentDao.loadIds( null, null ) );
     }
 
     @Override
@@ -705,6 +718,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
         ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thaw( ee );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
             this.expressionExperimentDao.thaw( ee );
         }

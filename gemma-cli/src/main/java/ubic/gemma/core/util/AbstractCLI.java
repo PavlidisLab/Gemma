@@ -35,10 +35,12 @@ import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +50,7 @@ import java.util.stream.Collectors;
  * application-specific options (they can be no-ops) and {@link #doWork()} to perform the actual work of the CLI.
  * <p>
  * Use {@link AbstractAuthenticatedCLI} if you need to authenticate the user.
+ *
  * @author pavlidis
  */
 public abstract class AbstractCLI implements CLI {
@@ -116,8 +119,10 @@ public abstract class AbstractCLI implements CLI {
      */
     @Nullable
     private File batchOutputFile;
-    private ExecutorService executorService;
 
+    private ExecutorService executorService;
+    private AtomicInteger batchTaskCounter;
+    private AtomicInteger completedBatchTasks;
     /**
      * Hold the results of the command execution
      * needs to be concurrently modifiable and kept in-order
@@ -127,13 +132,12 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Convenience method to obtain instance of any bean by name.
      *
-     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
-     * {@link BeanFactory}.
-     *
      * @param <T>  the bean class type
      * @param clz  class
      * @param name name
      * @return bean
+     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
+     * {@link BeanFactory}.
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
     @Deprecated
@@ -208,15 +212,30 @@ public abstract class AbstractCLI implements CLI {
         }
         StopWatch watch = StopWatch.createStarted();
         try {
+            executorService = createBatchTaskExecutorService();
             doWork();
+            executorService.shutdown();
+            if ( !executorService.isTerminated() ) {
+                log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", batchTaskCounter.get() - completedBatchTasks.get(), batchTaskCounter.get() ) );
+                while ( !executorService.awaitTermination( 5, TimeUnit.SECONDS ) ) {
+                    reportBatchProcessingProgress();
+                }
+            }
             return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
-        } catch ( WorkAbortedException e ) {
-            log.warn( "Operation was aborted by the current user." );
-            return ABORTED;
         } catch ( Exception e ) {
-            log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
-            return FAILURE;
+            List<Runnable> stillRunning = executorService.shutdownNow();
+            if ( !stillRunning.isEmpty() ) {
+                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+            }
+            if ( e instanceof WorkAbortedException ) {
+                log.warn( "Operation was aborted by the current user." );
+                return ABORTED;
+            } else {
+                log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
+                return FAILURE;
+            }
         } finally {
+            executorService = null;
             // always summarize processing, even if an error is thrown
             summarizeBatchProcessing();
             log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
@@ -358,13 +377,6 @@ public abstract class AbstractCLI implements CLI {
             this.numThreads = 1;
         }
 
-        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
-        if ( this.numThreads > 1 ) {
-            this.executorService = Executors.newFixedThreadPool( this.numThreads, threadFactory );
-        } else {
-            this.executorService = Executors.newSingleThreadExecutor( threadFactory );
-        }
-
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
             try {
                 this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
@@ -382,6 +394,7 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
      * {@link #doWork()}.
+     *
      * @throws ParseException in case of unrecoverable failure (i.e. missing option or invalid value), an exception can
      *                        be raised and will result in an exit code of {@link #FAILURE}.
      */
@@ -393,9 +406,9 @@ public abstract class AbstractCLI implements CLI {
      * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the
      * implementation can assume that all its arguments have already been initialized.
      *
-     * @throws Exception            in case of unrecoverable failure, an exception is thrown and will result in a
-     *                              {@link #FAILURE} exit code, otherwise use {@link #addErrorObject} to indicate an
-     *                              error and resume processing
+     * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a
+     *                   {@link #FAILURE} exit code, otherwise use {@link #addErrorObject} to indicate an
+     *                   error and resume processing
      */
     protected abstract void doWork() throws Exception;
 
@@ -451,6 +464,7 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Add an error object without a cause stacktrace.
+     *
      * @see #addErrorObject(Object, String)
      */
     protected void addErrorObject( @Nullable Object errorObject, String message ) {
@@ -460,6 +474,7 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Add an error object based on an exception.
+     *
      * @see #addErrorObject(Object, String, Throwable)
      */
     protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
@@ -533,31 +548,94 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Execute the given batch tasks.
+     * A task executor that automatically reports errors in batch tasks.
+     */
+    @ParametersAreNonnullByDefault
+    private class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
+
+        public BatchTaskExecutorService( ExecutorService delegate ) {
+            super( delegate );
+        }
+
+        @Override
+        protected Runnable wrap( Runnable runnable ) {
+            int taskId = batchTaskCounter.getAndIncrement();
+            return () -> {
+                try {
+                    runnable.run();
+                } catch ( Exception e ) {
+                    addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
+                    throw e;
+                } finally {
+                    completedBatchTasks.incrementAndGet();
+                }
+            };
+        }
+
+        @Override
+        protected <T> Callable<T> wrap( Callable<T> callable ) {
+            int taskId = batchTaskCounter.getAndIncrement();
+            return () -> {
+                try {
+                    return callable.call();
+                } catch ( Exception e ) {
+                    addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
+                    throw e;
+                } finally {
+                    completedBatchTasks.incrementAndGet();
+                }
+            };
+        }
+    }
+
+    protected ExecutorService createBatchTaskExecutorService() {
+        Assert.isNull( executorService, "There is already a batch task ExecutorService." );
+        batchTaskCounter = new AtomicInteger( 0 );
+        completedBatchTasks = new AtomicInteger( 0 );
+        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
+        ExecutorService es;
+        if ( this.numThreads > 1 ) {
+            es = Executors.newFixedThreadPool( this.numThreads, threadFactory );
+        } else {
+            es = Executors.newSingleThreadExecutor( threadFactory );
+        }
+        return new BatchTaskExecutorService( es );
+    }
+
+    /**
+     * Obtain an executor for running batch tasks.
      * <p>
-     * Errors will be reported with {@link #addErrorObject(Object, String, Throwable)}. However, reporting successes is
+     * The CLI will await any pending batch tasks before exiting. You may only submit batch tasks inside {@link #doWork()}.
+     * <p>
+     * Errors will be reported with {@link #addErrorObject(Object, Exception)}. However, reporting successes is
+     * the responsibility of the caller.
+     */
+    protected ExecutorService getBatchTaskExecutor() {
+        Assert.notNull( executorService, "Batch tasks can only be submitted in doWork()." );
+        return executorService;
+    }
+
+    /**
+     * Execute the given batch tasks and await their completions.
+     * <p>
+     * Errors will be reported with {@link #addErrorObject(Object, Exception)}. However, reporting successes is
      * the responsibility of the caller.
      */
     protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
         Assert.isTrue( !tasks.isEmpty(), "At least one batch task must be submitted." );
-        if ( tasks.size() == 1 ) {
-            tasks.iterator().next().run();
-            return;
-        }
-        ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( executorService );
+        ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( getBatchTaskExecutor() );
         List<Future<?>> futures = new ArrayList<>( tasks.size() );
         for ( Runnable task : tasks ) {
             futures.add( completionService.submit( task, null ) );
         }
         for ( int i = 1; i <= futures.size(); i++ ) {
-            try {
-                completionService.take().get();
-            } catch ( ExecutionException e ) {
-                addErrorObject( null, String.format( "Batch task #%d failed", i ), e.getCause() );
-            } finally {
-                i++;
-            }
+            completionService.take();
+            reportBatchProcessingProgress();
         }
+    }
+
+    private void reportBatchProcessingProgress() {
+        log.info( String.format( "Completed %d/%d batch tasks.", completedBatchTasks.get(), batchTaskCounter.get() ) );
     }
 
     private enum BatchFormat {
@@ -605,6 +683,7 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Exception raised when a {@link #doWork()} aborted by the user.
+     *
      * @author poirigui
      */
     private static class WorkAbortedException extends Exception {

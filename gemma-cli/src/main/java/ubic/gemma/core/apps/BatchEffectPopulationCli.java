@@ -65,6 +65,10 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                     ser.fillBatchInformation( ee, force );
                     addSuccessObject( bas );
+                    getBatchTaskExecutor().submit( () -> {
+                        refreshExpressionExperimentFromGemmaWeb( ee );
+                        return null;
+                    } );
                 } catch ( Exception e ) {
                     addErrorObject( bas, e );
                 }

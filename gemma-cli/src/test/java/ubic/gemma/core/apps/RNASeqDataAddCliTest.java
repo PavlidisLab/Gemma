@@ -18,10 +18,10 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -103,6 +103,11 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         public AuditEventService auditEventService() {
             return mock();
         }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -125,6 +130,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
+        ee.setId( 1L );
         rpkmFile = new ClassPathResource( "ubic/gemma/core/apps/test.rpkm.txt" ).getFile().getAbsolutePath();
         when( expressionExperimentService.findByShortName( "GSE000001" ) ).thenReturn( ee );
         when( expressionExperimentService.thawLite( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );

@@ -13,6 +13,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -58,6 +59,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
         @Bean
         public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
             return mock();
         }
     }

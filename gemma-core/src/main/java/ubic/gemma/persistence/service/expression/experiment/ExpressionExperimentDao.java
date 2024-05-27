@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -40,6 +41,13 @@ public interface ExpressionExperimentDao
         CachedFilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
+
+    /**
+     * Load an experiment by ID with a specific cache mode.
+     * <p>
+     * The cache mode will be effective for the remainder of the Hibernate session.
+     */
+    ExpressionExperiment load( Long id, CacheMode cacheMode );
 
     @Nullable
     BioAssaySet loadBioAssaySet( Long id );
