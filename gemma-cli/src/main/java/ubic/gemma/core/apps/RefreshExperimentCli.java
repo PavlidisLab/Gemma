@@ -42,7 +42,7 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
             getBatchTaskExecutor().execute( () -> {
                 if ( bas instanceof ExpressionExperiment ) {
                     try {
-                        refreshExpressionExperimentFromGemmaWeb( ( ExpressionExperiment ) bas );
+                        refreshExpressionExperimentFromGemmaWeb( ( ExpressionExperiment ) bas, true, true );
                         addSuccessObject( "ExpressionExperiment with ID " + bas.getId() );
                     } catch ( Exception e ) {
                         addErrorObject( "ExpressionExperiment with ID " + bas.getId(), e );

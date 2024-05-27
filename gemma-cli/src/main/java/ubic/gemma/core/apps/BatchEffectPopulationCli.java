@@ -64,11 +64,12 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                     ser.fillBatchInformation( ee, force );
+                    try {
+                        refreshExpressionExperimentFromGemmaWeb( ee, true, true );
+                    } catch ( Exception e ) {
+                        AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                    }
                     addSuccessObject( bas );
-                    getBatchTaskExecutor().submit( () -> {
-                        refreshExpressionExperimentFromGemmaWeb( ee );
-                        return null;
-                    } );
                 } catch ( Exception e ) {
                     addErrorObject( bas, e );
                 }

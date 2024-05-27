@@ -156,6 +156,13 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
 
     /**
+     * A lightweight version of {@link #loadAndThawWithRefreshCacheMode(Long)} which thaws as per {@link #thawLite(ExpressionExperiment)}.
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id );
+
+    /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
      * and message.
      */

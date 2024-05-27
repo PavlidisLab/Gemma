@@ -384,7 +384,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
             }
 
-            if ( !this.persist ) {
+            if ( this.persist ) {
+                try {
+                    refreshExpressionExperimentFromGemmaWeb( ee, false, true );
+                } catch ( Exception e ) {
+                    AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                }
+            } else {
                 AbstractCLI.log.info( "Writing results to disk" );
                 for ( DifferentialExpressionAnalysis r : results ) {
                     expressionDataFileService.writeDiffExArchiveFile( ee, r, config );

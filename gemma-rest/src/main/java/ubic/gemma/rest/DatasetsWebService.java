@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
@@ -37,6 +38,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
@@ -128,6 +130,8 @@ public class DatasetsWebService {
     private QuantitationTypeArgService quantitationTypeArgService;
     @Autowired
     private OntologyService ontologyService;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Autowired
     private DatasetArgService datasetArgService;
@@ -1097,15 +1101,31 @@ public class DatasetsWebService {
     @Secured("GROUP_ADMIN")
     @Path("/{dataset}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve a refreshed dataset", hidden = true)
-    public Response getDataset( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    @Operation(summary = "Retrieve a refreshed dataset",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            })
+    public Response getDataset(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
+            @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
+    ) {
         Long id = datasetArgService.getEntityId( datasetArg );
         if ( id == null ) {
             throw new NotFoundException( "No dataset matches " + datasetArg );
         }
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
+        ExpressionExperiment ee;
+        if ( refreshVectors ) {
+            ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
+        } else {
+            ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
+        }
         if ( ee == null ) {
             throw new NotFoundException( "No dataset with ID " + id );
+        }
+        if ( refreshReports ) {
+            expressionExperimentReportService.evictFromCache( id );
         }
         return Response.created( URI.create( "/datasets/" + ee.getId() ) )
                 .entity( expressionExperimentService.loadValueObject( ee ) )

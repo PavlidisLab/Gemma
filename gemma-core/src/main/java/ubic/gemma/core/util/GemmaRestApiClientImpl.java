@@ -8,14 +8,20 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 @CommonsLog
@@ -57,11 +63,34 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     @Override
     public Response perform( String endpoint ) throws IOException {
-        Assert.isTrue( endpoint.startsWith( "/" ) );
+        return performInternal( endpoint, null );
+    }
+
+    @Override
+    public Response perform( String endpoint, MultiValueMap<String, Object> params ) throws IOException {
+        return performInternal( endpoint, params );
+    }
+
+    public Response perform( String endpoint, String firstParamName, Object firstParamValue, Object... otherParams ) throws IOException {
+        Assert.isTrue( StringUtils.isNotBlank( firstParamName ), "Parameter names must not be blank." );
+        Assert.isTrue( otherParams.length % 2 == 0, "The number of parameters must be even." );
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        params.add( firstParamName, firstParamValue );
+        for ( int i = 0; i < otherParams.length; i += 2 ) {
+            Assert.isInstanceOf( String.class, otherParams[i], "Parameter names must be strings." );
+            Assert.isTrue( StringUtils.isNotBlank( ( String ) otherParams[i] ), "Parameter names must not be blank." );
+            params.add( ( String ) otherParams[i], otherParams[i + 1] );
+        }
+        return performInternal( endpoint, params );
+    }
+
+    private Response performInternal( String endpoint, @Nullable MultiValueMap<String, Object> params ) throws IOException {
+        Assert.isTrue( endpoint.startsWith( "/" ), "Endpoint must start with a '/' character." );
         URLConnection connection = null;
         try {
             int status;
-            connection = new URL( hostUrl + "/rest/v2" + endpoint ).openConnection();
+            URL url = new URL( hostUrl + "/rest/v2" + endpoint + ( params != null ? "?" + encodeQueryParams( params ) : "" ) );
+            connection = url.openConnection();
             connection.setRequestProperty( "Accept", "application/json" );
             connection.setRequestProperty( "Accept-Encoding", "gzip" );
             if ( username != null ) {
@@ -93,6 +122,28 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             if ( connection instanceof HttpURLConnection ) {
                 ( ( HttpURLConnection ) connection ).disconnect();
             }
+        }
+    }
+
+    private String encodeQueryParams( MultiValueMap<String, Object> params ) {
+        return params.entrySet().stream()
+                .flatMap( e -> e.getValue().stream().map( v -> encode( e.getKey() ) + "=" + encode( stringify( v ) ) ) )
+                .collect( Collectors.joining( "&" ) );
+    }
+
+    /**
+     * Stringify an object into something understood by Gemma REST.
+     * TODO: handle lists as comma-delimited strings
+     */
+    private String stringify( Object o ) {
+        return String.valueOf( o );
+    }
+
+    private String encode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
         }
     }
 

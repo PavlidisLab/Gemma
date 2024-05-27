@@ -18,6 +18,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
@@ -173,6 +174,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public DatabaseEntryArgService databaseEntryArgService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentReportService expressionExperimentReportService() {
             return mock();
         }
     }
@@ -543,13 +549,19 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK );
     }
 
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
     @Test
     @WithMockUser
     public void testRefreshDataset() {
         ee.setId( 1L );
         when( expressionExperimentService.loadAndThawWithRefreshCacheMode( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
-        assertThat( target( "/datasets/1/refresh" ).request().get() )
+        assertThat( target( "/datasets/1/refresh" )
+                .queryParam( "refreshVectors", true )
+                .queryParam( "refreshReports", true )
+                .request().get() )
                 .hasStatus( Response.Status.CREATED )
                 .hasHeaderSatisfying( "Location", locations -> {
                     assertThat( locations )
@@ -559,5 +571,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                             .endsWith( "/datasets/1" );
                 } )
                 .entity();
+        verify( expressionExperimentService ).loadAndThawWithRefreshCacheMode( 1L );
+        verify( expressionExperimentService ).loadValueObject( ee );
+        verify( expressionExperimentReportService ).evictFromCache( 1L );
     }
 }

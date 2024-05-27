@@ -28,6 +28,12 @@ public class GemmaRestApiClientTest {
     }
 
     @Test
+    public void testEndpointWithParameters() throws IOException {
+        assertThat( client.perform( "/datasets", "query", "BRCA1" ) )
+                .isInstanceOf( GemmaRestApiClient.DataResponse.class );
+    }
+
+    @Test
     public void testEndpointThatRequiresCredentials() throws IOException {
         assertThat( client.perform( "/users/me" ) )
                 .asInstanceOf( type( GemmaRestApiClient.ErrorResponse.class ) )

@@ -488,11 +488,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     /**
      * Refresh a dataset for Gemma Web.
      */
-    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee ) throws Exception {
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
         GemmaRestApiClient.Response response = getGemmaRestApiClient()
-                .perform( "/datasets/" + ee.getId() + "/refresh" );
+                .perform( "/datasets/" + ee.getId() + "/refresh",
+                        "refreshVectors", refreshVectors,
+                        "refreshReports", refreshReports );
         if ( response instanceof GemmaRestApiClient.DataResponse ) {
             log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
         } else if ( response instanceof GemmaRestApiClient.ErrorResponse ) {

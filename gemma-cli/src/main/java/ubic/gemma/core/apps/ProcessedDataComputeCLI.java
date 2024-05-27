@@ -132,6 +132,12 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 this.preprocessorService.process( ee, ignoreQuantitationMismatch );
             }
 
+            try {
+                refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+            } catch ( Exception e ) {
+                AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+            }
+
             // Note the auditing is done by the service.
             addSuccessObject( ee );
         } catch ( QuantitationMismatchPreprocessingException e ) {

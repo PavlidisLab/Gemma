@@ -1,6 +1,8 @@
 package ubic.gemma.core.util;
 
-import javax.annotation.Nullable;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
 import java.io.IOException;
 
 /**
@@ -10,11 +12,17 @@ import java.io.IOException;
 public interface GemmaRestApiClient {
 
     /**
-     * Access a given endpoint REST endpoint.
+     * Access a given REST endpoint.
+     */
+    Response perform( String endpoint ) throws IOException;
+
+    /**
+     * Access a given endpoint REST endpoint with parameters.
      * @throws IOException if anything goes wrong with I/O including issues with JSON deserialization
      */
-    @Nullable
-    Response perform( String endpoint ) throws IOException;
+    Response perform( String endpoint, MultiValueMap<String, Object> params ) throws IOException;
+
+    Response perform( String endpoint, String firstParamName, Object firstParamValue, Object... otherParams ) throws IOException;
 
     /**
      * Set credentials used for authenticating API requests.

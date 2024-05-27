@@ -736,6 +736,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thawWithoutVectors( ee );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
         this.expressionExperimentDao.thaw( ee );
