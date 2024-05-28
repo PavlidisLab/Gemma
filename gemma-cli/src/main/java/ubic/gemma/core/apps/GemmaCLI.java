@@ -81,7 +81,7 @@ public class GemmaCLI {
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
-                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", false, "Name of the executable to generate completion for (defaults to gemma-cli)" )
+                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" )
                 .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
@@ -193,7 +193,8 @@ public class GemmaCLI {
             if ( shellName.equals( "bash" ) ) {
                 completionGenerator = new BashCompletionGenerator( commandsByName.keySet() );
             } else if ( shellName.equals( "fish" ) ) {
-                completionGenerator = new FishCompletionGenerator( "gemma-cli", commandsByName.keySet() );
+                String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, "gemma-cli" );
+                completionGenerator = new FishCompletionGenerator( executableName, commandsByName.keySet() );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );
                 System.exit( 1 );
