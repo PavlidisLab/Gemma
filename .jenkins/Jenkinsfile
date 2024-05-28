@@ -6,6 +6,7 @@ def baseCodeVersion
 def dataDir
 def deployDir
 def cliDir
+def cliDirSymlink
 
 void setBuildStatus(String context, String message, String state) {
     step([
@@ -64,9 +65,13 @@ pipeline {
                         }
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        cliDir = params.CLI_DIR_PREFIX
+                        cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
+                        cliDirSymlink = params.CLI_DIR_PREFIX
                     } else if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
                         cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
+                        if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
+                            cliDirSymlink = params.CLI_DIR_PREFIX + '-staging'
+                        }
                     }
                 }
             }
@@ -215,6 +220,11 @@ pipeline {
                     }
                     steps {
                         sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
+                        script {
+                            if (cliDirSymlink != null) {
+                                sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
+                            }
+                        }
                     }
                 }
             }
