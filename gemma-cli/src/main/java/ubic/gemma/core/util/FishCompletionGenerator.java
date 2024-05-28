@@ -15,16 +15,19 @@ import java.util.stream.Collectors;
  */
 public class FishCompletionGenerator implements CompletionGenerator {
 
+    private final String executableName;
     private final String allSubcommands;
 
-    public FishCompletionGenerator( Set<String> allSubcommands ) {
+    public FishCompletionGenerator( String executableName, Set<String> allSubcommands ) {
+        this.executableName = executableName;
         this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).collect( Collectors.joining( " " ) );
     }
 
     @Override
     public void generateCompletion( Options options, PrintWriter writer ) {
         for ( Option o : options.getOptions() ) {
-            writer.printf( "complete -c gemma-cli -n %s %s%s%s%s%n",
+            writer.printf( "complete -c %s -n %s %s%s%s%s%n",
+                    executableName,
                     // prevents global options from being suggested after a subcommand
                     quoteIfNecessary( "not __fish_seen_subcommand_from " + allSubcommands ),
                     ( o.getOpt().length() == 1 ? " -s " : " -o " ) + o.getOpt(),
@@ -38,17 +41,19 @@ public class FishCompletionGenerator implements CompletionGenerator {
     public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         // -f prevents files from being suggested as subcommand
         // FIXME: add -k, but the order has to be reversed
-        writer.printf( "complete -c gemma-cli -n %s -f -a %s%s%n",
+        writer.printf( "complete -c %s -n %s -f -a %s%s%n",
+                executableName,
                 // prevents subcommands to be suggested after a subcommand
                 quoteIfNecessary( "not __fish_seen_subcommand_from " + allSubcommands ),
                 quoteIfNecessary( subcommand ),
                 StringUtils.isNotBlank( subcommandDescription ) ? " --description " + quoteIfNecessary( subcommandDescription ) : "" );
         // prevents files from being suggested if the command does not allow positional arguments
         if ( !allowsPositionalArguments ) {
-            writer.printf( "complete -c gemma-cli -n %s -f%n", quoteIfNecessary( "__fish_seen_subcommand_from " + subcommand ) );
+            writer.printf( "complete -c %s -n %s -f%n", executableName, quoteIfNecessary( "__fish_seen_subcommand_from " + subcommand ) );
         }
         for ( Option o : subcommandOptions.getOptions() ) {
-            writer.printf( "complete -c gemma-cli -n %s%s%s%s%s%s%n",
+            writer.printf( "complete -c %s -n %s%s%s%s%s%s%n",
+                    executableName,
                     quoteIfNecessary( "__fish_seen_subcommand_from " + subcommand ),
                     ( o.getOpt().length() == 1 ? " -s " : " -o " ) + o.getOpt(),
                     o.getLongOpt() != null ? " -l " + o.getLongOpt() : "",

@@ -50,7 +50,7 @@ public class CompletionGeneratorTest {
             return;
         }
         try ( PrintWriter writer = new PrintWriter( new OutputStreamWriter( process.getOutputStream() ) ) ) {
-            writeCompletionScript( new FishCompletionGenerator( new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
+            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
         assertEquals( error, 0, process.waitFor() );
@@ -92,7 +92,7 @@ public class CompletionGeneratorTest {
     private String getFishCompletions( String words ) throws IOException, InterruptedException {
         Process process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
         try ( PrintWriter writer = new PrintWriter( new OutputStreamWriter( process.getOutputStream() ) ) ) {
-            writeCompletionScript( new FishCompletionGenerator( new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
+            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
             writer.println( "complete -C 'gemma-cli " + words + "'" );
         }
         return getProcessOutput( process );
