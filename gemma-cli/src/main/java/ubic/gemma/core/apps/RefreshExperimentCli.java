@@ -1,7 +1,8 @@
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.commons.cli.ParseException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -11,8 +12,9 @@ import javax.annotation.Nullable;
 @Component
 public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
 
-    @Value("${gemma.hosturl}")
-    private String hostUrl;
+    private boolean refreshVectors;
+
+    private boolean refreshReports;
 
     public RefreshExperimentCli() {
         setUseReferencesIfPossible( true );
@@ -27,13 +29,22 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Refresh the given experiments on the Gemma Website at " + hostUrl;
+        return "Refresh the given experiments on the Gemma Website";
     }
 
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
+        options.addOption( "v", "refreshVectors", false, "Refresh raw and processed data vectors" );
+        options.addOption( "r", "refreshReports", false, "Refresh experiment reports (i.e. batch information, diff ex. analyses, etc.)" );
         addThreadsOption( options );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+        refreshVectors = commandLine.hasOption( 'v' );
+        refreshReports = commandLine.hasOption( 'r' );
     }
 
     @Override
@@ -42,7 +53,7 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
             getBatchTaskExecutor().execute( () -> {
                 if ( bas instanceof ExpressionExperiment ) {
                     try {
-                        refreshExpressionExperimentFromGemmaWeb( ( ExpressionExperiment ) bas, true, true );
+                        refreshExpressionExperimentFromGemmaWeb( ( ExpressionExperiment ) bas, refreshVectors, refreshReports );
                         addSuccessObject( "ExpressionExperiment with ID " + bas.getId() );
                     } catch ( Exception e ) {
                         addErrorObject( "ExpressionExperiment with ID " + bas.getId(), e );
