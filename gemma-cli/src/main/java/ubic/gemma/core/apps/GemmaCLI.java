@@ -152,7 +152,7 @@ public class GemmaCLI {
             profiles.add( "testdb" );
         }
 
-        ApplicationContext ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
+        ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
         /*
          * Build a map from command names to classes.
@@ -186,7 +186,7 @@ public class GemmaCLI {
                     shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
                 } else {
                     System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
-                    System.exit( 1 );
+                    exit( 1 );
                     return;
                 }
             }
@@ -197,7 +197,7 @@ public class GemmaCLI {
                 completionGenerator = new FishCompletionGenerator( executableName, commandsByName.keySet() );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );
-                System.exit( 1 );
+                exit( 1 );
                 return;
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
@@ -210,7 +210,7 @@ public class GemmaCLI {
             }
             completionGenerator.afterCompletion( completionWriter );
             completionWriter.flush();
-            System.exit( 0 );
+            exit( 0 );
             return;
         }
 
@@ -219,6 +219,7 @@ public class GemmaCLI {
             System.err.println( "No command was supplied." );
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
             exit( 1 );
+            return;
         }
 
         // the first element of the remaining args is the command and the rest are the arguments
