@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.util.TestComponent;
 
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ContextConfiguration
-public class FindObsoleteTermsCliTest extends BaseCliTest {
+public class FindObsoleteTermsCliTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
     @TestComponent

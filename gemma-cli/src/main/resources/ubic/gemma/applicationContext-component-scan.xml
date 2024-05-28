@@ -27,4 +27,6 @@
         <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
         <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
     </context:component-scan>
+
+    <bean class="ubic.gemma.core.util.MarkCLIsAsPrototypeAndSingletonsAsLazyInit"/>
 </beans>

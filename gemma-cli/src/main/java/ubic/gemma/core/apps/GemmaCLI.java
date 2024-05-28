@@ -18,10 +18,12 @@
  */
 package ubic.gemma.core.apps;
 
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import ubic.gemma.core.logging.LoggingConfigurer;
@@ -154,24 +156,29 @@ public class GemmaCLI {
 
         ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
 
-        /*
-         * Build a map from command names to classes.
-         */
-        Map<String, CLI> commandBeans = ctx.getBeansOfType( CLI.class );
-        Map<String, CLI> commandsByName = new HashMap<>();
-        SortedMap<CommandGroup, SortedMap<String, CLI>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
-        for ( CLI cliInstance : commandBeans.values() ) {
+        Map<String, Command> commandsByName = new HashMap<>();
+        SortedMap<CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
+        for ( String beanName : ctx.getBeanNamesForType( CLI.class ) ) {
+            CLI cliInstance;
+            Class<?> beanClass = ctx.getType( beanName );
+            try {
+                cliInstance = ( CLI ) beanClass.newInstance();
+            } catch ( InstantiationException | IllegalAccessException e2 ) {
+                log.warn( String.format( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.", beanClass.getName() ), e2 );
+                cliInstance = ctx.getBean( beanName, CLI.class );
+            }
             String commandName = cliInstance.getCommandName();
             if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                 // keep null to avoid printing some commands...
                 continue;
             }
-            commandsByName.put( commandName, cliInstance );
+            Command cmd = new Command( beanName, commandName, cliInstance.getShortDesc(), cliInstance.getOptions(), cliInstance.allowPositionalArguments() );
+            commandsByName.put( commandName, cmd );
             CommandGroup g = cliInstance.getCommandGroup();
             if ( !commandGroups.containsKey( g ) ) {
                 commandGroups.put( g, new TreeMap<>() );
             }
-            commandGroups.get( g ).put( commandName, cliInstance );
+            commandGroups.get( g ).put( commandName, cmd );
         }
 
         if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
@@ -203,9 +210,9 @@ public class GemmaCLI {
             PrintWriter completionWriter = new PrintWriter( System.out );
             completionGenerator.beforeCompletion( completionWriter );
             completionGenerator.generateCompletion( options, completionWriter );
-            for ( SortedMap<String, CLI> group : commandGroups.values() ) {
-                for ( CLI cli : group.values() ) {
-                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.allowPositionalArguments(), completionWriter );
+            for ( SortedMap<String, Command> group : commandGroups.values() ) {
+                for ( Command cli : group.values() ) {
+                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
                 }
             }
             completionGenerator.afterCompletion( completionWriter );
@@ -234,7 +241,10 @@ public class GemmaCLI {
             statusCode = 1;
         } else {
             try {
-                CLI cli = commandsByName.get( commandRequested );
+                StopWatch commandContextTimer = StopWatch.createStarted();
+                log.info( "Now loading context for " + commandRequested + "..." );
+                CLI cli = ctx.getBean( commandsByName.get( commandRequested ).getBeanName(), CLI.class );
+                log.info( "Loaded context for " + commandRequested + " took " + commandContextTimer.getTime() + " ms." );
                 System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                 System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
                 statusCode = cli.executeCommand( argsToPass );
@@ -282,7 +292,7 @@ public class GemmaCLI {
         return matcher.replaceAll( "$1 XXXXXX" );
     }
 
-    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, CLI>> commands, PrintWriter writer ) {
+    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, Command>> commands, PrintWriter writer ) {
         writer.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
@@ -290,16 +300,16 @@ public class GemmaCLI {
             footer.append( '\n' );
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
-            for ( Map.Entry<CommandGroup, SortedMap<String, CLI>> entry : commands.entrySet() ) {
+            for ( Map.Entry<CommandGroup, SortedMap<String, Command>> entry : commands.entrySet() ) {
                 if ( entry.getKey().equals( CommandGroup.DEPRECATED ) )
                     continue;
-                Map<String, CLI> commandsInGroup = entry.getValue();
+                Map<String, Command> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
                 int longestCommandInGroup = commandsInGroup.keySet().stream()
                         .map( String::length )
                         .max( Integer::compareTo )
                         .orElse( 0 );
-                for ( Map.Entry<String, CLI> e : commandsInGroup.entrySet() ) {
+                for ( Map.Entry<String, Command> e : commandsInGroup.entrySet() ) {
                     footer.append( e.getKey() )
                             .append( StringUtils.repeat( ' ', longestCommandInGroup - e.getKey().length() ) )
                             // FIXME: use a tabulation, but it creates newlines in IntelliJ's console
@@ -332,5 +342,14 @@ public class GemmaCLI {
     // order here is significant.
     public enum CommandGroup {
         EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
+    }
+
+    @Value
+    private static class Command {
+        String beanName;
+        String commandName;
+        String shortDesc;
+        Options options;
+        boolean allowsPositionalArguments;
     }
 }

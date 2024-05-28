@@ -12,9 +12,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 @Deprecated
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class FactorValueMigratorCLITest extends BaseCliTest {
+public class FactorValueMigratorCLITest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
     @TestComponent
