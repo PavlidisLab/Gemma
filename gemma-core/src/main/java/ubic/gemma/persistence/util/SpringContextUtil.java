@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.BuildInfo;
@@ -60,7 +61,7 @@ public class SpringContextUtil {
 
         StopWatch timer = StopWatch.createStarted();
         try {
-            ConfigurableApplicationContext context = new ClassPathXmlApplicationContext( paths.toArray( new String[0] ), false );
+            ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext( paths.toArray( new String[0] ), false );
             for ( String activeProfile : activeProfiles ) {
                 context.getEnvironment().addActiveProfile( activeProfile );
             }
@@ -125,6 +126,13 @@ public class SpringContextUtil {
             throw new IllegalStateException( "The context must contain at least one environment profile." );
         } else if ( numberOfActiveEnvironmentProfiles > 1 ) {
             throw new IllegalStateException( "The context must contain at most one environment profile." );
+        }
+        if ( context instanceof AbstractXmlApplicationContext ) {
+            // never validate in production, it's too slow
+            if ( context.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION ) ) {
+                log.debug( "Disabling XML validation for parsing the context metadata since the production production is enabled." );
+                ( ( AbstractXmlApplicationContext ) context ).setValidating( false );
+            }
         }
         BuildInfo buildInfo = BuildInfo.fromClasspath();
         SpringContextUtil.log.info( String.format( "Loading Gemma %s%s, hold on!",
