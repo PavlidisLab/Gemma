@@ -313,8 +313,7 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * Those arguments can be retrieved in {@link #processOptions(CommandLine)} by using {@link CommandLine#getArgList()}.
      */
-    @SuppressWarnings("unused")
-    protected void setAllowPositionalArguments( boolean allowPositionalArguments ) {
+    protected void setAllowPositionalArguments( @SuppressWarnings("SameParameterValue") boolean allowPositionalArguments ) {
         this.allowPositionalArguments = allowPositionalArguments;
     }
 
