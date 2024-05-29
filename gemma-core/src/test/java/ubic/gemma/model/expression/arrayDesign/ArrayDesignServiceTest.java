@@ -20,10 +20,10 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.UnresolvableObjectException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate4.HibernateObjectRetrievalFailureException;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -150,7 +150,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
                 CompositeSequence cs = compositeSequenceService.load( id );
                 if ( cs != null )
                     fail( cs + " was still in the system" );
-            } catch ( HibernateObjectRetrievalFailureException e ) {
+            } catch ( UnresolvableObjectException e ) {
                 // ok
             }
         }

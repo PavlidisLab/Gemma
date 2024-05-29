@@ -20,10 +20,10 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
+import org.hibernate.QueryException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate4.HibernateQueryException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -107,7 +107,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         characteristicService.browse( 10, 10, "category", true );
     }
 
-    @Test(expected = HibernateQueryException.class)
+    @Test(expected = QueryException.class)
     public void testBrowseWithInvalidField() {
         characteristicService.browse( 10, 10, "foo", true );
     }
