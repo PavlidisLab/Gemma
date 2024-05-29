@@ -21,9 +21,8 @@ import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,7 +96,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             return this.userDao.create( ( User ) user );
-        } catch ( DataIntegrityViolationException | InvalidDataAccessResourceUsageException e ) {
+        } catch ( ConstraintViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
     }

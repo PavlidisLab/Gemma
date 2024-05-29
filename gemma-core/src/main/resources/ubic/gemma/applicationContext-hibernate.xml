@@ -38,8 +38,8 @@
 		<constructor-arg name="maxAttempts" value="${gemma.transaction.maxretries}"/>
 		<constructor-arg name="retryableExceptions">
 			<map>
-				<entry key="org.springframework.dao.PessimisticLockingFailureException" value="true"/>
-				<entry key="org.springframework.dao.OptimisticLockingFailureException" value="true"/>
+				<entry key="org.hibernate.StaleObjectStateException" value="true"/>
+				<entry key="org.hibernate.StaleStateException" value="true"/>
 			</map>
 		</constructor-arg>
 		<constructor-arg name="traverseCauses" value="true"/>
@@ -92,7 +92,4 @@
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
 		<constructor-arg ref="ehcache"/>
 	</bean>
-
-	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
-
 </beans>
