@@ -63,6 +63,11 @@ public interface ExpressionExperimentService
     ExpressionExperiment loadReference( Long id );
 
     /**
+     * Load references for the given experiment IDs.
+     */
+    Collection<ExpressionExperiment> loadReferences( Collection<Long> ids );
+
+    /**
      * Load references for all experiments.
      * <p>
      * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
@@ -542,14 +547,18 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Return the taxon for each of the given experiments (or subsets).
+     */
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
-     * Returns the taxon of the given expressionExperiment.
+     * Returns the taxon of the given experiment or subset.
      *
      * @param bioAssaySet bioAssaySet.
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples).
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
 

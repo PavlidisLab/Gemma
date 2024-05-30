@@ -1401,37 +1401,46 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
-        Map<T, Taxon> result = new HashMap<>();
-
         if ( bioAssaySets.isEmpty() )
-            return result;
+            return Collections.emptyMap();
 
-        // is this going to run into problems if there are too many ees given? Need to batch?
-        T example = bioAssaySets.iterator().next();
-
-        // FIXME: multiple taxon can be returned for a given EE
-        String queryString;
-        if ( ExpressionExperiment.class.isAssignableFrom( example.getClass() ) ) {
-            queryString = "select EE, st from ExpressionExperiment as EE "
-                    + "join EE.bioAssays as BA join BA.sampleUsed as SU join SU.sourceTaxon st where EE in (:ees) "
-                    + "group by EE";
-        } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
-            queryString = "select eess, st from ExpressionExperimentSubSet eess "
-                    + "join eess.sourceExperiment ee join ee.bioAssays as BA join BA.sampleUsed as su "
-                    + "join su.sourceTaxon as st where eess in (:ees) group by eess";
-        } else {
-            throw new UnsupportedOperationException(
-                    "Can't get taxon of BioAssaySet of class " + example.getClass().getName() );
+        Collection<ExpressionExperiment> ees = new ArrayList<>();
+        Collection<ExpressionExperimentSubSet> subsets = new ArrayList<>();
+        for ( BioAssaySet bas : bioAssaySets ) {
+            if ( bas instanceof ExpressionExperiment ) {
+                ees.add( ( ExpressionExperiment ) bas );
+            } else if ( bas instanceof ExpressionExperimentSubSet ) {
+                subsets.add( ( ExpressionExperimentSubSet ) bas );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't get taxon of BioAssaySet of class " + bas.getClass().getName() );
+            }
         }
 
-        // FIXME: this query cannot be made cacheable because the taxon is not initialized when retrieved from the cache, defeating the purpose of caching altogether
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ees", optimizeIdentifiableParameterList( bioAssaySets ) )
-                .list();
+        List<Object[]> list = new ArrayList<>();
+        if ( !ees.isEmpty() ) {
+            // FIXME: this query cannot be made cacheable because the taxon is not initialized when retrieved from the cache, defeating the purpose of caching altogether
+            Query query = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select EE, st from ExpressionExperiment as EE "
+                            + "join EE.bioAssays as BA join BA.sampleUsed as SU join SU.sourceTaxon st where EE in (:ees) "
+                            + "group by EE" );
+            list.addAll( QueryUtils.listByIdentifiableBatch( query, "ees", ees, 2048 ) );
+        }
+        if ( !subsets.isEmpty() ) {
+            Query query = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess, st from ExpressionExperimentSubSet eess "
+                            + "join eess.sourceExperiment ee join ee.bioAssays as BA join BA.sampleUsed as su "
+                            + "join su.sourceTaxon as st where eess in (:ees) group by eess" );
+            list.addAll( QueryUtils.listByIdentifiableBatch( query, "ees", ees, 2048 ) );
+        }
 
-        //noinspection unchecked
-        return list.stream().collect( Collectors.toMap( row -> ( T ) row[0], row -> ( Taxon ) row[1] ) );
+        // collecting in a tree map in case BASs are proxies
+        Map<T, Taxon> result = new TreeMap<>( Comparator.comparing( BioAssaySet::getId ) );
+        for ( Object[] row : list ) {
+            //noinspection unchecked
+            result.put( ( T ) row[0], ( Taxon ) row[1] );
+        }
+        return result;
     }
 
     @Override

@@ -153,6 +153,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> loadReferences( Collection<Long> ids ) {
+        return expressionExperimentDao.loadReference( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAllReferences() {
         return expressionExperimentDao.loadReference( expressionExperimentDao.loadIds( null, null ) );
     }
