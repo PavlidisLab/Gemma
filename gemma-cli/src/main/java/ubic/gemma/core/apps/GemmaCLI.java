@@ -23,7 +23,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import ubic.gemma.core.logging.LoggingConfigurer;
@@ -241,12 +240,9 @@ public class GemmaCLI {
             statusCode = 1;
         } else {
             try {
-                StopWatch commandContextTimer = StopWatch.createStarted();
-                log.info( "Now loading context for " + commandRequested + "..." );
-                CLI cli = ctx.getBean( commandsByName.get( commandRequested ).getBeanName(), CLI.class );
-                log.info( "Loaded context for " + commandRequested + " took " + commandContextTimer.getTime() + " ms." );
                 System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                 System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
+                CLI cli = ctx.getBean( commandsByName.get( commandRequested ).getBeanName(), CLI.class );
                 statusCode = cli.executeCommand( argsToPass );
             } catch ( Exception e ) {
                 System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
