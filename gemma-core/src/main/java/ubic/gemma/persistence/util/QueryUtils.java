@@ -8,6 +8,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -199,6 +200,7 @@ public class QueryUtils {
 
     private static <T extends Identifiable> Predicate<T> distinctById() {
         Set<Long> seenIds = ConcurrentHashMap.newKeySet();
-        return i -> seenIds.add( i.getId() );
+        AtomicBoolean seenNullId = new AtomicBoolean( false );
+        return i -> i.getId() == null ? seenNullId.compareAndSet( false, true ) : seenIds.add( i.getId() );
     }
 }
