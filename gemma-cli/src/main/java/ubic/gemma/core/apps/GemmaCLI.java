@@ -23,6 +23,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import ubic.gemma.core.logging.LoggingConfigurer;
@@ -34,6 +35,7 @@ import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -239,6 +241,7 @@ public class GemmaCLI {
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
             statusCode = 1;
         } else {
+            StopWatch timer = StopWatch.createStarted();
             try {
                 System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                 System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
@@ -249,7 +252,7 @@ public class GemmaCLI {
                 System.err.println( ExceptionUtils.getStackTrace( e ) );
                 statusCode = 1;
             } finally {
-                System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
+                System.err.println( "========= Gemma CLI run of " + commandRequested + " complete in " + timer.getTime( TimeUnit.SECONDS ) + " seconds ============" );
             }
         }
 

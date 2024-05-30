@@ -22,7 +22,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -207,7 +206,6 @@ public abstract class AbstractCLI implements CLI {
             printHelp( options, new PrintWriter( System.err, true ) );
             return FAILURE;
         }
-        StopWatch watch = StopWatch.createStarted();
         try {
             try {
                 insideDoWork = true;
@@ -255,7 +253,6 @@ public abstract class AbstractCLI implements CLI {
                     executorService = null;
                 }
             }
-            log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
         }
     }
 
