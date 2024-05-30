@@ -18,10 +18,7 @@
  */
 package ubic.gemma.core.util;
 
-import lombok.Value;
 import org.apache.commons.cli.*;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -35,13 +32,14 @@ import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.*;
-import java.nio.file.Files;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Basic implementation of the {@link CLI} interface.
@@ -113,21 +111,20 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Format to use to summarize batch processing.
      */
-    private BatchFormat batchFormat;
+    private BatchTaskExecutorService.BatchFormat batchFormat;
     /**
      * Destination for batch processing summary.
      */
     @Nullable
     private File batchOutputFile;
 
-    private ExecutorService executorService;
-    private AtomicInteger batchTaskCounter;
-    private AtomicInteger completedBatchTasks;
     /**
-     * Hold the results of the command execution
-     * needs to be concurrently modifiable and kept in-order
+     * Indicate if we are "inside" {@link #doWork()}.
      */
-    private final List<BatchProcessingResult> batchProcessingResults = Collections.synchronizedList( new ArrayList<>() );
+    private boolean insideDoWork = false;
+
+    @Nullable
+    private BatchTaskExecutorService executorService;
 
     /**
      * Convenience method to obtain instance of any bean by name.
@@ -212,20 +209,30 @@ public abstract class AbstractCLI implements CLI {
         }
         StopWatch watch = StopWatch.createStarted();
         try {
-            executorService = createBatchTaskExecutorService();
-            doWork();
-            executorService.shutdown();
-            if ( !executorService.isTerminated() ) {
-                log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", batchTaskCounter.get() - completedBatchTasks.get(), batchTaskCounter.get() ) );
-                while ( !executorService.awaitTermination( 5, TimeUnit.SECONDS ) ) {
-                    reportBatchProcessingProgress();
-                }
+            try {
+                insideDoWork = true;
+                doWork();
+            } finally {
+                insideDoWork = false;
             }
-            return batchProcessingResults.stream().noneMatch( BatchProcessingResult::isError ) ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+            if ( executorService != null ) {
+                executorService.shutdown();
+                if ( !executorService.isTerminated() ) {
+                    log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", executorService.getSubmittedTasks() - executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
+                    while ( !executorService.awaitTermination( 5, TimeUnit.SECONDS ) ) {
+                        Assert.notNull( executorService, "Batch processing progress can only be reported if a batch task ExecutorService has been created." );
+                        log.info( String.format( "Completed %d/%d batch tasks.", executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
+                    }
+                }
+                return executorService.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
+            }
+            return SUCCESS;
         } catch ( Exception e ) {
-            List<Runnable> stillRunning = executorService.shutdownNow();
-            if ( !stillRunning.isEmpty() ) {
-                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+            if ( executorService != null ) {
+                List<Runnable> stillRunning = executorService.shutdownNow();
+                if ( !stillRunning.isEmpty() ) {
+                    log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+                }
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
@@ -235,9 +242,19 @@ public abstract class AbstractCLI implements CLI {
                 return FAILURE;
             }
         } finally {
-            executorService = null;
-            // always summarize processing, even if an error is thrown
-            summarizeBatchProcessing();
+            if ( executorService != null ) {
+                try {
+                    // always summarize processing, even if an error is thrown
+                    if ( batchFormat != BatchTaskExecutorService.BatchFormat.SUPPRESS && batchOutputFile != null ) {
+                        log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
+                    }
+                    executorService.summarizeBatchProcessing( batchFormat, batchOutputFile );
+                } catch ( IOException e ) {
+                    log.error( "Failed to summarize batch processing.", e );
+                } finally {
+                    executorService = null;
+                }
+            }
             log.info( String.format( "Elapsed time: %d seconds.", watch.getTime( TimeUnit.SECONDS ) ) );
         }
     }
@@ -378,14 +395,14 @@ public abstract class AbstractCLI implements CLI {
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
             try {
-                this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
+                this.batchFormat = BatchTaskExecutorService.BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
             } catch ( IllegalArgumentException e ) {
                 throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
             }
         } else {
-            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
+            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchTaskExecutorService.BatchFormat.TSV : BatchTaskExecutorService.BatchFormat.TEXT;
         }
-        this.batchOutputFile = ( File ) commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
+        this.batchOutputFile = commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
     }
 
     /**
@@ -420,7 +437,7 @@ public abstract class AbstractCLI implements CLI {
         }
         String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
                 message.replaceAll( "\n", "\nWARNING: " ) );
-        if ( "YES".equals( line.trim() ) ) {
+        if ( "YES" .equals( line.trim() ) ) {
             return;
         }
         throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );
@@ -428,27 +445,22 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Add a success object to indicate success in a batch processing.
-     * <p>
-     * This is further used in {@link #summarizeBatchProcessing()} to summarize the execution of the command.
-     *
      * @param successObject object that was processed
      * @param message       success message
      */
     protected void addSuccessObject( Object successObject, String message ) {
-        batchProcessingResults.add( new BatchProcessingResult( false, successObject, message, null ) );
+        getBatchTaskExecutorInternal().addSuccessObject( successObject, message );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
     protected void addSuccessObject( Object successObject ) {
-        batchProcessingResults.add( new BatchProcessingResult( false, successObject, null, null ) );
+        getBatchTaskExecutorInternal().addSuccessObject( successObject );
     }
 
     /**
      * Add an error object with a stacktrace to indicate failure in a batch processing.
-     * <p>
-     * This is further used in {@link #summarizeBatchProcessing()} to summarize the execution of the command.
      * <p>
      * This is intended to be used when an {@link Exception} is caught.
      *
@@ -457,7 +469,7 @@ public abstract class AbstractCLI implements CLI {
      * @param throwable   throwable to produce a stacktrace
      */
     protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, throwable ) );
+        getBatchTaskExecutorInternal().addErrorObject( errorObject, message, throwable );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
@@ -467,7 +479,7 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String)
      */
     protected void addErrorObject( @Nullable Object errorObject, String message ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, null ) );
+        getBatchTaskExecutorInternal().addErrorObject( errorObject, message );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
 
@@ -477,128 +489,21 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String, Throwable)
      */
     protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, exception.getMessage(), exception ) );
+        getBatchTaskExecutorInternal().addErrorObject( errorObject, exception );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
 
     /**
-     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
-     * 'successObjects' and 'errorObjects'
+     * Create an {@link ExecutorService} to be used for running batch tasks.
      */
-    private void summarizeBatchProcessing() {
-        if ( batchProcessingResults.isEmpty() ) {
-            return;
-        }
-        if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
-            log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
-        }
-        try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
-            switch ( batchFormat ) {
-                case TEXT:
-                    summarizeBatchProcessingToText( dest != null ? dest : System.out );
-                    break;
-                case TSV:
-                    summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
-                    break;
-                case SUPPRESS:
-                    break;
-            }
-        } catch ( IOException e ) {
-            log.error( "Failed to summarize batch processing.", e );
-        }
-    }
-
-    private void summarizeBatchProcessingToText( Appendable dest ) throws IOException {
-        List<BatchProcessingResult> successObjects = batchProcessingResults.stream().filter( bp -> !bp.isError() ).collect( Collectors.toList() );
-        if ( !successObjects.isEmpty() ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
-                    .append( " objects:\n" );
-            for ( BatchProcessingResult result : successObjects ) {
-                buf.append( result ).append( "\n" );
-            }
-            buf.append( "---------------------\n" );
-            dest.append( buf );
-        }
-
-        List<BatchProcessingResult> errorObjects = batchProcessingResults.stream().filter( BatchProcessingResult::isError ).collect( Collectors.toList() );
-        if ( !errorObjects.isEmpty() ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nErrors occurred during the processing of " )
-                    .append( errorObjects.size() ).append( " objects:\n" );
-            for ( BatchProcessingResult result : errorObjects ) {
-                buf.append( result ).append( "\n" );
-            }
-            buf.append( "---------------------\n" );
-            dest.append( buf );
-        }
-    }
-
-    private void summarizeBatchProcessingToTsv( Appendable dest ) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter( dest, CSVFormat.TDF ) ) {
-            for ( BatchProcessingResult result : batchProcessingResults ) {
-                printer.printRecord(
-                        result.getSource(),
-                        result.isError() ? "ERROR" : "SUCCESS",
-                        result.getMessage(),
-                        result.throwable != null ? ExceptionUtils.getRootCauseMessage( result.throwable ) : null );
-            }
-        }
-    }
-
-    /**
-     * A task executor that automatically reports errors in batch tasks.
-     */
-    @ParametersAreNonnullByDefault
-    private class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
-
-        public BatchTaskExecutorService( ExecutorService delegate ) {
-            super( delegate );
-        }
-
-        @Override
-        protected Runnable wrap( Runnable runnable ) {
-            int taskId = batchTaskCounter.getAndIncrement();
-            return () -> {
-                try {
-                    runnable.run();
-                } catch ( Exception e ) {
-                    addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
-                    throw e;
-                } finally {
-                    completedBatchTasks.incrementAndGet();
-                }
-            };
-        }
-
-        @Override
-        protected <T> Callable<T> wrap( Callable<T> callable ) {
-            int taskId = batchTaskCounter.getAndIncrement();
-            return () -> {
-                try {
-                    return callable.call();
-                } catch ( Exception e ) {
-                    addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
-                    throw e;
-                } finally {
-                    completedBatchTasks.incrementAndGet();
-                }
-            };
-        }
-    }
-
     protected ExecutorService createBatchTaskExecutorService() {
         Assert.isNull( executorService, "There is already a batch task ExecutorService." );
-        batchTaskCounter = new AtomicInteger( 0 );
-        completedBatchTasks = new AtomicInteger( 0 );
         ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
-        ExecutorService es;
         if ( this.numThreads > 1 ) {
-            es = Executors.newFixedThreadPool( this.numThreads, threadFactory );
+            return Executors.newFixedThreadPool( this.numThreads, threadFactory );
         } else {
-            es = Executors.newSingleThreadExecutor( threadFactory );
+            return Executors.newSingleThreadExecutor( threadFactory );
         }
-        return new BatchTaskExecutorService( es );
     }
 
     /**
@@ -609,8 +514,16 @@ public abstract class AbstractCLI implements CLI {
      * Errors will be reported with {@link #addErrorObject(Object, Exception)}. However, reporting successes is
      * the responsibility of the caller.
      */
-    protected ExecutorService getBatchTaskExecutor() {
-        Assert.notNull( executorService, "Batch tasks can only be submitted in doWork()." );
+    protected final ExecutorService getBatchTaskExecutor() {
+        // BatchTaskExecutorService is package-private
+        return getBatchTaskExecutorInternal();
+    }
+
+    private BatchTaskExecutorService getBatchTaskExecutorInternal() {
+        Assert.isTrue( insideDoWork || executorService != null, "Batch tasks can only be submitted in doWork()." );
+        if ( executorService == null ) {
+            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService() );
+        }
         return executorService;
     }
 
@@ -629,54 +542,7 @@ public abstract class AbstractCLI implements CLI {
         }
         for ( int i = 1; i <= futures.size(); i++ ) {
             completionService.take();
-            reportBatchProcessingProgress();
-        }
-    }
-
-    private void reportBatchProcessingProgress() {
-        log.info( String.format( "Completed %d/%d batch tasks.", completedBatchTasks.get(), batchTaskCounter.get() ) );
-    }
-
-    private enum BatchFormat {
-        TEXT,
-        TSV,
-        SUPPRESS
-    }
-
-    /**
-     * Represents an individual result in a batch processing.
-     */
-    @Value
-    private static class BatchProcessingResult {
-        boolean isError;
-        @Nullable
-        Object source;
-        @Nullable
-        String message;
-        @Nullable
-        Throwable throwable;
-
-        public BatchProcessingResult( boolean isError, @Nullable Object source, @Nullable String message, @Nullable Throwable throwable ) {
-            this.isError = isError;
-            this.source = source;
-            this.message = message;
-            this.throwable = throwable;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-            buf.append( source != null ? source : "Unknown object" );
-            if ( message != null ) {
-                buf.append( "\t" )
-                        .append( message.replace( "\n", "\n\t" ) ); // FIXME We don't want newlines here at all, but I'm not sure what condition this is meant to fix exactly.
-            }
-            if ( throwable != null ) {
-                buf.append( "\t" )
-                        .append( "Reason: " )
-                        .append( ExceptionUtils.getRootCauseMessage( throwable ) );
-            }
-            return buf.toString();
+            log.info( String.format( "Completed %d/%d batch tasks.", i, futures.size() ) );
         }
     }
 
