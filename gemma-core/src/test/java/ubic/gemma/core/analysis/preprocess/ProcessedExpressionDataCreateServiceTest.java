@@ -300,6 +300,10 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         assertNotNull( factor );
         assertEquals( 2, factor.getFactorValues().size() );
 
+        // reload the design
+        ee = eeService.loadAndThaw( ee.getId() );
+        assertNotNull( ee );
+
         /*
          * All that was setup. Now do the interesting bit
          */

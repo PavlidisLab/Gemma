@@ -125,7 +125,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         // remove stuff that will be in the way.
-        processedExpressionDataVectorService.removeProcessedDataVectors( ee );
+        expressionExperimentService.removeProcessedDataVectors( ee );
         sampleCoexpressionAnalysisService.removeForExperiment( ee );
         for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( ee ) ) {
             subsetService.remove( subset );
