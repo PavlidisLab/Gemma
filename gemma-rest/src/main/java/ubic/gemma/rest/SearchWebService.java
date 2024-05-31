@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;

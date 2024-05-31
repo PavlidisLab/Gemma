@@ -19,11 +19,10 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 

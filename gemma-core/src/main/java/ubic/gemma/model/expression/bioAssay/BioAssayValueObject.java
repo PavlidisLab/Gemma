@@ -14,17 +14,14 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.hibernate.Hibernate;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;

@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.util.*;

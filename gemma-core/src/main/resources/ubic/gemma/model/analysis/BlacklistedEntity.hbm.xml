@@ -3,7 +3,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-	<class name="ubic.gemma.model.expression.BlacklistedEntity" table="BLACKLIST" abstract="true" mutable="false">
+	<class name="ubic.gemma.model.blacklist.BlacklistedEntity" table="BLACKLIST" abstract="true" mutable="false">
 
 		<cache usage="read-only" />
 
@@ -39,10 +39,10 @@
 				sql-type="text" />
 		</property>
 
-		<subclass name="ubic.gemma.model.expression.experiment.BlacklistedExperiment"
+		<subclass name="ubic.gemma.model.blacklist.BlacklistedExperiment"
 			discriminator-value="blexperiment" abstract="false" />
 			
-		<subclass name="ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform" discriminator-value="blplatform"
-			abstract="false" />
+		<subclass name="ubic.gemma.model.blacklist.BlacklistedPlatform" discriminator-value="blplatform"
+				  abstract="false" />
 	</class>
 </hibernate-mapping>

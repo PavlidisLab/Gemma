@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;

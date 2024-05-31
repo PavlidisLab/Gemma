@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.*;
 

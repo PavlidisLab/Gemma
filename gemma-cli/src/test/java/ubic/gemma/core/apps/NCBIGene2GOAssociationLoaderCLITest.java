@@ -20,7 +20,7 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import static org.mockito.Mockito.*;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;

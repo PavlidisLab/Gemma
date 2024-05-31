@@ -24,7 +24,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;

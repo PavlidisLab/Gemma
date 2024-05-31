@@ -76,7 +76,7 @@
     <aop:config>
         <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
             <aop:after-returning method="doAclAdvice"
-                                 pointcut="ubic.gemma.core.util.Pointcuts.modifier()"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.modifier()"
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>

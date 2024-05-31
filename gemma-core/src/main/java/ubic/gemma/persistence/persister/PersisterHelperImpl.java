@@ -19,8 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.stereotype.Service;
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.

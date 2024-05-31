@@ -18,13 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 
 

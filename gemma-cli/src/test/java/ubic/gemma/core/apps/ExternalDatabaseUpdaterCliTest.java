@@ -19,7 +19,7 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -13,7 +13,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.ArrayList;
 import java.util.Collections;

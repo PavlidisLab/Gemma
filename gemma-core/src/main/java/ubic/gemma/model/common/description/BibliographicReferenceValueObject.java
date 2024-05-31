@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.hibernate.Hibernate;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;

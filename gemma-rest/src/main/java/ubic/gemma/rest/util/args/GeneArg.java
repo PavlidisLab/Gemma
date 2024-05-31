@@ -2,7 +2,7 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.util.MalformedArgException;

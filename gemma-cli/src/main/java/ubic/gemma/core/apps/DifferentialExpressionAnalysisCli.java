@@ -30,7 +30,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;

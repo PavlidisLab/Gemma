@@ -8,7 +8,7 @@ import org.xml.sax.SAXException;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;

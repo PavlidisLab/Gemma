@@ -24,7 +24,7 @@ import ubic.gemma.model.association.coexpression.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TaxonUtility;
+import ubic.gemma.persistence.service.genome.taxon.TaxonUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -48,16 +48,16 @@ public class LinkCreator {
 
         Class<? extends ExperimentCoexpressionLink> eeClazz;
         Class<? extends SupportDetails> supportClazz;
-        if ( TaxonUtility.isMouse( taxon ) ) {
+        if ( TaxonUtils.isMouse( taxon ) ) {
             clazz = MouseGeneCoExpression.Factory.class;
             eeClazz = MouseExperimentCoexpressionLinkImpl.class;
             supportClazz = MouseCoexpressionSupportDetailsImpl.class;
-        } else if ( TaxonUtility.isRat( taxon ) ) {
+        } else if ( TaxonUtils.isRat( taxon ) ) {
             clazz = RatGeneCoExpression.Factory.class;
             eeClazz = RatExperimentCoexpressionLinkImpl.class;
             supportClazz = RatCoexpressionSupportDetailsImpl.class;
 
-        } else if ( TaxonUtility.isHuman( taxon ) ) {
+        } else if ( TaxonUtils.isHuman( taxon ) ) {
             clazz = HumanGeneCoExpression.Factory.class;
             eeClazz = HumanExperimentCoexpressionLinkImpl.class;
             supportClazz = HumanCoexpressionSupportDetailsImpl.class;

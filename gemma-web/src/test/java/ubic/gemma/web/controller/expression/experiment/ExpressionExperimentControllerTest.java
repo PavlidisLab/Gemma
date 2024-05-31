@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.job.SubmittedTask;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;

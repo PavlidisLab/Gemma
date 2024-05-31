@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.Gene;

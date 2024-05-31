@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Collection;

@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * Class to handle saving client-side javascript error messages and warnings to a server-side log.

@@ -26,7 +26,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;

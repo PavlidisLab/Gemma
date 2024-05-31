@@ -17,7 +17,7 @@ package ubic.gemma.core.loader.association.phenotype;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;

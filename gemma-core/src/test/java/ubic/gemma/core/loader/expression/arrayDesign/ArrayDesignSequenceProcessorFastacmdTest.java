@@ -26,7 +26,7 @@ import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.util.Collection;

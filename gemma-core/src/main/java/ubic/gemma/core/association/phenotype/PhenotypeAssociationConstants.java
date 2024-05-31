@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.association.phenotype;
 
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 

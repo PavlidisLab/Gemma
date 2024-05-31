@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.OpenApiFactory;
 

@@ -10,12 +10,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 
 import static org.hamcrest.CoreMatchers.nullValue;

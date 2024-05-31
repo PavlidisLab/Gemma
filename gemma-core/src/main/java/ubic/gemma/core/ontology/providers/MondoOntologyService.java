@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology.providers;
 
 import ubic.basecode.ontology.providers.AbstractOntologyService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
 

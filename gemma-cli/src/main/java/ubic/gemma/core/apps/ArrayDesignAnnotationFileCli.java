@@ -25,7 +25,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractCLI;

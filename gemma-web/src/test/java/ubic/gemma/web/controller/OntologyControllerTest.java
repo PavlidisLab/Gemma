@@ -15,7 +15,7 @@ import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.util.EntityNotFoundException;
 

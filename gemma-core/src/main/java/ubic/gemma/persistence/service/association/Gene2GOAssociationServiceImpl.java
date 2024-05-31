@@ -30,7 +30,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.cache.CacheUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;

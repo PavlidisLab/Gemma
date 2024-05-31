@@ -13,7 +13,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 

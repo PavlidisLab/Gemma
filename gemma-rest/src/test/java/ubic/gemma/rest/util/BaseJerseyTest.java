@@ -21,7 +21,7 @@ import org.springframework.test.context.web.ServletTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
-import ubic.gemma.persistence.util.EnvironmentProfiles;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import javax.ws.rs.core.Application;
 

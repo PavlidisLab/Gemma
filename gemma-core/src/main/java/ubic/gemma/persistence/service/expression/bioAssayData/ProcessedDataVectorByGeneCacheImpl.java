@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.cache.CacheUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;

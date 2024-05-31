@@ -34,8 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
@@ -62,9 +62,9 @@ import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAss
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.AsyncFactoryBeanUtils;
+import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.BufferedWriter;
 import java.io.File;

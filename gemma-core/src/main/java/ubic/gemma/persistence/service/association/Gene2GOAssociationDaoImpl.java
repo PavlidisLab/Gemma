@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.HibernateUtils;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;

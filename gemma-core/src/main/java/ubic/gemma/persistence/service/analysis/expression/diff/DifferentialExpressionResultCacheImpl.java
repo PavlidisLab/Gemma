@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.cache.CacheUtils;
 
 import java.io.Serializable;
 import java.util.Collection;

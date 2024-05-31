@@ -28,18 +28,18 @@ import ubic.gemma.core.analysis.expression.coexpression.CoexpressionMetaValueObj
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.util.ArrayList;
 import java.util.Collection;

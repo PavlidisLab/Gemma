@@ -5,7 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
 

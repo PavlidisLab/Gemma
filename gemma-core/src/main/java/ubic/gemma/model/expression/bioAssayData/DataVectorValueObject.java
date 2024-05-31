@@ -19,7 +19,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;

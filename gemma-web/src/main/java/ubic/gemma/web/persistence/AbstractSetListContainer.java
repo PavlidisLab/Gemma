@@ -19,7 +19,7 @@
 
 package ubic.gemma.web.persistence;
 
-import ubic.gemma.model.GemmaSessionBackedValueObject;
+import ubic.gemma.model.common.GemmaSessionBackedValueObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;

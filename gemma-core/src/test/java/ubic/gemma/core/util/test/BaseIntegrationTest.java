@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.util.test.category.IntegrationTest;
-import ubic.gemma.persistence.util.EnvironmentProfiles;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 /**
  * Base class for integration tests.

@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import org.hibernate.SessionFactory;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;

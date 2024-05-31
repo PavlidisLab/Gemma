@@ -37,7 +37,7 @@ import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.LocalFile;

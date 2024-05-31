@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * Add batch information for RNA-seq experiments.

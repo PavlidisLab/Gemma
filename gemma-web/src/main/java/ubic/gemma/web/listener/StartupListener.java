@@ -27,8 +27,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import ubic.gemma.persistence.util.EnvironmentProfiles;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.ServletContext;
@@ -38,7 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static ubic.gemma.persistence.util.SpringContextUtil.prepareContext;
+import static ubic.gemma.core.context.SpringContextUtils.prepareContext;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters

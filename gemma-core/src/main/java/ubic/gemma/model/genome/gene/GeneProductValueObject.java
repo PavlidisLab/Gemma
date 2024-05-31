@@ -14,7 +14,7 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 /**
  * @author paul

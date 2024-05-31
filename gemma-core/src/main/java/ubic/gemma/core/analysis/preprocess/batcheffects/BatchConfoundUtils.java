@@ -23,7 +23,7 @@ import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.springframework.stereotype.Service;
 import ubic.basecode.math.KruskalWallis;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelperImpl;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;

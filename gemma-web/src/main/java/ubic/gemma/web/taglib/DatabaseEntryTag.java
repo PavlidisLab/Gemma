@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;

@@ -16,12 +16,7 @@ package ubic.gemma.model.common.description;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.IdentifiableValueObject;
-
-import javax.annotation.Nullable;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.Date;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 /**
  * ValueObject for database entry

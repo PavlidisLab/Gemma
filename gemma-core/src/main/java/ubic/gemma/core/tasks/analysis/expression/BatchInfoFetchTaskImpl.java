@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 
 /**
  * Task to try to get 'batch' information about an experiment. This usually involves downloading raw data files from the

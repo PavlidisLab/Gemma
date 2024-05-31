@@ -4,6 +4,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+import ubic.gemma.core.completion.BashCompletionGenerator;
+import ubic.gemma.core.completion.CompletionGenerator;
+import ubic.gemma.core.completion.FishCompletionGenerator;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

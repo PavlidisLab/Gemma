@@ -15,7 +15,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 

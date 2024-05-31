@@ -13,7 +13,7 @@
 	<!-- Automatically retry certain failed operations (marked with @Transactional or explicitly with @Retry) -->
 	<aop:config>
 		<aop:pointcut id="retryable"
-					  expression="ubic.gemma.core.util.Pointcuts.retryableOrTransactionalServiceMethod()"/>
+					  expression="ubic.gemma.persistence.util.Pointcuts.retryableOrTransactionalServiceMethod()"/>
 		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2"/>
 	</aop:config>
 

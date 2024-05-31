@@ -26,10 +26,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import ubic.gemma.core.completion.BashCompletionGenerator;
+import ubic.gemma.core.completion.CompletionGenerator;
+import ubic.gemma.core.completion.FishCompletionGenerator;
+import ubic.gemma.core.context.SpringContextUtils;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
-import ubic.gemma.core.util.*;
-import ubic.gemma.persistence.util.SpringContextUtil;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.util.HelpUtils;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -163,7 +168,7 @@ public class GemmaCLI {
             profiles.add( "testdb" );
         }
 
-        ctx = SpringContextUtil.getApplicationContext( profiles.toArray( new String[0] ) );
+        ctx = SpringContextUtils.getApplicationContext( profiles.toArray( new String[0] ) );
 
         Map<String, Command> commandsByName = new HashMap<>();
         SortedMap<CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );

@@ -14,7 +14,7 @@
  */
 package ubic.gemma.persistence.service.association.coexpression;
 
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.util.Collection;
 import java.util.List;

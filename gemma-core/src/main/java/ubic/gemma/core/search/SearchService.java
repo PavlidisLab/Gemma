@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 

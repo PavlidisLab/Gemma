@@ -1,6 +1,6 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 
 /**
  * Created by tesarst on 06/03/17.

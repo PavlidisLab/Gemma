@@ -1,7 +1,7 @@
 package ubic.gemma.core.tasks.analysis.expression;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 import ubic.gemma.core.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

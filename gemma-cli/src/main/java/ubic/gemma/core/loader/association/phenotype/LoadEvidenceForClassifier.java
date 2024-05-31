@@ -17,13 +17,13 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
 import java.io.*;

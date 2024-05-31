@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
