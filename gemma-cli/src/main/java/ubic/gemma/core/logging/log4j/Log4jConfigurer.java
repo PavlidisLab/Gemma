@@ -72,6 +72,8 @@ public class Log4jConfigurer implements LoggingConfigurer {
                 return Level.INFO;
             case 5:
                 return Level.DEBUG;
+            case 6:
+                return Level.TRACE;
             default:
                 throw new IllegalArgumentException( "the level must be between 0 and 5" );
         }

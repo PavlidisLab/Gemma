@@ -74,11 +74,11 @@ public class GemmaCLI {
     public static void main( String[] args ) {
         Option logOpt = Option.builder( VERBOSITY_OPTION )
                 .longOpt( "verbosity" ).hasArg()
-                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" )
+                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." )
                 .build();
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
-                .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). For example, '--logger ubic.gemma=5' or '--logger org.hibernate.SQL=5'" )
+                .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
@@ -114,7 +114,11 @@ public class GemmaCLI {
 
         if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
             try {
-                loggingConfigurer.configureAllLoggers( parseVerbosityLevel( commandLine.getOptionValue( VERBOSITY_OPTION ) ) );
+                try {
+                    loggingConfigurer.configureAllLoggers( Integer.parseInt( commandLine.getOptionValue( VERBOSITY_OPTION ) ) );
+                } catch ( NumberFormatException e ) {
+                    loggingConfigurer.configureAllLoggers( commandLine.getOptionValue( VERBOSITY_OPTION ) );
+                }
             } catch ( IllegalArgumentException e ) {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
@@ -133,7 +137,11 @@ public class GemmaCLI {
                 }
                 String loggerName = vals[0];
                 try {
-                    loggingConfigurer.configureLogger( loggerName, parseVerbosityLevel( vals[1] ) );
+                    try {
+                        loggingConfigurer.configureLogger( loggerName, Integer.parseInt( vals[1] ) );
+                    } catch ( NumberFormatException e ) {
+                        loggingConfigurer.configureLogger( loggerName, vals[1] );
+                    }
                 } catch ( IllegalArgumentException e ) {
                     System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION,
                             loggerName,
@@ -257,27 +265,6 @@ public class GemmaCLI {
         }
 
         exit( statusCode );
-    }
-
-    private static int parseVerbosityLevel( String s ) {
-        try {
-            return Integer.parseInt( s );
-        } catch ( NumberFormatException e ) {
-            if ( s.equalsIgnoreCase( "off" ) ) {
-                return 0;
-            } else if ( s.equalsIgnoreCase( "fatal" ) ) {
-                return 1;
-            } else if ( s.equalsIgnoreCase( "error" ) ) {
-                return 2;
-            } else if ( s.equalsIgnoreCase( "warn" ) ) {
-                return 3;
-            } else if ( s.equalsIgnoreCase( "info" ) ) {
-                return 4;
-            } else if ( s.equalsIgnoreCase( "debug" ) ) {
-                return 5;
-            }
-        }
-        throw new IllegalArgumentException( "Invalid verbosity level " + s );
     }
 
     /**
