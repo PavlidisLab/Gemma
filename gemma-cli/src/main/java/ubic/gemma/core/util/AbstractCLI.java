@@ -71,9 +71,6 @@ public abstract class AbstractCLI implements CLI {
      */
     protected static final int ABORTED = 2;
 
-    public static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2021 University of British Columbia.";
-
     private static final String AUTO_OPTION_NAME = "auto";
     private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
@@ -257,10 +254,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private void printHelp( Options options, PrintWriter writer ) {
-        new HelpFormatter().printHelp( writer, 150,
-                this.getCommandName() + " [options]",
-                this.getShortDesc() + "\n" + AbstractCLI.HEADER,
-                options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, AbstractCLI.FOOTER );
+        HelpUtils.printHelp( writer, getCommandName(), options, allowPositionalArguments, getShortDesc(), null );
     }
 
     /**

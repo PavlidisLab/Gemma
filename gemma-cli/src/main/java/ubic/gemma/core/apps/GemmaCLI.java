@@ -107,7 +107,7 @@ public class GemmaCLI {
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromClasspath();
-            System.out.printf( "Gemma version %s%n", buildInfo );
+            System.out.printf( "Gemma %s%n", buildInfo );
             exit( 0 );
             return;
         }
@@ -188,6 +188,13 @@ public class GemmaCLI {
                 commandGroups.put( g, new TreeMap<>() );
             }
             commandGroups.get( g ).put( commandName, cmd );
+        }
+
+        // full help with all the commands
+        if ( commandLine.hasOption( HELP_ALL_OPTION ) ) {
+            GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.out, true ) );
+            exit( 0 );
+            return;
         }
 
         if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
@@ -305,14 +312,13 @@ public class GemmaCLI {
                 }
                 footer.append( '\n' );
             }
+        } else {
+            footer.append( '\n' );
         }
 
-        footer.append( "To get help for a specific tool, use: gemma-cli <commandName> --help\n" );
-        footer.append( '\n' );
-        footer.append( AbstractCLI.FOOTER );
+        footer.append( "To get help for a specific tool, use: 'gemma-cli <commandName> --help'." );
 
-        new HelpFormatter().printHelp( writer, 150, "gemma-cli <commandName> [options]",
-                AbstractCLI.HEADER, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer.toString() );
+        HelpUtils.printHelp( writer, "<commandName>", options, false, null, footer.toString() );
     }
 
     /**
