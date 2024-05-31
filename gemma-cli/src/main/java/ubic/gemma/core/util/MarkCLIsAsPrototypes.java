@@ -12,12 +12,10 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
  * Mark all CLI beans as prototype and singletons as lazy-init by default.
  * <p>
  * This essentially makes loading of beans very fast since only the beans referenced by the CLI will be initialized.
- * <p>
- * This is a workaround because Spring 3 does not support lazy-by-default for annotated components.
  * @author poirigui
  */
 @CommonsLog
-public class MarkCLIsAsPrototypeAndSingletonsAsLazyInit implements BeanFactoryPostProcessor {
+public class MarkCLIsAsPrototypes implements BeanFactoryPostProcessor {
 
     @Override
     public void postProcessBeanFactory( ConfigurableListableBeanFactory beanFactory ) throws BeansException {
@@ -27,9 +25,6 @@ public class MarkCLIsAsPrototypeAndSingletonsAsLazyInit implements BeanFactoryPo
             if ( isCli( def, beanFactory.getBeanClassLoader() ) ) {
                 log.trace( "Marking " + beanName + " as prototype." );
                 def.setScope( ConfigurableBeanFactory.SCOPE_PROTOTYPE );
-            } else if ( def.isSingleton() && !def.isLazyInit() ) {
-                log.trace( "Marking " + beanName + " as lazy-init." );
-                def.setLazyInit( true );
             }
         }
     }

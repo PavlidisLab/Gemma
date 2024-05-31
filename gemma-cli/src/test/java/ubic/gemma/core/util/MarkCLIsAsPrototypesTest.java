@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
  * Test various behaviours of CLIs when injected as bean.
  * @author poirigui
  */
-public class MarkCLIsAsPrototypeAndSingletonsAsLazyInitTest extends BaseCLIIntegrationTest {
+public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
 
     @Autowired
     private BeanFactory beanFactory;

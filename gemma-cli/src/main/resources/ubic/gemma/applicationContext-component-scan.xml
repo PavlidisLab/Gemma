@@ -28,5 +28,6 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
-    <bean class="ubic.gemma.core.util.MarkCLIsAsPrototypeAndSingletonsAsLazyInit"/>
+    <bean class="ubic.gemma.core.context.LazyInitByDefaultPostProcessor"/>
+    <bean class="ubic.gemma.core.util.MarkCLIsAsPrototypes"/>
 </beans>
