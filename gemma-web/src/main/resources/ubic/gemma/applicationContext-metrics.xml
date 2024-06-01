@@ -3,7 +3,7 @@
        xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd"
-       profile="web&amp;!test">
+       profile="!test">
     <bean class="ubic.gemma.web.metrics.MeterRegistryWebConfigurer">
         <constructor-arg ref="meterRegistry"/>
     </bean>
