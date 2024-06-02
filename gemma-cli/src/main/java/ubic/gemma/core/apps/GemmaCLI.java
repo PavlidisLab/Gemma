@@ -63,6 +63,7 @@ public class GemmaCLI {
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
+            PROFILING_OPTION = "profiling",
             TESTDB_OPTION = "testdb";
 
     /**
@@ -94,7 +95,8 @@ public class GemmaCLI {
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
-                .addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" );
+                .addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" )
+                .addOption( PROFILING_OPTION, "profiling", false, "Enable profiling" );
         CommandLine commandLine;
         try {
             commandLine = new DefaultParser().parse( options, args, true );
@@ -166,6 +168,10 @@ public class GemmaCLI {
         // enable the test database
         if ( commandLine.hasOption( TESTDB_OPTION ) ) {
             profiles.add( "testdb" );
+        }
+
+        if ( commandLine.hasOption( PROFILING_OPTION ) ) {
+            profiles.add( "profiling" );
         }
 
         ctx = SpringContextUtils.getApplicationContext( profiles.toArray( new String[0] ) );
