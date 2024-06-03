@@ -224,10 +224,10 @@ public class GemmaCLI {
                     return;
                 }
             }
+            String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, "gemma-cli" );
             if ( shellName.equals( "bash" ) ) {
-                completionGenerator = new BashCompletionGenerator( commandsByName.keySet() );
+                completionGenerator = new BashCompletionGenerator( executableName, commandsByName.keySet() );
             } else if ( shellName.equals( "fish" ) ) {
-                String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, "gemma-cli" );
                 completionGenerator = new FishCompletionGenerator( executableName, commandsByName.keySet() );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );

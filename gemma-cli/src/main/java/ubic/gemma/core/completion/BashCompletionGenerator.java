@@ -13,6 +13,8 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
     private static final String INDENT = "    ";
 
+    private final String executableName;
+
     /**
      * A list of all possible subcommands.
      */
@@ -23,7 +25,8 @@ public class BashCompletionGenerator implements CompletionGenerator {
      */
     private String indent = "";
 
-    public BashCompletionGenerator( Set<String> subcommands ) {
+    public BashCompletionGenerator( String executableName, Set<String> subcommands ) {
+        this.executableName = executableName;
         this.subcommands = subcommands;
     }
 
@@ -59,9 +62,9 @@ public class BashCompletionGenerator implements CompletionGenerator {
     }
 
     private void generateWordsFromOptions( Options options, PrintWriter writer ) {
-        Set<String> optionsThatRequireArg = new HashSet<>();
-        Set<String> fileOptions = new HashSet<>();
-        Set<String> strings = new HashSet<>();
+        Set<String> optionsThatRequireArg = new TreeSet<>();
+        Set<String> fileOptions = new TreeSet<>();
+        Set<String> strings = new TreeSet<>();
         for ( Option option : options.getOptions() ) {
             List<String> words = new ArrayList<>( 2 );
             words.add( "-" + option.getOpt() );
@@ -130,7 +133,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
     public void afterCompletion( PrintWriter writer ) {
         popIndent();
         writer.println( "}" );
-        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli" );
+        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete " + quoteIfNecessary( executableName ) );
     }
 
     private String quoteRegex( String s ) {

@@ -27,7 +27,7 @@ public class FishCompletionGenerator implements CompletionGenerator {
     public void generateCompletion( Options options, PrintWriter writer ) {
         for ( Option o : options.getOptions() ) {
             writer.printf( "complete -c %s -n %s %s%s%s%s%n",
-                    executableName,
+                    quoteIfNecessary( executableName ),
                     // prevents global options from being suggested after a subcommand
                     quoteIfNecessary( "not __fish_seen_subcommand_from " + allSubcommands ),
                     ( o.getOpt().length() == 1 ? " -s " : " -o " ) + o.getOpt(),
