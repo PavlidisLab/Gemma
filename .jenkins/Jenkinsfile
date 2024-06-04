@@ -74,6 +74,7 @@ pipeline {
                         }
                     }
                 }
+                sh 'mvn -B clean'
             }
         }
         stage('Build') {
