@@ -1,9 +1,10 @@
 package ubic.gemma.core.config;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
 @CommonsLog
 @Profile("cli")
 @Component
-public class ConfigurationLinter implements InitializingBean {
+public class ConfigurationLinter implements ApplicationListener<ContextRefreshedEvent> {
 
     @Value("${load.ontologies}")
     private boolean autoLoadOntologies;
@@ -24,7 +25,7 @@ public class ConfigurationLinter implements InitializingBean {
     private String hbm2ddl;
 
     @Override
-    public void afterPropertiesSet() {
+    public void onApplicationEvent( ContextRefreshedEvent event ) {
         if ( autoLoadOntologies ) {
             log.warn( "Auto-loading of ontologies is enabled, this is not recommended for the CLI. Disable it by setting load.ontologies=false in Gemma.properties." );
         }
