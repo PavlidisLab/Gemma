@@ -3,13 +3,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 
-@Component
 public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     private boolean refreshVectors;

@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
@@ -40,7 +39,6 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-@Component
 public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
     private String arrayDesignName = null;

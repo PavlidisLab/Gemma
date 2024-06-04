@@ -7,8 +7,11 @@
 
     <!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository
         or @Controller). We exclude ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
-    <context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.core.context.BeanNameGenerator">
-        <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*"/>
+    <context:component-scan base-package="ubic.gemma.core" name-generator="ubic.gemma.core.context.BeanNameGenerator">
+        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
+    </context:component-scan>
+
+    <context:component-scan base-package="ubic.gemma.persistence" name-generator="ubic.gemma.core.context.BeanNameGenerator">
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 

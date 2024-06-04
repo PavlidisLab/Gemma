@@ -24,7 +24,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -50,7 +49,6 @@ import java.util.HashSet;
  *
  * @author xiangwan
  */
-@Component
 public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     private final static String SPLIT_CHAR = "\t";
     private final static int NAME_I = 0;
