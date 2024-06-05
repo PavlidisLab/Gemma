@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -41,7 +42,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.config.Settings;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
@@ -63,6 +63,26 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
+    // private static final XPathExpression xgds;
+    private static final XPathExpression xgse;
+    private static final XPathExpression xtitle;
+    private static final XPathExpression xgpls;
+    private static final XPathExpression xsummary;
+
+    static {
+        XPathFactory xf = XPathFactory.newInstance();
+        XPath xpath = xf.newXPath();
+        try {
+            // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+            xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
+            xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
+            xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
+            xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     @Autowired
     protected ExpressionExperimentService expressionExperimentService;
 
@@ -76,22 +96,11 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private ExternalDatabaseService externalDatabaseService;
 
     private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
-    private XPathExpression xgse;
-    private XPathExpression xtitle;
-    private XPathExpression xgpls;
-    private XPathExpression xsummary;
 
     private final ExecutorService es = Executors.newSingleThreadExecutor();
 
     @Override
-    public void afterPropertiesSet() throws XPathExpressionException {
-        XPathFactory xf = XPathFactory.newInstance();
-        XPath xpath = xf.newXPath();
-        // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
-        xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
-        xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
-        xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
-        xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
+    public void afterPropertiesSet() {
         try {
             es.submit( this::initializeLocalInfo );
         } finally {

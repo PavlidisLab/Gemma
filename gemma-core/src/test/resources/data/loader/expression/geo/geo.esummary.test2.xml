@@ -1,30 +1,30 @@
 <?xml version="1.0"?> <!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD eSummaryResult, 29 October 2004//EN"
-        "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd">
+    "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd">
 <!--suppress CheckTagEmptyBody -->
 <eSummaryResult>
     <DocSum>
         <Id>200021230</Id>
         <Item Name="GDS" Type="String"></Item>
-        <Item Name="title" Type="String">Different isoforms of MaxwellÂ´s Demon, a conserved cell membrane protein,
+        <Item Name="title" Type="String">Different isoforms of Maxwell´s Demon, a conserved cell membrane protein,
             mediate
             lose/win decisions during cell competition
         </Item>
         <Item Name="summary" Type="String">Cell competition promotes the elimination of weaker cells from a growing
             population.
-            Here we investigate how cells of Drosophila wing imaginal discs distinguish â€œwinnersâ€? from â€œlosersâ€?
+            Here we investigate how cells of Drosophila wing imaginal discs distinguish “winners”? from “losers”?
             during
             cell competition. Using genomic and functional assays we have identified Maxwell`s Demon (Mwd), a cell
             membrane
             protein conserved in multicellular animals. Our results suggest that the membrane protein Mwd is a dedicated
-            component of the cell competition response that is required and sufficient to label cells as â€œwinnersâ€?
+            component of the cell competition response that is required and sufficient to label cells as “winners”?
             or
-            â€œlosersâ€?. In Drosophila, the mwd locus produces three isoforms, mwdubi, mwdLose-A and mwdLose-B. Basal
+            “losers”?. In Drosophila, the mwd locus produces three isoforms, mwdubi, mwdLose-A and mwdLose-B. Basal
             levels of
             mwdubi are constantly produced. During competition the mwdLose isoforms are upregulated in prospective loser
             cells.
             Cell-cell comparison of relative mwdLose and mwdubi levels ultimately determine which cell undergoes
             apoptosis. This
-            â€œextracellular codeâ€? may constitute an ancient mechanism to terminate competitive conflicts among cells.
+            “extracellular code”? may constitute an ancient mechanism to terminate competitive conflicts among cells.
         </Item>
         <Item Name="GPL" Type="String">3829</Item>
         <Item Name="GSE" Type="String">21230</Item>
