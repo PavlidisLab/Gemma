@@ -27,7 +27,7 @@ public class BashCompletionGenerator implements CompletionGenerator {
 
     public BashCompletionGenerator( String executableName, Set<String> subcommands ) {
         this.executableName = executableName;
-        this.subcommands = subcommands;
+        this.subcommands = new TreeSet<>( subcommands );
     }
 
     @Override

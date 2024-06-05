@@ -20,7 +20,7 @@ public class FishCompletionGenerator implements CompletionGenerator {
 
     public FishCompletionGenerator( String executableName, Set<String> allSubcommands ) {
         this.executableName = executableName;
-        this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).collect( Collectors.joining( " " ) );
+        this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).sorted().collect( Collectors.joining( " " ) );
     }
 
     @Override
