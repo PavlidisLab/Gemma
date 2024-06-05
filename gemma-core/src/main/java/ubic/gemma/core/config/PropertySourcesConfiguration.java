@@ -2,6 +2,7 @@ package ubic.gemma.core.config;
 
 import org.apache.commons.configuration2.AbstractConfiguration;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.springframework.core.env.*;
 
 import java.util.Arrays;
@@ -25,7 +26,7 @@ public class PropertySourcesConfiguration extends AbstractConfiguration implemen
 
     private final ConcurrentMap<String, Object> cachedProperties = new ConcurrentHashMap<>();
 
-    public PropertySourcesConfiguration( PropertySources propertySources ) {
+    public PropertySourcesConfiguration( PropertySources propertySources, DefaultListDelimiterHandler listDelimiterHandler ) {
         MutablePropertySources ps = new MutablePropertySources( propertySources );
         ps.addFirst( new MapPropertySource( "overrides", overrides ) );
         ps.addFirst( new MapPropertySource( "cache", cachedProperties ) );

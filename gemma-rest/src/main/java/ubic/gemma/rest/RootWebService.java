@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -15,7 +15,6 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
@@ -48,13 +47,6 @@ public class RootWebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
 
-    /**
-     * Hardcoded list of {@link ubic.gemma.model.common.description.ExternalDatabase} names to display on the root
-     * endpoint.
-     * TODO: use a {@link ubic.gemma.model.common.description.DatabaseType} to identify those.
-     */
-    private static final String[] EXTERNAL_DATABASE_NAMES = Settings.getStringArray( "gemma.externalDatabases.featured" );
-
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
@@ -71,6 +63,9 @@ public class RootWebService {
     @Autowired(required = false)
     private ServletContext servletContext;
 
+    @Value("${gemma.externalDatabases.featured}")
+    private String[] featuredExternalDatabases;
+
     /**
      * Returns an object with API information.
      */
@@ -81,8 +76,8 @@ public class RootWebService {
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( @Context UriInfo uriInfo ) {
         // collect various versioned entities to display on the main endpoint
         List<ExternalDatabaseValueObject> versioned;
-        if ( EXTERNAL_DATABASE_NAMES != null && EXTERNAL_DATABASE_NAMES.length > 0 ) {
-            versioned = externalDatabaseService.findAllByNameIn( Arrays.asList( EXTERNAL_DATABASE_NAMES ) ).stream()
+        if ( featuredExternalDatabases != null && featuredExternalDatabases.length > 0 ) {
+            versioned = externalDatabaseService.findAllByNameIn( Arrays.asList( featuredExternalDatabases ) ).stream()
                     .map( ExternalDatabaseValueObject::new )
                     .collect( Collectors.toList() );
         } else {
@@ -141,7 +136,7 @@ public class RootWebService {
         return new UserValueObject( user, group );
     }
 
-    @Value
+    @lombok.Value
     public static class ApiInfoValueObject {
         String welcome;
         String version;
@@ -172,7 +167,7 @@ public class RootWebService {
     /**
      * @author keshav
      */
-    @Value
+    @lombok.Value
     public static class UserValueObject {
         String userName;
         String email;

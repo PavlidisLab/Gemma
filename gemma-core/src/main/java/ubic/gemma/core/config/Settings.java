@@ -21,6 +21,7 @@ package ubic.gemma.core.config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationUtils;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.PropertyPlaceholderHelper;
 
@@ -55,7 +56,7 @@ public class Settings {
 
     static {
         try {
-            config = new PropertySourcesConfiguration( SettingsConfig.settingsPropertySources() );
+            config = new PropertySourcesConfiguration( SettingsConfig.settingsPropertySources(), new DefaultListDelimiterHandler( ',' ) );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -167,14 +168,4 @@ public class Settings {
     public static String getString( String key, String defaultValue ) {
         return Settings.config.getString( key, defaultValue );
     }
-
-    public static String[] getStringArray( String key ) {
-        try {
-            return Settings.config.getStringArray( key );
-        } catch ( NoSuchElementException nsee ) {
-            Settings.log.info( key + " is not configured, returning default value of null" );
-            return null;
-        }
-    }
-
 }
