@@ -26,8 +26,8 @@ import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionSer
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;

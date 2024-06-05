@@ -20,7 +20,7 @@
 package ubic.gemma.core.tasks.maintenance;
 
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 
 import java.util.Collection;

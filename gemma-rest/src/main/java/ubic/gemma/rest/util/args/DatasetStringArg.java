@@ -21,4 +21,10 @@ public class DatasetStringArg extends DatasetArg<String> {
     ExpressionExperiment getEntity( ExpressionExperimentService service ) {
         return StringUtils.isEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() );
     }
+
+    @Override
+    Long getEntityId( ExpressionExperimentService service ) {
+        ExpressionExperiment ee = getEntity( service );
+        return ee != null ? ee.getId() : null;
+    }
 }

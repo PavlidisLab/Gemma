@@ -27,7 +27,7 @@ import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.net.URL;
 import java.util.ArrayList;

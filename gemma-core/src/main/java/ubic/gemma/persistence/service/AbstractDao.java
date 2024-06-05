@@ -28,7 +28,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.HibernateUtils;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

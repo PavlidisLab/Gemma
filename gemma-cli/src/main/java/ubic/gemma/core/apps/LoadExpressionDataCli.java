@@ -24,7 +24,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -51,7 +50,6 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-@Component
 public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
     @Autowired

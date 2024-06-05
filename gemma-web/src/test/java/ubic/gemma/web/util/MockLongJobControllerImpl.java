@@ -25,8 +25,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.job.AbstractTask;
 
 import java.util.HashMap;
 import java.util.Map;

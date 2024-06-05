@@ -22,11 +22,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.genome.FastaParser;
-import ubic.gemma.core.util.TimeUtil;
+import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.util.Collection;
@@ -190,12 +190,12 @@ public class RepeatScan {
                     // okay, still waiting.
                 }
                 Thread.sleep( RepeatScan.UPDATE_INTERVAL_MS );
-                String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
                 RepeatScan.log.info( "Repeatmasker: " + minutes + " minutes elapsed" );
             }
 
             overallWatch.stop();
-            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+            String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
             RepeatScan.log.info( "Repeatmasker took a total of " + minutes + " minutes" );
 
             // int exitVal = run.waitFor();

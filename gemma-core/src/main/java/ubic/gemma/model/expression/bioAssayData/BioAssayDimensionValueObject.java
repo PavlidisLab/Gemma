@@ -15,7 +15,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,7 +37,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
 
     private static final long serialVersionUID = -8686807689616396835L;
     private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
-    private transient BioAssayDimension bioAssayDimension = null;
     private String description;
     private String name;
     private boolean isReordered = false;
@@ -69,7 +68,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      */
     public BioAssayDimensionValueObject( BioAssayDimension entity ) {
         super( entity );
-        this.bioAssayDimension = entity;
         this.name = entity.getName();
         this.description = entity.getDescription();
         for ( BioAssay bv : entity.getBioAssays() ) {
@@ -104,25 +102,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
 
     public void setDescription( String description ) {
         this.description = description;
-    }
-
-    /**
-     * @return the represented BioAssayDimension. If this represents the dimension for an ExpressionExperimentSubSet,
-     * then the return will be a "fake" entity that has minimal information stored. This is a kludge to avoid
-     * having to make the DataMatrix code use ValueObjects.
-     */
-    BioAssayDimension getBioAssayDimension() {
-        if ( this.bioAssayDimension == null ) {
-            if ( !isSubset )
-                throw new IllegalStateException( "Entity was not set, not allowed unless isSubset=true" );
-
-            /*
-             * Begin hack.
-             */
-            return this.makeDummyBioAssayDimension();
-        }
-
-        return this.bioAssayDimension;
     }
 
     public boolean getIsSubset() {
@@ -184,7 +163,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     private BioAssayDimensionValueObject deepCopy() {
         BioAssayDimensionValueObject result = new BioAssayDimensionValueObject( this.id );
         result.bioAssays.addAll( this.bioAssays );
-        result.bioAssayDimension = this.bioAssayDimension;
         result.sourceBioAssayDimension = this.sourceBioAssayDimension;
         result.isSubset = this.isSubset;
         result.isReordered = this.isReordered;

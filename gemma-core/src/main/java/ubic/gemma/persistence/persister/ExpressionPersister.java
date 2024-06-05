@@ -34,13 +34,12 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
 import ubic.gemma.persistence.service.expression.experiment.*;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import javax.annotation.Nullable;
 import java.util.*;

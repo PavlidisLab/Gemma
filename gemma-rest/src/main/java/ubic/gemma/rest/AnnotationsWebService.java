@@ -31,7 +31,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;

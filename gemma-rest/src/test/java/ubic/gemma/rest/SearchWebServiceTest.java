@@ -1,5 +1,6 @@
 package ubic.gemma.rest;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.util.Version;
@@ -13,14 +14,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
@@ -31,7 +31,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyTest;
@@ -56,6 +56,16 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     @TestComponent
     @Import(JacksonConfig.class)
     public static class SearchWebServiceTestContextConfiguration {
+
+        @Bean
+        public OpenAPI openApi() {
+            return mock();
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
 
         @Bean
         public SearchWebService searchWebService() {

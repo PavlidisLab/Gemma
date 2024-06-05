@@ -4,7 +4,7 @@ import lombok.Setter;
 import org.quartz.JobExecutionContext;
 import org.quartz.StatefulJob;
 import org.springframework.util.Assert;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 /**
  * @author poirigui

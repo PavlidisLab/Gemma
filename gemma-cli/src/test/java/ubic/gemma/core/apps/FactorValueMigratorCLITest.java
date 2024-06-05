@@ -12,15 +12,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.core.util.test.BaseCliTest;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.*;
 @Deprecated
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class FactorValueMigratorCLITest extends BaseCliTest {
+public class FactorValueMigratorCLITest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
     @TestComponent
@@ -58,6 +59,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
         @Bean
         public ManualAuthenticationService manualAuthenticationService() {
+            return mock();
+        }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
             return mock();
         }
     }

@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -57,6 +59,15 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Autowired
     private AclService aclService;
 
+    private ExpressionExperiment ee;
+
+    @After
+    public void removeFixtures() {
+        if ( ee != null ) {
+            expressionExperimentDao.remove( ee );
+        }
+    }
+
     @Test
     public void testGetFilterableProperties() {
         Assertions.assertThat( expressionExperimentDao.getFilterableProperties() )
@@ -88,7 +99,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testThaw() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thaw( ee );
@@ -97,7 +108,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testThawBioAssays() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawBioAssays( ee );
@@ -107,7 +118,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testThawForFrontEnd() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawForFrontEnd( ee );
@@ -116,7 +127,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testThawWithoutVectors() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawWithoutVectors( ee );
@@ -444,47 +455,263 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ba1.setArrayDesignUsed( arrayDesign );
         ba1.setSampleUsed( bm );
         bm.getBioAssaysUsedIn().add( ba1 );
-        ExpressionExperiment ee1 = new ExpressionExperiment();
-        ee1.getBioAssays().add( ba1 );
+        ee = new ExpressionExperiment();
+        ee.getBioAssays().add( ba1 );
         // create quantitations
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.COUNT );
-        ee1.getQuantitationTypes().add( qt );
+        ee.getQuantitationTypes().add( qt );
         BioAssayDimension bad = new BioAssayDimension();
         bad.getBioAssays().add( ba1 );
         sessionFactory.getCurrentSession().persist( bad );
         RawExpressionDataVector vector = new RawExpressionDataVector();
-        vector.setExpressionExperiment( ee1 );
+        vector.setExpressionExperiment( ee );
         vector.setDesignElement( cs1 );
         vector.setQuantitationType( qt );
         vector.setBioAssayDimension( bad );
         vector.setData( new byte[0] );
-        ee1.getRawExpressionDataVectors().add( vector );
-        sessionFactory.getCurrentSession().persist( ee1 );
-
-        ee1 = reload( ee1 );
-        expressionExperimentDao.remove( ee1 );
+        ee.getRawExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee );
+        ee = reload( ee );
+        expressionExperimentDao.remove( ee );
+        ee = null; // to prevent a double-remove in the @After method
         sessionFactory.getCurrentSession().flush();
         assertNull( sessionFactory.getCurrentSession().get( BioAssayDimension.class, bad.getId() ) );
     }
 
     @Test
     public void testGetAllAnnotations() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        sessionFactory.getCurrentSession().persist( ee );
+        ee = createExpressionExperiment();
         expressionExperimentDao.getAllAnnotations( ee );
     }
 
     @Test
     public void testGetAnnotationsByLevel() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        sessionFactory.getCurrentSession().persist( ee );
+        ee = createExpressionExperiment();
         expressionExperimentDao.getExperimentAnnotations( ee );
         expressionExperimentDao.getBioMaterialAnnotations( ee );
         expressionExperimentDao.getExperimentalDesignAnnotations( ee );
+    }
+
+    @Test
+    public void testAddRawDataVectors() {
+        ee = createExpressionExperiment();
+        ArrayDesign platform = createPlatform();
+        assertNotNull( platform.getId() );
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( int i = 0; i < 3; i++ ) {
+            QuantitationType qt = new QuantitationType();
+            qt.setName( "qt" + i );
+            qt.setGeneralType( GeneralType.QUANTITATIVE );
+            qt.setType( StandardQuantitationType.AMOUNT );
+            qt.setScale( ScaleType.LOG2 );
+            qt.setRepresentation( PrimitiveType.DOUBLE );
+            Collection<RawExpressionDataVector> vectors = new ArrayList<>();
+            for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+                RawExpressionDataVector v = new RawExpressionDataVector();
+                v.setBioAssayDimension( bad );
+                v.setDesignElement( cs );
+                v.setExpressionExperiment( ee );
+                v.setQuantitationType( qt );
+                v.setData( new byte[0] );
+                vectors.add( v );
+            }
+            assertEquals( 10, expressionExperimentDao.addRawDataVectors( ee, qt, vectors ) );
+            Assertions.assertThat( ee.getQuantitationTypes() )
+                    .hasSize( i + 1 )
+                    .contains( qt );
+            Assertions.assertThat( ee.getRawExpressionDataVectors() )
+                    .hasSize( 10 * ( i + 1 ) );
+        }
+    }
+
+    @Test
+    public void testRemoveAllRawDataVectors() {
+        ee = createExpressionExperimentWithRawVectors();
+        expressionExperimentDao.removeAllRawDataVectors( ee );
+    }
+
+    @Test
+    public void testRemoveRawDataVectors() {
+        ExpressionExperiment ee = createExpressionExperimentWithRawVectors();
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt ) );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveRawDataVectorsWhenQtIsUnknown() {
+        ee = createExpressionExperimentWithRawVectors();
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        sessionFactory.getCurrentSession().persist( qt );
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt ) );
+    }
+
+    @Test
+    public void testReplaceRawDataVectors() {
+        ee = createExpressionExperimentWithRawVectors();
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            RawExpressionDataVector newVector = new RawExpressionDataVector();
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setExpressionExperiment( ee );
+            newVector.setBioAssayDimension( v.getBioAssayDimension() );
+            newVector.setQuantitationType( v.getQuantitationType() );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        expressionExperimentDao.replaceRawDataVectors( ee, newVectors.iterator().next().getQuantitationType(), newVectors );
+        Assertions.assertThat( ee.getQuantitationTypes() )
+                .hasSize( 1 );
+        Assertions.assertThat( ee.getRawExpressionDataVectors() )
+                .hasSize( 10 );
+    }
+
+    @Test
+    public void testCreateProcessedDataVectors() {
+        ee = createExpressionExperimentWithRawVectors();
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType newQt = new QuantitationType();
+        newQt.setGeneralType( GeneralType.QUANTITATIVE );
+        newQt.setType( StandardQuantitationType.AMOUNT );
+        newQt.setScale( ScaleType.LOG2 );
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsMaskedPreferred( true );
+        for ( RawExpressionDataVector rawVector : ee.getRawExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( rawVector.getDesignElement() );
+            newVector.setBioAssayDimension( rawVector.getBioAssayDimension() );
+            newVector.setQuantitationType( newQt );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        assertNotNull( newQt.getId() );
+        Assertions.assertThat( ee.getQuantitationTypes() )
+                .hasSize( 2 )
+                .contains( newQt );
+    }
+
+    @Test
+    public void testCreateProcessedDataVectorsWithPersistentQt() {
+        ee = createExpressionExperimentWithRawVectors();
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType newQt = new QuantitationType();
+        newQt.setGeneralType( GeneralType.QUANTITATIVE );
+        newQt.setType( StandardQuantitationType.AMOUNT );
+        newQt.setScale( ScaleType.LOG2 );
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsMaskedPreferred( true );
+        for ( RawExpressionDataVector rawVector : ee.getRawExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( rawVector.getDesignElement() );
+            newVector.setBioAssayDimension( rawVector.getBioAssayDimension() );
+            newVector.setQuantitationType( newQt );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        assertNotNull( newQt.getId() );
+        Assertions.assertThat( ee.getQuantitationTypes() )
+                .hasSize( 2 )
+                .contains( newQt );
+    }
+
+    @Test
+    public void testRemoveProcessedDataVectors() {
+        ee = createExpressionExperimentWithProcessedVectors();
+        assertEquals( 1, ee.getQuantitationTypes().size() );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        assertEquals( 10, expressionExperimentDao.removeProcessedDataVectors( ee ) );
+        assertEquals( 0, ee.getNumberOfDataVectors().intValue() );
+        assertEquals( 0, ee.getQuantitationTypes().size() );
+    }
+
+    @Test
+    public void testReplaceProcessedDataVectors() {
+        ee = createExpressionExperimentWithProcessedVectors();
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType newQt = new QuantitationType();
+        newQt.setGeneralType( GeneralType.QUANTITATIVE );
+        newQt.setType( StandardQuantitationType.AMOUNT );
+        newQt.setScale( ScaleType.LOG2 );
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsMaskedPreferred( true );
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setBioAssayDimension( v.getBioAssayDimension() );
+            newVector.setQuantitationType( newQt );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        Assertions.assertThat( ee.getQuantitationTypes() )
+                .hasSize( 1 );
+        assertEquals( 10, expressionExperimentDao.replaceProcessedDataVectors( ee, newVectors ) );
+        assertNotNull( newQt.getId() );
+        Assertions.assertThat( ee.getQuantitationTypes() )
+                .hasSize( 1 )
+                .contains( newQt );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+    }
+
+    @Test
+    public void testReplaceProcessedDataVectorsReusingTheSameQT() {
+        ee = createExpressionExperimentWithProcessedVectors();
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setBioAssayDimension( v.getBioAssayDimension() );
+            newVector.setQuantitationType( v.getQuantitationType() );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        assertEquals( 10, expressionExperimentDao.replaceProcessedDataVectors( ee, newVectors ) );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+    }
+
+    @Test
+    public void testReplaceProcessedDataVectorsWithDetachedExperiment() {
+        ee = createExpressionExperimentWithProcessedVectors();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( ee );
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType newQt = new QuantitationType();
+        newQt.setGeneralType( GeneralType.QUANTITATIVE );
+        newQt.setType( StandardQuantitationType.AMOUNT );
+        newQt.setScale( ScaleType.LOG2 );
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsMaskedPreferred( true );
+        sessionFactory.getCurrentSession().persist( newQt );
+        ee.getQuantitationTypes().add( newQt );
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setBioAssayDimension( v.getBioAssayDimension() );
+            newVector.setQuantitationType( newQt );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
+        assertEquals( 10, expressionExperimentDao.replaceProcessedDataVectors( ee, newVectors ) );
+        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
     }
 
     private ExpressionExperiment reload( ExpressionExperiment e ) {
@@ -494,8 +721,74 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     private ExpressionExperiment createExpressionExperiment() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee = ExpressionExperiment.Factory.newInstance();
         ee.setExperimentalDesign( new ExperimentalDesign() );
         return expressionExperimentDao.create( ee );
+    }
+
+    private ExpressionExperiment createExpressionExperimentWithRawVectors() {
+        ee = new ExpressionExperiment();
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        ee.getQuantitationTypes().add( qt );
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qt );
+            v.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        return expressionExperimentDao.create( ee );
+    }
+
+    private ExpressionExperiment createExpressionExperimentWithProcessedVectors() {
+        ee = new ExpressionExperiment();
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsMaskedPreferred( true );
+        ee.getQuantitationTypes().add( qt );
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            ProcessedExpressionDataVector v = new ProcessedExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qt );
+            v.setData( new byte[0] );
+            ee.getProcessedExpressionDataVectors().add( v );
+        }
+        ee.setNumberOfDataVectors( 10 );
+        return expressionExperimentDao.create( ee );
+    }
+
+    private ArrayDesign createPlatform() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign platform = new ArrayDesign();
+        platform.setPrimaryTaxon( taxon );
+        for ( int i = 0; i < 10; i++ ) {
+            CompositeSequence cs = new CompositeSequence();
+            cs.setName( "cs" + i );
+            cs.setArrayDesign( platform );
+            platform.getCompositeSequences().add( cs );
+        }
+        sessionFactory.getCurrentSession().persist( platform );
+        assertNotNull( platform.getId() );
+        return platform;
     }
 }

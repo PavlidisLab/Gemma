@@ -7,6 +7,9 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,7 +58,7 @@ public class QueryUtils {
         }
         List<T> sortedList = list.stream()
                 .sorted( Comparator.comparing( Identifiable::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
-                .distinct()
+                .filter( distinctById() )
                 .collect( Collectors.toList() );
         if ( sortedList.size() > MAX_PARAMETER_LIST_SIZE ) {
             log.warn( String.format( "Optimizing a large parameter list of size %d may have a negative impact on performance, use batchIdentifiableParameterList() instead.",
@@ -92,7 +95,7 @@ public class QueryUtils {
         }
         List<T> sortedList = list.stream()
                 .sorted( Comparator.comparing( Identifiable::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
-                .distinct()
+                .filter( distinctById() )
                 .collect( Collectors.toList() );
         return ListUtils.batch( sortedList, batchSize );
     }
@@ -115,15 +118,9 @@ public class QueryUtils {
     public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
         List<T> result = new ArrayList<>( list.size() );
         for ( List<S> batch : batchParameterList( list, batchSize ) ) {
-            int remainingToFetch;
-            if ( maxResults > 0 ) {
-                if ( result.size() < maxResults ) {
-                    remainingToFetch = maxResults - result.size();
-                } else {
-                    break;
-                }
-            } else {
-                remainingToFetch = -1;
+            int remainingToFetch = calculateRemainingToFetch( result, maxResults );
+            if ( remainingToFetch == 0 ) {
+                break;
             }
             query.setParameterList( batchParam, batch );
             query.setMaxResults( remainingToFetch );
@@ -131,6 +128,39 @@ public class QueryUtils {
             result.addAll( query.list() );
         }
         return result;
+    }
+
+    public static <S extends
+            Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list,
+            int batchSize ) {
+        return listByIdentifiableBatch( query, batchParam, list, batchSize, -1 );
+    }
+
+    public static <S extends Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
+        List<T> result = new ArrayList<>( list.size() );
+        for ( List<S> batch : batchIdentifiableParameterList( list, batchSize ) ) {
+            int remainingToFetch = calculateRemainingToFetch( result, maxResults );
+            if ( remainingToFetch == 0 ) {
+                break;
+            }
+            query.setParameterList( batchParam, batch );
+            query.setMaxResults( remainingToFetch );
+            //noinspection unchecked
+            result.addAll( query.list() );
+        }
+        return result;
+    }
+
+    private static int calculateRemainingToFetch( List<?> result, int maxResults ) {
+        if ( maxResults > 0 ) {
+            if ( result.size() < maxResults ) {
+                return maxResults - result.size();
+            } else {
+                return 0;
+            }
+        } else {
+            return -1;
+        }
     }
 
     /**
@@ -166,5 +196,11 @@ public class QueryUtils {
 
     public static String escapeLike( String s ) {
         return s.replaceAll( "[%_\\\\]", "\\\\$0" );
+    }
+
+    private static <T extends Identifiable> Predicate<T> distinctById() {
+        Set<Long> seenIds = ConcurrentHashMap.newKeySet();
+        AtomicBoolean seenNullId = new AtomicBoolean( false );
+        return i -> i.getId() == null ? seenNullId.compareAndSet( false, true ) : seenIds.add( i.getId() );
     }
 }

@@ -19,13 +19,12 @@
 package ubic.gemma.model.association.phenotype;
 
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.genome.Gene;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;

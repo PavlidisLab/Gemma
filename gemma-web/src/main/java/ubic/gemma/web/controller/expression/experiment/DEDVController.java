@@ -31,8 +31,8 @@ import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorComm
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;

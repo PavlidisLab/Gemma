@@ -22,16 +22,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.apps.Blat;
-import ubic.gemma.core.apps.ShellDelegatingBlat;
-import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-import ubic.gemma.persistence.util.ChromosomeUtil;
+import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -423,7 +421,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             Collection<BlatResult> toKeep = new HashSet<>();
             for ( BlatResult ba : blatResultsForSequence ) {
-                if ( ChromosomeUtil.isCanonical( ba.getTargetChromosome() ) ) {
+                if ( ChromosomeUtils.isCanonical( ba.getTargetChromosome() ) ) {
                     toKeep.add( ba );
                 }
             }

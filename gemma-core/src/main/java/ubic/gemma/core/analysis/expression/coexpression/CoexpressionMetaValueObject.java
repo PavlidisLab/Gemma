@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.expression.coexpression;
 
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.Serializable;
 import java.util.*;

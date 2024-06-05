@@ -19,7 +19,6 @@
 package ubic.gemma.web.taglib.arrayDesign;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;

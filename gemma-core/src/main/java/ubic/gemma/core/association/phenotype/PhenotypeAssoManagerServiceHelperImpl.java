@@ -21,8 +21,8 @@ package ubic.gemma.core.association.phenotype;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -38,6 +38,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -410,7 +411,11 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
 
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
 
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );

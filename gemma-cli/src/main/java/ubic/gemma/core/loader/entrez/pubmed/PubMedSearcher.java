@@ -40,8 +40,8 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     private Collection<String> args;
     private boolean persist = false;
 
-    PubMedSearcher() {
-        super();
+    public PubMedSearcher() {
+        setAllowPositionalArguments( true );
     }
 
     @Override

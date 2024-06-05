@@ -1,7 +1,6 @@
 package ubic.gemma.core.tasks.visualization;
 
-import lombok.Value;
-import ubic.gemma.model.ValueObject;
+import ubic.gemma.model.common.ValueObject;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;

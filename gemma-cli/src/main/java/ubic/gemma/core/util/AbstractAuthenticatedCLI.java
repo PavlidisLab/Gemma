@@ -24,8 +24,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -33,8 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need authentication.
@@ -64,6 +62,9 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
 
     @Autowired
     private ManualAuthenticationService manAuthentication;
+
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     /**
      * Indicate if the command requires authentication.
@@ -105,11 +106,12 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
-            if ( !success ) {
+            if ( success ) {
+                gemmaRestApiClient.setAuthentication( username, password );
+                AbstractCLI.log.info( "Logged in as " + username );
+            } else {
                 throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
-            } else {
-                AbstractCLI.log.info( "Logged in as " + username );
             }
         } else {
             AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
@@ -158,16 +160,17 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Tasks are wrapped with {@link DelegatingSecurityContextCallable} to ensure that they execute with the security
-     * context set up by {@link #authenticate()}.
-     */
     @Override
-    protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
-        super.executeBatchTasks( tasks.stream()
-                .map( DelegatingSecurityContextRunnable::new )
-                .collect( Collectors.toList() ) );
+    protected ExecutorService createBatchTaskExecutorService() {
+        return new DelegatingSecurityContextExecutorService( super.createBatchTaskExecutorService() );
+    }
+
+    /**
+     * Obtain a REST API client for Gemma.
+     * <p>
+     * This client is authenticated with the same credentials that the CLI is using.
+     */
+    protected GemmaRestApiClient getGemmaRestApiClient() {
+        return gemmaRestApiClient;
     }
 }

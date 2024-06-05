@@ -26,7 +26,10 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.IOException;
+
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
@@ -36,7 +39,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 public class ExpressionExperimentBibRefFinderTest {
 
     @Test
-    public void testLocatePrimaryReference() throws Exception {
+    public void testLocatePrimaryReference() {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -46,14 +49,19 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
+        BibliographicReference bibref = null;
+        try {
+            bibref = finder.locatePrimaryReference( ee );
+        } catch ( IOException e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
+        }
         assertNotNull( bibref );
         assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
                 bibref.getTitle() );
     }
 
     @Test
-    public void testLocatePrimaryReferenceInvalidGSE() throws Exception {
+    public void testLocatePrimaryReferenceInvalidGSE() {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -63,7 +71,12 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
-        assertTrue( bibref == null );
+        BibliographicReference bibref = null;
+        try {
+            bibref = finder.locatePrimaryReference( ee );
+        } catch ( IOException e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
+        }
+        assertNull( bibref );
     }
 }

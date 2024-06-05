@@ -67,7 +67,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 
 import java.util.*;
 

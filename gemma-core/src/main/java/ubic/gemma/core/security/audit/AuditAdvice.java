@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.Pointcuts;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.persistence.util.Pointcuts;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -89,7 +89,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.creator()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.CREATE );
     }
@@ -104,7 +104,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.updater()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.UPDATE );
     }
@@ -120,7 +120,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.saver()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.saver()")
     public void doSaveAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.SAVE );
     }
@@ -135,7 +135,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.deleter()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.DELETE );
     }

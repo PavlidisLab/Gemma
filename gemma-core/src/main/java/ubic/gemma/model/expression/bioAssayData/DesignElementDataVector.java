@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,11 +19,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 public abstract class DesignElementDataVector extends DataVector {
 
     private static final long serialVersionUID = -4185333066166517308L;
+
     private BioAssayDimension bioAssayDimension;
     private CompositeSequence designElement;
 
@@ -42,9 +42,4 @@ public abstract class DesignElementDataVector extends DataVector {
     public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
     }
-
-    public abstract ExpressionExperiment getExpressionExperiment();
-
-    public abstract void setExpressionExperiment( ExpressionExperiment expressionExperiment );
-
 }

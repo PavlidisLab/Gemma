@@ -3,9 +3,8 @@ package ubic.gemma.groovy.framework
 import gemma.gsec.authentication.ManualAuthenticationService
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.security.core.context.SecurityContextHolder
-import ubic.gemma.persistence.util.SpringContextUtil
-import ubic.gemma.persistence.util.EnvironmentProfiles
+import ubic.gemma.core.context.SpringContextUtils
+import ubic.gemma.core.context.EnvironmentProfiles
 
 /**
  * Class for creation of a spring context. Example usage:
@@ -40,7 +39,7 @@ class SpringSupport {
     }
 
     SpringSupport(String userName, String password, List<String> activeProfiles) {
-        ctx = SpringContextUtil.getApplicationContext(activeProfiles as String[])
+        ctx = SpringContextUtils.getApplicationContext(activeProfiles as String[])
         authenticate(userName, password);
     }
 

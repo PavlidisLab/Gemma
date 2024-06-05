@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.core.genome.gene.GOGroupValueObject;
-import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;

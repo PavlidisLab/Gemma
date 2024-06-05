@@ -36,12 +36,13 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.expression.arrayDesign.CuratableService;
+import ubic.gemma.persistence.service.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -59,6 +60,20 @@ import java.util.function.Function;
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentService
         extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
+
+    ExpressionExperiment loadReference( Long id );
+
+    /**
+     * Load references for the given experiment IDs.
+     */
+    Collection<ExpressionExperiment> loadReferences( Collection<Long> ids );
+
+    /**
+     * Load references for all experiments.
+     * <p>
+     * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
+     */
+    Collection<ExpressionExperiment> loadAllReferences();
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -81,11 +96,58 @@ public interface ExpressionExperimentService
      *
      * @param eeToUpdate experiment to be updated.
      * @param newVectors vectors to be added.
-     * @return updated experiment.
+     * @return the number of added vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment addRawVectors( ExpressionExperiment eeToUpdate,
-            Collection<RawExpressionDataVector> newVectors );
+    int addRawVectors( ExpressionExperiment eeToUpdate, Collection<RawExpressionDataVector> newVectors );
+
+    /**
+     * @see ExpressionExperimentDao#replaceRawDataVectors(ExpressionExperiment, QuantitationType, Collection)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
+     * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
+     * computing the processed data vectors, but it does clear them out.
+     *
+     * @param ee      experiment
+     * @param vectors If they are from more than one platform, that will be dealt with.
+     * @return the number of vectors replaced
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int replaceAllRawDataVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * @see ExpressionExperimentDao#removeAllRawDataVectors(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeAllRawDataVectors( ExpressionExperiment ee );
+
+    /**
+     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * @see ExpressionExperimentDao#createProcessedDataVectors(ExpressionExperiment, Collection)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    /**
+     * @see ExpressionExperimentDao#replaceProcessedDataVectors(ExpressionExperiment, Collection)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    /**
+     * @see ExpressionExperimentDao#removeProcessedDataVectors(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeProcessedDataVectors( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
@@ -135,6 +197,23 @@ public interface ExpressionExperimentService
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThaw( Long id );
+
+    /**
+     * Load an experiment without cache and thaw it as per {@link #thaw(ExpressionExperiment)} with {@link org.hibernate.CacheMode#REFRESH}.
+     * <p>
+     * This has the side effect of refreshing the cache with the latest data. Since this can be expensive, only
+     * administrators are allowed to do this.
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
+
+    /**
+     * A lightweight version of {@link #loadAndThawWithRefreshCacheMode(Long)} which thaws as per {@link #thawLite(ExpressionExperiment)}.
+     */
+    @Nullable
+    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id );
 
     /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
@@ -516,14 +595,18 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Return the taxon for each of the given experiments (or subsets).
+     */
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
-     * Returns the taxon of the given expressionExperiment.
+     * Returns the taxon of the given experiment or subset.
      *
      * @param bioAssaySet bioAssaySet.
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples).
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
@@ -578,18 +661,6 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
-
-    /**
-     * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
-     * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
-     * computing the processed data vectors, but it does clear them out.
-     *
-     * @param ee      experiment
-     * @param vectors If they are from more than one platform, that will be dealt with.
-     * @return the updated Experiment
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment replaceRawVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.

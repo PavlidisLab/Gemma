@@ -25,7 +25,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.HibernateUtils;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import java.util.*;
 

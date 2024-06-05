@@ -16,7 +16,7 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
-import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

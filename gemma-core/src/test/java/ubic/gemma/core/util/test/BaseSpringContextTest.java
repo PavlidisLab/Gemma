@@ -26,9 +26,6 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.EncodedResource;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import ubic.gemma.model.analysis.Analysis;
@@ -54,7 +51,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.sql.DataSource;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -168,23 +164,6 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
      */
     protected int deleteFromTables( String... names ) {
         return JdbcTestUtils.deleteFromTables( this.jdbcTemplate, names );
-    }
-
-    /**
-     * Execute the given SQL script. Use with caution outside of a transaction!
-     * The script will normally be loaded by classpath. There should be one statement per line. Any semicolons will be
-     * removed. <b>Do not use this method to execute DDL if you expect rollback.</b>
-     *
-     * @param sqlResourcePath the Spring resource path for the SQL script
-     * @param continueOnError whether or not to continue without throwing an exception in the event of an error
-     * @throws DataAccessException if there is an error executing a statement and continueOnError was <code>false</code>
-     */
-    protected void executeSqlScript( String sqlResourcePath, boolean continueOnError ) throws DataAccessException {
-
-        Resource resource = this.applicationContext.getResource( sqlResourcePath );
-        JdbcTestUtils
-                .executeSqlScript( this.jdbcTemplate, new EncodedResource( resource, StandardCharsets.UTF_8 ),
-                        continueOnError );
     }
 
     protected Gene getTestPersistentGene() {

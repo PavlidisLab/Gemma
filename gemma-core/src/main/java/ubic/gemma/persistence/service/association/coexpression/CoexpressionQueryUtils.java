@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.association.coexpression;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TaxonUtility;
+import ubic.gemma.persistence.service.genome.taxon.TaxonUtils;
 
 import java.util.*;
 
@@ -34,11 +34,11 @@ class CoexpressionQueryUtils {
 
     static String getExperimentLinkClassName( Taxon taxon ) {
         String g2gClassName;
-        if ( TaxonUtility.isHuman( taxon ) )
+        if ( TaxonUtils.isHuman( taxon ) )
             g2gClassName = "HumanExperimentCoexpressionLinkImpl";
-        else if ( TaxonUtility.isMouse( taxon ) )
+        else if ( TaxonUtils.isMouse( taxon ) )
             g2gClassName = "MouseExperimentCoexpressionLinkImpl";
-        else if ( TaxonUtility.isRat( taxon ) )
+        else if ( TaxonUtils.isRat( taxon ) )
             g2gClassName = "RatExperimentCoexpressionLinkImpl";
         else
             g2gClassName = "OtherExperimentCoexpressionLinkImpl";
@@ -47,11 +47,11 @@ class CoexpressionQueryUtils {
 
     static String getExperimentLinkTableName( Taxon taxon ) {
         String g2gClassName;
-        if ( TaxonUtility.isHuman( taxon ) )
+        if ( TaxonUtils.isHuman( taxon ) )
             g2gClassName = "HUMAN_EXPERIMENT_COEXPRESSION";
-        else if ( TaxonUtility.isMouse( taxon ) )
+        else if ( TaxonUtils.isMouse( taxon ) )
             g2gClassName = "MOUSE_EXPERIMENT_COEXPRESSION";
-        else if ( TaxonUtility.isRat( taxon ) )
+        else if ( TaxonUtils.isRat( taxon ) )
             g2gClassName = "RAT_EXPERIMENT_COEXPRESSION";
         else
             // must be other
@@ -75,11 +75,11 @@ class CoexpressionQueryUtils {
      */
     static String getGeneLinkClassName( Taxon taxon ) {
         String g2gClassName;
-        if ( TaxonUtility.isHuman( taxon ) )
+        if ( TaxonUtils.isHuman( taxon ) )
             g2gClassName = "HumanGeneCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( taxon ) )
+        else if ( TaxonUtils.isMouse( taxon ) )
             g2gClassName = "MouseGeneCoExpressionImpl";
-        else if ( TaxonUtility.isRat( taxon ) )
+        else if ( TaxonUtils.isRat( taxon ) )
             g2gClassName = "RatGeneCoExpressionImpl";
         else
             // must be other
@@ -93,11 +93,11 @@ class CoexpressionQueryUtils {
      */
     static String getGeneLinkTableName( Taxon taxon ) {
         String g2gClassName;
-        if ( TaxonUtility.isHuman( taxon ) )
+        if ( TaxonUtils.isHuman( taxon ) )
             g2gClassName = "HUMAN_GENE_COEXPRESSION";
-        else if ( TaxonUtility.isMouse( taxon ) )
+        else if ( TaxonUtils.isMouse( taxon ) )
             g2gClassName = "MOUSE_GENE_COEXPRESSION";
-        else if ( TaxonUtility.isRat( taxon ) )
+        else if ( TaxonUtils.isRat( taxon ) )
             g2gClassName = "RAT_GENE_COEXPRESSION";
         else
             // must be other
@@ -111,11 +111,11 @@ class CoexpressionQueryUtils {
      */
     static String getSupportDetailsTableName( Taxon taxon ) {
         String g2gClassName;
-        if ( TaxonUtility.isHuman( taxon ) )
+        if ( TaxonUtils.isHuman( taxon ) )
             g2gClassName = "HUMAN_LINK_SUPPORT_DETAILS";
-        else if ( TaxonUtility.isMouse( taxon ) )
+        else if ( TaxonUtils.isMouse( taxon ) )
             g2gClassName = "MOUSE_LINK_SUPPORT_DETAILS";
-        else if ( TaxonUtility.isRat( taxon ) )
+        else if ( TaxonUtils.isRat( taxon ) )
             g2gClassName = "RAT_LINK_SUPPORT_DETAILS";
         else
             // must be other

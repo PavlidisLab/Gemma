@@ -1,6 +1,3 @@
-/**
- *
- */
 @ParametersAreNonnullByDefault
 package ubic.gemma.persistence.retry;
 

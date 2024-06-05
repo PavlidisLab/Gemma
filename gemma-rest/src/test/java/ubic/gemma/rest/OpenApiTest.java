@@ -1,8 +1,6 @@
 package ubic.gemma.rest;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -12,25 +10,25 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
-import ubic.gemma.rest.util.JacksonConfig;
+import ubic.gemma.rest.util.OpenApiFactory;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -46,14 +44,20 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 public class OpenApiTest extends BaseJerseyTest {
 
-    @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
 
         @Bean
+        public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+            OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
+            factory.setModelConverters( Collections.singletonList( customModelResolver ) );
+            return factory;
+        }
+
+        @Bean
         public CustomModelResolver customModelResolver( SearchService searchService ) {
-            return new CustomModelResolver( Json.mapper(), searchService );
+            return new CustomModelResolver( searchService );
         }
 
         @Bean
@@ -91,6 +95,11 @@ public class OpenApiTest extends BaseJerseyTest {
             return mock( AccessDecisionManager.class );
         }
 
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
+
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
             T ees = mock( clazz );
             when( ees.getElementClass() ).thenAnswer( a -> elementClass );
@@ -100,14 +109,7 @@ public class OpenApiTest extends BaseJerseyTest {
     }
 
     @Autowired
-    private CustomModelResolver customModelResolver;
-
-    @Autowired
     private SearchService searchService;
-
-    @Autowired
-    @Qualifier("swaggerObjectMapper")
-    private ObjectMapper objectMapper;
 
     private OpenAPI spec;
 
@@ -115,13 +117,11 @@ public class OpenApiTest extends BaseJerseyTest {
     public void setUpSpec() throws IOException {
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
         when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
-        // FIXME: this is normally initialized in the servlet
-        ModelConverters.getInstance().addConverter( customModelResolver );
         Response response = target( "/openapi.json" ).request().get();
         assertThat( response )
                 .hasStatus( Response.Status.OK )
                 .hasEncoding( "gzip" );
-        spec = objectMapper.readValue( response.readEntity( InputStream.class ), OpenAPI.class );
+        spec = Json.mapper().readValue( response.readEntity( InputStream.class ), OpenAPI.class );
     }
 
     @Test

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.1.13" icons="true" automaticImage="PNG" always-add-relationships="true" generalizations="true" 
   realizations="true" associations="true" dependencies="true" nesting-relationships="true" router="FAN">  
-  <class id="1" language="java" name="ubic.gemma.model.common.AbstractAuditable" project="gemma-core"
+  <class id="1" language="java" name="ubic.gemma.model.common.auditAndSecurity.AbstractAuditable" project="gemma-core"
     file="/gemma-core/src/main/java/ubic/gemma/model/common/Auditable.java" binary="false" corner="BOTTOM_RIGHT">
     <position height="59" width="128" x="282" y="190"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

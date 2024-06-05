@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.util.JsonUtil;

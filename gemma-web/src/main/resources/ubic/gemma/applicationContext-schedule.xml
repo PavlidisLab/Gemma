@@ -6,7 +6,7 @@
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/task
             http://www.springframework.org/schema/task/spring-task.xsd"
-       profile="web">
+       profile="scheduler">
 
     <!-- author: keshav -->
 
@@ -32,19 +32,6 @@
                 <!--<ref local="monitorSpaceTrigger" /> -->
             </list>
         </property>
-        <property name="autoStartup" value="${quartzOn}"/>
-    </bean>
-
-    <!-- invoke methods as a member of the GROUP_AGENT -->
-    <!-- This requires a depends-on because the UserManager is not fully initialized when attempting authentication
-    during initialization https://github.com/PavlidisLab/Gemma/issues/1130 -->
-    <bean id="groupAgentSecurityContext"
-          class="ubic.gemma.web.scheduler.ManualAuthenticationServiceBasedSecurityContextFactory"
-          depends-on="userManager">
-        <constructor-arg ref="manualAuthenticationService"/>
-        <property name="userName" value="${gemma.agent.userName}"/>
-        <property name="password" value="${gemma.agent.password}"/>
-        <property name="fallbackToAnonymous" value="true"/>
     </bean>
 
     <!-- Triggers -->
@@ -139,7 +126,7 @@
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
                         <entry key="level" value="ubic.gemma.model.expression.biomaterial.BioMaterial"/>
-                        <entry key="secureInvoker" value-ref="groupAgentSecurityContext"/>
+                        <entry key="securityContext" value-ref="groupAgentSecurityContext"/>
                     </map>
                 </property>
             </bean>

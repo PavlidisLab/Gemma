@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.31.6</version>
+	<version>1.31.7</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -487,6 +487,15 @@
 				<configuration>
 					<skipTestProject>true</skipTestProject>
 					<versionDigitToIncrement>1</versionDigitToIncrement>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<!-- incremental compilation is buggy with this version of Maven -->
+					<!-- see https://stackoverflow.com/questions/17944108/maven-compiler-plugin-always-detecting-a-set-of-sources-as-stale -->
+					<useIncrementalCompilation>false</useIncrementalCompilation>
 				</configuration>
 			</plugin>
 			<plugin>

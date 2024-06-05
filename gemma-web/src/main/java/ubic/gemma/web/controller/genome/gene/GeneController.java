@@ -27,20 +27,20 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
@@ -107,19 +107,26 @@ public class GeneController extends BaseController {
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
-        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
-                .findEvidenceByGeneId( geneId, new HashSet<String>(),
-                        new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-        Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
-        Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
-        while ( iterator.hasNext() ) {
-            EvidenceValueObject<? extends PhenotypeAssociation> evo = iterator.next();
-            if ( !evo.isHomologueEvidence() )
-                collFilteredDVO.addAll( evo.getPhenotypes() );
+        try {
+            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
+                    .findEvidenceByGeneId( geneId, new HashSet<String>(),
+                            new EvidenceFilter( gvo.getTaxonId(), false, null ) );
+            Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
+            Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
+            while ( iterator.hasNext() ) {
+                EvidenceValueObject<? extends PhenotypeAssociation> evo = iterator.next();
+                if ( !evo.isHomologueEvidence() )
+                    collFilteredDVO.addAll( evo.getPhenotypes() );
+            }
+            gvo.setPhenotypes( collFilteredDVO );
+        } catch ( RuntimeException e ) {
+            if ( "Ontologies are not fully loaded yet, try again soon".equals( e.getMessage() ) ) {
+                log.warn( "Phenocarta ontologies are not loaded, will ignore phenotypes for " + gvo + "." );
+            } else {
+                throw e;
+            }
         }
-        gvo.setPhenotypes( collFilteredDVO );
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
-
         return gvo;
     }
 
