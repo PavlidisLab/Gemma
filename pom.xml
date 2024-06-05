@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.32.0-SNAPSHOT</version>
+	<version>1.31.7</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
