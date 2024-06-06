@@ -32,7 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collection;
 import java.util.HashSet;

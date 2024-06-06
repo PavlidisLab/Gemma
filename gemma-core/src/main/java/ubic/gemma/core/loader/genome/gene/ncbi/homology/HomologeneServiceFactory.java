@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.AbstractAsyncFactoryBean;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.context.AbstractAsyncFactoryBean;
+import ubic.gemma.core.config.Settings;
 
 /**
  * Factory for {@link HomologeneService}.

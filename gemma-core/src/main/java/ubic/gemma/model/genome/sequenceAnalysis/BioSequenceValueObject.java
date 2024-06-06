@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;

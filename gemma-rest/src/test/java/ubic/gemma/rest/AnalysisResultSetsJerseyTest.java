@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test for the result sets endpoint.
- *
+ * <p>
  * This also contains tests of other endpoints as using multiple classes would result in Spring context being reloaded
  * multiple times over.
  *

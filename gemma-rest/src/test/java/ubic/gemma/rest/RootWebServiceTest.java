@@ -1,31 +1,39 @@
 package ubic.gemma.rest;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockServletConfig;
-import ubic.gemma.persistence.util.Settings;
+import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
-import ubic.gemma.rest.util.OpenApiUtils;
-import ubic.gemma.rest.util.ResponseDataObject;
 
-import java.net.URI;
+import javax.ws.rs.core.Response;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
 public class RootWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Autowired
-    private RootWebService rootWebService;
+    private OpenAPI openApi;
+
+    @Value("${gemma.externalDatabases.featured}")
+    private List<String> featuredExternalDatabases;
 
     @Test
     public void test() {
-        ResponseDataObject<RootWebService.ApiInfoValueObject> response = rootWebService.getApiInfo( new MockHttpServletRequest(), new MockServletConfig() );
-        String expectedVersion = OpenApiUtils.getOpenApi( null ).getInfo().getVersion();
+        String expectedVersion = openApi.getInfo().getVersion();
         assertThat( expectedVersion ).isNotBlank();
-        assertThat( response.getData().getVersion() ).isEqualTo( expectedVersion );
-        assertThat( response.getData().getDocs() ).isEqualTo( URI.create( "/resources/restapidocs/" ) );
-        assertThat( response.getData().getExternalDatabases() )
-                .extracting( "name" ).containsExactly( Settings.getStringArray( "gemma.externalDatabases.featured" ) );
+        assertThat( featuredExternalDatabases ).isNotEmpty();
+        Assertions.assertThat( target( "/" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data" )
+                .hasFieldOrPropertyWithValue( "version", expectedVersion )
+                .hasFieldOrPropertyWithValue( "docs", "/resources/restapidocs/" )
+                .extracting( "externalDatabases", list( Object.class ) )
+                .extracting( "name" )
+                .containsExactlyElementsOf( featuredExternalDatabases );
     }
 }

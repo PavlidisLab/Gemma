@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 
 /**
  * @author paul

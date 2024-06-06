@@ -1,5 +1,9 @@
 ## Updates
 
+### Update 2.7.6
+
+- add build information to the root and to individual error responses
+
 ### Update 2.7.5
 
 - fix a bug in `getTaxonDatasets` sorting parameter, it was indicating `Taxon` instead of `ExpressionExperiment`

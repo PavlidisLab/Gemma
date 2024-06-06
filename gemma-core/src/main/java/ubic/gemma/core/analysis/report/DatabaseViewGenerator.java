@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.report;
 
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 

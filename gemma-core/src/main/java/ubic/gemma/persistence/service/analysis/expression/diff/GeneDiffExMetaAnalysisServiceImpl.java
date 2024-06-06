@@ -22,17 +22,14 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.BaseValueObject;
+import ubic.gemma.model.common.BaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 /**
  * @author Paul

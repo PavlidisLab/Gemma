@@ -98,5 +98,4 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
         return ( RawExpressionDataVector ) crit.getExecutableCriteria( getSessionFactory().getCurrentSession() ).uniqueResult();
     }
-
 }

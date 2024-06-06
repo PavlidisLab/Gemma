@@ -20,7 +20,7 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import org.hibernate.search.annotations.*;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;

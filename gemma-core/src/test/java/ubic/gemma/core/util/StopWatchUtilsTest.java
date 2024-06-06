@@ -2,6 +2,7 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
+import ubic.gemma.core.profiling.StopWatchUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

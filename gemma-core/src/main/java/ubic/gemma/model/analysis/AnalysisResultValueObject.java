@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 /**
  * Wraps an {@link AnalysisResult} to expose it on the public API.

@@ -26,14 +26,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -41,7 +41,10 @@ import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 
 /**
  * @author daq2101
@@ -72,13 +75,10 @@ public class GeneController extends BaseController {
     }
 
 
-
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
-
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
-
         return gvo;
     }
 

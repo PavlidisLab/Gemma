@@ -44,7 +44,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.HibernateUtils;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;

@@ -28,11 +28,11 @@ import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
 
 /**
  * @author pavlidis
@@ -55,8 +55,8 @@ public class PubMedXMLFetcherTest {
 
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
-        } catch ( RuntimeException e ) {
-            this.checkCause( e );
+        } catch ( Exception e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
     }
 
@@ -73,8 +73,8 @@ public class PubMedXMLFetcherTest {
                     br.getAuthorList() );
             assertEquals( "J Virol", br.getPublication() );
 
-        } catch ( RuntimeException e ) {
-            this.checkCause( e );
+        } catch ( Exception e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
     }
 
@@ -95,8 +95,8 @@ public class PubMedXMLFetcherTest {
 
             SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
             assertEquals( "2013", f.format( br.getPublicationDate() ) );
-        } catch ( RuntimeException e ) {
-            this.checkCause( e );
+        } catch ( Exception e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
     }
 
@@ -105,8 +105,8 @@ public class PubMedXMLFetcherTest {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
             assertNull( br );
-        } catch ( RuntimeException e ) {
-            this.checkCause( e );
+        } catch ( Exception e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
     }
 
@@ -118,19 +118,5 @@ public class PubMedXMLFetcherTest {
     @After
     public void tearDown() {
         pmf = null;
-    }
-
-    private void checkCause( RuntimeException e ) {
-        if ( e.getCause() instanceof java.net.ConnectException ) {
-            PubMedXMLFetcherTest.log.warn( "Test skipped due to connection exception" );
-        } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-            PubMedXMLFetcherTest.log.warn( "Test skipped due to unknown host exception" );
-        } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
-            PubMedXMLFetcherTest.log.warn( "Test skipped due to a 503 error from NCBI" );
-        } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "502" ) ) {
-            PubMedXMLFetcherTest.log.warn( "Test skipped due to a 502 error from NCBI" );
-        } else {
-            throw ( e );
-        }
     }
 }

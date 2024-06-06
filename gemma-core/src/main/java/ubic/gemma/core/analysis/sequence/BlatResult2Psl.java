@@ -19,7 +19,7 @@
 package ubic.gemma.core.analysis.sequence;
 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * Used to convert BlatResult objects into PSL lines that can be displayed in the UCSC Genome Browser.

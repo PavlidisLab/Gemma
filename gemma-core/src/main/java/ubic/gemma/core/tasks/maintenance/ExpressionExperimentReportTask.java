@@ -1,6 +1,6 @@
 package ubic.gemma.core.tasks.maintenance;
 
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 
 /**
  * Handles delegation of report generation (to the space, or run locally)

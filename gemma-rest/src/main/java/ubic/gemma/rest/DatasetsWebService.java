@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,13 +35,12 @@ import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
@@ -49,7 +49,9 @@ import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -85,12 +87,8 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -140,6 +138,8 @@ public class DatasetsWebService {
     private QuantitationTypeArgService quantitationTypeArgService;
     @Autowired
     private OntologyService ontologyService;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Autowired
     private DatasetArgService datasetArgService;
@@ -150,8 +150,8 @@ public class DatasetsWebService {
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
-    @Autowired
-    private HttpServletRequest request;
+    @Context
+    private UriInfo uriInfo;
 
     @ParametersAreNonnullByDefault
     private class Highlighter extends DefaultHighlighter {
@@ -165,15 +165,14 @@ public class DatasetsWebService {
 
         @Override
         public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
-            String reconstructedUri = ServletUriComponentsBuilder.fromRequest( request )
+            URI reconstructedUri = uriInfo.getBaseUriBuilder()
                     .scheme( null ).host( null ).port( -1 )
                     // replace the query with the term URI and only retain the filter
                     .replaceQueryParam( "query", termUri != null ? termUri : termLabel )
                     .replaceQueryParam( "offset" )
                     .replaceQueryParam( "limit" )
                     .replaceQueryParam( "sort" )
-                    .build()
-                    .toUriString();
+                    .build();
             return Collections.singletonMap( field, String.format( "**[%s](%s)**", termLabel, reconstructedUri ) );
         }
 
@@ -730,20 +729,13 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDifferentialExpressionAnalysesResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Context HttpServletRequest request ) {
+            @Context UriInfo uriInfo ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        UriComponentsBuilder uriComponents;
-        // this is only for testing because Jersey in-memory container lacks a servlet context
-        if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromContextPath( request )
-                    .scheme( null ).host( null ).port( -1 );
-        } else {
-            uriComponents = UriComponentsBuilder.newInstance();
-        }
-        URI resultSetUri = uriComponents
+        URI resultSetUri = uriInfo.getBaseUriBuilder()
+                .scheme( null ).host( null ).port( -1 )
                 .path( "/resultSets" )
                 .queryParam( "datasets", "{datasetId}" )
-                .buildAndExpand( ee.getId() ).toUri();
+                .build( ee.getId() );
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();
@@ -1037,7 +1029,8 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
+        AuditEvent lastBatchInfoEvent = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        return respond( lastBatchInfoEvent == null || lastBatchInfoEvent.getEventType() instanceof BatchInformationMissingEvent );
     }
 
     /**
@@ -1222,8 +1215,47 @@ public class DatasetsWebService {
         );
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws
-            FilteringException, IOException {
+    /**
+     * Retrieve a "refreshed" dataset.
+     * <p>
+     * This has the main side effect of refreshing the second-level cache with the contents of the database.
+     */
+    @GET
+    @Secured("GROUP_ADMIN")
+    @Path("/{dataset}/refresh")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve a refreshed dataset",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            })
+    public Response getDataset(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
+            @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
+    ) {
+        Long id = datasetArgService.getEntityId( datasetArg );
+        if ( id == null ) {
+            throw new NotFoundException( "No dataset matches " + datasetArg );
+        }
+        ExpressionExperiment ee;
+        if ( refreshVectors ) {
+            ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
+        } else {
+            ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
+        }
+        if ( ee == null ) {
+            throw new NotFoundException( "No dataset with ID " + id );
+        }
+        if ( refreshReports ) {
+            expressionExperimentReportService.evictFromCache( id );
+        }
+        return Response.created( URI.create( "/datasets/" + ee.getId() ) )
+                .entity( expressionExperimentService.loadValueObject( ee ) )
+                .build();
+    }
+
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filter ).orElse( null );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );

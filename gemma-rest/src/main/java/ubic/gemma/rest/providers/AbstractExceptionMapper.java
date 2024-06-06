@@ -1,32 +1,32 @@
 package ubic.gemma.rest.providers;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.rest.util.OpenApiUtils;
+import org.glassfish.jersey.server.ContainerRequest;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
-import ubic.gemma.rest.util.ServletUtils;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import static ubic.gemma.rest.util.ExceptionMapperUtils.acceptsJson;
-
 @CommonsLog
 public abstract class AbstractExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {
 
-    @Context
-    private HttpServletRequest request;
+    private final OpenAPI spec;
+    private final BuildInfo buildInfo;
 
     @Context
-    private HttpHeaders headers;
+    private ResourceContext ctx;
 
-    @Context
-    private ServletConfig servletConfig;
+    protected AbstractExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
+        this.spec = spec;
+        this.buildInfo = buildInfo;
+    }
 
     /**
      * Translate the exception to an HTTP {@link Response.Status}.
@@ -48,26 +48,40 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         return false;
     }
 
-    protected Response.ResponseBuilder getResponseBuilder( E exception ) {
-        // FIXME: request is null in tests
-        return Response.status( request != null && isXmlHttpRequest( request ) ? Response.Status.OK : getStatus( exception ) );
+    protected Response.ResponseBuilder getResponseBuilder( ContainerRequest request, E exception ) {
+        return Response.status( isXmlHttpRequest( request ) ? Response.Status.OK : getStatus( exception ) );
     }
 
     @Override
     public final Response toResponse( E exception ) {
+        ContainerRequest request = ctx.getResource( ContainerRequest.class );
         if ( logException( exception ) ) {
-            log.error( String.format( "Unhandled exception was raised%s.",
-                    request != null ? " for " + ServletUtils.summarizeRequest( request ).replaceAll( "[\r\n]", "" ) : "" ), exception );
+            String m;
+            if ( request != null ) {
+                m = String.format( "Unhandled exception was raised for %s %s", request.getMethod(), request.getRequestUri() );
+            } else {
+                m = "Unhandled exception was raised, but there is no current request.";
+            }
+            log.error( m, exception );
         }
-        Response.ResponseBuilder responseBuilder = getResponseBuilder( exception );
-        if ( acceptsJson( headers ) ) {
+        String version;
+        if ( spec.getInfo() != null ) {
+            version = spec.getInfo().getVersion();
+        } else {
+            log.warn( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
+            version = null;
+        }
+        Response.ResponseBuilder responseBuilder = getResponseBuilder( request, exception );
+        if ( request == null || acceptsJson( request ) ) {
             return responseBuilder
                     .type( MediaType.APPLICATION_JSON_TYPE )
-                    .entity( new ResponseErrorObject( getWellComposedErrorBody( exception ), OpenApiUtils.getOpenApi( servletConfig ) ) )
+                    .entity( new ResponseErrorObject( getWellComposedErrorBody( exception ), version, new BuildInfoValueObject( buildInfo ) ) )
                     .build();
         } else {
             WellComposedErrorBody body = getWellComposedErrorBody( exception );
             StringBuilder builder = new StringBuilder();
+            builder.append( "Version: " ).append( version != null ? version : "?" ).append( '\n' );
+            builder.append( "Build info: " ).append( buildInfo ).append( '\n' );
             builder.append( "Message: " ).append( body.getMessage() );
             if ( body.getErrors() != null ) {
                 body.getErrors().forEach( ( k, v ) -> {
@@ -81,7 +95,11 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         }
     }
 
-    private boolean isXmlHttpRequest( HttpServletRequest request ) {
-        return "XMLHttpRequest".equalsIgnoreCase( request.getHeader( "X-Requested-With" ) );
+    private boolean acceptsJson( ContainerRequest request ) {
+        return request.getAcceptableMediaTypes().stream().anyMatch( mediaType -> mediaType.isCompatible( MediaType.APPLICATION_JSON_TYPE ) );
+    }
+
+    private boolean isXmlHttpRequest( ContainerRequest request ) {
+        return "XMLHttpRequest".equalsIgnoreCase( request.getHeaderString( "X-Requested-With" ) );
     }
 }

@@ -34,11 +34,11 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
-import ubic.gemma.persistence.service.TableMaintenanceUtilImpl;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtilImpl;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -40,6 +40,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -73,7 +74,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         BibliographicReferenceValueObject vo;
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
@@ -205,7 +210,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException(
                         "Could not locate reference with pubmed id=" + pubMedId + ", either in Gemma or at NCBI" );

@@ -4,8 +4,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;

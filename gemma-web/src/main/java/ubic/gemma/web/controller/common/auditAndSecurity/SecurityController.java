@@ -15,7 +15,6 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.model.Securable;
-import org.springframework.dao.DataIntegrityViolationException;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -39,8 +38,8 @@ public interface SecurityController {
      * AJAX
      *
      * @param groupName group name
-     * @throws DataIntegrityViolationException cannot remove a group if it is being used to set any permission, remove
-     *                                         permission settings first (is thrown if the acl_entry table has rows with this sid)
+     * @throws org.hibernate.exception.ConstraintViolationException cannot remove a group if it is being used to set any
+     * permission, remove permission settings first (is thrown if the acl_entry table has rows with this sid)
      */
     void deleteGroup( String groupName );
 

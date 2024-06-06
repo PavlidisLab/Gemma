@@ -2,7 +2,6 @@ package ubic.gemma.persistence.persister;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import javax.annotation.CheckReturnValue;
 

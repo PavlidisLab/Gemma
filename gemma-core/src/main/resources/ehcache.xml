@@ -220,7 +220,7 @@
     <cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.BlacklistedEntity" maxElementsInMemory="1000"
+    <cache name="ubic.gemma.model.blacklist.BlacklistedEntity" maxElementsInMemory="1000"
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment" maxElementsInMemory="10000"

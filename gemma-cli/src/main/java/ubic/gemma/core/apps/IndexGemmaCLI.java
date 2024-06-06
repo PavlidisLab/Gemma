@@ -4,7 +4,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.IndexerService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -23,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
 public class IndexGemmaCLI extends AbstractCLI {
 
     /**

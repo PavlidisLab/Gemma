@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.QueryUtils;
-import ubic.gemma.persistence.util.TaskCancelledException;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -404,7 +403,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
                 // Check if task was cancelled.
                 if ( Thread.currentThread().isInterrupted() ) {
-                    throw new TaskCancelledException( "Search was cancelled" );
+                    throw new RuntimeException( "Search was cancelled" ) {
+                        private static final long serialVersionUID = 7343146551545342910L;
+                    };
                 }
 
                 numGeneBatchesDone++;
@@ -418,7 +419,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
             // Check if task was cancelled.
             if ( Thread.currentThread().isInterrupted() ) {
-                throw new TaskCancelledException( "Search was cancelled" );
+                throw new RuntimeException( "Search was cancelled" ) {
+                    private static final long serialVersionUID = 7343146551545342910L;
+                };
             }
 
             numResultSetBatchesDone++;

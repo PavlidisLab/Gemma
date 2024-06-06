@@ -24,7 +24,7 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
 import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 

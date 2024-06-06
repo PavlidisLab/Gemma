@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 
 /**
  * @author Paul

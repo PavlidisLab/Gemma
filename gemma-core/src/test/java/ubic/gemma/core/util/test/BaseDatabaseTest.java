@@ -8,6 +8,7 @@ import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
 import org.apache.lucene.util.Version;
 import org.hibernate.SessionFactory;
+import org.junit.After;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ import org.springframework.test.context.junit4.AbstractTransactionalJUnit4Spring
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.persistence.hibernate.H2Dialect;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -112,7 +113,19 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
     @Autowired
     protected AclService aclService;
 
+    /**
+     * Flush and clear the session after each test.
+     * <p>
+     * This ensures that any error in the test are caught and each test starts with a clean slate.
+     */
+    @After
+    public final void flushAndClearSession() {
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+    }
+
     protected static class DataSourceInitializer implements InitializingBean {
+
 
         private final JdbcTemplate template;
 

@@ -21,7 +21,7 @@ package ubic.gemma.model.common.description;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

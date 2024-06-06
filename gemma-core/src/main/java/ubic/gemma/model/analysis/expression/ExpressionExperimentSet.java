@@ -24,7 +24,7 @@ import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.Store;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 

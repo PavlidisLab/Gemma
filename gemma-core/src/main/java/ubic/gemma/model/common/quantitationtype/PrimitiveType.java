@@ -18,19 +18,34 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import java.io.Serializable;
-import java.util.*;
-
+/**
+ * Primitive storage types for data vectors.
+ * @see ubic.basecode.io.ByteArrayConverter
+ * @see java.io.DataOutputStream
+ */
 public enum PrimitiveType {
-    DOUBLE,
-    INT,
-    LONG,
-    CHAR,
-    BOOLEAN,
-    STRING,
-    INTARRAY,
-    DOUBLEARRAY,
-    CHARARRAY,
-    BOOLEANARRAY,
-    STRINGARRAY;
+    DOUBLE( 8 ),
+    INT( 4 ),
+    LONG( 8 ),
+    CHAR( 2 ),
+    BOOLEAN( 1 ),
+    STRING( -1 ),
+    INTARRAY( -1 ),
+    DOUBLEARRAY( -1 ),
+    CHARARRAY( -1 ),
+    BOOLEANARRAY( -1 ),
+    STRINGARRAY( -1 );
+
+    private final int sizeInBytes;
+
+    PrimitiveType( int sizeInBytes ) {
+        this.sizeInBytes = sizeInBytes;
+    }
+
+    /**
+     * @return a size in bytes, or {@code -1} if the type is of variable size
+     */
+    public int getSizeInBytes() {
+        return sizeInBytes;
+    }
 }

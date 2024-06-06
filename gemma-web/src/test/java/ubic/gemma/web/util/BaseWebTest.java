@@ -15,8 +15,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
-import ubic.gemma.persistence.util.EnvironmentProfiles;
-import ubic.gemma.persistence.util.MailEngine;
+import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.core.util.MailEngine;
 
 import java.util.Arrays;
 import java.util.Properties;

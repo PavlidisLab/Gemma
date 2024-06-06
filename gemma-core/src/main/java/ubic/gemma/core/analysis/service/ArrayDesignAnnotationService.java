@@ -21,7 +21,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * Methods to generate annotations for array designs, based on information already in the database. This can be used to

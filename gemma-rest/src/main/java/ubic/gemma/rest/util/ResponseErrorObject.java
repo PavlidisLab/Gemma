@@ -14,7 +14,6 @@
  */
 package ubic.gemma.rest.util;
 
-import io.swagger.v3.oas.models.OpenAPI;
 import lombok.Value;
 
 /**
@@ -28,16 +27,5 @@ public class ResponseErrorObject {
 
     WellComposedErrorBody error;
     String apiVersion;
-
-    /**
-     * @param payload payload containing the error details.
-     */
-    public ResponseErrorObject( WellComposedErrorBody payload, OpenAPI openApi ) {
-        this.error = payload;
-        if ( openApi.getInfo() != null ) {
-            this.apiVersion = openApi.getInfo().getVersion();
-        } else {
-            this.apiVersion = null;
-        }
-    }
+    BuildInfoValueObject buildInfo;
 }

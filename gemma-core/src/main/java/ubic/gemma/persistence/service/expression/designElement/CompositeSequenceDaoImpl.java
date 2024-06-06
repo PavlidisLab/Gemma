@@ -47,8 +47,8 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
 

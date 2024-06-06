@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
@@ -76,179 +77,118 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     @Override
     @Transactional
-    public void replaceProcessedDataVectors( ExpressionExperiment ee,
+    public int replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
-
-        ee = eeService.thaw( ee );
-
         // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
         QuantitationType qt = vecs.iterator().next().getQuantitationType();
         if ( qt.getId() == null ) {
             QuantitationType existingQt = quantitationTypeService.find( ee, qt );
             if ( existingQt != null ) {
+                log.info( "Reusing existing QT for replacement vectors: " + existingQt );
                 qt = existingQt;
             } else {
+                log.info( "Creating a new QT for replacement vectors: " + qt );
                 qt = quantitationTypeService.create( qt );
             }
+            for ( ProcessedExpressionDataVector v : vecs ) {
+                v.setQuantitationType( qt );
+            }
         }
-        for ( ProcessedExpressionDataVector v : vecs ) {
-            v.setQuantitationType( qt );
-        }
-
-        ee.getProcessedExpressionDataVectors().clear();
-        ee.getProcessedExpressionDataVectors().addAll( vecs );
-        ee.setNumberOfDataVectors( vecs.size() );
-
-        eeService.update( ee );
-
-        assert ee.getNumberOfDataVectors() != null;
+        return eeService.replaceProcessedDataVectors( ee, vecs );
     }
 
     @Override
     @Transactional
     public void reorderByDesign( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
-        if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
-                    .info( ee.getShortName() + " does not have a populated experimental design, skipping" );
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            log.info( ee + " does not have a populated experimental design, skipping" );
             return;
         }
 
         Collection<ProcessedExpressionDataVector> processedDataVectors = ee.getProcessedExpressionDataVectors();
 
-        if ( processedDataVectors.size() == 0 ) {
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
-                    .info( ee.getShortName() + " does not have processed data" );
+        if ( processedDataVectors.isEmpty() ) {
+            log.info( ee + " does not have processed data; no BioAssayDimension can be reordered." );
             return;
         }
 
-        Collection<BioAssayDimension> dims = this.eeService.getBioAssayDimensions( ee );
+        BioAssayDimension dim = processedDataVectors.iterator().next().getBioAssayDimension();
+        Assert.isTrue( processedDataVectors.stream().allMatch( v -> v.getBioAssayDimension().equals( dim ) ),
+                "All vectors must share the same dimension: " + dim );
 
-        if ( dims.size() > 1 ) {
-            this.checkAllBioAssayDimensionsMatch( dims );
-        }
-
-        BioAssayDimension bioassaydim = dims.iterator().next();
-        List<BioMaterial> start = new ArrayList<>();
-        for ( BioAssay ba : bioassaydim.getBioAssays() ) {
-
-            start.add( ba.getSampleUsed() );
+        List<BioMaterial> originalSamples = new ArrayList<>();
+        for ( BioAssay ba : dim.getBioAssays() ) {
+            originalSamples.add( ba.getSampleUsed() );
         }
 
         /*
          * Get the ordering we want.
          */
-        List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( start, ee.getExperimentalDesign().getExperimentalFactors() );
+        List<BioMaterial> orderedSamples = ExpressionDataMatrixColumnSort
+                .orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
 
-        /*
-         * Map of biomaterials to the new order index.
-         */
-        final Map<BioMaterial, Integer> ordering = new HashMap<>();
-        int i = 0;
-        for ( BioMaterial bioMaterial : orderByExperimentalDesign ) {
-            ordering.put( bioMaterial, i );
-            i++;
+        if ( originalSamples.equals( orderedSamples ) ) {
+            log.info( ee + " already has correct ordering; no need to reorder processed vectors." );
+            return;
         }
 
-        /*
-         * Map of the original order to new order of bioassays.
-         */
-        Map<Integer, Integer> indexes = new HashMap<>();
+        List<BioAssay> bioAssays = dim.getBioAssays();
 
-        Map<BioAssayDimension, BioAssayDimension> old2new = new HashMap<>();
-        for ( BioAssayDimension bioAssayDimension : dims ) {
-
-            List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-            assert bioAssays != null;
-
-            /*
-             * Initialize the new bioassay list.
-             */
-            List<BioAssay> resorted = new ArrayList<>( bioAssays.size() );
-            for ( int m = 0; m < bioAssays.size(); m++ ) {
-                resorted.add( null );
+        // reordered bioassays
+        BioAssay[] orderedBioAssays = new BioAssay[bioAssays.size()];
+        // mapping of old-to-new indices for sorting vectors efficiently
+        int[] indexes = new int[bioAssays.size()];
+        for ( int oldIndex = 0; oldIndex < bioAssays.size(); oldIndex++ ) {
+            BioAssay bioAssay = bioAssays.get( oldIndex );
+            int newIndex = orderedSamples.indexOf( bioAssay.getSampleUsed() );
+            if ( newIndex == -1 ) {
+                throw new IllegalStateException( "No index found for " + bioAssay.getSampleUsed() + " in " + orderedSamples );
             }
-
-            for ( int oldIndex = 0; oldIndex < bioAssays.size(); oldIndex++ ) {
-                BioAssay bioAssay = bioAssays.get( oldIndex );
-
-                BioMaterial sam1 = bioAssay.getSampleUsed();
-                if ( ordering.containsKey( sam1 ) ) {
-                    Integer newIndex = ordering.get( sam1 );
-
-                    resorted.set( newIndex, bioAssay );
-
-                    /*
-                     * Should be the same for all dimensions....
-                     */
-                    assert !indexes.containsKey( oldIndex ) || indexes.get( oldIndex ).equals( newIndex );
-                    indexes.put( oldIndex, newIndex );
-                } else {
-                    throw new IllegalStateException();
-                }
-
-            }
-
-            BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance();
-            newBioAssayDimension.setBioAssays( resorted );
-            newBioAssayDimension.setName( "Processed data of ee " + ee.getShortName() + " ordered by design" );
-            newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
-
-            newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
-
-            old2new.put( bioAssayDimension, newBioAssayDimension );
-
+            orderedBioAssays[newIndex] = bioAssay;
+            indexes[oldIndex] = newIndex;
         }
+
+        BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance();
+        newBioAssayDimension.setBioAssays( Arrays.asList( orderedBioAssays ) );
+        newBioAssayDimension.setName( "Processed data of ee " + ee.getShortName() + " ordered by design" );
+        newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
+        newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
 
         ByteArrayConverter converter = new ByteArrayConverter();
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {
-
-            BioAssayDimension revisedBioAssayDimension = old2new.get( v.getBioAssayDimension() );
-            assert revisedBioAssayDimension != null;
-
+            assert newBioAssayDimension != null;
             double[] data = converter.byteArrayToDoubles( v.getData() );
-
-            /*
-             * Put the data in the order of the bioAssayDimension.
-             */
-            Double[] resortedData = new Double[data.length];
-
+            // put the data in the order of the bioAssayDimension.
+            double[] resortedData = new double[data.length];
             for ( int k = 0; k < data.length; k++ ) {
-                resortedData[k] = data[indexes.get( k )];
+                resortedData[k] = data[indexes[k]];
             }
-
-            v.setData( converter.toBytes( resortedData ) );
-            v.setBioAssayDimension( revisedBioAssayDimension );
-
+            v.setData( converter.doubleArrayToBytes( resortedData ) );
+            v.setBioAssayDimension( newBioAssayDimension );
         }
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
-                .info( "Updating bioassay ordering of " + processedDataVectors.size() + " vectors" );
+
+        eeService.update( ee );
+        log.info( "Updating bioassay ordering of " + processedDataVectors.size() + " vectors" );
     }
 
     @Override
     @Transactional
-    public Set<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
+    public void updateRanks( ExpressionExperiment ee ) {
         Set<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = this.loadIntensities( ee, processedVectors );
 
         if ( intensities == null ) {
-            return processedVectors;
+            return;
         }
 
         ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Load intensities: " + timer.getTime() + "ms" );
 
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks data for " + processedVectors.size() + " vectors..." );
         this.computeRanks( processedVectors, intensities );
-
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
-                .info( "Updating ranks data for " + processedVectors.size() + " vectors ..." );
-        this.processedExpressionDataVectorService.update( processedVectors );
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Done" );
-
-        return processedVectors;
+        eeService.update( ee );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks is done" );
     }
 
     /**
@@ -418,5 +358,4 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
         ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
     }
-
 }

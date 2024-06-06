@@ -29,9 +29,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.util.StopWatchUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -44,12 +45,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
@@ -67,8 +68,8 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
@@ -99,6 +100,13 @@ public class ExpressionExperimentDaoImpl
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
+    }
+
+    @Override
+    public ExpressionExperiment load( Long id, CacheMode cacheMode ) {
+        Session session = getSessionFactory().getCurrentSession();
+        session.setCacheMode( cacheMode );
+        return super.load( id );
     }
 
     @Override
@@ -1394,37 +1402,46 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
-        Map<T, Taxon> result = new HashMap<>();
-
         if ( bioAssaySets.isEmpty() )
-            return result;
+            return Collections.emptyMap();
 
-        // is this going to run into problems if there are too many ees given? Need to batch?
-        T example = bioAssaySets.iterator().next();
-
-        // FIXME: multiple taxon can be returned for a given EE
-        String queryString;
-        if ( ExpressionExperiment.class.isAssignableFrom( example.getClass() ) ) {
-            queryString = "select EE, st from ExpressionExperiment as EE "
-                    + "join EE.bioAssays as BA join BA.sampleUsed as SU join SU.sourceTaxon st where EE in (:ees) "
-                    + "group by EE";
-        } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
-            queryString = "select eess, st from ExpressionExperimentSubSet eess "
-                    + "join eess.sourceExperiment ee join ee.bioAssays as BA join BA.sampleUsed as su "
-                    + "join su.sourceTaxon as st where eess in (:ees) group by eess";
-        } else {
-            throw new UnsupportedOperationException(
-                    "Can't get taxon of BioAssaySet of class " + example.getClass().getName() );
+        Collection<ExpressionExperiment> ees = new ArrayList<>();
+        Collection<ExpressionExperimentSubSet> subsets = new ArrayList<>();
+        for ( BioAssaySet bas : bioAssaySets ) {
+            if ( bas instanceof ExpressionExperiment ) {
+                ees.add( ( ExpressionExperiment ) bas );
+            } else if ( bas instanceof ExpressionExperimentSubSet ) {
+                subsets.add( ( ExpressionExperimentSubSet ) bas );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't get taxon of BioAssaySet of class " + bas.getClass().getName() );
+            }
         }
 
-        // FIXME: this query cannot be made cacheable because the taxon is not initialized when retrieved from the cache, defeating the purpose of caching altogether
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ees", optimizeIdentifiableParameterList( bioAssaySets ) )
-                .list();
+        List<Object[]> list = new ArrayList<>();
+        if ( !ees.isEmpty() ) {
+            // FIXME: this query cannot be made cacheable because the taxon is not initialized when retrieved from the cache, defeating the purpose of caching altogether
+            Query query = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select EE, st from ExpressionExperiment as EE "
+                            + "join EE.bioAssays as BA join BA.sampleUsed as SU join SU.sourceTaxon st where EE in (:ees) "
+                            + "group by EE" );
+            list.addAll( QueryUtils.listByIdentifiableBatch( query, "ees", ees, 2048 ) );
+        }
+        if ( !subsets.isEmpty() ) {
+            Query query = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess, st from ExpressionExperimentSubSet eess "
+                            + "join eess.sourceExperiment ee join ee.bioAssays as BA join BA.sampleUsed as su "
+                            + "join su.sourceTaxon as st where eess in (:ees) group by eess" );
+            list.addAll( QueryUtils.listByIdentifiableBatch( query, "ees", ees, 2048 ) );
+        }
 
-        //noinspection unchecked
-        return list.stream().collect( Collectors.toMap( row -> ( T ) row[0], row -> ( Taxon ) row[1] ) );
+        // collecting in a tree map in case BASs are proxies
+        Map<T, Taxon> result = new TreeMap<>( Comparator.comparing( BioAssaySet::getId ) );
+        for ( Object[] row : list ) {
+            //noinspection unchecked
+            result.put( ( T ) row[0], ( Taxon ) row[1] );
+        }
+        return result;
     }
 
     @Override
@@ -1839,6 +1856,11 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
+        // remove vectors
+        // those can also be removed in cascade, but it's much faster to use these instead
+        removeAllRawDataVectors( ee );
+        removeProcessedDataVectors( ee );
+
         super.remove( ee );
 
         if ( !samplesToRemove.isEmpty() ) {
@@ -1878,8 +1900,17 @@ public class ExpressionExperimentDaoImpl
         /*
          * Optional because this could be slow.
          */
+        StopWatch timer = StopWatch.createStarted();
         Hibernate.initialize( expressionExperiment.getRawExpressionDataVectors() );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Initializing %d raw vectors took %d ms", expressionExperiment.getRawExpressionDataVectors().size(), timer.getTime() ) );
+        }
+        timer.reset();
+        timer.start();
         Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Initializing %d processed vectors took %d ms", expressionExperiment.getProcessedExpressionDataVectors().size(), timer.getTime() ) );
+        }
     }
 
     // "thawLite"
@@ -2234,6 +2265,256 @@ public class ExpressionExperimentDaoImpl
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );
+        }
+    }
+
+    @Override
+    public int addRawDataVectors( ExpressionExperiment ee, QuantitationType newQt, Collection<RawExpressionDataVector> newVectors ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
+        // each set of raw vectors must have a *distinct* QT
+        Assert.isTrue( !ee.getQuantitationTypes().contains( newQt ),
+                "ExpressionExperiment already has a quantitation like " + newQt );
+        checkVectors( ee, newQt, newVectors );
+        if ( newQt.getId() == null ) {
+            log.info( "Creating " + newQt + "..." );
+            getSessionFactory().getCurrentSession().persist( newQt );
+        }
+        if ( newQt.getIsPreferred() ) {
+            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                if ( !qt.equals( newQt ) ) {
+                    log.info( "Unmarking " + qt + " as preferred for " + ee + ", a new set of preferred raw vectors will be added." );
+                    qt.setIsPreferred( false );
+                    // we could break here since there is at most one, but we might as well check all of them and fix
+                    // incorrect QTs
+                }
+            }
+        }
+        // this is a denormalization; easy to forget to update this.
+        ee.getQuantitationTypes().add( newQt );
+        ee.getRawExpressionDataVectors().addAll( newVectors );
+        update( ee );
+        log.info( "Added " + newVectors.size() + " raw vectors to " + ee + " for " + newQt );
+        return newVectors.size();
+    }
+
+    @Override
+    public int removeAllRawDataVectors( ExpressionExperiment ee ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        // ensures the EE is in the session before we retrieve QTs to delete
+        update( ee );
+        //noinspection unchecked
+        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select q from ExpressionExperiment e "
+                                + "join e.rawExpressionDataVectors p "
+                                + "join p.quantitationType q "
+                                + "where e = :ee "
+                                + "group by q" )
+                .setParameter( "ee", ee )
+                .list();
+        ee.getRawExpressionDataVectors().clear();
+        int deletedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
+        // remove QTs
+        for ( QuantitationType qt : qtsToRemove ) {
+            if ( !ee.getQuantitationTypes().remove( qt ) ) {
+                log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its raw vector, it will be removed directly." );
+                getSessionFactory().getCurrentSession().delete( qt );
+            }
+        }
+        if ( deletedVectors > 0 ) {
+            log.info( "Deleted all " + deletedVectors + " raw data vectors from " + ee + " for " + qtsToRemove.size() + " quantitation types." );
+        }
+        return deletedVectors;
+    }
+
+    @Override
+    public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.notNull( qt.getId(), "Quantitation type must be persistent" );
+        Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
+                "The provided quantitation type must belong to at least one raw vector of the experiment." );
+        ee.getRawExpressionDataVectors().clear();
+        int deletedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .executeUpdate();
+        if ( !ee.getQuantitationTypes().remove( qt ) ) {
+            log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its raw vectors, it will be removed directly." );
+            getSessionFactory().getCurrentSession().delete( qt );
+        }
+        update( ee );
+        if ( deletedVectors > 0 ) {
+            log.info( "Deleted " + deletedVectors + " raw data vectors from " + ee + " for " + qt );
+        }
+        return deletedVectors;
+    }
+
+    @Override
+    public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.notNull( qt.getId(), "Quantitation type must be persistent" );
+        Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
+                "The provided quantitation type must belong to at least one vector of the experiment." );
+        checkVectors( ee, qt, vectors );
+        ee.getRawExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( qt ) );
+        int deletedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .executeUpdate();
+        // in case it was attached to the previous vectors, but not the EE QTs
+        if ( ee.getQuantitationTypes().add( qt ) ) {
+            log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its replaced raw vectors, it will be added directly." );
+        }
+        ee.getRawExpressionDataVectors().addAll( vectors );
+        update( ee );
+        if ( deletedVectors > 0 ) {
+            log.info( "Replaced " + deletedVectors + " raw data vectors from " + ee + " for " + qt );
+        }
+        return deletedVectors;
+    }
+
+    @Override
+    public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
+        Assert.isTrue( !vectors.isEmpty(), "At least one vector must be provided." );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        Assert.isTrue( qt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
+        checkVectors( ee, qt, vectors );
+        if ( qt.getId() == null ) {
+            log.info( "Creating " + qt + "..." );
+            getSessionFactory().getCurrentSession().persist( qt );
+        }
+        ee.getQuantitationTypes().add( qt );
+        ee.getProcessedExpressionDataVectors().addAll( vectors );
+        ee.setNumberOfDataVectors( vectors.size() );
+        update( ee );
+        return vectors.size();
+    }
+
+    @Override
+    public int removeProcessedDataVectors( ExpressionExperiment ee ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+
+        // this is only necessary if EE is detached, in this case the QTs from the experiment will conflict with freshly
+        // retrieved QTs from the database
+        update( ee );
+
+        // obtain QTs to remove directly from the vectors
+        //noinspection unchecked
+        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select q from ExpressionExperiment e "
+                                + "join e.processedExpressionDataVectors p "
+                                + "join p.quantitationType q "
+                                + "where e = :ee "
+                                + "group by q" )
+                .setParameter( "ee", ee )
+                .list();
+
+        // this is not really allowed, but it might happen
+        if ( qtsToRemove.size() > 1 ) {
+            log.warn( ee + " has more than one QT associated to its processed vectors, they will all be removed." );
+        }
+
+        ee.getProcessedExpressionDataVectors().clear();
+        ee.setNumberOfDataVectors( 0 );
+
+        int deletedVectors = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from ProcessedExpressionDataVector pv where pv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
+
+        // remove QTs
+        for ( QuantitationType qt : qtsToRemove ) {
+            if ( !ee.getQuantitationTypes().remove( qt ) ) {
+                log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its processed vector, it will be removed directly." );
+                getSessionFactory().getCurrentSession().delete( qt );
+            }
+        }
+
+        if ( deletedVectors > 0 ) {
+            log.info( "Deleted " + deletedVectors + " processed data vectors from " + ee + " for " + qtsToRemove.size() + " quantitation types." );
+        }
+
+        return deletedVectors;
+    }
+
+    @Override
+    public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.isTrue( !vectors.isEmpty(), "At least one vector must be provided when replacing data, use removeProcessedDataVectors() for removing vectors." );
+        QuantitationType newQt = vectors.iterator().next().getQuantitationType();
+        Assert.isTrue( newQt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
+        checkVectors( ee, newQt, vectors );
+        if ( newQt.getId() == null ) {
+            log.info( "Creating " + newQt + "..." );
+            getSessionFactory().getCurrentSession().persist( newQt );
+        }
+        // this is only necessary if EE is detached, in this case the QTs from the experiment will conflict with freshly
+        // retrieved QTs from the database
+        update( ee );
+        //noinspection unchecked
+        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select q from ExpressionExperiment e "
+                        + "join e.processedExpressionDataVectors p "
+                        + "join p.quantitationType q "
+                        + "where e = :ee "
+                        + "group by q" )
+                .setParameter( "ee", ee )
+                .list();
+        if ( qtsToRemove.remove( newQt ) ) {
+            log.info( newQt + " is being reused, will not remove it." );
+        }
+        ee.getProcessedExpressionDataVectors().clear();
+        int deletedVectors = this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from ProcessedExpressionDataVector pv where pv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
+        ee.getProcessedExpressionDataVectors().addAll( vectors );
+        ee.setNumberOfDataVectors( vectors.size() );
+        ee.getQuantitationTypes().add( newQt );
+        // remove QTs
+        for ( QuantitationType qt : qtsToRemove ) {
+            if ( !ee.getQuantitationTypes().remove( qt ) ) {
+                log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its processed vector, it will be removed." );
+                getSessionFactory().getCurrentSession().delete( qt );
+            }
+        }
+        if ( deletedVectors > 0 ) {
+            log.info( "Replaced " + deletedVectors + " from " + ee + " for " + newQt );
+        }
+        return deletedVectors;
+    }
+
+    /**
+     * Perform a few sanity checks on a collection of vectors to create.
+     * <p>
+     * In particular, we ensure that the followings are true:
+     * <ul>
+     *     <li>all vectors are transient</li>
+     *     <li>all vectors are linked to the expression experiment</li>
+     *     <li>all vectors share the same bioassay dimension</li>
+     *     <li>all vectors share the same quantitation type</li>
+     *     <li>all vectors have expected size as per the bioassay dimension and storage requirement</li>
+     * </ul>
+     */
+    private void checkVectors( ExpressionExperiment ee, QuantitationType qt, Collection<? extends DesignElementDataVector> vectors ) {
+        BioAssayDimension bad = vectors.iterator().next().getBioAssayDimension();
+        Assert.notNull( bad.getId(), "Vectors must have a persistent dimension." );
+        Assert.isTrue( ee.getBioAssays().containsAll( bad.getBioAssays() ), "The BioAssayDimension must be a subset of the experiment's BioAssays." );
+        Assert.isTrue( vectors.stream().allMatch( v -> v.getId() == null ), "All vectors must be transient" );
+        Assert.isTrue( vectors.stream().map( DataVector::getExpressionExperiment ).allMatch( e -> e == ee ), "All vectors must belong to " + ee );
+        Assert.isTrue( vectors.stream().map( DesignElementDataVector::getQuantitationType ).allMatch( q -> q == qt ), "All vectors must use " + qt );
+        Assert.isTrue( vectors.stream().map( DesignElementDataVector::getBioAssayDimension ).allMatch( b -> b == bad ), "All vectors must use " + bad );
+        if ( qt.getRepresentation().getSizeInBytes() != -1 ) {
+            int expectedVectorSizeInBytes = bad.getBioAssays().size() * qt.getRepresentation().getSizeInBytes();
+            Assert.isTrue( vectors.stream().map( DesignElementDataVector::getData ).allMatch( b -> b.length == expectedVectorSizeInBytes ),
+                    "All vectors must contain " + bad.getBioAssays().size() + " values, expected size is " + expectedVectorSizeInBytes + " B." );
         }
     }
 }

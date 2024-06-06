@@ -1,11 +1,11 @@
 package ubic.gemma.persistence.retry;
 
+import org.hibernate.StaleStateException;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,19 +68,19 @@ public class RetryTest extends BaseSpringContextTest implements InitializingBean
 
     @Test
     public void testRetry() {
-        when( testRetryDao.work() ).thenThrow( PessimisticLockingFailureException.class );
+        when( testRetryDao.work() ).thenThrow( StaleStateException.class );
         assertThatThrownBy( testRetryService::pessimisticOperation )
-                .isInstanceOf( PessimisticLockingFailureException.class );
+                .isInstanceOf( StaleStateException.class );
         verify( testRetryDao, VerificationModeFactory.times( 3 ) ).work();
     }
 
     @Test
     public void testRetryWithRetryableExceptionInCause() {
-        when( testRetryDao.work() ).thenThrow( new RuntimeException( new PessimisticLockingFailureException( "test" ) ) );
+        when( testRetryDao.work() ).thenThrow( new RuntimeException( new StaleStateException( "test" ) ) );
         assertThatThrownBy( testRetryService::pessimisticOperation )
                 .isInstanceOf( RuntimeException.class )
                 .cause()
-                .isInstanceOf( PessimisticLockingFailureException.class );
+                .isInstanceOf( StaleStateException.class );
         verify( testRetryDao, VerificationModeFactory.times( 3 ) ).work();
     }
 
@@ -101,17 +101,17 @@ public class RetryTest extends BaseSpringContextTest implements InitializingBean
 
     @Test
     public void testRetryTransactionalOperation() {
-        when( testRetryDao.work() ).thenThrow( PessimisticLockingFailureException.class );
+        when( testRetryDao.work() ).thenThrow( StaleStateException.class );
         assertThatThrownBy( testRetryService::pessimisticOperationWithTransactionalAnnotation )
-                .isInstanceOf( PessimisticLockingFailureException.class );
+                .isInstanceOf( StaleStateException.class );
         verify( testRetryDao, VerificationModeFactory.times( 3 ) ).work();
     }
 
     @Test
     public void testRetryNonTransactionalOperation() {
-        when( testRetryDao.work() ).thenThrow( PessimisticLockingFailureException.class );
+        when( testRetryDao.work() ).thenThrow( StaleStateException.class );
         assertThatThrownBy( testRetryService::pessimisticOperationWithoutRetry )
-                .isInstanceOf( PessimisticLockingFailureException.class );
+                .isInstanceOf( StaleStateException.class );
         verify( testRetryDao ).work();
         verifyNoMoreInteractions( testRetryDao );
     }

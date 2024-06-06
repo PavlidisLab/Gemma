@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 import java.util.Objects;
 

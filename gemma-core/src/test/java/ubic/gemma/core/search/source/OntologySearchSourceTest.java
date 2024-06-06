@@ -19,7 +19,7 @@ import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
 import java.net.URI;

@@ -20,7 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 
 import java.util.Collection;

@@ -24,6 +24,15 @@
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
         </bean>
+        <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
+        <!-- This is lazily initialized because we only need it for scheduled jobs -->
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.agent.userName}"/>
+            <property name="password" value="${gemma.agent.password}"/>
+        </bean>
     </beans>
 
     <beans profile="test,testdb">
@@ -34,6 +43,13 @@
             <property name="jdbcUrl" value="${gemma.testdb.url}"/>
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.testdb.maximumPoolSize}"/>
+        </bean>
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.testdb.agent.userName}"/>
+            <property name="password" value="${gemma.testdb.agent.password}"/>
         </bean>
     </beans>
 

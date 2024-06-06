@@ -89,6 +89,10 @@
             <param-name>allowCredentials</param-name>
             <param-value>true</param-value>
         </init-param>
+        <init-param>
+            <param-name>maxAge</param-name>
+            <param-value>1200</param-value>
+        </init-param>
     </filter>
 
     <!-- this is the default servlet that servers static resources -->
@@ -173,6 +177,11 @@
         <init-param>
             <param-name>jersey.config.server.provider.classnames</param-name>
             <param-value>org.glassfish.jersey.message.GZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
+        </init-param>
+        <!-- see ubic.gemma.rest.util.OpenApiConfig -->
+        <init-param>
+            <param-name>openapi.context.id</param-name>
+            <param-value>ubic.gemma.rest</param-value>
         </init-param>
         <init-param>
             <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->

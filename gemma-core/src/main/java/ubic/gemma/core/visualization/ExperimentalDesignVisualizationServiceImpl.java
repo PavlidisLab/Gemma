@@ -19,13 +19,11 @@
 
 package ubic.gemma.core.visualization;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math3.analysis.function.Exp;
-import org.apache.log4j.Layout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -41,6 +39,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.SlicedDoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -50,8 +49,8 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -207,7 +206,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             eeId = vec.getExpressionExperiment().getId(); // might be subset id.
 
             if ( !returnedLayouts.containsKey( eeId ) ) {
-                if ( vec.isSliced() ) {
+                if ( vec instanceof SlicedDoubleVectorValueObject ) {
                     LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> trimmedLayout = new LinkedHashMap<>();
 
                     for ( BioAssayValueObject baVo : newOrdering ) {
@@ -515,7 +514,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
          * The following is the really slow part if we don't use a cache.
          */
         ExpressionExperiment actualEe;
-        if ( vec.isSliced() ) {
+        if ( vec instanceof SlicedDoubleVectorValueObject ) {
             /*
              * Then we are looking at a subset, so associate it with the original experiment.
              */

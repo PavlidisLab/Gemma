@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 

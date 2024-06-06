@@ -2,7 +2,7 @@ package ubic.gemma.model.common.measurement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 @SuppressWarnings("unused") // Used in frontend through FVBasicVO

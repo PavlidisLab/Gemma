@@ -8,7 +8,6 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import ubic.gemma.core.apps.Blat;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
