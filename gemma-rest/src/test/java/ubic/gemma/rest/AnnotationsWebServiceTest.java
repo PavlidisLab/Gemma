@@ -1,5 +1,7 @@
 package ubic.gemma.rest;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,11 +17,11 @@ import org.springframework.test.context.TestExecutionListeners;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -29,8 +31,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
@@ -110,6 +116,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock();
+        }
+
+        @Bean
+        public OpenAPI openAPI() {
+            return new OpenAPI().info( new Info().version( "1.0.0" ) );
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock( BuildInfo.class );
         }
     }
 
