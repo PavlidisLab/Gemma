@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzerUtils;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -649,7 +649,7 @@ public class ExperimentalDesignController extends BaseController {
                  * Check for unused factorValues
                  */
                 Collection<FactorValue> usedFactorValues = new HashSet<>();
-                LinearModelAnalyzerUtils.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
+                LinearModelAnalyzer.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
 
                 Collection<FactorValue> toDelete = new HashSet<>();
                 for ( FactorValue fv : ef.getFactorValues() ) {

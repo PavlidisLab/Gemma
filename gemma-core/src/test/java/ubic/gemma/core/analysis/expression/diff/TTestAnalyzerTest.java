@@ -44,7 +44,7 @@ import static org.junit.Assume.assumeTrue;
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private LinearModelAnalyzerImpl analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Test
     public void testOneSampleTtest() throws Exception {

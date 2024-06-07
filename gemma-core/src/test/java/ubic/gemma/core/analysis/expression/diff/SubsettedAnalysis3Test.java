@@ -53,7 +53,7 @@ import static org.junit.Assert.assertNotNull;
 public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
     @Autowired
-    private LinearModelAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;

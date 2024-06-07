@@ -60,7 +60,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private LinearModelAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Autowired
     private AnalysisSelectionAndExecutionService analysisService = null;

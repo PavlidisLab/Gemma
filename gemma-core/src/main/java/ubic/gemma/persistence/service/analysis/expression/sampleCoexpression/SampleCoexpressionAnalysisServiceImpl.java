@@ -30,7 +30,7 @@ import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzerUtils;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -400,7 +400,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
+        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
 
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 

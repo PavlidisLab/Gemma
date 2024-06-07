@@ -45,7 +45,7 @@ import static org.junit.Assume.assumeTrue;
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private LinearModelAnalyzerImpl analyzer = null;
+    private DiffExAnalyzer analyzer = null;
 
     /**
      * Tests the OneWayAnova method.

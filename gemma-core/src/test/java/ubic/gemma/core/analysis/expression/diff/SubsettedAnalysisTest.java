@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
 public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private LinearModelAnalyzerImpl analyzer = null;
+    private DiffExAnalyzer analyzer = null;
 
     @Test
     public final void testInvalidSubsetFactor() {

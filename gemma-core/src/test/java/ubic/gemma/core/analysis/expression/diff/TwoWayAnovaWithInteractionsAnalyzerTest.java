@@ -41,12 +41,12 @@ import static org.junit.Assume.assumeTrue;
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    LinearModelAnalyzerImpl analyzer = null;
+    DiffExAnalyzer analyzer = null;
 
     @Test
     public void testTwoWayAnova() {
 
-        log.debug( "Testing TwoWayAnova method in " + LinearModelAnalyzer.class.getName() );
+        log.debug( "Testing TwoWayAnova method in " + DiffExAnalyzer.class.getName() );
 
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 

@@ -54,7 +54,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     private AnalysisSelectionAndExecutionService analysisService = null;
 
     @Autowired
-    private LinearModelAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;

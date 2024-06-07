@@ -25,7 +25,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzerUtils;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
@@ -230,7 +230,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExpressionDataDoubleMatrix finalMatrix = originalDataMatrix;
         if ( columnsToKeep.size() < originalDataMatrix.columns() ) {
-            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, LinearModelAnalyzerUtils.createBADMap( columnsToKeep ) );
+            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, LinearModelAnalyzer.createBADMap( columnsToKeep ) );
         }
         return finalMatrix;
     }

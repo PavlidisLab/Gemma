@@ -29,7 +29,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Autowired
     AnalysisSelectionAndExecutionService analysis = null;
     @Autowired
-    private LinearModelAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     /*
      * Tests determineAnalysis.

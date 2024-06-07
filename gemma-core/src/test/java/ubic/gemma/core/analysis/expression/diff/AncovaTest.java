@@ -48,7 +48,7 @@ import static org.junit.Assert.*;
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private LinearModelAnalyzerImpl analyzer;
+    private DiffExAnalyzer analyzer;
 
     /*
      * With a continuous covariate only
