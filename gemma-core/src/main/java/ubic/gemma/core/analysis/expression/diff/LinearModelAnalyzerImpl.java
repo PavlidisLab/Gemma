@@ -22,6 +22,8 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -692,6 +694,7 @@ public class LinearModelAnalyzerImpl implements LinearModelAnalyzer {
         /*
          * Create result objects for each model fit. Keeping things in order is important.
          */
+        final Transformer<CompositeSequence, Long> rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
         boolean warned = false;
         //  int notUsable = 0;
         int processed = 0;
@@ -701,7 +704,7 @@ public class LinearModelAnalyzerImpl implements LinearModelAnalyzer {
                 LinearModelAnalyzerImpl.log.info( "Processed results for " + processed + " elements ..." );
             }
 
-            LinearModelSummary lm = rawResults.get( el.getId().toString() );
+            LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
             if ( LinearModelAnalyzerImpl.log.isDebugEnabled() )
                 LinearModelAnalyzerImpl.log.debug( el.getName() + "\n" + lm );
