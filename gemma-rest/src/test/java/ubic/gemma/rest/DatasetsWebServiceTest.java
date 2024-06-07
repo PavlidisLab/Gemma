@@ -574,7 +574,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
         verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
@@ -592,7 +593,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort", "+correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
         verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
