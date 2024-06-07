@@ -20,8 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -46,10 +45,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
     private static final Log log = LogFactory.getLog( AnalysisSelectionAndExecutionServiceImpl.class );
 
-    /*
-     * We are context-aware so we can get prototype beans.
-     */
-    private ApplicationContext applicationContext;
+    @Autowired
+    private LinearModelAnalyzer linearModelAnalyzer;
 
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
@@ -60,11 +57,11 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( expressionExperiment, config );
+        return linearModelAnalyzer.run( expressionExperiment, config );
     }
 
     /**
-     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
+     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzerImpl}'s
      * EXCLUDE_CHARACTERISTICS_VALUES
      *
      * @return selected type of analysis such as t-test, two-way ANOVA, etc.
@@ -156,7 +153,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     }
 
     /**
-     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
+     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzerImpl}'s
      * EXCLUDE_CHARACTERISTICS_VALUES
      *
      * @return AnalysisType
@@ -274,11 +271,6 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     }
 
     @Override
-    public DiffExAnalyzer getAnalyzer() {
-        return this.applicationContext.getBean( DiffExAnalyzer.class );
-    }
-
-    @Override
     public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config ) {
         AnalysisType analyzer = this.determineAnalysis( subset, config );
@@ -287,12 +279,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( subset, config );
-    }
-
-    @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
-        this.applicationContext = applicationContext;
+        return linearModelAnalyzer.run( subset, config );
     }
 
     private Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,
