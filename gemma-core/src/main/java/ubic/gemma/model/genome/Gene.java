@@ -19,7 +19,6 @@
 package ubic.gemma.model.genome;
 
 import org.hibernate.search.annotations.*;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -47,8 +46,6 @@ public class Gene extends ChromosomeFeature {
     private Taxon taxon;
     private Set<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
-    @Deprecated
-    private Set<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -202,16 +199,6 @@ public class Gene extends ChromosomeFeature {
 
     public void setOfficialSymbol( String officialSymbol ) {
         this.officialSymbol = officialSymbol;
-    }
-
-    @Deprecated
-    public Set<PhenotypeAssociation> getPhenotypeAssociations() {
-        return this.phenotypeAssociations;
-    }
-
-    @Deprecated
-    public void setPhenotypeAssociations( Set<PhenotypeAssociation> phenotypeAssociations ) {
-        this.phenotypeAssociations = phenotypeAssociations;
     }
 
     @IndexedEmbedded

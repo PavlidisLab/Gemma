@@ -25,6 +25,7 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -35,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.Pointcuts;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.persistence.util.Pointcuts;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -88,7 +89,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.creator()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.CREATE );
     }
@@ -103,7 +104,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.updater()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.updater()")
     public void doUpdateAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.UPDATE );
     }
@@ -119,7 +120,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.saver()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.saver()")
     public void doSaveAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.SAVE );
     }
@@ -134,7 +135,7 @@ public class AuditAdvice {
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
     @Order(4)
-    @Before("ubic.gemma.core.util.Pointcuts.deleter()")
+    @Before("ubic.gemma.persistence.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.DELETE );
     }
@@ -154,7 +155,17 @@ public class AuditAdvice {
             AuditAdvice.log.warn( String.format( "Cannot audit a null object passed as first argument of %s.", signature ) );
             return;
         }
-        User user = userManager.getCurrentUser();
+        // Hibernate might decide to flush the session when retrieving the current user. This is not desirable because
+        // the entity being updated might not be fully initialized.
+        // See https://github.com/PavlidisLab/Gemma/issues/1093 for an example of this happening.
+        User user;
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
+        try {
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            user = userManager.getCurrentUser();
+        } finally {
+            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
+        }
         if ( user == null ) {
             AuditAdvice.log.info( String.format( "User could not be determined (anonymous?), audit will be skipped for %s.", signature ) );
             return;

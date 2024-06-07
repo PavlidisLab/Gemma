@@ -19,7 +19,8 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.Auditable;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -36,6 +37,9 @@ public interface AuditEventService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<AuditEvent> getEvents( Auditable auditable );
+
+    @Transactional(readOnly = true)
+    Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditable );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -55,7 +59,7 @@ public interface AuditEventService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * @param date date

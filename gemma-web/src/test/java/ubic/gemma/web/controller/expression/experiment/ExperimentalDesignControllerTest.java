@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.expression.experiment.FactorValueDeletion;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.*;
@@ -20,9 +20,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
+
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -112,6 +114,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         fv = new FactorValue();
         fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
         when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
         when( factorValueService.load( fv.getId() ) ).thenReturn( fv );
     }
@@ -157,6 +160,24 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The value cannot be blank" );
         verify( factorValueService ).load( 1L );
+        verifyNoMoreInteractions( factorValueService );
+    }
+
+    @Test
+    public void testUpdateFactorValueCharacteristic() {
+        Statement s1 = new Statement();
+        s1.setCategory( "bar" );
+        s1.setSubject( "foo" );
+        Statement s2 = new Statement();
+        s2.setCategory( "bar" );
+        s2.setSubject( "bar" );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] {
+                new FactorValueValueObject( fv, s1 ),
+                new FactorValueValueObject( fv, s2 ) } );
+        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any( Function.class ) );
+        verify( factorValueService ).saveStatement( fv, s1 );
+        verify( factorValueService ).saveStatement( fv, s2 );
         verifyNoMoreInteractions( factorValueService );
     }
 
@@ -208,11 +229,12 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         fv.setId( 1L );
         fv.setExperimentalFactor( new ExperimentalFactor() );
         fv.setNeedsAttention( true );
-        FactorValueValueObject fvvo = new FactorValueValueObject();
-        fvvo.setId( fv.getId() );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { new FactorValueValueObject( fv ) } );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        FactorValueValueObject fvvo = new FactorValueValueObject( fv );
+        fvvo.setCategory( "test" );
+        fvvo.setValue( "test" );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
+        experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         verify( factorValueService ).saveStatement( eq( fv ), any() );
         verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
         verifyNoMoreInteractions( factorValueService );

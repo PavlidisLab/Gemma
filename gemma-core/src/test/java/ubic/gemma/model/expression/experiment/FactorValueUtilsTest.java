@@ -1,5 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
+import org.junit.Assert;
 import org.junit.Test;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -17,7 +18,7 @@ public class FactorValueUtilsTest {
 
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", "delivered at dose", "650 mg/kg" ) );
-        assertEquals( "methoxyacetic acid delivered at dose 650 mg/kg", FactorValueUtils.getSummaryString( fv ) );
+        Assert.assertEquals( "methoxyacetic acid delivered at dose 650 mg/kg", FactorValueUtils.getSummaryString( fv ) );
 
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", "delivered at dose", "650 mg/kg", "for duration", "4h" ) );

@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -389,7 +388,11 @@ public class ExpressionExperimentSetServiceImpl
         for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
             eeTaxon = this.getTaxonForSet( ee );
 
-            assert eeTaxon != null;
+            if ( eeTaxon == null ) {
+                // this can happen if there are 0 samples
+                continue;
+            }
+
             if ( !eeTaxon.equals( groupTaxon ) ) {
                 throw new IllegalArgumentException(
                         "Failed to add experiments of wrong taxa (" + ee + ") to eeset. " + "EESet taxon is "

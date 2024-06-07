@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import java.util.Objects;
 
 /**
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
@@ -29,23 +29,13 @@ public class ProcessedExpressionDataVector extends DesignElementDataVector {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3948846630785289034L;
+
     private Double rankByMean;
     private Double rankByMax;
-    private ExpressionExperiment expressionExperiment;
 
     @Override
     public String toString() {
         return "ProcessedExpressionDataVector [ID=" + this.getId() + "]";
-    }
-
-    @Override
-    public ExpressionExperiment getExpressionExperiment() {
-        return this.expressionExperiment;
-    }
-
-    @Override
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -79,12 +69,36 @@ public class ProcessedExpressionDataVector extends DesignElementDataVector {
         this.rankByMean = rankByMean;
     }
 
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash( getExpressionExperiment(), getQuantitationType(), getDesignElement(), getBioAssayDimension() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof ProcessedExpressionDataVector ) ) {
+            return false;
+        }
+        final ProcessedExpressionDataVector that = ( ProcessedExpressionDataVector ) object;
+        if ( this.getId() != null || that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( getExpressionExperiment(), that.getExpressionExperiment() )
+                && Objects.equals( getDesignElement(), that.getDesignElement() )
+                && Objects.equals( getQuantitationType(), that.getQuantitationType() )
+                && Objects.equals( getBioAssayDimension(), that.getBioAssayDimension() );
+    }
+
     public static final class Factory {
 
         public static ProcessedExpressionDataVector newInstance() {
             return new ProcessedExpressionDataVector();
         }
-
     }
-
 }

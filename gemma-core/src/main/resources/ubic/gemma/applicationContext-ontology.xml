@@ -1,86 +1,167 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-   http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-
-    <!-- executor used for loading ontologies in background -->
-    <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-        <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
+    <bean id="excludedWordsFromStemming" class="ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean">
+        <constructor-arg value="classpath:ubic/gemma/core/ontology/excludedWordsFromStemming.txt"/>
     </bean>
 
-    <beans profile="!test">
+    <beans profile="production,dev">
+        <!-- executor used for loading ontologies in background -->
+        <bean id="ontologyTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+            <property name="corePoolSize" value="${gemma.ontology.loader.corePoolSize}"/>
+            <property name="threadNamePrefix" value="gemma-ontology-loader-thread-"/>
+        </bean>
+
         <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <!-- TODO: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged -->
+            <property name="processImports" value="false"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg
                 value="ubic.basecode.ontology.providers.ExperimentalFactorOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="cellTypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.CellTypeOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="chebiOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.ChebiOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
             <property name="inferenceMode" value="NONE"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="humanPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.HumanPhenotypeOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="mouseDevelopmentOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.MouseDevelopmentOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="humanDevelopmentOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.HumanDevelopmentOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="sequenceOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.SequenceOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="cellLineOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.CellLineOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="uberonOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.basecode.ontology.providers.UberonOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="patoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.gemma.core.ontology.providers.PatoOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
         <bean id="mondoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
             <constructor-arg value="ubic.gemma.core.ontology.providers.MondoOntologyService"/>
             <property name="autoLoad" value="${load.ontologies}"/>
             <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
         </bean>
     </beans>
+
+    <beans profile="test">
+        <!--
+        This section contains configuration for the ontology services used in tests
+
+        By default, no ontology are loaded in tests and no limit is applied to the number of ontologies that can be
+        loaded concurrently.
+        -->
+
+        <!-- executor used for loading ontologies in background -->
+        <bean id="ontologyTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor"/>
+
+        <!-- test ontologies are always loaded on-demand, so we never set autoLoad to true -->
+        <bean id="gemmaOntology" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.gemma.core.ontology.providers.GemmaOntologyService"/>
+            <property name="processImports" value="false"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="experimentalFactorOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.ExperimentalFactorOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="obiService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.ObiService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="mondoOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.gemma.core.ontology.providers.MondoOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="mammalianPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="humanPhenotypeOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.HumanPhenotypeOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="nifstOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.NIFSTDOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="processImports" value="false"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="fmaOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.FMAOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+        <bean id="uberonOntologyService" class="ubic.gemma.core.ontology.providers.OntologyServiceFactory">
+            <constructor-arg value="ubic.basecode.ontology.providers.UberonOntologyService"/>
+            <property name="taskExecutor" ref="ontologyTaskExecutor"/>
+            <property name="excludedWordsFromStemming" ref="excludedWordsFromStemming"/>
+        </bean>
+    </beans>
+
 </beans>

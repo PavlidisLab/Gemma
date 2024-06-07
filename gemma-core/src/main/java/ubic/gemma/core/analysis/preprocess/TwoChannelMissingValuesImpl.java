@@ -108,6 +108,16 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         ee = expressionExperimentService.thawLite( ee );
         Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( ee );
+
+        // check that we don't already have a missing value QT
+        for ( QuantitationType qt : usefulQuantitationTypes ) {
+            if ( StandardQuantitationType.PRESENTABSENT.equals(qt.getType()) ) {
+                log.warn( "This experiment already has a missing value quantitation type, no action will be taken and empty collection returned" );
+                return new HashSet<>();
+            }
+        }
+
+
         StopWatch timer = new StopWatch();
         timer.start();
         TwoChannelMissingValuesImpl.log.info( "Loading vectors ..." );
@@ -238,8 +248,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         }
         TwoChannelMissingValuesImpl.log.info( "Finished: " + count + " vectors examined for missing values" );
 
-        log.info( "Persisting " + results.size() + " vectors ... " );
-        // saving twice is needed to get the QT filled in properly.
+        log.info( "Persisting " + results.size() + " vectors... " );
+        // saving twice is needed to get the QT filled in properly. ??Why??
         source = expressionExperimentService.save( source );
         source.getRawExpressionDataVectors().addAll( results );
         source = expressionExperimentService.save( source );

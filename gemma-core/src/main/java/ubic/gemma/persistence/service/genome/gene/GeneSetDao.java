@@ -47,12 +47,16 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
     int getGeneCount( Long id );
 
     /**
-     * Returns the taxon of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
-     *
-     * @param id id
-     * @return taxon of a random member of the set or null
+     * Returns the taxon of an arbitrary member of the set.
+     * @return the taxon, or null if the gene set does not have any member
      */
-    Taxon getTaxon( Long id );
+    @Nullable
+    Taxon getTaxon( GeneSet geneSet );
+
+    /**
+     * Return all the taxa of the gene set members.
+     */
+    List<Taxon> getTaxa( GeneSet geneSet );
 
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 

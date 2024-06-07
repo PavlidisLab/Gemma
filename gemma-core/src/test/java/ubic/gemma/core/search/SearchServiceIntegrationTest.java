@@ -28,25 +28,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.OntologyTestUtils;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -57,7 +58,6 @@ import static org.junit.Assert.*;
 /**
  * @author kelsey
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
     private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
@@ -94,12 +94,6 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
-            assert is != null;
-            // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
-            // this will fail if the loading of uberon is enabled - it will collide.
-            OntologyTestUtils.initialize( fmaOntologyService, is );
-        }
         ee = this.getTestPersistentBasicExpressionExperiment();
 
         Characteristic eeCharSpinalCord = Characteristic.Factory.newInstance();
@@ -136,7 +130,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
     @After
@@ -150,7 +144,15 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      * are found, -- requires LARQ index.
      */
     @Test
-    public void testGeneralSearch4Brain() throws SearchException {
+    @DirtiesContext
+    public void testGeneralSearch4Brain() throws SearchException, IOException {
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
+            assert is != null;
+            // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
+            // this will fail if the loading of uberon is enabled - it will collide.
+            fmaOntologyService.initialize( is, true );
+        }
+
         SearchSettings settings = SearchSettings.builder()
                 .query( "Brain" ) // should hit 'cavity of brain'.
                 .resultType( ExpressionExperiment.class )
@@ -159,7 +161,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .build();
 
-        Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
+        Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100 );
         assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
         SearchService.SearchResultMap found = this.searchService.search( settings );
@@ -200,7 +202,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblems() throws SearchException {
+    public void testSearchByBibRefIdProblems() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -235,7 +237,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblemsB() throws SearchException {
+    public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -309,7 +311,15 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      * Test we find EE tagged with a child term that matches the given uri.
      */
     @Test
-    public void testURIChildSearch() throws SearchException {
+    @DirtiesContext
+    public void testURIChildSearch() throws SearchException, IOException {
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
+            assert is != null;
+            // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
+            // this will fail if the loading of uberon is enabled - it will collide.
+            fmaOntologyService.initialize( is, true );
+        }
+
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/FMA_83153" ) // OrganComponent of Neuraxis; superclass of
                 // 'spinal cord'.

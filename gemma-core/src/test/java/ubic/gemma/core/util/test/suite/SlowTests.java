@@ -13,6 +13,6 @@ import ubic.gemma.core.util.test.category.SlowTest;
  */
 @RunWith(Categories.class)
 @Categories.IncludeCategory(SlowTest.class)
-@Suite.SuiteClasses({ AllTests.class })
+@Suite.SuiteClasses(AllTests.class)
 public class SlowTests {
 }

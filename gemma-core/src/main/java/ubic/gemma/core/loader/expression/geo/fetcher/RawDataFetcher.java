@@ -26,7 +26,7 @@ import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -124,7 +124,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     }
 
     /*
-     * ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1105/GSE1105%5FRAW%2Etar
+     * ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1nnn/GSE1105/GSE1105%5FRAW%2Etar
      */
     @Override
     protected String formRemoteFilePath( String identifier ) {

@@ -39,8 +39,6 @@
         <mapping resource="ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml"/>
         <mapping resource="ubic/gemma/model/association/coexpression/RatExperimentCoexpressionLink.hbm.xml"/>
         <mapping resource="ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/association/phenotype/PhenotypeAssociationPublication.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>

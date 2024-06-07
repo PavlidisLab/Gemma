@@ -19,7 +19,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,7 +44,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.util.TimeUtil;
+import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -59,7 +58,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * @author paul
@@ -663,7 +662,7 @@ public class AffyPowerToolsProbesetSummarize {
                     File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
                     Long size = outputFile.length();
 
-                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                    String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
                     AffyPowerToolsProbesetSummarize.log
                             .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
                                     + " kb (" + minutes + " minutes elapsed)" );
@@ -677,7 +676,7 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             overallWatch.stop();
-            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+            String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
             AffyPowerToolsProbesetSummarize.log
                     .info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
 

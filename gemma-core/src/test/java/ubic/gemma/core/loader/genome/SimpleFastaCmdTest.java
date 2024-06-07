@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.net.URISyntaxException;

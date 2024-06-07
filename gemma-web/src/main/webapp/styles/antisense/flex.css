@@ -1,0 +1,29 @@
+/* flex */
+
+/* do not use this to flex, please */
+
+/* https://vuetifyjs.com/en/styles/spacing/#spacing */
+
+.flex {
+    display: flex;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.justify-space-between {
+    justify-content: space-between;
+}
+
+.justify-space-around {
+    justify-content: space-around;
+}
+
+.align-baseline {
+    align-items: baseline;
+}

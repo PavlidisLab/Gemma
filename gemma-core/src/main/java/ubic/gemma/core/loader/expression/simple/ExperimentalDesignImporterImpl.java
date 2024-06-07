@@ -153,7 +153,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         // make sure that EFO is initialized
         try {
-            OntologyUtils.ensureInitialized( efoService );
+            OntologyUtils.ensureInitializedLite( efoService );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );
@@ -368,9 +368,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
                 Statement newVc = Statement.Factory.newInstance();
                 if ( category != null ) {
-                    String category2 = category.getCategory();
-                    assert category2 != null;
-                    newVc.setCategory( category2 );
+                    newVc.setCategory( category.getCategory() );
                     newVc.setCategoryUri( category.getCategoryUri() );
                 }
                 newVc.setValue( value ); // don't have a valueUri at this point
@@ -580,12 +578,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private Characteristic termForCategoryLookup( String category, Collection<OntologyTerm> terms ) {
 
         OntologyTerm t = null;
-        String lookup = category.replaceAll( "_", " " ).toLowerCase();
+        String lookup = category.replaceAll( "_", " " );
         for ( OntologyTerm to : terms ) {
-            if ( to.getLabel().equals( category )
-                    || to.getLabel().toLowerCase().equals( lookup )
+            if ( category.equalsIgnoreCase( to.getLabel() )
+                    || lookup.equalsIgnoreCase( to.getLabel() )
                     // if EFO is loaded, the "sex" term is actually named "biological sex"
-                    || ( to.getLabel().equals( "biological sex" ) && lookup.equals( "sex" ) ) ) {
+                    || ( "biological sex".equalsIgnoreCase( to.getLabel() ) && "sex".equalsIgnoreCase( lookup ) ) ) {
                 t = to;
                 break;
             }

@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.11-SNAPSHOT</version>
+		<version>1.2.13</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -140,7 +140,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.19</version>
+			<version>1.1.23</version>
 		</dependency>
 
 		<dependency>
@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
-			<version>1.9.20.1</version>
+			<version>1.9.22.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -286,7 +286,7 @@
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
-			<version>1.10.13</version>
+			<version>1.10.14</version>
 		</dependency>
 
 		<!-- Plotting -->
@@ -300,16 +300,17 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.12.0</version>
+			<version>3.14.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.10.0</version>
+			<version>1.12.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
+			<version>1.3.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -329,7 +330,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.13.0</version>
+			<version>2.16.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -443,7 +444,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>2.2.220</version>
+			<version>2.2.224</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -494,15 +495,24 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<!-- incremental compilation is buggy with this version of Maven -->
+					<!-- see https://stackoverflow.com/questions/17944108/maven-compiler-plugin-always-detecting-a-set-of-sources-as-stale -->
+					<useIncrementalCompilation>false</useIncrementalCompilation>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${extraJvmArgs}</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
-					<excludes>
-						<exclude>**/*Tests.java</exclude>
-					</excludes>
-					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
+					<argLine>${jvmOptions}</argLine>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -512,12 +522,12 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${extraJvmArgs}</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<argLine>${jvmOptions}</argLine>
+					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
+					<groups>ubic.gemma.core.util.test.category.IntegrationTest</groups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -539,18 +549,7 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.3.0</version>
-				<configuration>
-					<descriptors>
-						<descriptor>src/assembly/src.xml</descriptor>
-					</descriptors>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<!-- with lombok, some references are invalid in the original source code -->
@@ -569,7 +568,21 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>8.4.3</version>
+				<version>9.1.0</version>
+				<configuration>
+					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<!-- a newer version with better filters can be enabled with -Pdepcheck, but it's incompatible with the Maven minimum requirement -->
+				<version>2.11.0</version>
+				<configuration>
+					<allowMajorUpdates>false</allowMajorUpdates>
+					<processDependencyManagement>false</processDependencyManagement>
+					<processPluginDependencies>false</processPluginDependencies>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -607,14 +620,36 @@
 			</distributionManagement>
 		</profile>
 		<profile>
-			<!-- Target Java 8 bytecode on Java 9+ -->
-			<id>java8</id>
-			<activation>
-				<jdk>[9,)</jdk>
-			</activation>
-			<properties>
-				<maven.compiler.release>8</maven.compiler.release>
-			</properties>
+			<id>depcheck</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>versions-maven-plugin</artifactId>
+						<version>2.16.2</version>
+						<configuration>
+							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
+							<dependencyExcludes>
+								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
+								<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
+								<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
+								<dependencyExclude>com.googlecode.javaewah:JavaEWAH:*</dependencyExclude>
+								<dependencyExclude>org.springframework.retry:spring-retry:*</dependencyExclude>
+								<dependencyExclude>org.springframework.social:spring-social-core:*</dependencyExclude>
+								<dependencyExclude>org.springframework.ws:spring-ws-core:*</dependencyExclude>
+								<dependencyExclude>org.glassfish.jersey.*:*:*</dependencyExclude>
+								<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
+								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
+								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
+							</dependencyExcludes>
+							<pluginDependencyExcludes>
+								<pluginDependencyExclude>org.antlr:antlr4-maven-plugin:*</pluginDependencyExclude>
+							</pluginDependencyExcludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 	<distributionManagement>
@@ -628,12 +663,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>3.1.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.2</version>
 				<configuration>
 					<quiet>true</quiet>
 					<doclint>all,-reference,-missing</doclint>
@@ -647,38 +680,73 @@
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
 				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+							<report>test-aggregate</report>
+						</reports>
+					</reportSet>
+					<reportSet>
+						<id>default</id>
+						<reports>
+							<report>javadoc</report>
+							<report>test-javadoc</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>9.1.0</version>
+				<configuration>
+					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
 			</plugin>
 		</plugins>
 	</reporting>
 	<properties>
-		<!-- TODO: move this into pavlab-starter-parent -->
-		<maven.compiler.release>8</maven.compiler.release>
-		<gsec.version>0.0.15</gsec.version>
+		<maven.version>3.1.1</maven.version>
+		<gsec.version>0.0.16</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<tomcat.version>9.0.80</tomcat.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.15.3</jackson.version>
-		<swagger.version>2.2.11</swagger.version>
+		<jackson.version>2.17.1</jackson.version>
+		<swagger.version>2.2.22</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.29.2</slack.version>
-		<micrometer.version>1.11.0</micrometer.version>
-		<tomcat.version>9.0.80</tomcat.version>
+		<slack.version>1.39.2</slack.version>
+		<micrometer.version>1.13.0</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
+		<mysql.version>8.4.0</mysql.version>
+		<tomcat.version>9.0.87</tomcat.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<!--suppress UnresolvedMavenProperty -->
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
-		<extraJvmArgs>
+		<redirectTestOutputToFile>true</redirectTestOutputToFile>
+		<!-- common JVM options -->
+		<jvmOptions>
 			-Dlog4j1.compatibility=true
 			-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
 			-Djava.awt.headless=true
+			-Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL
 			<!-- FIXME: remove this once we've migrated to Spring 5 -->
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
-		</extraJvmArgs>
+		</jvmOptions>
 	</properties>
 </project>

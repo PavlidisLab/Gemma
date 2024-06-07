@@ -19,16 +19,18 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * @author pavlidis
@@ -39,9 +41,12 @@ public class BibliographicReferenceDaoImpl
         extends AbstractVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceDao {
 
+    private final int eeBatchSize;
+
     @Autowired
     public BibliographicReferenceDaoImpl( SessionFactory sessionFactory ) {
         super( BibliographicReference.class, sessionFactory );
+        this.eeBatchSize = HibernateUtils.getBatchSize( sessionFactory, sessionFactory.getClassMetadata( ExpressionExperiment.class ) );
     }
 
     @Override
@@ -89,8 +94,8 @@ public class BibliographicReferenceDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
-                .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) " )
+                .setParameterList( "bs", optimizeIdentifiableParameterList( bibliographicReferences ) ).list();
     }
 
     @Override
@@ -101,17 +106,14 @@ public class BibliographicReferenceDaoImpl
 
         Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<>();
 
-        for ( Collection<BibliographicReference> batch : BatchIterator.batches( records, 200 ) ) {
+        for ( Collection<BibliographicReference> batch : batchIdentifiableParameterList( records, eeBatchSize ) ) {
             //noinspection unchecked
             List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query )
                     .setParameterList( "recs", batch ).list();
             for ( Object[] o : os ) {
                 ExpressionExperiment e = ( ExpressionExperiment ) o[0];
                 BibliographicReference b = ( BibliographicReference ) o[1];
-                if ( !result.containsKey( b ) ) {
-                    result.put( b, new HashSet<ExpressionExperiment>() );
-                }
-                result.get( b ).add( e );
+                result.computeIfAbsent( b, k -> new HashSet<>() ).add( e );
             }
         }
         return result;

@@ -140,13 +140,13 @@ public class NCBIGene2GOAssociationLoader {
         Collection<Gene2GOAssociation> itemsToPersist = new ArrayList<>();
         try {
             while ( !( producerDone.get() && queue.isEmpty() ) ) {
-                Gene2GOAssociation associations = queue.poll();
+                Gene2GOAssociation association = queue.poll();
 
-                if ( associations == null ) {
+                if ( association == null ) {
                     continue;
                 }
 
-                itemsToPersist.add( associations );
+                itemsToPersist.add( association );
                 if ( ++count % NCBIGene2GOAssociationLoader.BATCH_SIZE == 0 ) {
                     persisterHelper.persist( itemsToPersist );
                     itemsToPersist.clear();
@@ -160,7 +160,7 @@ public class NCBIGene2GOAssociationLoader {
                     double meanspt = secspt / cpt;
 
                     String progString = "Processed and loaded " + count + " (" + secsperthousand
-                            + " seconds elapsed, average per thousand=" + String.format( "%.2f", meanspt ) + ")";
+                            + " seconds elapsed, average per thousand=" + String.format( "%.2f", meanspt ) + "), last was: " + association;
                     NCBIGene2GOAssociationLoader.log.info( progString );
                     millis = System.currentTimeMillis();
                 }

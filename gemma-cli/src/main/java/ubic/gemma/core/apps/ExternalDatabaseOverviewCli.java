@@ -37,7 +37,7 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-
+        addBatchOption( options );
     }
 
     @Override

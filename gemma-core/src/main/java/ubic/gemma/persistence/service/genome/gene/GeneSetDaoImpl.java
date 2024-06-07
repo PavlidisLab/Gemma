@@ -39,6 +39,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.gene.GeneSet</code>.
@@ -63,14 +65,22 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public Taxon getTaxon( Long id ) {
+    public Taxon getTaxon( GeneSet geneSet ) {
         // get one gene, check the taxon.
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from GeneSet gs join gs.members m join m.gene g where gs.id = :id" )
-                .setParameter( "id", id ).setMaxResults( 1 );
+        return ( Taxon ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .setParameter( "gs", geneSet )
+                .setMaxResults( 1 )
+                .uniqueResult();
+    }
 
-        Gene g = ( Gene ) q.uniqueResult();
-        return g != null ? g.getTaxon() : null;
+    @Override
+    public List<Taxon> getTaxa( GeneSet geneSet ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .setParameter( "gs", geneSet )
+                .list();
     }
 
     @Override
@@ -126,7 +136,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                                 + "left join m.gene.taxon t "
                                 + "where g.id in :ids "
                                 + "group by g.id" )
-                .setParameterList( "ids", ids )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
                 .list();
         return fillValueObjects( result );
     }
@@ -272,7 +282,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
                 .createQuery( "select g.id, genes.id from GeneSet g join g.members m join m.gene genes where g.id in :ids" )
-                .setParameterList( "ids", ids )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
                 .list();
         Map<Long, Set<Long>> geneIdsByGeneSetId = r.stream()
                 .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> ( Long ) row[1], Collectors.toSet() ) ) );

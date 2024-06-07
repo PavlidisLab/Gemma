@@ -35,14 +35,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 
 /**
  * @author paul
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
+    private static final String DESCRIPTION = "Generate analysis text files (diff expression)";
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
@@ -69,7 +68,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        Collection<Callable<Void>> tasks = new ArrayList<>( queue.size() );
+        Collection<Runnable> tasks = new ArrayList<>( queue.size() );
         for ( BioAssaySet ee : queue ) {
             tasks.add( new ProcessBioAssaySet( ee ) );
         }
@@ -86,11 +85,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
+        Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
-        this.addThreadsOption( options );
         options.addOption( forceWriteOption );
     }
 
@@ -112,7 +110,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
 
-            expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
+            //expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
@@ -124,7 +122,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     // Inner class for processing the experiments
-    private class ProcessBioAssaySet implements Callable<Void> {
+    private class ProcessBioAssaySet implements Runnable {
         private SecurityContext context;
         private BioAssaySet bioAssaySet;
 
@@ -133,14 +131,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
 
         @Override
-        public Void call() {
+        public void run() {
             BioAssaySet ee = bioAssaySet;
             if ( ee == null ) {
-                return null;
+                return;
             }
             AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
             ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
-            return null;
         }
     }
 }

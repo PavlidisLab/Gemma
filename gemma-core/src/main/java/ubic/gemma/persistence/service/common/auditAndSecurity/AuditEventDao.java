@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseDao;
@@ -76,4 +76,6 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditables );
 }

@@ -25,7 +25,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
-import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.cache.CacheUtils;
 
 import java.util.Map;
 

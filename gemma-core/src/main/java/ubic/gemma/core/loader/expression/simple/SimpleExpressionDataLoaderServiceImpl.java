@@ -27,11 +27,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -94,8 +92,11 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
-            BibliographicReference ref = pubfetch.retrieveByHTTP( metaData.getPubMedId() );
-            experiment.setPrimaryPublication( ref );
+            try {
+                experiment.setPrimaryPublication( pubfetch.retrieveByHTTP( metaData.getPubMedId() ) );
+            } catch ( IOException e ) {
+                log.error( "Failed to retrieve PubMed entry for " + metaData.getPubMedId() + ", the primary publication will not be updated.", e );
+            }
         }
 
         QuantitationType quantitationType = this.convertQuantitationType( metaData );

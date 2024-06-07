@@ -22,19 +22,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -43,6 +40,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -61,8 +59,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
     private Persister persisterHelper;
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -77,7 +74,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         BibliographicReferenceValueObject vo;
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
@@ -113,15 +114,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
             }
             valueObjects.add( vo );
-
-            // adding phenotype information to the Bibliographic Reference
-
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
-                    .findPhenotypesForBibliographicReference( vo.getPubAccession() );
-
-            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-            vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
         }
 
@@ -218,7 +210,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+            }
             if ( bibRef == null ) {
                 throw new EntityNotFoundException(
                         "Could not locate reference with pubmed id=" + pubMedId + ", either in Gemma or at NCBI" );
@@ -249,14 +245,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             }
             CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
             if ( !citationToEEs.containsKey( cvo ) ) {
-                citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
+                citationToEEs.put( cvo, new ArrayList<>() );
             }
-            ExpressionExperiment ee = entry.getKey();
-            ee.setBioAssays( null );
-            ee.setAccession( null );
-            ee.setExperimentalDesign( null );
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( ee ) );
-
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true, true ) );
         }
 
         return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );

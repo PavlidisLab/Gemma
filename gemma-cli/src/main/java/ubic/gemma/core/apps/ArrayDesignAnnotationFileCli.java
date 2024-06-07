@@ -25,7 +25,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -38,7 +38,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
@@ -62,14 +61,17 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     // file info
     private String batchFileName;
 
-    private boolean overWrite = false;
+  //  private boolean overWrite = false;
     private boolean processAllADs = false;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
-    private String geneFileName;
+    // private String geneFileName;
     private GeneOntologyService goService;
     private String taxonName;
     private boolean notifiedAboutGOState = false;
     private TaxonService taxonService;
+
+    private boolean useGO = true;
+    private boolean deleteOtherFiles = true; // should other files that incorporate the annotations be deleted?
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -85,19 +87,26 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Option batchLoading = Option.builder( "b" ).longOpt( "batch" ).desc( ArrayDesignAnnotationFileCli.BATCH_LOAD_DESC ).build();
 
-        Option geneListFile = Option.builder( "g" ).longOpt( GENE_NAME_LIST_FILE_OPTION ).desc( ArrayDesignAnnotationFileCli.GENE_LIST_FILE_DESC )
-                .hasArg().argName( "File of gene symbols" ).build();
+//        Option geneListFile = Option.builder( "g" ).longOpt( GENE_NAME_LIST_FILE_OPTION ).desc( ArrayDesignAnnotationFileCli.GENE_LIST_FILE_DESC )
+//                .hasArg().argName( "File of gene symbols" ).build();
 
         Option taxonNameOption = Option.builder( "t" ).longOpt( "taxon" ).hasArg().argName( "taxon name" )
                 .desc( ArrayDesignAnnotationFileCli.TAXON_DESC ).build();
 
-        Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
+     //   Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
+
+        Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotations" ).build();
+
+        Option dontDeleteOtherFilesOption = Option.builder( "k" ).longOpt( "dontDeleteOtherFiles" ).desc( "Keep other files associated" +
+                "with the platform such as data set flat files and DEA results. Use this option if the annotations haven't changed; default is to delete them" ).build();
 
         options.addOption( fileLoading );
         options.addOption( batchLoading );
-        options.addOption( overWriteOption );
+     //   options.addOption( overWriteOption );
         options.addOption( taxonNameOption );
-        options.addOption( geneListFile );
+        options.addOption( skipGOOption );
+        options.addOption( dontDeleteOtherFilesOption );
+        //    options.addOption( geneListFile );
 
     }
 
@@ -122,24 +131,37 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         }
 
-        if ( commandLine.hasOption( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION ) ) {
-            this.geneFileName = commandLine.getOptionValue( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
-            if ( !commandLine.hasOption( "taxon" ) ) {
-                throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
-            }
-            this.taxonName = commandLine.getOptionValue( "taxon" );
-
+        if ( commandLine.hasOption( "nogo" ) ) {
+            AbstractCLI.log.info( "GO annotations will be ommitted (there will be a blank column) and only one annotation file will be generated instead of three." );
+            this.useGO = false;
         }
+
+//        if ( commandLine.hasOption( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION ) ) {
+//            this.geneFileName = commandLine.getOptionValue( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
+//            if ( !commandLine.hasOption( "taxon" ) ) {
+//                throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
+//            }
+//            this.taxonName = commandLine.getOptionValue( "taxon" );
+//
+//        }
 
         if ( commandLine.hasOption( "taxon" ) ) {
             this.taxonName = commandLine.getOptionValue( "taxon" );
             if ( commandLine.hasOption( 'b' ) ) {
                 AbstractCLI.log.info( "Will batch process array designs for " + this.taxonName );
+            } else {
+                AbstractCLI.log.info( "Will make generic file for all genes for " + this.taxonName );
             }
         }
 
-        if ( commandLine.hasOption( 'o' ) )
-            this.overWrite = true;
+        if ( commandLine.hasOption( "dontDeleteOtherFiles" ) ) {
+            log.warn( "Deletion of other files associated with the platform has been disabled, such as data files and DEA results files. " +
+                    "If the annotations have changed since the files were last generated, you will have to delete the file manually." );
+            deleteOtherFiles = false;
+        }
+
+//        if ( commandLine.hasOption( 'o' ) )
+//            this.overWrite = true;
 
         super.processOptions( commandLine );
 
@@ -161,13 +183,16 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     protected void doWork() throws Exception {
         this.taxonService = this.getBean( TaxonService.class );
 
-        OntologyUtils.ensureInitialized( goService );
+        if ( this.useGO ) {
+            OntologyUtils.ensureInitialized( goService );
+        }
 
         log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
-        if ( StringUtils.isNotBlank( geneFileName ) ) {
-            this.processGeneList();
-        } else if ( processAllADs ) {
+//        if ( StringUtils.isNotBlank( geneFileName ) ) {
+//            this.processGeneList();
+//        } else
+        if ( processAllADs ) {
             this.processAllADs(); // 'batch'
         } else if ( batchFileName != null ) {
             this.processFromListInFile(); // list of ADs to run
@@ -175,7 +200,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
         } else {
             if ( this.getArrayDesignsToProcess().isEmpty() ) {
-                throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
+                throw new IllegalArgumentException( "You must specify a platform, a taxon, or batch." );
             }
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
@@ -204,7 +229,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return;
         }
 
-        arrayDesignAnnotationService.create( arrayDesign, overWrite );
+        arrayDesignAnnotationService.create( arrayDesign, useGO, deleteOtherFiles );
 
     }
 
@@ -339,38 +364,38 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             }
         }
     }
-
-    private void processGeneList() throws IOException {
-        AbstractCLI.log.info( "Loading genes to annotate from " + geneFileName );
-        InputStream is = new FileInputStream( geneFileName );
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
-            String line;
-            GeneService geneService = this.getBean( GeneService.class );
-            Taxon taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-            }
-            Collection<Gene> genes = new HashSet<>();
-            while ( ( line = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( line ) ) {
-                    continue;
-                }
-                String[] arguments = StringUtils.split( line, '\t' );
-                String gene = arguments[0];
-                Gene g = geneService.findByOfficialSymbol( gene, taxon );
-                if ( g == null ) {
-                    AbstractCLI.log.info( "Gene: " + gene + " not found." );
-                    continue;
-                }
-                genes.add( g );
-            }
-            AbstractCLI.log.info( "File contained " + genes.size() + " potential gene symbols" );
-
-            int numProcessed = arrayDesignAnnotationService
-                    .generateAnnotationFile( new PrintWriter( System.out ), genes );
-            AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
-        }
-    }
+//
+//    private void processGeneList() throws IOException {
+//        AbstractCLI.log.info( "Loading genes to annotate from " + geneFileName );
+//        InputStream is = new FileInputStream( geneFileName );
+//        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+//            String line;
+//            GeneService geneService = this.getBean( GeneService.class );
+//            Taxon taxon = taxonService.findByCommonName( taxonName );
+//            if ( taxon == null ) {
+//                throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+//            }
+//            Collection<Gene> genes = new HashSet<>();
+//            while ( ( line = br.readLine() ) != null ) {
+//                if ( StringUtils.isBlank( line ) ) {
+//                    continue;
+//                }
+//                String[] arguments = StringUtils.split( line, '\t' );
+//                String gene = arguments[0];
+//                Gene g = geneService.findByOfficialSymbol( gene, taxon );
+//                if ( g == null ) {
+//                    AbstractCLI.log.info( "Gene: " + gene + " not found." );
+//                    continue;
+//                }
+//                genes.add( g );
+//            }
+//            AbstractCLI.log.info( "File contained " + genes.size() + " potential gene symbols" );
+//
+//            int numProcessed = arrayDesignAnnotationService
+//                    .generateAnnotationFile( new PrintWriter( System.out ), genes );
+//            AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
+//        }
+//    }
 
     private void processGenesForTaxon() {
         GeneService geneService = this.getBean( GeneService.class );
@@ -382,14 +407,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Collection<Gene> genes = geneService.loadAll( taxon );
         AbstractCLI.log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService
-                .generateAnnotationFile( new PrintWriter( System.out ), genes );
+                .generateAnnotationFile( new PrintWriter( System.out ), genes, useGO );
         AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
-
-        this.arrayDesignAnnotationService.create( inputAd, overWrite );
-
+        this.arrayDesignAnnotationService.create( inputAd, useGO, deleteOtherFiles );
         addSuccessObject( inputAd );
 
     }

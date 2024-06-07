@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -40,8 +40,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for platforms.
@@ -92,7 +97,7 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter );
-        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -102,7 +107,7 @@ public class PlatformsWebService {
     @Operation(summary = "Count platforms matching the provided filter")
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
-        return Responder.respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
+        return respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
     }
 
     /**
@@ -131,7 +136,7 @@ public class PlatformsWebService {
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter )
                 .and( arrayDesignArgService.getFilters( platformsArg ) );
-        return Responder.paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -146,7 +151,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit
     ) {
-        return Responder.paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
+        return paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
                 new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 
@@ -168,7 +173,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -189,7 +194,7 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
-        return Responder.paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -218,7 +223,7 @@ public class PlatformsWebService {
     ) {
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
-        return Responder.paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
+        return paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
                 compositeSequenceService.getSort( "id", Sort.Direction.ASC ), offset.getValue(), limit.getValue() );
     }
 
@@ -247,7 +252,7 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         // FIXME: deal with potential null return value of loadValueObject
-        return Responder.paginate( compositeSequenceService
+        return paginate( compositeSequenceService
                 .getGenes( probeArgService.getEntityWithPlatform( probeArg, arrayDesignArgService.getEntity( platformArg ) ), offset.getValue(),
                         limit.getValue() )
                 .map( geneService::loadValueObject ), probeArgService.getFilters( probeArg ), new String[] { "id" } );
@@ -264,11 +269,15 @@ public class PlatformsWebService {
     @Path("/{platform}/annotations")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the annotations of a given platform", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string", format = "binary"))) })
+            @ApiResponse(content = @Content(schema = @Schema(type = "string", format = "binary"))) })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {
-        return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
+        try {
+            return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
+        }
     }
 
     /**
@@ -277,7 +286,7 @@ public class PlatformsWebService {
      * @param arrayDesign the platform to fetch and output the annotation file for.
      * @return a Response object containing the annotation file.
      */
-    private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
+    private Response outputAnnotationFile( ArrayDesign arrayDesign ) throws IOException {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
@@ -285,15 +294,15 @@ public class PlatformsWebService {
         if ( !file.exists() ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
-                annotationFileService.create( arrayDesign, true );
+                // To speed things up, we don't delete other files
+                annotationFileService.create( arrayDesign, true, false ); // include GO by default.
                 file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
                 if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
             } catch ( IOException e ) {
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
-
-        return Response.ok( file )
+        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
                 .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();

@@ -12,7 +12,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -28,7 +28,6 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
             return new ExperimentalFactorDaoImpl( sessionFactory );
         }
-
     }
 
     @Autowired

@@ -14,8 +14,8 @@
 
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
     <context:component-scan base-package="ubic.gemma.web"
-                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
-        <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
+                            name-generator="ubic.gemma.core.context.BeanNameGenerator">
+        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
     <!-- Mapping URLS to controllers -->
@@ -97,6 +97,9 @@
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.HandlerExceptionResolverComposite">
         <property name="exceptionResolvers">
             <list>
+                <!-- handle all Spring MVC built-in exceptions -->
+                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver"/>
+                <!-- handles Gemma-specific exceptions -->
                 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
                     <property name="statusCodes">
                         <props>
@@ -115,7 +118,12 @@
                         </props>
                     </property>
                 </bean>
+                <!-- handle Tomcat's ClientAbortException, only needed for Tomact deployments -->
+                <bean class="ubic.gemma.web.util.ClientAbortExceptionResolver"/>
+                <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
+                    <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
+                    <property name="statusCode" value="500"/>
                     <property name="errorView" value="error/500"/>
                 </bean>
             </list>
@@ -309,8 +317,6 @@
             <dwr:include method="getProducts"/>
             <dwr:include method="loadGeneDetails"/>
             <dwr:include method="loadGeneEvidence"/>
-            <dwr:include method="loadAllenBrainImages"/>
-            <dwr:include method="getGeneABALink"/>
         </dwr:remote>
     </bean>
 
@@ -339,27 +345,6 @@
             <dwr:include method="findGeneSetsByGene"/>
             <dwr:include method="findGeneSetsByName"/>
             <dwr:include method="canCurrentUserEditGroup"/>
-        </dwr:remote>
-    </bean>
-
-
-    <bean id="phenotypeController" class="ubic.gemma.web.controller.PhenotypeController">
-        <dwr:remote javascript="PhenotypeController">
-            <dwr:include method="findEvidenceByFilters"/>
-            <dwr:include method="findExperimentCategory"/>
-            <dwr:include method="findCandidateGenes"/>
-            <dwr:include method="calculateExternalDatabasesStatistics"/>
-            <dwr:include method="findExperimentOntologyValue"/>
-            <dwr:include method="findEvidenceOwners"/>
-            <dwr:include method="loadAllPhenotypesByTree"/>
-            <dwr:include method="searchOntologyForPhenotypes"/>
-            <dwr:include method="findBibliographicReference"/>
-            <dwr:include method="validatePhenotypeAssociationForm"/>
-            <dwr:include method="processPhenotypeAssociationForm"/>
-            <dwr:include method="removePhenotypeAssociation"/>
-            <dwr:include method="makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis"/>
-            <dwr:include method="removeAllEvidenceFromMetaAnalysis"/>
-            <dwr:include method="findExternalDatabaseName"/>
         </dwr:remote>
     </bean>
 
@@ -440,6 +425,7 @@
             <dwr:include method="createExperimentalFactor"/>
             <dwr:include method="deleteExperimentalFactors"/>
             <dwr:include method="updateExperimentalFactors"/>
+            <dwr:include method="getBioMaterialCharacteristicCategories"/>
             <dwr:include method="getFactorValues"/>
             <dwr:include method="createFactorValue"/>
             <dwr:include method="deleteFactorValues"/>
@@ -716,23 +702,20 @@
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.FreeTextGeneResultsValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.FreeTextGeneResultsValueObject"
                      javascript="FreeTextGeneResultsValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.PhenotypeGroupValueObject"
-                     javascript="PhenotypeGroupValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject"
                      javascript="DatabaseBackedGeneSetValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject"
                      javascript="SessionBoundGeneSetValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
@@ -741,47 +724,18 @@
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject"
                      javascript="CitationValueObject"/>
 
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.CharacteristicValueObject"
                      javascript="CharacteristicValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject"
-                     javascript="ScoreValueObject"/>
-
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject"
-                     javascript="PhenotypeAssPubValueObject"/>
-
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject"
-                     javascript="SimpleTreeValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject"
-                     javascript="EvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
-                     javascript="ExperimentalEvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject"
-                     javascript="LiteratureEvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject"
-                     javascript="DiffExpressionEvidenceValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
                      javascript="ExpressionExperimentSetValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.expression.BlacklistedValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.blacklist.BlacklistedValueObject"
                      javascript="BlacklistedValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
@@ -790,11 +744,6 @@
                      javascript="GeeqValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqAdminValueObject"
                      javascript="GeeqAdminValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject"
-                     javascript="PhenotypeValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject"
-                     javascript="ExternalDatabaseStatisticsValueObject"/>
 
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject"/>
@@ -974,7 +923,7 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.common.description.BibliographicReferenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.BaseValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.common.BaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.DatabaseEntryValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequenceValueObject"/>

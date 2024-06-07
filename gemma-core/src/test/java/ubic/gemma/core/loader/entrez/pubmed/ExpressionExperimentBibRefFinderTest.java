@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,29 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.net.UnknownHostException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
  */
+@Category(GeoTest.class)
 public class ExpressionExperimentBibRefFinderTest {
 
-    private static final Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
-
     @Test
-    @Category(SlowTest.class)
-    public void testLocatePrimaryReference() throws Exception {
+    public void testLocatePrimaryReference() {
+        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -54,25 +49,20 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
+        BibliographicReference bibref = null;
         try {
-            BibliographicReference bibref = null;
-            for ( int i = 0; i < 3; i++ ) {
-                bibref = finder.locatePrimaryReference( ee );
-                if ( bibref != null )
-                    break;
-                Thread.sleep( 1000 );
-            }
-            assertNotNull( bibref );
-            assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
-                    bibref.getTitle() );
-        } catch ( Exception e ) {
-            checkCause( e );
+            bibref = finder.locatePrimaryReference( ee );
+        } catch ( IOException e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
-
+        assertNotNull( bibref );
+        assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
+                bibref.getTitle() );
     }
 
     @Test
-    public void testLocatePrimaryReferenceInvalidGSE() throws Exception {
+    public void testLocatePrimaryReferenceInvalidGSE() {
+        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -81,34 +71,12 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
+        BibliographicReference bibref = null;
         try {
-            BibliographicReference bibref = finder.locatePrimaryReference( ee );
-            assert ( bibref == null );
-        } catch ( Exception e ) {
-            checkCause( e );
+            bibref = finder.locatePrimaryReference( ee );
+        } catch ( IOException e ) {
+            assumeThatExceptionIsDueToNetworkIssue( e );
         }
+        assertNull( bibref );
     }
-
-    private void checkCause( Exception e ) throws Exception {
-        IOException k;
-        if ( e instanceof IOException ) {
-            k = ( IOException ) e;
-        } else if ( e.getCause() instanceof IOException ) {
-            k = ( IOException ) e.getCause();
-        } else {
-            throw e;
-        }
-        if ( k instanceof UnknownHostException || k instanceof SSLException ) {
-            assumeNoException( e );
-        } else if ( k.getMessage().contains( "503" ) ) {
-            assumeNoException( "Test skipped due to a 503 error from NCBI", e );
-        } else if ( k.getMessage().contains( "502" ) ) {
-            log.warn( "Test skipped due to a 502 error from NCBI" );
-        } else if ( k.getMessage().contains( "500" ) ) {
-            log.warn( "Test skipped due to a 500 error from NCBI" );
-        } else {
-            throw e;
-        }
-    }
-
 }

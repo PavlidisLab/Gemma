@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,7 +55,7 @@ import java.util.stream.Collectors;
  * @author pavlidis
  */
 @SuppressWarnings("unused")
-@Service
+@Service("userManager")
 public class UserManagerImpl implements UserManager {
 
     private final Log logger = LogFactory.getLog( this.getClass() );
@@ -533,7 +532,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
+    public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException {
         User user = this.loadUser( username );
 
         Set<GrantedAuthority> dbAuthsSet = new HashSet<>();

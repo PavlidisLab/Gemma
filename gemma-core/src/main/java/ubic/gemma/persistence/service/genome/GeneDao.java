@@ -104,12 +104,6 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     /**
      * @param taxon taxon
-     * @return a collections of genes that match the given taxon
-     */
-    Collection<Gene> getGenesByTaxon( Taxon taxon );
-
-    /**
-     * @param taxon taxon
      * @return a collection of genes that are actually MicroRNA for a given taxon
      */
     Collection<Gene> getMicroRnaByTaxon( Taxon taxon );

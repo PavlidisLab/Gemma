@@ -26,8 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -102,7 +103,8 @@ public class AnnotationController {
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
-        if ( ontologyService.isObsolete( vc.getValueUri() ) ) {
+        OntologyTerm term = ontologyService.getTerm( vc.getValueUri() );
+        if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
             throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
         }
         expressionExperimentService.addCharacteristic( ee, vc );
@@ -124,22 +126,24 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         try {
-            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, taxon );
+            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon );
             /*
              * Populate the definition for the top hits.
              */
             int numfilled = 0;
             int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
             for ( CharacteristicValueObject cvo : sortedResults ) {
-                cvo.setValueDefinition( ontologyService.getDefinition( cvo.getValueUri() ) );
+                cvo.setValueDefinition( cvo.getValueUri() != null ? ontologyService.getDefinition( cvo.getValueUri() ) : null );
                 if ( ++numfilled > maxfilled ) {
                     break;
                 }
             }
 
             return sortedResults;
+        } catch ( ParseSearchException e ) {
+            throw new IllegalArgumentException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search query.", e );
+            throw new RuntimeException( e );
         }
     }
 

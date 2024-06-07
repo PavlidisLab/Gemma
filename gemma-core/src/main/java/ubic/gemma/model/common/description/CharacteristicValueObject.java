@@ -17,7 +17,7 @@ package ubic.gemma.model.common.description;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 
@@ -46,6 +46,9 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String value;
     private String valueUri;
 
+    @GemmaWebOnly
+    private String originalValue = null; // what we originally got from GEO for biomaterial characteristics in particular. May be missing for some.
+
     /**
      * A unique ontology identifier (i.e. IRI) for this characteristic.
      */
@@ -53,7 +56,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String valueId;
 
-    // TODO: all the following fields are Phenocarta-specific and should be relocated
+    // TODO: all the following fields are Phenocarta-specific and should be relocated FIXME it's not clear which fields are referred to by this comment. I've marked some candidates
 
     /**
      * id used by url on the client side
@@ -63,7 +66,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     @GemmaWebOnly
     private boolean alreadyPresentInDatabase = false;
     @GemmaWebOnly
-    private boolean alreadyPresentOnGene = false;
+    private boolean alreadyPresentOnGene = false; // phenocarta?
     /**
      * child term from a root
      */
@@ -77,12 +80,12 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     @GemmaWebOnly
     private String ontologyUsed = null;
     @GemmaWebOnly
-    private long privateGeneCount = 0L;
+    private long privateGeneCount = 0L; // phenocarta?
     /**
      * number of occurrences in all genes
      */
     @GemmaWebOnly
-    private long publicGeneCount = 0L;
+    private long publicGeneCount = 0L; // phenocarta?
     /**
      * root of a query
      */
@@ -115,6 +118,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.value = characteristic.getValue();
         this.valueUri = characteristic.getValueUri();
         this.urlId = parseUrlId( characteristic.getValueUri() );
+        this.originalValue = characteristic.getOriginalValue();
     }
 
     public CharacteristicValueObject( String value, @Nullable String valueUri ) {

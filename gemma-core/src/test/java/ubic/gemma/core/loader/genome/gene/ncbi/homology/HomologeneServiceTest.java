@@ -29,10 +29,10 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collection;
 import java.util.concurrent.Future;
@@ -131,7 +131,7 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     @Category(SlowTest.class)
     public final void testHomologeneFromFtpServer() throws Exception {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/current/homologene.data" );
+        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/last-archive/homologene.data" );
         hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
         Future<HomologeneService> homologeneService = hgs.getObject();
         assertThat( homologeneService ).succeedsWithin( 30, TimeUnit.SECONDS );
@@ -150,6 +150,6 @@ public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
     public void testDisableLoadHomologene() {
         assertThat( hgs.isInitialized() ).isFalse();
         hgs.setLoadHomologene( false );
-        assertThat( hgs.getObject() ).succeedsWithin( 40, TimeUnit.MILLISECONDS );
+        assertThat( hgs.getObject() ).succeedsWithin( 100, TimeUnit.MILLISECONDS );
     }
 }

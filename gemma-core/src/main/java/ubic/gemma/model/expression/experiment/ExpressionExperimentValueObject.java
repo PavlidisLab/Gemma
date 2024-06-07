@@ -8,11 +8,13 @@ import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -37,6 +39,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     /**
      * Batch effect type. See {@link BatchEffectType} enum for possible values.
      */
+    @Schema(implementation = BatchEffectType.class)
     private String batchEffect;
     /**
      * Summary statistics of a batch effect is present.
@@ -52,6 +55,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonIgnore
     private Long experimentalDesign;
     private String externalDatabase;
+    private String externalDatabaseUri;
     private String externalUri;
     private GeeqValueObject geeq;
     @JsonIgnore
@@ -65,6 +69,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String source;
     @JsonIgnore
     private Boolean suitableForDEA = true;
+
     /**
      * FIXME: this should be named simply "taxon", but that field is already taken for Gemma Web, see {@link #getTaxon()}.
      */
@@ -89,8 +94,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * Creates a new value object out of given Expression Experiment.
      *
      * @param ee the experiment to convert into a value object.
+     * @param ignoreDesign exclude the experimental design from serialization
+     * @param ignoreAccession exclude accession from serialization
      */
-    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession ) {
         super( ee );
         this.shortName = ee.getShortName();
         this.name = ee.getName();
@@ -98,10 +105,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.description = ee.getDescription();
 
         // accession
-        if ( ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+        if ( !ignoreAccession && ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
-            this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
+            this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
+            if ( ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                this.externalUri = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ee.getAccession().getAccession();
+            }
         }
 
         // EE
@@ -113,7 +123,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Counts
-        if ( ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ) {
+        if ( Hibernate.isInitialized( ee.getBioAssays() ) ) {
             this.numberOfBioAssays = ee.getBioAssays().size();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
@@ -121,7 +131,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // ED
-        if ( ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
+        if ( !ignoreDesign && ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
@@ -140,6 +150,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else {
             geeq = null;
         }
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+        this( ee, false, false );
     }
 
     /**
@@ -169,10 +183,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.accession = vo.getAccession();
         this.batchConfound = vo.getBatchConfound();
         this.batchEffect = vo.getBatchEffect();
+        this.batchEffectStatistics = vo.getBatchEffectStatistics();
         this.externalDatabase = vo.getExternalDatabase();
+        this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
         this.metadata = vo.getMetadata();
-        this.shortName = vo.getShortName();
+        if ( vo.getShortName() == null && ExpressionExperimentSubsetValueObject.class.isAssignableFrom( vo.getClass() ) ) {
+            this.setShortName( ( ( ExpressionExperimentSubsetValueObject ) vo ).getSourceExperimentShortName() );
+        } else {
+            this.shortName = vo.getShortName();
+        }
         this.source = vo.getSource();
         this.taxonObject = vo.getTaxonObject();
         this.technologyType = vo.getTechnologyType();

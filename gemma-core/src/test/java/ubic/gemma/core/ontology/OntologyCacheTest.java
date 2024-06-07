@@ -1,5 +1,6 @@
 package ubic.gemma.core.ontology;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.assertj.core.util.Sets.set;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
 
@@ -24,11 +26,16 @@ public class OntologyCacheTest {
     @Before
     public void setUp() {
         ontologyService = mock( OntologyService.class );
-        ontologyCache = new OntologyCache( new ConcurrentMapCache( "parents" ), new ConcurrentMapCache( "children" ) );
+        ontologyCache = new OntologyCache( new ConcurrentMapCache( "search" ), new ConcurrentMapCache( "parents" ), new ConcurrentMapCache( "children" ) );
         term1 = new OntologyTermSimple( "http://example.com/term1", "term1" );
         term2 = new OntologyTermSimple( "http://example.com/term2", "term2" );
         term3 = new OntologyTermSimple( "http://example.com/term3", "term3" );
-        term4 = new OntologyTermSimple( "http://example.com/term3", "term4" );
+        term4 = new OntologyTermSimple( "http://example.com/term4", "term4" );
+    }
+
+    @After
+    public void resetMocks() {
+        reset( ontologyService );
     }
 
     @Test
@@ -54,12 +61,14 @@ public class OntologyCacheTest {
     }
 
     @Test
-    public void testLookupByEnumeration() {
+    public void testLookupByMaximalSubsetWhenMinSubsetSizeIsSet() {
         ontologyCache.getChildren( ontologyService, Collections.singleton( term1 ), true, true );
         verify( ontologyService ).getChildren( Collections.singleton( term1 ), true, true );
 
-        // a k-3 subset exist (i.e. [term1]) but only via enumeration
+        ontologyCache.setMinSubsetSize( 2 );
+
+        // a subset of size 1 exists, but it cannot be used
         ontologyCache.getChildren( ontologyService, Arrays.asList( term1, term2, term3, term4 ), true, true );
-        verify( ontologyService, atMostOnce() ).getChildren( Collections.singleton( term1 ), true, true );
+        verify( ontologyService ).getChildren( Arrays.asList( term1, term2, term3, term4 ), true, true );
     }
 }

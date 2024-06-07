@@ -1,0 +1,498 @@
+function __gemma_cli_complete() {
+    COMPREPLY=()
+    words="${COMP_WORDS[*]}"
+    current_option="${COMP_WORDS[$COMP_CWORD-1]}"
+    if ! [[ " $words " =~ ' '(adATcleanup|addExternalDatabase|addGEOData|addPlatformSequences|addTSVData|affyAltsUpdate|affyCollapse|affyFromCel|blackList|blatPlatform|coexpAnalyze|corrMat|ctdDownload|deleteDiffEx|deleteExperiments|deletePhenotypes|deletePlatformElements|detachSequences|dgaDownload|diffExAnalyze|dumpForNIF|evidenceImport|fetchMeshTerms|fillBatchInfo|findDatasetPubs|findObsoleteTerms|geneUpdate|generateDataFile|genericPlatform|getDataMatrix|gwasDownload|importDesign|listExternalDatabases|listGEOData|loadEvidenceForClassifier|loadGenesFromFile|loadTaxa|makePlatformAnnotFiles|makePrivate|makeProcessedData|makePublic|mapPlatformToGenes|mergePlatforms|migrateFactorValues|omimDownload|orderVectorsByDesign|pca|platformMapSummary|platformRepeatScan|platformSubsumptionTest|printExperimentalDesign|probeRename|pubmedAssociateToExperiments|pubmedLoad|pubmedSearchAndSave|refreshExperiment|replaceData|rgdDownload|rnaseqBatchInfo|rnaseqDataAdd|runGeeq|searchIndex|seqCleanup|sfariDownload|splitExperiment|switchExperimentPlatform|updateEe2c|updateExternalDatabase|updateGOAnnots|updateMultifunc|updatePubMeds|vectorMerge|viewExpDesigns)' ' ]]; then
+        if ! [[ "$current_option" =~ (--completion-executable|--completion-shell|--logger|--verbosity|-ce|-cs|-logger|-v) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--completion' '--completion-executable' '--completion-shell' '--help' '--help-all' '--logger' '--profiling' '--testdb' '--verbosity' '--version' '-c' '-ce' '-cs' '-h' '-ha' '-logger' '-profiling' '-testdb' '-v' '-version'" -- "$2")
+        fi
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'adATcleanup' 'addExternalDatabase' 'addGEOData' 'addPlatformSequences' 'addTSVData' 'affyAltsUpdate' 'affyCollapse' 'affyFromCel' 'blackList' 'blatPlatform' 'coexpAnalyze' 'corrMat' 'ctdDownload' 'deleteDiffEx' 'deleteExperiments' 'deletePhenotypes' 'deletePlatformElements' 'detachSequences' 'dgaDownload' 'diffExAnalyze' 'dumpForNIF' 'evidenceImport' 'fetchMeshTerms' 'fillBatchInfo' 'findDatasetPubs' 'findObsoleteTerms' 'geneUpdate' 'generateDataFile' 'genericPlatform' 'getDataMatrix' 'gwasDownload' 'importDesign' 'listExternalDatabases' 'listGEOData' 'loadEvidenceForClassifier' 'loadGenesFromFile' 'loadTaxa' 'makePlatformAnnotFiles' 'makePrivate' 'makeProcessedData' 'makePublic' 'mapPlatformToGenes' 'mergePlatforms' 'migrateFactorValues' 'omimDownload' 'orderVectorsByDesign' 'pca' 'platformMapSummary' 'platformRepeatScan' 'platformSubsumptionTest' 'printExperimentalDesign' 'probeRename' 'pubmedAssociateToExperiments' 'pubmedLoad' 'pubmedSearchAndSave' 'refreshExperiment' 'replaceData' 'rgdDownload' 'rnaseqBatchInfo' 'rnaseqDataAdd' 'runGeeq' 'searchIndex' 'seqCleanup' 'sfariDownload' 'splitExperiment' 'switchExperimentPlatform' 'updateEe2c' 'updateExternalDatabase' 'updateGOAnnots' 'updateMultifunc' 'updatePubMeds' 'vectorMerge' 'viewExpDesigns'" -- "$2")
+    fi
+    if [[ " $words " =~ ' addGEOData ' ]]; then
+        if ! [[ "$current_option" =~ (--acc|--file|-batchFormat|-batchOutputFile|-e|-f|-softfile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--acc' '--file' '--force' '--help' '--match' '--platforms' '--update' '-allowsuper' '-batchFormat' '-batchOutputFile' '-e' '-f' '-force' '-h' '-m' '-nopost' '-softfile' '-splitByPlatform' '-update' '-y'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f|-softfile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' addTSVData ' ]]; then
+        if ! [[ "$current_option" =~ (--dir|--file|-batchFormat|-batchOutputFile|-d|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--file' '--help' '-batchFormat' '-batchOutputFile' '-d' '-f' '-h'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' affyFromCel ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-aptFile' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-aptFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' coexpAnalyze ' ]]; then
+        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--abs' '--cachecut' '--cdfcut' '--distinctValCut' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--fwe' '--help' '--lowcut' '--lowvarcut' '--missingcut' '--nodb' '-a' '-all' '-array' '-auto' '-batchFormat' '-batchOutputFile' '-c' '-choosecut' '-d' '-dataFile' '-delete' '-dv' '-e' '-eeset' '-f' '-force' '-h' '-init' '-k' '-l' '-logtransform' '-lv' '-m' '-mdate' '-metric' '-n' '-noimages' '-nonegcorr' '-noqc' '-normalizemethod' '-probeDegreeLim' '-q' '-subset' '-t' '-text' '-w' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-dataFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' corrMat ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' deleteDiffEx ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' deleteExperiments ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' diffExAnalyze ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-e' '-eeset' '-f' '-factors' '-force' '-h' '-mdate' '-nobayes' '-nodb' '-nofiles' '-q' '-redo' '-subset' '-t' '-type' '-usebatch' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' fillBatchInfo ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' findDatasetPubs ' ]]; then
+        if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (-batchOutputFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' generateDataFile ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--forceWrite' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-w' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' getDataMatrix ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outputFileName|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outputFileName' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-filter' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outputFileName|-batchOutputFile|-f|-o|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' importDesign ' ]]; then
+        if ! [[ "$current_option" =~ (--designFile|--experiment|-e|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--designFile' '--experiment' '--help' '-e' '-f' '-h'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--designFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' makePrivate ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' makeProcessedData ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-diagupdate' '-e' '-eeset' '-f' '-force' '-h' '-ignoreqm' '-mdate' '-q' '-rankupdate' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' makePublic ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' pca ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' printExperimentalDesign ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outFilePrefix' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' pubmedAssociateToExperiments ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-pubmedIDFile|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-pubmedIDFile' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-pubmedIDFile|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' refreshExperiment ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--refreshReports' '--refreshVectors' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-r' '-t' '-threads' '-v' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' replaceData ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-file|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-file' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-file|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' rnaseqBatchInfo ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' rnaseqDataAdd ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-count|-e|-eeset|-f|-multiqc|-q|-rlen|-rpkm|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-allowMissing' '-batchFormat' '-batchOutputFile' '-count' '-e' '-eeset' '-f' '-h' '-log2cpm' '-multiqc' '-q' '-rlen' '-rpkm' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' runGeeq ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--mode' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-m' '-mdate' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' splitExperiment ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factor|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-factor' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' switchExperimentPlatform ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' updateEe2c ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--truncate' '-h' '-truncate'" -- "$2")
+    fi
+    if [[ " $words " =~ ' vectorMerge ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' adATcleanup ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' addPlatformSequences ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--file|--ids|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '--ids' '--sequence' '--type' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-force' '-h' '-i' '-mdate' '-s' '-t' '-y'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' affyCollapse ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-affyProbeFile' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-affyProbeFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' blatPlatform ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--blatfile' '--help' '--scoreThresh' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-s' '-sensitive' '-t'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--blatfile|-b|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' deletePlatformElements ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' detachSequences ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' genericPlatform ' ]]; then
+        if ! [[ "$current_option" =~ (--geneListFile|--platform|--taxon|-a|-f|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--geneListFile' '--help' '--platform' '--taxon' '-a' '-f' '-h' '-nodb' '-t'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--geneListFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' makePlatformAnnotFiles ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--batch' '--dontDeleteOtherFiles' '--help' '--nogo' '--taxon' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-k' '-l' '-mdate' '-nogo' '-t'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--dontDeleteOtherFiles|-batchOutputFile|-f|-k) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' mapPlatformToGenes ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--identityThreshold' '--overlapThreshold' '--scoreThreshold' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-config' '-f' '-force' '-h' '-i' '-import' '-mdate' '-mirna' '-ncbi' '-nodb' '-o' '-probes' '-s' '-source' '-t' '-usePred'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' mergePlatforms ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--name' '--other' '--shortname' '-a' '-add' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-n' '-o' '-s'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' platformRepeatScan ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' platformSubsumptionTest ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--other' '-a' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-o'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' probeRename ' ]]; then
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' seqCleanup ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--file' '--help' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-dryrun' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' dumpForNIF ' ]]; then
+        if ! [[ "$current_option" =~ (--limit|-l) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dataset' '--diffexpression' '--help' '--limit' '--tissue' '-d' '-h' '-l' '-t' '-x'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' listGEOData ' ]]; then
+        if ! [[ "$current_option" =~ (-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' platformMapSummary ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' viewExpDesigns ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' affyAltsUpdate ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' blackList ' ]]; then
+        if ! [[ "$current_option" =~ (--accession|-a|-accession|-file|-reason) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--accession' '--help' '-a' '-accession' '-file' '-h' '-pp' '-reason' '-undo'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (-file) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' findObsoleteTerms ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' updatePubMeds ' ]]; then
+        if ! [[ "$current_option" =~ (-pmids) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h' '-pmids'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' ctdDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' deletePhenotypes ' ]]; then
+        if ! [[ "$current_option" =~ (-d) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-d' '-h'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' dgaDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' evidenceImport ' ]]; then
+        if ! [[ "$current_option" =~ (-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-c' '-f' '-h'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' gwasDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' loadEvidenceForClassifier ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' omimDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' rgdDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' sfariDownload ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' addExternalDatabase ' ]]; then
+        if ! [[ "$current_option" =~ (--name|--type|-n|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--name' '--type' '-h' '-n' '-t'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' geneUpdate ' ]]; then
+        if ! [[ "$current_option" =~ (--file|-f|-restart|-taxon) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-nodownload' '-restart' '-taxon'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' loadGenesFromFile ' ]]; then
+        if ! [[ "$current_option" =~ (-f|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-f' '-h' '-t'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' searchIndex ' ]]; then
+        if ! [[ "$current_option" =~ (-threads) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-a' '-b' '-e' '-g' '-h' '-q' '-s' '-threads' '-x' '-y'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' updateExternalDatabase ' ]]; then
+        if ! [[ "$current_option" =~ (--description|--last-updated|--name|--parent-database|--release-note|--release-url|--release-version|-d|-lastUpdated|-n|-parentDatabase|-releaseNote|-releaseUrl|-releaseVersion) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--description' '--help' '--last-updated' '--name' '--parent-database' '--release' '--release-note' '--release-url' '--release-version' '-d' '-h' '-lastUpdated' '-n' '-parentDatabase' '-release' '-releaseNote' '-releaseUrl' '-releaseVersion'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' updateGOAnnots ' ]]; then
+        if ! [[ "$current_option" =~ (--file|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' updateMultifunc ' ]]; then
+        if ! [[ "$current_option" =~ (--taxon|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--taxon' '-h' '-t'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' fetchMeshTerms ' ]]; then
+        if ! [[ "$current_option" =~ (--file|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-m'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' listExternalDatabases ' ]]; then
+        if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (-batchOutputFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' loadTaxa ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' migrateFactorValues ' ]]; then
+        if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile|-migrationFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h' '-migrateNonTrivialCases' '-migrateRemainingCharacteristics' '-migrateRemainingFactorValues' '-migrationFile' '-noop'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (-batchOutputFile|-migrationFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' orderVectorsByDesign ' ]]; then
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' pubmedLoad ' ]]; then
+        if ! [[ "$current_option" =~ (--dir|-d) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--help' '-d' '-h'" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' pubmedSearchAndSave ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--persist' '-d' '-h'" -- "$2")
+    fi
+}
+complete -o filenames -o bashdefault -F __gemma_cli_complete 'gemma-cli'

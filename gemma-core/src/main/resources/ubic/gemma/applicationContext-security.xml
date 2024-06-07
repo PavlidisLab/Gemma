@@ -76,7 +76,7 @@
     <aop:config>
         <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
             <aop:after-returning method="doAclAdvice"
-                                 pointcut="ubic.gemma.core.util.Pointcuts.modifier()"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.modifier()"
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>
@@ -123,7 +123,5 @@
         <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
-
-    <bean id="userManager" class="ubic.gemma.core.security.authentication.UserManagerImpl"/>
 
 </beans>

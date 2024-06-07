@@ -25,9 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.maintenance.CharacteristicUpdateCommand;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -138,6 +137,8 @@ public class CharacteristicBrowserController {
 
         boolean searchEfs = true; // fixme, make this optional
 
+        queryString = queryString.trim();
+
         List<AnnotationValueObject> results = new ArrayList<>();
         if ( StringUtils.isBlank( queryString ) ) {
             return results;
@@ -148,7 +149,7 @@ public class CharacteristicBrowserController {
             chars = characteristicService.findByUri( queryString );
         } else {
 
-            chars = characteristicService.findByValue( queryString );
+            chars = characteristicService.findByValueStartingWith( queryString );
 
             if ( searchCategories ) {
                 chars.addAll( characteristicService.findByCategory( queryString ) );
@@ -264,10 +265,6 @@ public class CharacteristicBrowserController {
             ExperimentalFactor ef = ( ExperimentalFactor ) annotatedItem;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign(),
                     "Exp Fac: " + ef.getName() + ( StringUtils.isNotBlank( ef.getDescription() ) ? " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" : "" ), servletContext ) );
-        } else if ( annotatedItem instanceof PhenotypeAssociation ) {
-            PhenotypeAssociation pa = ( PhenotypeAssociation ) annotatedItem;
-            avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );
-            avo.setParentDescription( pa.getId().toString() );
         } else {
             avo.setParentDescription( String.format( "%s: %d", annotatedItem.getClass().getSimpleName(), annotatedItem.getId() ) );
         }

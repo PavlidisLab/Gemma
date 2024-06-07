@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
@@ -33,7 +34,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.io.InputStream;
@@ -121,6 +122,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe != null );

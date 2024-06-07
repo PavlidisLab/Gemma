@@ -2,12 +2,13 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nullable;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Mutable argument type base class for Gene API.
@@ -30,11 +31,12 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
         super( propertyName, propertyType, value );
     }
 
-    /**
-     * Retrieve a gene entity from the given service for the given taxon.
-     */
-    @Nullable
-    abstract Gene getEntityWithTaxon( GeneService geneService, Taxon taxon );
+
+    List<Gene> getEntitiesWithTaxon( GeneService service, Taxon taxon ) {
+        return getEntities( service ).stream()
+                .filter( gene -> gene.getTaxon().equals( taxon ) )
+                .collect( Collectors.toList() );
+    }
 
     /**
      * Used by RS to parse value of request parameters.

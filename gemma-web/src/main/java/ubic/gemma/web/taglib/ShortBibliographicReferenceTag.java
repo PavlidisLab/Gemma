@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;

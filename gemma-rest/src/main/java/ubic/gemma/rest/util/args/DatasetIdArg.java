@@ -23,4 +23,9 @@ public class DatasetIdArg extends DatasetArg<Long> {
     ExpressionExperiment getEntity( ExpressionExperimentService service ) {
         return service.load( this.getValue() );
     }
+
+    @Override
+    Long getEntityId( ExpressionExperimentService service ) {
+        return this.getValue();
+    }
 }

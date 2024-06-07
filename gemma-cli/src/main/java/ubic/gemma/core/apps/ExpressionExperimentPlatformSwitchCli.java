@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
@@ -41,8 +42,15 @@ import java.util.Collection;
 public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
     private String arrayDesignName = null;
-    private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private ExpressionExperimentPlatformSwitchService serv;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private AuditTrailService ats;
 
     @Override
     public String getCommandName() {
@@ -51,15 +59,12 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     @Override
     protected void doWork() throws Exception {
-        serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
-
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 this.processExperiment( ( ExpressionExperiment ) ee );
             } else {
                 throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
             }
-
         }
     }
 
@@ -69,13 +74,11 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
                         "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
-
         options.addOption( arrayDesignOption );
         this.addForceOption( options );
     }
@@ -86,31 +89,24 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         if ( commandLine.hasOption( 'a' ) ) {
             this.arrayDesignName = commandLine.getOptionValue( 'a' );
         }
-        arrayDesignService = this.getBean( ArrayDesignService.class );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
-
         try {
             ee = this.eeService.thawLite( ee );
-
-            AuditTrailService ats = this.getBean( AuditTrailService.class );
+            ArrayDesign ad;
             if ( this.arrayDesignName != null ) {
-                ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName );
+                ad = this.locateArrayDesign( this.arrayDesignName );
                 if ( ad == null ) {
                     throw new RuntimeException( "Unknown array design" );
                 }
-                ad = arrayDesignService.thaw( ad );
                 serv.switchExperimentToArrayDesign( ee, ad );
-
                 ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
-
             } else {
                 // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
-                serv.switchExperimentToMergedPlatform( ee );
-                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged array Design " );
+                ad = serv.switchExperimentToMergedPlatform( ee );
+                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged platform " + ad );
             }
-
             addSuccessObject( ee );
         } catch ( Exception e ) {
             addErrorObject( ee, e );

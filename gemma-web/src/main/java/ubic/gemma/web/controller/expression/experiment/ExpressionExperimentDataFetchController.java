@@ -34,10 +34,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -250,7 +250,8 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false )
+                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee ) );
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
@@ -347,11 +348,11 @@ public class ExpressionExperimentDataFetchController {
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        f = expressionDataFileService.writeOrLocateDataFile( qType, false );
+                        f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
                     } else {
 
                         try {
-                            f = expressionDataFileService.writeOrLocateDataFile( ee, false, filtered );
+                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered ).orElse( null );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                         }
@@ -364,10 +365,10 @@ public class ExpressionExperimentDataFetchController {
             else if ( usedFormat.equals( "json" ) ) {
 
                 if ( qType != null ) {
-                    f = expressionDataFileService.writeOrLocateJSONDataFile( qType, false );
+                    f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
                 } else {
                     try {
-                        f = expressionDataFileService.writeOrLocateJSONDataFile( ee, false, filtered );
+                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered ).orElse( null );
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                     }

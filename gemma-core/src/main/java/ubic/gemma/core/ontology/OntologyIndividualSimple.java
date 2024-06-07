@@ -10,9 +10,9 @@ public class OntologyIndividualSimple extends AbstractOntologyResourceSimple imp
     private final OntologyTermSimple instanceOf;
 
     /**
-     *
-     * @param uri
-     * @param label
+     * Create a new simple ontology individual.
+     * @param uri        a URI for the term, of null for a free-text term
+     * @param label      a label for the term
      * @param instanceOf the term this individual is an instance of which must be simple since this class has to be
      *                   {@link java.io.Serializable}.
      */

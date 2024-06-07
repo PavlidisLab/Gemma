@@ -18,8 +18,7 @@
  */
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 import java.util.Collection;
 
@@ -30,10 +29,6 @@ import java.util.Collection;
  * @param <R> type of analysis result set this is wrapping.
  */
 public abstract class AnalysisResultSetValueObject<K extends AnalysisResult, R extends AnalysisResultSet<K>> extends IdentifiableValueObject<R> {
-
-    protected AnalysisResultSetValueObject() {
-        super();
-    }
 
     protected AnalysisResultSetValueObject( R analysisResultSet ) {
         super( analysisResultSet );

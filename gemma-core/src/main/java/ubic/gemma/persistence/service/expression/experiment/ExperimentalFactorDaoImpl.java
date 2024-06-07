@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -53,29 +54,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public void remove( ExperimentalFactor experimentalFactor ) {
-        ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
-
-        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
-        ed.getExperimentalFactors().remove( experimentalFactor );
-
-        // remove associations with the experimental factor values in related expression experiments
-        //noinspection unchecked
-        List<BioMaterial> bioMaterials = getSessionFactory().getCurrentSession()
-                .createQuery( "select bm from BioMaterial as bm join bm.factorValues fv where fv.experimentalFactor = :ef group by bm" )
-                .setParameter( "ef", experimentalFactor )
-                .list();
-        for ( BioMaterial bm : bioMaterials ) {
-            bm.getFactorValues().removeAll( experimentalFactor.getFactorValues() );
-        }
-
-        // remove the experimental factor this cascades to values.
-        super.remove( experimentalFactor );
-    }
-
-    @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
-
         BusinessKey.checkValidKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
@@ -94,5 +73,32 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         Hibernate.initialize( ef );
         Hibernate.initialize( ef.getExperimentalDesign() );
         return ef;
+    }
+
+    @Override
+    public void remove( ExperimentalFactor experimentalFactor ) {
+        // associated analyses are removed in ExperimentalFactorService
+
+        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
+        ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
+        ed.getExperimentalFactors().remove( experimentalFactor );
+
+        // remove associations with the experimental factor values in related expression experiments
+        Collection<BioMaterial> bioMaterials = getBioMaterials( experimentalFactor );
+        if ( !bioMaterials.isEmpty() ) {
+            for ( BioMaterial bm : bioMaterials ) {
+                if ( bm.getFactorValues().removeAll( experimentalFactor.getFactorValues() ) ) {
+                    log.info( "Removed factor value(s) of " + experimentalFactor + " from " + bm );
+                }
+            }
+        }
+
+        super.remove( experimentalFactor );
+    }
+
+    private List<BioMaterial> getBioMaterials( ExperimentalFactor ef ) {
+        return getSessionFactory().getCurrentSession().createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .setParameter( "ef", ef )
+                .list();
     }
 }

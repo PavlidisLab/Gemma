@@ -1,6 +1,7 @@
 package ubic.gemma.rest;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,48 +11,78 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
-import ubic.gemma.rest.util.args.DatasetArgService;
-import ubic.gemma.rest.util.args.GeneArgService;
-import ubic.gemma.rest.util.args.QuantitationTypeArgService;
+import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
+
+        @Bean
+        public OpenAPI openApi() {
+            return new OpenAPI()
+                    .info( new Info().version( "1.0.0" ) );
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
 
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
@@ -84,6 +115,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public DifferentialExpressionResultService differentialExpressionResultService() {
+            return mock( DifferentialExpressionResultService.class );
+        }
+
+        @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
         }
@@ -109,6 +145,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public TaxonArgService taxonArgService() {
+            return mock();
+        }
+
+        @Bean
         public GeneArgService geneArgService() {
             return mock( GeneArgService.class );
         }
@@ -121,6 +162,36 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
+        }
+
+        @Bean
+        public OntologyService ontologyService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionAnalysisResultSetService expressionAnalysisResultSetService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionAnalysisResultSetArgService expressionAnalysisResultSetArgService() {
+            return mock();
+        }
+
+        @Bean
+        public DatabaseEntryArgService databaseEntryArgService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentReportService expressionExperimentReportService() {
+            return mock();
         }
     }
 
@@ -139,24 +210,38 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private SearchService searchService;
 
+    @Autowired
+    private TaxonArgService taxonArgService;
+
+    @Autowired
+    private GeneArgService geneArgService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
     private ExpressionExperiment ee;
 
     @Before
-    public void setUpMocks() {
+    public void setUpMocks() throws TimeoutException {
         ee = ExpressionExperiment.Factory.newInstance();
         //noinspection unchecked
         Set<String> universe = mock( Set.class );
         when( universe.contains( any( String.class ) ) ).thenReturn( true );
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
     }
 
     @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService );
+    public void resetMocks() throws Exception {
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService );
     }
 
     @Test
@@ -214,20 +299,19 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                     assertThat( s.isFillResults() ).isFalse();
                     assertThat( s.getHighlighter() ).isNotNull();
                 } );
-        verify( expressionExperimentService ).getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) );
-        verify( expressionExperimentService ).loadIdsWithCache( Filters.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ), Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC ) );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
     }
 
     @Test
     public void testGetDatasetsWithEmptyQuery() {
-        assertThat( target( "/datasets" ).queryParam( "query", "" ).request().get() )
+        assertThat( target( "/datasets" ).queryParam( "query", " " ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
     private SearchResult<ExpressionExperiment> createMockSearchResult( Long id ) {
-        return SearchResult.from( ExpressionExperiment.class, id, 0, "test result object" );
+        return SearchResult.from( ExpressionExperiment.class, id, 0, null, "test result object" );
     }
 
     @Test
@@ -268,7 +352,24 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsPlatformsUsageStatistics() {
+    public void testGetDatasetsWhenInferenceTimeoutThenProduce503ServiceUnavailable() throws TimeoutException {
+        //noinspection unchecked
+        when( expressionExperimentService.getFilter( eq( "allCharacteristic.valueUri" ), eq( Filter.Operator.in ), anyCollection() ) )
+                .thenAnswer( a -> Filter.by( "c", "valueUri", String.class, Filter.Operator.in, a.getArgument( 2, Collection.class ) ) );
+        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) )
+                .thenThrow( new TimeoutException( "Inference timed out!" ) );
+        when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
+                .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
+        assertThat( target( "/datasets" ).queryParam( "filter", "allCharacteristic.valueUri in (a, b, c)" ).request().get() )
+                .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
+                .hasHeaderSatisfying( "Retry-After", values -> {
+                    assertThat( values ).isNotEmpty();
+                } )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetsPlatformsUsageStatistics() throws TimeoutException {
         Filter f = Filter.by( "ee", "id", Long.class, Filter.Operator.lessThan, 10L, "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.lessThan, "10" ) )
                 .thenReturn( f );
@@ -277,12 +378,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null );
-        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), 50 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null, new HashSet<>(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), null, 50 );
     }
 
     @Test
-    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() {
+    public void testGetDatasetsAnnotationsWithRetainMentionedTerms() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "retainMentionedTerms", "true" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -291,14 +392,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet() );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, Collections.emptySet() );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
     }
 
     @Test
-    public void testGetDatasetsAnnotations() {
+    public void testGetDatasetsAnnotations() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -307,10 +408,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 100 )
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, null, null, null, null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
     }
 
     @Test
@@ -322,14 +423,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsAnnotationsWhenMaxFrequencyIsSuppliedLimitMustUseMaximum() {
+    public void testGetDatasetsAnnotationsWhenMaxFrequencyIsSuppliedLimitMustUseMaximum() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "minFrequency", "10" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 5000, 10, null, null, null, null );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000 );
     }
 
     @Test
@@ -339,9 +440,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 50 )
-                .extracting( "groupBy", InstanceOfAssertFactories.list( String.class ) )
+                .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 50, 0, null, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 50 );
     }
 
     @Test
@@ -349,15 +450,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), 100, 0, ExpressionExperimentService.UNCATEGORIZED, null, null, null );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, ExpressionExperimentService.UNCATEGORIZED, null, null, 0, null, 100 );
     }
 
     @Test
-    public void testGetDatasetsCategories() {
+    public void testGetDatasetsCategories() throws SearchException {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null );
+        verify( expressionExperimentService ).getCategoriesUsageFrequency( Filters.empty(), null, null, null, null, 20 );
     }
 
     @Test
@@ -373,15 +474,25 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testGetDatasetProcessedExpression() throws IOException {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        when( expressionExperimentService.getMaskedPreferredQuantitationType( ee ) )
-                .thenReturn( qt );
+        when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).getMaskedPreferredQuantitationType( ee );
-        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
+        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), any() );
+    }
+
+    @Test
+    public void testGetDatasetProcessedExpressionWhenNoProcessedVectorsExist() throws IOException {
+        when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( false );
+        assertThat( target( "/datasets/1/data/processed" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).load( 1L );
+        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
+        verifyNoMoreInteractions( expressionExperimentService );
+        verifyNoInteractions( expressionDataFileService );
     }
 
     @Test
@@ -451,5 +562,74 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotationsById( 1L );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
+        Gene brca1 = new Gene();
+        when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/genes/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
+    }
+
+    @Test
+    public void testGetDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa() {
+        Taxon human = new Taxon();
+        Gene brca1 = new Gene();
+        when( taxonArgService.getEntity( any() ) ).thenReturn( human );
+        when( geneArgService.getEntityWithTaxon( any(), eq( human ) ) ).thenReturn( brca1 );
+        assertThat( target( "/datasets/analyses/differential/results/taxa/human/genes/BRCA1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "filter", "" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .extracting( "groupBy", list( String.class ) )
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
+    }
+
+    @Test
+    public void testGetDatasetsAnalysisResultSets() {
+        ee.setId( 1L );
+        when( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit( any(), isNull(), isNull(), anyInt(), anyInt(), isNull() ) )
+                .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
+        assertThat( target( "/datasets/1/analyses/differential/resultSets" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDataset() {
+        ee.setId( 1L );
+        when( expressionExperimentService.loadAndThawWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
+        assertThat( target( "/datasets/1/refresh" )
+                .queryParam( "refreshVectors", true )
+                .queryParam( "refreshReports", true )
+                .request().get() )
+                .hasStatus( Response.Status.CREATED )
+                .hasHeaderSatisfying( "Location", locations -> {
+                    assertThat( locations )
+                            .hasSize( 1 )
+                            .first()
+                            .asString()
+                            .endsWith( "/datasets/1" );
+                } )
+                .entity();
+        verify( expressionExperimentService ).loadAndThawWithRefreshCacheMode( 1L );
+        verify( expressionExperimentService ).loadValueObject( ee );
+        verify( expressionExperimentReportService ).evictFromCache( 1L );
     }
 }

@@ -96,14 +96,6 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
-                .setParameter( "f", fv ).list();
-    }
-
-    @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )

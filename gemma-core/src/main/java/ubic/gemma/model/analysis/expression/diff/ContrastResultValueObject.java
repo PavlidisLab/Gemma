@@ -3,7 +3,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
 /**

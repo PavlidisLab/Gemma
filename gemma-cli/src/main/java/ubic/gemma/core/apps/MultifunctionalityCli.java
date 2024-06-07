@@ -30,6 +30,10 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
 
     private Taxon taxon;
 
+    public MultifunctionalityCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public String getCommandName() {
         return "updateMultifunc";
@@ -42,11 +46,6 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
                 .desc( "Taxon to process" ).longOpt( "taxon" )
                 .build();
         options.addOption( taxonOption );
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @Override

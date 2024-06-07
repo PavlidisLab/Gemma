@@ -26,13 +26,14 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * @author pavlidis
@@ -84,7 +85,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
             eeTimer.start();
             this.getSessionFactory().getCurrentSession()
                     .createQuery( "select ee from ExpressionExperiment ee where ee in :ees" )
-                    .setParameterList( "ees", ees )
+                    .setParameterList( "ees", optimizeIdentifiableParameterList( ees ) )
                     .list();
             eeTimer.stop();
         }
@@ -101,7 +102,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
                                     + "left join fetch fv.experimentalFactor "
                                     + "fetch all properties "
                                     + "where bad in :dims" )
-                    .setParameterList( "dims", dims )
+                    .setParameterList( "dims", optimizeIdentifiableParameterList( dims ) )
                     .list();
             dimTimer.stop();
         }

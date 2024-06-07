@@ -16,8 +16,7 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.core.search.IndexerService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 
 /**

@@ -1,44 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-   http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+   http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <util:properties id="dataSourceProps">
+        <prop key="rewriteBatchedStatements">true</prop>
+        <!-- Default timezone for storage of DATETIME that are mapped to exact moments (i.e. java.util.Date) -->
+        <prop key="connectionTimeZone">America/Vancouver</prop>
+        <!-- Drops ONLY_FULL_GROUP_BY -->
+        <prop key="sessionVariables">sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'</prop>
+    </util:properties>
 
     <!-- we use the same database for production and development -->
     <beans profile="production,dev">
         <!-- Database connection information -->
         <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
-            <property name="driverClassName" value="${gemma.db.driver}"/>
+            <property name="poolName" value="gemma"/>
+            <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
             <property name="username" value="${gemma.db.user}"/>
             <property name="password" value="${gemma.db.password}"/>
             <property name="jdbcUrl" value="${gemma.db.url}"/>
-            <property name="dataSourceProperties">
-                <props>
-                    <prop key="connectionTimeZone">${gemma.db.timezone}</prop>
-                    <prop key="sessionVariables">sql_mode='${gemma.db.sqlMode}'</prop>
-                </props>
-            </property>
+            <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
+        </bean>
+        <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
+        <!-- This is lazily initialized because we only need it for scheduled jobs -->
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.agent.userName}"/>
+            <property name="password" value="${gemma.agent.password}"/>
         </bean>
     </beans>
 
-    <beans profile="test">
+    <beans profile="test,testdb">
         <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
-            <property name="driverClassName" value="${gemma.testdb.driver}"/>
+            <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
             <property name="username" value="${gemma.testdb.user}"/>
             <property name="password" value="${gemma.testdb.password}"/>
             <property name="jdbcUrl" value="${gemma.testdb.url}"/>
-            <property name="dataSourceProperties">
-                <props>
-                    <prop key="connectionTimeZone">${gemma.testdb.timezone}</prop>
-                    <prop key="sessionVariables">sql_mode='${gemma.testdb.sqlMode}'</prop>
-                </props>
-            </property>
+            <property name="dataSourceProperties" ref="dataSourceProps"/>
+            <property name="maximumPoolSize" value="${gemma.testdb.maximumPoolSize}"/>
+        </bean>
+        <bean id="groupAgentSecurityContext"
+              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              lazy-init="true">
+            <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
+            <property name="userName" value="${gemma.testdb.agent.userName}"/>
+            <property name="password" value="${gemma.testdb.agent.password}"/>
         </bean>
     </beans>
 
     <beans profile="production">
         <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
             <property name="host" value="${mail.host}"/>
+            <property name="protocol" value="${mail.protocol}"/>
             <property name="username" value="${mail.username}"/>
             <property name="password" value="${mail.password}"/>
         </bean>

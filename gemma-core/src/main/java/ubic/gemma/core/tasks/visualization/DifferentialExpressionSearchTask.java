@@ -1,6 +1,6 @@
 package ubic.gemma.core.tasks.visualization;
 
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 
 /**
  * Created with IntelliJ IDEA.

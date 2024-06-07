@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
+import javax.annotation.Nullable;
 import java.io.*;
 
 /**
@@ -68,6 +69,12 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     @Override
     public String getCommandName() {
         return "deletePlatformElements";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override

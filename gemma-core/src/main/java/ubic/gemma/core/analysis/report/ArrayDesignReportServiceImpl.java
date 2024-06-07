@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.util.*;
@@ -44,7 +44,7 @@ import java.util.*;
 /**
  * @author jsantos
  */
-@Component
+@Component("arrayDesignReportService")
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private final static String HOME_DIR = Settings.getString( "gemma.appdata.home" );
     private final static Log log = LogFactory.getLog( ArrayDesignReportServiceImpl.class );
@@ -87,6 +87,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
+
         // remove file first
         File f = new File( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
@@ -97,10 +98,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 return;
             }
         }
-        try (FileOutputStream fos = new FileOutputStream( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+        try ( FileOutputStream fos = new FileOutputStream( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
             oos.writeObject( adVo );
         } catch ( Throwable e ) {
             // cannot write to file. Just fail gracefully.
@@ -172,8 +173,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             }
         }
 
-        try (FileOutputStream fos = new FileOutputStream( reportFileName );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+        try ( FileOutputStream fos = new FileOutputStream( reportFileName );
+                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
             oos.writeObject( adVo );
         } catch ( Throwable e ) {
             ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName, e );
@@ -207,7 +208,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                         + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
                         + id );
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
+            try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
 
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
 
@@ -230,7 +231,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
+            try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
             } catch ( Throwable e ) {
                 return null;
@@ -293,6 +294,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
         Map<Auditable, AuditEvent> sequenceAnalysisEvents = events.get( ArrayDesignSequenceAnalysisEvent.class );
         Map<Auditable, AuditEvent> repeatAnalysisEvents = events.get( ArrayDesignRepeatAnalysisEvent.class );
+        Map<Auditable, AuditEvent> creationEvents = auditEventService.getCreateEvents( arrayDesigns );
 
         for ( ArrayDesignValueObject adVo : adVos ) {
 
@@ -326,6 +328,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 }
             }
 
+            if ( creationEvents.containsKey( ad ) ) {
+                AuditEvent event = creationEvents.get( ad );
+                if ( event != null ) {
+                    adVo.setCreateDate( event.getDate() );
+                }
+            }
         }
 
         watch.stop();
@@ -404,7 +412,18 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public String getLastGeneMappingEvent( Long id ) {
         return this.getLastEvent( id, ArrayDesignGeneMappingEvent.class );
+    }
 
+    @Override
+    public String getCreateDate( Long id ) {
+        ArrayDesign ad = arrayDesignService.load( id );
+
+        if ( ad == null )
+            return "";
+
+        List<AuditEvent> events = auditEventService.getEvents( ad );
+        AuditEvent lastEvent = events.get( 0 );
+        return DateFormatUtils.format( lastEvent.getDate(), "yyyy.MMM.dd hh:mm aa" );
     }
 
     private String getLastEvent( Long id, Class<? extends AuditEventType> eventType ) {

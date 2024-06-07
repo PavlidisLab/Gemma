@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 
@@ -42,6 +42,11 @@ public interface SearchService {
 
         List<SearchResult<?>> toList();
     }
+
+    /**
+     * Obtain a list of fields that can be searched on for the given result type.
+     */
+    Set<String> getFields( Class<? extends Identifiable> resultType );
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched

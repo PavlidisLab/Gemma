@@ -25,7 +25,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -106,20 +105,6 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
             }
         }
         return taxaWithGenes;
-    }
-
-    /**
-     * @return Taxon that are on NeuroCarta evidence
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithEvidence() {
-
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : this.taxonDao.findTaxonUsedInEvidence() ) {
-            taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-        }
-        return taxaSpecies;
     }
 
     /**

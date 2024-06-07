@@ -15,8 +15,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
@@ -32,7 +36,7 @@ public class GoogleAnalytics4ProviderTest {
             log.info( String.format( "\nURL: %s\nPayload: %s", request.getURI(), new String( body, StandardCharsets.UTF_8 ) ) );
             return execution.execute( request, body );
         } );
-        provider = new GoogleAnalytics4Provider( restTemplate, new ScheduledThreadPoolExecutor( 1 ), "test", "test" );
+        provider = new GoogleAnalytics4Provider( restTemplate, "test", "test" );
         provider.afterPropertiesSet();
         provider.setDebug( true );
         ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.randomNumeric( 10 ) + "." + RandomStringUtils.randomNumeric( 10 ) );

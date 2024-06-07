@@ -34,7 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author pavlidis
  */
-@Component
+@Component("whatsNewService")
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class WhatsNewServiceImpl implements WhatsNewService {
 

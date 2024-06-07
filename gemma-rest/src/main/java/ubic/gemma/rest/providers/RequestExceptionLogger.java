@@ -1,11 +1,10 @@
 package ubic.gemma.rest.providers;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import ubic.gemma.rest.util.ServletUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
@@ -19,11 +18,13 @@ import javax.ws.rs.ext.Provider;
 public class RequestExceptionLogger implements RequestEventListener {
 
     @Context
-    private HttpServletRequest request;
+    private ContainerRequest request;
 
     @Override
     public void onEvent( RequestEvent requestEvent ) {
-        log.error( "Unhandled exception while processing request :" + ServletUtils.summarizeRequest( request ) + ".",
+        ContainerRequest request1 = requestEvent.getContainerRequest();
+        log.error( String.format( "Unhandled exception while processing request :%s.",
+                        request1.getMethod() + ' ' + request1.getRequestUri() ),
                 requestEvent.getException() );
     }
 }

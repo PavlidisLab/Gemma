@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,16 +41,16 @@ import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -233,6 +234,7 @@ public class ExpressionExperimentController {
     /**
      * Exposed for AJAX calls.
      */
+    @Secured("GROUP_USER")
     public String deleteById( Long id ) {
         if ( id == null ) return null;
         RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
@@ -381,7 +383,7 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
         ExpressionExperiment ee = getExperimentById( e.getId(), true );
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
+        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true, true ); // ignore "batch" and continuous.
     }
 
     /**
@@ -472,7 +474,7 @@ public class ExpressionExperimentController {
         countTimer.start();
         long bioMaterialCount = expressionExperimentService.countBioMaterials( null );
         long arrayDesignCount = arrayDesignService.countWithCache( null );
-        long expressionExperimentCount = expressionExperimentService.countWithCache( null );
+        long expressionExperimentCount = expressionExperimentService.countWithCache( null, null );
         Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
         countTimer.stop();
 
@@ -502,11 +504,14 @@ public class ExpressionExperimentController {
 
         Locale locale = LocaleContextHolder.getLocale();
         NumberFormat integerFormat = NumberFormat.getIntegerInstance( locale );
+        List<Taxon> taxaInOrder = new ArrayList<>( eesPerTaxon.keySet() );
+        taxaInOrder.sort( Comparator.comparing( Taxon::getCommonName ) );
 
-        for ( Taxon t : eesPerTaxon.keySet() ) {
+        for ( Taxon t : taxaInOrder ) {
             Map<String, Object> taxLine = new HashMap<>();
             taxLine.put( "taxonId", t.getId() );
             taxLine.put( "taxonName", t.getScientificName() );
+            taxLine.put( "taxonCommonName", StringUtils.capitalize( t.getCommonName() ) );
             taxLine.put( "totalCount", integerFormat.format( eesPerTaxon.get( t ) ) );
             if ( newEEsPerTaxon.containsKey( t ) ) {
                 taxLine.put( "newCount", integerFormat.format( newEEsPerTaxon.get( t ).size() ) );
@@ -787,6 +792,7 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
+    @Secured("GROUP_USER")
     public String removePrimaryPublication( Long eeId ) {
         RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
         return taskRunningService.submitTask( task );
@@ -1055,6 +1061,7 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - possibly used in JS
+    @Secured("GROUP_USER")
     public String updatePubMed( Long eeId, String pubmedId ) {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
@@ -1126,7 +1133,7 @@ public class ExpressionExperimentController {
 
         count = outliers.size();
 
-        if ( count > 0 ) ExpressionExperimentController.log.info( count + " possible outliers detected." );
+        if ( count > 0 ) ExpressionExperimentController.log.debug( count + " possible outliers detected." );
 
         return count;
     }
@@ -1533,7 +1540,7 @@ public class ExpressionExperimentController {
     private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, true );
         try {
-            sampleCoexpressionAnalysisService.compute( ee );
+            sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw e;

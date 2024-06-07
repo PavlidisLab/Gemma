@@ -66,6 +66,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioMaterial copy( BioMaterial bioMaterial ) {
         return this.bioMaterialDao.copy( bioMaterial );
     }
@@ -74,12 +75,6 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.bioMaterialDao.findByExperiment( experiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
-        return this.bioMaterialDao.findByFactorValue( fv );
     }
 
     @Override

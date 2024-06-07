@@ -18,7 +18,7 @@
          <column name="NUMBER_OF_PROBES" not-null="true" unique="false" sql-type="INTEGER"/>
       </property>
       <property name="direction">
-         <column name="DIRECTION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+         <column name="DIRECTION" not-null="true" unique="false" sql-type="VARCHAR(255)" index="direction"/>
          <type name="org.hibernate.type.EnumType">
             <param name="enumClass">ubic.gemma.model.analysis.expression.diff.Direction</param>
             <param name="useNamed">true</param>

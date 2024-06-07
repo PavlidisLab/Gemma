@@ -1,11 +1,12 @@
 package ubic.gemma.model.common.measurement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 @SuppressWarnings("unused") // Used in frontend through FVBasicVO
-public class MeasurementValueObject extends IdentifiableValueObject {
+public class MeasurementValueObject extends IdentifiableValueObject<Measurement> {
 
     private String value;
     private String unit;
@@ -42,10 +43,12 @@ public class MeasurementValueObject extends IdentifiableValueObject {
         return unitId;
     }
 
+    @Schema(implementation = MeasurementType.class)
     public String getType() {
         return type;
     }
 
+    @Schema(implementation = PrimitiveType.class)
     public String getRepresentation() {
         return representation;
     }

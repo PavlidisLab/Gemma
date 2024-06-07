@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
@@ -29,6 +28,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -51,6 +53,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected final Class<? extends T> elementClass;
     private final SessionFactory sessionFactory;
     private final ClassMetadata classMetadata;
+    private final int batchSize;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         this( elementClass, sessionFactory, requireNonNull( sessionFactory.getClassMetadata( elementClass ),
@@ -67,6 +70,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         this.elementClass = elementClass;
         this.sessionFactory = sessionFactory;
         this.classMetadata = classMetadata;
+        this.batchSize = HibernateUtils.getBatchSize( sessionFactory, classMetadata );
     }
 
     @Override
@@ -124,6 +128,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         }
     }
 
+    /**
+     * This implementation is temporary and attempts to best replicate the behaviour of loading entities by multiple IDs
+     * introduced in Hibernate 5. <a href="https://thorben-janssen.com/fetch-multiple-entities-id-hibernate/">Read more about this</a>.
+     */
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
@@ -148,11 +156,19 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             }
         }
 
-        if ( !unloadedIds.isEmpty() ) {
+        if ( batchSize != -1 && unloadedIds.size() > batchSize ) {
+            for ( Collection<Long> batch : batchParameterList( unloadedIds, batchSize ) ) {
+                //noinspection unchecked
+                results.addAll( sessionFactory.getCurrentSession()
+                        .createCriteria( elementClass )
+                        .add( Restrictions.in( idPropertyName, batch ) )
+                        .list() );
+            }
+        } else if ( !unloadedIds.isEmpty() ) {
             //noinspection unchecked
             results.addAll( sessionFactory.getCurrentSession()
                     .createCriteria( elementClass )
-                    .add( Restrictions.in( idPropertyName, new HashSet<>( unloadedIds ) ) )
+                    .add( Restrictions.in( idPropertyName, optimizeParameterList( unloadedIds ) ) )
                     .list() );
         }
 
@@ -276,6 +292,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     protected final SessionFactory getSessionFactory() {
         return sessionFactory;
+    }
+
+    protected final int getBatchSize() {
+        return batchSize;
     }
 
     /**

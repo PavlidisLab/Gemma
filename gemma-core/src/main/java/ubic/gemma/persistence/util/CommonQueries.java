@@ -31,7 +31,9 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.*;
 
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * Contains methods to perform 'common' queries that are needed across DAOs.
@@ -58,7 +60,7 @@ public class CommonQueries {
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-        queryObject.setParameterList( "ees", ees );
+        queryObject.setParameterList( "ees", optimizeParameterList( ees ) );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -93,7 +95,7 @@ public class CommonQueries {
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-        queryObject.setParameterList( "ees", ees );
+        queryObject.setParameterList( "ees", optimizeParameterList( ees ) );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -110,7 +112,7 @@ public class CommonQueries {
             Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() );
             // note: CollectionUtils.removeAll has a bug.
 
-            qr = session.createQuery( subsetQuery ).setParameterList( "ees", possibleEEsubsets ).list();
+            qr = session.createQuery( subsetQuery ).setParameterList( "ees", optimizeParameterList( possibleEEsubsets ) ).list();
             CommonQueries.addAllAds( ee2ads, qr );
         }
 
@@ -233,25 +235,25 @@ public class CommonQueries {
      */
     public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Collection<Long> arrayDesigns,
             Session session ) {
+        if ( genes.isEmpty() || arrayDesigns.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+
+        Query queryObject = session.createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)" )
+                .addScalar( "csid", LongType.INSTANCE )
+                .addScalar( "geneId", LongType.INSTANCE )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameterList( "ads", optimizeParameterList( arrayDesigns ) )
+                .setReadOnly( true );
 
         Map<Long, Collection<Long>> cs2genes = new HashMap<>();
-
-        String queryString = "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)";
-        SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", LongType.INSTANCE );
-        queryObject.addScalar( "geneId", LongType.INSTANCE );
-        queryObject.setParameterList( "ads", arrayDesigns );
-        queryObject.setParameterList( "geneIds", genes );
-        queryObject.setReadOnly( true );
-        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
-        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
-        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
-        queryObject.addSynchronizedEntityClass( Gene.class );
-
-        CommonQueries.addGeneIds( cs2genes, queryObject );
-
+        for ( Collection<Long> batch : batchParameterList( genes, GENE2CS_BATCH_SIZE ) ) {
+            CommonQueries.addGeneIds( cs2genes, queryObject.setParameterList( "geneIds", batch ) );
+        }
         return cs2genes;
-
     }
 
     public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes,
@@ -267,8 +269,8 @@ public class CommonQueries {
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<>();
         Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
-        queryObject.setParameterList( "genes", genes );
-        queryObject.setParameterList( "ads", arrayDesigns );
+        queryObject.setParameterList( "genes", optimizeIdentifiableParameterList( genes ) );
+        queryObject.setParameterList( "ads", optimizeIdentifiableParameterList( arrayDesigns ) );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -297,7 +299,7 @@ public class CommonQueries {
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
-        queryObject.setParameterList( "genes", genes );
+        queryObject.setParameterList( "genes", optimizeIdentifiableParameterList( genes ) );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -334,39 +336,39 @@ public class CommonQueries {
         if ( probes.isEmpty() )
             return new HashMap<>();
 
+        Query queryObject = session.createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) " )
+                .addScalar( "csid", LongType.INSTANCE )
+                .addScalar( "geneId", LongType.INSTANCE )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setReadOnly( true );
+
         Map<Long, Collection<Long>> cs2genes = new HashMap<>();
-
-        String queryString = "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) ";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", LongType.INSTANCE );
-        queryObject.addScalar( "geneId", LongType.INSTANCE );
-        queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
-        queryObject.setReadOnly( true );
-        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
-        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
-        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
-        queryObject.addSynchronizedEntityClass( Gene.class );
-
-        CommonQueries.addGeneIds( cs2genes, queryObject );
-
+        for ( Collection<Long> batch : batchParameterList( probes, GENE2CS_BATCH_SIZE ) ) {
+            CommonQueries.addGeneIds( cs2genes, queryObject.setParameterList( "probes", batch ) );
+        }
         return cs2genes;
     }
 
     public static Collection<Long> filterProbesByPlatform( Collection<Long> probes, Collection<Long> arrayDesignIds,
             Session session ) {
-        assert probes != null && !probes.isEmpty();
-        assert arrayDesignIds != null && !arrayDesignIds.isEmpty();
-        String queryString = "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", LongType.INSTANCE );
-        queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
-        queryObject.setParameterList( "adids", arrayDesignIds, LongType.INSTANCE );
-        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
-        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
-        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
-        queryObject.addSynchronizedEntityClass( Gene.class );
-        //noinspection unchecked
-        return queryObject.list();
+        if ( probes.isEmpty() || arrayDesignIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        Query queryObject = session.createSQLQuery( "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)" )
+                .addScalar( "csid", LongType.INSTANCE )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameterList( "adids", optimizeParameterList( arrayDesignIds ), LongType.INSTANCE );
+        List<Long> results = new ArrayList<>();
+        for ( Collection<Long> batch : batchParameterList( probes, GENE2CS_BATCH_SIZE ) ) {
+            //noinspection unchecked
+            results.addAll( queryObject.setParameterList( "probes", batch, LongType.INSTANCE ).list() );
+        }
+        return results;
     }
-
 }

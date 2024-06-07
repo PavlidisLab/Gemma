@@ -47,26 +47,26 @@ public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSer
     private void writeCharacteristic( Long id, String category, String categoryUri, String valueId, String value, String valueUri, JsonGenerator jsonGenerator ) {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
-        jsonGenerator.writeObjectField( "category", category );
-        jsonGenerator.writeObjectField( "categoryUri", categoryUri );
-        jsonGenerator.writeObjectField( "valueId", valueId );
-        jsonGenerator.writeObjectField( "value", value );
-        jsonGenerator.writeObjectField( "valueUri", valueUri );
+        jsonGenerator.writeStringField( "category", category );
+        jsonGenerator.writeStringField( "categoryUri", categoryUri );
+        jsonGenerator.writeStringField( "valueId", valueId );
+        jsonGenerator.writeStringField( "value", value );
+        jsonGenerator.writeStringField( "valueUri", valueUri );
         jsonGenerator.writeEndObject();
     }
 
     private void writeStatement( String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeObjectField( "category", category );
-        jsonGenerator.writeObjectField( "categoryUri", categoryUri );
-        jsonGenerator.writeObjectField( "subjectId", subjectId );
-        jsonGenerator.writeObjectField( "subject", subject );
-        jsonGenerator.writeObjectField( "subjectUri", subjectUri );
-        jsonGenerator.writeObjectField( "predicate", predicate );
-        jsonGenerator.writeObjectField( "predicateUri", predicateUri );
-        jsonGenerator.writeObjectField( "objectId", objectId );
-        jsonGenerator.writeObjectField( "object", object );
-        jsonGenerator.writeObjectField( "objectUri", objectUri );
+        jsonGenerator.writeStringField( "category", category );
+        jsonGenerator.writeStringField( "categoryUri", categoryUri );
+        jsonGenerator.writeStringField( "subjectId", subjectId );
+        jsonGenerator.writeStringField( "subject", subject );
+        jsonGenerator.writeStringField( "subjectUri", subjectUri );
+        jsonGenerator.writeStringField( "predicate", predicate );
+        jsonGenerator.writeStringField( "predicateUri", predicateUri );
+        jsonGenerator.writeStringField( "objectId", objectId );
+        jsonGenerator.writeStringField( "object", object );
+        jsonGenerator.writeStringField( "objectUri", objectUri );
         jsonGenerator.writeEndObject();
     }
 }

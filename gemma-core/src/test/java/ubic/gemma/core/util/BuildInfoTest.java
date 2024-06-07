@@ -10,7 +10,7 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,10 +47,10 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testFromSettings() {
+    public void testFromClasspath() {
         assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
                 getClass().getResource( "/ubic/gemma/version.properties" ) != null );
-        buildInfo = BuildInfo.fromSettings();
+        buildInfo = BuildInfo.fromClasspath();
         assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
         assertNotNull( buildInfo.getGitHash() );

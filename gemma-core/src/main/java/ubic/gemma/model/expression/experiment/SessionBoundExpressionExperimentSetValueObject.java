@@ -37,7 +37,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.GemmaSessionBackedValueObject;
+import ubic.gemma.model.common.GemmaSessionBackedValueObject;
 
 /**
  * @author tvrossum

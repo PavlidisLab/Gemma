@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.genome.ChromosomeFeature" table="CHROMOSOME_FEATURE"
@@ -15,7 +15,7 @@
         <discriminator column="class"/>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="CHROMOSOME_FEATURE_NAME"/>
         </property>
         <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false"
@@ -23,7 +23,7 @@
         </property>
         <property name="previousNcbiId" type="java.lang.String">
             <column name="PREVIOUS_NCBI_ID" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
+                    sql-type="VARCHAR(255)" index="PREVIOUS_NCBI_ID"/>
         </property>
         <many-to-one name="physicalLocation" class="ubic.gemma.model.genome.PhysicalLocation" cascade="all"
                      lazy="proxy" fetch="select">
@@ -33,7 +33,7 @@
                   abstract="false">
             <property name="ncbiGi" type="java.lang.String">
                 <column name="NCBI_GI" not-null="false" unique="false"
-                        sql-type="VARCHAR(255)"/>
+                        sql-type="VARCHAR(255)" index="NCBI_GI"/>
             </property>
             <property name="dummy" type="java.lang.Boolean">
                 <column name="DUMMY" not-null="false" sql-type="TINYINT"/>
@@ -61,11 +61,11 @@
                         sql-type="text"/>
             </property>
             <property name="ncbiGeneId" type="java.lang.Integer">
-                <column name="NCBI_GENE_ID" not-null="false" unique="false" sql-type="INTEGER"/>
+                <column name="NCBI_GENE_ID" not-null="false" unique="false" sql-type="INTEGER" index="NCBI_GENE_ID"/>
             </property>
             <property name="ensemblId" type="java.lang.String">
                 <column name="ENSEMBL_ID" not-null="false" unique="false"
-                        sql-type="VARCHAR(255)"/>
+                        sql-type="VARCHAR(255)" index="ENSEMBL_ID"/>
             </property>
             <!-- dummy gene products are not visible in this collection, use BioSequence2GeneProduct instead -->
             <set name="products" lazy="true" fetch="select" inverse="true" cascade="all" where="DUMMY = 0">
@@ -96,13 +96,6 @@
                          cascade="all" lazy="proxy" fetch="select">
                 <column name="MULTIFUNCTIONALITY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
             </many-to-one>
-            <set name="phenotypeAssociations" lazy="true" fetch="select" inverse="true" cascade="all">
-                <cache usage="read-write"/>
-                <key foreign-key="PHENOTYPE_ASSOCIATION_GENE_FKC">
-                    <column name="GENE_FK" sql-type="BIGINT"/>
-                </key>
-                <one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociation"/>
-            </set>
         </subclass>
     </class>
 </hibernate-mapping>

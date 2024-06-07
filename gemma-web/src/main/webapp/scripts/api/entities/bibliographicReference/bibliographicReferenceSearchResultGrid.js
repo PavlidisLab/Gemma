@@ -28,8 +28,6 @@ Gemma.BibliographicReference.Record = new Ext.data.Record.create([{
     name: "meshTerms"
 }, {
     name: "chemicalsTerms"
-}, {
-    name: "bibliographicPhenotypes"
 }]);
 
 Gemma.BibliographicReference.SearchStore = Ext.extend(Ext.data.Store, {
@@ -109,34 +107,6 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
                 return result;
             }
 
-        },
-        {
-            header: "Phenotypes",
-            dataIndex: 'bibliographicPhenotypes',
-            width: 80,
-            renderer: function (value) {
-                var maxPhenotypesToDisplay = 3;
-                var result = "";
-                var phenotypeStrings = {};
-                for (var i = 0; i < value.length && i < maxPhenotypesToDisplay; i++) {
-                    var phenotypesValues = value[i].phenotypesValues;
-                    for (var j = 0; j < phenotypesValues.length && j < maxPhenotypesToDisplay; j++) {
-                        if (phenotypeStrings[phenotypesValues[j].value]) {
-                            // already made link for this phenotype
-                            continue;
-                        }
-                        if (result.length !== 0) {
-                            result += ",";
-                        }
-                        result = result + '&nbsp<a target="_blank" ext:qtip="View all associations for &quot;'
-                            + phenotypesValues[j].value + '&quot; (' + phenotypesValues[j].urlId + ')" href="'
-                            + Gemma.LinkRoots.phenotypePage + phenotypesValues[j].urlId + '">'
-                            + phenotypesValues[j].value + '</a>';
-                        phenotypeStrings[phenotypesValues[j].value] = true;
-                    }
-                }
-                return result;
-            }
         }, {
             header: "PubMed",
             dataIndex: 'citation',
@@ -177,7 +147,6 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
     runKeywordSearch: function (query) {
         var params = [{
             query: query,
-            searchPhenotypes: this.getTopToolbar().usePhenotypesCheck.getValue(),
             searchExperiments: this.getTopToolbar().useExperimentsCheck.getValue(),
             searchBibrefs: this.getTopToolbar().useBibRefsCheck.getValue(),
             // ,maxResults: max
@@ -319,13 +288,6 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
             }
         });
 
-        var usePhenotypesCheck = {
-            xtype: 'checkbox',
-            boxLabel: 'Search phenotypes',
-            checked: true,
-            ref: 'usePhenotypesCheck',
-            disabled: false
-        };
 
         var useExperimentsCheck = {
             xtype: 'checkbox',
@@ -423,7 +385,7 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
                         },
                         scope: this
                     }
-                }), '->', usePhenotypesCheck, '-', useExperimentsCheck, '-', useBibRefsCheck]
+                }), '->', '-', useExperimentsCheck, '-', useBibRefsCheck]
         });
 
         Ext.apply(this, {

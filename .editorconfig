@@ -4,9 +4,6 @@ root = true
 indent_style=space
 indent_size=4
 
-[init-indices.sql]
-indent_size=2
-
 [/pom.xml]
 indent_style=tab
 
@@ -42,3 +39,6 @@ indent_style=tab
 
 [dwrServices.js]
 indent_size=4
+
+[typo.css]
+indent_style=tab

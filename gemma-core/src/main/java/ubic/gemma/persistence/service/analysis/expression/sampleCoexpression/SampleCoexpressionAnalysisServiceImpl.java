@@ -30,11 +30,11 @@ import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzerUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
@@ -116,44 +116,56 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public DoubleMatrix<BioAssay, BioAssay> computeIfNecessary( ExpressionExperiment ee ) {
+    @Transactional(readOnly = true)
+    public DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee ) {
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
         SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
         if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this.shouldComputeRegressed( thawedee, analysis ) ) {
             SampleCoexpressionAnalysisServiceImpl.log
                     .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, thawedee.getId() ) );
-            return this.compute( thawedee );
+            return null;
         } else {
             this.logCormatStatus( analysis, false );
             return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
         }
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public PreparedCoexMatrices prepare( ExpressionExperiment ee ) {
+        // Create new analysis
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
+        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors );
+        return new PreparedCoexMatrices( matrix, regressedMatrix );
+    }
+
+
     /**
      * Unfortunately, this method breaks under high contention (see <a href="https://github.com/PavlidisLab/Gemma/issues/400">#400</a>,
      * so we need to fully lock the database while undergoing using {@link Isolation#SERIALIZABLE} transaction isolation
      * level. This annotation also has to be appled to other methods of this class that call compute() directly or
      * indirectly.
+     *
+     * PP changed this to do more of the processing in a read-only transaction
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee, PreparedCoexMatrices matrices ) {
+        SampleCoexpressionMatrix matrix = matrices.matrix;
+
+        if ( matrix == null ) {
+            throw new RuntimeException( "Full coexpression matrix could not be computed." );
+        }
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
         // Remove any old data
         this.removeForExperiment( thawedee );
 
-        // Create new analysis
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( thawedee );
-        SampleCoexpressionMatrix matrix = this.getMatrix( thawedee, false, vectors );
-        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( thawedee, true, vectors );
-
-        if ( matrix == null ) {
-            throw new RuntimeException( "Full coexpression matrix could not be computed." );
-        }
+        SampleCoexpressionMatrix regressedMatrix = matrices.regressedMatrix; // this one is optional
 
         // this one is optional
         if ( regressedMatrix == null ) {
@@ -388,7 +400,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
+        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
@@ -408,3 +420,5 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return new ExpressionDataDoubleMatrix( dmatrix, f, dmatrix.getQuantitationTypes() );
     }
 }
+
+

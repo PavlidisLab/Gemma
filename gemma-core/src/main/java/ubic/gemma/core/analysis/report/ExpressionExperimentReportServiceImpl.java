@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
@@ -42,7 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
  * @author paul
  * @author klc
  */
-@Service
+@Service("expressionExperimentReportService")
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
     private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";
@@ -70,7 +70,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @SuppressWarnings("unchecked")
     private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
-            DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+            DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
+            PCAAnalysisEvent.class, BatchInformationMissingEvent.class };
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -85,7 +86,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedDataVectorCache processedDataVectorCache;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -108,10 +109,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-
-        processedDataVectorCache.clearCache( id );
         experimentalDesignVisualizationService.clearCaches( id );
-
     }
 
     @Override
@@ -205,6 +203,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
+        Map<Auditable, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
         Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = this.getSampleRemovalEvents( ees );
@@ -272,6 +271,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateBatchFetch( date );
 
+                    eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                }
+            } else if ( batchMissingEvents.containsKey( ee ) ) { // we use date.
+                AuditEvent event = batchMissingEvents.get( ee );
+                if ( event != null ) {
+                    Date date = event.getDate();
+                    eeVo.setDateBatchFetch( date );
                     eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }

@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 /**

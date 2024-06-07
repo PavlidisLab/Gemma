@@ -219,13 +219,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
         String targetStarts = ( String ) row[17];
         Long queryId = ( ( BigInteger ) row[18] ).longValue();
 
-        int hash = 1;
-        int prime = 31;
-        hash = prime * hash + chromId.hashCode();
-        hash = prime * hash + targetStart.hashCode();
-        hash = prime * hash + targetEnd.hashCode();
-        hash = prime * hash + targetStarts.hashCode();
-        hash = prime * hash + queryId.hashCode();
+        int hash = Objects.hash( chromId, targetStart, targetEnd, targetStarts, queryId );
 
         EntityUtils.populateMapSet( blatResultCount, csId, hash );
 

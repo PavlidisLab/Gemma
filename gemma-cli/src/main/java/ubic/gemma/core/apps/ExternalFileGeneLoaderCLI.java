@@ -38,6 +38,10 @@ public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private String directGeneInputFileName = null;
     private String taxonName;
 
+    public ExternalFileGeneLoaderCLI() {
+        setRequireLogin( true );
+    }
+
     @Override
     public String getShortDesc() {
         return "loading genes from a non-NCBI files; only used for species like salmon";
@@ -66,11 +70,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
     @Override
     public String getCommandName() {
         return "loadGenesFromFile";
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @SuppressWarnings("static-access")

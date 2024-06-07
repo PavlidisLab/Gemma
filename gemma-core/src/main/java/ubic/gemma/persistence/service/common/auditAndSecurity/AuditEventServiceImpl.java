@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -51,6 +51,12 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditables ) {
+        return this.auditEventDao.getCreateEvents( auditables );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.auditEventDao.getLastEvent( auditable, type );
     }
@@ -64,7 +70,7 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Override
     @Transactional(readOnly = true)
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         return this.auditEventDao.getLastEventsByType( auditables, types );
     }
 

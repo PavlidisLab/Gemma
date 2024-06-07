@@ -390,7 +390,9 @@ Gemma.HelpText.WidgetDefaults = {
 	ExperimentalFactorAddWindow: {
 		descriptionEmptyText: "A short phrase such as 'control vs. drug'",
 		descriptionUnique: "Description must be unique among factors",
-		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked."
+		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked.",
+		makeFromExistingCharacteristicTT : "Optional: Select an existing 'raw' BioMaterial Characteristic to prepopulate the new factor with." +
+			 "If you check 'continuous', the values will be intereprted as numbers."
 	},
 	// ExperimentalFactorChooserPanel : {
 	// helpTitle : "Help for factor choose",
@@ -443,7 +445,7 @@ Gemma.HelpText.WidgetDefaults = {
 		dataReprocessed: "Reprocessed from raw data by Gemma.",
 		dataExternal: "Data are from external source.",
 		noBatchInfo: "Information on sample batching was not available",
-		noBatchesSingletons: "Gemma was unable to form a reasonable sample batching structure",
+		noBatchesSingletons: "Gemma was unable to form a reasonable batching structure due to batch(es) with one sample",
 		noBatchesBadHeaders: "Information on sample batching was not extractable from the available data",
 		statusUnsuitableForDEA: "Data or experimental design not suitable for differential expression analysis."
 	},

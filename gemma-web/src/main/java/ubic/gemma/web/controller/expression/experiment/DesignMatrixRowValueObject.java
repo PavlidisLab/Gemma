@@ -23,10 +23,7 @@ import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.FactorValueVector;
 
 import java.io.Serializable;
@@ -131,7 +128,11 @@ public class DesignMatrixRowValueObject implements Serializable {
         for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
             FactorValue fv = i.next();
             if ( fv != null ) {
-                buf.append( FactorValueUtils.getSummaryString( fv ) );
+                if ( fv.getMeasurement() != null ) {
+                    buf.append( fv.getMeasurement().getValue() );
+                } else {
+                    buf.append( FactorValueUtils.getSummaryString( fv ) );
+                }
             }
             if ( i.hasNext() )
                 buf.append( ", " );
@@ -144,17 +145,20 @@ public class DesignMatrixRowValueObject implements Serializable {
         /**
          * @param expressionExperiment ee
          * @param removeBatchFactor    if true, any factor(s) that look like "batch information" will be ignored.
+         * @param removeContinuous if true, any factor(s) that are continuous will be ignored. If you don't set this to true, you will get a row for each assay.
          * @return collection
          */
         public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment,
-                boolean removeBatchFactor ) {
+                boolean removeBatchFactor, boolean removeContinuous ) {
 
             Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
                     .getExperimentalFactors();
 
             for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
                 ExperimentalFactor experimentalFactor = iterator.next();
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                if ( removeBatchFactor && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                    iterator.remove();
+                } else if ( removeContinuous && experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
                     iterator.remove();
                 }
             }

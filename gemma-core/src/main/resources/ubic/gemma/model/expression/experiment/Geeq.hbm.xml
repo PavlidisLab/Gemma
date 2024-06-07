@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
     <class name="ubic.gemma.model.expression.experiment.Geeq" table="GEEQ">
@@ -12,22 +12,28 @@
             </generator>
         </id>
         <property name="detectedQualityScore" type="double">
-            <column name="DETECTED_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="DETECTED_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"
+                    index="GEEQ_DETECTED_QUALITY_SCORE"/>
         </property>
         <property name="manualQualityScore" type="double">
-            <column name="MANUAL_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="MANUAL_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"
+                    index="GEEQ_MANUAL_QUALITY_SCORE"/>
         </property>
         <property name="manualQualityOverride" type="boolean">
-            <column name="MANUAL_QUALITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"/>
+            <column name="MANUAL_QUALITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"
+                    index="GEEQ_MANUAL_QUALITY_OVERRIDE"/>
         </property>
         <property name="detectedSuitabilityScore" type="double">
-            <column name="DETECTED_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="DETECTED_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"
+                    index="GEEQ_DETECTED_SUITABILITY_SCORE"/>
         </property>
         <property name="manualSuitabilityScore" type="double">
-            <column name="MANUAL_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="MANUAL_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"
+                    index="GEEQ_MANUAL_SUITABILITY_SCORE"/>
         </property>
         <property name="manualSuitabilityOverride" type="boolean">
-            <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"/>
+            <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"
+                    index="GEEQ_MANUAL_SUITABILITY_OVERRIDE"/>
         </property>
         <property name="sScorePublication" type="double">
             <column name="SCORE_PUBLICATION" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
@@ -39,7 +45,8 @@
             <column name="SCORE_PLATFORMS_TECH_MULTI" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="sScoreAvgPlatformPopularity" type="double">
-            <column name="SCORE_AVG_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="SCORE_AVG_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0"
+                    sql-type="DOUBLE"/>
         </property>
         <property name="sScoreAvgPlatformSize" type="double">
             <column name="SCORE_AVG_PLATFORM_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>

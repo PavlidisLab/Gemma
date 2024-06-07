@@ -18,12 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.Statement;
 
 /**
  * @author luke
@@ -39,6 +40,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String termName;
     @GemmaWebOnly
     private String description;
+    @Schema(implementation = GOEvidenceCode.class)
     private String evidenceCode;
     private String objectClass;
     @GemmaWebOnly
@@ -62,6 +64,14 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( id );
     }
 
+    public AnnotationValueObject( String classUri, String className, String termUri, String termName, Class<?> objectClass ) {
+        this.classUri = classUri;
+        this.className = className;
+        this.termUri = termUri;
+        this.termName = termName;
+        this.objectClass = formatObjectClass( objectClass );
+    }
+
     public AnnotationValueObject( Characteristic c ) {
         super( c );
         classUri = c.getCategoryUri();
@@ -74,10 +84,14 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {
         this( c );
+        this.objectClass = formatObjectClass( objectClass );
+    }
+
+    private static String formatObjectClass( Class<?> objectClass ) {
         if ( ExpressionExperiment.class.isAssignableFrom( objectClass ) ) {
-            this.objectClass = "ExperimentTag";
+            return "ExperimentTag";
         } else {
-            this.objectClass = objectClass.getSimpleName();
+            return objectClass.getSimpleName();
         }
     }
 

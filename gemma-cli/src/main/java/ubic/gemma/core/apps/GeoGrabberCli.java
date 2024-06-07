@@ -19,6 +19,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -49,7 +50,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
     private static final int NCBI_CHUNK_SIZE = 100;
     private static final int MAX_RETRIES = 5; // on failures
-    private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 20; // stop condition when we stop seeing useful records
+    private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 50; // stop condition when we stop seeing useful records
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
@@ -215,7 +216,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
             int retries = 0;
             int numSkippedChunks = 0;
             boolean reachedRewindPoint = ( startDate == null && startFrom == null );
-
+            GeoRecord lastValidRecord = null;
             while ( keepGoing ) {
 
                 log.debug( "Searching from " + start + ", seeking " + NCBI_CHUNK_SIZE + " records" );
@@ -241,9 +242,13 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                         numSkippedChunks++;
 
                         // repeated empty results can just mean we ran out of records.
-                        if (numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
-                            log.info("Have already skipped " + numSkippedChunks + " chunks, still no records: bailing");
-                            break;
+                        if ( numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
+                            if ( lastValidRecord != null && lastValidRecord.getReleaseDate().before( new Date( 2007, 01, 01 ) ) ) {
+                                log.info( "Seem to have hit end of records, bailing" );
+                                break;
+                            } else {
+                               // no op fo rnow.
+                            }
                         }
                         start += NCBI_CHUNK_SIZE;
                         continue;
@@ -368,23 +373,34 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                                     + "\t" + geoRecord.getSubSeriesOf()
                                     + "\t" + geoRecord.getPubMedIds()
                                     + "\t" + geoRecord.getTitle()
-                                    + "\t" + geoRecord.getSummary()
+                                    + "\t" + clean( geoRecord.getSummary() )
                                     + "\t" + geoRecord.getMeshHeadings()
-                                    + "\t" + geoRecord.getSampleDetails()
-                                    + "\t" + geoRecord.getLibraryStrategy()
-                                    + "\t" + geoRecord.getOverallDesign() + "\n" );
+                                    + "\t" + clean( geoRecord.getSampleDetails() )
+                                    + "\t" + clean( geoRecord.getLibraryStrategy() )
+                                    + "\t" + clean( geoRecord.getOverallDesign() ) + "\n" );
 
                     seen.add( geoRecord.getGeoAccession() );
 
                     os.flush();
 
                     numUsed++;
+                    lastValidRecord = geoRecord;
                 }
                 os.flush();
 
             }
         }
 
+    }
+
+
+    /**
+     * Replace any 'tab' characters with spaces.
+     * @param s
+     * @return
+     */
+    String clean( String s ) {
+        return s.replace( '\t', ' ' );
     }
 
 }

@@ -2,19 +2,9 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.MalformedArgException;
-
-import javax.ws.rs.NotFoundException;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Mutable argument type base class for Taxon API

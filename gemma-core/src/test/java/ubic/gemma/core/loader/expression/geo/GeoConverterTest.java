@@ -150,7 +150,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
     public void testConvertGSE18Stress() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ).getInputStream() );
@@ -410,7 +409,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Category(SlowTest.class)
     public void testConvertGSE60() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse60Short/GSE60_family.soft.gz" ).getInputStream() );
@@ -624,7 +622,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Category(SlowTest.class)
     public final void testGSE8872() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse8872short/GSE8872_family.soft.gz" ).getInputStream() );

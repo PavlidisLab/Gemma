@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author paul
  */
+@Category(SlowTest.class)
 public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     @Autowired

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <import resource="classpath:ubic/gemma/applicationContext-ontology.xml"/>
+    <bean id="props" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="properties">
+            <props>
+                <prop key="load.ontologies">false</prop>
+                <prop key="gemma.ontology.loader.corePoolSize">4</prop>
+            </props>
+        </property>
+    </bean>
+    <context:property-placeholder properties-ref="props"/>
+</beans>

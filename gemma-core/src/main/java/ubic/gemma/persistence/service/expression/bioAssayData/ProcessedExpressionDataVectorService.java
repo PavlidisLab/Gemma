@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -30,12 +29,10 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Paul
@@ -45,6 +42,36 @@ public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     /**
+     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+
+    /**
+     * Create processed vectors and update ranks.
+     * <p>
+     * Mismatch between quantitation type and data is ignored.
+     * @see #createProcessedDataVectors(ExpressionExperiment)
+     * @see #updateRanks(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int computeProcessedExpressionData( ExpressionExperiment ee );
+
+    /**
+     * Create processed vectors and update ranks.
+     * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @see #updateRanks(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+
+    /**
      * Replace the processed vectors of a EE with the given vectors.
      * <p>
      * Ranks are recomputed.
@@ -52,28 +79,23 @@ public interface ProcessedExpressionDataVectorService
      * @param ee      ee
      * @param vectors non-persistent, all of the same quantitationtype
      */
-    @Secured({ "GROUP_USER" })
-    void replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
-    @Transactional
-    @Secured({ "GROUP_USER" })
+    /**
+     * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void reorderByDesign( ExpressionExperiment ee );
+
+    /**
+     * Update the ranks of the processed vectors for the given experiment.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updateRanks( ExpressionExperiment ee );
 
     @Secured({ "GROUP_ADMIN" })
     void clearCache();
-
-    @Secured({ "GROUP_USER" })
-    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
-     * should already have been computed.
-     *
-     * @param expressionExperiment ee
-     * @return updated expressionExperiment
-     */
-    @Secured({ "GROUP_USER" })
-    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreInferredScale ) throws QuantitationMismatchException;
 
     /**
      * @param expressionExperiments - expressionExperiments or expressionExperimentSubSets
@@ -185,36 +207,5 @@ public interface ProcessedExpressionDataVectorService
     Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
-
-    /**
-     * Compute processed expression data, ignoring mismatched with the inferred scale.
-     */
-    @Secured({ "GROUP_ADMIN" })
-    void computeProcessedExpressionData( ExpressionExperiment ee );
-
-    /**
-     * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
-     * refreshing.
-     */
-    @Secured({ "GROUP_ADMIN" })
-    void computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreInferredScale ) throws QuantitationMismatchException;
-
-
-    /**
-     * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
-     *
-     * @param eeId the experiment id
-     */
-    @Secured({ "GROUP_ADMIN" })
-    void reorderByDesign( ExpressionExperiment ee );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
-
-    @Secured({ "GROUP_USER" })
-    void update( Collection<ProcessedExpressionDataVector> updatedVectors );
 }

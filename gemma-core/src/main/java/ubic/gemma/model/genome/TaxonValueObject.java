@@ -14,11 +14,9 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
-
-import java.io.Serializable;
 
 /**
  * @author Paul

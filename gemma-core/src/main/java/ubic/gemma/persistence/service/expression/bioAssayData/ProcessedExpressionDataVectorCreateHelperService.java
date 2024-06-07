@@ -18,14 +18,13 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * @author Paul
  */
 interface ProcessedExpressionDataVectorCreateHelperService {
 
-    void replaceProcessedDataVectors( ExpressionExperiment ee,
+    int replaceProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
     void reorderByDesign( ExpressionExperiment ee );
@@ -37,5 +36,5 @@ interface ProcessedExpressionDataVectorCreateHelperService {
      * @param ee the experiment
      * @return processed vectors with updated ranks
      */
-    Set<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee );
+    void updateRanks( ExpressionExperiment ee );
 }

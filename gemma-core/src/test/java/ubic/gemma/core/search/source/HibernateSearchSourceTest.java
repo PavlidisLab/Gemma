@@ -8,12 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +35,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     private HibernateSearchSource hibernateSearchSource;
 
     @Test
-    public void test() throws HibernateSearchException {
+    public void test() throws SearchException {
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
                 .isEmpty();
         assertThat( hibernateSearchSource.searchArrayDesign( SearchSettings.expressionExperimentSearch( "hello" ) ) )
@@ -54,7 +55,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testSearchExpressionExperiment() throws HibernateSearchException {
+    public void testSearchExpressionExperiment() throws SearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
 
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
@@ -84,7 +85,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testSearchExpressionExperimentByStatementObject() throws HibernateSearchException {
+    public void testSearchExpressionExperimentByStatementObject() throws SearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
         Taxon taxon = new Taxon();
         fts.persist( taxon );
@@ -122,5 +123,10 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
                 .anySatisfy( r -> {
                     assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
+    }
+
+    @Test
+    public void testSearchWithInvalidQuerySyntax() throws SearchException {
+        hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder().query( "\"" ).build() );
     }
 }

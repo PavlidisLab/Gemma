@@ -21,12 +21,12 @@ package ubic.gemma.web.controller.genome.gene;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.genome.gene.GOGroupValueObject;
-import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
-import ubic.gemma.core.genome.gene.service.GeneSearchService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -140,16 +140,6 @@ public class GenePickerController {
     /**
      * AJAX
      *
-     * @return Taxon that are on Phenocarta evidence
-     */
-    public Collection<TaxonValueObject> getTaxaWithEvidence() {
-
-        return this.taxonService.getTaxaWithEvidence();
-    }
-
-    /**
-     * AJAX
-     *
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {
@@ -203,8 +193,10 @@ public class GenePickerController {
         results.addAll( sessionSets );
         try {
             results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
+        } catch ( ParseSearchException e ) {
+            throw new IllegalArgumentException( "Invalid search query: " + query, e );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search settings.", e );
+            throw new RuntimeException( e );
         }
 
         for ( SearchResultDisplayObject r : results ) {

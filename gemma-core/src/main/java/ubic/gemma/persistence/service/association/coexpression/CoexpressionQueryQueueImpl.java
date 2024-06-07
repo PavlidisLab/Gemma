@@ -43,7 +43,7 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
     private final CoexpressionDao coexpressionDao;
     private final GeneDao geneDao;
 
-    private Future<?> queryCacheFuture;
+    private final ExecutorService queryCacheExecutor = Executors.newSingleThreadExecutor();
 
     public CoexpressionQueryQueueImpl( CoexpressionDao coexpressionDao, GeneDao geneDao ) {
         this.coexpressionDao = coexpressionDao;
@@ -79,7 +79,7 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        queryCacheFuture = Executors.newSingleThreadExecutor().submit( new DelegatingSecurityContextRunnable( new Runnable() {
+        queryCacheExecutor.submit( new DelegatingSecurityContextRunnable( new Runnable() {
 
             private static final int MAX_WARNINGS = 5;
 
@@ -109,13 +109,13 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
                     }
                 }
             }
-
         } ) );
     }
 
     @Override
     public void destroy() throws Exception {
-        queryCacheFuture.cancel( true );
+        // filling the coexpression cache is not really critical, so we can safely interrupt it
+        queryCacheExecutor.shutdownNow();
     }
 
     private void queryForCache( Long geneId ) {

@@ -19,23 +19,19 @@
 package ubic.gemma.core.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need authentication.
@@ -66,29 +62,26 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
     @Autowired
     private ManualAuthenticationService manAuthentication;
 
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
+
+    private boolean requireLogin = false;
+
     @Override
-    public String getShortDesc() {
-        return "No description provided";
+    protected final void beforeWork() {
+        authenticate();
+    }
+
+    @Override
+    protected final void afterWork( @Nullable Exception e ) {
+        SecurityContextHolder.clearContext();
     }
 
     /**
      * Indicate if the command requires authentication.
-     * <p>
-     * Override this to return true to make authentication required.
-     *
-     * @return true if login is required, otherwise false
      */
-    protected boolean requireLogin() {
-        return false;
-    }
-
-    /**
-     * You must override this method to process any options you added.
-     */
-    @Override
-    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        super.processStandardOptions( commandLine );
-        this.authenticate();
+    public void setRequireLogin( boolean requireLogin ) {
+        this.requireLogin = requireLogin;
     }
 
     /**
@@ -98,7 +91,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
             AbstractCLI.log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
-        } else if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
+        } else if ( requireLogin || System.getenv().containsKey( USERNAME_ENV ) ) {
             String username = getUsername();
             String password = getPassword();
 
@@ -111,11 +104,12 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
-            if ( !success ) {
+            if ( success ) {
+                gemmaRestApiClient.setAuthentication( username, password );
+                AbstractCLI.log.info( "Logged in as " + username );
+            } else {
                 throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
-            } else {
-                AbstractCLI.log.info( "Logged in as " + username );
             }
         } else {
             AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
@@ -164,16 +158,17 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Tasks are wrapped with {@link DelegatingSecurityContextCallable} to ensure that they execute with the security
-     * context set up by {@link #authenticate()}.
-     */
     @Override
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
-        return super.executeBatchTasks( tasks.stream()
-                .map( DelegatingSecurityContextCallable::new )
-                .collect( Collectors.toList() ) );
+    protected ExecutorService createBatchTaskExecutorService() {
+        return new DelegatingSecurityContextExecutorService( super.createBatchTaskExecutorService() );
+    }
+
+    /**
+     * Obtain a REST API client for Gemma.
+     * <p>
+     * This client is authenticated with the same credentials that the CLI is using.
+     */
+    protected GemmaRestApiClient getGemmaRestApiClient() {
+        return gemmaRestApiClient;
     }
 }

@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.springframework.context.ApplicationContextAware;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -28,7 +27,7 @@ import java.util.Collection;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface AnalysisSelectionAndExecutionService extends ApplicationContextAware {
+public interface AnalysisSelectionAndExecutionService {
 
     Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
@@ -46,11 +45,6 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      */
     AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             ExperimentalFactor subsetFactor, boolean includeInteractions );
-
-    /**
-     * @return a new instance of a linear model analyzer.
-     */
-    DiffExAnalyzer getAnalyzer();
 
     DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config );

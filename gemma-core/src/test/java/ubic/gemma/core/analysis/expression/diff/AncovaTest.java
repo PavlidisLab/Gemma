@@ -48,7 +48,7 @@ import static org.junit.Assert.*;
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private DiffExAnalyzer analyzer;
+    private LinearModelAnalyzerImpl analyzer;
 
     /*
      * With a continuous covariate only
@@ -463,6 +463,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                                 assertEquals( 1, r.getContrasts().size() );
                                 ContrastResult contrast = r.getContrasts().iterator().next();
                                 assertEquals( super.factorValueA1, contrast.getFactorValue() );
+                                assertNotNull( contrast.getLogFoldChange() );
                                 assertEquals( -202.5587, contrast.getLogFoldChange(), 0.001 );
                                 foundContrast = true;
                                 break;

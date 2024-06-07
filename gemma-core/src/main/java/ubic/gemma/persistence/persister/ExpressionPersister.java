@@ -34,13 +34,12 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
 import ubic.gemma.persistence.service.expression.experiment.*;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -317,11 +316,6 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             ++count;
-
-            if ( Thread.interrupted() ) {
-                AbstractPersister.log.debug( "Cancelled" );
-                return null;
-            }
         }
 
         AbstractPersister.log.debug( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size()
@@ -454,19 +448,17 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment, Caches caches ) {
-
-        Set<BioAssay> alreadyFilled = new HashSet<>();
-
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             AbstractPersister.log.debug( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 this.fillInBioAssayAssociations( bioAssay, caches );
-                alreadyFilled.add( bioAssay );
             }
         } else {
             AbstractPersister.log.debug( "Filling in bioassays via data vectors" ); // usual case.
+            Set<BioAssay> alreadyFilled;
             alreadyFilled = this.fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches );
             expressionExperiment.setBioAssays( alreadyFilled );
+            expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
     }
 

@@ -24,6 +24,8 @@ import ubic.gemma.persistence.util.BusinessKey;
 import java.util.Collection;
 import java.util.HashSet;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+
 /**
  * @author paul
  */
@@ -42,9 +44,7 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
-                                + "join fetch dev.designElement de "
-                                + "left join fetch de.biologicalCharacteristic bc "
-                                + "left join fetch bc.sequenceDatabaseEntry "
+                                + "join dev.designElement de "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
                 .setParameter( "ad", arrayDesign )
@@ -60,10 +60,9 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector as dev "
-                                + "inner join dev.designElement as de "
                                 // no need for the fetch jointures since the design elements and biological characteristics are already in the session
-                                + "where de in (:des) and dev.quantitationType = :qt" )
-                .setParameterList( "des", designElements )
+                                + "where dev.designElement in (:des) and dev.quantitationType = :qt" )
+                .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
                 .setParameter( "qt", quantitationType )
                 .list();
     }
@@ -73,9 +72,6 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select v from RawExpressionDataVector as v "
-                                + "join fetch v.designElement de "
-                                + "left join fetch de.biologicalCharacteristic bc "
-                                + "left join fetch bc.sequenceDatabaseEntry "
                                 + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
@@ -102,5 +98,4 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
         return ( RawExpressionDataVector ) crit.getExecutableCriteria( getSessionFactory().getCurrentSession() ).uniqueResult();
     }
-
 }

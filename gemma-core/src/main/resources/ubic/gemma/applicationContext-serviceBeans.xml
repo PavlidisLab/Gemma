@@ -9,6 +9,7 @@
 
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="threadNamePrefix" value="gemma-local-tasks-thread-"/>
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
     </bean>
 
@@ -36,7 +37,7 @@
     </bean>
 
     <!-- micrometer, for metrics -->
-    <beans profile="production,dev">
+    <beans profile="metrics">
         <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
             <constructor-arg value="DEFAULT"/>
             <constructor-arg value="SYSTEM"/>
@@ -70,6 +71,11 @@
                     <bean class="ubic.gemma.core.metrics.binder.database.HikariCPMetrics">
                         <constructor-arg ref="dataSource"/>
                     </bean>
+                    <bean class="ubic.gemma.core.metrics.binder.ThreadPoolTaskExecutorMetrics">
+                        <constructor-arg ref="taskExecutor"/>
+                        <property name="poolName" value="gemmaLocalTasks"/>
+                    </bean>
+                    <ref bean="taskRunningService"/>
                 </list>
             </constructor-arg>
         </bean>

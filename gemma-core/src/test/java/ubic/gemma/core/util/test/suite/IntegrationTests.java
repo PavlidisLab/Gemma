@@ -3,10 +3,13 @@ package ubic.gemma.core.util.test.suite;
 import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import ubic.gemma.core.util.test.category.SpringContextTest;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 
+/**
+ * Integration tests.
+ */
 @RunWith(Categories.class)
-@Categories.IncludeCategory(SpringContextTest.class)
+@Categories.IncludeCategory(IntegrationTest.class)
 @Suite.SuiteClasses({ AllTests.class })
 public class IntegrationTests {
 }

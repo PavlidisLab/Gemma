@@ -12,13 +12,13 @@
          </generator>
       </id>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)" index="COMPOSITE_SEQUENCE_NAME"/>
       </property>
       <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequence"
-                   lazy="false" fetch="join">
+                   lazy="false" fetch="select">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"

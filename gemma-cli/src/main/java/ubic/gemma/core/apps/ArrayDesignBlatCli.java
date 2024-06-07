@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.Callable;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -73,7 +73,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .desc(
                         "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
                 .longOpt( "scoreThresh" )
-                .type( Double.class )
+                .type( Number.class )
                 .build();
 
         options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
@@ -107,7 +107,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 //        }
 
         if ( commandLine.hasOption( 's' ) ) {
-            this.blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
+            this.blatScoreThreshold = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
         }
 
         TaxonService taxonService = this.getBean( TaxonService.class );
@@ -184,7 +184,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     + allArrayDesigns.size() + " items]" );
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-            Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+            Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
             for ( ArrayDesign arrayDesign : allArrayDesigns ) {
                 arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
@@ -263,10 +263,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     /*
      * Here is our task runner.
      */
-    private class ProcessArrayDesign implements Callable<Void> {
+    private class ProcessArrayDesign implements Runnable {
 
         private ArrayDesign arrayDesign;
-        private Date skipIfLastRunLaterThan;
+        private final Date skipIfLastRunLaterThan;
 
         private ProcessArrayDesign( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
             this.arrayDesign = arrayDesign;
@@ -274,14 +274,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         }
 
         @Override
-        public Void call() {
+        public void run() {
             if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                return null;
+                return;
             }
             arrayDesign = getArrayDesignService().thaw( arrayDesign );
             ArrayDesignBlatCli.this.processArrayDesign( arrayDesign );
             addSuccessObject( arrayDesign );
-            return null;
         }
     }
 }

@@ -7,9 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.web.WebAppConfiguration;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -17,32 +15,28 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.MalformedArgException;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ubic.gemma.rest.util.Assertions.assertThat;
 
-@ActiveProfiles("web")
-@WebAppConfiguration
-public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
+public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Autowired
     private AnalysisResultSetsWebService service;
@@ -59,6 +53,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
     /* fixtures */
     private ArrayDesign arrayDesign;
     private ExpressionExperiment ee;
@@ -66,10 +63,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     private ExpressionAnalysisResultSet dears;
     private DatabaseEntry databaseEntry2;
 
-    @Before
-    public void setUp() throws Exception {
+    @Autowired
+    private PersistentDummyObjectHelper testHelper;
 
-        ee = getTestPersistentBasicExpressionExperiment();
+    @Before
+    public void setupMocks() {
+
+        ee = testHelper.getTestPersistentBasicExpressionExperiment();
 
         arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
         CompositeSequence probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
@@ -112,7 +112,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown() {
+    public void removeFixtures() {
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
         databaseEntryService.remove( databaseEntry2 );
@@ -236,50 +236,55 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindByIdThenReturn200Success() {
-        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
-        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
-        assertEquals( dearsVo.getId(), dears.getId() );
-        assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
-        assertNotNull( dearsVo.getResults() );
+        assertThat( target( "/resultSets/" + dears.getId() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.id", dears.getId().intValue() )
+                .hasFieldOrPropertyWithValue( "data.analysis.id", dea.getId().intValue() )
+                .extracting( "data.results" )
+                .isNotNull();
     }
 
     @Test
     public void testFindByIdWhenExcludeResultsThenReturn200Success() {
-        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
-        DifferentialExpressionAnalysisResultSetValueObject dearsVo = ( DifferentialExpressionAnalysisResultSetValueObject ) result.getData();
-        assertEquals( dearsVo.getId(), dears.getId() );
-        assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
-        assertNull( dearsVo.getResults() );
+        assertThat( target( "/resultSets/" + dears.getId() ).queryParam( "excludeResults", true ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" )
+                .entityAsString()
+                .doesNotContain( "results" );
     }
 
     @Test
     public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
-        assertThrows( MalformedArgException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
+        assertThat( target( "/resultSets/alksdok102" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
-        long id = 123129L;
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
-        assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
+        assertThat( target( "/resultSets/" + 123129L ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test
-    public void testFindByIdToTsv() throws IOException {
-        StreamingOutput result = service.getResultSetAsTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ) );
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        result.write( byteArrayOutputStream );
-        byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );
-        // FIXME: I could not find the equivalent of withFirstRecordAsHeader() in the builder API
-        CSVParser reader = CSVFormat.Builder.create( CSVFormat.TDF.withFirstRecordAsHeader() )
-                .setSkipHeaderRecord( false )
-                .setCommentMarker( '#' ).build()
-                .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
-        assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
-        CSVRecord record = reader.iterator().next();
-        assertEquals( record.get( "pvalue" ), "1.0" );
-        assertEquals( record.get( "corrected_pvalue" ), "0.0001" );
-        // rank is null, it should appear as an empty string
-        assertEquals( record.get( "rank" ), "" );
+    public void testFindByIdToTsv() {
+        assertThat( target( "/resultSets/" + dears.getId() ).request( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 ).get() )
+                .entityAsStream()
+                .satisfies( is -> {
+                    // FIXME: I could not find the equivalent of withFirstRecordAsHeader() in the builder API
+                    CSVParser reader = CSVFormat.Builder.create( CSVFormat.TDF.withFirstRecordAsHeader() )
+                            .setSkipHeaderRecord( false )
+                            .setCommentMarker( '#' ).build()
+                            .parse( new InputStreamReader( is ) );
+                    assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
+                    CSVRecord record = reader.iterator().next();
+                    assertEquals( record.get( "pvalue" ), "1.0" );
+                    assertEquals( record.get( "corrected_pvalue" ), "0.0001" );
+                    // rank is null, it should appear as an empty string
+                    assertEquals( record.get( "rank" ), "" );
+                } );
     }
 }

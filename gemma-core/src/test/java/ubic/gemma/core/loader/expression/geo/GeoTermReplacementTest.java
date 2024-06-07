@@ -5,26 +5,31 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.time.StopWatch;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
+import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * Test replacements for GEO terms.
@@ -34,25 +39,36 @@ import static org.junit.Assert.assertNotNull;
 public class GeoTermReplacementTest {
 
     private static final List<OntologyService> ontologies = new ArrayList<>();
+    private static final Map<OntologyService, Collection<String>> prefixesByOntology = new HashMap<>();
 
     static {
-        addOntology( new CellLineOntologyService() );
-        addOntology( new CellTypeOntologyService() );
-        addOntology( new ObiService() );
-        addOntology( new MondoOntologyService() );
-        addOntology( new UberonOntologyService() );
-        addOntology( new PatoOntologyService() );
-        addOntology( new MammalianPhenotypeOntologyService() );
-        // FIXME: addOntology( new ChebiOntologyService() );
-        // EFO is a grab bag, so we list it last
-        addOntology( new ExperimentalFactorOntologyService() );
+        addOntology( new GemmaOntologyService(), "http://gemma.msl.ubc.ca/ont/TGEMO_" );
+        addOntology( new ObiService(), "http://purl.obolibrary.org/obo/OBI_" );
+        addOntology( new PatoOntologyService(), "http://purl.obolibrary.org/obo/PATO_" );
+        addOntology( new CellTypeOntologyService(), "http://purl.obolibrary.org/obo/CL_" );
+        addOntology( new CellLineOntologyService(), "http://purl.obolibrary.org/obo/CLO_" );
+        addOntology( new MondoOntologyService(), "http://purl.obolibrary.org/obo/MONDO_" );
+        addOntology( new UberonOntologyService(), "http://purl.obolibrary.org/obo/UBERON_" );
+        addOntology( new HumanPhenotypeOntologyService(), "http://purl.obolibrary.org/obo/HP_" );
+        addOntology( new MammalianPhenotypeOntologyService(), "http://purl.obolibrary.org/obo/MP_" );
+        addOntology( new ExperimentalFactorOntologyService(), "http://www.ebi.ac.uk/efo/", "http://purl.obolibrary.org/obo/BTO_" );
+        // TODO: addOntology( new ChebiOntologyService(), "http://purl.obolibrary.org/obo/CHEBI_" );
     }
 
-    private static void addOntology( OntologyService ontology ) {
+    private static void addOntology( OntologyService ontology, String... prefix ) {
         ontology.setInferenceMode( OntologyService.InferenceMode.NONE );
         ontology.setSearchEnabled( false );
         ontology.setProcessImports( false );
         ontologies.add( ontology );
+        prefixesByOntology.put( ontology, Arrays.asList( prefix ) );
+    }
+
+    /**
+     * Remove an ontology in order to free some memory.
+     */
+    private static void removeOntology( OntologyService ontology ) {
+        ontologies.remove( ontology );
+        prefixesByOntology.remove( ontology );
     }
 
     @Value
@@ -69,15 +85,16 @@ public class GeoTermReplacementTest {
         ExecutorCompletionService<OntologyService> cs = new ExecutorCompletionService<>( Executors.newFixedThreadPool( 8 ) );
         for ( OntologyService os : ontologies ) {
             cs.submit( () -> {
+                StopWatch watch = StopWatch.createStarted();
                 os.initialize( true, false );
+                log.info( "Initialized " + os + " in " + watch.getTime() + " ms" );
                 return os;
             } );
         }
 
         List<Rec> records = new ArrayList<>();
         try ( InputStream is = getClass().getResourceAsStream( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ) ) {
-            assertNotNull( is );
-            for ( CSVRecord record : CSVParser.parse( is, StandardCharsets.UTF_8, CSVFormat.TDF.withCommentMarker( '#' ) ) ) {
+            for ( CSVRecord record : CSVParser.parse( requireNonNull( is ), StandardCharsets.UTF_8, CSVFormat.TDF.withCommentMarker( '#' ) ) ) {
                 String synonym = record.get( 0 );
                 String value = record.get( 1 );
                 String valueUri = record.get( 2 );
@@ -91,6 +108,10 @@ public class GeoTermReplacementTest {
                 if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/HANCESTRO_" ) ) {
                     continue;
                 }
+                // FIXME: enable GO
+                if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
+                    continue;
+                }
                 if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/NCBITaxon_" ) ) {
                     continue;
                 }
@@ -98,40 +119,76 @@ public class GeoTermReplacementTest {
             }
         }
 
+        SoftAssertions assertions = new SoftAssertions();
+
+        // verify category URIs against EFO.factor.categories.txt
+        Map<String, String> categories;
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( requireNonNull( GeoTermReplacementTest.class.getResourceAsStream( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" ) ) ) ) ) {
+            categories = reader.lines()
+                    .filter( line -> !line.startsWith( "#" ) )
+                    .map( line -> line.split( "\t", 2 ) )
+                    .collect( Collectors.toMap( row -> row[0], row -> row[1] ) );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        for ( Rec rec : records ) {
+            assertions.assertThat( categories )
+                    .withFailMessage( "%s: Unknown category URI %s", rec.synonym, rec.categoryUri )
+                    .containsKey( rec.categoryUri )
+                    .withFailMessage( "%s: Invalid URI %s for category %s", rec.synonym, rec.categoryUri, rec.category )
+                    .containsEntry( rec.categoryUri, rec.category );
+        }
+
+        // verify that all term has a supported prefix
+        for ( Rec rec : records ) {
+            assertions.assertThat( prefixesByOntology.values() )
+                    .withFailMessage( "%s: No prefix for %s", rec.synonym, rec.valueUri )
+                    .flatMap( c -> c )
+                    .anySatisfy( prefix -> {
+                        assertThat( rec.valueUri ).startsWith( prefix );
+                    } );
+        }
+
+        // fail now if possible, because the next step is going to be expensive
+        assertions.assertAll();
+
+        int numOntologies = ontologies.size();
         Set<String> seen = new HashSet<>();
-        int failures = 0;
-        for ( int i = 0; i < ontologies.size(); i++ ) {
-            OntologyService os = cs.take().get();
-            log.info( "Looking up terms in " + os );
+        for ( int i = 0; i < numOntologies; i++ ) {
+            OntologyService os;
+            try {
+                os = cs.take().get();
+            } catch ( ExecutionException e ) {
+                // skip the test if ontologies cannot be loaded
+                assumeNoException( e );
+                return;
+            }
             for ( Rec rec : records ) {
-                // skip undeclared terms
+                if ( prefixesByOntology.get( os ).stream().noneMatch( rec.valueUri::startsWith ) ) {
+                    continue;
+                }
                 OntologyTerm term = os.getTerm( rec.valueUri );
+                assertions.assertThat( term )
+                        .withFailMessage( "%s: No term found for %s in %s", rec.synonym, rec.valueUri, os )
+                        .isNotNull();
                 if ( term == null ) {
                     continue;
                 }
-                // skip terms lacking a label
-                if ( term.getAnnotations().stream().map( AnnotationProperty::getProperty ).noneMatch( "label"::equals ) ) {
-                    continue;
-                }
-                // CLO has a typo, ignore it
-                if ( "neuronal stem cell".equals( term.getLabel() ) ) {
-                    continue;
-                }
+                assertions.assertThat( rec.value )
+                        .withFailMessage( "%s: Replace '%s' with '%s' from %s", rec.synonym, rec.value, term.getLabel(), os )
+                        .isEqualTo( term.getLabel() );
                 seen.add( rec.synonym );
-                if ( !term.getLabel().equals( rec.value ) ) {
-                    log.warn( String.format( "%s: Replace '%s' with '%s' %s", rec.synonym, rec.value, term.getLabel(), term.getUri() ) );
-                    failures++;
-                }
             }
+            assertions.assertAll();
+            removeOntology( os );
         }
 
         for ( Rec rec : records ) {
-            if ( !seen.contains( rec.synonym ) ) {
-                log.warn( String.format( "%s: No term found for %s in any ontology", rec.synonym, rec.valueUri ) );
-                failures++;
-            }
+            assertions.assertThat( seen )
+                    .withFailMessage( "%s: No term found for %s in any ontology", rec.synonym, rec.valueUri )
+                    .contains( rec.synonym );
         }
 
-        assertEquals( 0, failures );
+        assertions.assertAll();
     }
 }

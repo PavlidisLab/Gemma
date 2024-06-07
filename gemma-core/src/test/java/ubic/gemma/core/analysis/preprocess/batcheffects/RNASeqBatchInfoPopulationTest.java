@@ -19,15 +19,11 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -42,7 +38,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
+
+import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -169,6 +168,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      * batch info.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE156689NoBatchinfo() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
@@ -409,13 +409,34 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         s.convertHeadersToBatches( h.values() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchQ() throws Exception {
         //GSE173137 - 
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE173137" );
         s.convertHeadersToBatches( h.values() );
+    }
+
+    @Test
+    public void testBatchR() throws Exception {
+        // GSE83115 - singleton batches if we use lane, dropping to device gives two batches.
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE83115" );
+
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 2, batches.size() );
+    }
+
+    @Test(expected = SingletonBatchesException.class)
+    public void testBatchS() throws Exception {
+        // GSE173615
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE173615" );
+
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
     }
 
     @After

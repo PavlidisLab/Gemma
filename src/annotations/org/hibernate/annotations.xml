@@ -1,0 +1,5 @@
+<root>
+    <item name='org.hibernate.Query java.lang.Object uniqueResult()'>
+        <annotation name='javax.annotation.Nullable'/>
+    </item>
+</root>

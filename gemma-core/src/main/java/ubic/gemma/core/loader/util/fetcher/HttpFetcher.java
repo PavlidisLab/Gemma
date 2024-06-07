@@ -21,7 +21,7 @@ package ubic.gemma.core.loader.util.fetcher;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.net.URI;

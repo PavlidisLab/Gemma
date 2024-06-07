@@ -26,21 +26,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author paul
@@ -153,6 +150,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
+        for ( BioAssay bm : differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() ) {
+            for ( FactorValue fv : bm.getSampleUsed().getFactorValues() ) {
+                Hibernate.initialize( fv.getExperimentalFactor() );
+            }
+        }
 
         Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
 
@@ -221,7 +223,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Transactional
     public void remove( DifferentialExpressionAnalysis toDelete ) {
         toDelete = ensureInSession( toDelete );
-       
+
         // Remove meta analyses that use the analyzed experiment
         log.info( "Removing meta analyses with this experiment..." );
         Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
@@ -248,6 +250,22 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByExperiment( ee );
         this.remove( diffAnalyses );
+    }
+
+    @Override
+    @Transactional
+    public int removeForExperimentalFactor( ExperimentalFactor experimentalFactor ) {
+        Collection<DifferentialExpressionAnalysis> found = differentialExpressionAnalysisDao.findByFactor( experimentalFactor );
+        this.remove( found );
+        return found.size();
+    }
+
+    @Override
+    @Transactional
+    public int removeForExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+        Collection<DifferentialExpressionAnalysis> found = differentialExpressionAnalysisDao.findByFactors( experimentalFactors );
+        this.remove( found );
+        return found.size();
     }
 
     @Override

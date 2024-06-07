@@ -29,7 +29,7 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * This parses GO annotations from NCBI. See <a href="ftp://ftp.ncbi.nih.gov/gene/DATA/README">readme</a>.
- * 
+ *
  * <pre>
  * tax_id:
  * the unique identifier provided by NCBI Taxonomy
@@ -66,8 +66,7 @@ import java.util.concurrent.BlockingQueue;
  * @author keshav
  * @author pavlidis
  */
-public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation>
-        implements QueuingParser<Gene2GOAssociation> {
+public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements QueuingParser<Gene2GOAssociation> {
 
     private static final String COMMENT_INDICATOR = "#";
     private static final Set<String> ignoredEvidenceCodes = new HashSet<>();
@@ -85,6 +84,9 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     private final int EVIDENCE_CODE = Settings.getInt( "gene2go.evidence_code" );
     private final int GENE_ID = Settings.getInt( "gene2go.gene_id" );
     private final int GO_ID = Settings.getInt( "gene2go.go_id" );
+
+    private final int GO_TERM_LABEL = Settings.getInt( "gene2go.goterm" );
+
     private BlockingQueue<Gene2GOAssociation> queue;
 
     private int count = 0;
@@ -132,18 +134,16 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
      *
      * @param  line line
-     * @return      Object
+     * @return Object
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public Gene2GOAssociation mapFromGene2GO( String line ) {
 
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 
-        if ( line.startsWith( NCBIGene2GOAssociationParser.COMMENT_INDICATOR ) )
-            return null;
+        if ( line.startsWith( NCBIGene2GOAssociationParser.COMMENT_INDICATOR ) ) return null;
 
-        if ( values.length < 8 )
-            return null;
+        if ( values.length < 8 ) return null;
 
         Integer taxonId;
         try {
@@ -163,7 +163,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         Characteristic oe = Characteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
-        oe.setValue( value ); // NOTE: this is not the GO term label, it's the GO ID. It's OK because we do label lookups
+        oe.setValue( values[GO_TERM_LABEL] );
 
         // g2GOAss.setSource( ncbiGeneDb );
 
@@ -196,8 +196,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     @Override
     public void parse( InputStream inputStream, BlockingQueue<Gene2GOAssociation> aqueue ) throws IOException {
-        if ( inputStream == null )
-            throw new IllegalArgumentException( "InputStream was null" );
+        if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aqueue;
         super.parse( inputStream );
 

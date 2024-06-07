@@ -25,13 +25,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.core.config.Settings;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -107,17 +108,33 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
+     * Produce a value for representing a factor value.
+     * <p>
+     * In the context of the design file, this is focusing on the value (i.e. subjects or measurement value) itself and
+     * not its metadata which are instead exposed in the file header.
+     * <p>
      * Replaces spaces and hyphens with underscores.
-     *
      * @param factorValue FV
      * @return replaced string
      */
     public static String constructFactorValueName( FactorValue factorValue ) {
-        String matchedFactorValue = FactorValueUtils.getSummaryString( factorValue, " | " );
-        matchedFactorValue = matchedFactorValue.trim();
-        matchedFactorValue = matchedFactorValue.replaceAll( "-", "_" );
-        matchedFactorValue = matchedFactorValue.replaceAll( "\\s", "_" );
-        return matchedFactorValue;
+        String v;
+        if ( factorValue.getMeasurement() != null ) {
+            v = factorValue.getMeasurement().getValue();
+        } else {
+            String valueFromStatements = factorValue.getCharacteristics().stream()
+                    .map( Statement::getSubject )
+                    .collect( Collectors.joining( " | " ) );
+            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
+                v = valueFromStatements;
+            } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
+                v = factorValue.getValue();
+            } else {
+                v = ""; // this is treated as NaN in most scenarios
+            }
+        }
+        return v.replace( '-', '_' )
+                .replaceAll( "\\s+", "_" );
     }
 
     /**

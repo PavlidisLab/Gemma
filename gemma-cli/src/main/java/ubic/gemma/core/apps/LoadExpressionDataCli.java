@@ -52,22 +52,28 @@ import java.util.Collection;
  */
 public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private ExpressionExperimentService eeService;
+    @Autowired
+    private PreprocessorService preprocessorService;
+    @Autowired
+    private GeoService geoService;
+    @Autowired
+    private ArrayDesignService ads;
+
     // Command line Options
     private String accessionFile = null;
     private String accessions = null;
-    private boolean doMatching = true;
+    private boolean doMatching = false;
     private boolean force = false;
     private boolean platformOnly = false;
     private boolean allowSubSeriesLoad = false;
     private boolean allowSuperSeriesLoad = false;
     // Service Beans
-    @Autowired
-    private ExpressionExperimentService eeService;
-    @Autowired
-    private PreprocessorService preprocessorService;
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
     private boolean updateOnly = false;
+    private String softFile = null;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -79,7 +85,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         return "addGEOData";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().argName( "Input file" )
@@ -98,13 +103,13 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                 .longOpt( "platforms" ).build();
         options.addOption( platformOnlyOption );
 
-        Option noBioAssayMatching = Option.builder( "n" ).desc( "Do not try to match samples across platforms" )
-                .longOpt( "nomatch" ).build();
+        Option noBioAssayMatching = Option.builder( "m" ).desc( "Try to match samples across platforms (e.g. multi-part microarray platforms)" )
+                .longOpt( "match" ).build();
 
         options.addOption( noBioAssayMatching );
 
         Option splitByPlatformOption = Option.builder( "splitByPlatform" )
-                .desc( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
+                .desc( "Force data from each platform into a separate experiment" )
                 .build();
         options.addOption( splitByPlatformOption );
 
@@ -118,20 +123,31 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
         options.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
 
+        options.addOption( Option.builder( "softfile" ).desc( "Load directly from soft.gz file; use with single accession via -e" ).hasArg().argName( "soft file path" ).build() );
+
         /*
          * add 'allowsub/super' series option;
          */
         options.addOption( Option.builder( "allowsuper" ).desc( "Allow sub/super series to be loaded" ).build() );
+
+        addBatchOption( options );
     }
 
     @Override
     protected void doWork() throws Exception {
-        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
         if ( accessions == null && accessionFile == null ) {
             throw new IllegalArgumentException(
                     "You must specific either a file or accessions on the command line" );
+        }
+
+        if ( softFile != null ) {
+            Collection<?> ees = geoService.loadFromSoftFile( accessions, softFile, platformOnly, doMatching, splitByPlatform );
+            for ( Object object : ees ) {
+                addSuccessObject( object );
+            }
+            return;
         }
 
         if ( accessions != null ) {
@@ -148,7 +164,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
                 if ( platformOnly ) {
                     Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
-                    ArrayDesignService ads = this.getBean( ArrayDesignService.class );
                     for ( Object object : designs ) {
                         assert object instanceof ArrayDesign;
                         ArrayDesign ad = ( ArrayDesign ) object;
@@ -157,7 +172,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         addSuccessObject( ad );
                     }
                 } else {
-                    this.processAccession( geoService, accession );
+                    this.processAccession( accession );
                 }
             }
 
@@ -175,7 +190,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         continue;
                     }
 
-                    this.processAccession( geoService, accession );
+                    this.processAccession( accession );
 
                 }
             }
@@ -217,16 +232,24 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
             this.doMatching = false; // defensive
         } else {
             this.splitByPlatform = false;
-            this.doMatching = !commandLine.hasOption( 'n' );
+            this.doMatching = commandLine.hasOption( 'm' );
         }
 
         this.suppressPostProcessing = commandLine.hasOption( "nopost" );
 
+        if ( commandLine.hasOption( "softfile" ) ) {
+            this.softFile = commandLine.getOptionValue( "softfile" );
+            if ( accessions == null || accessions.split( "," ).length > 1 ) {
+                throw new IllegalArgumentException( "You must specify exactly one accession to load from a SOFT file" );
+            }
+
+        }
     }
 
-    private void processAccession( GeoService geoService, String accession ) {
+    private void processAccession( String accession ) {
         try {
 
+            log.info( " ***** Starting processing of " + accession + " *****" );
             if ( updateOnly ) {
                 geoService.updateFromGEO( accession );
                 addSuccessObject( accession, "Updated" );

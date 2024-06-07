@@ -35,6 +35,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the one way anova analyzer. See test/data/stat-tests/README.txt for R code.
@@ -44,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private DiffExAnalyzer analyzer = null;
+    private LinearModelAnalyzerImpl analyzer = null;
 
     /**
      * Tests the OneWayAnova method.
@@ -52,10 +53,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testOneWayAnova() throws Exception {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         super.configureTestDataForOneWayAnova();
 
@@ -86,10 +84,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testOnewayAnovaB() throws Exception {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
+        assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         super.configureTestDataForOneWayAnova();
 

@@ -18,12 +18,21 @@
  */
 package ubic.gemma.core.security.authentication;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.acl.domain.AclService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -33,18 +42,52 @@ import static org.mockito.Mockito.*;
 /**
  * @author pavlidis
  */
-public class UserServiceImplTest {
-    private final UserServiceImpl userService = new UserServiceImpl();
-    private final User testUser = User.Factory.newInstance();
+@ContextConfiguration
+public class UserServiceImplTest extends AbstractJUnit4SpringContextTests {
+
+    @Configuration
+    @TestComponent
+    static class UserServiceImplTestContextConfiguration {
+
+        @Bean
+        public UserService userService() {
+            return new UserServiceImpl();
+        }
+
+        @Bean
+        public UserDao userDao() {
+            return mock();
+        }
+
+        @Bean
+        public UserGroupDao userGroupDao() {
+            return mock();
+        }
+
+        @Bean
+        public AclService aclService() {
+            return mock();
+        }
+
+        @Bean
+        public SecurityService securityService() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
     private UserDao userDaoMock;
+
+    private final User testUser = User.Factory.newInstance();
+
     private Collection<UserGroup> userGroups;
 
     @Before
     public void setUp() {
-        userDaoMock = mock( UserDao.class );
-        userService.userDao = userDaoMock;
-
-        userService.userGroupDao = mock( UserGroupDao.class );
+        testUser.setId( 1L );
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
@@ -57,7 +100,11 @@ public class UserServiceImplTest {
         group.getGroupMembers().add( testUser );
         userGroups = new HashSet<>();
         userGroups.add( group );
+    }
 
+    @After
+    public void resetMocks() {
+        reset( userDaoMock );
     }
 
     @Test
@@ -77,9 +124,9 @@ public class UserServiceImplTest {
 
     @Test
     public void testHandleRemoveUser() {
+        when( userDaoMock.load( testUser.getId() ) ).thenReturn( testUser );
         when( userDaoMock.loadGroups( testUser ) ).thenReturn( userGroups );
         userService.delete( testUser );
         verify( userDaoMock ).remove( testUser );
     }
-
 }

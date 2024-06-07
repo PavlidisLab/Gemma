@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.ChromosomeUtil;
+import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,8 +76,8 @@ public class BlatAssociationScorerTest {
         // BlatAssociation expected = association_2;
         BlatAssociation actual = BlatAssociationScorer.scoreResults( blatAssociations );
 
-        assertFalse( ChromosomeUtil.isCanonical( blatResult_1.getTargetChromosome() ) );
-        assertTrue( ChromosomeUtil.isCanonical( blatResult_2.getTargetChromosome() ) );
+        assertFalse( ChromosomeUtils.isCanonical( blatResult_1.getTargetChromosome() ) );
+        assertTrue( ChromosomeUtils.isCanonical( blatResult_2.getTargetChromosome() ) );
         assertEquals( 940.0, association_1.getScore(), 0 );
         assertEquals( 564.0, association_2.getScore(), 0 );
         assertEquals( 1.0, actual.getSpecificity(), 0 );

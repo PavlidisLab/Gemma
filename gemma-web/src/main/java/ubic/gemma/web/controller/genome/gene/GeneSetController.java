@@ -27,8 +27,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
@@ -190,8 +191,10 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
         try {
             return geneSetService.findGeneSetsByName( query, taxonId );
+        } catch ( ParseSearchException e ) {
+            throw new IllegalArgumentException( e.getMessage(), e );
         } catch ( SearchException e ) {
-            throw new IllegalArgumentException( "Invalid search query.", e );
+            throw new RuntimeException( e );
         }
     }
 

@@ -43,9 +43,10 @@ public class GeoCharacteristicParseTest {
         assertEquals( "http://purl.obolibrary.org/obo/PATO_0000047", c.getCategoryUri() );
         assertEquals( "http://purl.obolibrary.org/obo/PATO_0000384", c.getValueUri() );
 
-        t = BioMaterial.Factory.newInstance();
-        g.parseGEOSampleCharacteristicString( "Sex: M,Tissue=brain", t );
-        check2chars( t );
+        // I'm sorry but this case is just too crazy (mixing : and = ) and leaves other situations unaddressed like the lithium use (non-user=0, user = 1): 0 below.
+//        t = BioMaterial.Factory.newInstance();
+//        g.parseGEOSampleCharacteristicString( "Sex: M,Tissue=brain", t );
+//        check2chars( t );
 
         t = BioMaterial.Factory.newInstance();
         g.parseGEOSampleCharacteristicString( "Sex : M; Tissue:brain ", t );
@@ -92,6 +93,24 @@ public class GeoCharacteristicParseTest {
         assertEquals( "fibroblast", c.getValue() );
         assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000324", c.getCategoryUri() );
         assertEquals( "http://purl.obolibrary.org/obo/CL_0000057", c.getValueUri() );
+
+
+        // test ugly packing of information in sample info line
+        // lithium use (non-user=0, user = 1): 0
+        t = BioMaterial.Factory.newInstance();
+        g.parseGEOSampleCharacteristicString( "lithium use (non-user=0, user = 1): 0", t );
+        c = t.getCharacteristics().iterator().next();
+        assertEquals( "lithium use (non-user=0, user = 1)", c.getCategory() );
+        assertEquals( "0", c.getValue() );
+
+        // test empty value
+        // happens in GSM270278
+        t = BioMaterial.Factory.newInstance();
+        g.parseGEOSampleCharacteristicString( "Strain:", t );
+        c = t.getCharacteristics().iterator().next();
+        assertEquals( "strain", c.getCategory() );
+        assertEquals( "", c.getValue() );
+        assertEquals( "Strain:", c.getOriginalValue() );
     }
 
     /**

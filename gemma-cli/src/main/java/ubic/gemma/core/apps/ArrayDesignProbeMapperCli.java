@@ -6,6 +6,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -20,12 +21,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -76,6 +75,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
 
+    public ArrayDesignProbeMapperCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.PLATFORM;
@@ -87,17 +90,17 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.buildOptions( options );
 
         options.addOption( Option.builder( "i" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .longOpt( "identityThreshold" ).build() );
 
         options.addOption( Option.builder( "s" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
                 .longOpt( "scoreThreshold" ).build() );
 
         options.addOption( Option.builder( "o" ).hasArg().argName( "value" )
-                .type( Double.class )
+                .type( Number.class )
                 .desc( "Minimum fraction of probe overlap with exons, default = " + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
                 .longOpt( "overlapThreshold" )
                 .build() );
@@ -173,11 +176,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         options.addOption( probesToDoOption );
     }
 
-    @Override
-    protected boolean requireLogin() {
-        return true;
-    }
-
     private TaxonService taxonService;
 
     /**
@@ -234,7 +232,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( commandLine.hasOption( 's' ) ) {
-            blatScoreThreshold = ( Double ) commandLine.getParsedOptionValue( 's' );
+            blatScoreThreshold = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
             if ( blatScoreThreshold < 0 || blatScoreThreshold > 1 ) {
                 throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
             }
@@ -249,14 +247,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.mirnaOnlyModeOption = commandLine.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION );
 
         if ( commandLine.hasOption( 'i' ) ) {
-            identityThreshold = ( Double ) commandLine.getParsedOptionValue( 'i' );
+            identityThreshold = ( ( Number ) commandLine.getParsedOptionValue( 'i' ) ).doubleValue();
             if ( identityThreshold < 0 || identityThreshold > 1 ) {
                 throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
             }
         }
 
         if ( commandLine.hasOption( 'o' ) ) {
-            overlapThreshold = ( Double ) commandLine.getParsedOptionValue( 'o' );
+            overlapThreshold = ( ( Number ) commandLine.getParsedOptionValue( 'o' ) ).doubleValue();
             if ( overlapThreshold < 0 || overlapThreshold > 1 ) {
                 throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
             }
@@ -515,7 +513,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         // TODO: process array designs in order of how many experiments they use (most first)
 
-        Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+        Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
             arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
@@ -676,10 +674,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    private class ProcessADProbeMapper implements Callable<Void> {
+    private class ProcessADProbeMapper implements Runnable {
 
-        private ArrayDesign arrayDesign;
-        private Date skipIfLastRunLaterThan;
+        private final ArrayDesign arrayDesign;
+        private final Date skipIfLastRunLaterThan;
 
         private ProcessADProbeMapper( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
             this.arrayDesign = arrayDesign;
@@ -687,12 +685,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         @Override
-        public Void call() {
+        public void run() {
 
             if ( arrayDesign.getCurationDetails().getTroubled() ) {
                 AbstractCLI.log.warn( "Skipping troubled platform: " + arrayDesign );
                 addErrorObject( arrayDesign, "Skipped because it is troubled; run in non-batch-mode" );
-                return null;
+                return;
             }
 
             /*
@@ -700,8 +698,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
              * just the ones from the taxon specified.
              */
             ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, arrayDesign );
-
-            return null;
         }
     }
 

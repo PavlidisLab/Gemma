@@ -26,7 +26,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -53,6 +53,10 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private String assayName;
     @GemmaWebOnly
     private String assayDescription;
+
+    @GemmaWebOnly
+    private String fastqHeaders = null;
+
     /**
      * Related {@link BioAssay} IDs.
      */
@@ -64,6 +68,13 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     @GemmaWebOnly
     private Map<String, String> characteristicValues = new HashMap<>();
+
+    /**
+     * Map of categories to original text values (for this biomaterial).
+     * This is only used for display and will only be populated if the original value is different from the value.
+     */
+    @GemmaWebOnly
+    private Map<String, String> characteristicOriginalValues = new HashMap<>();
 
     /**
      * Indicate if this is using the {@link #fVBasicVOs} or {@link #factorValueObjects} for representing factor values.
@@ -156,6 +167,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
                 continue;
             }
             this.characteristicValues.put( c.getCategory(), c.getValue() );
+            if ( c.getOriginalValue() != null && !c.getOriginalValue().equals( c.getValue() ) ) {
+                this.characteristicOriginalValues.put( c.getCategory(), c.getOriginalValue() );
+            }
         }
     }
 
@@ -168,6 +182,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayProcessingDate = ba.getProcessingDate();
+        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
     }
 
     @JsonProperty("factorValues")

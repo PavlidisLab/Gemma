@@ -1,27 +1,25 @@
 package ubic.gemma.rest.providers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
-import ubic.gemma.rest.util.OpenApiUtils;
-import ubic.gemma.rest.util.ResponseErrorObject;
-import ubic.gemma.rest.util.WellComposedErrorBody;
-import ubic.gemma.rest.util.ServletUtils;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.util.BuildInfo;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
  * Handles Spring Security {@link AuthenticationException} by producing a 403 Forbidden response.
  */
 @Provider
+@Component
 public class AuthenticationExceptionMapper extends AbstractExceptionMapper<AuthenticationException> {
+
+    @Autowired
+    public AuthenticationExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
+        super( spec, buildInfo );
+    }
 
     @Override
     protected Response.Status getStatus( AuthenticationException exception ) {
@@ -29,7 +27,7 @@ public class AuthenticationExceptionMapper extends AbstractExceptionMapper<Authe
     }
 
     @Override
-    protected boolean logException() {
+    protected boolean logException( AuthenticationException e ) {
         return true;
     }
 }

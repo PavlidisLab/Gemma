@@ -60,7 +60,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DiffExAnalyzer analyzer;
+    private LinearModelAnalyzer analyzer;
 
     @Autowired
     private AnalysisSelectionAndExecutionService analysisService = null;
@@ -156,6 +156,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService
                 .load( persistent.iterator().next().getId() );
+        assertNotNull( refetched );
 
         refetched = differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
