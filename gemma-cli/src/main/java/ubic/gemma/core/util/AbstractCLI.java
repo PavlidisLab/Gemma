@@ -204,11 +204,16 @@ public abstract class AbstractCLI implements CLI {
             return FAILURE;
         }
         try {
+            Exception e = null;
             try {
+                beforeWork();
                 insideDoWork = true;
                 doWork();
+            } catch ( Exception e2 ) {
+                e = e2;
             } finally {
                 insideDoWork = false;
+                afterWork( e );
             }
             if ( executorService != null ) {
                 executorService.shutdown();
@@ -346,7 +351,7 @@ public abstract class AbstractCLI implements CLI {
         return skipIfLastRunLaterThan;
     }
 
-    protected void buildStandardOptions( Options options ) {
+    private void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
     }
@@ -364,7 +369,7 @@ public abstract class AbstractCLI implements CLI {
      * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
      * purposes.
      */
-    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
+    private void processStandardOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
             throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", DATE_OPTION, AUTO_OPTION_NAME ) );
         }
@@ -408,6 +413,13 @@ public abstract class AbstractCLI implements CLI {
     protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
 
     /**
+     * Override this to perform any setup before {@link #doWork()}.
+     */
+    protected void beforeWork() {
+
+    }
+
+    /**
      * Command line implementation.
      * <p>
      * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the
@@ -420,6 +432,14 @@ public abstract class AbstractCLI implements CLI {
     protected abstract void doWork() throws Exception;
 
     /**
+     * Override this to perform any cleanup after {@link #doWork()}.
+     * @param exception the exception thrown by {@link #doWork()} if any, else null
+     */
+    protected void afterWork( @Nullable Exception exception ) {
+
+    }
+
+    /**
      * Prompt the user for a confirmation or raise an exception to abort the {@link #doWork()} method.
      */
     protected void promptConfirmationOrAbort( String message ) throws Exception {
@@ -428,7 +448,7 @@ public abstract class AbstractCLI implements CLI {
         }
         String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
                 message.replaceAll( "\n", "\nWARNING: " ) );
-        if ( "YES" .equals( line.trim() ) ) {
+        if ( "YES".equals( line.trim() ) ) {
             return;
         }
         throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );

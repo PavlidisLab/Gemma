@@ -61,6 +61,10 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private boolean skipDownload = false;
     private Integer startNcbiId = null;
 
+    public NcbiGeneLoaderCLI() {
+        setRequireLogin( true );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;
@@ -93,11 +97,6 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
         options.addOption( Option.builder( "restart" ).longOpt( null ).desc( "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
                 + "and assumes you have the right -taxon option, if any)" ).argName( "ncbi id" ).hasArg().build() );
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @Override

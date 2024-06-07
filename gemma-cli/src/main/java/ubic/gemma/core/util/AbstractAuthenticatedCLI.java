@@ -19,8 +19,6 @@
 package ubic.gemma.core.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +26,7 @@ import org.springframework.security.concurrent.DelegatingSecurityContextExecutor
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,24 +65,23 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
 
-    /**
-     * Indicate if the command requires authentication.
-     * <p>
-     * Override this to return true to make authentication required.
-     *
-     * @return true if login is required, otherwise false
-     */
-    protected boolean requireLogin() {
-        return false;
+    private boolean requireLogin = false;
+
+    @Override
+    protected final void beforeWork() {
+        authenticate();
+    }
+
+    @Override
+    protected final void afterWork( @Nullable Exception e ) {
+        SecurityContextHolder.clearContext();
     }
 
     /**
-     * You must override this method to process any options you added.
+     * Indicate if the command requires authentication.
      */
-    @Override
-    protected void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        super.processStandardOptions( commandLine );
-        this.authenticate();
+    public void setRequireLogin( boolean requireLogin ) {
+        this.requireLogin = requireLogin;
     }
 
     /**
@@ -93,7 +91,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
             AbstractCLI.log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
-        } else if ( requireLogin() || System.getenv().containsKey( USERNAME_ENV ) ) {
+        } else if ( requireLogin || System.getenv().containsKey( USERNAME_ENV ) ) {
             String username = getUsername();
             String password = getPassword();
 
