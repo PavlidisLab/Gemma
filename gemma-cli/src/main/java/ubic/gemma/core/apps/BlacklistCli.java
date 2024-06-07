@@ -28,14 +28,14 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
-import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -60,6 +60,10 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     private Collection<String> platformsToScreen;
     private String reason = null;
     private String accession = null;
+
+    public BlacklistCli() {
+        setRequireLogin( true );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -98,11 +102,6 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected boolean requireLogin() {
-        return true;
-    }
-
-    @Override
     protected void doWork() throws Exception {
         BlacklistedEntityService blacklistedEntityService = this.getBean( BlacklistedEntityService.class );
         ExternalDatabaseService externalDatabaseService = this.getBean( ExternalDatabaseService.class );
@@ -124,7 +123,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 return;
             }
 
-            if (reason.isEmpty()) {
+            if ( reason.isEmpty() ) {
                 throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
             }
 
