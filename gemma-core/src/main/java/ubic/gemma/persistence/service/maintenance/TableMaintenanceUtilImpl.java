@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.core.util.MailEngine;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -179,33 +178,29 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             }
 
             if ( !needToRefresh ) {
-                Collection<Auditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
+                Collection<ArrayDesign> newObj = auditEventService.getNewSinceDate( ArrayDesign.class, status.getLastUpdate() );
 
-                for ( Auditable a : newObj ) {
-                    if ( a instanceof ArrayDesign ) {
-                        needToRefresh = true;
-                        annotation = a + " is new since " + status.getLastUpdate();
-                        TableMaintenanceUtilImpl.log.debug( annotation );
-                        break;
-                    }
+                for ( ArrayDesign a : newObj ) {
+                    needToRefresh = true;
+                    annotation = a + " is new since " + status.getLastUpdate();
+                    TableMaintenanceUtilImpl.log.debug( annotation );
+                    break;
                 }
             }
 
             if ( !needToRefresh ) {
-                Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
-                for ( Auditable a : updatedObj ) {
-                    if ( a instanceof ArrayDesign ) {
-                        for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
-                            if ( ae == null )
-                                continue; // legacy of ordered-list which could end up with gaps; should
-                            // not be needed any more
-                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
-                                    && ae.getDate().after( status.getLastUpdate() ) ) {
-                                needToRefresh = true;
-                                annotation = a + " had probe mapping done since: " + status.getLastUpdate();
-                                TableMaintenanceUtilImpl.log.debug( annotation );
-                                break;
-                            }
+                Collection<ArrayDesign> updatedObj = auditEventService.getUpdatedSinceDate( ArrayDesign.class, status.getLastUpdate() );
+                for ( ArrayDesign a : updatedObj ) {
+                    for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
+                        if ( ae == null )
+                            continue; // legacy of ordered-list which could end up with gaps; should
+                        // not be needed any more
+                        if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
+                                && ae.getDate().after( status.getLastUpdate() ) ) {
+                            needToRefresh = true;
+                            annotation = a + " had probe mapping done since: " + status.getLastUpdate();
+                            TableMaintenanceUtilImpl.log.debug( annotation );
+                            break;
                         }
                     }
                     if ( needToRefresh )

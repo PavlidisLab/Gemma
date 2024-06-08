@@ -27,8 +27,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.BuildInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;

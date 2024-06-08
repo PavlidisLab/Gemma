@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,18 +21,15 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author pavlidis
@@ -61,16 +58,11 @@ public class AuditEventServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testHandleGetNewSinceDate() {
-
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = auditEventService.getNewSinceDate( d );
-        assertTrue( objs.size() > 0 );
-        // for ( AbstractAuditable auditable : objs ) {
-        // if ( objs instanceof ArrayDesign ) {
-        // }
-        // }
+        Collection<ArrayDesign> objs = auditEventService.getNewSinceDate( ArrayDesign.class, d );
+        assertFalse( objs.isEmpty() );
     }
 
     @Test
@@ -78,12 +70,7 @@ public class AuditEventServiceTest extends BaseSpringContextTest {
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = auditEventService.getUpdatedSinceDate( d );
-        assertTrue( objs.size() > 0 );
-        // for ( AbstractAuditable auditable : objs ) {
-        // if ( objs instanceof ArrayDesign ) {
-        // }
-        // }
+        Collection<ArrayDesign> objs = auditEventService.getUpdatedSinceDate( ArrayDesign.class, d );
+        assertFalse( objs.isEmpty() );
     }
-
 }

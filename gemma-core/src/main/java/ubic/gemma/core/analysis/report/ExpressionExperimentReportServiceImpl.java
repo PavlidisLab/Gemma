@@ -32,8 +32,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -195,16 +195,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = this.getEvents( ees, typesToGet );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> events = this.getEvents( ees, typesToGet );
 
-        Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
-        Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
-        Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
+        Map<ExpressionExperiment, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
 
-        Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
-        Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
-        Map<Auditable, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
-        Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
+        Map<ExpressionExperiment, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
+        Map<ExpressionExperiment, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = this.getSampleRemovalEvents( ees );
 
@@ -435,11 +435,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
     }
 
-    private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
+    private Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> getEvents(
             Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
-
         return auditEventService.getLastEvents( ees, types );
-
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
