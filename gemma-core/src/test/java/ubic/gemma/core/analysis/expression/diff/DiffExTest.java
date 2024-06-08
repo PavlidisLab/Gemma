@@ -75,7 +75,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private DiffExAnalyzer analyzer = null;
+    private LinearModelAnalyzer analyzer = null;
 
     @Autowired
     private ArrayDesignService arrayDesignService;

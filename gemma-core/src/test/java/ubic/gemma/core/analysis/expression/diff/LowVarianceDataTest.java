@@ -52,7 +52,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     private AnalysisSelectionAndExecutionService analysisService = null;
 
     @Autowired
-    private DiffExAnalyzer analyzer;
+    private LinearModelAnalyzer analyzer;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
