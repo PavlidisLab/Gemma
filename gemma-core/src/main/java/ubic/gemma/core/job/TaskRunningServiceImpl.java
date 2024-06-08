@@ -67,7 +67,6 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public void destroy() throws Exception {
-        log.info( "Shutting down TaskRunningService executor..." );
         executorService.shutdown();
         if ( !executorService.isTerminated() ) {
             log.warn( "There are still running tasks, will wait at most 5 minutes before shutting them down." );
