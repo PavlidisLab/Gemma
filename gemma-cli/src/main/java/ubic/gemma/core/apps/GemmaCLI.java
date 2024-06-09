@@ -54,17 +54,7 @@ import java.util.regex.Pattern;
 @CommonsLog
 public class GemmaCLI {
 
-    private static final String
-            HELP_OPTION = "h",
-            HELP_ALL_OPTION = "ha",
-            COMPLETION_OPTION = "c",
-            COMPLETION_EXECUTABLE_OPTION = "ce",
-            COMPLETION_SHELL_OPTION = "cs",
-            VERSION_OPTION = "version",
-            LOGGER_OPTION = "logger",
-            VERBOSITY_OPTION = "v",
-            PROFILING_OPTION = "profiling",
-            TESTDB_OPTION = "testdb";
+    private static final String HELP_OPTION = "h", HELP_ALL_OPTION = "ha", COMPLETION_OPTION = "c", COMPLETION_EXECUTABLE_OPTION = "ce", COMPLETION_SHELL_OPTION = "cs", VERSION_OPTION = "version", LOGGER_OPTION = "logger", VERBOSITY_OPTION = "v", PROFILING_OPTION = "profiling", TESTDB_OPTION = "testdb";
 
     /**
      * Pattern used to match password in the CLI arguments.
@@ -78,25 +68,9 @@ public class GemmaCLI {
     private static ApplicationContext ctx = null;
 
     public static void main( String[] args ) {
-        Option logOpt = Option.builder( VERBOSITY_OPTION )
-                .longOpt( "verbosity" ).hasArg()
-                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." )
-                .build();
-        Option otherLogOpt = Option.builder( LOGGER_OPTION )
-                .longOpt( "logger" ).hasArg()
-                .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
-                .build();
-        Options options = new Options()
-                .addOption( HELP_OPTION, "help", false, "Show help" )
-                .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
-                .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
-                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" )
-                .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
-                .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
-                .addOption( otherLogOpt )
-                .addOption( logOpt )
-                .addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" )
-                .addOption( PROFILING_OPTION, "profiling", false, "Enable profiling" );
+        Option logOpt = Option.builder( VERBOSITY_OPTION ).longOpt( "verbosity" ).hasArg().desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." ).build();
+        Option otherLogOpt = Option.builder( LOGGER_OPTION ).longOpt( "logger" ).hasArg().desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " ).build();
+        Options options = new Options().addOption( HELP_OPTION, "help", false, "Show help" ).addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" ).addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" ).addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" ).addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" ).addOption( VERSION_OPTION, "version", false, "Show Gemma version" ).addOption( otherLogOpt ).addOption( logOpt ).addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" ).addOption( PROFILING_OPTION, "profiling", false, "Enable profiling" );
         CommandLine commandLine;
         try {
             commandLine = new DefaultParser().parse( options, args, true );
@@ -127,8 +101,7 @@ public class GemmaCLI {
                     loggingConfigurer.configureAllLoggers( commandLine.getOptionValue( VERBOSITY_OPTION ) );
                 }
             } catch ( IllegalArgumentException e ) {
-                System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
-                        ExceptionUtils.getRootCauseMessage( e ) );
+                System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION, ExceptionUtils.getRootCauseMessage( e ) );
                 GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
                 exit( 1 );
                 return;
@@ -150,9 +123,7 @@ public class GemmaCLI {
                         loggingConfigurer.configureLogger( loggerName, vals[1] );
                     }
                 } catch ( IllegalArgumentException e ) {
-                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION,
-                            loggerName,
-                            ExceptionUtils.getRootCauseMessage( e ) );
+                    System.err.printf( "Failed to parse the %s option for %s: %s.%n", LOGGER_OPTION, loggerName, ExceptionUtils.getRootCauseMessage( e ) );
                     GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
                     exit( 1 );
                     return;
@@ -176,6 +147,7 @@ public class GemmaCLI {
 
         ctx = SpringContextUtils.getApplicationContext( profiles.toArray( new String[0] ) );
 
+        Map<String, Command> commandsByClassName = new HashMap<>();
         Map<String, Command> commandsByName = new HashMap<>();
         SortedMap<CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
         for ( String beanName : ctx.getBeanNamesForType( CLI.class ) ) {
@@ -187,12 +159,13 @@ public class GemmaCLI {
                 log.warn( String.format( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.", beanClass.getName() ), e2 );
                 cliInstance = ctx.getBean( beanName, CLI.class );
             }
+            Command cmd = new Command( beanClass, beanName, cliInstance.getCommandName(), cliInstance.getShortDesc(), cliInstance.getOptions(), cliInstance.allowPositionalArguments() );
+            commandsByClassName.put( beanClass.getName(), cmd );
             String commandName = cliInstance.getCommandName();
             if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                 // keep null to avoid printing some commands...
                 continue;
             }
-            Command cmd = new Command( beanName, commandName, cliInstance.getShortDesc(), cliInstance.getOptions(), cliInstance.allowPositionalArguments() );
             commandsByName.put( commandName, cmd );
             CommandGroup g = cliInstance.getCommandGroup();
             if ( !commandGroups.containsKey( g ) ) {
@@ -225,10 +198,12 @@ public class GemmaCLI {
                 }
             }
             String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, "gemma-cli" );
+            Set<String> subcommands = new HashSet<>( commandsByName.keySet() );
+            subcommands.addAll( commandsByClassName.keySet() );
             if ( shellName.equals( "bash" ) ) {
-                completionGenerator = new BashCompletionGenerator( executableName, commandsByName.keySet() );
+                completionGenerator = new BashCompletionGenerator( executableName, subcommands );
             } else if ( shellName.equals( "fish" ) ) {
-                completionGenerator = new FishCompletionGenerator( executableName, commandsByName.keySet() );
+                completionGenerator = new FishCompletionGenerator( executableName, subcommands );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );
                 exit( 1 );
@@ -239,7 +214,10 @@ public class GemmaCLI {
             completionGenerator.generateCompletion( options, completionWriter );
             for ( SortedMap<String, Command> group : commandGroups.values() ) {
                 for ( Command cli : group.values() ) {
-                    completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
+                    completionGenerator.generateSubcommandCompletion( cli.getBeanClass().getName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
+                    if ( cli.getCommandName() != null ) {
+                        completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
+                    }
                 }
             }
             completionGenerator.afterCompletion( completionWriter );
@@ -261,25 +239,31 @@ public class GemmaCLI {
         String commandRequested = commandArgs.remove( 0 );
         String[] argsToPass = commandArgs.toArray( new String[] {} );
 
-        int statusCode;
-        if ( !commandsByName.containsKey( commandRequested ) ) {
+        Command command;
+        if ( commandsByClassName.containsKey( commandRequested ) ) {
+            command = commandsByClassName.get( commandRequested );
+        } else if ( commandsByName.containsKey( commandRequested ) ) {
+            command = commandsByName.get( commandRequested );
+        } else {
             System.err.println( "Unrecognized command: " + commandRequested );
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
+            exit( 1 );
+            return;
+        }
+
+        int statusCode;
+        StopWatch timer = StopWatch.createStarted();
+        try {
+            System.err.println( "========= Gemma CLI invocation of " + command.getCommandName() + " ============" );
+            System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
+            CLI cli = ctx.getBean( command.getBeanName(), CLI.class );
+            statusCode = cli.executeCommand( argsToPass );
+        } catch ( Exception e ) {
+            System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
+            System.err.println( ExceptionUtils.getStackTrace( e ) );
             statusCode = 1;
-        } else {
-            StopWatch timer = StopWatch.createStarted();
-            try {
-                System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
-                System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
-                CLI cli = ctx.getBean( commandsByName.get( commandRequested ).getBeanName(), CLI.class );
-                statusCode = cli.executeCommand( argsToPass );
-            } catch ( Exception e ) {
-                System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
-                System.err.println( ExceptionUtils.getStackTrace( e ) );
-                statusCode = 1;
-            } finally {
-                System.err.println( "========= Gemma CLI run of " + commandRequested + " complete in " + timer.getTime( TimeUnit.SECONDS ) + " seconds ============" );
-            }
+        } finally {
+            System.err.println( "========= Gemma CLI run of " + command + " complete in " + timer.getTime( TimeUnit.SECONDS ) + " seconds ============" );
         }
 
         exit( statusCode );
@@ -305,21 +289,14 @@ public class GemmaCLI {
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
             for ( Map.Entry<CommandGroup, SortedMap<String, Command>> entry : commands.entrySet() ) {
-                if ( entry.getKey().equals( CommandGroup.DEPRECATED ) )
-                    continue;
+                if ( entry.getKey().equals( CommandGroup.DEPRECATED ) ) continue;
                 Map<String, Command> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
-                int longestCommandInGroup = commandsInGroup.keySet().stream()
-                        .map( String::length )
-                        .max( Integer::compareTo )
-                        .orElse( 0 );
+                int longestCommandInGroup = commandsInGroup.keySet().stream().map( String::length ).max( Integer::compareTo ).orElse( 0 );
                 for ( Map.Entry<String, Command> e : commandsInGroup.entrySet() ) {
-                    footer.append( e.getKey() )
-                            .append( StringUtils.repeat( ' ', longestCommandInGroup - e.getKey().length() ) )
+                    footer.append( e.getKey() ).append( StringUtils.repeat( ' ', longestCommandInGroup - e.getKey().length() ) )
                             // FIXME: use a tabulation, but it creates newlines in IntelliJ's console
-                            .append( "    " )
-                            .append( StringUtils.defaultIfBlank( e.getValue().getShortDesc(), "No description provided" ) )
-                            .append( '\n' );
+                            .append( "    " ).append( StringUtils.defaultIfBlank( e.getValue().getShortDesc(), "No description provided" ) ).append( '\n' );
                 }
                 footer.append( '\n' );
             }
@@ -349,10 +326,17 @@ public class GemmaCLI {
 
     @Value
     private static class Command {
+        Class<?> beanClass;
         String beanName;
+        @Nullable
         String commandName;
         String shortDesc;
         Options options;
         boolean allowsPositionalArguments;
+
+        @Override
+        public String toString() {
+            return commandName != null ? commandName : beanClass.getName();
+        }
     }
 }
