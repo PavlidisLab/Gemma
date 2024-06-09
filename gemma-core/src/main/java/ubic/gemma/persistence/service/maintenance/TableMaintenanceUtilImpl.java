@@ -166,63 +166,85 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     @Transactional
     @Timed
-    public void updateGene2CsEntries() {
-        TableMaintenanceUtilImpl.log.debug( "Running Gene2CS status check" );
+    public int updateGene2CsEntries() {
+        return updateGene2CsEntries( false );
+    }
 
+    @Override
+    @Transactional
+    @Timed
+    public int updateGene2CsEntries( boolean force ) {
         String annotation = "";
+        Gene2CsStatus updatedStatus = null;
         try {
-            Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
             boolean needToRefresh = false;
-            if ( status == null ) {
+
+            if ( force ) {
                 needToRefresh = true;
+                annotation = "Force-updating the GENE2CS table.";
             }
 
             if ( !needToRefresh ) {
-                Collection<ArrayDesign> newObj = auditEventService.getNewSinceDate( ArrayDesign.class, status.getLastUpdate() );
-
-                for ( ArrayDesign a : newObj ) {
+                TableMaintenanceUtilImpl.log.info( "Running Gene2CS status check..." );
+                Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
+                if ( status == null ) {
                     needToRefresh = true;
-                    annotation = a + " is new since " + status.getLastUpdate();
-                    TableMaintenanceUtilImpl.log.debug( annotation );
-                    break;
+                    annotation = "No Gene2Cs status exists on disk.";
+                }
+
+                if ( !needToRefresh ) {
+                    Collection<ArrayDesign> newObj = auditEventService.getNewSinceDate( ArrayDesign.class, status.getLastUpdate() );
+
+                    for ( ArrayDesign a : newObj ) {
+                        needToRefresh = true;
+                        annotation = a + " is new since " + status.getLastUpdate();
+                        TableMaintenanceUtilImpl.log.debug( annotation );
+                        break;
+                    }
+                }
+
+                if ( !needToRefresh ) {
+                    Collection<ArrayDesign> updatedObj = auditEventService.getUpdatedSinceDate( ArrayDesign.class, status.getLastUpdate() );
+                    for ( ArrayDesign a : updatedObj ) {
+                        for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
+                            if ( ae == null )
+                                continue; // legacy of ordered-list which could end up with gaps; should
+                            // not be needed any more
+                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
+                                    && ae.getDate().after( status.getLastUpdate() ) ) {
+                                needToRefresh = true;
+                                annotation = a + " had probe mapping done since: " + status.getLastUpdate();
+                                TableMaintenanceUtilImpl.log.debug( annotation );
+                                break;
+                            }
+                        }
+                        if ( needToRefresh )
+                            break;
+                    }
                 }
             }
 
             if ( !needToRefresh ) {
-                Collection<ArrayDesign> updatedObj = auditEventService.getUpdatedSinceDate( ArrayDesign.class, status.getLastUpdate() );
-                for ( ArrayDesign a : updatedObj ) {
-                    for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
-                        if ( ae == null )
-                            continue; // legacy of ordered-list which could end up with gaps; should
-                        // not be needed any more
-                        if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
-                                && ae.getDate().after( status.getLastUpdate() ) ) {
-                            needToRefresh = true;
-                            annotation = a + " had probe mapping done since: " + status.getLastUpdate();
-                            TableMaintenanceUtilImpl.log.debug( annotation );
-                            break;
-                        }
-                    }
-                    if ( needToRefresh )
-                        break;
+                TableMaintenanceUtilImpl.log.info( "No update of GENE2CS needed." );
+                return 0;
+            }
+
+            TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
+            int updated = this.generateGene2CsEntries();
+            annotation += "\n\n" + "Updated " + updated + " entries.";
+            TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
+            updatedStatus = this.writeUpdateStatus( annotation, null );
+            return updated;
+        } catch ( Exception e ) {
+            updatedStatus = this.writeUpdateStatus( annotation, e );
+            throw e;
+        } finally {
+            if ( updatedStatus != null ) {
+                this.sendEmail( updatedStatus );
+                if ( updatedStatus.getError() == null ) {
+                    this.updateGene2csExternalDatabaseLastUpdated( updatedStatus );
                 }
             }
-
-            if ( needToRefresh ) {
-                TableMaintenanceUtilImpl.log.debug( "Update of GENE2CS initiated" );
-                this.generateGene2CsEntries();
-                Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, null );
-                this.updateGene2csExternalDatabaseLastUpdated( updatedStatus );
-                this.sendEmail( updatedStatus );
-
-            } else {
-                TableMaintenanceUtilImpl.log.debug( "No update of GENE2CS needed" );
-            }
-
-        } catch ( RuntimeException e ) {
-            Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, e );
-            this.sendEmail( updatedStatus );
-            throw e;
         }
     }
 
@@ -318,6 +340,21 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         return updated;
     }
 
+    @Override
+    public void evictGene2CsQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( GENE2CS_QUERY_SPACE );
+    }
+
+    @Override
+    public void evictEe2CQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( EE2C_QUERY_SPACE );
+    }
+
+    @Override
+    public void evictEe2AdQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( EE2AD_QUERY_SPACE );
+    }
+
     /**
      * For use in tests.
      */
@@ -332,13 +369,11 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      *
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
-    private void generateGene2CsEntries() {
-        TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
-        int updated = this.sessionFactory.getCurrentSession()
+    private int generateGene2CsEntries() {
+        return this.sessionFactory.getCurrentSession()
                 .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .executeUpdate();
-        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
     }
 
     /**

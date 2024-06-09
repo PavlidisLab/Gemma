@@ -11,6 +11,8 @@ import java.io.IOException;
  */
 public interface GemmaRestApiClient {
 
+    String getHostUrl();
+
     /**
      * Access a given REST endpoint.
      */

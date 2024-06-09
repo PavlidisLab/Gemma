@@ -57,16 +57,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.LinkAnalysisCli ' ]]; then
-        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--mdate|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --mdate --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
+        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-dataFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' coexpAnalyze ' ]]; then
-        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--mdate|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --mdate --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
+        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-dataFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -121,16 +121,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DifferentialExpressionAnalysisCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' diffExAnalyze ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -233,16 +233,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ProcessedDataComputeCLI ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' makeProcessedData ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -377,16 +377,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.GeeqCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' runGeeq ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -425,10 +425,14 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEE2CCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --truncate -h -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--since|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since --truncate -h -s -truncate" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' updateEe2c ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --truncate -h -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--since|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since --truncate -h -s -truncate" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.VectorMergingCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
@@ -447,96 +451,96 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignAuditTrailCleanupCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' adATcleanup ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignSequenceAssociationCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--ids|--mdate|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --mdate --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--ids|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' addPlatformSequences ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--ids|--mdate|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --mdate --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--ids|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.AffyProbeCollapseCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-affyProbeFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' affyCollapse ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-affyProbeFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignBlatCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--mdate|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --mdate --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--blatfile|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' blatPlatform ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--mdate|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --mdate --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--blatfile|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeCleanupCLI ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' deletePlatformElements ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignBioSequenceDetachCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' detachSequences ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -559,112 +563,112 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignAnnotationFileCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --mdate --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--dontDeleteOtherFiles|-batchOutputFile|-f|-k) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' makePlatformAnnotFiles ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --mdate --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--dontDeleteOtherFiles|-batchOutputFile|-f|-k) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeMapperCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--mdate|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --mdate --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' mapPlatformToGenes ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--mdate|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --mdate --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignMergeCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' mergePlatforms ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignRepeatScanCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformRepeatScan ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignSubsumptionTesterCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformSubsumptionTest ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeRenamerCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' probeRename ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.BioSequenceCleanupCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help --mdate -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' seqCleanup ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help --mdate -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -701,16 +705,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignMapSummaryCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformMapSummary ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")

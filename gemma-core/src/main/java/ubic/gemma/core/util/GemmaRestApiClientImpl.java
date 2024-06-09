@@ -44,6 +44,11 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
         this.objectMapper = objectMapper;
     }
 
+    @Override
+    public String getHostUrl() {
+        return hostUrl;
+    }
+
     /**
      * Set the authentication credentials used by this client.
      */
