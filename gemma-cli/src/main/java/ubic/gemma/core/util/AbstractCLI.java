@@ -216,6 +216,7 @@ public abstract class AbstractCLI implements CLI {
                 doWork();
             } catch ( Exception e2 ) {
                 e = e2;
+                throw e2;
             } finally {
                 insideDoWork = false;
                 afterWork( e );
