@@ -40,32 +40,50 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
         super( delegate );
     }
 
+    private final ThreadLocal<Boolean> wasSuccessObjectAdded = ThreadLocal.withInitial( () -> false );
+    private final ThreadLocal<Boolean> wasErrorObjectAdded = ThreadLocal.withInitial( () -> false );
+
     @Override
     protected Runnable wrap( Runnable runnable ) {
-        int taskId = batchTaskCounter.getAndIncrement();
+        Object batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
         return () -> {
             try {
                 runnable.run();
+                if ( !wasSuccessObjectAdded.get() && !wasErrorObjectAdded.get() ) {
+                    addSuccessObject( batchObject );
+                }
             } catch ( Exception e ) {
-                addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
+                if ( !wasErrorObjectAdded.get() ) {
+                    addErrorObject( batchObject, e );
+                }
                 throw e;
             } finally {
                 completedBatchTasks.incrementAndGet();
+                wasSuccessObjectAdded.remove();
+                wasErrorObjectAdded.remove();
             }
         };
     }
 
     @Override
     protected <T> Callable<T> wrap( Callable<T> callable ) {
-        int taskId = batchTaskCounter.getAndIncrement();
+        Object batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
         return () -> {
             try {
-                return callable.call();
+                T result = callable.call();
+                if ( !wasSuccessObjectAdded.get() && !wasErrorObjectAdded.get() ) {
+                    addSuccessObject( batchObject );
+                }
+                return result;
             } catch ( Exception e ) {
-                addErrorObject( String.format( "Batch task #%d failed", taskId + 1 ), e );
+                if ( !wasErrorObjectAdded.get() ) {
+                    addErrorObject( batchObject, e );
+                }
                 throw e;
             } finally {
                 completedBatchTasks.incrementAndGet();
+                wasSuccessObjectAdded.remove();
+                wasErrorObjectAdded.remove();
             }
         };
     }
@@ -91,14 +109,14 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      * @param message       success message
      */
     void addSuccessObject( Object successObject, String message ) {
-        batchProcessingResults.add( new BatchProcessingResult( false, successObject, message, null ) );
+        addBatchProcessingResult( new BatchProcessingResult( false, successObject, message, null ) );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
     void addSuccessObject( Object successObject ) {
-        batchProcessingResults.add( new BatchProcessingResult( false, successObject, null, null ) );
+        addBatchProcessingResult( new BatchProcessingResult( false, successObject, null, null ) );
     }
 
     /**
@@ -111,8 +129,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      * @param throwable   throwable to produce a stacktrace
      */
     void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, throwable ) );
-        hasErrorObjects = true;
+        addBatchProcessingResult( new BatchProcessingResult( true, errorObject, message, throwable ) );
     }
 
     /**
@@ -121,8 +138,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      * @see #addErrorObject(Object, String)
      */
     void addErrorObject( @Nullable Object errorObject, String message ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, message, null ) );
-        hasErrorObjects = true;
+        addBatchProcessingResult( new BatchProcessingResult( true, errorObject, message, null ) );
     }
 
     /**
@@ -131,8 +147,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      * @see #addErrorObject(Object, String, Throwable)
      */
     void addErrorObject( @Nullable Object errorObject, Exception exception ) {
-        batchProcessingResults.add( new BatchProcessingResult( true, errorObject, exception.getMessage(), exception ) );
-        hasErrorObjects = true;
+        addBatchProcessingResult( new BatchProcessingResult( true, errorObject, exception.getMessage(), exception ) );
     }
 
     /**
@@ -140,6 +155,15 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      */
     boolean hasErrorObjects() {
         return hasErrorObjects;
+    }
+
+    private void addBatchProcessingResult( BatchProcessingResult result ) {
+        if ( result.isError() ) {
+            wasErrorObjectAdded.set( true );
+            hasErrorObjects = true;
+        } else {
+            wasSuccessObjectAdded.set( true );
+        }
     }
 
     /**
