@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
+
 /**
  * Generates fish completion script.
  * @author poirigui
@@ -68,9 +70,5 @@ public class FishCompletionGenerator implements CompletionGenerator {
         return File.class.equals( o.getType() )
                 || o.getOpt().toLowerCase().contains( "file" )
                 || ( o.getLongOpt() != null && o.getLongOpt().toLowerCase().contains( "file" ) );
-    }
-
-    private String quoteIfNecessary( String s ) {
-        return "'" + s.replaceAll( "'", "'\"'\"'" ).replaceAll( "\n", "\\\\n" ) + "'";
     }
 }

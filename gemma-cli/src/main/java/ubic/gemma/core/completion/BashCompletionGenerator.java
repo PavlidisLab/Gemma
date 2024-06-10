@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
+
 public class BashCompletionGenerator implements CompletionGenerator {
 
     private static final String INDENT = "    ";
@@ -139,9 +141,5 @@ public class BashCompletionGenerator implements CompletionGenerator {
     private String quoteRegex( String s ) {
         // FIXME: properly escape regex characters in command name
         return s;
-    }
-
-    private String quoteIfNecessary( String s ) {
-        return "'" + s.replaceAll( "'", "'\"'\"'" ).replaceAll( "\n", "\\\\n" ) + "'";
     }
 }

@@ -4,13 +4,13 @@ function __gemma_cli_complete() {
     current_option="${COMP_WORDS[$COMP_CWORD-1]}"
     if ! [[ " $words " =~ ' '(adATcleanup|addExternalDatabase|addGEOData|addPlatformSequences|addTSVData|affyAltsUpdate|affyCollapse|affyFromCel|blackList|blatPlatform|coexpAnalyze|corrMat|deleteDiffEx|deleteExperiments|deletePlatformElements|detachSequences|diffExAnalyze|dumpForNIF|fetchMeshTerms|fillBatchInfo|findDatasetPubs|findObsoleteTerms|geneUpdate|generateDataFile|genericPlatform|getDataMatrix|importDesign|listExternalDatabases|listGEOData|loadGenesFromFile|loadTaxa|makePlatformAnnotFiles|makePrivate|makeProcessedData|makePublic|mapPlatformToGenes|mergePlatforms|migrateFactorValues|orderVectorsByDesign|pca|platformMapSummary|platformRepeatScan|platformSubsumptionTest|printExperimentalDesign|probeRename|pubmedAssociateToExperiments|pubmedLoad|pubmedSearchAndSave|refreshExperiment|replaceData|rnaseqBatchInfo|rnaseqDataAdd|runGeeq|searchIndex|seqCleanup|splitExperiment|switchExperimentPlatform|ubic.gemma.core.apps.AffyDataFromCelCli|ubic.gemma.core.apps.AffyProbeCollapseCli|ubic.gemma.core.apps.ArrayDesignAlternativePopulateCli|ubic.gemma.core.apps.ArrayDesignAnnotationFileCli|ubic.gemma.core.apps.ArrayDesignAuditTrailCleanupCli|ubic.gemma.core.apps.ArrayDesignBioSequenceDetachCli|ubic.gemma.core.apps.ArrayDesignBlatCli|ubic.gemma.core.apps.ArrayDesignMapSummaryCli|ubic.gemma.core.apps.ArrayDesignMergeCli|ubic.gemma.core.apps.ArrayDesignProbeCleanupCLI|ubic.gemma.core.apps.ArrayDesignProbeMapperCli|ubic.gemma.core.apps.ArrayDesignProbeRenamerCli|ubic.gemma.core.apps.ArrayDesignRepeatScanCli|ubic.gemma.core.apps.ArrayDesignSequenceAssociationCli|ubic.gemma.core.apps.ArrayDesignSubsumptionTesterCli|ubic.gemma.core.apps.BatchEffectPopulationCli|ubic.gemma.core.apps.BibRefUpdaterCli|ubic.gemma.core.apps.BioSequenceCleanupCli|ubic.gemma.core.apps.BlacklistCli|ubic.gemma.core.apps.DatabaseViewGeneratorCLI|ubic.gemma.core.apps.DeleteDiffExCli|ubic.gemma.core.apps.DeleteExperimentsCli|ubic.gemma.core.apps.DifferentialExpressionAnalysisCli|ubic.gemma.core.apps.ExperimentalDesignImportCli|ubic.gemma.core.apps.ExperimentalDesignViewCli|ubic.gemma.core.apps.ExperimentalDesignWriterCLI|ubic.gemma.core.apps.ExpressionDataCorrMatCli|ubic.gemma.core.apps.ExpressionDataMatrixWriterCLI|ubic.gemma.core.apps.ExpressionExperimentDataFileGeneratorCli|ubic.gemma.core.apps.ExpressionExperimentPlatformSwitchCli|ubic.gemma.core.apps.ExpressionExperimentPrimaryPubCli|ubic.gemma.core.apps.ExternalDatabaseAdderCli|ubic.gemma.core.apps.ExternalDatabaseOverviewCli|ubic.gemma.core.apps.ExternalDatabaseUpdaterCli|ubic.gemma.core.apps.ExternalFileGeneLoaderCLI|ubic.gemma.core.apps.FactorValueMigratorCLI|ubic.gemma.core.apps.FindObsoleteTermsCli|ubic.gemma.core.apps.GeeqCli|ubic.gemma.core.apps.GenericGenelistDesignGenerator|ubic.gemma.core.apps.GeoGrabberCli|ubic.gemma.core.apps.IndexGemmaCLI|ubic.gemma.core.apps.LinkAnalysisCli|ubic.gemma.core.apps.LoadExpressionDataCli|ubic.gemma.core.apps.LoadSimpleExpressionDataCli|ubic.gemma.core.apps.MakeExperimentPrivateCli|ubic.gemma.core.apps.MakeExperimentsPublicCli|ubic.gemma.core.apps.MeshTermFetcherCli|ubic.gemma.core.apps.MultifunctionalityCli|ubic.gemma.core.apps.NCBIGene2GOAssociationLoaderCLI|ubic.gemma.core.apps.NcbiGeneLoaderCLI|ubic.gemma.core.apps.OrderVectorsByDesignCli|ubic.gemma.core.apps.ProcessedDataComputeCLI|ubic.gemma.core.apps.PubMedLoaderCli|ubic.gemma.core.apps.RNASeqBatchInfoCli|ubic.gemma.core.apps.RNASeqDataAddCli|ubic.gemma.core.apps.RefreshExperimentCli|ubic.gemma.core.apps.ReplaceDataCli|ubic.gemma.core.apps.SVDCli|ubic.gemma.core.apps.SplitExperimentCli|ubic.gemma.core.apps.TaxonLoaderCli|ubic.gemma.core.apps.UpdateEE2CCli|ubic.gemma.core.apps.UpdateEe2AdCli|ubic.gemma.core.apps.UpdateGene2CsCli|ubic.gemma.core.apps.UpdatePubMedCli|ubic.gemma.core.apps.VectorMergingCli|ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher|updateEe2Ad|updateEe2c|updateExternalDatabase|updateGOAnnots|updateGene2Cs|updateMultifunc|updatePubMeds|vectorMerge|viewExpDesigns)' ' ]]; then
         if ! [[ "$current_option" =~ (--completion-executable|--completion-shell|--logger|--verbosity|-ce|-cs|-logger|-v) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--completion' '--completion-executable' '--completion-shell' '--help' '--help-all' '--logger' '--profiling' '--testdb' '--verbosity' '--version' '-c' '-ce' '-cs' '-h' '-ha' '-logger' '-profiling' '-testdb' '-v' '-version'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--completion --completion-executable --completion-shell --help --help-all --logger --profiling --testdb --verbosity --version -c -ce -cs -h -ha -logger -profiling -testdb -v -version" -- "$2")
         fi
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'adATcleanup' 'addExternalDatabase' 'addGEOData' 'addPlatformSequences' 'addTSVData' 'affyAltsUpdate' 'affyCollapse' 'affyFromCel' 'blackList' 'blatPlatform' 'coexpAnalyze' 'corrMat' 'deleteDiffEx' 'deleteExperiments' 'deletePlatformElements' 'detachSequences' 'diffExAnalyze' 'dumpForNIF' 'fetchMeshTerms' 'fillBatchInfo' 'findDatasetPubs' 'findObsoleteTerms' 'geneUpdate' 'generateDataFile' 'genericPlatform' 'getDataMatrix' 'importDesign' 'listExternalDatabases' 'listGEOData' 'loadGenesFromFile' 'loadTaxa' 'makePlatformAnnotFiles' 'makePrivate' 'makeProcessedData' 'makePublic' 'mapPlatformToGenes' 'mergePlatforms' 'migrateFactorValues' 'orderVectorsByDesign' 'pca' 'platformMapSummary' 'platformRepeatScan' 'platformSubsumptionTest' 'printExperimentalDesign' 'probeRename' 'pubmedAssociateToExperiments' 'pubmedLoad' 'pubmedSearchAndSave' 'refreshExperiment' 'replaceData' 'rnaseqBatchInfo' 'rnaseqDataAdd' 'runGeeq' 'searchIndex' 'seqCleanup' 'splitExperiment' 'switchExperimentPlatform' 'ubic.gemma.core.apps.AffyDataFromCelCli' 'ubic.gemma.core.apps.AffyProbeCollapseCli' 'ubic.gemma.core.apps.ArrayDesignAlternativePopulateCli' 'ubic.gemma.core.apps.ArrayDesignAnnotationFileCli' 'ubic.gemma.core.apps.ArrayDesignAuditTrailCleanupCli' 'ubic.gemma.core.apps.ArrayDesignBioSequenceDetachCli' 'ubic.gemma.core.apps.ArrayDesignBlatCli' 'ubic.gemma.core.apps.ArrayDesignMapSummaryCli' 'ubic.gemma.core.apps.ArrayDesignMergeCli' 'ubic.gemma.core.apps.ArrayDesignProbeCleanupCLI' 'ubic.gemma.core.apps.ArrayDesignProbeMapperCli' 'ubic.gemma.core.apps.ArrayDesignProbeRenamerCli' 'ubic.gemma.core.apps.ArrayDesignRepeatScanCli' 'ubic.gemma.core.apps.ArrayDesignSequenceAssociationCli' 'ubic.gemma.core.apps.ArrayDesignSubsumptionTesterCli' 'ubic.gemma.core.apps.BatchEffectPopulationCli' 'ubic.gemma.core.apps.BibRefUpdaterCli' 'ubic.gemma.core.apps.BioSequenceCleanupCli' 'ubic.gemma.core.apps.BlacklistCli' 'ubic.gemma.core.apps.DatabaseViewGeneratorCLI' 'ubic.gemma.core.apps.DeleteDiffExCli' 'ubic.gemma.core.apps.DeleteExperimentsCli' 'ubic.gemma.core.apps.DifferentialExpressionAnalysisCli' 'ubic.gemma.core.apps.ExperimentalDesignImportCli' 'ubic.gemma.core.apps.ExperimentalDesignViewCli' 'ubic.gemma.core.apps.ExperimentalDesignWriterCLI' 'ubic.gemma.core.apps.ExpressionDataCorrMatCli' 'ubic.gemma.core.apps.ExpressionDataMatrixWriterCLI' 'ubic.gemma.core.apps.ExpressionExperimentDataFileGeneratorCli' 'ubic.gemma.core.apps.ExpressionExperimentPlatformSwitchCli' 'ubic.gemma.core.apps.ExpressionExperimentPrimaryPubCli' 'ubic.gemma.core.apps.ExternalDatabaseAdderCli' 'ubic.gemma.core.apps.ExternalDatabaseOverviewCli' 'ubic.gemma.core.apps.ExternalDatabaseUpdaterCli' 'ubic.gemma.core.apps.ExternalFileGeneLoaderCLI' 'ubic.gemma.core.apps.FactorValueMigratorCLI' 'ubic.gemma.core.apps.FindObsoleteTermsCli' 'ubic.gemma.core.apps.GeeqCli' 'ubic.gemma.core.apps.GenericGenelistDesignGenerator' 'ubic.gemma.core.apps.GeoGrabberCli' 'ubic.gemma.core.apps.IndexGemmaCLI' 'ubic.gemma.core.apps.LinkAnalysisCli' 'ubic.gemma.core.apps.LoadExpressionDataCli' 'ubic.gemma.core.apps.LoadSimpleExpressionDataCli' 'ubic.gemma.core.apps.MakeExperimentPrivateCli' 'ubic.gemma.core.apps.MakeExperimentsPublicCli' 'ubic.gemma.core.apps.MeshTermFetcherCli' 'ubic.gemma.core.apps.MultifunctionalityCli' 'ubic.gemma.core.apps.NCBIGene2GOAssociationLoaderCLI' 'ubic.gemma.core.apps.NcbiGeneLoaderCLI' 'ubic.gemma.core.apps.OrderVectorsByDesignCli' 'ubic.gemma.core.apps.ProcessedDataComputeCLI' 'ubic.gemma.core.apps.PubMedLoaderCli' 'ubic.gemma.core.apps.RNASeqBatchInfoCli' 'ubic.gemma.core.apps.RNASeqDataAddCli' 'ubic.gemma.core.apps.RefreshExperimentCli' 'ubic.gemma.core.apps.ReplaceDataCli' 'ubic.gemma.core.apps.SVDCli' 'ubic.gemma.core.apps.SplitExperimentCli' 'ubic.gemma.core.apps.TaxonLoaderCli' 'ubic.gemma.core.apps.UpdateEE2CCli' 'ubic.gemma.core.apps.UpdateEe2AdCli' 'ubic.gemma.core.apps.UpdateGene2CsCli' 'ubic.gemma.core.apps.UpdatePubMedCli' 'ubic.gemma.core.apps.VectorMergingCli' 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher' 'updateEe2Ad' 'updateEe2c' 'updateExternalDatabase' 'updateGOAnnots' 'updateGene2Cs' 'updateMultifunc' 'updatePubMeds' 'vectorMerge' 'viewExpDesigns'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "adATcleanup addExternalDatabase addGEOData addPlatformSequences addTSVData affyAltsUpdate affyCollapse affyFromCel blackList blatPlatform coexpAnalyze corrMat deleteDiffEx deleteExperiments deletePlatformElements detachSequences diffExAnalyze dumpForNIF fetchMeshTerms fillBatchInfo findDatasetPubs findObsoleteTerms geneUpdate generateDataFile genericPlatform getDataMatrix importDesign listExternalDatabases listGEOData loadGenesFromFile loadTaxa makePlatformAnnotFiles makePrivate makeProcessedData makePublic mapPlatformToGenes mergePlatforms migrateFactorValues orderVectorsByDesign pca platformMapSummary platformRepeatScan platformSubsumptionTest printExperimentalDesign probeRename pubmedAssociateToExperiments pubmedLoad pubmedSearchAndSave refreshExperiment replaceData rnaseqBatchInfo rnaseqDataAdd runGeeq searchIndex seqCleanup splitExperiment switchExperimentPlatform ubic.gemma.core.apps.AffyDataFromCelCli ubic.gemma.core.apps.AffyProbeCollapseCli ubic.gemma.core.apps.ArrayDesignAlternativePopulateCli ubic.gemma.core.apps.ArrayDesignAnnotationFileCli ubic.gemma.core.apps.ArrayDesignAuditTrailCleanupCli ubic.gemma.core.apps.ArrayDesignBioSequenceDetachCli ubic.gemma.core.apps.ArrayDesignBlatCli ubic.gemma.core.apps.ArrayDesignMapSummaryCli ubic.gemma.core.apps.ArrayDesignMergeCli ubic.gemma.core.apps.ArrayDesignProbeCleanupCLI ubic.gemma.core.apps.ArrayDesignProbeMapperCli ubic.gemma.core.apps.ArrayDesignProbeRenamerCli ubic.gemma.core.apps.ArrayDesignRepeatScanCli ubic.gemma.core.apps.ArrayDesignSequenceAssociationCli ubic.gemma.core.apps.ArrayDesignSubsumptionTesterCli ubic.gemma.core.apps.BatchEffectPopulationCli ubic.gemma.core.apps.BibRefUpdaterCli ubic.gemma.core.apps.BioSequenceCleanupCli ubic.gemma.core.apps.BlacklistCli ubic.gemma.core.apps.DatabaseViewGeneratorCLI ubic.gemma.core.apps.DeleteDiffExCli ubic.gemma.core.apps.DeleteExperimentsCli ubic.gemma.core.apps.DifferentialExpressionAnalysisCli ubic.gemma.core.apps.ExperimentalDesignImportCli ubic.gemma.core.apps.ExperimentalDesignViewCli ubic.gemma.core.apps.ExperimentalDesignWriterCLI ubic.gemma.core.apps.ExpressionDataCorrMatCli ubic.gemma.core.apps.ExpressionDataMatrixWriterCLI ubic.gemma.core.apps.ExpressionExperimentDataFileGeneratorCli ubic.gemma.core.apps.ExpressionExperimentPlatformSwitchCli ubic.gemma.core.apps.ExpressionExperimentPrimaryPubCli ubic.gemma.core.apps.ExternalDatabaseAdderCli ubic.gemma.core.apps.ExternalDatabaseOverviewCli ubic.gemma.core.apps.ExternalDatabaseUpdaterCli ubic.gemma.core.apps.ExternalFileGeneLoaderCLI ubic.gemma.core.apps.FactorValueMigratorCLI ubic.gemma.core.apps.FindObsoleteTermsCli ubic.gemma.core.apps.GeeqCli ubic.gemma.core.apps.GenericGenelistDesignGenerator ubic.gemma.core.apps.GeoGrabberCli ubic.gemma.core.apps.IndexGemmaCLI ubic.gemma.core.apps.LinkAnalysisCli ubic.gemma.core.apps.LoadExpressionDataCli ubic.gemma.core.apps.LoadSimpleExpressionDataCli ubic.gemma.core.apps.MakeExperimentPrivateCli ubic.gemma.core.apps.MakeExperimentsPublicCli ubic.gemma.core.apps.MeshTermFetcherCli ubic.gemma.core.apps.MultifunctionalityCli ubic.gemma.core.apps.NCBIGene2GOAssociationLoaderCLI ubic.gemma.core.apps.NcbiGeneLoaderCLI ubic.gemma.core.apps.OrderVectorsByDesignCli ubic.gemma.core.apps.ProcessedDataComputeCLI ubic.gemma.core.apps.PubMedLoaderCli ubic.gemma.core.apps.RNASeqBatchInfoCli ubic.gemma.core.apps.RNASeqDataAddCli ubic.gemma.core.apps.RefreshExperimentCli ubic.gemma.core.apps.ReplaceDataCli ubic.gemma.core.apps.SVDCli ubic.gemma.core.apps.SplitExperimentCli ubic.gemma.core.apps.TaxonLoaderCli ubic.gemma.core.apps.UpdateEE2CCli ubic.gemma.core.apps.UpdateEe2AdCli ubic.gemma.core.apps.UpdateGene2CsCli ubic.gemma.core.apps.UpdatePubMedCli ubic.gemma.core.apps.VectorMergingCli ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher updateEe2Ad updateEe2c updateExternalDatabase updateGOAnnots updateGene2Cs updateMultifunc updatePubMeds vectorMerge viewExpDesigns" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.LoadExpressionDataCli ' ]]; then
         if ! [[ "$current_option" =~ (--acc|--file|-batchFormat|-batchOutputFile|-e|-f|-softfile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--acc' '--file' '--force' '--help' '--match' '--platforms' '--update' '-allowsuper' '-batchFormat' '-batchOutputFile' '-e' '-f' '-force' '-h' '-m' '-nopost' '-softfile' '-splitByPlatform' '-update' '-y'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --file --force --help --match --platforms --update -allowsuper -batchFormat -batchOutputFile -e -f -force -h -m -nopost -softfile -splitByPlatform -update -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f|-softfile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -18,7 +18,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' addGEOData ' ]]; then
         if ! [[ "$current_option" =~ (--acc|--file|-batchFormat|-batchOutputFile|-e|-f|-softfile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--acc' '--file' '--force' '--help' '--match' '--platforms' '--update' '-allowsuper' '-batchFormat' '-batchOutputFile' '-e' '-f' '-force' '-h' '-m' '-nopost' '-softfile' '-splitByPlatform' '-update' '-y'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --file --force --help --match --platforms --update -allowsuper -batchFormat -batchOutputFile -e -f -force -h -m -nopost -softfile -splitByPlatform -update -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f|-softfile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -26,7 +26,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.LoadSimpleExpressionDataCli ' ]]; then
         if ! [[ "$current_option" =~ (--dir|--file|-batchFormat|-batchOutputFile|-d|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--file' '--help' '-batchFormat' '-batchOutputFile' '-d' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dir --file --help -batchFormat -batchOutputFile -d -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -34,7 +34,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' addTSVData ' ]]; then
         if ! [[ "$current_option" =~ (--dir|--file|-batchFormat|-batchOutputFile|-d|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--file' '--help' '-batchFormat' '-batchOutputFile' '-d' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dir --file --help -batchFormat -batchOutputFile -d -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -42,7 +42,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.AffyDataFromCelCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-aptFile' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-aptFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -50,23 +50,23 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' affyFromCel ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-aptFile' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-aptFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.LinkAnalysisCli ' ]]; then
-        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--abs' '--cachecut' '--cdfcut' '--distinctValCut' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--fwe' '--help' '--lowcut' '--lowvarcut' '--missingcut' '--nodb' '-a' '-all' '-array' '-auto' '-batchFormat' '-batchOutputFile' '-c' '-choosecut' '-d' '-dataFile' '-delete' '-dv' '-e' '-eeset' '-f' '-force' '-h' '-init' '-k' '-l' '-logtransform' '-lv' '-m' '-mdate' '-metric' '-n' '-noimages' '-nonegcorr' '-noqc' '-normalizemethod' '-probeDegreeLim' '-q' '-subset' '-t' '-text' '-w' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--mdate|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --mdate --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-dataFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' coexpAnalyze ' ]]; then
-        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--abs' '--cachecut' '--cdfcut' '--distinctValCut' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--fwe' '--help' '--lowcut' '--lowvarcut' '--missingcut' '--nodb' '-a' '-all' '-array' '-auto' '-batchFormat' '-batchOutputFile' '-c' '-choosecut' '-d' '-dataFile' '-delete' '-dv' '-e' '-eeset' '-f' '-force' '-h' '-init' '-k' '-l' '-logtransform' '-lv' '-m' '-mdate' '-metric' '-n' '-noimages' '-nonegcorr' '-noqc' '-normalizemethod' '-probeDegreeLim' '-q' '-subset' '-t' '-text' '-w' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--cachecut|--cdfcut|--distinctValCut|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--fwe|--lowcut|--lowvarcut|--mdate|--missingcut|-array|-batchFormat|-batchOutputFile|-c|-choosecut|-dataFile|-dv|-e|-eeset|-f|-k|-l|-lv|-m|-mdate|-metric|-normalizemethod|-probeDegreeLim|-q|-subset|-t|-w|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--abs --cachecut --cdfcut --distinctValCut --eeListfile --excludeEEFile --experiment --expressionQuery --force --fwe --help --lowcut --lowvarcut --mdate --missingcut --nodb -a -all -array -auto -batchFormat -batchOutputFile -c -choosecut -d -dataFile -delete -dv -e -eeset -f -force -h -init -k -l -logtransform -lv -m -mdate -metric -n -noimages -nonegcorr -noqc -normalizemethod -probeDegreeLim -q -subset -t -text -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-dataFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -74,7 +74,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExpressionDataCorrMatCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -82,7 +82,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' corrMat ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -90,7 +90,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DeleteDiffExCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -98,7 +98,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' deleteDiffEx ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -106,7 +106,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DeleteExperimentsCli ' ]]; then
         if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -a -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -114,23 +114,23 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' deleteExperiments ' ]]; then
         if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -a -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DifferentialExpressionAnalysisCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-e' '-eeset' '-f' '-factors' '-force' '-h' '-mdate' '-nobayes' '-nodb' '-nofiles' '-q' '-redo' '-subset' '-t' '-type' '-usebatch' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' diffExAnalyze ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-e' '-eeset' '-f' '-factors' '-force' '-h' '-mdate' '-nobayes' '-nodb' '-nofiles' '-q' '-redo' '-subset' '-t' '-type' '-usebatch' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -138,7 +138,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.BatchEffectPopulationCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -146,7 +146,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' fillBatchInfo ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -154,7 +154,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdatePubMedCli ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -162,7 +162,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' findDatasetPubs ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -170,7 +170,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExpressionExperimentDataFileGeneratorCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--forceWrite' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-w' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --forceWrite --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -178,7 +178,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' generateDataFile ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--forceWrite' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-w' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --forceWrite --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -w -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -186,7 +186,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExpressionDataMatrixWriterCLI ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outputFileName|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outputFileName' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-filter' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --outputFileName --taxon -all -batchFormat -batchOutputFile -e -eeset -f -filter -h -o -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outputFileName|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -194,7 +194,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' getDataMatrix ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outputFileName|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outputFileName' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-filter' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --outputFileName --taxon -all -batchFormat -batchOutputFile -e -eeset -f -filter -h -o -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outputFileName|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -202,7 +202,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExperimentalDesignImportCli ' ]]; then
         if ! [[ "$current_option" =~ (--designFile|--experiment|-e|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--designFile' '--experiment' '--help' '-e' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--designFile --experiment --help -e -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--designFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -210,7 +210,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' importDesign ' ]]; then
         if ! [[ "$current_option" =~ (--designFile|--experiment|-e|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--designFile' '--experiment' '--help' '-e' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--designFile --experiment --help -e -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--designFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -218,7 +218,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.MakeExperimentPrivateCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -226,23 +226,23 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' makePrivate ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ProcessedDataComputeCLI ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-diagupdate' '-e' '-eeset' '-f' '-force' '-h' '-ignoreqm' '-mdate' '-q' '-rankupdate' '-t' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' makeProcessedData ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-diagupdate' '-e' '-eeset' '-f' '-force' '-h' '-ignoreqm' '-mdate' '-q' '-rankupdate' '-t' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --taxon -all -batchFormat -batchOutputFile -diagupdate -e -eeset -f -force -h -ignoreqm -mdate -q -rankupdate -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -250,7 +250,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.MakeExperimentsPublicCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -258,7 +258,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' makePublic ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -266,7 +266,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SVDCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -274,7 +274,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' pca ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -282,7 +282,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExperimentalDesignWriterCLI ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outFilePrefix' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --outFilePrefix --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -o -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -290,7 +290,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' printExperimentalDesign ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outFilePrefix' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --outFilePrefix --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -o -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -298,7 +298,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExpressionExperimentPrimaryPubCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-pubmedIDFile|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-pubmedIDFile' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -pubmedIDFile -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-pubmedIDFile|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -306,7 +306,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' pubmedAssociateToExperiments ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-pubmedIDFile|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-pubmedIDFile' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -pubmedIDFile -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-pubmedIDFile|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -314,7 +314,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.RefreshExperimentCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--refreshReports' '--refreshVectors' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-r' '-t' '-threads' '-v' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -322,7 +322,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' refreshExperiment ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--refreshReports' '--refreshVectors' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-r' '-t' '-threads' '-v' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -330,7 +330,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ReplaceDataCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-file|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-file' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -file -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-file|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -338,7 +338,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' replaceData ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-file|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-file' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -file -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-file|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -346,7 +346,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.RNASeqBatchInfoCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -354,7 +354,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' rnaseqBatchInfo ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -362,7 +362,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.RNASeqDataAddCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-count|-e|-eeset|-f|-multiqc|-q|-rlen|-rpkm|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-allowMissing' '-batchFormat' '-batchOutputFile' '-count' '-e' '-eeset' '-f' '-h' '-log2cpm' '-multiqc' '-q' '-rlen' '-rpkm' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -a -all -allowMissing -batchFormat -batchOutputFile -count -e -eeset -f -h -log2cpm -multiqc -q -rlen -rpkm -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -370,23 +370,23 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' rnaseqDataAdd ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-count|-e|-eeset|-f|-multiqc|-q|-rlen|-rpkm|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-a' '-all' '-allowMissing' '-batchFormat' '-batchOutputFile' '-count' '-e' '-eeset' '-f' '-h' '-log2cpm' '-multiqc' '-q' '-rlen' '-rpkm' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -a -all -allowMissing -batchFormat -batchOutputFile -count -e -eeset -f -h -log2cpm -multiqc -q -rlen -rpkm -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.GeeqCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--mode' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-m' '-mdate' '-q' '-t' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' runGeeq ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--mode' '--taxon' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-m' '-mdate' '-q' '-t' '-x'" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--mdate|--mode|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-m|-mdate|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --mdate --mode --taxon -all -auto -batchFormat -batchOutputFile -e -eeset -f -force -h -m -mdate -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -394,7 +394,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SplitExperimentCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factor|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-factor' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -factor -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -402,7 +402,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' splitExperiment ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factor|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-factor' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -factor -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -410,7 +410,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExpressionExperimentPlatformSwitchCli ' ]]; then
         if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -a -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -418,21 +418,21 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' switchExperimentPlatform ' ]]; then
         if ! [[ "$current_option" =~ (--array|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-a' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -a -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEE2CCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--truncate' '-h' '-truncate'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --truncate -h -truncate" -- "$2")
     fi
     if [[ " $words " =~ ' updateEe2c ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--truncate' '-h' '-truncate'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --truncate -h -truncate" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.VectorMergingCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -440,103 +440,103 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' vectorMerge ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignAuditTrailCleanupCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' adATcleanup ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignSequenceAssociationCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--ids|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '--ids' '--sequence' '--type' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-force' '-h' '-i' '-mdate' '-s' '-t' '-y'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--ids|--mdate|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --mdate --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' addPlatformSequences ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|--ids|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '--ids' '--sequence' '--type' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-force' '-h' '-i' '-mdate' '-s' '-t' '-y'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--ids|--mdate|--sequence|--type|-a|-batchFormat|-batchOutputFile|-f|-i|-mdate|-s|-t|-y) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --ids --mdate --sequence --type -a -auto -batchFormat -batchOutputFile -f -force -h -i -mdate -s -t -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.AffyProbeCollapseCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-affyProbeFile' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-affyProbeFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' affyCollapse ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-affyProbeFile' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -affyProbeFile -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-affyProbeFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignBlatCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--blatfile' '--help' '--scoreThresh' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-s' '-sensitive' '-t'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--mdate|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --mdate --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--blatfile|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' blatPlatform ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--blatfile' '--help' '--scoreThresh' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-s' '-sensitive' '-t'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--blatfile|--mdate|--scoreThresh|-a|-b|-batchFormat|-batchOutputFile|-f|-mdate|-s|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --blatfile --help --mdate --scoreThresh -a -auto -b -batchFormat -batchOutputFile -f -h -mdate -s -sensitive -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--blatfile|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeCleanupCLI ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' deletePlatformElements ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignBioSequenceDetachCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' detachSequences ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-delete' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -delete -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -544,7 +544,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.GenericGenelistDesignGenerator ' ]]; then
         if ! [[ "$current_option" =~ (--geneListFile|--platform|--taxon|-a|-f|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--geneListFile' '--help' '--platform' '--taxon' '-a' '-f' '-h' '-nodb' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--geneListFile --help --platform --taxon -a -f -h -nodb -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--geneListFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -552,119 +552,119 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' genericPlatform ' ]]; then
         if ! [[ "$current_option" =~ (--geneListFile|--platform|--taxon|-a|-f|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--geneListFile' '--help' '--platform' '--taxon' '-a' '-f' '-h' '-nodb' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--geneListFile --help --platform --taxon -a -f -h -nodb -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--geneListFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignAnnotationFileCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--batch' '--dontDeleteOtherFiles' '--help' '--nogo' '--taxon' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-k' '-l' '-mdate' '-nogo' '-t'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --mdate --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--dontDeleteOtherFiles|-batchOutputFile|-f|-k) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' makePlatformAnnotFiles ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--batch' '--dontDeleteOtherFiles' '--help' '--nogo' '--taxon' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-f' '-h' '-k' '-l' '-mdate' '-nogo' '-t'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--taxon|-a|-batchFormat|-batchOutputFile|-f|-l|-mdate|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --dontDeleteOtherFiles --help --mdate --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--dontDeleteOtherFiles|-batchOutputFile|-f|-k) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeMapperCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--identityThreshold' '--overlapThreshold' '--scoreThreshold' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-config' '-f' '-force' '-h' '-i' '-import' '-mdate' '-mirna' '-ncbi' '-nodb' '-o' '-probes' '-s' '-source' '-t' '-usePred'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--mdate|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --mdate --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' mapPlatformToGenes ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--identityThreshold' '--overlapThreshold' '--scoreThreshold' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-config' '-f' '-force' '-h' '-i' '-import' '-mdate' '-mirna' '-ncbi' '-nodb' '-o' '-probes' '-s' '-source' '-t' '-usePred'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--identityThreshold|--mdate|--overlapThreshold|--scoreThreshold|-a|-batchFormat|-batchOutputFile|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --identityThreshold --mdate --overlapThreshold --scoreThreshold -a -auto -batchFormat -batchOutputFile -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignMergeCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--name' '--other' '--shortname' '-a' '-add' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-n' '-o' '-s'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' mergePlatforms ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--name' '--other' '--shortname' '-a' '-add' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-n' '-o' '-s'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -f -h -mdate -n -o -s" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignRepeatScanCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformRepeatScan ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignSubsumptionTesterCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--other' '-a' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-o'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformSubsumptionTest ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '--other' '-a' '-all' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate' '-o'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|--other|-a|-batchFormat|-batchOutputFile|-f|-mdate|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate --other -a -all -auto -batchFormat -batchOutputFile -f -h -mdate -o" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignProbeRenamerCli ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' probeRename ' ]]; then
-        if ! [[ "$current_option" =~ (--array|--file|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--array' '--file' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--file|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --file --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.BioSequenceCleanupCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--file' '--help' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-dryrun' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help --mdate -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' seqCleanup ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--file' '--help' '-a' '-auto' '-b' '-batchFormat' '-batchOutputFile' '-dryrun' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --file --help --mdate -a -auto -b -batchFormat -batchOutputFile -dryrun -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -672,65 +672,65 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEe2AdCli ' ]]; then
         if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--since' '-h' '-s'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updateEe2Ad ' ]]; then
         if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--since' '-h' '-s'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DatabaseViewGeneratorCLI ' ]]; then
         if ! [[ "$current_option" =~ (--limit|-l) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dataset' '--diffexpression' '--help' '--limit' '--tissue' '-d' '-h' '-l' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dataset --diffexpression --help --limit --tissue -d -h -l -t -x" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' dumpForNIF ' ]]; then
         if ! [[ "$current_option" =~ (--limit|-l) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dataset' '--diffexpression' '--help' '--limit' '--tissue' '-d' '-h' '-l' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dataset --diffexpression --help --limit --tissue -d -h -l -t -x" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.GeoGrabberCli ' ]]; then
         if ! [[ "$current_option" =~ (-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -date -gselimit -h -output -platformLimit -platforms -startat -startdate" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
         if ! [[ "$current_option" =~ (-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -date -gselimit -h -output -platformLimit -platforms -startat -startdate" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignMapSummaryCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformMapSummary ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--adListFile' '--array' '--help' '-a' '-auto' '-batchFormat' '-batchOutputFile' '-f' '-h' '-mdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--mdate|-a|-batchFormat|-batchOutputFile|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --help --mdate -a -auto -batchFormat -batchOutputFile -f -h -mdate" -- "$2")
         fi
         if [[ "$current_option" =~ (--adListFile|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExperimentalDesignViewCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' viewExpDesigns ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignAlternativePopulateCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' affyAltsUpdate ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.BlacklistCli ' ]]; then
         if ! [[ "$current_option" =~ (--accession|-a|-accession|-file|-reason) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--accession' '--help' '-a' '-accession' '-file' '-h' '-pp' '-reason' '-undo'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--accession --help -a -accession -file -h -pp -reason -undo" -- "$2")
         fi
         if [[ "$current_option" =~ (-file) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -738,41 +738,41 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' blackList ' ]]; then
         if ! [[ "$current_option" =~ (--accession|-a|-accession|-file|-reason) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--accession' '--help' '-a' '-accession' '-file' '-h' '-pp' '-reason' '-undo'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--accession --help -a -accession -file -h -pp -reason -undo" -- "$2")
         fi
         if [[ "$current_option" =~ (-file) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.FindObsoleteTermsCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' findObsoleteTerms ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.BibRefUpdaterCli ' ]]; then
         if ! [[ "$current_option" =~ (-pmids) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h' '-pmids'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -pmids" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updatePubMeds ' ]]; then
         if ! [[ "$current_option" =~ (-pmids) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h' '-pmids'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -pmids" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExternalDatabaseAdderCli ' ]]; then
         if ! [[ "$current_option" =~ (--name|--type|-n|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--name' '--type' '-h' '-n' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --type -h -n -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' addExternalDatabase ' ]]; then
         if ! [[ "$current_option" =~ (--name|--type|-n|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--name' '--type' '-h' '-n' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --type -h -n -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.NcbiGeneLoaderCLI ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f|-restart|-taxon) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-nodownload' '-restart' '-taxon'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h -nodownload -restart -taxon" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -780,7 +780,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' geneUpdate ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f|-restart|-taxon) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-nodownload' '-restart' '-taxon'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h -nodownload -restart -taxon" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -788,37 +788,37 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExternalFileGeneLoaderCLI ' ]]; then
         if ! [[ "$current_option" =~ (-f|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-f' '-h' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -f -h -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' loadGenesFromFile ' ]]; then
         if ! [[ "$current_option" =~ (-f|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-f' '-h' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -f -h -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.IndexGemmaCLI ' ]]; then
         if ! [[ "$current_option" =~ (-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-a' '-b' '-e' '-g' '-h' '-q' '-s' '-threads' '-x' '-y'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -a -b -e -g -h -q -s -threads -x -y" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' searchIndex ' ]]; then
         if ! [[ "$current_option" =~ (-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-a' '-b' '-e' '-g' '-h' '-q' '-s' '-threads' '-x' '-y'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -a -b -e -g -h -q -s -threads -x -y" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExternalDatabaseUpdaterCli ' ]]; then
         if ! [[ "$current_option" =~ (--description|--last-updated|--name|--parent-database|--release-note|--release-url|--release-version|-d|-lastUpdated|-n|-parentDatabase|-releaseNote|-releaseUrl|-releaseVersion) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--description' '--help' '--last-updated' '--name' '--parent-database' '--release' '--release-note' '--release-url' '--release-version' '-d' '-h' '-lastUpdated' '-n' '-parentDatabase' '-release' '-releaseNote' '-releaseUrl' '-releaseVersion'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--description --help --last-updated --name --parent-database --release --release-note --release-url --release-version -d -h -lastUpdated -n -parentDatabase -release -releaseNote -releaseUrl -releaseVersion" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updateExternalDatabase ' ]]; then
         if ! [[ "$current_option" =~ (--description|--last-updated|--name|--parent-database|--release-note|--release-url|--release-version|-d|-lastUpdated|-n|-parentDatabase|-releaseNote|-releaseUrl|-releaseVersion) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--description' '--help' '--last-updated' '--name' '--parent-database' '--release' '--release-note' '--release-url' '--release-version' '-d' '-h' '-lastUpdated' '-n' '-parentDatabase' '-release' '-releaseNote' '-releaseUrl' '-releaseVersion'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--description --help --last-updated --name --parent-database --release --release-note --release-url --release-version -d -h -lastUpdated -n -parentDatabase -release -releaseNote -releaseUrl -releaseVersion" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.NCBIGene2GOAssociationLoaderCLI ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -826,7 +826,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' updateGOAnnots ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -834,17 +834,17 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.MultifunctionalityCli ' ]]; then
         if ! [[ "$current_option" =~ (--taxon|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--taxon' '-h' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --taxon -h -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updateMultifunc ' ]]; then
         if ! [[ "$current_option" =~ (--taxon|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--taxon' '-h' '-t'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --taxon -h -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.MeshTermFetcherCli ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-m'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h -m" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -852,7 +852,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' fetchMeshTerms ' ]]; then
         if ! [[ "$current_option" =~ (--file|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--file' '--help' '-f' '-h' '-m'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--file --help -f -h -m" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -860,7 +860,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExternalDatabaseOverviewCli ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -868,21 +868,21 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' listExternalDatabases ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.TaxonLoaderCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' loadTaxa ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.FactorValueMigratorCLI ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile|-migrationFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h' '-migrateNonTrivialCases' '-migrateRemainingCharacteristics' '-migrateRemainingFactorValues' '-migrationFile' '-noop'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h -migrateNonTrivialCases -migrateRemainingCharacteristics -migrateRemainingFactorValues -migrationFile -noop" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile|-migrationFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -890,7 +890,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' migrateFactorValues ' ]]; then
         if ! [[ "$current_option" =~ (-batchFormat|-batchOutputFile|-migrationFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-batchFormat' '-batchOutputFile' '-h' '-migrateNonTrivialCases' '-migrateRemainingCharacteristics' '-migrateRemainingFactorValues' '-migrationFile' '-noop'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -batchFormat -batchOutputFile -h -migrateNonTrivialCases -migrateRemainingCharacteristics -migrateRemainingFactorValues -migrationFile -noop" -- "$2")
         fi
         if [[ "$current_option" =~ (-batchOutputFile|-migrationFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -898,7 +898,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.OrderVectorsByDesignCli ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -906,7 +906,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' orderVectorsByDesign ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -914,25 +914,25 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.PubMedLoaderCli ' ]]; then
         if ! [[ "$current_option" =~ (--dir|-d) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--help' '-d' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dir --help -d -h" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' pubmedLoad ' ]]; then
         if ! [[ "$current_option" =~ (--dir|-d) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dir' '--help' '-d' '-h'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dir --help -d -h" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--persist' '-d' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --persist -d -h" -- "$2")
     fi
     if [[ " $words " =~ ' pubmedSearchAndSave ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '--persist' '-d' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --persist -d -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateGene2CsCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--force' '--help' '-f' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
     fi
     if [[ " $words " =~ ' updateGene2Cs ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--force' '--help' '-f' '-h'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
     fi
 }
-complete -o filenames -o bashdefault -F __gemma_cli_complete 'gemma-cli-staging'
+complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli-staging

@@ -35,6 +35,7 @@ import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.core.util.HelpUtils;
+import ubic.gemma.core.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -43,6 +44,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -272,12 +274,15 @@ public class GemmaCLI {
     /**
      * Mask password for logging
      */
-    static String getOptStringForLogging( Object[] argsToPass ) {
+    static String getOptStringForLogging( String[] argsToPass ) {
         Matcher matcher = PASSWORD_IN_CLI_MATCHER.matcher( StringUtils.join( argsToPass, " " ) );
         if ( matcher.matches() ) {
             log.warn( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
+            return matcher.replaceAll( "$1 XXXXXX" );
         }
-        return matcher.replaceAll( "$1 XXXXXX" );
+        return Arrays.stream( argsToPass )
+                .map( ShellUtils::quoteIfNecessary )
+                .collect( Collectors.joining( " " ) );
     }
 
     private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, Command>> commands, PrintWriter writer ) {
