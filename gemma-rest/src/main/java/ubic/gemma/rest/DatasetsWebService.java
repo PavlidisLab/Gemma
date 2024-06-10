@@ -77,6 +77,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -140,7 +141,6 @@ public class DatasetsWebService {
     private OntologyService ontologyService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
-
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
@@ -149,6 +149,8 @@ public class DatasetsWebService {
     private GeneArgService geneArgService;
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Context
     private UriInfo uriInfo;
@@ -318,6 +320,28 @@ public class DatasetsWebService {
         return top( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l, inferredTerms );
     }
 
+    @GET
+    @Path("/platforms/refresh")
+    @Secured("GROUP_ADMIN")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Retrieve refreshed experiment-to-platform associations.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = { @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
+    public Response refreshDatasetsPlatforms(
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+    ) {
+        tableMaintenanceUtil.evictEe2AdQueryCache();
+        return Response.created( URI.create( "/datasets/platforms" ) )
+                .entity( getDatasetsPlatformsUsageStatistics( query, filter, limit ) )
+                .build();
+    }
+
     @Value
     public static class CategoryWithUsageStatisticsValueObject implements UsageStatistics {
         String classUri;
@@ -413,7 +437,8 @@ public class DatasetsWebService {
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
             @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
-            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms ) {
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+    ) {
         boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
@@ -554,6 +579,34 @@ public class DatasetsWebService {
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
             this.parentTerms = parentTerms;
         }
+    }
+
+    @GET
+    @Path("/annotations/refresh")
+    @Secured("GROUP_ADMIN")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve refreshed dataset annotations.",
+            responses = {
+                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
+            })
+    public Response refreshDatasetsAnnotations(
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
+            @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
+            @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported. If empty, uncategorized terms are reported.") @QueryParam("category") String category,
+            @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
+            @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
+            @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
+            @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
+            @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+    ) {
+        tableMaintenanceUtil.evictEe2CQueryCache();
+        return Response.created( URI.create( "/datasets/annotations" ) )
+                .entity( getDatasetsAnnotationsUsageStatistics( query, filter, exclude, limitArg, minFrequency, category, excludedCategoryUris, excludeFreeTextCategories, excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms, retainMentionedTerms ) )
+                .build();
     }
 
     @GET
@@ -1228,8 +1281,11 @@ public class DatasetsWebService {
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
             })
-    public Response getDataset(
+    public Response refreshDataset(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
             @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
@@ -1251,8 +1307,15 @@ public class DatasetsWebService {
             expressionExperimentReportService.evictFromCache( id );
         }
         return Response.created( URI.create( "/datasets/" + ee.getId() ) )
-                .entity( expressionExperimentService.loadValueObject( ee ) )
+                .entity( new ResponseDataObjectExpressionExperimentValueObject( expressionExperimentService.loadValueObject( ee ) ) )
                 .build();
+    }
+
+    public static class ResponseDataObjectExpressionExperimentValueObject extends ResponseDataObject<ExpressionExperimentValueObject> {
+
+        public ResponseDataObjectExpressionExperimentValueObject( ExpressionExperimentValueObject payload ) {
+            super( payload );
+        }
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {

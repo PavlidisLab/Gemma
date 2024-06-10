@@ -4,10 +4,12 @@ package ubic.gemma.rest;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.FactoryBean;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -24,7 +27,6 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
@@ -145,22 +147,45 @@ public class OpenApiTest extends BaseJerseyTest {
 
     @Test
     public void testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection() {
-        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
-            assertThat( operations.getGet().getResponses() )
-                    .describedAs( "GET %s", path )
-                    .hasEntrySatisfying( new Condition<>( entry -> {
-                        if ( entry.getKey().startsWith( "3" ) ) {
-                            // a redirection, no need for a default response
+        SoftAssertions assertions = new SoftAssertions();
+        for ( String path : spec.getPaths().keySet() ) {
+            if ( path.equals( "/genes/probes/refresh" ) ) {
+                // FIXME: this is broken, see https://github.com/swagger-api/swagger-core/issues/4693
+                continue;
+            }
+            PathItem operations = spec.getPaths().get( path );
+            assertions.assertThat( operations.getGet().getResponses() )
+                    .describedAs( "GET %s (%s)", path, operations.getGet().getOperationId() )
+                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "default" )
+                            || entry.equals( "201" )
+                            || entry.equals( "204" )
+                            || entry.startsWith( "3" ),
+                            "has at least a default GET response or is a redirection" ) )
+                    .allSatisfy( ( responseCode, content ) -> {
+                        if ( responseCode.startsWith( "3" ) ) {
+                            // a redirection, no need for a default responses
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
+                        } else if ( responseCode.equals( "201" ) ) {
+                            // created
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .doesNotContainKey( "*/*" );
+                        } else if ( responseCode.equals( "204" ) ) {
+                            // no content
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
                         } else {
-                            assertThat( entry.getKey() ).isEqualTo( "default" );
-                            assertThat( entry.getValue().getContent() )
-                                    .describedAs( "GET %s -> default", path )
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
                                     .isNotEmpty()
                                     .doesNotContainKey( "*/*" );
                         }
-                        return true;
-                    }, "" ) );
-        } );
+                    } );
+        }
+        assertions.assertAll();
     }
 
     @Test

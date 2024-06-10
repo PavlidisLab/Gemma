@@ -5,50 +5,44 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
 import java.util.Date;
 
-public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
+public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
-    private static final String
-            TRUNCATE_OPTION = "truncate",
-            SINCE_OPTION = "s";
+    private static final String SINCE_OPTION = "s";
+
+    private Date sinceLastUpdate;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
-    private boolean truncate;
-    private Date sinceLastUpdate;
-
     @Nullable
     @Override
     public String getCommandName() {
-        return "updateEe2c";
+        return "updateEe2Ad";
     }
 
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table";
+        return "Update the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table.";
     }
 
     @Override
     public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
+        return CommandGroup.PLATFORM;
     }
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
-        addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date", options );
+        addDateOption( SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date", options );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        truncate = commandLine.hasOption( TRUNCATE_OPTION );
         if ( commandLine.hasOption( SINCE_OPTION ) ) {
             sinceLastUpdate = commandLine.getParsedOptionValue( SINCE_OPTION );
         } else {
@@ -58,13 +52,13 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doWork() throws Exception {
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate );
         if ( updated > 0 ) {
             try {
-                getGemmaRestApiClient().perform( "/datasets/annotations/refresh" );
-                log.info( "Refreshed all EE2C associations from " + getGemmaRestApiClient().getHostUrl() );
+                getGemmaRestApiClient().perform( "/datasets/platforms/refresh" );
+                log.info( "Refreshed EE2AD associations from " + getGemmaRestApiClient().getHostUrl() );
             } catch ( Exception e ) {
-                log.warn( "Failed to refresh EE2C from " + getGemmaRestApiClient().getHostUrl(), e );
+                log.warn( "Failed to refresh EE2AD from " + getGemmaRestApiClient().getHostUrl(), e );
             }
         }
     }
