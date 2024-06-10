@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.RandomUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;

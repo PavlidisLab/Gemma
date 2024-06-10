@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;

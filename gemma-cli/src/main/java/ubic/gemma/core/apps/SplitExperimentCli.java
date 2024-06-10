@@ -28,7 +28,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;

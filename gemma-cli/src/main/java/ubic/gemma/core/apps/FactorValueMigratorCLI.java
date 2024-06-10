@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 
 import javax.annotation.CheckReturnValue;
@@ -66,8 +67,8 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.MISC;
     }
 
     @Override

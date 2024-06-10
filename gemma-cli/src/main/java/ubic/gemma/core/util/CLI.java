@@ -31,7 +31,7 @@ public interface CLI {
     /**
      * Obtain the command group for this CLI.
      */
-    GemmaCLI.CommandGroup getCommandGroup();
+    CommandGroup getCommandGroup();
 
     /**
      * Obtain the options for the CLI.
@@ -48,4 +48,9 @@ public interface CLI {
      * @return an exit code
      */
     int executeCommand( String... args );
+
+    // order here is significant.
+    enum CommandGroup {
+        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, SYSTEM, MISC, DEPRECATED
+    }
 }

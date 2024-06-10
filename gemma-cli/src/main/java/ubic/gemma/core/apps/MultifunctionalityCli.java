@@ -20,6 +20,7 @@ import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -79,8 +80,8 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
 }

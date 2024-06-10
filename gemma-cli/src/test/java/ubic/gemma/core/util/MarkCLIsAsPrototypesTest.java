@@ -7,7 +7,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.core.apps.TestCli;
 import ubic.gemma.core.util.test.BaseCLIIntegrationTest;
 
@@ -85,7 +84,7 @@ public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
         }
 
         @Override
-        public GemmaCLI.CommandGroup getCommandGroup() {
+        public CommandGroup getCommandGroup() {
             return null;
         }
 

@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.util.AbstractCLI;

@@ -20,7 +20,7 @@ public class TestCli implements CLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
+    public CommandGroup getCommandGroup() {
         return null;
     }
 

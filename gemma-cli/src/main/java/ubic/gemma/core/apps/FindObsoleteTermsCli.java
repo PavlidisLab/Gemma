@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.LinkedHashMap;
@@ -34,8 +35,8 @@ public class FindObsoleteTermsCli extends AbstractCLI {
     private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.METADATA;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.METADATA;
     }
 
     @Override

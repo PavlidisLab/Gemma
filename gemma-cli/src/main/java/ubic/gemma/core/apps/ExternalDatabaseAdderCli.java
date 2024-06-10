@@ -23,6 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -42,8 +43,8 @@ public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
     private DatabaseType type;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
     @Override

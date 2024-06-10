@@ -26,6 +26,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -61,8 +62,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean ignoreQuantitationMismatch = false;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override

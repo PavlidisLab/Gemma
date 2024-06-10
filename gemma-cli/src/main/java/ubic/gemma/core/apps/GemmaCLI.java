@@ -177,7 +177,7 @@ public class GemmaCLI {
 
         Map<String, Command> commandsByClassName = new HashMap<>();
         Map<String, Command> commandsByName = new HashMap<>();
-        SortedMap<CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
+        SortedMap<CLI.CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CLI.CommandGroup::ordinal ) );
         for ( String beanName : ctx.getBeanNamesForType( CLI.class ) ) {
             CLI cliInstance;
             Class<?> beanClass = ctx.getType( beanName );
@@ -195,7 +195,7 @@ public class GemmaCLI {
                 continue;
             }
             commandsByName.put( commandName, cmd );
-            CommandGroup g = cliInstance.getCommandGroup();
+            CLI.CommandGroup g = cliInstance.getCommandGroup();
             if ( !commandGroups.containsKey( g ) ) {
                 commandGroups.put( g, new TreeMap<>() );
             }
@@ -311,7 +311,7 @@ public class GemmaCLI {
                 .collect( Collectors.joining( " " ) );
     }
 
-    private static void printHelp( Options options, @Nullable SortedMap<CommandGroup, SortedMap<String, Command>> commands, PrintWriter writer ) {
+    private static void printHelp( Options options, @Nullable SortedMap<CLI.CommandGroup, SortedMap<String, Command>> commands, PrintWriter writer ) {
         writer.println( "============ Gemma CLI tools ============" );
 
         StringBuilder footer = new StringBuilder();
@@ -319,8 +319,8 @@ public class GemmaCLI {
             footer.append( '\n' );
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
-            for ( Map.Entry<CommandGroup, SortedMap<String, Command>> entry : commands.entrySet() ) {
-                if ( entry.getKey().equals( CommandGroup.DEPRECATED ) ) continue;
+            for ( Map.Entry<CLI.CommandGroup, SortedMap<String, Command>> entry : commands.entrySet() ) {
+                if ( entry.getKey().equals( CLI.CommandGroup.DEPRECATED ) ) continue;
                 Map<String, Command> commandsInGroup = entry.getValue();
                 footer.append( "---- " ).append( entry.getKey() ).append( " ----" ).append( '\n' );
                 int longestCommandInGroup = commandsInGroup.keySet().stream().map( String::length ).max( Integer::compareTo ).orElse( 0 );
@@ -348,11 +348,6 @@ public class GemmaCLI {
             ( ( ConfigurableApplicationContext ) ctx ).close();
         }
         System.exit( statusCode );
-    }
-
-    // order here is significant.
-    public enum CommandGroup {
-        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, SYSTEM, MISC, DEPRECATED
     }
 
     @Value

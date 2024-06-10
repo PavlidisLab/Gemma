@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 

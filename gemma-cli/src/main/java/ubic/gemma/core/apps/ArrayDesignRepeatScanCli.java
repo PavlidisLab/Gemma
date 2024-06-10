@@ -25,6 +25,7 @@ import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -44,8 +45,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     private String inputFileName;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.PLATFORM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.PLATFORM;
     }
 
     @SuppressWarnings("static-access")
