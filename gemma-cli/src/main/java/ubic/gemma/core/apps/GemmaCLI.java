@@ -302,7 +302,7 @@ public class GemmaCLI {
      */
     static String getOptStringForLogging( String[] argsToPass ) {
         Matcher matcher = PASSWORD_IN_CLI_MATCHER.matcher( StringUtils.join( argsToPass, " " ) );
-        if ( matcher.matches() ) {
+        if ( matcher.find() ) {
             log.warn( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
             return matcher.replaceAll( "$1 XXXXXX" );
         }
