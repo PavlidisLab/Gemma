@@ -29,9 +29,8 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -113,7 +112,7 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Format to use to summarize batch processing.
      */
-    private BatchTaskExecutorService.BatchFormat batchFormat;
+    private BatchFormat batchFormat;
     /**
      * Destination for batch processing summary.
      */
@@ -251,10 +250,7 @@ public abstract class AbstractCLI implements CLI {
             if ( executorService != null ) {
                 try {
                     // always summarize processing, even if an error is thrown
-                    if ( batchFormat != BatchTaskExecutorService.BatchFormat.SUPPRESS && batchOutputFile != null ) {
-                        log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
-                    }
-                    executorService.summarizeBatchProcessing( batchFormat, batchOutputFile );
+                    summarizeBatchProcessing();
                 } catch ( IOException e ) {
                     log.error( "Failed to summarize batch processing.", e );
                 } finally {
@@ -416,12 +412,12 @@ public abstract class AbstractCLI implements CLI {
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
             try {
-                this.batchFormat = BatchTaskExecutorService.BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
+                this.batchFormat = BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
             } catch ( IllegalArgumentException e ) {
                 throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
             }
         } else {
-            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchTaskExecutorService.BatchFormat.TSV : BatchTaskExecutorService.BatchFormat.TEXT;
+            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
         }
         this.batchOutputFile = commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
     }
@@ -580,6 +576,38 @@ public abstract class AbstractCLI implements CLI {
             completionService.take();
             log.info( String.format( "Completed %d/%d batch tasks.", i, futures.size() ) );
         }
+    }
+
+    /**
+     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
+     * 'successObjects' and 'errorObjects'
+     */
+    private void summarizeBatchProcessing() throws IOException {
+        BatchTaskExecutorService executor = getBatchTaskExecutorInternal();
+        if ( executor.getBatchProcessingResults().isEmpty() ) {
+            return;
+        }
+        if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
+            log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
+        }
+        try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
+            switch ( batchFormat ) {
+                case TEXT:
+                    new BatchTaskExecutorServiceSummarizer( executor ).summarizeBatchProcessingToText( dest != null ? dest : System.out );
+                    break;
+                case TSV:
+                    new BatchTaskExecutorServiceSummarizer( executor ).summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
+                    break;
+                case SUPPRESS:
+                    break;
+            }
+        }
+    }
+
+    enum BatchFormat {
+        TEXT,
+        TSV,
+        SUPPRESS
     }
 
     /**
