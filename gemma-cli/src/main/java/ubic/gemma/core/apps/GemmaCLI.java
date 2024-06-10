@@ -56,7 +56,17 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class GemmaCLI {
 
-    private static final String HELP_OPTION = "h", HELP_ALL_OPTION = "ha", COMPLETION_OPTION = "c", COMPLETION_EXECUTABLE_OPTION = "ce", COMPLETION_SHELL_OPTION = "cs", VERSION_OPTION = "version", LOGGER_OPTION = "logger", VERBOSITY_OPTION = "v", PROFILING_OPTION = "profiling", TESTDB_OPTION = "testdb";
+    private static final String
+            HELP_OPTION = "h",
+            HELP_ALL_OPTION = "ha",
+            COMPLETION_OPTION = "c",
+            COMPLETION_EXECUTABLE_OPTION = "ce",
+            COMPLETION_SHELL_OPTION = "cs",
+            VERSION_OPTION = "version",
+            LOGGER_OPTION = "logger",
+            VERBOSITY_OPTION = "v",
+            PROFILING_OPTION = "profiling",
+            TESTDB_OPTION = "testdb";
 
     /**
      * Pattern used to match password in the CLI arguments.
@@ -70,9 +80,25 @@ public class GemmaCLI {
     private static ApplicationContext ctx = null;
 
     public static void main( String[] args ) {
-        Option logOpt = Option.builder( VERBOSITY_OPTION ).longOpt( "verbosity" ).hasArg().desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." ).build();
-        Option otherLogOpt = Option.builder( LOGGER_OPTION ).longOpt( "logger" ).hasArg().desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " ).build();
-        Options options = new Options().addOption( HELP_OPTION, "help", false, "Show help" ).addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" ).addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" ).addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" ).addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" ).addOption( VERSION_OPTION, "version", false, "Show Gemma version" ).addOption( otherLogOpt ).addOption( logOpt ).addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" ).addOption( PROFILING_OPTION, "profiling", false, "Enable profiling" );
+        Option logOpt = Option.builder( VERBOSITY_OPTION )
+                .longOpt( "verbosity" ).hasArg()
+                .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." )
+                .build();
+        Option otherLogOpt = Option.builder( LOGGER_OPTION )
+                .longOpt( "logger" ).hasArg()
+                .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j.properties). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
+                .build();
+        Options options = new Options()
+                .addOption( HELP_OPTION, "help", false, "Show help" )
+                .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
+                .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
+                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" )
+                .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
+                .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
+                .addOption( otherLogOpt )
+                .addOption( logOpt )
+                .addOption( TESTDB_OPTION, "testdb", false, "Use the test database as described by gemma.testdb.* configuration" )
+                .addOption( PROFILING_OPTION, "profiling", false, "Enable profiling" );
         CommandLine commandLine;
         try {
             commandLine = new DefaultParser().parse( options, args, true );
