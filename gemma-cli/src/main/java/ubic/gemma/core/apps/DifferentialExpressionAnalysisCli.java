@@ -127,7 +127,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.buildOptions( options );
 
         /* Supports: running on all data sets that have not been run since a given date. */
-        super.addDateOption( options );
+        super.addLimitingDateOption( options );
 
         super.addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         super.addForceOption( options );

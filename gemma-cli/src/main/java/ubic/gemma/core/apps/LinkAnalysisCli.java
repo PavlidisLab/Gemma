@@ -204,7 +204,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        super.addDateOption( options );
+        super.addLimitingDateOption( options );
 
         Option nodeDegreeUpdate = Option.builder( "n" ).desc( "Update the node degree for taxon given by -t option. All other options ignored." )
                 .build();

@@ -69,7 +69,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         addForceOption( options );
-        addDateOption( options );
+        addLimitingDateOption( options );
         options.addOption( UPDATE_DIAGNOSTICS_OPTION, false,
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         options.addOption( UPDATE_RANKS_OPTION, false, "Only update the expression intensity rank information (may be combined with other options)" );

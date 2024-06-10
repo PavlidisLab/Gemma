@@ -78,7 +78,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
                 .longOpt( "adListFile" ).build();
         options.addOption( eeFileListOption );
 
-        this.addDateOption( options );
+        this.addLimitingDateOption( options );
         this.addAutoOption( options );
         this.addBatchOption( options );
     }

@@ -20,25 +20,22 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
-import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Basic implementation of the {@link CLI} interface.
@@ -71,12 +68,19 @@ public abstract class AbstractCLI implements CLI {
      */
     protected static final int ABORTED = 2;
 
-    private static final String AUTO_OPTION_NAME = "auto";
     private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
-    private static final String DATE_OPTION = "mdate";
+
+    private static final String AUTO_OPTION_NAME = "auto";
+    private static final String LIMITING_DATE_OPTION = "mdate";
+
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
+
+    /**
+     * When parsing dates, use this as a reference for 'now'.
+     */
+    private static final Date relativeTo = new Date();
 
     @Autowired
     private BeanFactory ctx;
@@ -94,12 +98,14 @@ public abstract class AbstractCLI implements CLI {
     /**
      * The event type to look for the lack of, when using auto-seek.
      */
+    @Nullable
     private Class<? extends AuditEventType> autoSeekEventType;
     /**
      * Date used to identify which entities to run the tool on (e.g., those which were run less recently than mDate). To
-     * enable call addDateOption.
+     * enable call addLimitingDateOption.
      */
-    private String mDate;
+    @Nullable
+    private Date limitingDate;
     /**
      * Number of threads to use for batch processing.
      */
@@ -288,12 +294,23 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * The limiting date can be retrieved with {@link #getLimitingDate()}.
      */
-    protected void addDateOption( Options options ) {
-        options.addOption( Option.builder( DATE_OPTION ).hasArg()
-                .desc( "Constrain to run only on entities with analyses older than the given date. "
-                        + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                        + "If there is no record of when the analysis was last run, it will be run." )
-                .build() );
+    protected void addLimitingDateOption( Options options ) {
+        addDateOption( LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
+                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                + "If there is no record of when the analysis was last run, it will be run.", options );
+    }
+
+    /**
+     * Add a date option with support for fuzzy dates (i.e. one month ago).
+     * @see DateConverterImpl
+     */
+    protected void addDateOption( String name, String longOpt, String desc, Options options ) {
+        options.addOption( Option.builder( name )
+                .longOpt( longOpt )
+                .desc( desc )
+                .hasArg()
+                .type( Date.class )
+                .converter( new DateConverterImpl( relativeTo, TimeZone.getDefault() ) ).build() );
     }
 
     /**
@@ -330,25 +347,33 @@ public abstract class AbstractCLI implements CLI {
         this.allowPositionalArguments = allowPositionalArguments;
     }
 
+    /**
+     * Indicate if auto-seek is enabled.
+     */
     protected boolean isAutoSeek() {
         return autoSeek;
     }
 
+    /**
+     * Indicate the event to be used for auto-seeking.
+     */
     protected Class<? extends AuditEventType> getAutoSeekEventType() {
-        return autoSeekEventType;
+        return requireNonNull( autoSeekEventType, "This CLI was not configured with a specific event type for auto-seek." );
+    }
+
+    /**
+     * Obtain the limiting date (i.e. starting date at which entities should be processed).
+     */
+    @Nullable
+    protected Date getLimitingDate() {
+        if ( limitingDate != null ) {
+            AbstractCLI.log.info( "Analyses will be run only if last was older than " + limitingDate );
+        }
+        return limitingDate;
     }
 
     protected int getNumThreads() {
         return numThreads;
-    }
-
-    protected Date getLimitingDate() {
-        Date skipIfLastRunLaterThan = null;
-        if ( StringUtils.isNotBlank( mDate ) ) {
-            skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-            AbstractCLI.log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
-        }
-        return skipIfLastRunLaterThan;
     }
 
     private void buildStandardOptions( Options options ) {
@@ -370,12 +395,12 @@ public abstract class AbstractCLI implements CLI {
      * purposes.
      */
     private void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", DATE_OPTION, AUTO_OPTION_NAME ) );
+        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", LIMITING_DATE_OPTION, AUTO_OPTION_NAME ) );
         }
 
-        if ( commandLine.hasOption( DATE_OPTION ) ) {
-            this.mDate = commandLine.getOptionValue( DATE_OPTION );
+        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) ) {
+            this.limitingDate = commandLine.getParsedOptionValue( LIMITING_DATE_OPTION );
         }
 
         this.autoSeek = commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME );

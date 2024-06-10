@@ -727,6 +727,7 @@
 		<dom4j.version>2.1.4</dom4j.version>
 		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.89</tomcat.version>
+		<prettytime.version>5.0.7.Final</prettytime.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
