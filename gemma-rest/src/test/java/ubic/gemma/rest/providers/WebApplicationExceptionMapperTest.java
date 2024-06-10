@@ -116,7 +116,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\",\"buildInfo\":{\"version\":\"1.0.0\",\"timestamp\":\"2024-05-20T11:41:58.000+00:00\",\"gitHash\":\"1234\"}}",
+                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\",\"buildInfo\":{\"version\":\"1.0.0\",\"timestamp\":\"2024-05-20T04:41:58.000+00:00\",\"gitHash\":\"1234\"}}",
                         version ) );
     }
 }
