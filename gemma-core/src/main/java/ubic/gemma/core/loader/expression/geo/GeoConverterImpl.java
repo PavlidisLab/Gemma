@@ -123,8 +123,7 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
      */
-    private int tooManyElements = Settings
-            .getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
+    private int tooManyElements = Settings.getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
@@ -196,16 +195,13 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( geoObject instanceof GeoSeries ) { // typically we start here, with a series.
             return this.convertSeries( ( GeoSeries ) geoObject );
         } else if ( geoObject instanceof GeoSubset ) {
-            throw new IllegalArgumentException(
-                    "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
+            throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
         } else if ( geoObject instanceof GeoSample ) {
-            throw new IllegalArgumentException(
-                    "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
+            throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
         } else if ( geoObject instanceof GeoPlatform ) {
             return this.convertPlatform( ( GeoPlatform ) geoObject );
         } else {
-            throw new IllegalArgumentException(
-                    "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
+            throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() + " ('" + geoObject + "')" );
         }
 
     }
@@ -234,8 +230,7 @@ public class GeoConverterImpl implements GeoConverter {
                 duplicateExists = true;
                 experimentalFactor = existingExperimentalFactor;
                 if ( GeoConverterImpl.log.isDebugEnabled() )
-                    GeoConverterImpl.log.debug( experimentalFactor.getName()
-                            + " already exists.  Not adding to list of experimental factors." );
+                    GeoConverterImpl.log.debug( experimentalFactor.getName() + " already exists.  Not adding to list of experimental factors." );
                 break;
             }
         }
@@ -264,8 +259,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @return Primary taxon of array as determined by this method
      */
     @Override
-    public Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
-            throws IllegalArgumentException {
+    public Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa ) throws IllegalArgumentException {
 
         if ( platformTaxa == null || platformTaxa.isEmpty() ) {
             return null;
@@ -304,8 +298,7 @@ public class GeoConverterImpl implements GeoConverter {
         for ( String taxon : taxonProbeNumberList.keySet() ) {
             // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
             // ugly but we see it in some arrays
-            if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon )
-                    && taxonProbeNumberList.get( taxon ) > highestScore ) {
+            if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon ) && taxonProbeNumberList.get( taxon ) > highestScore ) {
                 primaryTaxonName = taxon;
                 highestScore = taxonProbeNumberList.get( taxon );
             }
@@ -337,8 +330,7 @@ public class GeoConverterImpl implements GeoConverter {
     @Override
     public byte[] convertData( List<Object> vector, QuantitationType qt ) {
 
-        if ( vector == null || vector.size() == 0 )
-            return null;
+        if ( vector == null || vector.size() == 0 ) return null;
 
         boolean containsAtLeastOneNonNull = false;
         for ( Object string : vector ) {
@@ -376,9 +368,7 @@ public class GeoConverterImpl implements GeoConverter {
                         toConvert.add( rawValue );
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
                         if ( valueString.length() != 1 ) {
-                            throw new IllegalStateException(
-                                    "Attempt to cast a string of length " + valueString.length() + " to a char: "
-                                            + rawValue + "(quantitation type =" + qt );
+                            throw new IllegalStateException( "Attempt to cast a string of length " + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
                         }
                         toConvert.add( valueString.toCharArray()[0] );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
@@ -409,20 +399,17 @@ public class GeoConverterImpl implements GeoConverter {
         if ( pt.equals( PrimitiveType.DOUBLE ) ) {
             double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
             if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException(
-                        "Expected " + vector.size() + " got " + byteArrayToDoubles.length + " doubles" );
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length + " doubles" );
             }
         } else if ( pt.equals( PrimitiveType.INT ) ) {
             int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
             if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException(
-                        "Expected " + vector.size() + " got " + byteArrayToInts.length + " ints" );
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length + " ints" );
             }
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
             boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
             if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException(
-                        "Expected " + vector.size() + " got " + byteArrayToBooleans.length + " booleans" );
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length + " booleans" );
             }
         }
 
@@ -487,8 +474,7 @@ public class GeoConverterImpl implements GeoConverter {
         return StringUtils.abbreviate( title, maxWidth );
     }
 
-    private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet,
-            FactorValue factorValue ) {
+    private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
@@ -497,9 +483,7 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
                     BioMaterial material = bioAssay.getSampleUsed();
                     if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                        GeoConverterImpl.log
-                                .debug( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
-                                        + material );
+                        GeoConverterImpl.log.debug( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to " + material );
                     }
                     material.getFactorValues().add( factorValue );
                 }
@@ -533,30 +517,20 @@ public class GeoConverterImpl implements GeoConverter {
      * @param samplesToSkip  samples to skip
      * @param series         series
      */
-    private void checkForDataToSkip( GeoSeries series, Collection<String> dataSetsToSkip,
-            Collection<GeoSample> samplesToSkip ) {
+    private void checkForDataToSkip( GeoSeries series, Collection<String> dataSetsToSkip, Collection<GeoSample> samplesToSkip ) {
 
         for ( GeoDataset dataset : series.getDataSets() ) {
             // This doesn't cover every possibility...
-            if ( dataset.getExperimentType().equals( ExperimentType.arrayCGH ) || dataset.getExperimentType()
-                    .equals( ExperimentType.ChIPChip )
-                    || dataset.getExperimentType()
-                    .equals( ExperimentType.geneExpressionSAGEbased )
-                    || dataset.getExperimentType()
-                    .equals( ExperimentType.Other ) ) {
-                GeoConverterImpl.log
-                        .warn( "Gemma does not know how to handle experiment type=" + dataset.getExperimentType() );
+            if ( dataset.getExperimentType().equals( ExperimentType.arrayCGH ) || dataset.getExperimentType().equals( ExperimentType.ChIPChip ) || dataset.getExperimentType().equals( ExperimentType.geneExpressionSAGEbased ) || dataset.getExperimentType().equals( ExperimentType.Other ) ) {
+                GeoConverterImpl.log.warn( "Gemma does not know how to handle experiment type=" + dataset.getExperimentType() );
 
                 if ( series.getDataSets().size() == 1 ) {
-                    GeoConverterImpl.log.warn( "Because the experiment type cannot be handled, "
-                            + "and there is only one data set in this series, nothing will be returned!" );
+                    GeoConverterImpl.log.warn( "Because the experiment type cannot be handled, " + "and there is only one data set in this series, nothing will be returned!" );
                 }
                 samplesToSkip.addAll( this.getDatasetSamples( dataset ) );
                 dataSetsToSkip.add( dataset.getGeoAccession() );
             } else {
-                GeoConverterImpl.log
-                        .info( "Data from " + dataset + " is of type " + dataset.getExperimentType() + ", " + this
-                                .getDatasetSamples( dataset ).size() + " samples." );
+                GeoConverterImpl.log.info( "Data from " + dataset + " is of type " + dataset.getExperimentType() + ", " + this.getDatasetSamples( dataset ).size() + " samples." );
             }
         }
 
@@ -566,11 +540,13 @@ public class GeoConverterImpl implements GeoConverter {
                 continue;
             } else if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
 
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
+                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
+                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
+                    // no-op, just making explicit.
+                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
 
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
+                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
@@ -579,9 +555,7 @@ public class GeoConverterImpl implements GeoConverter {
 
             // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed'; 
 
-            GeoConverterImpl.log
-                    .info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType()
-                            + " LibSource=" + sample.getLibSource() + " LibStrategy=" + sample.getLibStrategy() );
+            GeoConverterImpl.log.info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType() + " LibSource=" + sample.getLibSource() + " LibStrategy=" + sample.getLibStrategy() );
             samplesToSkip.add( sample );
         }
 
@@ -597,8 +571,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @param platform           platform
      * @param platformDatasetMap dataset map
      */
-    private void convertByPlatform( GeoSeries series, Collection<ExpressionExperiment> converted,
-            Map<GeoPlatform, Collection<GeoData>> platformDatasetMap, int i, GeoPlatform platform ) {
+    private void convertByPlatform( GeoSeries series, Collection<ExpressionExperiment> converted, Map<GeoPlatform, Collection<GeoData>> platformDatasetMap, int i, GeoPlatform platform ) {
         GeoSeries platformSpecific = new GeoSeries();
 
         Collection<GeoData> datasets = platformDatasetMap.get( platform );
@@ -637,8 +610,7 @@ public class GeoConverterImpl implements GeoConverter {
         platformSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
         ExpressionExperiment ee = this.convertSeriesSingle( platformSpecific );
-        if ( ee != null )
-            converted.add( ee );
+        if ( ee != null ) converted.add( ee );
 
     }
 
@@ -652,14 +624,10 @@ public class GeoConverterImpl implements GeoConverter {
      * @param bioMaterial BA
      */
     private void convertChannel( GeoSample sample, GeoChannel channel, BioMaterial bioMaterial ) {
-        if ( bioMaterial == null )
-            return;
-        GeoConverterImpl.log
-                .debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
+        if ( bioMaterial == null ) return;
+        GeoConverterImpl.log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
 
-        bioMaterial.setDescription(
-                ( bioMaterial.getDescription() == null ? "" : bioMaterial.getDescription() + ";" ) + "Channel "
-                        + channel.getChannelNumber() );
+        bioMaterial.setDescription( ( bioMaterial.getDescription() == null ? "" : bioMaterial.getDescription() + ";" ) + "Channel " + channel.getChannelNumber() );
 
         if ( !StringUtils.isBlank( channel.getGrowthProtocol() ) ) {
             Treatment treatment = Treatment.Factory.newInstance();
@@ -722,10 +690,7 @@ public class GeoConverterImpl implements GeoConverter {
             if ( bioMaterial.getSourceTaxon() != null ) {
                 String previousChannelTaxon = bioMaterial.getSourceTaxon().getScientificName();
                 if ( previousChannelTaxon != null && !( previousChannelTaxon.equals( currentChannelTaxon ) ) ) {
-                    throw new IllegalArgumentException(
-                            "Channel 1 taxon is " + bioMaterial.getSourceTaxon().getScientificName()
-                                    + " Channel 2 taxon is " + currentChannelTaxon
-                                    + " Check that is expected for sample " + sample.getGeoAccession() );
+                    throw new IllegalArgumentException( "Channel 1 taxon is " + bioMaterial.getSourceTaxon().getScientificName() + " Channel 2 taxon is " + currentChannelTaxon + " Check that is expected for sample " + sample.getGeoAccession() );
                 }
 
             } else {
@@ -882,8 +847,7 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( line.startsWith( "#" ) ) {
                     continue;
                 }
-                if ( line.isEmpty() )
-                    continue;
+                if ( line.isEmpty() ) continue;
 
                 String[] split = StringUtils.split( line, "\t" );
 
@@ -899,8 +863,7 @@ public class GeoConverterImpl implements GeoConverter {
                 String category = split[3];
                 String categoryUri = split[4];
 
-                if ( StringUtils.isBlank( value ) || StringUtils.isBlank( valueUri ) || StringUtils.isBlank( category )
-                        || StringUtils.isBlank( categoryUri ) ) {
+                if ( StringUtils.isBlank( value ) || StringUtils.isBlank( valueUri ) || StringUtils.isBlank( category ) || StringUtils.isBlank( categoryUri ) ) {
                     throw new IllegalArgumentException( "Invalid line had blank field(s): " + line );
                 }
 
@@ -995,12 +958,9 @@ public class GeoConverterImpl implements GeoConverter {
              * See bug 1672. Sometimes the platform for the dataset is wrong so we should just go on. The exception was
              * otherwise catching a case we don't see under normal use.
              */
-            throw new IllegalStateException(
-                    "ArrayDesigns must be converted before datasets - didn't find " + geoDataset.getPlatform()
-                            + "; possibly dataset has incorrect platform?" );
+            throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find " + geoDataset.getPlatform() + "; possibly dataset has incorrect platform?" );
         }
-        ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: " + platform
-                .getLastUpdateDate() );
+        ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: " + platform.getLastUpdateDate() );
 
         if ( !skipDataVectors )
             this.convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
@@ -1038,23 +998,17 @@ public class GeoConverterImpl implements GeoConverter {
         if ( StringUtils.isEmpty( expExp.getName() ) ) {
             expExp.setName( geoDataset.getTitle() );
         } else {
-            expExp.setDescription(
-                    expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession() + ": " + geoDataset
-                            .getTitle() + "\n" );
+            expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession() + ": " + geoDataset.getTitle() + "\n" );
         }
     }
 
-    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
-            ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName,
-            List<Object> dataVector, QuantitationType qt ) {
+    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform, ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName, List<Object> dataVector, QuantitationType qt ) {
 
-        if ( dataVector == null || dataVector.size() == 0 )
-            return null;
+        if ( dataVector == null || dataVector.size() == 0 ) return null;
 
         int numValuesExpected = bioAssayDimension.getBioAssays().size();
         if ( dataVector.size() != numValuesExpected ) {
-            throw new IllegalArgumentException(
-                    "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.size() );
+            throw new IllegalArgumentException( "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.size() );
         }
         byte[] blob = this.convertData( dataVector, qt );
         if ( blob == null ) { // all missing etc.
@@ -1104,10 +1058,7 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        if ( compositeSequence.getBiologicalCharacteristic() != null
-                && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null &&
-                compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getExternalDatabase()
-                        .getName() == null ) {
+        if ( compositeSequence.getBiologicalCharacteristic() != null && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getExternalDatabase().getName() == null ) {
             // this is obscure.
             throw new IllegalStateException( compositeSequence + " sequence accession external database lacks name" );
         }
@@ -1196,9 +1147,7 @@ public class GeoConverterImpl implements GeoConverter {
         // convert the design element information.
         String identifier = platform.getIdColumnName();
         if ( identifier == null && !platform.getColumnNames().isEmpty() ) {
-            throw new IllegalStateException(
-                    "Cannot determine the platform design element id column for " + platform + "; " + platform
-                            .getColumnNames().size() + " column names available." );
+            throw new IllegalStateException( "Cannot determine the platform design element id column for " + platform + "; " + platform.getColumnNames().size() + " column names available." );
         }
 
         Collection<String> externalReferences = this.determinePlatformExternalReferenceIdentifier( platform );
@@ -1254,9 +1203,7 @@ public class GeoConverterImpl implements GeoConverter {
             return arrayDesign;
         }
 
-        boolean fullyUsable = this
-                .convertPlatformElements( identifier, platform, arrayDesign, externalReferences, probeOrganismColumn,
-                        externalDb, descriptions, sequences, probeOrganism, primaryTaxon );
+        boolean fullyUsable = this.convertPlatformElements( identifier, platform, arrayDesign, externalReferences, probeOrganismColumn, externalDb, descriptions, sequences, probeOrganism, primaryTaxon );
 
         if ( !fullyUsable ) {
             GeoConverterImpl.log.warn( "Some or all identifiers may have been skipped during parse" );
@@ -1282,10 +1229,7 @@ public class GeoConverterImpl implements GeoConverter {
      *                             the data doesn't
      *                             match)
      */
-    private boolean convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
-            Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb,
-            List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon
-            primaryTaxon ) {
+    private boolean convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign, Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb, List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon ) {
 
         /*
          * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
@@ -1300,8 +1244,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         if ( !platform.useDataFromGeo() && !forceConvertElements ) {
-            GeoConverterImpl.log
-                    .warn( "Will not convert elements for this platform - set forceConvertElements to override" );
+            GeoConverterImpl.log.warn( "Will not convert elements for this platform - set forceConvertElements to override" );
             return false;
         }
 
@@ -1312,15 +1255,10 @@ public class GeoConverterImpl implements GeoConverter {
             externalRefs = platform.getColumnData( externalReferences );
         }
 
-        assert externalRefs == null
-                || externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
-                + externalRefs.iterator().next().size()
-                + " != " + identifiers.size();
+        assert externalRefs == null || externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! " + externalRefs.iterator().next().size() + " != " + identifiers.size();
 
         if ( GeoConverterImpl.log.isDebugEnabled() ) {
-            GeoConverterImpl.log
-                    .debug( "Converting " + identifiers.size() + " probe identifiers on GEO platform " + platform
-                            .getGeoAccession() );
+            GeoConverterImpl.log.debug( "Converting " + identifiers.size() + " probe identifiers on GEO platform " + platform.getGeoAccession() );
         }
 
         Iterator<String> descIter = null;
@@ -1337,9 +1275,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( identifiers.size() > tooManyElements ) {
             // something odd like an exon array in GEO, there are lots of unused probes (data sets don't use them)
-            GeoConverterImpl.log
-                    .warn( "Platform " + platform.getGeoAccession() + " has more elements than expected (" + identifiers
-                            .size() + "), turning on strict selection method" );
+            GeoConverterImpl.log.warn( "Platform " + platform.getGeoAccession() + " has more elements than expected (" + identifiers.size() + "), turning on strict selection method" );
             strictSelection = true;
         }
 
@@ -1347,36 +1283,25 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<CompositeSequence> compositeSequences = new ArrayList<>( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
-            i = this.processId( platform, arrayDesign, probeOrganismColumn, externalDb, sequences, probeOrganism,
-                    primaryTaxon, cloneIdentifiers, externalRefs, descIter, refSeqAccessionPattern, strictSelection,
-                    skipped, compositeSequences, i, id );
+            i = this.processId( platform, arrayDesign, probeOrganismColumn, externalDb, sequences, probeOrganism, primaryTaxon, cloneIdentifiers, externalRefs, descIter, refSeqAccessionPattern, strictSelection, skipped, compositeSequences, i, id );
         }
         arrayDesign.setCompositeSequences( new HashSet<>( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
         if ( !skipped.isEmpty() ) {
-            GeoConverterImpl.log
-                    .info( "Skipped " + skipped.size() + " elements due to strict selection; last was " + skipped
-                            .get( skipped.size() - 1 ) + "; retained: " + compositeSequences.size() );
+            GeoConverterImpl.log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was " + skipped.get( skipped.size() - 1 ) + "; retained: " + compositeSequences.size() );
         }
 
         if ( arrayDesign.getCompositeSequences().size() > tooManyElements ) {
             // this is just a safeguard; perhaps temporary.
-            throw new IllegalStateException(
-                    "Platform " + arrayDesign.getShortName() + " has too many elements to be loaded. " + arrayDesign
-                            .getCompositeSequences().size() );
+            throw new IllegalStateException( "Platform " + arrayDesign.getShortName() + " has too many elements to be loaded. " + arrayDesign.getCompositeSequences().size() );
         }
 
         GeoConverterImpl.log.info( arrayDesign.getCompositeSequences().size() + " elements on the platform" );
         return !strictSelection;
     }
 
-    private int processId( GeoPlatform platform, ArrayDesign arrayDesign, String probeOrganismColumn,
-            ExternalDatabase externalDb, List<String> sequences, List<String> probeOrganism, Taxon
-            primaryTaxon,
-            List<String> cloneIdentifiers, List<List<String>> externalRefs, Iterator<String> descIter,
-            Pattern refSeqAccessionPattern, boolean strictSelection, List<String> skipped,
-            Collection<CompositeSequence> compositeSequences, int i, String id ) {
+    private int processId( GeoPlatform platform, ArrayDesign arrayDesign, String probeOrganismColumn, ExternalDatabase externalDb, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon, List<String> cloneIdentifiers, List<List<String>> externalRefs, Iterator<String> descIter, Pattern refSeqAccessionPattern, boolean strictSelection, List<String> skipped, Collection<CompositeSequence> compositeSequences, int i, String id ) {
         String externalAccession = null;
         if ( externalRefs != null ) {
             externalAccession = this.getExternalAccession( externalRefs, i );
@@ -1397,9 +1322,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                     skipped.add( id );
                     if ( skipped.size() % 50000 == 0 ) {
-                        GeoConverterImpl.log
-                                .info( "Skipped " + skipped.size() + " elements due to strict selection; last was "
-                                        + id );
+                        GeoConverterImpl.log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was " + id );
                     }
                     i++;
                     return i;
@@ -1423,8 +1346,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
 
-        if ( descIter != null )
-            description = description + " " + descIter.next();
+        if ( descIter != null ) description = description + " " + descIter.next();
 
         CompositeSequence cs = CompositeSequence.Factory.newInstance();
         String probeName = platform.getProbeNamesInGemma().get( id );
@@ -1434,8 +1356,7 @@ public class GeoConverterImpl implements GeoConverter {
                 GeoConverterImpl.log.debug( "Probe retaining original name: " + probeName );
             platform.getProbeNamesInGemma().put( id, id ); // must make sure this is populated.
         } else {
-            if ( GeoConverterImpl.log.isDebugEnabled() )
-                GeoConverterImpl.log.debug( "Found probe: " + probeName );
+            if ( GeoConverterImpl.log.isDebugEnabled() ) GeoConverterImpl.log.debug( "Found probe: " + probeName );
         }
 
         cs.setName( probeName );
@@ -1455,8 +1376,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         BioSequence bs = this.createMinimalBioSequence( probeTaxon );
-        this.setBsProps( platform, externalDb, sequences, refSeqAccessionPattern, i, id, externalAccession,
-                cloneIdentifier, bs );
+        this.setBsProps( platform, externalDb, sequences, refSeqAccessionPattern, i, id, externalAccession, cloneIdentifier, bs );
 
         this.checkCs( arrayDesign, externalAccession, cloneIdentifier, cs, probeTaxon, bs );
 
@@ -1467,20 +1387,17 @@ public class GeoConverterImpl implements GeoConverter {
         return i;
     }
 
-    private void checkCs( ArrayDesign arrayDesign, String externalAccession, String cloneIdentifier,
-            CompositeSequence cs, Taxon probeTaxon, BioSequence bs ) {
+    private void checkCs( ArrayDesign arrayDesign, String externalAccession, String cloneIdentifier, CompositeSequence cs, Taxon probeTaxon, BioSequence bs ) {
         /*
          * If we have no basis for describing the sequence, we have to skip it.
          */
         if ( StringUtils.isBlank( externalAccession ) && StringUtils.isBlank( cloneIdentifier ) ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                GeoConverterImpl.log.debug( "Blank external reference and clone id for " + cs + " on " + arrayDesign
-                        + ", no biological rawGEOString can be added." );
+                GeoConverterImpl.log.debug( "Blank external reference and clone id for " + cs + " on " + arrayDesign + ", no biological rawGEOString can be added." );
             }
         } else if ( probeTaxon == null ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                GeoConverterImpl.log.debug( "No valid taxon identified for " + cs + " on " + arrayDesign
-                        + ", no biological rawGEOString can be added." );
+                GeoConverterImpl.log.debug( "No valid taxon identified for " + cs + " on " + arrayDesign + ", no biological rawGEOString can be added." );
             }
         } else if ( probeTaxon.getId() != null ) {
             // IF there is no taxon given for probe do not create a biosequence otherwise bombs as there is no taxon
@@ -1489,9 +1406,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private void setBsProps( GeoPlatform platform, ExternalDatabase externalDb, List<String> sequences,
-            Pattern refSeqAccessionPattern, int i, String id, String externalAccession, String cloneIdentifier,
-            BioSequence bs ) {
+    private void setBsProps( GeoPlatform platform, ExternalDatabase externalDb, List<String> sequences, Pattern refSeqAccessionPattern, int i, String id, String externalAccession, String cloneIdentifier, BioSequence bs ) {
         boolean isRefseq = false;
 
         // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
@@ -1515,9 +1430,7 @@ public class GeoConverterImpl implements GeoConverter {
             bs.setLength( ( long ) bs.getSequence().length() );
             bs.setType( SequenceType.DNA );
             bs.setName( id );
-            bs.setDescription(
-                    "Sequence from platform " + platform.getGeoAccession() + " provided by manufacturer. "
-                            + ( externalAccession != null ? "Used in leiu of " + externalAccession : "No external accession provided" ) );
+            bs.setDescription( "Sequence from platform " + platform.getGeoAccession() + " provided by manufacturer. " + ( externalAccession != null ? "Used in leiu of " + externalAccession : "No external accession provided" ) );
         } else if ( externalAccession != null && !isRefseq && externalDb != null ) {
 
             /*
@@ -1549,8 +1462,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( String taxonScientificName : organisms ) {
-            if ( taxonScientificName == null )
-                continue;
+            if ( taxonScientificName == null ) continue;
             taxaOnPlatform.append( ": " ).append( taxonScientificName );
             // make sure add scientific name to map for platform
             if ( taxonScientificNameMap.containsKey( taxonScientificName ) ) {
@@ -1624,8 +1536,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private void convertPubMedIds( GeoSeries series, ExpressionExperiment expExp ) {
         Collection<String> ids = series.getPubmedIds();
-        if ( ids == null || ids.size() == 0 )
-            return;
+        if ( ids == null || ids.size() == 0 ) return;
 
         //noinspection LoopStatementThatDoesntLoop // Usually just one
         for ( String string : ids ) {
@@ -1710,8 +1621,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @param  experimentalDesign experimental design
      * @return BA
      */
-    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign
-            experimentalDesign ) {
+    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign experimentalDesign ) {
         if ( sample == null ) {
             GeoConverterImpl.log.warn( "Null sample" );
             return null;
@@ -1816,18 +1726,14 @@ public class GeoConverterImpl implements GeoConverter {
         // get map of platform to dataset.
 
         if ( organismDatasetMap.size() > 1 ) {
-            GeoConverterImpl.log
-                    .warn( "**** Multiple-species series, with multiple datasets. This series will be split into "
-                            + organismDatasetMap.size() + " experiments. ****" );
+            GeoConverterImpl.log.warn( "**** Multiple-species series, with multiple datasets. This series will be split into " + organismDatasetMap.size() + " experiments. ****" );
             int i = 1;
             for ( String organism : organismDatasetMap.keySet() ) {
                 this.convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
                 i++;
             }
         } else if ( organismSampleMap.size() > 1 ) {
-            GeoConverterImpl.log
-                    .warn( "**** Multiple-species series. This series will be split into " + organismSampleMap.size()
-                            + " experiments. ****" );
+            GeoConverterImpl.log.warn( "**** Multiple-species series. This series will be split into " + organismSampleMap.size() + " experiments. ****" );
             int i = 1;
             for ( String organism : organismSampleMap.keySet() ) {
                 this.convertSpeciesSpecificSamples( series, converted, organismSampleMap, i, organism );
@@ -1841,8 +1747,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         } else {
             ExpressionExperiment ee = this.convertSeriesSingle( series );
-            if ( ee != null )
-                converted.add( ee );
+            if ( ee != null ) converted.add( ee );
         }
 
         return converted;
@@ -1875,8 +1780,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @return ExpressionExperiment, or null if the series cannot be converted (wrong sample type, etc.)
      */
     private ExpressionExperiment convertSeriesSingle( GeoSeries series ) {
-        if ( series == null )
-            return null;
+        if ( series == null ) return null;
         GeoConverterImpl.log.info( "Converting series: " + series.getGeoAccession() );
 
         Collection<GeoDataset> dataSets = series.getDataSets();
@@ -1889,8 +1793,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         if ( !this.isUsable( series ) ) {
-            GeoConverterImpl.log
-                    .info( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
+            GeoConverterImpl.log.info( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
             return null;
         }
 
@@ -1912,8 +1815,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
         if ( series.getLastUpdateDate() != null ) {
-            expExp.setDescription(
-                    expExp.getDescription() + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() + "\n" );
+            expExp.setDescription( expExp.getDescription() + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() + "\n" );
         }
 
         // note that if this was part of a split, makeTitle will already have been called, but that's okay
@@ -1972,8 +1874,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         // spits out a big summary of the correspondence.
-        if ( GeoConverterImpl.log.isDebugEnabled() )
-            GeoConverterImpl.log.debug( series.getSampleCorrespondence() );
+        if ( GeoConverterImpl.log.isDebugEnabled() ) GeoConverterImpl.log.debug( series.getSampleCorrespondence() );
         int numBioMaterials = 0;
         int numSkippedBioMaterials = 0;
         /*
@@ -1984,13 +1885,11 @@ public class GeoConverterImpl implements GeoConverter {
         for ( Iterator<Set<String>> iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             Set<String> correspondingSamples = iter.next();
-            if ( correspondingSamples.isEmpty() )
-                continue; // can happen after removing samples (multitaxon)
+            if ( correspondingSamples.isEmpty() ) continue; // can happen after removing samples (multitaxon)
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             String bioMaterialName = this.getBiomaterialPrefix( series, ++numBioMaterials );
-            StringBuilder bioMaterialDescription = new StringBuilder(
-                    GeoConverterImpl.BIOMATERIAL_DESCRIPTION_PREFIX + series.getGeoAccession() );
+            StringBuilder bioMaterialDescription = new StringBuilder( GeoConverterImpl.BIOMATERIAL_DESCRIPTION_PREFIX + series.getGeoAccession() );
 
             // From the series samples, find the sample that corresponds and convert it.
             for ( String cSample : correspondingSamples ) {
@@ -2010,16 +1909,14 @@ public class GeoConverterImpl implements GeoConverter {
                     if ( accession.equals( cSample ) ) {
 
                         if ( seen.contains( accession ) ) {
-                            GeoConverterImpl.log
-                                    .error( "Got " + accession + " twice, this time in set " + correspondingSamples );
+                            GeoConverterImpl.log.error( "Got " + accession + " twice, this time in set " + correspondingSamples );
                         }
                         seen.add( accession );
 
                         BioAssay ba = this.convertSample( sample, bioMaterial, expExp.getExperimentalDesign() );
 
                         assert ( ba != null );
-                        ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
-                                + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
+                        ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession() + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
 
                         assert ba.getSampleUsed() != null;
                         bioMaterial.getBioAssaysUsedIn().add( ba );
@@ -2032,8 +1929,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
                 if ( !found ) {
                     if ( GeoConverterImpl.log.isDebugEnabled() )
-                        GeoConverterImpl.log.debug( "No sample found in " + series + " to match " + cSample
-                                + "; this can happen if some samples were not run on all platforms." );
+                        GeoConverterImpl.log.debug( "No sample found in " + series + " to match " + cSample + "; this can happen if some samples were not run on all platforms." );
 
                 }
             }
@@ -2046,17 +1942,14 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
 
-        GeoConverterImpl.log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size()
-                + " bioassays and " + ( numBioMaterials - numSkippedBioMaterials ) + " biomaterials." );
+        GeoConverterImpl.log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays and " + ( numBioMaterials - numSkippedBioMaterials ) + " biomaterials." );
 
         int expectedNumSamples = series.getSamples().size() - samplesToSkip.size();
         int actualNumSamples = expExp.getBioAssays().size();
         expExp.setNumberOfSamples( actualNumSamples );
 
         if ( expectedNumSamples > actualNumSamples ) {
-            GeoConverterImpl.log.warn( ( expectedNumSamples - actualNumSamples )
-                    + " samples were not in the 'sample correspondence'"
-                    + " and have been omitted. Possibly they were in the Series (GSE) but not in the corresponding Dataset (GDS)?" );
+            GeoConverterImpl.log.warn( ( expectedNumSamples - actualNumSamples ) + " samples were not in the 'sample correspondence'" + " and have been omitted. Possibly they were in the Series (GSE) but not in the corresponding Dataset (GDS)?" );
         }
 
         // this is mostly only needed for converting data vectors, which will be confused by the extra ones
@@ -2071,8 +1964,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         } else {
             for ( GeoDataset dataset : dataSets ) {
-                if ( dataSetsToSkip.contains( dataset.getGeoAccession() ) )
-                    continue;
+                if ( dataSetsToSkip.contains( dataset.getGeoAccession() ) ) continue;
                 this.convertDataset( dataset, expExp );
             }
         }
@@ -2080,8 +1972,7 @@ public class GeoConverterImpl implements GeoConverter {
         return expExp;
     }
 
-    private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted,
-            Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
+    private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
         GeoSeries speciesSpecific = new GeoSeries();
 
         Collection<GeoData> datasets = organismDatasetMap.get( organism );
@@ -2118,16 +2009,13 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setTitle( makeTitle( series.getTitle(), organism ) );
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues() );
-        speciesSpecific.getSeriesTypes().addAll(
-                series.getSeriesTypes() ); // even though this might apply to samples left behind in other part.
+        speciesSpecific.getSeriesTypes().addAll( series.getSeriesTypes() ); // even though this might apply to samples left behind in other part.
 
         ExpressionExperiment ee = this.convertSeriesSingle( speciesSpecific );
-        if ( ee != null )
-            converted.add( ee );
+        if ( ee != null ) converted.add( ee );
     }
 
-    private void convertSpeciesSpecificSamples( GeoSeries series, Collection<ExpressionExperiment> converted,
-            Map<String, Collection<GeoSample>> organismSampleMap, int i, String organism ) {
+    private void convertSpeciesSpecificSamples( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoSample>> organismSampleMap, int i, String organism ) {
 
         GeoSeries speciesSpecific = new GeoSeries();
 
@@ -2169,8 +2057,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
         ExpressionExperiment ee = this.convertSeriesSingle( speciesSpecific );
-        if ( ee != null )
-            converted.add( ee );
+        if ( ee != null ) converted.add( ee );
 
     }
 
@@ -2190,8 +2077,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @param  geoSubSet          geo subset
      * @return FV
      */
-    private FactorValue convertSubsetDescriptionToFactorValue( GeoSubset geoSubSet,
-            ExperimentalFactor experimentalFactor ) {
+    private FactorValue convertSubsetDescriptionToFactorValue( GeoSubset geoSubSet, ExperimentalFactor experimentalFactor ) {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
 
@@ -2210,8 +2096,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
             if ( fv.equals( factorValue ) ) {
-                GeoConverterImpl.log
-                        .debug( factorValue + " is matched by existing factorValue for " + experimentalFactor );
+                GeoConverterImpl.log.debug( factorValue + " is matched by existing factorValue for " + experimentalFactor );
                 return fv;
             }
         }
@@ -2247,8 +2132,7 @@ public class GeoConverterImpl implements GeoConverter {
         Characteristic term = Characteristic.Factory.newInstance();
         this.convertVariableType( term, variable.getType() );
 
-        if ( term.getCategory() != null )
-            result.setCategory( term );
+        if ( term.getCategory() != null ) result.setCategory( term );
         return result;
     }
 
@@ -2367,8 +2251,7 @@ public class GeoConverterImpl implements GeoConverter {
             throw new IllegalStateException( "No action for variable type='" + varType + "' (no category ontology term configured)" );
         }
 
-        if ( GeoConverterImpl.log.isDebugEnabled() )
-            GeoConverterImpl.log.debug( "Category term: " + term + " " );
+        if ( GeoConverterImpl.log.isDebugEnabled() ) GeoConverterImpl.log.debug( "Category term: " + term + " " );
         c.setCategory( term );
         c.setCategoryUri( uri );
         c.setEvidenceCode( GOEvidenceCode.IIA );
@@ -2380,22 +2263,17 @@ public class GeoConverterImpl implements GeoConverter {
      *
      * @param values A GeoValues object holding the parsed results.
      */
-    private void convertVectorsForPlatform( GeoValues values, ExpressionExperiment expExp,
-            List<GeoSample> datasetSamples, GeoPlatform geoPlatform ) {
+    private void convertVectorsForPlatform( GeoValues values, ExpressionExperiment expExp, List<GeoSample> datasetSamples, GeoPlatform geoPlatform ) {
 
         assert datasetSamples.size() > 0 : "No samples in dataset";
 
         if ( !geoPlatform.useDataFromGeo() ) {
             // see bug 4181
-            GeoConverterImpl.log
-                    .warn( "Platform characteristics indicate data from GEO should be ignored or will not be present anyway ("
-                            + geoPlatform + ")" );
+            GeoConverterImpl.log.warn( "Platform characteristics indicate data from GEO should be ignored or will not be present anyway (" + geoPlatform + ")" );
             return;
         }
 
-        GeoConverterImpl.log
-                .info( "Converting vectors for " + geoPlatform.getGeoAccession() + ", " + datasetSamples.size()
-                        + " samples." );
+        GeoConverterImpl.log.info( "Converting vectors for " + geoPlatform.getGeoAccession() + ", " + datasetSamples.size() + " samples." );
 
         BioAssayDimension bioAssayDimension = this.convertGeoSampleList( datasetSamples, expExp );
 
@@ -2424,15 +2302,12 @@ public class GeoConverterImpl implements GeoConverter {
             int columnAccordingToSample = quantitationTypes.indexOf( quantitationType );
 
             int quantitationTypeIndex = values.getQuantitationTypeIndex( geoPlatform, quantitationType );
-            GeoConverterImpl.log.debug( "Processing " + quantitationType + " (column=" + quantitationTypeIndex
-                    + " - according to sample, it's " + columnAccordingToSample + ")" );
+            GeoConverterImpl.log.debug( "Processing " + quantitationType + " (column=" + quantitationTypeIndex + " - according to sample, it's " + columnAccordingToSample + ")" );
 
-            Map<String, List<Object>> dataVectors = this
-                    .makeDataVectors( values, datasetSamples, quantitationTypeIndex );
+            Map<String, List<Object>> dataVectors = this.makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null || dataVectors.size() == 0 ) {
-                GeoConverterImpl.log
-                        .debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
+                GeoConverterImpl.log.debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 continue;
             }
             GeoConverterImpl.log.info( dataVectors.size() + " data vectors for " + quantitationType );
@@ -2443,38 +2318,30 @@ public class GeoConverterImpl implements GeoConverter {
             qt.setName( quantitationType );
             String description = quantitationTypeDescriptions.get( columnAccordingToSample );
             qt.setDescription( description );
-            QuantitationTypeParameterGuesser
-                    .guessQuantitationTypeParameters( qt, quantitationType, description, exampleValue );
+            QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description, exampleValue );
 
             int count = 0;
             int skipped = 0;
             for ( String designElementName : dataVectors.keySet() ) {
                 List<Object> dataVector = dataVectors.get( designElementName );
-                if ( dataVector == null || dataVector.size() == 0 )
-                    continue;
+                if ( dataVector == null || dataVector.size() == 0 ) continue;
 
-                RawExpressionDataVector vector = this
-                        .convertDesignElementDataVector( geoPlatform, expExp, bioAssayDimension, designElementName,
-                                dataVector, qt );
+                RawExpressionDataVector vector = this.convertDesignElementDataVector( geoPlatform, expExp, bioAssayDimension, designElementName, dataVector, qt );
 
                 if ( vector == null ) {
                     skipped++;
                     if ( GeoConverterImpl.log.isDebugEnabled() )
-                        GeoConverterImpl.log
-                                .debug( "Null vector for DE=" + designElementName + " QT=" + quantitationType );
+                        GeoConverterImpl.log.debug( "Null vector for DE=" + designElementName + " QT=" + quantitationType );
                     continue;
                 }
 
                 if ( GeoConverterImpl.log.isTraceEnabled() ) {
-                    GeoConverterImpl.log
-                            .trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " "
-                                    + dataVector.size() + " elements in vector" );
+                    GeoConverterImpl.log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " " + dataVector.size() + " elements in vector" );
                 }
 
                 expExp.getRawExpressionDataVectors().add( vector );
 
-                if ( ++count % GeoConverterImpl.LOGGING_VECTOR_COUNT_UPDATE == 0 && GeoConverterImpl.log
-                        .isDebugEnabled() ) {
+                if ( ++count % GeoConverterImpl.LOGGING_VECTOR_COUNT_UPDATE == 0 && GeoConverterImpl.log.isDebugEnabled() ) {
                     GeoConverterImpl.log.debug( count + " Data vectors added" );
                 }
             }
@@ -2485,17 +2352,14 @@ public class GeoConverterImpl implements GeoConverter {
                     GeoConverterImpl.log.debug( count + " Data vectors added for '" + quantitationType + "'" );
                 }
             } else {
-                GeoConverterImpl.log.info( "No vectors were retained for " + quantitationType
-                        + " -- usually this is due to all values being missing." );
+                GeoConverterImpl.log.info( "No vectors were retained for " + quantitationType + " -- usually this is due to all values being missing." );
             }
 
             if ( skipped > 0 ) {
                 GeoConverterImpl.log.info( "Skipped " + skipped + " vectors" );
             }
         }
-        GeoConverterImpl.log
-                .info( "Total of " + expExp.getRawExpressionDataVectors().size() + " vectors on platform " + geoPlatform
-                        + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
+        GeoConverterImpl.log.info( "Total of " + expExp.getRawExpressionDataVectors().size() + " vectors on platform " + geoPlatform + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
     private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
@@ -2520,23 +2384,18 @@ public class GeoConverterImpl implements GeoConverter {
         arrayDesign.setShortName( platform.getGeoAccession() );
         arrayDesign.setDescription( platform.getDescriptions() );
         PlatformType technology = platform.getTechnology();
-        if ( technology == PlatformType.dualChannel || technology == PlatformType.dualChannelGenomic
-                || technology == PlatformType.spottedOligonucleotide || technology == PlatformType.spottedDNAOrcDNA ) {
+        if ( technology == PlatformType.dualChannel || technology == PlatformType.dualChannelGenomic || technology == PlatformType.spottedOligonucleotide || technology == PlatformType.spottedDNAOrcDNA ) {
             arrayDesign.setTechnologyType( TechnologyType.TWOCOLOR );
-        } else if ( technology == PlatformType.singleChannel || technology == PlatformType.oligonucleotideBeads
-                || technology == PlatformType.inSituOligonucleotide ) {
+        } else if ( technology == PlatformType.singleChannel || technology == PlatformType.oligonucleotideBeads || technology == PlatformType.inSituOligonucleotide ) {
             arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         } else if ( technology == null ) {
-            GeoConverterImpl.log
-                    .warn( "No technology type available for " + platform + ", provisionally setting to 'other'" );
+            GeoConverterImpl.log.warn( "No technology type available for " + platform + ", provisionally setting to 'other'" );
             arrayDesign.setTechnologyType( TechnologyType.OTHER );
         } else if ( technology.equals( PlatformType.MPSS ) ) {
             arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
-        } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
-                .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
+        } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
             arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
-        } else if ( technology
-                .equals( PlatformType.other ) ) {
+        } else if ( technology.equals( PlatformType.other ) ) {
             // We don't know....
             arrayDesign.setTechnologyType( TechnologyType.OTHER );
         } else {
@@ -2561,8 +2420,7 @@ public class GeoConverterImpl implements GeoConverter {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyProbeDescription( string ) ) {
-                GeoConverterImpl.log.debug( string + " appears to indicate the  probe descriptions in column " + index
-                        + " for platform " + platform );
+                GeoConverterImpl.log.debug( string + " appears to indicate the  probe descriptions in column " + index + " for platform " + platform );
                 return string;
             }
             index++;
@@ -2574,8 +2432,7 @@ public class GeoConverterImpl implements GeoConverter {
     private ExternalDatabase determinePlatformExternalDatabase( GeoPlatform platform ) {
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
 
-        Collection<String> likelyExternalDatabaseIdentifiers = this
-                .determinePlatformExternalReferenceIdentifier( platform );
+        Collection<String> likelyExternalDatabaseIdentifiers = this.determinePlatformExternalReferenceIdentifier( platform );
         String dbIdentifierDescription = this.getDbIdentifierDescription( platform );
 
         String url;
@@ -2592,8 +2449,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         String likelyExternalDatabaseIdentifier = likelyExternalDatabaseIdentifiers.iterator().next();
-        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" )
-                || likelyExternalDatabaseIdentifier.toLowerCase().equals( "genbank" ) ) {
+        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) || likelyExternalDatabaseIdentifier.toLowerCase().equals( "genbank" ) ) {
             if ( genbank == null ) {
                 if ( externalDatabaseService != null ) {
                     genbank = externalDatabaseService.findByName( "Genbank" );
@@ -2629,9 +2485,7 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<String> matches = new HashSet<>();
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyExternalReference( string ) ) {
-                GeoConverterImpl.log
-                        .debug( string + " appears to indicate a possible external reference identifier in column "
-                                + index + " for platform " + platform );
+                GeoConverterImpl.log.debug( string + " appears to indicate a possible external reference identifier in column " + index + " for platform " + platform );
                 matches.add( string );
 
             }
@@ -2657,8 +2511,7 @@ public class GeoConverterImpl implements GeoConverter {
         int index = 0;
         for ( String columnName : columnNames ) {
             if ( GeoConstants.likelyProbeOrganism( columnName ) ) {
-                GeoConverterImpl.log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index
-                        + " for platform " + platform );
+                GeoConverterImpl.log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index + " for platform " + platform );
                 return columnName;
             }
             index++;
@@ -2672,8 +2525,7 @@ public class GeoConverterImpl implements GeoConverter {
         int index = 0;
         for ( String columnName : columnNames ) {
             if ( GeoConstants.likelySequence( columnName ) ) {
-                GeoConverterImpl.log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index
-                        + " for platform " + platform );
+                GeoConverterImpl.log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index + " for platform " + platform );
                 return columnName;
             }
             index++;
@@ -2691,12 +2543,10 @@ public class GeoConverterImpl implements GeoConverter {
         bioMaterial.getCharacteristics().add( gemmaChar );
     }
 
-    private FactorValue findMatchingExperimentalFactorValue( Collection<ExperimentalFactor> experimentalFactors,
-            FactorValue convertVariableToFactorValue ) {
+    private FactorValue findMatchingExperimentalFactorValue( Collection<ExperimentalFactor> experimentalFactors, FactorValue convertVariableToFactorValue ) {
         Collection<Statement> characteristics = convertVariableToFactorValue.getCharacteristics();
         if ( characteristics.size() > 1 )
-            throw new UnsupportedOperationException(
-                    "Can't handle factor values with multiple characteristics in GEO conversion" );
+            throw new UnsupportedOperationException( "Can't handle factor values with multiple characteristics in GEO conversion" );
         Characteristic c = characteristics.iterator().next();
 
         FactorValue matchingFactorValue = null;
@@ -2735,17 +2585,13 @@ public class GeoConverterImpl implements GeoConverter {
         for ( GeoSample sample : seriesSamples ) {
             if ( geoDataset.getColumnNames().contains( sample.getGeoAccession() ) ) {
                 if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                    GeoConverterImpl.log
-                            .debug( "Dataset " + geoDataset + " includes sample " + sample + " on platform " + sample
-                                    .getPlatforms().iterator().next() );
+                    GeoConverterImpl.log.debug( "Dataset " + geoDataset + " includes sample " + sample + " on platform " + sample.getPlatforms().iterator().next() );
                 }
                 datasetSamples.add( sample );
             }
 
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                GeoConverterImpl.log
-                        .debug( "Dataset " + geoDataset + " DOES NOT include sample " + sample + " on platform "
-                                + sample.getPlatforms().iterator().next() );
+                GeoConverterImpl.log.debug( "Dataset " + geoDataset + " DOES NOT include sample " + sample + " on platform " + sample.getPlatforms().iterator().next() );
             }
         }
 
@@ -2783,8 +2629,7 @@ public class GeoConverterImpl implements GeoConverter {
             for ( GeoSample sample : series.getSamples() ) {
 
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
-                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
-                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: " + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
 
                 if ( !organisms.containsKey( organism ) ) {
@@ -2826,8 +2671,7 @@ public class GeoConverterImpl implements GeoConverter {
         if ( series.getDataSets() == null || series.getDataSets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
-                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
-                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: " + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 GeoPlatform platform = sample.getPlatforms().iterator().next();
 
                 if ( platforms.get( platform ) == null ) {
@@ -2857,12 +2701,10 @@ public class GeoConverterImpl implements GeoConverter {
             Collection<GeoPlatform> platforms = sample.getPlatforms();
             assert platforms.size() != 0;
             if ( platforms.size() > 1 ) {
-                throw new UnsupportedOperationException(
-                        "Can't handle GEO sample ids associated with multiple platforms just yet" );
+                throw new UnsupportedOperationException( "Can't handle GEO sample ids associated with multiple platforms just yet" );
             }
             GeoPlatform nextPlatform = platforms.iterator().next();
-            if ( platform == null )
-                platform = nextPlatform;
+            if ( platform == null ) platform = nextPlatform;
             else if ( !platform.equals( nextPlatform ) )
                 throw new IllegalArgumentException( "All samples here must use the same platform" );
         }
@@ -2888,8 +2730,7 @@ public class GeoConverterImpl implements GeoConverter {
         for ( GeoSeries series2 : series ) {
             if ( series2.getSamples() != null && series2.getSamples().size() > 0 ) {
                 if ( found ) {
-                    throw new IllegalStateException(
-                            "More than one of the series for " + geoDataset + " has samples: " + series2 );
+                    throw new IllegalStateException( "More than one of the series for " + geoDataset + " has samples: " + series2 );
                 }
                 seriesSamples = series2.getSamples();
                 found = true;
@@ -2916,8 +2757,7 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
             toConvert.add( false );
         } else {
-            throw new UnsupportedOperationException(
-                    "Missing values in data vectors of type " + pt + " not supported" );
+            throw new UnsupportedOperationException( "Missing values in data vectors of type " + pt + " not supported" );
         }
     }
 
@@ -2969,8 +2809,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private boolean isUsable( GeoSeries series ) {
 
-        return series.getSeriesTypes().contains( SeriesType.geneExpressionByArray ) || series.getSeriesTypes()
-                .contains( SeriesType.geneExpressionBySequencing );
+        return series.getSeriesTypes().contains( SeriesType.geneExpressionByArray ) || series.getSeriesTypes().contains( SeriesType.geneExpressionBySequencing );
 
     }
 
@@ -2983,8 +2822,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
-    private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,
-            Integer quantitationTypeIndex ) {
+    private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
         Map<String, List<Object>> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = this.getPlatformForSamples( datasetSamples );
@@ -2992,8 +2830,7 @@ public class GeoConverterImpl implements GeoConverter {
         // the locations of the data we need in the target vectors (mostly reordering)
         Integer[] indices = values.getIndices( platform, datasetSamples, quantitationTypeIndex );
 
-        if ( indices == null || indices.length == 0 )
-            return null; // can happen if quantitation type was filtered out.
+        if ( indices == null || indices.length == 0 ) return null; // can happen if quantitation type was filtered out.
 
         assert indices.length == datasetSamples.size();
 
@@ -3010,8 +2847,7 @@ public class GeoConverterImpl implements GeoConverter {
              * quantitation type that was filtered out during parsing, or absent from some samples.
              */
             List<Object> ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
-            if ( ob == null || ob.size() == 0 )
-                continue;
+            if ( ob == null || ob.size() == 0 ) continue;
             assert ob.size() == datasetSamples.size();
             dataVectors.put( designElementName, ob );
         }
@@ -3020,24 +2856,19 @@ public class GeoConverterImpl implements GeoConverter {
 
         values.clear( platform, datasetSamples, quantitationTypeIndex );
 
-        if ( !filledIn )
-            return null;
+        if ( !filledIn ) return null;
 
         return dataVectors;
     }
 
-    private void matchSampleReplicationToExperimentalFactorValue( BioMaterial bioMaterial,
-            Collection<ExperimentalFactor> experimentalFactors, GeoReplication replication ) {
+    private void matchSampleReplicationToExperimentalFactorValue( BioMaterial bioMaterial, Collection<ExperimentalFactor> experimentalFactors, GeoReplication replication ) {
         // find the experimentalFactor that matches this.
         FactorValue convertVariableToFactorValue = this.convertReplicationToFactorValue( replication );
-        FactorValue matchingFactorValue = this
-                .findMatchingExperimentalFactorValue( experimentalFactors, convertVariableToFactorValue );
+        FactorValue matchingFactorValue = this.findMatchingExperimentalFactorValue( experimentalFactors, convertVariableToFactorValue );
         if ( matchingFactorValue != null ) {
             bioMaterial.getFactorValues().add( matchingFactorValue );
         } else {
-            throw new IllegalStateException(
-                    "Could not find matching factor value for " + replication + " in experimental design for sample "
-                            + bioMaterial );
+            throw new IllegalStateException( "Could not find matching factor value for " + replication + " in experimental design for sample " + bioMaterial );
         }
     }
 
@@ -3048,32 +2879,26 @@ public class GeoConverterImpl implements GeoConverter {
      *                          for the
      *                          BioAssay
      */
-    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension,
-            String sampleAcc ) {
+    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String sampleAcc ) {
 
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
             if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                 bioAssayDimension.getBioAssays().add( bioAssay );
-                GeoConverterImpl.log
-                        .debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
+                GeoConverterImpl.log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
                 return true;
             }
         }
         return false;
     }
 
-    private void matchSampleVariableToExperimentalFactorValue( BioMaterial bioMaterial,
-            Collection<ExperimentalFactor> experimentalFactors, GeoVariable variable ) {
+    private void matchSampleVariableToExperimentalFactorValue( BioMaterial bioMaterial, Collection<ExperimentalFactor> experimentalFactors, GeoVariable variable ) {
 
         // find the experimentalFactor that matches this.
         FactorValue convertVariableToFactorValue = this.convertVariableToFactorValue( variable );
-        FactorValue matchingFactorValue = this
-                .findMatchingExperimentalFactorValue( experimentalFactors, convertVariableToFactorValue );
+        FactorValue matchingFactorValue = this.findMatchingExperimentalFactorValue( experimentalFactors, convertVariableToFactorValue );
 
         if ( matchingFactorValue == null ) {
-            throw new IllegalStateException(
-                    "Could not find matching factor value for " + variable + " in experimental design for sample "
-                            + bioMaterial );
+            throw new IllegalStateException( "Could not find matching factor value for " + variable + " in experimental design for sample " + bioMaterial );
         }
 
         // make sure we don't put the factor value on more than once.
@@ -3096,8 +2921,7 @@ public class GeoConverterImpl implements GeoConverter {
         for ( GeoSample sample : datasetSamples ) {
             if ( sample.hasUsableData() ) {
                 reference = sample.getColumnNames();
-                if ( !reference.isEmpty() )
-                    break;
+                if ( !reference.isEmpty() ) break;
             } else {
                 expectingData = false;
             }
@@ -3137,8 +2961,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
         if ( someDidntMatch ) {
-            GeoConverterImpl.log
-                    .warn( "Samples do not have consistent quantification type names. Last error was: " + lastError );
+            GeoConverterImpl.log.warn( "Samples do not have consistent quantification type names. Last error was: " + lastError );
         }
     }
 
