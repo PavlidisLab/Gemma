@@ -34,6 +34,7 @@ pipeline {
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
         // whether or not to force integration tests
         booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
+        booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
     }
     stages {
         stage('Checkout scm') {
@@ -134,7 +135,32 @@ pipeline {
                 }
             }
             parallel {
-                stage('Run slow unit tests and integration tests') {
+                stage('Run slow unit tests') {
+                    anyOf {
+                        // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+                        branch 'hotfix-*'
+                        branch 'release-*'
+                        branch 'development'
+                        expression { params.FORCE_SLOW_TESTS }
+                    }
+                    steps {
+                        setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        sh 'mvn -B test -Dgroups=SlowTest'
+                    }
+                    post {
+                        always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
+                            junit testResults: '**/target/failsafe-reports/*.xml'
+                        }
+                        success {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        unsuccessful {
+                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
+                }
+                stage('Run integration tests') {
                     when {
                         anyOf {
                             // we can safely ignore integration tests on the master branch, those were run in hotfix/release
@@ -146,7 +172,6 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test -Dgroups=SlowTest'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
                         }
