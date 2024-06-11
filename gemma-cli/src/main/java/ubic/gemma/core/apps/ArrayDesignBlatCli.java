@@ -34,7 +34,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -183,13 +182,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     + allArrayDesigns.size() + " items]" );
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-            Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
             for ( ArrayDesign arrayDesign : allArrayDesigns ) {
-                arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
+                getBatchTaskExecutor().submit( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
-
-            executeBatchTasks( arrayDesigns );
-
         } else {
             throw new RuntimeException();
         }

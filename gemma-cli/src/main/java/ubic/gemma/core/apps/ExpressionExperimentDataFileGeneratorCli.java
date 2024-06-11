@@ -31,8 +31,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -68,11 +66,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        Collection<Runnable> tasks = new ArrayList<>( queue.size() );
         for ( BioAssaySet ee : queue ) {
-            tasks.add( new ProcessBioAssaySet( ee ) );
+            getBatchTaskExecutor().submit( new ProcessBioAssaySet( ee ) );
         }
-        executeBatchTasks( tasks );
     }
 
     @Override

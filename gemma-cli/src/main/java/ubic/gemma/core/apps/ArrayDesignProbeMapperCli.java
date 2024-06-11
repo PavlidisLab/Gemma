@@ -25,7 +25,10 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -513,12 +516,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         // TODO: process array designs in order of how many experiments they use (most first)
-
-        Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
-            arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
+            getBatchTaskExecutor().submit( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
-        executeBatchTasks( arrayDesigns );
     }
 
     private void configure( ArrayDesign arrayDesign ) {

@@ -209,30 +209,9 @@ public abstract class AbstractCLI implements CLI {
             return FAILURE;
         }
         try {
-            Exception e = null;
-            try {
-                beforeWork();
-                insideDoWork = true;
-                doWork();
-            } catch ( Exception e2 ) {
-                e = e2;
-                throw e2;
-            } finally {
-                insideDoWork = false;
-                afterWork( e );
-            }
-            if ( executorService != null ) {
-                executorService.shutdown();
-                if ( !executorService.isTerminated() ) {
-                    log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", executorService.getSubmittedTasks() - executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
-                    while ( !executorService.awaitTermination( 5, TimeUnit.SECONDS ) ) {
-                        Assert.notNull( executorService, "Batch processing progress can only be reported if a batch task ExecutorService has been created." );
-                        log.info( String.format( "Completed %d/%d batch tasks.", executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
-                    }
-                }
-                return executorService.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
-            }
-            return SUCCESS;
+            work();
+            awaitBatchExecutorService();
+            return executorService != null && executorService.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
         } catch ( Exception e ) {
             if ( executorService != null ) {
                 List<Runnable> stillRunning = executorService.shutdownNow();
@@ -435,6 +414,26 @@ public abstract class AbstractCLI implements CLI {
     protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
 
     /**
+     * Default workflow of a CLI.
+     */
+    private void work() throws Exception {
+        beforeWork();
+        Exception doWorkException = null;
+        try {
+            insideDoWork = true;
+            try {
+                doWork();
+            } catch ( Exception e2 ) {
+                doWorkException = e2;
+                throw doWorkException;
+            }
+        } finally {
+            insideDoWork = false;
+            afterWork( doWorkException );
+        }
+    }
+
+    /**
      * Override this to perform any setup before {@link #doWork()}.
      */
     protected void beforeWork() {
@@ -444,8 +443,9 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Command line implementation.
      * <p>
-     * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the
-     * implementation can assume that all its arguments have already been initialized.
+     * This is called after {@link #buildOptions(Options)}, {@link #processOptions(CommandLine)} and {@link #beforeWork()},
+     * so the implementation can assume that all its arguments have already been initialized and any setup behaviour
+     * have been performed.
      *
      * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a
      *                   {@link #FAILURE} exit code, otherwise use {@link #addErrorObject} to indicate an
@@ -455,6 +455,8 @@ public abstract class AbstractCLI implements CLI {
 
     /**
      * Override this to perform any cleanup after {@link #doWork()}.
+     * <p>
+     * This is always invoked regardless of the outcome of {@link #doWork()}.
      * @param exception the exception thrown by {@link #doWork()} if any, else null
      */
     protected void afterWork( @Nullable Exception exception ) {
@@ -544,8 +546,8 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * The CLI will await any pending batch tasks before exiting. You may only submit batch tasks inside {@link #doWork()}.
      * <p>
-     * Errors will be reported with {@link #addErrorObject(Object, Exception)}. However, reporting successes is
-     * the responsibility of the caller.
+     * Successes and errors are reported automatically if {@link #addSuccessObject(Object, String)} or {@link #addErrorObject(Object, String)}
+     * haven't been invoked during the execution of the callable/runnable.
      */
     protected final ExecutorService getBatchTaskExecutor() {
         // BatchTaskExecutorService is package-private
@@ -553,7 +555,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private BatchTaskExecutorService getBatchTaskExecutorInternal() {
-        Assert.isTrue( insideDoWork || executorService != null, "Batch tasks can only be submitted in doWork()." );
+        Assert.isTrue( insideDoWork, "Batch tasks can only be submitted in doWork()." );
         if ( executorService == null ) {
             executorService = new BatchTaskExecutorService( createBatchTaskExecutorService() );
         }
@@ -561,21 +563,19 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
-     * Execute the given batch tasks and await their completions.
-     * <p>
-     * Errors will be reported with {@link #addErrorObject(Object, Exception)}. However, reporting successes is
-     * the responsibility of the caller.
+     * Await the completion of all batch tasks.
      */
-    protected void executeBatchTasks( Collection<? extends Runnable> tasks ) throws InterruptedException {
-        Assert.isTrue( !tasks.isEmpty(), "At least one batch task must be submitted." );
-        ExecutorCompletionService<?> completionService = new ExecutorCompletionService<>( getBatchTaskExecutor() );
-        List<Future<?>> futures = new ArrayList<>( tasks.size() );
-        for ( Runnable task : tasks ) {
-            futures.add( completionService.submit( task, null ) );
+    protected void awaitBatchExecutorService() throws InterruptedException {
+        if ( executorService == null ) {
+            return;
         }
-        for ( int i = 1; i <= futures.size(); i++ ) {
-            completionService.take();
-            log.info( String.format( "Completed %d/%d batch tasks.", i, futures.size() ) );
+        executorService.shutdown();
+        if ( executorService.isTerminated() ) {
+            return;
+        }
+        log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", executorService.getSubmittedTasks() - executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
+        while ( !executorService.awaitTermination( 5, TimeUnit.SECONDS ) ) {
+            log.info( String.format( "Completed %d/%d batch tasks.", executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
         }
     }
 
@@ -584,20 +584,21 @@ public abstract class AbstractCLI implements CLI {
      * 'successObjects' and 'errorObjects'
      */
     private void summarizeBatchProcessing() throws IOException {
-        BatchTaskExecutorService executor = getBatchTaskExecutorInternal();
-        if ( executor.getBatchProcessingResults().isEmpty() ) {
+        Assert.notNull( executorService );
+        if ( executorService.getBatchProcessingResults().isEmpty() ) {
             return;
         }
         if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
             log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
         }
+        BatchTaskExecutorServiceSummarizer summarizer;
         try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
             switch ( batchFormat ) {
                 case TEXT:
-                    new BatchTaskExecutorServiceSummarizer( executor ).summarizeBatchProcessingToText( dest != null ? dest : System.out );
+                    new BatchTaskExecutorServiceSummarizer( executorService ).summarizeBatchProcessingToText( dest != null ? dest : System.out );
                     break;
                 case TSV:
-                    new BatchTaskExecutorServiceSummarizer( executor ).summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
+                    new BatchTaskExecutorServiceSummarizer( executorService ).summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
                     break;
                 case SUPPRESS:
                     break;
