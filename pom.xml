@@ -745,6 +745,9 @@
 			-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
 			-Djava.awt.headless=true
 			-Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL
+			<!-- FIXME: remove this once we've migrated to Spring 5 -->
+			<!-- this flag is ignored starting Java 17 -->
+			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
 	</properties>
 </project>
