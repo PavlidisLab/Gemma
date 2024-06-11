@@ -712,7 +712,6 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<maven.version>3.1.1</maven.version>
 		<gsec.version>0.0.17-SNAPSHOT</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
