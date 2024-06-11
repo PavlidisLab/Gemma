@@ -145,8 +145,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                     on <time datetime="${appConfig["gemma.build.timestamp"]}"><fmt:formatDate value="${parsedBuildTimestamp}" type="both"/></time>
                 </c:if>
                 <c:if test="${appConfig['gemma.build.gitHash'] != null}">
-                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}"
-                        target="_blank" rel="noopener noreferrer">${appConfig["gemma.build.gitHash"]}</a>
+                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}">${appConfig["gemma.build.gitHash"]}</a>
                 </c:if>
                 </span>
             </security:authorize>
