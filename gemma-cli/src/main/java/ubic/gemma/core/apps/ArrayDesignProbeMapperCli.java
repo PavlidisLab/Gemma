@@ -6,7 +6,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -21,6 +20,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,10 +74,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private boolean mirnaOnlyModeOption = false;
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
-
-    public ArrayDesignProbeMapperCli() {
-        setRequireLogin( true );
-    }
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -174,6 +170,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg().argName( "probes" ).build();
 
         options.addOption( probesToDoOption );
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     private TaxonService taxonService;

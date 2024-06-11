@@ -23,10 +23,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.RandomUtils;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,10 +39,6 @@ import java.util.Collection;
 public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
 
     private String[] pmids;
-
-    public BibRefUpdaterCli() {
-        setRequireLogin( true );
-    }
 
     @Override
     public String getCommandName() {
@@ -62,6 +58,11 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "pmids" ).longOpt( null ).desc( "Pubmed ids, comma-delimited; default is to do all in DB" ).argName( "ids" ).hasArg().build() );
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     @Override

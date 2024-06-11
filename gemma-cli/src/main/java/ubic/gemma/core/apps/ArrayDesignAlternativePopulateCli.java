@@ -40,10 +40,6 @@ import java.io.InputStreamReader;
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI {
 
-    public ArrayDesignAlternativePopulateCli() {
-        setRequireLogin( true );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
@@ -57,6 +53,11 @@ public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI 
     @Override
     protected void buildOptions( Options options ) {
 
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     @Override
