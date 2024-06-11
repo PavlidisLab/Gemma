@@ -56,6 +56,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
 
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
+    protected ArrayDesignSequenceManipulatingCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;

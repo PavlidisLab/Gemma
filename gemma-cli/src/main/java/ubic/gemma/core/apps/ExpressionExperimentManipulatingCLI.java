@@ -35,8 +35,8 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -116,6 +116,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * Try to use references instead of actual entities.
      */
     private boolean useReferencesIfPossible = false;
+
+    protected ExpressionExperimentManipulatingCLI() {
+        setRequireLogin( true );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
