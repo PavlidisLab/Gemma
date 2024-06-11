@@ -166,8 +166,7 @@
     </dependencies>
 
     <properties>
-        <!-- 4.10+ require Java 11 -->
-        <antlr4.version>4.9.3</antlr4.version>
+        <antlr4.version>4.13.1</antlr4.version>
     </properties>
 
 </project>
