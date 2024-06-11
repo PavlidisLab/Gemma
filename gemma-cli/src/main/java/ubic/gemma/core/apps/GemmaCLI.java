@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -52,9 +51,15 @@ import java.util.stream.Collectors;
  *
  * @author paul
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-@CommonsLog
 public class GemmaCLI {
+
+    static {
+        // set this as early as possible, otherwise logging might be broken
+        if ( System.getProperty( "gemma.log.dir" ) == null ) {
+            System.err.println( "The 'gemma.log.dir' system property is not set, will default to the current folder." );
+            System.setProperty( "gemma.log.dir", "." );
+        }
+    }
 
     private static final String
             HELP_OPTION = "h",
@@ -184,7 +189,8 @@ public class GemmaCLI {
             try {
                 cliInstance = ( CLI ) beanClass.newInstance();
             } catch ( InstantiationException | IllegalAccessException e2 ) {
-                log.warn( String.format( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.", beanClass.getName() ), e2 );
+                System.err.printf( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.%n", beanClass.getName() );
+                e2.printStackTrace( System.err );
                 cliInstance = ctx.getBean( beanName, CLI.class );
             }
             Command cmd = new Command( beanClass, beanName, cliInstance.getCommandName(), cliInstance.getShortDesc(), cliInstance.getOptions(), cliInstance.allowPositionalArguments() );
@@ -303,7 +309,7 @@ public class GemmaCLI {
     static String getOptStringForLogging( String[] argsToPass ) {
         Matcher matcher = PASSWORD_IN_CLI_MATCHER.matcher( StringUtils.join( argsToPass, " " ) );
         if ( matcher.find() ) {
-            log.warn( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
+            System.err.println( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
             return matcher.replaceAll( "$1 XXXXXX" );
         }
         return Arrays.stream( argsToPass )
