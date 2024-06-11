@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Functions for maintaining the database. This is intended for denormalized tables and statistics tables that need to
@@ -174,73 +175,29 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateGene2CsEntries( boolean force ) {
-        String annotation = "";
         Gene2CsStatus updatedStatus = null;
         try {
-            boolean needToRefresh = false;
-
-            if ( force ) {
-                needToRefresh = true;
-                annotation = "Force-updating the GENE2CS table.";
-            }
-
-            if ( !needToRefresh ) {
-                TableMaintenanceUtilImpl.log.info( "Running Gene2CS status check..." );
-                Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
-                if ( status == null ) {
-                    needToRefresh = true;
-                    annotation = "No Gene2Cs status exists on disk.";
-                }
-
-                if ( !needToRefresh ) {
-                    Collection<ArrayDesign> newObj = auditEventService.getNewSinceDate( ArrayDesign.class, status.getLastUpdate() );
-
-                    for ( ArrayDesign a : newObj ) {
-                        needToRefresh = true;
-                        annotation = a + " is new since " + status.getLastUpdate();
-                        TableMaintenanceUtilImpl.log.debug( annotation );
-                        break;
-                    }
-                }
-
-                if ( !needToRefresh ) {
-                    Collection<ArrayDesign> updatedObj = auditEventService.getUpdatedSinceDate( ArrayDesign.class, status.getLastUpdate() );
-                    for ( ArrayDesign a : updatedObj ) {
-                        for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
-                            if ( ae == null )
-                                continue; // legacy of ordered-list which could end up with gaps; should
-                            // not be needed any more
-                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
-                                    && ae.getDate().after( status.getLastUpdate() ) ) {
-                                needToRefresh = true;
-                                annotation = a + " had probe mapping done since: " + status.getLastUpdate();
-                                TableMaintenanceUtilImpl.log.debug( annotation );
-                                break;
-                            }
-                        }
-                        if ( needToRefresh )
-                            break;
-                    }
-                }
-            }
-
-            if ( !needToRefresh ) {
+            String annotation;
+            if ( ( annotation = needsToRefreshGene2Cs( force ) ) == null ) {
                 TableMaintenanceUtilImpl.log.info( "No update of GENE2CS needed." );
                 return 0;
             }
-
             TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
             int updated = this.generateGene2CsEntries();
-            annotation += "\n\n" + "Updated " + updated + " entries.";
+            if ( updated > 0 ) {
+                annotation += "\n\n" + "Updated " + updated + " entries.";
+            }
             TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
             updatedStatus = this.writeUpdateStatus( annotation, null );
             return updated;
         } catch ( Exception e ) {
-            updatedStatus = this.writeUpdateStatus( annotation, e );
+            updatedStatus = this.writeUpdateStatus( "An error occurred while attempting to update the GENE2CS table.", e );
             throw e;
         } finally {
             if ( updatedStatus != null ) {
-                this.sendEmail( updatedStatus );
+                if ( sendEmail ) {
+                    mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
+                }
                 if ( updatedStatus.getError() == null ) {
                     this.updateGene2csExternalDatabaseLastUpdated( updatedStatus );
                 }
@@ -364,6 +321,50 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     }
 
     /**
+     * Check if the GENE2CS table needs to be updated.
+     * @param force force-update the GENE2CS table
+     * @return the reason for updating, or null not to update
+     */
+    private String needsToRefreshGene2Cs( boolean force ) {
+        if ( force ) {
+            return "Force-updating the GENE2CS table.";
+        }
+
+        TableMaintenanceUtilImpl.log.info( "Running Gene2CS status check..." );
+        Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
+        if ( status == null ) {
+            return "No Gene2Cs status exists on disk.";
+        }
+
+        // check if the last attempt failed, in ths case it will be retried
+        if ( status.getError() != null ) {
+            return "Last GENE2CS update attempt failed, retrying...";
+        }
+
+        // check if new platforms have been added
+        Collection<ArrayDesign> newObj = auditEventService.getNewSinceDate( ArrayDesign.class, status.getLastUpdate() );
+        for ( ArrayDesign a : newObj ) {
+            String annotation = a + " is new since " + status.getLastUpdate();
+            TableMaintenanceUtilImpl.log.debug( annotation );
+            return annotation;
+        }
+
+        // check if any platform has had gene mapping update since the last GENE2CS update
+        Map<ArrayDesign, AuditEvent> updatedObj = auditEventService.getLastEvents( ArrayDesign.class, ArrayDesignGeneMappingEvent.class );
+        for ( ArrayDesign a : updatedObj.keySet() ) {
+            AuditEvent ae = updatedObj.get( a );
+            // not be needed any more
+            if ( ae.getDate().after( status.getLastUpdate() ) ) {
+                String annotation = a + " had probe mapping done since: " + status.getLastUpdate();
+                TableMaintenanceUtilImpl.log.debug( annotation );
+                return annotation;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Function to regenerate the GENE2CS entries. Gene2Cs is a denormalized join table that allows for a quick link
      * between Genes and CompositeSequences
      *
@@ -390,12 +391,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         } catch ( IOException | ClassNotFoundException e ) {
             throw new RuntimeException( "Failed to obtain last gene2cs update status.", e );
         }
-    }
-
-    private void sendEmail( Gene2CsStatus results ) {
-        if ( !sendEmail )
-            return;
-        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + results.getAnnotation() );
     }
 
     /**
