@@ -52,17 +52,17 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final FactorValueDao factorValueDao;
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
-    @Autowired
-    private CharacteristicService characteristicService;
+    private final CharacteristicService characteristicService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
-            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao, CharacteristicService characteristicService ) {
         super( bioMaterialDao );
         this.bioMaterialDao = bioMaterialDao;
         this.factorValueDao = factorValueDao;
         this.bioAssayDao = bioAssayDao;
         this.experimentalFactorDao = experimentalFactorDao;
+        this.characteristicService = characteristicService;
     }
 
     @Override

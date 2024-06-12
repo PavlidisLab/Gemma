@@ -35,7 +35,7 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
 
         @Bean
         public BioMaterialService bioMaterialService( SessionFactory sessionFactory ) {
-            return new BioMaterialServiceImpl( new BioMaterialDaoImpl( sessionFactory ), mock(), mock(), mock() );
+            return new BioMaterialServiceImpl( new BioMaterialDaoImpl( sessionFactory ), mock(), mock(), mock(), mock() );
         }
 
         @Bean
