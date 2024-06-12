@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.apps.Blat;
+import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;

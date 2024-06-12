@@ -220,7 +220,7 @@
     <cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.BlacklistedEntity" maxElementsInMemory="1000"
+    <cache name="ubic.gemma.model.blacklist.BlacklistedEntity" maxElementsInMemory="1000"
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment" maxElementsInMemory="10000"
@@ -463,8 +463,9 @@
 
     <cache name="ProcessedExpressionDataVectorCache" maxElementsInMemory="100000" overflowToDisk="true" eternal="true"/>
 
-    <cache name="OntologyService.parents" maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
-    <cache name="OntologyService.children" maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
+    <cache name="OntologyService.search" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
+    <cache name="OntologyService.parents" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
+    <cache name="OntologyService.children" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
 
     <!-- both caches are evicted when GO terms are updated -->
     <cache name="GeneOntologyService.goTerms" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>

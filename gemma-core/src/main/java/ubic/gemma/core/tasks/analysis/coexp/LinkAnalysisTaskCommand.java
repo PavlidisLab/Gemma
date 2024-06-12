@@ -22,7 +22,7 @@ package ubic.gemma.core.tasks.analysis.coexp;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**

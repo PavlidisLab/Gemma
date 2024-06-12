@@ -18,16 +18,17 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -44,6 +45,10 @@ import java.util.Map;
 public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
     @Autowired
+    private ExpressionExperimentService eeserv;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
     private PersisterHelper persisterHelper;
 
     @Override
@@ -59,13 +64,11 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-
+        addBatchOption( options );
     }
 
     @Override
     protected void doWork() throws Exception {
-
-        ExpressionExperimentService eeserv = this.getBean( ExpressionExperimentService.class );
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
         Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications();
         for ( ExpressionExperiment ee : ees ) {
@@ -134,8 +137,8 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
 
@@ -146,7 +149,6 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
      */
     private BibliographicReference getBibliographicReference( String pubmedId ) {
         // check if it already in the system
-        BibliographicReferenceService bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
         BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
         if ( publication == null ) {
             PubMedSearch pms = new PubMedSearch();

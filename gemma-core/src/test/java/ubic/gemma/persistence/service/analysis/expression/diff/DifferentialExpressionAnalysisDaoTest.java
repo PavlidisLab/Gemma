@@ -10,11 +10,13 @@ import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -121,6 +123,20 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
                 assertEquals( 0, result.getContrasts().size() );
             }
         }
+    }
+
+    @Test
+    public void testFindByFactor() {
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setId( 1L );
+        differentialExpressionAnalysisDao.findByFactor( ef );
+    }
+
+    @Test
+    public void testFindByFactors() {
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setId( 1L );
+        differentialExpressionAnalysisDao.findByFactors( Collections.singleton( ef ) );
     }
 
     private DifferentialExpressionAnalysis createAnalysis( int numResultSets, int numResults, int numContrasts ) {

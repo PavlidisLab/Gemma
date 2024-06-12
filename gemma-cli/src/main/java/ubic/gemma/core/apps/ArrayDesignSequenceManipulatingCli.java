@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
@@ -57,6 +56,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
 
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
+    protected ArrayDesignSequenceManipulatingCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
@@ -67,7 +70,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     }
 
     @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions( Options options ) {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
                 .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
@@ -79,8 +81,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
                 .longOpt( "adListFile" ).build();
         options.addOption( eeFileListOption );
 
-        this.addDateOption( options );
+        this.addLimitingDateOption( options );
         this.addAutoOption( options );
+        this.addBatchOption( options );
     }
 
     @Override

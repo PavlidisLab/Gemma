@@ -48,11 +48,16 @@ public class CorsFilter extends OncePerRequestFilter {
     @Nullable
     private String allowedHeaders;
     private boolean allowCredentials = false;
+    private int maxAge = -1;
 
     @Override
     protected void initFilterBean() {
-        log.info( String.format( "CORS is configured to allow requests from %s",
-                String.join( ", ", allowedOrigins.split( "," ) ) ) );
+        log.info( String.format( "CORS is configured to allow requests%s from %s%s%s%s",
+                allowCredentials ? " with credentials" : "",
+                String.join( ", ", splitAndTrim( allowedOrigins ) ),
+                allowedMethods != null ? "\n\tAllowed methods: " + String.join( ", ", splitAndTrim( allowedMethods ) ) : "",
+                allowedHeaders != null ? "\n\tAllowed headers: " + String.join( ", ", splitAndTrim( allowedHeaders ) ) : "",
+                maxAge >= 0 ? "\n\tMax age: " + maxAge : "" ) );
     }
 
     @Override
@@ -67,7 +72,7 @@ public class CorsFilter extends OncePerRequestFilter {
                 res.addHeader( "Access-Control-Allow-Origin", WILDCARD );
             } else {
                 boolean matched = false;
-                for ( String allowedOrigin : allowedOrigins.split( "," ) ) {
+                for ( String allowedOrigin : splitAndTrim( allowedOrigins ) ) {
                     allowedOrigin = allowedOrigin.trim();
                     if ( allowedOrigin.equalsIgnoreCase( origin ) ) {
                         res.addHeader( "Access-Control-Allow-Origin", allowedOrigin );
@@ -91,6 +96,9 @@ public class CorsFilter extends OncePerRequestFilter {
             }
             if ( StringUtils.isNotBlank( allowedHeaders ) ) {
                 res.addHeader( "Access-Control-Allow-Headers", allowedHeaders );
+            }
+            if ( maxAge >= 0 ) {
+                res.addIntHeader( "Access-Control-Max-Age", maxAge );
             }
             res.setStatus( HttpStatus.NO_CONTENT.value() );
             return;
@@ -145,5 +153,16 @@ public class CorsFilter extends OncePerRequestFilter {
      */
     public void setAllowCredentials( boolean allowCredentials ) {
         this.allowCredentials = allowCredentials;
+    }
+
+    /**
+     * Set the maximum time in seconds that the results of a preflight request can be cached by the client.
+     */
+    public void setMaxAge( int maxAge ) {
+        this.maxAge = maxAge;
+    }
+
+    private String[] splitAndTrim( String s ) {
+        return s.split( "\\s*,\\s*" );
     }
 }

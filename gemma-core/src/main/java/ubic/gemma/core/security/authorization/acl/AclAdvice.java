@@ -40,12 +40,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.util.Pointcuts;
 
 import java.util.Collection;
 
 /**
  * For permissions modification to be triggered, the method name must match certain patterns, which include "create", or
- * "remove". These patterns are defined in the {@link ubic.gemma.core.util.Pointcuts}. Other methods that would require
+ * "remove". These patterns are defined in the {@link Pointcuts}. Other methods that would require
  * changes to permissions will not work without modifying the source code. *
  *
  * @author Paul

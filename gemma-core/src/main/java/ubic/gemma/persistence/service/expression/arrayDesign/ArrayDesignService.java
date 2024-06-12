@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.auditAndSecurity.curation.CuratableService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -319,6 +320,7 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
+     * Thaw a given platform.
      * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
@@ -326,7 +328,8 @@ public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayD
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
-     * @see ArrayDesignDao#thaw(Collection)
+     * Thaw a collection of platforms.
+     * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

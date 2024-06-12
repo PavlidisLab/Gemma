@@ -20,31 +20,31 @@
 package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.genome.gene.GOGroupValueObject;
-import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
@@ -124,19 +124,18 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( !geneOntologyService.isOntologyLoaded() ) {
             return Collections.emptySet();
         }
-        Collection<OntologyTerm> matches = null;
+        Collection<OntologySearchResult<OntologyTerm>> matches;
         try {
-            matches = this.geneOntologyService
-                    .findTerm( StringUtils.strip( goTermName ) );
+            matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ), 500 );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( e );
         }
 
         Collection<GeneSet> results = new HashSet<>();
 
-        for ( OntologyTerm t : matches ) {
+        for ( OntologySearchResult<OntologyTerm> t : matches ) {
             if ( taxon == null ) {
-                Collection<GeneSet> sets = this.goTermToGeneSets( t, maxGeneSetSize );
+                Collection<GeneSet> sets = this.goTermToGeneSets( t.getResult(), maxGeneSetSize );
                 results.addAll( sets );
 
                 // noinspection StatementWithEmptyBody // FIXME should we count each species as one go?
@@ -145,7 +144,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 }
             } else {
 
-                GeneSet converted = this.goTermToGeneSet( t, taxon, maxGeneSetSize );
+                GeneSet converted = this.goTermToGeneSet( t.getResult(), taxon, maxGeneSetSize );
                 // converted will be null if its size is more than maxGeneSetSize
                 if ( converted != null ) {
                     results.add( converted );

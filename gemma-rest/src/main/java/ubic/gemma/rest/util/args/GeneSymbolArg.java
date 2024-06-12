@@ -2,13 +2,14 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,12 +40,12 @@ public class GeneSymbolArg extends GeneArg<String> {
     }
 
     @Override
-    protected Gene getEntityWithTaxon( GeneService service, Taxon taxon ) {
-        return service.findByOfficialSymbol( getValue(), taxon );
+    List<Gene> getEntities( GeneService service ) throws BadRequestException {
+        return new ArrayList<>( service.findByOfficialSymbol( getValue() ) );
     }
 
     @Override
-    List<Gene> getEntities( GeneService service ) throws BadRequestException {
-        return new ArrayList<>( service.findByOfficialSymbol( getValue() ) );
+    List<Gene> getEntitiesWithTaxon( GeneService service, Taxon taxon ) {
+        return Collections.singletonList( service.findByOfficialSymbol( getValue(), taxon ) );
     }
 }

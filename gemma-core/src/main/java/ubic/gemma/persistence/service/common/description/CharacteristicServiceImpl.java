@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
+
 /**
  * @author Luke
  * @see    CharacteristicService
@@ -94,8 +96,14 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByValue( java.lang.String search ) {
-        return this.characteristicDao.findByValue( search + '%' );
+    public Collection<Characteristic> findByValueStartingWith( String search ) {
+        return this.characteristicDao.findByValue( escapeLike( search ) + '%' );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Characteristic> findByValueLike( String search ) {
+        return this.characteristicDao.findByValue( search );
     }
 
     @Override

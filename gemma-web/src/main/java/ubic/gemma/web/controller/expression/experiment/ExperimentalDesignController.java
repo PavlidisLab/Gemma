@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,12 +32,15 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.expression.experiment.FactorValueDeletion;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -69,6 +73,7 @@ import java.util.*;
  */
 @Controller
 @RequestMapping("/experimentalDesign")
+@SuppressWarnings("unused")
 public class ExperimentalDesignController extends BaseController {
 
     @Autowired
@@ -95,8 +100,7 @@ public class ExperimentalDesignController extends BaseController {
     private ServletContext servletContext;
 
     public void createDesignFromFile( Long eeid, String filePath ) {
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid,
-                EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid, EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
 
         if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot import an experimental design for an experiment that already has design data populated." );
@@ -121,10 +125,17 @@ public class ExperimentalDesignController extends BaseController {
 
     }
 
-    public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueObject efvo ) {
-        if ( e == null || e.getId() == null )
-            return;
+    /**
+     * Create an experimental factor.
+     *
+     * @param e    experimentalDesign to add the factor to
+     * @param efvo non-null if we are pre-populating the factor values based on an existing set of BioMaterialCharacteristic,
+     *             see <a href="https://github.com/PavlidisLab/Gemma/issues/987">#987</a>
+     */
+    public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueWebUIObject efvo ) {
+        if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.valueOf( efvo.getType() ) );
@@ -134,31 +145,106 @@ public class ExperimentalDesignController extends BaseController {
         ef.setCategory( this.createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
 
         /*
-         * Note: this call should not be needed because of cascade behaviour.
+         * Note: this call should not be needed because of cascade behaviour when we call update.
          */
         // experimentalFactorService.create( ef );
-        if ( ed.getExperimentalFactors() == null )
-            ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+
+        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<>() );
         ed.getExperimentalFactors().add( ef );
 
         experimentalDesignService.update( ed );
 
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        if ( StringUtils.isNotBlank( efvo.getBioMaterialCharacteristicCategoryToUse() ) ) {
 
-        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-        // "ExperimentalFactor added: " + efvo.getName(), efvo.toString() );
+            log.info( "Creating factor values based on existing BioMaterial Characteristics: " + efvo.getBioMaterialCharacteristicCategoryToUse() + " in " + ee.getShortName() );
+
+            /*
+             * get the biomaterials, pull the relevant characteristic keeping track of which biomaterial had which value, then create a factor value for each unique value. Then associate the factor values with the biomaterial according to the value it had for the characteristic.
+             */
+            Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( experimentalDesignService.getExpressionExperiment( ed ) );
+
+            Map<CharacteristicValueObject, Collection<BioMaterial>> map = new HashMap<>();
+
+            for ( BioMaterialValueObject bmo : bmvos ) {
+                BioMaterial bm = bioMaterialService.load( bmo.getId() );
+
+                // biomaterials that are missing the characteristic will just be ignored. Curator would have to fill in.
+                for ( CharacteristicValueObject cvo : bmo.getCharacteristics() ) {
+                    cvo.setId( null ); // we just want to compare the values, not the IDs.
+                    if ( cvo.getCategory().equals( efvo.getBioMaterialCharacteristicCategoryToUse() ) ) {
+                        if ( !map.containsKey( cvo ) ) {
+                            map.put( cvo, new HashSet<>() );
+                        }
+                        map.get( cvo ).add( bm );
+                    }
+                }
+            }
+
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                // we have to make an fv for each biomaterial, and we have to make a measurement for each biomaterial.
+                // We udpate the experiment in batch to try to speed this up.
+                Map<BioMaterial, FactorValue> bmToFv = new HashMap<>();
+                for ( CharacteristicValueObject cvo : map.keySet() ) {
+                    for ( BioMaterial bm : map.get( cvo ) ) {
+                        FactorValue fv = FactorValue.Factory.newInstance();
+                        fv.setExperimentalFactor( ef );
+
+                        if ( cvo.getValue() == null || cvo.getValue().isEmpty() ) {
+                            cvo.setValue( null );
+                        } else {
+                            try {
+                                Double.parseDouble( cvo.getValue() );
+                            } catch ( NumberFormatException err ) {
+                                // try to handle missing data reasonably.
+                                if ( cvo.getValue().equalsIgnoreCase( "NA" ) || cvo.getValue().equalsIgnoreCase( "N/A" ) ) {
+                                    cvo.setValue( null );
+                                } else {
+                                    // clean up after ourselves.
+                                    experimentalFactorService.remove( ef );
+                                    throw new IllegalArgumentException( "Factor type is continuous but the value is not parseable as a number or missing data: " + cvo.getValue() );
+                                }
+                            }
+                        }
+                        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, cvo.getValue(), PrimitiveType.DOUBLE );
+                        fv.setMeasurement( m );
+                        bmToFv.put( bm, fv );
+                    }
+                }
+                expressionExperimentService.addFactorValues( ee, bmToFv );
+            } else {
+                Collection<BioMaterial> toUpdate = new HashSet<>();
+                for ( CharacteristicValueObject cvo : map.keySet() ) {
+                    FactorValue fv = FactorValue.Factory.newInstance();
+                    fv.setExperimentalFactor( ef );
+
+                    Statement s = Statement.Factory.newInstance();
+                    if ( ef.getCategory() != null ) {
+                        s.setCategory( ef.getCategory().getCategory() );
+                        s.setCategoryUri( ef.getCategory().getCategoryUri() );
+                    }
+                    s.setSubject( cvo.getValue() );
+                    s.setSubjectUri( cvo.getValueUri() ); // can be null
+                    fv.getCharacteristics().add( s );
+                    fv = expressionExperimentService.addFactorValue( ee, fv );
+
+                    for ( BioMaterial bm : map.get( cvo ) ) {
+                        bm.getFactorValues().add( fv );
+                        toUpdate.add( bm );
+                    }
+                }
+                bioMaterialService.update( toUpdate );
+            }
+        }
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
 
     public void createFactorValue( EntityDelegator<ExperimentalFactor> e ) {
-        if ( e == null || e.getId() == null )
-            return;
+        if ( e == null || e.getId() == null ) return;
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
 
         if ( ef == null ) {
-            throw new EntityNotFoundException(
-                    "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
+            throw new EntityNotFoundException( "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
         Set<Statement> chars = new HashSet<>();
@@ -187,8 +273,7 @@ public class ExperimentalDesignController extends BaseController {
     }
 
     public void createFactorValueCharacteristic( EntityDelegator<FactorValue> e, CharacteristicValueObject cvo ) {
-        if ( e == null || e.getId() == null )
-            return;
+        if ( e == null || e.getId() == null ) return;
         FactorValue fv = factorValueService.load( e.getId() );
 
         if ( fv == null ) {
@@ -226,8 +311,7 @@ public class ExperimentalDesignController extends BaseController {
 
     public void deleteExperimentalFactors( EntityDelegator<ExperimentalDesign> e, Long[] efIds ) {
 
-        if ( e == null || e.getId() == null )
-            return;
+        if ( e == null || e.getId() == null ) return;
 
         Collection<Long> efCol = new LinkedList<>();
         Collections.addAll( efCol, efIds );
@@ -250,10 +334,7 @@ public class ExperimentalDesignController extends BaseController {
                 throw new IllegalArgumentException( "A characteristic ID must be supplied." );
             }
             FactorValue fv = factorValueService.loadOrFail( fvvo.getId() );
-            Statement c = fv.getCharacteristics().stream()
-                    .filter( s -> s.getId().equals( fvvo.getCharId() ) )
-                    .findFirst()
-                    .orElseThrow( () -> new EntityNotFoundException( String.format( "No statement with ID %d in FactorVlaue with ID %d", fvvo.getCharId(), fvvo.getId() ) ) );
+            Statement c = fv.getCharacteristics().stream().filter( s -> s.getId().equals( fvvo.getCharId() ) ).findFirst().orElseThrow( () -> new EntityNotFoundException( String.format( "No statement with ID %d in FactorVlaue with ID %d", fvvo.getCharId(), fvvo.getId() ) ) );
             fvs[i] = fv;
             statements[i] = c;
         }
@@ -264,8 +345,7 @@ public class ExperimentalDesignController extends BaseController {
 
     public void deleteFactorValues( EntityDelegator<ExperimentalFactor> e, Long[] fvIds ) {
 
-        if ( e == null || e.getId() == null )
-            return;
+        if ( e == null || e.getId() == null ) return;
         Collection<Long> fvCol = new LinkedList<>();
         Collections.addAll( fvCol, fvIds );
 
@@ -279,9 +359,17 @@ public class ExperimentalDesignController extends BaseController {
     }
 
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator<ExpressionExperiment> e ) {
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( e.getId() );
+        return getBioMaterialValueObjects( ee );
+    }
+
+    /**
+     * This filters the characteristics through filterCharacteristics()
+     *
+     * @param ee experiment to get biomaterials for
+     */
+    private Collection<BioMaterialValueObject> getBioMaterialValueObjects( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -297,12 +385,34 @@ public class ExperimentalDesignController extends BaseController {
     }
 
     /**
+     * Extract just the categories from the biomaterial's characteristics.
+     * @return Collection of CharacteristicValueObjects but all we care about is the category
+     */
+    public Collection<CharacteristicValueObject> getBioMaterialCharacteristicCategories( Long experimentalDesignID ) {
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesignService.loadOrFail( experimentalDesignID ) );
+
+        Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( ee );
+        if ( bmvos.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        Set<CharacteristicValueObject> categories = new HashSet<>();
+        for ( BioMaterialValueObject bmvo : bmvos ) {
+            for ( String cvo : bmvo.getCharacteristicValues().keySet() ) {
+                //  if ( StringUtils.isNotBlank( cvo.getCategory() ) ) { // this shouldn't happen; also duplicates are already filtered out
+                categories.add( new CharacteristicValueObject( null, null, cvo, null ) );
+                //  }
+            }
+        }
+        return categories;
+    }
+
+    /**
      * Filter the characteristicValues to those that we want to display in columns in the biomaterialvalue table.
      *
      */
     private void filterCharacteristics( Collection<BioMaterialValueObject> result ) {
-
-        int c = result.size();
+        Collection<String> toremove = new HashSet<>();
 
         // build map of categories to bmos. No category: can't use.
         Map<String, Collection<BioMaterialValueObject>> map = new HashMap<>();
@@ -324,8 +434,15 @@ public class ExperimentalDesignController extends BaseController {
                 }
 
                 if ( !map.containsKey( category ) ) {
-                    map.put( category, new HashSet<BioMaterialValueObject>() );
+                    map.put( category, new HashSet<>() );
                 }
+
+                if ( map.get( category ).contains( bmo ) ) {
+                    // See issue 999. We have to hide these duplicated categories entirely, as they can't be reliably "lined up" across samples.
+                    toremove.add( category );
+                    continue;
+                }
+
                 map.get( category ).add( bmo );
             }
         }
@@ -333,11 +450,11 @@ public class ExperimentalDesignController extends BaseController {
         /*
         find ones that don't meet criteria for display e.g are constant across all samples
          */
-        Collection<String> toremove = new HashSet<>();
+
         for ( String category : map.keySet() ) {
             //log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
-              //  toremove.add( category ); // this isn't really worth it and hides useful information.
+                //  toremove.add( category ); // this isn't really worth it and hides useful information.
                 continue;
             }
 
@@ -348,7 +465,6 @@ public class ExperimentalDesignController extends BaseController {
             }
 
             Collection<String> vals = new HashSet<>();
-            boolean keeper = false;
             bms:
             for ( BioMaterialValueObject bm : map.get( category ) ) {
                 // log.info( "inspecting " + bm );
@@ -370,8 +486,7 @@ public class ExperimentalDesignController extends BaseController {
 
                     if ( mappedCategory.equals( category ) ) {
                         if ( !vals.contains( mappedValue ) ) {
-                            if ( log.isDebugEnabled() )
-                                log.debug( category + " -> " + mappedValue );
+                            if ( log.isDebugEnabled() ) log.debug( category + " -> " + mappedValue );
                             vals.add( mappedValue );
                         }
 
@@ -380,13 +495,6 @@ public class ExperimentalDesignController extends BaseController {
                         bm.getCharacteristicValues().put( mappedCategory, mappedValue );
                     }
                 }
-
-                //                if ( vals.size() > 1 ) {
-                //                    if ( log.isDebugEnabled() )
-                //                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
-                //
-                //                    keeper = true;
-                //                }
             }
 
             if ( vals.size() < 2 ) { // constant
@@ -404,8 +512,7 @@ public class ExperimentalDesignController extends BaseController {
     }
 
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<?> e ) {
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
         Long designId;
@@ -418,8 +525,7 @@ public class ExperimentalDesignController extends BaseController {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
         // ugly fix for bug 3746
-        ExpressionExperiment ee = experimentalDesignService
-                .getExpressionExperiment( this.experimentalDesignService.loadOrFail( designId ) );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.loadOrFail( designId ) );
         ee = expressionExperimentService.thawLite( ee );
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -432,11 +538,9 @@ public class ExperimentalDesignController extends BaseController {
 
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<ExperimentalFactor> e ) {
         // FIXME I'm not sure why this keeps getting called with empty fields.
-        if ( e == null || e.getId() == null )
-            return new HashSet<>();
+        if ( e == null || e.getId() == null ) return new HashSet<>();
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null )
-            return new HashSet<>();
+        if ( ef == null ) return new HashSet<>();
 
         Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue value : ef.getFactorValues() ) {
@@ -445,7 +549,8 @@ public class ExperimentalDesignController extends BaseController {
         return result;
     }
 
-    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator<ExperimentalFactor> e ) {
+    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics
+            ( EntityDelegator<ExperimentalFactor> e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) {
             return result;
@@ -493,21 +598,12 @@ public class ExperimentalDesignController extends BaseController {
         String desc = ee.getDescription();
         ee.setDescription( StringUtils.strip( desc ) );
         RequestContextHolder.getRequestAttributes().setAttribute( "id", ee.getExperimentalDesign().getId(), RequestAttributes.SCOPE_REQUEST );
-        return new ModelAndView( "experimentalDesign.detail" )
-                .addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() )
-                .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
-                .addObject( "experimentalDesign", ee.getExperimentalDesign() )
-                .addObject( "expressionExperiment", ee )
-                .addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" )
-                .addAllObjects( getNeedsAttentionDetails( ee ) )
-                .addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
+        return new ModelAndView( "experimentalDesign.detail" ).addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() ).addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ).addObject( "experimentalDesign", ee.getExperimentalDesign() ).addObject( "expressionExperiment", ee ).addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" ).addAllObjects( getNeedsAttentionDetails( ee ) ).addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
     }
 
     private Map<String, ?> getNeedsAttentionDetails( ExpressionExperiment ee ) {
         Map<String, Object> result = new HashMap<>();
-        boolean needsAttention = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                .flatMap( ef -> ef.getFactorValues().stream() )
-                .anyMatch( FactorValue::getNeedsAttention );
+        boolean needsAttention = ee.getExperimentalDesign().getExperimentalFactors().stream().flatMap( ef -> ef.getFactorValues().stream() ).anyMatch( FactorValue::getNeedsAttention );
         result.put( "needsAttention", needsAttention );
         try {
             ExperimentalDesign randomEd = experimentalDesignService.getRandomExperimentalDesignThatNeedsAttention( ee.getExperimentalDesign() );
@@ -528,20 +624,24 @@ public class ExperimentalDesignController extends BaseController {
 
     public void updateBioMaterials( BioMaterialValueObject[] bmvos ) {
 
-        if ( bmvos == null || bmvos.length == 0 )
-            return;
+        if ( bmvos == null || bmvos.length == 0 ) return;
+
+
+        StopWatch w = new StopWatch();
+        w.start();
 
         Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
 
-        if ( biomaterials.isEmpty() )
-            return;
+        log.info( String.format( "Updating biomaterials took %.2f seconds", ( double ) w.getTime() / 1000.0 ) );
+
+        if ( biomaterials.isEmpty() ) return;
 
         BioMaterial bm = biomaterials.iterator().next();
         ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        if ( ee == null )
-            throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
 
         ee = expressionExperimentService.thawLite( ee );
+
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
@@ -579,15 +679,13 @@ public class ExperimentalDesignController extends BaseController {
                 details.append( "id: " ).append( ba.getId() ).append( " - " ).append( ba.getName() ).append( "\n" );
             }
         }
-        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "BioMaterials updated (" + bmvos.length + " items)", details.toString() );
+        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "BioMaterials updated (" + bmvos.length + " items)", details.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
     public void updateExperimentalFactors( ExperimentalFactorValueObject[] efvos ) {
 
-        if ( efvos == null || efvos.length == 0 )
-            return;
+        if ( efvos == null || efvos.length == 0 ) return;
 
         for ( ExperimentalFactorValueObject efvo : efvos ) {
             ExperimentalFactor ef = experimentalFactorService.loadOrFail( efvo.getId() );
@@ -625,8 +723,7 @@ public class ExperimentalDesignController extends BaseController {
 
         ExperimentalFactor ef = experimentalFactorService.loadOrFail( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-        if ( ee == null )
-            throw new EntityNotFoundException( "No experiment for factor: " + ef );
+        if ( ee == null ) throw new EntityNotFoundException( "No experiment for factor: " + ef );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
@@ -636,8 +733,7 @@ public class ExperimentalDesignController extends BaseController {
          * TODO: support Characteristic extensions (predicate-object)
          */
 
-        if ( fvvos == null || fvvos.length == 0 )
-            return;
+        if ( fvvos == null || fvvos.length == 0 ) return;
 
         // validate the VOs
         FactorValue[] fvs = new FactorValue[fvvos.length];
@@ -676,6 +772,9 @@ public class ExperimentalDesignController extends BaseController {
                         .filter( s -> s.getId().equals( charId ) )
                         .findFirst()
                         .orElseThrow( () -> new EntityNotFoundException( String.format( "No characteristic with ID %d in FactorValue with ID %d", charId, fvvo.getId() ) ) );
+                // updating the statement can alter its hashCode() and thus breaking the Set contract, we have to remove
+                // it and add it back before saving
+                fv.getCharacteristics().remove( c );
             } else {
                 c = Statement.Factory.newInstance();
             }
@@ -717,6 +816,10 @@ public class ExperimentalDesignController extends BaseController {
                 c.setSecondObjectUri( null );
             }
 
+            if ( charId != null ) {
+                fv.getCharacteristics().add( c );
+            }
+
             fvs[i] = fv;
             statements[i] = c;
         }
@@ -725,8 +828,7 @@ public class ExperimentalDesignController extends BaseController {
         for ( int i = 0; i < fvs.length; i++ ) {
             statements[i] = factorValueService.saveStatement( fvs[i], statements[i] );
             if ( fvs[i].getNeedsAttention() ) {
-                factorValueService.clearNeedsAttentionFlag( fvs[i],
-                        "The dataset does not need attention and all of its factor values were fixed." );
+                factorValueService.clearNeedsAttentionFlag( fvs[i], "The dataset does not need attention and all of its factor values were fixed." );
                 log.info( "Reverted needs attention flag for " + fvs[i] );
             }
         }
@@ -739,10 +841,8 @@ public class ExperimentalDesignController extends BaseController {
 
     public void markFactorValuesAsNeedsAttention( Long[] fvvos, String note ) {
         Set<FactorValue> fvs = new HashSet<>( fvvos.length );
-        int i = 0;
         for ( Long fvo : fvvos ) {
-            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new,
-                    String.format( "No FactorValue with ID %d", fvo ) );
+            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new, String.format( "No FactorValue with ID %d", fvo ) );
             if ( fv.getNeedsAttention() ) {
                 if ( fvvos.length == 1 ) {
                     throw new IllegalArgumentException( String.format( "%s is already marked as needs attention.", fv ) );
@@ -760,10 +860,8 @@ public class ExperimentalDesignController extends BaseController {
 
     public void clearFactorValuesNeedsAttention( Long[] fvvos, String note ) {
         Set<FactorValue> fvs = new HashSet<>( fvvos.length );
-        int i = 0;
         for ( Long fvo : fvvos ) {
-            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new,
-                    String.format( "No FactorValue with ID %d", fvo ) );
+            FactorValue fv = factorValueService.loadOrFail( fvo, EntityNotFoundException::new, String.format( "No FactorValue with ID %d", fvo ) );
             if ( !fv.getNeedsAttention() ) {
                 if ( fvvos.length == 1 ) {
                     throw new IllegalArgumentException( String.format( "%s does not need attention.", fv ) );

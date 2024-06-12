@@ -63,7 +63,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             debugEndpoint = "https://www.google-analytics.com/debug/mp/collect?api_secret={apiSecret}&measurement_id={measurementId}";
 
     private final RestTemplate restTemplate;
-    private final ScheduledExecutorService taskExecutor;
+    private final ScheduledExecutorService taskExecutor = Executors.newSingleThreadScheduledExecutor();
     private final String measurementId;
     private final String apiSecret;
     private long resolutionMillis = DEFAULT_RESOLUTION_MILLIS;
@@ -82,23 +82,21 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
      * Create a new Google Analytics 4 provider.
      *
      * @param restTemplate  a REST template for performing requests with the collect API
-     * @param taskExecutor  a task executor for running scheduled flush tasks
      * @param measurementId a measurement ID which may be empty
      * @param apiSecret     an API secret, must be non-empty if measurementId is supplied
      */
-    public GoogleAnalytics4Provider( RestTemplate restTemplate, ScheduledExecutorService taskExecutor, String measurementId, String apiSecret ) {
+    public GoogleAnalytics4Provider( RestTemplate restTemplate, String measurementId, String apiSecret ) {
         Assert.isTrue( StringUtils.isBlank( measurementId ) || !StringUtils.isBlank( apiSecret ) );
         this.restTemplate = restTemplate;
-        this.taskExecutor = taskExecutor;
         this.measurementId = measurementId;
         this.apiSecret = apiSecret;
     }
 
     /**
-     * @see #GoogleAnalytics4Provider(RestTemplate, ScheduledExecutorService, String, String)
+     * @see #GoogleAnalytics4Provider(RestTemplate, String, String)
      */
     public GoogleAnalytics4Provider( String measurementId, String apiSecret ) {
-        this( new RestTemplate(), new ScheduledThreadPoolExecutor( 1 ), measurementId, apiSecret );
+        this( new RestTemplate(), measurementId, apiSecret );
     }
 
 

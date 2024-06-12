@@ -31,8 +31,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -41,7 +39,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
+    private static final String DESCRIPTION = "Generate analysis text files (diff expression)";
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
@@ -68,11 +66,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        Collection<Runnable> tasks = new ArrayList<>( queue.size() );
         for ( BioAssaySet ee : queue ) {
-            tasks.add( new ProcessBioAssaySet( ee ) );
+            getBatchTaskExecutor().submit( new ProcessBioAssaySet( ee ) );
         }
-        executeBatchTasks( tasks );
     }
 
     @Override
@@ -85,11 +81,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
+        Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
-        this.addThreadsOption( options );
         options.addOption( forceWriteOption );
     }
 
@@ -111,7 +106,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
 
-            expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
+            //expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );

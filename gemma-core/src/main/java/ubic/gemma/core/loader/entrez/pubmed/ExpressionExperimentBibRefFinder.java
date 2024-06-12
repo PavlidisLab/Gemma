@@ -46,7 +46,7 @@ public class ExpressionExperimentBibRefFinder {
 
     private static final String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
 
-    public BibliographicReference locatePrimaryReference( ExpressionExperiment ee ) {
+    public BibliographicReference locatePrimaryReference( ExpressionExperiment ee ) throws IOException {
 
         if ( ee.getPrimaryPublication() != null )
             return ee.getPrimaryPublication();
@@ -76,7 +76,7 @@ public class ExpressionExperimentBibRefFinder {
         return fetcher.retrieveByHTTP( pubMedId );
     }
 
-    private int locatePubMedId( String geoSeries ) {
+    private int locatePubMedId( String geoSeries ) throws IOException {
         if ( !geoSeries.matches( "GSE\\d+" ) ) {
             ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
             return -1;
@@ -109,10 +109,6 @@ public class ExpressionExperimentBibRefFinder {
                     return Integer.parseInt( capturedAccession );
                 }
             }
-
-        } catch ( IOException e ) {
-            ExpressionExperimentBibRefFinder.log.error( e, e );
-            throw new RuntimeException( "Could not get data from remote server", e );
         } catch ( NumberFormatException e ) {
             ExpressionExperimentBibRefFinder.log.error( e, e );
             throw new RuntimeException( "Could not determine valid pubmed id" );

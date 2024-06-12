@@ -42,7 +42,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
 import java.awt.*;
 import java.io.File;
@@ -64,14 +63,13 @@ import java.util.concurrent.Future;
  * </p>
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ComBat<R, C> {
+class ComBat<R, C> {
 
     private static final String BATCH_COLUMN_NAME = "batch";
     private static final Log log = LogFactory.getLog( ComBat.class );
 
     private final ObjectMatrix<C, String, ?> sampleInfo;
     private final DoubleMatrix<R, C> data;
-
     private boolean hasMissing = false;
     private int numSamples;
     private int numBatches;
@@ -80,7 +78,7 @@ public class ComBat<R, C> {
     private LinkedHashMap<String, Collection<C>> batches;
     private Map<String, Map<C, Integer>> originalLocationsInMatrix;
 
-    private Algebra solver;
+    private final Algebra solver;
     private DoubleMatrix2D varpooled;
     private DoubleMatrix2D standMean;
     private DoubleMatrix2D gammaHat = null;
@@ -104,19 +102,24 @@ public class ComBat<R, C> {
      */
     private DoubleMatrix2D x;
 
-    public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, ?> sampleInfo ) {
 
-        if ( data.columns() < 4 ) {
-            throw new IllegalArgumentException( "Cannot run ComBat with fewer than 4 samples" );
-        }
+    /**
+     * Constructor that can be used just for testing correctability (data is not provided) - FIXME refactor so it's not a constructor.
+     */
+    public ComBat( ObjectMatrix<C, String, ?> sampleInfo ) throws ComBatException {
+        this.sampleInfo = sampleInfo;
+        solver = new Algebra();
+        computeDesignMatrix();
+        this.data = null;
+    }
+
+    public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, ?> sampleInfo ) throws ComBatException {
 
         this.data = data;
         this.sampleInfo = sampleInfo;
         solver = new Algebra();
         y = new DenseDoubleMatrix2D( data.asArray() );
         this.initPartA();
-        // DesignMatrix dm = new DesignMatrix( sampleInfo );
-        // this.x = dm.getMatrix();
         x = this.computeDesignMatrix();
     }
 
@@ -133,8 +136,7 @@ public class ComBat<R, C> {
      */
     public void plot( String filePrefix ) {
 
-        if ( this.gammaHat == null )
-            throw new IllegalArgumentException( "You must call 'run' first" );
+        if ( this.gammaHat == null ) throw new IllegalArgumentException( "You must call 'run' first" );
 
         /*
          * View the distribution of gammaHat, which we assume will have a normal distribution
@@ -206,6 +208,10 @@ public class ComBat<R, C> {
      */
     public DoubleMatrix2D run( boolean parametric ) throws ComBatException {
 
+        if ( data.columns() < 4 ) {
+            throw new IllegalArgumentException( "Cannot run ComBat with fewer than 4 samples" );
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -228,11 +234,9 @@ public class ComBat<R, C> {
         gammaBar = new DoubleArrayList();
         t2 = new DoubleArrayList();
         for ( int batchIndex = 0; batchIndex < gammaHat.rows(); batchIndex++ ) {
-            double mean = DescriptiveWithMissing
-                    .mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
+            double mean = DescriptiveWithMissing.mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
             gammaBar.add( mean );
-            t2.add( DescriptiveWithMissing
-                    .sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ), mean ) );
+            t2.add( DescriptiveWithMissing.sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ), mean ) );
         }
 
         // assertEquals( -0.092144, gammaBar.get( 0 ), 0.001 );
@@ -276,9 +280,9 @@ public class ComBat<R, C> {
     /**
      * Special standardization: partial regression of covariates
      *
-     * @param b b
-     * @param A A
-     * @return double matrix 2d
+     * @param b the data matrix
+     * @param A the design matrix
+     * @return double matrix 2d representing the data with the covariates regressed out and standardized
      */
     DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
 
@@ -311,8 +315,7 @@ public class ComBat<R, C> {
             }
             varpooled = var;
         } else {
-            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus )
-                    .assign( Functions.pow( 2 ) );
+            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus ).assign( Functions.pow( 2 ) );
             DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
             scale.assign( 1.0 / numSamples );
             varpooled = solver.mult( varpooled, scale );
@@ -355,9 +358,7 @@ public class ComBat<R, C> {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( empirical );
         xySeriesCollection.addSeries( theory );
-        JFreeChart chart = ChartFactory
-                .createXYLineChart( "", "Magnitude", "Density", xySeriesCollection, PlotOrientation.VERTICAL, false,
-                        false, false );
+        JFreeChart chart = ChartFactory.createXYLineChart( "", "Magnitude", "Density", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
@@ -386,9 +387,7 @@ public class ComBat<R, C> {
 
             DoubleMatrix1D[] batchResults;
 
-            batchResults = this.itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
-                    gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ),
-                    bPrior.get( batchIndex ) );
+            batchResults = this.itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ), gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior.get( batchIndex ) );
 
             for ( int j = 0; j < batchResults[0].size(); j++ ) {
                 double v = batchResults[0].get( j );
@@ -424,16 +423,12 @@ public class ComBat<R, C> {
             final int firstBatch = i * batchesPerThread;
             final int lastBatch = i == ( numThreads - 1 ) ? batches.size() : firstBatch + batchesPerThread;
 
-            futures[i] = service.submit( new Runnable() {
-                @Override
-                public void run() {
-                    for ( int k = firstBatch; k < lastBatch; k++ ) {
-                        String batchId = batchIds[k];
-                        DoubleMatrix2D batchData = ComBat.this.getBatchData( sdata, batchId );
-                        DoubleMatrix1D[] batchResults = ComBat.this
-                                .nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat.viewRow( k ) );
-                        results.put( batchId, batchResults );
-                    }
+            futures[i] = service.submit( () -> {
+                for ( int k = firstBatch; k < lastBatch; k++ ) {
+                    String batchId = batchIds[k];
+                    DoubleMatrix2D batchData = ComBat.this.getBatchData( sdata, batchId );
+                    DoubleMatrix1D[] batchResults = ComBat.this.nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat.viewRow( k ) );
+                    results.put( batchId, batchResults );
                 }
             } );
         }
@@ -529,19 +524,36 @@ public class ComBat<R, C> {
          * Find the batch
          */
         DesignMatrix d = null;
-        int batchFactorColumnIndex = sampleInfo.getColIndexByName( ComBat.BATCH_COLUMN_NAME );
-        Object[] batchFactor = sampleInfo.getColumn( batchFactorColumnIndex );
+        int batchFactorColumnIndex = this.sampleInfo.getColIndexByName( ComBat.BATCH_COLUMN_NAME );
+        Object[] batchFactor = this.sampleInfo.getColumn( batchFactorColumnIndex );
         if ( batchFactor != null ) {
             d = new DesignMatrix( batchFactor, 1, ComBat.BATCH_COLUMN_NAME );
         }
         if ( d == null ) {
             throw new IllegalStateException( "No batch factor was found" );
         }
-        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = this
-                .getSampleInfoWithoutBatchFactor( batchFactorColumnIndex );
+        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = this.getSampleInfoWithoutBatchFactor( batchFactorColumnIndex );
+
+        // Check if the experimental design is going to be usable.
+        DesignMatrix nonBatchFactorDesign = new DesignMatrix( sampleInfoWithoutBatchFactor );
+        int nonbatchrank = solver.rank( nonBatchFactorDesign.getDoubleMatrix() );
+        if ( nonbatchrank < nonBatchFactorDesign.getDoubleMatrix().columns() ) {
+            /*
+           FIXME If this is because of duplicate columns, we _could_ try to fix it.
+             */
+            throw new ComBatException( "Non-batch factor part of the model matrix is not of full rank (Rank " + nonbatchrank + " < " + nonBatchFactorDesign.getDoubleMatrix().columns() + " columns); batch correction cannot proceed" );
+        }
 
         d.add( sampleInfoWithoutBatchFactor );
         design = d.getDoubleMatrix();
+
+        // guard against problems.
+        int ranka = solver.rank( design );
+        if ( ranka < design.columns() ) {
+            // if we get here, it probably means there is a confound between the batches and the other factors.
+            throw new ComBatException( "Model matrix is not of full rank (Rank " + ranka + " < " + design.columns() + " columns); batch correction cannot proceed" );
+        }
+
         return design;
     }
 
@@ -590,16 +602,14 @@ public class ComBat<R, C> {
     }
 
     private ObjectMatrix<String, String, Object> getSampleInfoWithoutBatchFactor( int batchFactorColumnIndex ) {
-        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = new ObjectMatrixImpl<>( sampleInfo.rows(),
-                sampleInfo.columns() - 1 );
+        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = new ObjectMatrixImpl<>( sampleInfo.rows(), sampleInfo.columns() - 1 );
 
         boolean warned = false;
         int r = 0;
         for ( int i = 0; i < sampleInfo.rows(); i++ ) {
             int c = 0;
             for ( int j = 0; j < sampleInfo.columns(); j++ ) {
-                if ( j == batchFactorColumnIndex )
-                    continue;
+                if ( j == batchFactorColumnIndex ) continue;
                 if ( i == 0 ) {
                     sampleInfoWithoutBatchFactor.addColumnName( sampleInfo.getColName( j ) );
                 }
@@ -641,8 +651,8 @@ public class ComBat<R, C> {
             C sampleName = sampleInfo.getRowName( i );
             String batchId = ( String ) sampleInfo.get( i, batchColumnIndex );
             if ( !batches.containsKey( batchId ) ) {
-                batches.put( batchId, new ArrayList<C>() );
-                originalLocationsInMatrix.put( batchId, new LinkedHashMap<C, Integer>() );
+                batches.put( batchId, new ArrayList<>() );
+                originalLocationsInMatrix.put( batchId, new LinkedHashMap<>() );
             }
             batches.get( batchId ).add( sampleName );
 
@@ -655,8 +665,7 @@ public class ComBat<R, C> {
          */
         for ( String batchId : batches.keySet() ) {
             if ( batches.get( batchId ).size() < 2 ) {
-                throw new IllegalArgumentException(
-                        "Batch correction not possible with less than 2 samples in any batch. Consider combining batches." );
+                throw new IllegalArgumentException( "Batch correction not possible with less than 2 samples in any batch. Consider combining batches." );
             }
         }
 
@@ -664,8 +673,7 @@ public class ComBat<R, C> {
         numProbes = y.rows();
     }
 
-    private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
-            double t2b, double a, double b ) throws ComBatException {
+    private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar, double t2b, double a, double b ) throws ComBatException {
 
         DoubleMatrix1D n = this.rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
@@ -681,11 +689,9 @@ public class ComBat<R, C> {
             DoubleMatrix1D sum2 = this.stepSum( matrix, gnew );
             DoubleMatrix1D dnew = this.postVar( sum2, n, a, b );
 
-            DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs )
-                    .assign( gold, Functions.div );
+            DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs ).assign( gold, Functions.div );
 
-            DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs )
-                    .assign( dold, Functions.div );
+            DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs ).assign( dold, Functions.div );
             double gnewmax;
             double dnewmax;
             if ( hasMissing ) {
@@ -706,9 +712,7 @@ public class ComBat<R, C> {
                  * For certain data sets, we just flail around; for example if there are only two samples. This is a
                  * bailout for exceptional circumstances.
                  */
-                throw new ComBatException(
-                        "Failed to converge within " + MAXITERS + " iterations, last delta was " + String
-                                .format( "%.2g", change ) );
+                throw new ComBatException( "Failed to converge within " + MAXITERS + " iterations, last delta was " + String.format( "%.2g", change ) );
             }
         }
 
@@ -740,8 +744,7 @@ public class ComBat<R, C> {
             double sumdLH = 0.0;
             for ( int j = 0; j < matrix.rows(); j++ ) {
 
-                if ( j == i )
-                    continue;
+                if ( j == i ) continue;
                 double g = gHat.getQuick( j );
                 double d = dHat.getQuick( j );
 
@@ -756,8 +759,7 @@ public class ComBat<R, C> {
 
                 double LH = ( 1.0 / Math.pow( twopi * d, no2 ) ) * Math.exp( -sum2 / ( 2 * d ) );
 
-                if ( Double.isNaN( LH ) )
-                    continue;
+                if ( Double.isNaN( LH ) ) continue;
 
                 double gLH = g * LH;
                 double dLH = d * LH;
@@ -778,12 +780,10 @@ public class ComBat<R, C> {
         return new DoubleMatrix1D[] { gstar, dstar };
     }
 
-    private DoubleMatrix1D postMean( DoubleMatrix1D ghat, double gbar, DoubleMatrix1D n, DoubleMatrix1D dstar,
-            double t2b ) {
+    private DoubleMatrix1D postMean( DoubleMatrix1D ghat, double gbar, DoubleMatrix1D n, DoubleMatrix1D dstar, double t2b ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( ghat.size() );
         for ( int i = 0; i < ghat.size(); i++ ) {
-            result.set( i, ( t2b * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar ) / ( t2b * n.get( i ) + dstar
-                    .get( i ) ) );
+            result.set( i, ( t2b * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar ) / ( t2b * n.get( i ) + dstar.get( i ) ) );
         }
         return result;
     }
@@ -807,8 +807,7 @@ public class ComBat<R, C> {
 
             DoubleMatrix2D Xbb = this.getBatchDesign( batchId );
 
-            DoubleMatrix2D adjustedBatch = batchData.copy()
-                    .assign( solver.transpose( solver.mult( Xbb, gammastar ) ), Functions.minus );
+            DoubleMatrix2D adjustedBatch = batchData.copy().assign( solver.transpose( solver.mult( Xbb, gammastar ) ), Functions.minus );
 
             DoubleMatrix1D deltaStarRow = deltastar.viewRow( batchNum );
             deltaStarRow.assign( Functions.sqrt );
@@ -849,8 +848,7 @@ public class ComBat<R, C> {
     private DoubleMatrix1D rowNonMissingCounts( DoubleMatrix2D matrix ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( matrix.rows() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            result.set( i, DescriptiveWithMissing
-                    .sizeWithoutMissingValues( new DoubleArrayList( matrix.viewRow( i ).toArray() ) ) );
+            result.set( i, DescriptiveWithMissing.sizeWithoutMissingValues( new DoubleArrayList( matrix.viewRow( i ).toArray() ) ) );
         }
         return result;
     }
@@ -871,8 +869,7 @@ public class ComBat<R, C> {
          * subtract column gnew from each column of data; square; then sum over each row.
          */
 
-        DoubleMatrix2D deltas = matrix.copy().assign( ( s.mult( s.transpose( g ), a ) ), Functions.minus )
-                .assign( Functions.square );
+        DoubleMatrix2D deltas = matrix.copy().assign( ( s.mult( s.transpose( g ), a ) ), Functions.minus ).assign( Functions.square );
         DoubleMatrix1D sumsq = new DenseDoubleMatrix1D( deltas.rows() );
         sumsq.assign( 0.0 );
 

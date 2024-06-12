@@ -29,7 +29,7 @@ import java.util.Objects;
  */
 @Getter
 @Setter
-public class DesignElementDataVector extends DataVector {
+public abstract class DesignElementDataVector extends DataVector {
 
     private static final long serialVersionUID = -4185333066166517308L;
 

@@ -11,7 +11,7 @@ import org.springframework.validation.AbstractBindingResult;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.ValueObject;
+import ubic.gemma.model.common.ValueObject;
 
 import java.io.Serializable;
 import java.util.HashMap;

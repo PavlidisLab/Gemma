@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -30,9 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -43,7 +40,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.AclQueryUtils;
+import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -51,7 +48,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.EE2C_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author Luke
@@ -100,10 +98,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //noinspection unchecked
-        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
-                .setMaxResults( limit )
-                .list();
+        // no need to rank if there is no limit since we're collecting in a mapping
+        List<Object[]> result = findExperimentsByUrisInternal( uris, taxon, limit > 0 && rankByLevel, limit );
         if ( result.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -136,11 +132,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             return Collections.emptyMap();
         }
         //noinspection unchecked
-        List<Object[]> result = prepareExperimentsByUrisQuery( uris, taxon, limit > 0 && rankByLevel )
-                .setMaxResults( limit )
-                .list();
-        //noinspection unchecked
-        return result.stream().collect( Collectors.groupingBy(
+        return findExperimentsByUrisInternal( uris, taxon, limit > 0 && rankByLevel, limit ).stream().collect( Collectors.groupingBy(
                 row -> ( Class<? extends Identifiable> ) row[0],
                 Collectors.groupingBy(
                         row -> ( String ) row[1],
@@ -149,13 +141,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                                 Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) ) ) ) ) ) );
     }
 
-    private Query prepareExperimentsByUrisQuery( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel ) {
+    private List<Object[]> findExperimentsByUrisInternal( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
         String qs = "select T.`LEVEL`, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
                 + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
-                + AclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
+                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where T.VALUE_URI in :uris"
                 + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
-                + AclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory() )
+                + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
@@ -164,6 +156,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
                 // invalidate the cache when the EE2C table is updated
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                // invalidate the cache when EEs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
                 // invalidate the cache when new characteristics are added/removed
                 .addSynchronizedEntityClass( Characteristic.class );
 
@@ -173,17 +167,46 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             query.setParameter( "bmClass", BioMaterial.class );
         }
 
-        query.setParameterList( "uris", uris );
-
         if ( taxon != null ) {
             query.setParameter( "taxonId", taxon.getId() );
         }
 
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
         query.setCacheable( true );
 
-        return query;
+        List<Object[]> result;
+        if ( uris.size() > MAX_PARAMETER_LIST_SIZE ) {
+            if ( limit > 0 && rankByLevel ) {
+                // query is limited and order is important, we have to sort the results in memory
+                result = streamByBatch( query, "uris", uris, 2048, Object[].class )
+                        .sorted( Comparator.comparing( row -> rankClass( ( Class<?> ) row[0] ) ) )
+                        .limit( limit )
+                        .collect( Collectors.toList() );
+            } else {
+                // query is either unlimited or there is no ordering, batching will not affect the output
+                result = listByBatch( query, "uris", uris, 2048, limit );
+            }
+        } else {
+            //noinspection unchecked
+            result = query
+                    .setParameterList( "uris", optimizeParameterList( uris ) )
+                    .list();
+        }
+
+        return result;
+    }
+
+    private int rankClass( Class<?> clazz ) {
+        if ( clazz == ExpressionExperiment.class ) {
+            return 0;
+        } else if ( clazz == ExperimentalDesign.class ) {
+            return 1;
+        } else if ( clazz == BioMaterial.class ) {
+            return 2;
+        } else {
+            return 3;
+        }
     }
 
     @Override
@@ -198,7 +221,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .sorted()
                 .collect( Collectors.toList() );
 
-        for ( List<String> batch : ListUtils.partition( uniqueUris, 100 ) ) {
+        for ( Collection<String> batch : batchParameterList( uniqueUris, getBatchSize() ) ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
                     .createQuery( "from Characteristic where valueUri in (:uris)" )
@@ -210,13 +233,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByUri( String searchString ) {
-        if ( StringUtils.isBlank( searchString ) )
+    public Collection<Characteristic> findByUri( String uri ) {
+        if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
-                .setParameter( "search", searchString ).list();
+                .createQuery( "select char from Characteristic as char where  char.valueUri = :uri" )
+                .setParameter( "uri", uri ).list();
     }
 
     @Override
@@ -234,18 +257,14 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris ) {
-        List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
-        if ( uniqueUris.isEmpty() )
+        if ( uris.isEmpty() )
             return Collections.emptyMap();
-        //noinspection unchecked
-        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+        Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select lower(coalesce(char.valueUri, char.value)), count(char) from Characteristic char "
                         + "where char.valueUri in :uris "
-                        + "group by coalesce(char.valueUri, char.value)" )
-                .setParameterList( "uris", uniqueUris )
-                .list() )
-                .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Long ) row[1] ) );
+                        + "group by coalesce(char.valueUri, char.value)" );
+        return streamByBatch( q, "uris", uris, 2048, Object[].class )
+                .collect( Collectors.groupingBy( row -> ( String ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
@@ -277,7 +296,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )
-                .setParameter( "search", search.endsWith( "%" ) ? search : search + "%" ).list();
+                .setParameter( "search", search )
+                .list();
     }
 
     @Override
@@ -302,7 +322,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
         }
 
-      //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
+        //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
         boolean efOK = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( ExperimentalFactor.class ) );
 
         String extraClause;
@@ -326,7 +346,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "where C.ID in :ids "
                         + "and (I.class is NULL or I.class = 'ExpressionExperiment') " // for investigations, only retrieve EEs
                         + extraClause )
-                .setParameterList( "ids", characteristicIds )
+                .setParameterList( "ids", optimizeParameterList( characteristicIds ) )
                 .setMaxResults( maxResults )
                 .list();
         Set<Characteristic> characteristicsNotFound = new HashSet<>();
@@ -354,7 +374,13 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         // batch-load all the proxies
-        charToParent.forEach( ( c, parent ) -> Hibernate.initialize( parent ) );
+        for ( Map.Entry<Characteristic, Identifiable> entry : charToParent.entrySet() ) {
+            Identifiable parent = entry.getValue();
+            Hibernate.initialize( parent );
+            if ( parent instanceof FactorValue ) {
+                Hibernate.initialize( ( ( FactorValue ) parent ).getExperimentalFactor() );
+            }
+        }
 
         if ( !characteristicsNotFound.isEmpty() ) {
             //noinspection unchecked
@@ -371,9 +397,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 //            }
 
             if ( efOK ) {
+                //noinspection unchecked
                 List<Object[]> efResults = getSessionFactory().getCurrentSession()
                         .createQuery( "select ef, ef.category from ExperimentalFactor ef where ef.category in :characteristics" )
-                        .setParameterList( "characteristics", characteristicsNotFound ).list();
+                        .setParameterList( "characteristics", optimizeParameterList( characteristicsNotFound ) )
+                        .list();
 
                 for ( Object[] row : efResults ) {
                     charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );

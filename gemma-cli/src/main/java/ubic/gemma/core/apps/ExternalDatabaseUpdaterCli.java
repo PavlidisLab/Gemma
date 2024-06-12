@@ -5,8 +5,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -38,6 +39,10 @@ public class ExternalDatabaseUpdaterCli extends AbstractAuthenticatedCLI {
     private URL releaseUrl;
     private Date lastUpdated;
 
+    public ExternalDatabaseUpdaterCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public String getCommandName() {
         return "updateExternalDatabase";
@@ -49,13 +54,8 @@ public class ExternalDatabaseUpdaterCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.SYSTEM;
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
     @Override

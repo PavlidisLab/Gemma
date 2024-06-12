@@ -6,8 +6,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -20,11 +22,13 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -75,9 +79,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
 
+    public ArrayDesignProbeMapperCli() {
+        setRequireLogin( true );
+    }
+
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.PLATFORM;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.PLATFORM;
     }
 
     @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
@@ -170,11 +178,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg().argName( "probes" ).build();
 
         options.addOption( probesToDoOption );
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     private TaxonService taxonService;
@@ -513,12 +516,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         // TODO: process array designs in order of how many experiments they use (most first)
-
-        Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
-            arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
+            getBatchTaskExecutor().submit( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
-        executeBatchTasks( arrayDesigns );
     }
 
     private void configure( ArrayDesign arrayDesign ) {

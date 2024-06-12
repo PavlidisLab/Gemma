@@ -1,0 +1,111 @@
+/* a responsive mini-framework inspired by Bootstrap 5 https://getbootstrap.com/docs/5.0/ */
+
+/* xs screen */
+.container {
+    margin: 0 auto;
+    padding: 0 1.25em;
+}
+
+.d-sm {
+    display: none;
+}
+
+.d-sm-inline {
+    display: inline;
+}
+
+.d-md {
+    display: none;
+}
+
+.d-md-inline {
+    display: none;
+}
+
+.d-lg {
+    display: none;
+}
+
+.d-lg-inline {
+    display: none;
+}
+
+.d-xl {
+    display: none;
+}
+
+.d-xl-inline {
+    display: none;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+/* small screens */
+@media (min-width: 576px) {
+    .container {
+        width: calc(576px - 2 * 1.25em);
+    }
+
+    .d-sm {
+        display: block;
+    }
+
+    .d-sm-inline {
+        display: inline;
+    }
+}
+
+/* medium screen */
+@media (min-width: 768px) {
+    .container {
+        width: calc(768px - 2 * 1.25em);
+    }
+
+    .d-md {
+        display: block;
+    }
+
+    .d-md-inline {
+        display: inline;
+    }
+
+    .flex-md-nowrap {
+        flex-wrap: nowrap;
+    }
+}
+
+/* large screens */
+@media (min-width: 992px) {
+    .container {
+        width: calc(992px - 2 * 1.25em);
+    }
+
+    .d-lg {
+        display: block;
+    }
+
+    .d-lg-inline {
+        display: inline;
+    }
+
+    .flex-lg-nowrap {
+        flex-wrap: nowrap;
+    }
+}
+
+/* xl screens */
+@media (min-width: 1200px) {
+    .container {
+        width: calc(1200px - 2 * 1.25em);
+    }
+
+    .d-xl {
+        display: block;
+    }
+
+    .d-xl-inline {
+        display: inline;
+    }
+}

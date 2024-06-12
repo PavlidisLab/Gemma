@@ -22,7 +22,9 @@ package ubic.gemma.web.controller.expression.experiment;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import org.springframework.security.access.AccessDeniedException;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -34,6 +36,13 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
+import static ubic.gemma.web.util.dwr.MockDwrResultHandlers.getCallback;
+import static ubic.gemma.web.util.dwr.MockDwrResultHandlers.getException;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
+import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
 
 /**
  * @author ptan
@@ -86,18 +95,56 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
     }
 
     @Test
-    public void testUpdatePubMed() throws ExecutionException, InterruptedException {
+    public void testUpdatePubMed() throws Exception {
         ExpressionExperiment ee = getTestPersistentExpressionExperiment();
         ees.add( ee );
 
-        String taskId = eeController.updatePubMed( ee.getId(), "1" );
-        taskRunningService.getSubmittedTask( taskId ).getResult();
-        ee = expressionExperimentService.thaw( ee );
-        assertEquals( "Biochem Med", ee.getPrimaryPublication().getPublication() );
+        perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
+                .andExpect( callback().exist() )
+                .andDo( getCallback( ( String taskId ) -> {
+                    SubmittedTask st = taskRunningService.getSubmittedTask( taskId );
+                    assertNotNull( st );
+                    try {
+                        st.getResult();
+                    } catch ( ExecutionException | InterruptedException e ) {
+                        throw new RuntimeException( e );
+                    }
+                    ExpressionExperiment ee1 = expressionExperimentService.thaw( ee );
+                    assertEquals( "Biochem Med", ee1.getPrimaryPublication().getPublication() );
+                } ) );
 
-        taskId = eeController.updatePubMed( ee.getId(), "2" );
-        taskRunningService.getSubmittedTask( taskId ).getResult();
-        ee = expressionExperimentService.thaw( ee );
-        assertEquals( "Biochem Biophys Res Commun", ee.getPrimaryPublication().getPublication() );
+
+        perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "2" ) )
+                .andExpect( callback().exist() )
+                .andDo( getCallback( ( String taskId ) -> {
+                    SubmittedTask st = taskRunningService.getSubmittedTask( taskId );
+                    assertNotNull( st );
+                    try {
+                        st.getResult();
+                    } catch ( ExecutionException | InterruptedException e ) {
+                        throw new RuntimeException( e );
+                    }
+                    ExpressionExperiment ee1 = expressionExperimentService.thaw( ee );
+                    assertEquals( "Biochem Biophys Res Commun", ee1.getPrimaryPublication().getPublication() );
+                } ) );
+    }
+
+    @Test
+    public void testUpdatePubMedAsAnonymousUser() throws Exception {
+        ExpressionExperiment ee = getTestPersistentExpressionExperiment();
+        ees.add( ee );
+        runAsAnonymous();
+        try {
+            perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
+                    .andExpect( status().isOk() )
+                    .andExpect( exception().exist() )
+                    .andExpect( callback().doesNotExist() )
+                    .andDo( getException( e -> {
+                        assertEquals( AccessDeniedException.class.getName(), e.getJavaClassName() );
+                        assertEquals( "Access is denied", e.getMessage() );
+                    } ) );
+        } finally {
+            runAsAdmin();
+        }
     }
 }

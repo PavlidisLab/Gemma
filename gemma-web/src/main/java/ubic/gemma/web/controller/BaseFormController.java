@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.WebDataBinder;
@@ -31,8 +30,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.persistence.util.MailEngine;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +38,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
@@ -177,31 +174,4 @@ public abstract class BaseFormController extends SimpleFormController {
 
         return super.processFormSubmission( request, response, command, errors );
     }
-
-    /**
-     * Convenience message to send messages to users
-     */
-    protected void sendEmail( User user, String msg ) {
-        if ( StringUtils.isBlank( user.getEmail() ) ) {
-            log.warn( "Could not send email to " + user + ", no email address" );
-        }
-        log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
-
-        mailEngine.send( message );
-    }
-
-    /**
-     * Convenience message to send messages to users
-     */
-    protected void sendEmail( User user, String templateName, Map<String, Object> model ) {
-        if ( StringUtils.isBlank( user.getEmail() ) ) {
-            log.warn( "Could not send email to " + user + ", no email address" );
-        }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
-        mailEngine.sendMessage( message, templateName, model );
-    }
-
 }

@@ -20,7 +20,7 @@
 package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.common.AbstractDescribable;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 

@@ -39,11 +39,11 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -57,6 +57,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -78,7 +79,7 @@ import java.util.*;
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
-    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca"; // FIXME factor out as config
+    private static final String SUPPORT_EMAIL = Settings.getString( "gemma.support.email" );
 
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
 
@@ -182,7 +183,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             // Experimental. Ideally make a background process. But usually these files should be available anyway...
             log.info( String.format( "Annotation file %s not found, creating for %s...", f.getPath(), arrayDesign ) );
             try {
-                annotationFileService.create( arrayDesign, true );
+                annotationFileService.create( arrayDesign, true, false ); // include GO by default ... but this might be changed.
+                //also, don't delete associated files, as this takes a while and since this on-demand generation is just to handle the case of the file being missing, not annotations changing.
             } catch ( Exception e ) {
                 log.error( String.format( "Failed to create annotation file %s for %s.", f.getPath(), arrayDesign ), e );
             }
@@ -319,7 +321,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public ArrayDesignValueObjectExt getDetails( Long id ) {
 
         ArrayDesign arrayDesign = this.getADSafely( id );
-        log.info( "Loading details of " + arrayDesign );
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
@@ -342,7 +343,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( result.getIsAffymetrixAltCdf() )
             result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
 
-        log.info( "Finished loading details of " + arrayDesign );
         return result;
     }
 

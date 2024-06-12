@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
@@ -25,19 +27,24 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
-import ubic.gemma.persistence.service.TableMaintenanceUtilImpl;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtilImpl;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +57,22 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     @Configuration
     @TestComponent
     static class CharacteristicDaoImplContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
+            Path gene2csInfoPath = Files.createTempDirectory( "DBReport" ).resolve( "gene2cs.info" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.gene2cs.path=" + gene2csInfoPath );
+        }
+
+        /**
+         * Needed to convert {@link String} to {@link Path}.
+         */
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
+        }
 
         @Bean
         public CharacteristicDao characteristicDao( SessionFactory sessionFactory ) {
@@ -151,7 +174,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         acl.insertAce( 0, BasePermission.READ, new AclPrincipalSid( "bob" ), false );
         aclService.updateAcl( acl );
 
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
@@ -171,15 +194,14 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( ee );
-        sessionFactory.getCurrentSession().flush();
-
         // add ACLs and read permission to everyone
         MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee ) );
         acl.insertAce( 0, BasePermission.READ, new AclGrantedAuthoritySid(
                 new SimpleGrantedAuthority( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), false );
         aclService.updateAcl( acl );
+        sessionFactory.getCurrentSession().flush();
 
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
 
@@ -211,7 +233,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
         aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported

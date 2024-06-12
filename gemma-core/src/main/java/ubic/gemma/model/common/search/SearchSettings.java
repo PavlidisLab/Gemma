@@ -22,10 +22,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.With;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.OntologyHighlighter;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -50,14 +51,10 @@ import java.util.stream.Collectors;
 @With
 public class SearchSettings implements Serializable {
 
-    public static final char
-            WILDCARD_CHAR = '*',
-            SINGLE_WILDCARD_CHAR = '?';
-
 
     public enum SearchMode {
         /**
-         * Prefer correctness over speed.
+         * Prefer correctness to speed.
          */
         ACCURATE,
         /**
@@ -108,10 +105,9 @@ public class SearchSettings implements Serializable {
      * @param  arrayDesign the array design to limit the search to
      * @return search settings
      */
-    public static SearchSettings compositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
+    public static SearchSettings compositeSequenceSearch( String query, @Nullable ArrayDesign arrayDesign ) {
         return builder().query( query )
                 .resultType( CompositeSequence.class )
-                .resultType( ArrayDesign.class )
                 .platformConstraint( arrayDesign ) // TODO: check if this was specified in the original code
                 .build();
     }
@@ -136,7 +132,7 @@ public class SearchSettings implements Serializable {
      * @param taxon if you want to filter by taxon (can be null)
      * @return search settings
      */
-    public static SearchSettings expressionExperimentSearch( String query, Taxon taxon ) {
+    public static SearchSettings expressionExperimentSearch( String query, @Nullable Taxon taxon ) {
         return builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )
@@ -151,7 +147,7 @@ public class SearchSettings implements Serializable {
      * @param  taxon the taxon to limit the search to (can be null)
      * @return search settings
      */
-    public static SearchSettings geneSearch( String query, Taxon taxon ) {
+    public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {
         return builder().query( query ).resultType( Gene.class ).taxon( taxon ).build();
     }
 
@@ -210,65 +206,6 @@ public class SearchSettings implements Serializable {
     private transient Highlighter highlighter;
 
     /**
-     * Get this query, trimmed.
-     */
-    public String getQuery() {
-        return query == null ? null : query.trim();
-    }
-
-    /**
-     * Get the original query that was set by {@link #setQuery(String)}, untrimmed.
-     */
-    @SuppressWarnings("unused")
-    public String getRawQuery() {
-        return this.query;
-    }
-
-    /**
-     * Indicate if the query refers to an ontology term.
-     * <p>
-     * This is done by checking if this query starts with 'http://' for now, but there could be fancier checks performed
-     * in the future.
-     */
-    public boolean isTermQuery() {
-        return getQuery() != null && getQuery().startsWith( "http://" );
-    }
-
-    /**
-     * Obtain the term URI.
-     *
-     * @deprecated use {@link #getQuery()} and {@link #isTermQuery()} instead.
-     *
-     * @return the term URI if this is a term query, otherwise null
-     */
-    @Deprecated
-    public String getTermUri() {
-        return isTermQuery() ? getQuery() : null;
-    }
-
-    /**
-     * Set this term URI.
-     *
-     * @deprecated URI can be set with {@link #setQuery(String)} instead.
-     *
-     * @param termUri a valid term URI, or null or a blank string
-     */
-    @Deprecated
-    public void setTermUri( String termUri ) {
-        if ( StringUtils.isNotBlank( termUri ) && !termUri.startsWith( "http://" ) ) {
-            throw new IllegalArgumentException( "The term URI must be a valid URI." );
-        }
-        setQuery( termUri );
-    }
-
-    /**
-     * Check if the query is a wildcard query.
-     */
-    public boolean isWildcard() {
-        return query.contains( String.valueOf( WILDCARD_CHAR ) ) || query.contains( String.valueOf( SINGLE_WILDCARD_CHAR ) );
-    }
-
-    /**
      * Check if this is configured to search a given result type.
      */
     public boolean hasResultType( Class<?> cls ) {
@@ -276,21 +213,37 @@ public class SearchSettings implements Serializable {
     }
 
     /**
+     * Highlight a given field.
+     */
+    @Nullable
+    public Map<String, String> highlight( String value, String field ) {
+        return highlighter != null ? highlighter.highlight( value, field ) : null;
+    }
+
+    /**
      * Highlight a given ontology term.
      * <p>
-     * This is a shorthand for {@link #getHighlighter()} and {@link Highlighter#highlightTerm(String, String, String)}
+     * This is a shorthand for {@link #getHighlighter()} and {@link OntologyHighlighter#highlightTerm(String, String, String)}
      * that deals with a potentially null highlighter.
      * @see #setHighlighter(Highlighter)
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable
     public Map<String, String> highlightTerm( String termUri, String termLabel, String field ) {
-        return highlighter != null ? highlighter.highlightTerm( termUri, termLabel, field ) : null;
+        if ( highlighter instanceof OntologyHighlighter ) {
+            return ( ( OntologyHighlighter ) highlighter ).highlightTerm( termUri, termLabel, field );
+        } else {
+            return null;
+        }
     }
 
     @Nullable
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer, Set<String> fields ) {
-        return highlighter != null ? highlighter.highlightDocument( document, luceneHighlighter, analyzer, fields ) : null;
+    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
+        if ( highlighter instanceof LuceneHighlighter ) {
+            return ( ( LuceneHighlighter ) highlighter ).highlightDocument( document, luceneHighlighter, analyzer );
+        } else {
+            return null;
+        }
     }
 
     @Override

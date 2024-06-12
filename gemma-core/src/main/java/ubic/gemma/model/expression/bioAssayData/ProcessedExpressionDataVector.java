@@ -66,6 +66,5 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
         public static ProcessedExpressionDataVector newInstance() {
             return new ProcessedExpressionDataVector();
         }
-
     }
 }

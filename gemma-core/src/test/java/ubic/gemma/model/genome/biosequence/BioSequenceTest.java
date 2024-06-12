@@ -2,6 +2,7 @@ package ubic.gemma.model.genome.biosequence;
 
 import junit.framework.TestCase;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author Paul

@@ -56,9 +56,14 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
             double threshold );
 
     /**
-     * @return analyses associated with the factor, either through the subsetfactor or as factors for resultsets.
+     * Retrieve analyses associated with the factor, either through the subset factor or as factors for result sets.
      */
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
+
+    /**
+     * @see #findByFactor(ExperimentalFactor)
+     */
+    Collection<DifferentialExpressionAnalysis> findByFactors( Collection<ExperimentalFactor> experimentalFactors );
 
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
 

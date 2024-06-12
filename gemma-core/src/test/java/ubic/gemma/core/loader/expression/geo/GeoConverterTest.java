@@ -150,7 +150,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
     public void testConvertGSE18Stress() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ).getInputStream() );
@@ -410,7 +409,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Category(SlowTest.class)
     public void testConvertGSE60() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse60Short/GSE60_family.soft.gz" ).getInputStream() );
@@ -440,13 +438,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testConvertGSE8134() throws Exception {
+    public void testConvertGSE235534() throws Exception {
         InputStream is = new GZIPInputStream(
-                new ClassPathResource( "/data/loader/expression/geo/GSE8134_family.soft.gz" ).getInputStream() );
+                new ClassPathResource( "/data/loader/expression/geo/GSE235534_family.soft.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
 
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE8134" );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE235534" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
@@ -454,7 +452,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+        assertEquals( 6, ees.iterator().next().getBioAssays().size() );
     }
+
 
     /*
      * Case where the same sample can be in multiple series, we had problems with it.
@@ -624,7 +624,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Category(SlowTest.class)
     public final void testGSE8872() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/gse8872short/GSE8872_family.soft.gz" ).getInputStream() );
@@ -778,7 +777,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         boolean found1 = false;
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
-               // log.info( c );
+                // log.info( c );
                 String category = c.getCategory();
                 if ( !category.equals( "molecular entity" ) && !category.equals( "labelling" ) && !category.equals( "BioSource" ) ) { // we lose these original strings, or they have diff format; not important.
                     assertNotNull( c.getOriginalValue() );

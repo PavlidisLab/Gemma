@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.tasks.analysis.sequence;
 
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 
 public interface ArrayDesignRepeatScanTask extends Task<ArrayDesignRepeatScanTaskCommand> {}
 

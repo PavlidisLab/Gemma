@@ -21,12 +21,14 @@ package ubic.gemma.persistence.service.expression.designElement;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -45,7 +47,10 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
 
 /**
  * @author pavlidis
@@ -54,7 +59,8 @@ import static ubic.gemma.persistence.service.TableMaintenanceUtil.GENE2CS_QUERY_
 public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 
-    private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
+    private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2048;
+
     /**
      * Absolute maximum number of records to return when fetching raw summaries. This is necessary to avoid retrieving
      * millions of records (some sequences are repeats and can have >200,000 records.
@@ -236,42 +242,27 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences ) {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<>();
 
-        int BATCH_SIZE = 2000;
-
-        if ( compositeSequences.size() == 0 )
+        if ( compositeSequences.isEmpty() )
             return returnVal;
+
+        for ( CompositeSequence cs : compositeSequences ) {
+            returnVal.put( cs, new HashSet<>() );
+        }
 
         /*
          * Get the cs->gene mapping
          */
-        final String nativeQuery = "SELECT CS, GENE FROM GENE2CS WHERE CS IN (:csids) ";
-
-        for ( CompositeSequence cs : compositeSequences ) {
-            returnVal.put( cs, new HashSet<Gene>() );
-        }
-
         List<Object> csGene = new ArrayList<>();
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
-        queryObject.addScalar( "cs", StandardBasicTypes.LONG );
-        queryObject.addScalar( "gene", StandardBasicTypes.LONG );
-        queryObject.addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
-        queryObject.addSynchronizedEntityClass( ArrayDesign.class );
-        queryObject.addSynchronizedEntityClass( CompositeSequence.class );
-        queryObject.addSynchronizedEntityClass( Gene.class );
+        Query queryObject = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "SELECT CS, GENE FROM GENE2CS WHERE CS IN (:csids)" )
+                .addScalar( "cs", StandardBasicTypes.LONG )
+                .addScalar( "gene", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class );
 
-        Collection<Long> csIdBatch = new HashSet<>();
-        for ( CompositeSequence cs : compositeSequences ) {
-            csIdBatch.add( cs.getId() );
-
-            if ( csIdBatch.size() == BATCH_SIZE ) {
-                queryObject.setParameterList( "csids", csIdBatch );
-                csGene.addAll( queryObject.list() );
-                csIdBatch.clear();
-            }
-        }
-
-        if ( csIdBatch.size() > 0 ) {
+        for ( Collection<Long> csIdBatch : batchParameterList( EntityUtils.getIds( compositeSequences ), GENE2CS_BATCH_SIZE ) ) {
             queryObject.setParameterList( "csids", csIdBatch );
             csGene.addAll( queryObject.list() );
         }
@@ -305,25 +296,12 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     + " genes." );
 
         // fetch the genes
-        Collection<Long> batch = new HashSet<>();
         Collection<Gene> genes = new HashSet<>();
         String geneQuery = "from Gene g where g.id in ( :gs )";
-
-        org.hibernate.Query geneQueryObject = this.getSessionFactory().getCurrentSession().createQuery( geneQuery )
-                .setFetchSize( 1000 );
-
-        for ( Long gene : genesToFetch ) {
-            batch.add( gene );
-            if ( batch.size() == BATCH_SIZE ) {
-                AbstractDao.log.debug( "Processing batch ... " );
-                geneQueryObject.setParameterList( "gs", batch );
-                //noinspection unchecked
-                genes.addAll( geneQueryObject.list() );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
+        org.hibernate.Query geneQueryObject = this.getSessionFactory().getCurrentSession()
+                .createQuery( geneQuery );
+        for ( Collection<Long> batch : batchParameterList( genesToFetch, GENE2CS_BATCH_SIZE ) ) {
+            AbstractDao.log.debug( "Processing batch ... " );
             geneQueryObject.setParameterList( "gs", batch );
             //noinspection unchecked
             genes.addAll( geneQueryObject.list() );
@@ -397,14 +375,10 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 + " composite sequences" );
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<>();
 
-        BatchIterator<CompositeSequence> it = BatchIterator
-                .batches( compositeSequences, CompositeSequenceDaoImpl.PROBE_TO_GENE_MAP_BATCH_SIZE );
-
         StopWatch timer = new StopWatch();
         timer.start();
         int total = 0;
-        for ( ; it.hasNext(); ) {
-            Collection<CompositeSequence> batch = it.next();
+        for ( Collection<CompositeSequence> batch : batchIdentifiableParameterList( compositeSequences, CompositeSequenceDaoImpl.PROBE_TO_GENE_MAP_BATCH_SIZE ) ) {
             this.batchGetGenesWithSpecificity( batch, results );
             total += batch.size();
         }

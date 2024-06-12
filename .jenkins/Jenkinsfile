@@ -1,19 +1,21 @@
+//file:noinspection GrUnresolvedAccess
+
 def testdbUrl
 def gemmaVersion
 def baseCodeVersion
-def siteDir = '/space/web/maven-sites'
-def dataDir = '/space/gemmaData'
-def deployDir = '/var/local/tomcat/gemma'
-def cliDir = '/space/grp/gemma-cli'
+def dataDir
+def deployDir
+def cliDir
+def cliDirSymlink
 
 void setBuildStatus(String context, String message, String state) {
-  step([
-      $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
-      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
-      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-  ])
+    step([
+        $class            : "GitHubCommitStatusSetter",
+        reposSource       : [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
+        contextSource     : [$class: "ManuallyEnteredCommitContextSource", context: context],
+        errorHandlers     : [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+        statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]]]
+    ])
 }
 
 pipeline {
@@ -21,63 +23,71 @@ pipeline {
     tools {
         maven 'Maven 3.8.1'
     }
+    parameters {
+        string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
+        string(name: 'STAGING_DATA_DIR', defaultValue: '/space/staginggemmaData', description: 'Directory where staging data is stored.')
+        string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
+        string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
+        string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/grp/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
+        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat/gemma', description: 'Prefix for Gemma Web deployment directories.')
+        // either hotfix or release, we only have one staging server & CLI symlink
+        choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
+        // whether or not to force integration tests
+        booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
+        booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
+    }
     stages {
         stage('Checkout scm') {
             steps {
                 checkout scm
                 script {
-                    def pom = readMavenPom()
-                    testdbUrl = pom.properties['gemma.testdb.build.url']
-                    gemmaVersion = pom.version
+                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
+                    gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
+                    baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
-                    if (env.BRANCH_NAME == "development" && !gemmaVersion.endsWith("-SNAPSHOT")) {
+                    if (env.BRANCH_NAME != "master" && !gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A development build must have a -SNAPSHOT suffix.")
                     }
-                    for (dep in pom.dependencies) {
-                        if (dep.groupId == 'baseCode' && dep.artifactId == 'baseCode') {
-                            baseCodeVersion = dep.version
-                            break
-                        }
-                    }
-                    if (baseCodeVersion == null) {
-                        error('The baseCode dependency was not found in pom.xml.')
-                    }
-                    if (env.BRANCH_NAME == 'development') {
-                        dataDir = '/space/sandboxgemmaData'
-                    }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        dataDir = '/space/staginggemmaData'
+                    if (env.BRANCH_NAME == 'master') {
+                        dataDir = params.DATA_DIR
+                    } else if (env.BRANCH_NAME == 'development') {
+                        dataDir = params.DEV_DATA_DIR
+                    } else if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
+                        dataDir = params.STAGING_DATA_DIR
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        deployDir = 'moe:' + deployDir
+                        deployDir = 'moe:' + params.DEPLOY_DIR_PREFIX
                     } else {
-                        deployDir = 'chalmers:' + deployDir
+                        deployDir = 'chalmers:' + params.DEPLOY_DIR_PREFIX
+                        if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
+                            deployDir += '-staging'
+                        }
                     }
-                    if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
-                        deployDir += '-staging'
-                    }
-                    if (env.BRANCH_NAME != 'master') {
-                        cliDir += '-' + gemmaVersion
+                    if (env.BRANCH_NAME == 'master') {
+                        cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
+                        cliDirSymlink = params.CLI_DIR_PREFIX
+                    } else if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                        cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
+                        if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
+                            cliDirSymlink = params.CLI_DIR_PREFIX + '-staging'
+                        }
                     }
                 }
+                sh 'mvn -B clean'
             }
         }
         stage('Build') {
             steps {
                 setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
+                sh 'mvn -B compile'
             }
             post {
                 success {
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
@@ -94,11 +104,23 @@ pipeline {
                 success {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                 }
-                failure {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                }
-                unstable {
+                unsuccessful {
                     setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+                sh 'mvn -B package -DskipTests'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                }
+                unsuccessful {
+                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                 }
             }
         }
@@ -109,32 +131,33 @@ pipeline {
                     branch 'hotfix-*'
                     branch 'release-*'
                     branch 'development'
+                    expression { params.FORCE_INTEGRATION_TESTS }
                 }
             }
             parallel {
                 stage('Run slow unit tests') {
                     when {
                         anyOf {
+                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            expression { params.FORCE_SLOW_TESTS }
                         }
                     }
                     steps {
-                        setBuildStatus "Slow tests", "Slow tests for #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
                     }
                     post {
                         always {
                             junit testResults: '**/target/surefire-reports/*.xml'
+                            junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
                             setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
-                        failure {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
+                        unsuccessful {
                             setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
@@ -142,28 +165,28 @@ pipeline {
                 stage('Run integration tests') {
                     when {
                         anyOf {
+                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            expression { params.FORCE_INTEGRATION_TESTS }
                         }
                     }
                     steps {
-                        setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
                             sh 'mvn -B verify -DskipUnitTests'
                         }
                     }
                     post {
                         always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
-                        failure {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
+                        unsuccessful {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
@@ -172,6 +195,8 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
+                            branch 'hotfix-*'
+                            branch 'release-*'
                             branch 'development'
                         }
                     }
@@ -179,7 +204,7 @@ pipeline {
                         sh 'mvn -B deploy -DskipTests'
                     }
                 }
-                stage ('Deploy Maven website') {
+                stage('Deploy Maven website') {
                     when {
                         anyOf {
                             branch 'master'
@@ -190,16 +215,20 @@ pipeline {
                     }
                     steps {
                         sh 'mvn -B site-deploy'
-                        sh "ln -Tsf ${siteDir}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                        sh "ln -Tsf ${siteDir}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
+                        script {
+                            if (dataDir != null) {
+                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
+                            }
+                        }
                     }
                 }
-                stage ('Deploy Gemma Web') {
+                stage('Deploy Gemma Web') {
                     when {
                         anyOf {
                             branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
+                            // we only support one staging server
+                            branch params.STAGING_BRANCH + '-*'
                             branch 'development'
                         }
                     }
@@ -208,16 +237,22 @@ pipeline {
                         sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
                     }
                 }
-                stage ('Deploy Gemma CLI') {
+                stage('Deploy Gemma CLI') {
                     when {
                         anyOf {
                             branch 'master'
                             branch 'hotfix-*'
                             branch 'release-*'
+                            // never deploy the development CLI, it's too risky
                         }
                     }
                     steps {
                         sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
+                        script {
+                            if (cliDirSymlink != null) {
+                                sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
+                            }
+                        }
                     }
                 }
             }
@@ -227,7 +262,7 @@ pipeline {
         fixed {
             slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
-        unstable {
+        unsuccessful {
             slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
         }
     }

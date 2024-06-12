@@ -47,7 +47,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
     @Test
     public final void testOnSubmit() throws Exception {
-        MockHttpServletRequest request = this.newPost( "/pubMedSearch.html" );
+        MockHttpServletRequest request = new MockHttpServletRequest( "POST", "/pubMedSearch.html" );
         request.addParameter( "accession", "134444" );
 
         try {
@@ -79,7 +79,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         // put it in the system.
         this.getTestPersistentBibliographicReference( "12299" );
 
-        MockHttpServletRequest request = this.newPost( "/pubMedSearch.html" );
+        MockHttpServletRequest request = new MockHttpServletRequest( "POST", "/pubMedSearch.html" );
 
         ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "12299" ),
                 new BeanPropertyBindingResult( new PubMedSearchCommand( "12299" ), "searchCriteria" ),
@@ -93,7 +93,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
     @Test
     public final void testOnSubmitInvalidValue() throws Exception {
-        MockHttpServletRequest request = this.newPost( "/pubMedSearch.html" );
+        MockHttpServletRequest request = new MockHttpServletRequest( "POST", "/pubMedSearch.html" );
         ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "bad idea" ),
                 new BeanPropertyBindingResult( new PubMedSearchCommand( "bad idea" ), "searchCriteria" ),
                 new SimpleSessionStatus() );
@@ -104,7 +104,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
     @Test
     public final void testOnSubmitNotFound() throws Exception {
-        MockHttpServletRequest request = this.newPost( "/pubMedSearch.html" );
+        MockHttpServletRequest request = new MockHttpServletRequest( "POST", "/pubMedSearch.html" );
         ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "13133333314444" ),
                 new BeanPropertyBindingResult( new PubMedSearchCommand( "13133333314444" ), "searchCriteria" ),
                 new SimpleSessionStatus() );

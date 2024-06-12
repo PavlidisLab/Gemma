@@ -44,7 +44,7 @@ import java.util.Map;
 public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?>> {
 
     public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
+            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
             throws IOException {
         this.write( writer, matrix, geneAnnotations, writeHeader, true, true, orderByDesign );
     }

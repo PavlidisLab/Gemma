@@ -38,6 +38,32 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit ) {
+        ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, offset, limit );
+        return result != null ? thaw( result ) : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit ) {
+        ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, threshold, offset, limit );
+        return result != null ? thaw( result ) : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countResults( ExpressionAnalysisResultSet ears ) {
+        return voDao.countResults( ears );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countResults( ExpressionAnalysisResultSet ears, double threshold ) {
+        return voDao.countResults( ears, threshold );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet ears ) {
         ears = ensureInSession( ears );
         voDao.thaw( ears );

@@ -30,7 +30,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -127,7 +127,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.buildOptions( options );
 
         /* Supports: running on all data sets that have not been run since a given date. */
-        super.addDateOption( options );
+        super.addLimitingDateOption( options );
 
         super.addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         super.addForceOption( options );
@@ -384,7 +384,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
             }
 
-            if ( !this.persist ) {
+            if ( this.persist ) {
+                try {
+                    refreshExpressionExperimentFromGemmaWeb( ee, false, true );
+                } catch ( Exception e ) {
+                    AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                }
+            } else {
                 AbstractCLI.log.info( "Writing results to disk" );
                 for ( DifferentialExpressionAnalysis r : results ) {
                     expressionDataFileService.writeDiffExArchiveFile( ee, r, config );

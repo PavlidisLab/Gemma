@@ -46,8 +46,8 @@ Gemma.GemmaNavigationHeader = Ext
                   items : [ {
                      xtype : 'panel',
                      html : '<div style="margin:10px;padding:5px;"><p>Gemma is a web site, database and a set of tools for the meta-analysis, re-use and '
-                        + 'sharing of genomics data, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands '
-                        + 'of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential'
+                        + 'sharing of gene expression profiling data. Gemma contains data from thousands '
+                        + 'of public studies, referencing thousands of published papers. Users can search, access and visualize the data and differential'
                         + ' expression results. For more information, see the '
                         + '<a href="https://pavlidislab.github.io/Gemma/" target="_blank">help and documentation.&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '
@@ -524,7 +524,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : ctxBasePath + '/home.html',
-                            cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
+                            cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" height="63" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
                          }
                       }, '->', {
                          ref : 'navToolbar',
@@ -560,7 +560,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : 'https://www.ubc.ca/',
-                            cn : '<img src="' + ctxBasePath + '/images/logo/ubcgrey_logo_40.png"/>',
+                            cn : '<img src="' + ctxBasePath + '/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo"/>',
                             style : 'padding-left:15px; padding-right:10px'
                          }
                       } ] );

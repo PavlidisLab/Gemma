@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -31,13 +32,13 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.MISC;
     }
 
     @Override
     protected void buildOptions( Options options ) {
-
+        addBatchOption( options );
     }
 
     @Override

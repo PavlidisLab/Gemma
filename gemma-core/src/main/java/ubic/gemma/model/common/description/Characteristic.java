@@ -91,6 +91,7 @@ public class Characteristic extends AbstractDescribable implements Serializable,
         return BY_CATEGORY_AND_VALUE_COMPARATOR;
     }
 
+    @Nullable
     private String category;
     @Nullable
     private String categoryUri;
@@ -98,6 +99,7 @@ public class Characteristic extends AbstractDescribable implements Serializable,
     /**
      * Stores the value this characteristic had before it was assigned a URI for the term.
      */
+    @Nullable
     private String originalValue = null;
     private String value;
     @Nullable
@@ -127,11 +129,12 @@ public class Characteristic extends AbstractDescribable implements Serializable,
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
     @Field
+    @Nullable
     public String getCategory() {
         return this.category;
     }
 
-    public void setCategory( String category ) {
+    public void setCategory( @Nullable String category ) {
         this.category = category;
     }
 
@@ -169,11 +172,12 @@ public class Characteristic extends AbstractDescribable implements Serializable,
     /**
      * @return the originalValue
      */
+    @Nullable
     public String getOriginalValue() {
         return originalValue;
     }
 
-    public void setOriginalValue( String originalValue ) {
+    public void setOriginalValue( @Nullable String originalValue ) {
         this.originalValue = originalValue;
     }
 
@@ -218,9 +222,6 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null ) {
-            return super.hashCode();
-        }
         return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
                 StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
     }

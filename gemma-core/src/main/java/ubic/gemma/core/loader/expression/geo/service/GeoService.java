@@ -61,7 +61,6 @@ public interface GeoService {
 
     /**
      * Refetch and reprocess the GEO series, updating select information. Currently only implemented for experiments (GSEs)
-     * @param geoAccession
      */
     void updateFromGEO( String geoAccession );
 
@@ -75,4 +74,12 @@ public interface GeoService {
 
     void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
 
+    /**
+     * Load from a SOFT file. This can be used for testing but maybe there are other situations it is useful.
+     *
+     * @param accession e.g GSE1234
+     * @param softFile the full path to the SOFT file. The file name has to be [accession].soft.gz
+     * @return a single experiment.
+     */
+    Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform );
 }

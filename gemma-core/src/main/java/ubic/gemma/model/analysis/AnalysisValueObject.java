@@ -1,6 +1,6 @@
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
 public abstract class AnalysisValueObject<T extends Analysis> extends IdentifiableValueObject<T> {
 

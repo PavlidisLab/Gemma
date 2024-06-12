@@ -6,10 +6,11 @@ import org.hibernate.Query;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
@@ -211,9 +212,12 @@ public class FilterQueryUtils {
                     Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
                     addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
                 } else if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
+                    if ( !( subClause.getRequiredValue() instanceof Collection ) ) {
+                        throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+                    }
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    query.setParameterList( paramName, requireNonNull( ( Collection<?> ) subClause.getRequiredValue(), "Required value cannot be null for the 'in' operator." )
-                            .stream().sorted().distinct().collect( Collectors.toList() ) );
+                    //noinspection rawtypes,unchecked
+                    query.setParameterList( paramName, optimizeParameterList( ( Collection ) subClause.getRequiredValue() ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
                     query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
@@ -225,10 +229,5 @@ public class FilterQueryUtils {
 
     private static String formParamName( PropertyMapping mapping, int i ) {
         return formProperty( mapping ).replaceAll( "\\W", "_" ) + i;
-    }
-
-    private static String escapeLike( String s ) {
-        return s.replace( "%", "\\%" )
-                .replace( "_", "\\_" );
     }
 }

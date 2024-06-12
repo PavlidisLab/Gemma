@@ -16,14 +16,14 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collections;
 
@@ -59,6 +59,7 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
         @Bean
         public GemmaOntologyService gemmaOntologyService() {
             GemmaOntologyService ontology = new GemmaOntologyService();
+            ontology.setSearchEnabled( false );
             ontology.setProcessImports( false ); // FIXME: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged in TGEMO
             ontology.initialize( true, false );
             return ontology;
@@ -121,7 +122,6 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
     private OntologyService ontologyService;
 
     @Test
-    @Category(SlowTest.class)
     public void testInferenceInGemma() {
         OntologyTerm overexpression = ontologyService.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00004" );
         assertNotNull( overexpression );

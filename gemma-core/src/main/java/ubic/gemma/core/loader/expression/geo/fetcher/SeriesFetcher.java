@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 public class SeriesFetcher extends GeoFetcher {
 

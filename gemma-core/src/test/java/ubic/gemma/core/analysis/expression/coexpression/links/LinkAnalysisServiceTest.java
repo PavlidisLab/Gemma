@@ -27,7 +27,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionCache;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
@@ -174,7 +174,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     }
 
     private void checkUnsupportedLinksHaveNoSupport() {
-        JdbcTemplate jt = jdbcTemplate;
+        JdbcTemplate jt = getJdbcTemplate();
 
         // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
         // position 12 is important.
@@ -306,7 +306,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                         .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                                 EntityUtils.getIds( ees ), 100, false );
 
-                if( !multiGeneResults.isEmpty() ) {
+                if ( !multiGeneResults.isEmpty() ) {
 
                     for ( Long id : multiGeneResults.keySet() ) {
                         for ( CoexpressionValueObject coex : multiGeneResults.get( id ) ) {

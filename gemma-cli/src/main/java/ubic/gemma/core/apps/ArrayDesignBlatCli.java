@@ -22,7 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.AbstractCLI;
@@ -34,7 +34,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -183,13 +182,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     + allArrayDesigns.size() + " items]" );
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-            Collection<Runnable> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
             for ( ArrayDesign arrayDesign : allArrayDesigns ) {
-                arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
+                getBatchTaskExecutor().submit( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
-
-            executeBatchTasks( arrayDesigns );
-
         } else {
             throw new RuntimeException();
         }

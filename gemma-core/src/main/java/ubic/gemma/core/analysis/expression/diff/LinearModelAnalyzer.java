@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -35,7 +36,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
-import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
@@ -71,7 +72,7 @@ import java.util.concurrent.*;
  */
 @Component
 @Scope(value = "prototype")
-public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
+public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer implements DisposableBean {
 
     /**
      * Preset levels for which we will store the HitListSizes.
@@ -123,7 +124,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param  columnsToUse columns to use
      * @return bio assay dimension
      */
-    private static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
+    public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
          * Indices of the biomaterials in the original matrix.
          */
@@ -141,6 +142,18 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         reorderedDim.setDescription( bioAssays.size() + " bioAssays" );
 
         return reorderedDim;
+    }
+
+    /**
+     * Executor used for performing analyses in the background while the current thread is reporting progress.
+     * <p>
+     * This bean is using the prototype scope, so a single-thread executor is suitable to prevent concurrent analyses.
+     */
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    @Override
+    public void destroy() throws Exception {
+        executorService.shutdown();
     }
 
     /**
@@ -382,10 +395,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( dmatrix == null ) {
             throw new RuntimeException( String.format( "There are no processed EVs for %s.", expressionExperiment ) );
         }
-
-        /*
-         * FIXME remove flagged outlier samples ... at some point; so we don't carry NaNs around unnecessarily.
-         */
 
         return this.run( expressionExperiment, dmatrix, config );
 
@@ -1097,7 +1106,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
                 + ( interceptFactor == null ? "" : " with intercept treated as factor" )
                 + ( interactionFactorLists.isEmpty() ? "" : " with interaction" )
-                + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+                + ( subsetFactorValue == null ? "" : " Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Set<ExpressionAnalysisResultSet> resultSets = this
@@ -1367,7 +1376,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         // perform the analysis in a background thread, so that we can provide feedback and interrupt it if it takes
         // too long
-        Future<Map<String, LinearModelSummary>> f = Executors.newSingleThreadExecutor().submit( () -> {
+        Future<Map<String, LinearModelSummary>> f = executorService.submit( () -> {
             StopWatch timer = new StopWatch();
             timer.start();
             LeastSquaresFit fit;

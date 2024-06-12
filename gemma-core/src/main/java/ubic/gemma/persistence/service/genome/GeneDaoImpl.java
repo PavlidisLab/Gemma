@@ -27,7 +27,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.util.BatchIterator;
+import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -47,6 +47,9 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -177,7 +180,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //language=HQL
         final String queryString = "select g from Gene as g join fetch g.taxon t where g.officialSymbol in (:symbols) and t.id = :taxonId";
 
-        for ( Collection<String> batch : new BatchIterator<>( query, GeneDaoImpl.BATCH_SIZE ) ) {
+        for ( Collection<String> batch : batchParameterList( query, getBatchSize() ) ) {
             //noinspection unchecked
             List<Gene> results = this.getSessionFactory().getCurrentSession()
                     .createQuery( queryString )
@@ -197,7 +200,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //language=HQL
         final String queryString = "from Gene g where g.ncbiGeneId in (:ncbi)";
 
-        for ( Collection<Integer> batch : new BatchIterator<>( ncbiIds, GeneDaoImpl.BATCH_SIZE ) ) {
+        for ( Collection<Integer> batch : batchParameterList( ncbiIds, getBatchSize() ) ) {
             //noinspection unchecked
             List<Gene> results = this.getSessionFactory().getCurrentSession()
                     .createQuery( queryString )
@@ -280,17 +283,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Collection<Gene> getGenesByTaxon( Taxon taxon ) {
-        //language=HQL
-        final String queryString = "select gene from Gene as gene where gene.taxon = :taxon ";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameter( "taxon", taxon )
-                .list();
-    }
-
-    @Override
     public Collection<Gene> getMicroRnaByTaxon( Taxon taxon ) {
         //language=HQL
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon"
@@ -332,8 +324,14 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<>( ids, GeneDaoImpl.BATCH_SIZE ) ) {
-            result.addAll( this.doLoadThawedLite( batch ) );
+        for ( Collection<Long> batch : batchParameterList( ids, getBatchSize() ) ) {
+            //noinspection unchecked
+            result.addAll( this.getSessionFactory().getCurrentSession().createQuery(
+                            "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
+                                    + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
+                                    + "where g.id in (:gIds)" )
+                    .setParameterList( "gIds", batch )
+                    .list() );
         }
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
@@ -349,8 +347,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<>( ids, GeneDaoImpl.BATCH_SIZE ) ) {
-            result.addAll( this.doLoadThawedLiter( batch ) );
+        for ( Collection<Long> batch : batchParameterList( ids, getBatchSize() ) ) {
+            //noinspection unchecked
+            result.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select g from Gene g join fetch g.taxon t where g.id in (:gIds)" )
+                    .setParameterList( "gIds", batch )
+                    .list() );
         }
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
@@ -390,22 +392,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {
         if ( genes.isEmpty() )
             return new HashSet<>();
-
         Collection<Gene> result = new HashSet<>();
-        Collection<Gene> batch = new HashSet<>();
-
-        for ( Gene g : genes ) {
-            batch.add( g );
-            if ( batch.size() == GeneDaoImpl.BATCH_SIZE ) {
-                result.addAll( this.loadThawed( EntityUtils.getIds( batch ) ) );
-                batch.clear();
-            }
+        for ( Collection<Long> batch : batchParameterList( EntityUtils.getIds( genes ), getBatchSize() ) ) {
+            result.addAll( this.loadThawed( batch ) );
         }
-
-        if ( !batch.isEmpty() ) {
-            result.addAll( this.loadThawed( EntityUtils.getIds( batch ) ) );
-        }
-
         return result;
     }
 
@@ -455,7 +445,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( !gpIds.isEmpty() ) {
             removedGeneProductsAccessions = getSessionFactory().getCurrentSession()
                     .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" )
-                    .setParameterList( "gpIds", gpIds )
+                    .setParameterList( "gpIds", optimizeParameterList( gpIds ) )
                     .executeUpdate();
         } else {
             removedGeneProductsAccessions = 0;
@@ -471,7 +461,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( !gaIds.isEmpty() ) {
             removedAliases = getSessionFactory().getCurrentSession()
                     .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" )
-                    .setParameterList( "gaIds", gaIds )
+                    .setParameterList( "gaIds", optimizeParameterList( gaIds ) )
                     .executeUpdate();
         } else {
             removedAliases = 0;
@@ -487,7 +477,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( !plIds.isEmpty() ) {
             removedPhysicalLocations = getSessionFactory().getCurrentSession()
                     .createQuery( "delete from PhysicalLocation pl where pl.id in :plIds" )
-                    .setParameterList( "plIds", plIds )
+                    .setParameterList( "plIds", optimizeParameterList( plIds ) )
                     .executeUpdate();
         } else {
             removedPhysicalLocations = 0;
@@ -657,22 +647,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         fillMultifunctionalityRank( geneValueObjects );
     }
 
-    private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
-                        + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
-                        + "where g.id in (:gIds)" ).setParameterList( "gIds", ids ).list();
-    }
-
-    private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from Gene g join fetch g.taxon t where g.id in (:gIds)" )
-                .setParameterList( "gIds", ids )
-                .list();
-    }
-
     /**
      * Returns genes in the region.
      */
@@ -725,7 +699,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
-                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( geneValueObjects ) ) )
                 .list();
         Map<Long, List<String>> aliasByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
@@ -748,7 +722,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" )
-                .setParameterList( "ids", geneValueObjects.stream().map( GeneValueObject::getId ).collect( Collectors.toSet() ) )
+                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( geneValueObjects ) ) )
                 .list();
         Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
@@ -785,7 +759,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids" )
-                .setParameterList( "ids", ids )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
                 .list();
         Map<Long, Double> result = results.stream()
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Double ) row[1] ) );

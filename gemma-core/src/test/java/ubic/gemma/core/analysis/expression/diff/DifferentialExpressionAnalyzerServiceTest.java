@@ -37,17 +37,19 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -84,6 +86,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    @Autowired
+    private ExperimentalDesignService experimentalDesignService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
@@ -332,6 +337,59 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
+    // See https://github.com/PavlidisLab/Gemma/issues/1034
+    @Test
+    public void testContinuousFactor() throws Exception {
+        prepareGSE1611();
+
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        // add a continuous factor. Code similar to ExperimentalDesignController.createExperimentalFactor
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CONTINUOUS );
+        ef.setExperimentalDesign( ed );
+        ef.setName( "test" );
+        ef.setDescription( "continuous" );
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setCategory( "test" );
+        c.setValue( "testcontinuous" );
+        ef.setCategory( c );
+
+        ed.getExperimentalFactors().add( ef );
+
+        experimentalDesignService.update( ed );
+
+        Collection<BioMaterialValueObject> result = new HashSet<>();
+        int i = 0; // just fill in silly values.
+        Map<BioMaterial, FactorValue> bmToFv = new HashMap<>();
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            BioMaterial sample = assay.getSampleUsed();
+
+            FactorValue fv = FactorValue.Factory.newInstance();
+            fv.setExperimentalFactor( ef );
+            Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, new Double( ++i ).toString(), PrimitiveType.DOUBLE );
+            fv.setMeasurement( m );
+            bmToFv.put( sample, fv );
+
+        }
+        expressionExperimentService.addFactorValues( ee, bmToFv );
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
+        // analyze
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+        assertFalse( analyses.isEmpty() );
+
+        // this triggers an error?
+        expressionDataFileService.writeDiffExArchiveFile( ee, analyses.iterator().next(), config );
+
+    }
+
     private void prepareGSE1611() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator(
@@ -346,8 +404,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        Set<ProcessedExpressionDataVector> vectors = processedDataVectorService.createProcessedDataVectors( ee );
-        assertEquals( 100, vectors.size() );
+        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee ) );
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );

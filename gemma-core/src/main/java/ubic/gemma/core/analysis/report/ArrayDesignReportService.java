@@ -66,4 +66,6 @@ public interface ArrayDesignReportService {
 
     String getLastGeneMappingEvent( Long id );
 
+    String getCreateDate( Long id );
+
 }

@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.persister.PersisterHelper;
@@ -40,8 +39,8 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     private Collection<String> args;
     private boolean persist = false;
 
-    PubMedSearcher() {
-        super();
+    public PubMedSearcher() {
+        setAllowPositionalArguments( true );
     }
 
     @Override

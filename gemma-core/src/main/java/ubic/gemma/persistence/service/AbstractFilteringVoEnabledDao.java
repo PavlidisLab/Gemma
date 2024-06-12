@@ -10,11 +10,12 @@ import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.*;
 import org.springframework.beans.factory.InitializingBean;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.Subquery;
+import ubic.gemma.persistence.util.SubqueryUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;

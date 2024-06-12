@@ -7,6 +7,37 @@ import javax.annotation.Nullable;
 public class CharacteristicUtils {
 
     /**
+     * Create a new characteristic that represents the category of a given characteristic.
+     */
+    public static Characteristic getCategory( Characteristic t ) {
+        Characteristic c = new Characteristic();
+        c.setCategory( t.getCategory() );
+        c.setCategoryUri( t.getCategoryUri() );
+        return c;
+    }
+
+    /**
+     * Check if the given characteristic is uncategorized.
+     */
+    public static boolean isUncategorized( Characteristic c ) {
+        return c.getCategory() == null && c.getCategoryUri() == null;
+    }
+
+    /**
+     * Check if the given characteristic has or is a free-text category.
+     */
+    public static boolean isFreeTextCategory( Characteristic c ) {
+        return c.getCategory() != null && c.getCategoryUri() == null;
+    }
+
+    /**
+     * Check if the given characteristic is a free-text value.
+     */
+    public static boolean isFreeText( Characteristic c ) {
+        return c.getValue() != null && c.getValueUri() == null;
+    }
+
+    /**
      * Compare a pair of ontology terms.
      */
     public static boolean equals( String a, String aUri, String b, String bUri ) {

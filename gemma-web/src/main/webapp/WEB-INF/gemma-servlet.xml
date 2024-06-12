@@ -14,8 +14,8 @@
 
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
     <context:component-scan base-package="ubic.gemma.web"
-                            name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
-        <context:exclude-filter type="annotation" expression="ubic.gemma.persistence.util.TestComponent"/>
+                            name-generator="ubic.gemma.core.context.BeanNameGenerator">
+        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
     <!-- Mapping URLS to controllers -->
@@ -97,6 +97,9 @@
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.HandlerExceptionResolverComposite">
         <property name="exceptionResolvers">
             <list>
+                <!-- handle all Spring MVC built-in exceptions -->
+                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver"/>
+                <!-- handles Gemma-specific exceptions -->
                 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
                     <property name="statusCodes">
                         <props>
@@ -115,6 +118,9 @@
                         </props>
                     </property>
                 </bean>
+                <!-- handle Tomcat's ClientAbortException, only needed for Tomact deployments -->
+                <bean class="ubic.gemma.web.util.ClientAbortExceptionResolver"/>
+                <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
                     <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>
                     <property name="statusCode" value="500"/>
@@ -342,7 +348,6 @@
         </dwr:remote>
     </bean>
 
-
     <bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
         <dwr:remote javascript="SearchService">
             <dwr:include method="ajaxSearch"/>
@@ -420,6 +425,7 @@
             <dwr:include method="createExperimentalFactor"/>
             <dwr:include method="deleteExperimentalFactors"/>
             <dwr:include method="updateExperimentalFactors"/>
+            <dwr:include method="getBioMaterialCharacteristicCategories"/>
             <dwr:include method="getFactorValues"/>
             <dwr:include method="createFactorValue"/>
             <dwr:include method="deleteFactorValues"/>
@@ -696,11 +702,11 @@
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.FreeTextGeneResultsValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.FreeTextGeneResultsValueObject"
                      javascript="FreeTextGeneResultsValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
@@ -709,7 +715,7 @@
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject"
                      javascript="SessionBoundGeneSetValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
@@ -729,7 +735,7 @@
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.expression.BlacklistedValueObject"
+        <dwr:convert type="bean" class="ubic.gemma.model.blacklist.BlacklistedValueObject"
                      javascript="BlacklistedValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
@@ -917,7 +923,7 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.common.description.BibliographicReferenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.BaseValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.common.BaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.DatabaseEntryValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequenceValueObject"/>

@@ -19,7 +19,7 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import ubic.gemma.core.util.NetDatasourceUtil;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * @author pavlidis

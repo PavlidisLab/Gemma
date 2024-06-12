@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

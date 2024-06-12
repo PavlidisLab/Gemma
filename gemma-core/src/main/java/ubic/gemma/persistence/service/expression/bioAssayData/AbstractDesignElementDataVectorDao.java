@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+
 /**
  * @author pavlidis
  * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
@@ -83,7 +85,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
             eeTimer.start();
             this.getSessionFactory().getCurrentSession()
                     .createQuery( "select ee from ExpressionExperiment ee where ee in :ees" )
-                    .setParameterList( "ees", ees )
+                    .setParameterList( "ees", optimizeIdentifiableParameterList( ees ) )
                     .list();
             eeTimer.stop();
         }
@@ -100,7 +102,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
                                     + "left join fetch fv.experimentalFactor "
                                     + "fetch all properties "
                                     + "where bad in :dims" )
-                    .setParameterList( "dims", dims )
+                    .setParameterList( "dims", optimizeIdentifiableParameterList( dims ) )
                     .list();
             dimTimer.stop();
         }

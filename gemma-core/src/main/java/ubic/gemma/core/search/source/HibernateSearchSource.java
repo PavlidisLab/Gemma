@@ -5,19 +5,23 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.queryParser.MultiFieldQueryParser;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.util.Version;
 import org.hibernate.SessionFactory;
 import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.FieldAwareSearchSource;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -33,13 +37,17 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.search.lucene.LuceneQueryUtils.parseSafely;
+
 /**
  * Search source based on Hibernate Search.
  * @author poirigui
  */
 @Component
 @CommonsLog
-public class HibernateSearchSource implements SearchSource, InitializingBean {
+public class HibernateSearchSource implements FieldAwareSearchSource, InitializingBean {
+
+    private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
 
     private static final Class<?>[] SEARCHABLE_CLASSES = new Class[] {
             ExpressionExperiment.class,
@@ -58,9 +66,10 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
             "fullTextUri", "keywords.term", "meshTerms.term", "pubAccession.accession", "title" };
 
     private static String[] DATASET_FIELDS = {
-            "shortName", "name", "description", "bioAssays.name", "bioAssays.description", "bioAssays.accession.accession",
-            "bioAssays.sampleUsed.name", "bioAssays.sampleUsed.characteristics.value",
-            "bioAssays.sampleUsed.characteristics.valueUri", "characteristics.value", "characteristics.valueUri",
+            "shortName", "name", "description", "accession.accession",
+            "bioAssays.name", "bioAssays.description", "bioAssays.accession.accession", "bioAssays.sampleUsed.name",
+            "bioAssays.sampleUsed.characteristics.value", "bioAssays.sampleUsed.characteristics.valueUri",
+            "characteristics.value", "characteristics.valueUri",
             "experimentalDesign.name", "experimentalDesign.description", "experimentalDesign.experimentalFactors.name",
             "experimentalDesign.experimentalFactors.description",
             "experimentalDesign.experimentalFactors.category.categoryUri",
@@ -89,9 +98,7 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
 
     private static String[] COMPOSITE_SEQUENCE_FIELDS = { "name", "description" };
 
-    private static String[] prefix( String p, String... fields ) {
-        return Arrays.stream( fields ).map( f -> p + f ).toArray( String[]::new );
-    }
+    private static final Map<Class<?>, Set<String>> ALL_FIELDS = new HashMap<>();
 
     static {
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "primaryPublication.", PUBLICATION_FIELDS ) );
@@ -100,6 +107,16 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "literatureSources.", PUBLICATION_FIELDS ) );
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "members.gene.", GENE_FIELDS ) );
         COMPOSITE_SEQUENCE_FIELDS = ArrayUtils.addAll( COMPOSITE_SEQUENCE_FIELDS, prefix( "biologicalCharacteristic.", BIO_SEQUENCE_FIELDS ) );
+        ALL_FIELDS.put( ExpressionExperiment.class, new HashSet<>( Arrays.asList( DATASET_FIELDS ) ) );
+        ALL_FIELDS.put( ArrayDesign.class, new HashSet<>( Arrays.asList( PLATFORM_FIELDS ) ) );
+        ALL_FIELDS.put( CompositeSequence.class, new HashSet<>( Arrays.asList( COMPOSITE_SEQUENCE_FIELDS ) ) );
+        ALL_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_FIELDS ) ) );
+        ALL_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_FIELDS ) ) );
+        ALL_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_FIELDS ) ) );
+    }
+
+    private static String[] prefix( String p, String... fields ) {
+        return Arrays.stream( fields ).map( f -> p + f ).toArray( String[]::new );
     }
 
     @Autowired
@@ -120,60 +137,68 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
     }
 
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws HibernateSearchException {
+    public Set<String> getFields( Class<? extends Identifiable> entityClass ) {
+        return ALL_FIELDS.getOrDefault( entityClass, Collections.emptySet() );
+    }
+
+    @Override
+    public boolean accepts( SearchSettings settings ) {
+        return settings.isUseIndices();
+    }
+
+    @Override
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
         return searchFor( settings, BibliographicReference.class, PUBLICATION_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
         return searchFor( settings, BioSequence.class, BIO_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
         return searchFor( settings, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         return searchFor( settings, ExpressionExperiment.class, DATASET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
         return searchFor( settings, Gene.class, GENE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws HibernateSearchException {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
         return searchFor( settings, GeneSet.class, GENE_SET_FIELDS );
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws HibernateSearchException {
+    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws SearchException {
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
-            QueryBuilder queryBuilder = fullTextSession.getSearchFactory().buildQueryBuilder().forEntity( clazz )
-                    .get();
-            Query query = queryBuilder.keyword()
-                    .onFields( fields )
-                    .matching( settings.getQuery() )
-                    .createQuery();
             Analyzer analyzer = analyzers.get( clazz );
-            Highlighter highlighter = settings.getHighlighter() != null ? settings.getHighlighter().createLuceneHighlighter( new QueryScorer( query ) ) : null;
+            QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
+            Query query = parseSafely( settings, queryParser );
+            Highlighter highlighter;
             String[] projection;
-            if ( highlighter != null ) {
+            if ( settings.getHighlighter() instanceof LuceneHighlighter ) {
+                highlighter = new Highlighter( ( ( LuceneHighlighter ) settings.getHighlighter() ).getFormatter(), new QueryScorer( query ) );
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
+                highlighter = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
             //noinspection unchecked
@@ -185,9 +210,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                     .list();
             StopWatch timer = StopWatch.createStarted();
             try {
-                Set<String> fieldsSet = new HashSet<>( Arrays.asList( fields ) );
+                DoubleSummaryStatistics stats = results.stream().mapToDouble( r -> ( Float ) r[1] ).summaryStatistics();
                 return results.stream()
-                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, fieldsSet, clazz ) )
+                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, clazz, stats ) )
                         .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
@@ -201,7 +226,13 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
     }
 
     @Nullable
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Set<String> fields, Class<T> clazz ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
+        double score;
+        if ( stats.getMax() == stats.getMin() ) {
+            score = FULL_TEXT_SCORE_PENALTY;
+        } else {
+            score = FULL_TEXT_SCORE_PENALTY * ( ( Float ) row[1] - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
+        }
         if ( settings.isFillResults() ) {
             //noinspection unchecked
             T entity = ( T ) row[0];
@@ -209,9 +240,9 @@ public class HibernateSearchSource implements SearchSource, InitializingBean {
                 // this happens if an entity is still in the cache, but was removed from the database
                 return null;
             }
-            return SearchResult.from( clazz, entity, ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, entity, score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], ( Float ) row[1], highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer, fields ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
         }
     }
 }

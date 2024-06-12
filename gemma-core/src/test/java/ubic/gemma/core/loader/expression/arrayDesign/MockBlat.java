@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import ubic.gemma.core.apps.Blat;
-import ubic.gemma.core.apps.ShellDelegatingBlat.BlattableGenome;
+import ubic.gemma.core.analysis.sequence.Blat;
+import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat.BlattableGenome;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;

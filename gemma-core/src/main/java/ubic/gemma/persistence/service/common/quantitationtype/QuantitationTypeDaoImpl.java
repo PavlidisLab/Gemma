@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -180,7 +182,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             List<Long> qtIds = getSessionFactory().getCurrentSession()
                     .createQuery( "select distinct v.quantitationType.id from " + vectorType.getName() + " v where v.expressionExperiment = :ee and v.quantitationType.id in :ids" )
                     .setParameter( "ee", ee )
-                    .setParameterList( "ids", ids )
+                    .setParameterList( "ids", optimizeParameterList( ids ) )
                     .list();
             qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
         }

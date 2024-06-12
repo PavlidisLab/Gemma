@@ -6,17 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialServiceImpl;
-import ubic.gemma.persistence.util.TestComponent;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -31,7 +30,7 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
 
         @Bean
         public ExperimentalFactorService experimentalFactorService( ExperimentalFactorDao experimentalFactorDao, BioMaterialService bioMaterialService ) {
-            return new ExperimentalFactorServiceImpl( experimentalFactorDao, mock(), bioMaterialService);
+            return new ExperimentalFactorServiceImpl( experimentalFactorDao, mock(), bioMaterialService );
         }
 
         @Bean
@@ -42,11 +41,6 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
         @Bean
         public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
             return new ExperimentalFactorDaoImpl( sessionFactory );
-        }
-
-        @Bean
-        public CharacteristicService characteristicService() {
-            return mock();
         }
     }
 

@@ -97,20 +97,12 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public Collection<BioMaterial> findByFactor( ExperimentalFactor factor ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv.experimentalFactor = :f" )
-                .setParameter( "f", factor )
-                .list();
-    }
-
-    @Override
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
+    public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
-                .setParameter( "f", fv ).list();
+                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .setParameter( "ef", experimentalFactor )
+                .list();
     }
 
     @Override

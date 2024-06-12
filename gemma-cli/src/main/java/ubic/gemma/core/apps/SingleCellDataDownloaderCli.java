@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -99,8 +100,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
     }
 
     @Override
@@ -250,55 +251,56 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             if ( writer != null && !resume ) {
                 writer.println( SUMMARY_HEADER );
             }
-            executeBatchTasks( accessions.stream()
-                    .map( geoAccession -> ( Runnable ) () -> {
-                        String detectedDataType = UNKNOWN_INDICATOR;
-                        int numberOfSamples = 0, numberOfCells = 0, numberOfGenes = 0;
-                        String comment = "";
-                        try {
-                            log.info( geoAccession + ": Parsing GEO series metadata..." );
-                            GeoSeries series = readSeriesFromGeo( geoAccession );
-                            if ( series == null ) {
-                                addErrorObject( geoAccession, "The SOFT file does not contain an entry for the series." );
-                                comment = "The SOFT file does not contain an entry for the series.";
-                                return;
-                            }
-                            if ( detector.hasSingleCellData( series ) ) {
-                                if ( dataType != null && supplementaryFile != null ) {
-                                    detectedDataType = dataType.name();
-                                    detector.downloadSingleCellData( series, dataType, supplementaryFile );
-                                } else if ( dataType != null ) {
-                                    detectedDataType = dataType.name();
-                                    detector.downloadSingleCellData( series, dataType );
-                                } else {
-                                    detectedDataType = detector.getSingleCellDataType( series ).name();
-                                    detector.downloadSingleCellData( series );
-                                }
-                                List<String> samples = series.getSamples().stream().map( GeoSample::getGeoAccession ).collect( Collectors.toList() );
-                                ArrayDesign platform = new ArrayDesign();
-                                List<BioAssay> bas = samples.stream().map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) ).collect( Collectors.toList() );
-                                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
-                                numberOfSamples = loader.getSampleNames().size();
-                                SingleCellDimension scd = loader.getSingleCellDimension( bas );
-                                numberOfCells = scd.getNumberOfCells();
-                                numberOfGenes = loader.getGenes().size();
-                                addSuccessObject( geoAccession );
-                            } else {
-                                detectedDataType = UNSUPPORTED_INDICATOR;
-                            }
-                        } catch ( Exception e ) {
-                            addErrorObject( geoAccession, e );
-                            comment = StringUtils.trim( ExceptionUtils.getRootCauseMessage( e ) );
-                            if ( !detectedDataType.equals( UNKNOWN_INDICATOR ) ) {
-                                comment += " (detected data type: " + detectedDataType + ")";
-                            }
-                            detectedDataType = FAILED_INDICATOR;
-                        } finally {
-                            if ( writer != null ) {
-                                writer.printf( "%s\t%s\t%d\t%d\t%d\t%s%n", geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes, escapeTsv( comment ) );
-                            }
+            for ( String geoAccession : accessions ) {
+                getBatchTaskExecutor().submit( () -> {
+                    String detectedDataType = UNKNOWN_INDICATOR;
+                    int numberOfSamples = 0, numberOfCells = 0, numberOfGenes = 0;
+                    String comment = "";
+                    try {
+                        log.info( geoAccession + ": Parsing GEO series metadata..." );
+                        GeoSeries series = readSeriesFromGeo( geoAccession );
+                        if ( series == null ) {
+                            addErrorObject( geoAccession, "The SOFT file does not contain an entry for the series." );
+                            comment = "The SOFT file does not contain an entry for the series.";
+                            return;
                         }
-                    } ).collect( Collectors.toList() ) );
+                        if ( detector.hasSingleCellData( series ) ) {
+                            if ( dataType != null && supplementaryFile != null ) {
+                                detectedDataType = dataType.name();
+                                detector.downloadSingleCellData( series, dataType, supplementaryFile );
+                            } else if ( dataType != null ) {
+                                detectedDataType = dataType.name();
+                                detector.downloadSingleCellData( series, dataType );
+                            } else {
+                                detectedDataType = detector.getSingleCellDataType( series ).name();
+                                detector.downloadSingleCellData( series );
+                            }
+                            List<String> samples = series.getSamples().stream().map( GeoSample::getGeoAccession ).collect( Collectors.toList() );
+                            ArrayDesign platform = new ArrayDesign();
+                            List<BioAssay> bas = samples.stream().map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) ).collect( Collectors.toList() );
+                            SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+                            numberOfSamples = loader.getSampleNames().size();
+                            SingleCellDimension scd = loader.getSingleCellDimension( bas );
+                            numberOfCells = scd.getNumberOfCells();
+                            numberOfGenes = loader.getGenes().size();
+                            addSuccessObject( geoAccession );
+                        } else {
+                            detectedDataType = UNSUPPORTED_INDICATOR;
+                        }
+                    } catch ( Exception e ) {
+                        addErrorObject( geoAccession, e );
+                        comment = StringUtils.trim( ExceptionUtils.getRootCauseMessage( e ) );
+                        if ( !detectedDataType.equals( UNKNOWN_INDICATOR ) ) {
+                            comment += " (detected data type: " + detectedDataType + ")";
+                        }
+                        detectedDataType = FAILED_INDICATOR;
+                    } finally {
+                        if ( writer != null ) {
+                            writer.printf( "%s\t%s\t%d\t%d\t%d\t%s%n", geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes, escapeTsv( comment ) );
+                        }
+                    }
+                } );
+            }
         }
     }
 

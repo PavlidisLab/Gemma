@@ -28,21 +28,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -129,7 +130,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
     @After
@@ -160,7 +161,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .build();
 
-        Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
+        Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100 );
         assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
         SearchService.SearchResultMap found = this.searchService.search( settings );
@@ -201,7 +202,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblems() throws SearchException {
+    public void testSearchByBibRefIdProblems() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -236,7 +237,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblemsB() throws SearchException {
+    public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );

@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.providers.OntologyService;
@@ -31,7 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @CommonsLog
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-ontology.xml", "classpath:ubic/gemma/core/ontology/OntologyLoadingTest-context.xml" })
+@ActiveProfiles("production")
+@ContextConfiguration
 public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
 
     @Autowired
@@ -68,6 +70,17 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private UberonOntologyService uberon;
 
+    @Autowired
+    private ObiService obi;
+
+    @Autowired
+    private MouseDevelopmentOntologyService mdo;
+
+    @Test
+    public void testThatConnectivityAndConnectiveAreExcludedFromStemmingInClo() {
+        assertThat( clo.getExcludedWordsFromStemming() ).contains( "connectivity", "connective" );
+    }
+
     @Test
     public void testThatChebiDoesNotHaveInferenceEnabled() {
         assertThat( chebi.getInferenceMode() ).isEqualTo( OntologyService.InferenceMode.NONE );
@@ -82,7 +95,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Category(SlowTest.class)
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
-        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon );
+        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo );
         List<OntologyService> services = new ArrayList<>();
         List<Future<?>> futures = new ArrayList<>();
         for ( OntologyService os : ontologyServices ) {

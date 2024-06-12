@@ -1,34 +1,36 @@
 package ubic.gemma.rest;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.Data;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.Condition;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.BaseJerseyTest;
-import ubic.gemma.rest.util.JacksonConfig;
+import ubic.gemma.rest.util.OpenApiFactory;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -36,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -43,14 +46,20 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 public class OpenApiTest extends BaseJerseyTest {
 
-    @Import(JacksonConfig.class)
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
 
         @Bean
-        public CustomModelResolver customModelResolver() {
-            return new CustomModelResolver( Json.mapper(), mock( SearchService.class ) );
+        public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+            OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
+            factory.setModelConverters( Collections.singletonList( customModelResolver ) );
+            return factory;
+        }
+
+        @Bean
+        public CustomModelResolver customModelResolver( SearchService searchService ) {
+            return new CustomModelResolver( searchService );
         }
 
         @Bean
@@ -88,6 +97,11 @@ public class OpenApiTest extends BaseJerseyTest {
             return mock( AccessDecisionManager.class );
         }
 
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
+
         private static <S extends Identifiable, T extends EntityArgService<S, ?>> T mockFilteringService( Class<T> clazz, Class<S> elementClass ) {
             T ees = mock( clazz );
             when( ees.getElementClass() ).thenAnswer( a -> elementClass );
@@ -97,23 +111,19 @@ public class OpenApiTest extends BaseJerseyTest {
     }
 
     @Autowired
-    private CustomModelResolver customModelResolver;
-
-    @Autowired
-    @Qualifier("swaggerObjectMapper")
-    private ObjectMapper objectMapper;
+    private SearchService searchService;
 
     private OpenAPI spec;
 
     @Before
     public void setUpSpec() throws IOException {
-        // FIXME: this is normally initialized in the servlet
-        ModelConverters.getInstance().addConverter( customModelResolver );
+        when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
+        when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
         Response response = target( "/openapi.json" ).request().get();
         assertThat( response )
                 .hasStatus( Response.Status.OK )
                 .hasEncoding( "gzip" );
-        spec = objectMapper.readValue( response.readEntity( InputStream.class ), OpenAPI.class );
+        spec = Json.mapper().readValue( response.readEntity( InputStream.class ), OpenAPI.class );
     }
 
     @Test
@@ -136,6 +146,77 @@ public class OpenApiTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection() {
+        SoftAssertions assertions = new SoftAssertions();
+        for ( String path : spec.getPaths().keySet() ) {
+            if ( path.equals( "/genes/probes/refresh" ) ) {
+                // FIXME: this is broken, see https://github.com/swagger-api/swagger-core/issues/4693
+                continue;
+            }
+            PathItem operations = spec.getPaths().get( path );
+            assertions.assertThat( operations.getGet().getResponses() )
+                    .describedAs( "GET %s (%s)", path, operations.getGet().getOperationId() )
+                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "default" )
+                            || entry.equals( "201" )
+                            || entry.equals( "204" )
+                            || entry.startsWith( "3" ),
+                            "has at least a default GET response or is a redirection" ) )
+                    .allSatisfy( ( responseCode, content ) -> {
+                        if ( responseCode.startsWith( "3" ) ) {
+                            // a redirection, no need for a default responses
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
+                        } else if ( responseCode.equals( "201" ) ) {
+                            // created
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .doesNotContainKey( "*/*" );
+                        } else if ( responseCode.equals( "204" ) ) {
+                            // no content
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
+                        } else {
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNotEmpty()
+                                    .doesNotContainKey( "*/*" );
+                        }
+                    } );
+        }
+        assertions.assertAll();
+    }
+
+    @Test
+    public void testEnsureThatAllErrorResponsesUseResponseErrorObjectWithJsonMediaType() {
+        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
+            assertThat( operations.getGet().getResponses() ).allSatisfy( ( code, response ) -> {
+                if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
+                    assertThat( response.getContent() )
+                            .describedAs( "GET %s -> %s", path, code )
+                            .hasEntrySatisfying( "application/json", content -> {
+                                assertThat( content.getSchema().get$ref() ).isEqualTo( "#/components/schemas/ResponseErrorObject" );
+                            } );
+                }
+            } );
+        } );
+    }
+
+    @Test
+    public void testGetDatasetsCategories() {
+        assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
+                .hasEntrySatisfying( "default", response -> {
+                    assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
+                            .isEqualTo( "#/components/schemas/QueriedAndFilteredAndInferredAndLimitedResponseDataObjectCategoryWithUsageStatisticsValueObject" );
+                } )
+                .hasEntrySatisfying( "503", response -> {
+                    Assertions.assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
+                            .isEqualTo( "#/components/schemas/ResponseErrorObject" );
+                } );
+    }
+
+    @Test
     public void testFilterArgSchemas() {
         assertThat( spec.getComponents().getSchemas() )
                 // FIXME: remove the dangling 'Filter'
@@ -154,7 +235,7 @@ public class OpenApiTest extends BaseJerseyTest {
         assertThat( spec.getComponents().getSchemas() )
                 // FIXME: remove the dangling 'Sort'
                 // .doesNotContainKey( "Sort" )
-                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet", "SortArgTaxon" );
+                .containsKeys( "SortArgExpressionExperiment", "SortArgArrayDesign", "SortArgExpressionAnalysisResultSet" );
         Schema<?> schema = spec.getComponents().getSchemas().get( "SortArgExpressionExperiment" );
         assertThat( schema.getType() )
                 .isEqualTo( "string" );
@@ -169,5 +250,23 @@ public class OpenApiTest extends BaseJerseyTest {
                     assertThat( p.getSchema().getMinimum() ).isEqualTo( "1" );
                     assertThat( p.getSchema().getMaximum() ).isEqualTo( "5000" );
                 } );
+    }
+
+    @Test
+    public void testSearchableProperties() {
+        assertThat( spec.getPaths().get( "/search" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getName() ).isEqualTo( "query" );
+                    assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
+                } );
+        assertThat( spec.getComponents().getSchemas().get( "QueryArg" ) ).satisfies( s -> {
+            assertThat( s.getType() ).isEqualTo( "string" );
+            //noinspection unchecked
+            assertThat( s.getExtensions() )
+                    .isNotNull()
+                    .containsEntry( "x-gemma-searchable-properties", Collections.singletonMap( ExpressionExperiment.class.getName(), Collections.singletonList( "shortName" ) ) );
+            assertThat( s.getExternalDocs().getUrl() )
+                    .isEqualTo( "https://lucene.apache.org/core/3_6_2/queryparsersyntax.html" );
+        } );
     }
 }

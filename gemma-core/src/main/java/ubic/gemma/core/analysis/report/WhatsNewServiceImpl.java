@@ -34,7 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author pavlidis
  */
-@Component
+@Component("whatsNewService")
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class WhatsNewServiceImpl implements WhatsNewService {
 
@@ -215,11 +215,15 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
 
-        Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
+        Collection<Auditable> updatedObjects = new HashSet<>();
+        updatedObjects.addAll( auditEventService.getUpdatedSinceDate( ArrayDesign.class, date ) );
+        updatedObjects.addAll( auditEventService.getUpdatedSinceDate( ExpressionExperiment.class, date ) );
         wn.setUpdatedObjects( updatedObjects );
         WhatsNewServiceImpl.log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
 
-        Collection<Auditable> newObjects = auditEventService.getNewSinceDate( date );
+        Collection<Auditable> newObjects = new HashSet<>();
+        newObjects.addAll( auditEventService.getNewSinceDate( ArrayDesign.class, date ) );
+        newObjects.addAll( auditEventService.getNewSinceDate( ExpressionExperiment.class, date ) );
         wn.setNewObjects( newObjects );
         WhatsNewServiceImpl.log.info( wn.getNewObjects().size() + " new objects since " + date );
 

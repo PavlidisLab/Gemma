@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 

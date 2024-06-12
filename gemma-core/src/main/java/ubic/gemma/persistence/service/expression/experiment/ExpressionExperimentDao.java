@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -39,6 +40,13 @@ public interface ExpressionExperimentDao
         CachedFilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject>, BrowsingDao<ExpressionExperiment> {
 
     String OBJECT_ALIAS = "ee";
+
+    /**
+     * Load an experiment by ID with a specific cache mode.
+     * <p>
+     * The cache mode will be effective for the remainder of the Hibernate session.
+     */
+    ExpressionExperiment load( Long id, CacheMode cacheMode );
 
     @Nullable
     BioAssaySet loadBioAssaySet( Long id );
@@ -172,7 +180,7 @@ public interface ExpressionExperimentDao
      * <p>
      * Experiments <b>are not</b> filtered by ACLs and toubled experiments are only visible to administrators.
      */
-    Map<Taxon, Long> getPerTaxonCount( List<Long> ids );
+    Map<Taxon, Long> getPerTaxonCount( Collection<Long> ids );
 
     Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
 
@@ -182,8 +190,6 @@ public interface ExpressionExperimentDao
 
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment ee, ArrayDesign oldAd );
-
     /**
      * Obtain the preferred quantitation type, if available.
      */
@@ -191,10 +197,9 @@ public interface ExpressionExperimentDao
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * Obtain the masked preferred quantitation type, if available.
+     * Test if the dataset has preferred expression data vectors.
      */
-    @Nullable
-    QuantitationType getMaskedPreferredQuantitationType( ExpressionExperiment ee );
+    boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
@@ -262,6 +267,11 @@ public interface ExpressionExperimentDao
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
+     * Obtain experiment-level annotations.
+     */
+    List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
+
+    /**
      * Obtain sample-level annotations.
      */
     List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
@@ -271,12 +281,21 @@ public interface ExpressionExperimentDao
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 
-    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    /**
+     * Special indicator for free-text terms.
+     * <p>
+     * Free-text terms or categories have a null URI and a non-empty label.
+     */
+    String FREE_TEXT = null;
 
     /**
      * Special indicator for an uncategorized term.
+     * <p>
+     * Uncategorized terms (or the uncategorized category) has both null URI and label.
      */
     String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
@@ -306,6 +325,52 @@ public interface ExpressionExperimentDao
      * The result is stored in the standard query cache.
      */
     long countBioMaterials( @Nullable Filters filters );
+
+    /**
+     * Add raw data vectors with the given quantitation type.
+     * @return the number of raw data vectors created
+     */
+    int addRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> newVectors );
+
+    /**
+     * Remove all raw data vectors.
+     * <p>
+     * All affected QTs are removed.
+     */
+    int removeAllRawDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Remove raw data vectors for a given quantitation type.
+     * @return the number of removed raw vectors
+     */
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Replace raw data vectors for a given quantitation type.
+     * @return the number of replaced raw vectors
+     */
+    int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Create processed data vectors
+     * @return the number of created processed vectors
+     */
+    int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    /**
+     * Remove processed data vectors.
+     * <p>
+     * Their corresponding QT is removed and the number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
+     * is set to zero.
+     * @return the number of removed processed vectors
+     */
+    int removeProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Replace processed data vectors.
+     * @return the number of vectors replaced
+     */
+    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 

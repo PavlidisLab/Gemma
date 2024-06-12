@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
@@ -31,7 +32,6 @@ import ubic.gemma.model.common.description.Versioned;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -65,6 +65,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     @JsonIgnore
     private Boolean blackListed = false;
+    @Deprecated
+    @Schema(implementation = TechnologyType.class)
     private String color; // FIXME redundant with technologyType
     @JsonIgnore
     private String dateCached;
@@ -109,6 +111,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @JsonIgnore
     private Date lastSequenceUpdate;
     private String name;
+
+
+    @JsonIgnore
+    private Date createDate;
+
     /**
      * The number of unique genes that this array design maps to.
      */
@@ -136,11 +143,13 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @Nullable
     @JsonProperty("taxon")
     private TaxonValueObject taxonObject;
+    @Schema(implementation = TechnologyType.class)
     private String technologyType;
 
     // for the Versioned interface
     private String releaseVersion;
     private URL releaseUrl;
+
 
     /**
      * Main external reference.
@@ -236,6 +245,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.switchedExpressionExperimentCount = arrayDesignValueObject.switchedExpressionExperimentCount;
         this.releaseVersion = arrayDesignValueObject.releaseVersion;
         this.releaseUrl = arrayDesignValueObject.releaseUrl;
+        this.createDate = arrayDesignValueObject.createDate;
     }
 
     /**

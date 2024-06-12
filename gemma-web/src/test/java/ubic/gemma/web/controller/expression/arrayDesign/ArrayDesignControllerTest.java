@@ -21,7 +21,8 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.util.Collection;
 
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author keshav
  */
-public class ArrayDesignControllerTest extends BaseSpringWebTest {
+public class ArrayDesignControllerTest extends BaseWebIntegrationTest {
 
     @Autowired
     private ArrayDesignController arrayDesignController;

@@ -1,6 +1,7 @@
 package ubic.gemma.core.util.test;
 
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.*;
 
 import static org.junit.Assume.assumeNoException;
@@ -23,7 +24,7 @@ public class Assumptions {
      * </ul>
      * Only a connection is established; the resource itself is not consumed.
      */
-    public static void assumeThatResourceIsAvailable( String url ) throws Exception {
+    public static void assumeThatResourceIsAvailable( String url ) {
         URLConnection con = null;
         try {
             con = new URL( url ).openConnection();
@@ -41,10 +42,38 @@ public class Assumptions {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
         } catch ( SSLException e ) {
             assumeNoException( String.format( "SSL issue attempting to connect to %s.", url ), e );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
         } finally {
             if ( con instanceof HttpURLConnection ) {
                 ( ( HttpURLConnection ) con ).disconnect();
             }
+        }
+    }
+
+    public static void assumeThatExceptionIsDueToNetworkIssue( Exception e ) {
+        if ( e instanceof IOException ) {
+            checkIOException( ( IOException ) e );
+        }
+        if ( e.getCause() instanceof IOException ) {
+            assumeThatExceptionIsDueToNetworkIssue( ( IOException ) e.getCause() );
+        }
+        throw new RuntimeException( e );
+    }
+
+    private static void checkIOException( IOException e ) {
+        if ( e instanceof ConnectException ) {
+            assumeNoException( "Test skipped due to connection exception", e );
+        } else if ( e instanceof UnknownHostException ) {
+            assumeNoException( "Test skipped due to unknown host exception", e );
+        } else if ( e instanceof SSLException ) {
+            assumeNoException( "SSL issue attempting to connect.", e );
+        } else if ( e.getMessage() != null && e.getMessage().contains( "504" ) ) {
+            assumeNoException( "Test skipped due to a 504 error", e );
+        } else if ( e.getMessage() != null && e.getMessage().contains( "503" ) ) {
+            assumeNoException( "Test skipped due to a 503 error", e );
+        } else if ( e.getMessage() != null && e.getMessage().contains( "502" ) ) {
+            assumeNoException( "Test skipped due to a 502 error", e );
         }
     }
 }

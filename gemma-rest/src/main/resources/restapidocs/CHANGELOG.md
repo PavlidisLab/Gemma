@@ -1,5 +1,44 @@
 ## Updates
 
+### Update 2.7.6
+
+- add build information to the root and to individual error responses
+
+### Update 2.7.5
+
+- fix a bug in `getTaxonDatasets` sorting parameter, it was indicating `Taxon` instead of `ExpressionExperiment`
+- disambiguate all endpoints that expect a gene identifier with a taxon argument, the previous endpoints still exist but
+  will now raise `400 Bad Request` when an ambiguous identifier is supplied instead of returning an arbitrary result
+- add endpoints to retrieve all genes with pagination
+- merge `getResultSets` and `getResultSetsAsTsv` endpoints in the OpenAPI specification
+- add support for offset/limit and threshold arguments for retrieving DE results and retaining most significant probes
+
+### Update 2.7.4
+
+- indicate 503 status codes for endpoints that could timeout due to a long-running search
+
+### Update 2.7.3
+
+- fix double-gzipping for the `getPlatformAnnotations` endpoint
+- add a limit argument `getDatasetCategoriesUsageStatistics` with a default value of 200
+- more parent terms now include in `getDatasetAnnotationsUsageFrequency`
+- search is much more efficient and now capable of handling more advanced syntax
+
+#### More free-text categories
+
+We've backfilled thousands of free-text categories from GEO sample metadata which resulted in
+the `getDatasetCategoriesUsageFrequency` endpoint producing far more results than usual. This is now being alleviated
+by a new `limit` parameter with a default value of 200.
+
+#### Complete inference for parent terms in `getDatasetAnnotationsUsageFrequency`
+
+The `getDatasetAnnotationsUsageFrequency` endpoint now include parent terms that satisfy the `hasPart` relation. We've
+rewritten the logic under the hood to be much more efficient and cache frequently requested terms.
+
+#### Advanced search syntax
+
+The search endpoint and individual query parameters now support an advanced search syntax provided by Lucene.
+
 ### Update 2.7.2
 
 Expose statements in `FactorValueValueObject` and `FactorValueBasicValueObject`.

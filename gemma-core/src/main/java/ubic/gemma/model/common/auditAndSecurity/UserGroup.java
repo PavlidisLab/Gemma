@@ -21,7 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.User;
-import ubic.gemma.model.common.AbstractAuditable;
 
 import java.util.HashSet;
 import java.util.Set;

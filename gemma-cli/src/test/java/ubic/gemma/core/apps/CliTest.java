@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,25 +20,24 @@
 package ubic.gemma.core.apps;
 
 import org.junit.Test;
-import ubic.gemma.core.apps.GemmaCLI;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * 
+ *
  * @author paul
  */
 public class CliTest {
 
     @Test
     public void testMaskPwd() {
-        String result = GemmaCLI.getOptStringForLogging( new Object[] { "-u", "administrator", "-p", "password", "--array", "GPL14187" } );
+        String result = GemmaCLI.getOptStringForLogging( new String[] { "-u", "administrator", "-p", "password", "--array", "GPL14187" } );
         assertEquals( "-u administrator -p XXXXXX --array GPL14187", result );
 
-        result = GemmaCLI.getOptStringForLogging( new Object[] { "-u", "administrator", "--array", "GPL14187", "-p", "password" } );
+        result = GemmaCLI.getOptStringForLogging( new String[] { "-u", "administrator", "--array", "GPL14187", "-p", "password" } );
         assertEquals( "-u administrator --array GPL14187 -p XXXXXX", result );
 
-        result = GemmaCLI.getOptStringForLogging( new Object[] { "-u", "administrator", "--password", "password", "--array", "GPL14187" } );
+        result = GemmaCLI.getOptStringForLogging( new String[] { "-u", "administrator", "--password", "password", "--array", "GPL14187" } );
         assertEquals( "-u administrator --password XXXXXX --array GPL14187", result );
 
     }

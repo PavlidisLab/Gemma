@@ -2083,11 +2083,12 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
                 .createQuery( "from GeneCoexpressedGenes where geneId = :id" ).setParameter( "id", geneId )
                 .uniqueResult();
         // note this might be a no-op.
-        for ( Long g : removedGenes ) {
-            gcti.removeEntity( g );
-            sess.update( gcti );
+        if ( gcti != null ) {
+            for ( Long g : removedGenes ) {
+                gcti.removeEntity( g );
+                sess.update( gcti );
+            }
         }
-
     }
 
     /**

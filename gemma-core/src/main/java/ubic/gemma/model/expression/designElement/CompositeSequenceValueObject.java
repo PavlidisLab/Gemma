@@ -19,12 +19,10 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.Hibernate;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 /**

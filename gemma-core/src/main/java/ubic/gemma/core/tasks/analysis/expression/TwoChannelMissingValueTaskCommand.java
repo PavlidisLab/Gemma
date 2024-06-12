@@ -21,7 +21,7 @@ package ubic.gemma.core.tasks.analysis.expression;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValuesImpl;
 import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.tasks.Task;
+import ubic.gemma.core.job.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;

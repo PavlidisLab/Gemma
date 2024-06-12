@@ -23,7 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
@@ -65,12 +65,18 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     private final static int ARRAY_DESIGN_NAME_I = LoadSimpleExpressionDataCli.SOURCE_I + 1;
     private final static int TECHNOLOGY_TYPE_I = LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I + 1;
     private final static int TOTAL_FIELDS = LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I + 1;
+
+    @Autowired
     private ExpressionExperimentService eeService;
-    private ArrayDesignService adService = null;
+    @Autowired
+    private ArrayDesignService adService;
+    @Autowired
+    private SimpleExpressionDataLoaderService eeLoaderService;
+    @Autowired
+    private TaxonService taxonService;
+
     private String dirName = "./";
-    private SimpleExpressionDataLoaderService eeLoaderService = null;
     private String fileName = null;
-    private TaxonService taxonService = null;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -98,7 +104,6 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         return "addTSVData";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).required().hasArg().argName( "File Name" )
@@ -108,15 +113,11 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         Option dirOption = Option.builder( "d" ).hasArg().argName( "File Folder" )
                 .desc( "The folder for containing the experiment files" ).longOpt( "dir" ).build();
         options.addOption( dirOption );
-
+        addBatchOption( options );
     }
 
     @Override
     protected void doWork() throws Exception {
-        this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
-        this.eeService = this.getBean( ExpressionExperimentService.class );
-        this.adService = this.getBean( ArrayDesignService.class );
-        this.taxonService = this.getBean( TaxonService.class );
         if ( this.fileName != null ) {
             AbstractCLI.log.info( "Loading experiments from " + this.fileName );
             InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );

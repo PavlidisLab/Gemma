@@ -216,8 +216,9 @@
                                 <srcFile>${project.build.directory}/schema/gemma/gsec/sql/gsec-acl-ddl.sql</srcFile>
                                 <scrFile>${project.build.directory}/schema/gemma/gsec/sql/init-acl-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
-                                <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
                                 <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/mysql/init-entities.sql</srcFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/init-data.sql</srcFile>
                             </srcFiles>
                             <!--suppress MavenModelInspection -->
                             <skip>${skipIntegrationTests}</skip>
@@ -278,7 +279,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.10.0</version>
+            <version>1.11.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -288,7 +289,7 @@
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>3.9.0</version>
+            <version>3.11.0</version>
         </dependency>
 
         <!-- Utilities -->
@@ -338,7 +339,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <version>4.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

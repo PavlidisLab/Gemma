@@ -6,9 +6,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.Assertions;
@@ -21,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test for the result sets endpoint.
- *
+ * <p>
  * This also contains tests of other endpoints as using multiple classes would result in Spring context being reloaded
  * multiple times over.
  *
@@ -43,7 +41,7 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
     }
 
     @After
-    public void tearDown() {
+    public void removeFixtures() {
         expressionExperimentService.remove( ee );
     }
 

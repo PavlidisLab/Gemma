@@ -69,8 +69,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         }
 
         ExpressionDataDoubleMatrix intensities = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-        if ( intensities == null ) {
-            throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
+        if ( intensities == null || intensities.rows() == 0 ) {
+            throw new IllegalStateException( "Could not locate intensity matrix, or it was empty, for " + ee.getShortName() );
         }
 
         QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
@@ -81,6 +81,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( intensities );
         } catch ( UnsupportedQuantitationScaleConversionException e ) {
             log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+        }
+
+        if ( intensities.rows() < 3 ) {
+            // this data is pretty much useless altogether, so an exception is the right way to go.
+            throw new IllegalStateException( "Not enough data left after filtering to proceed (" + intensities.rows() + " rows for " + ee.getShortName() + ")" );
         }
 
         mvr = expressionExperimentService.updateMeanVarianceRelation( ee, calculateMeanVariance( intensities ) );

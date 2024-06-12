@@ -1,0 +1,50 @@
+/*
+ * The gemma-core project
+ *
+ * Copyright (c) 2018 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.persistence.service.blacklist;
+
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
+
+/**
+ * @author paul
+ */
+public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity, BlacklistedValueObject> {
+
+    boolean isBlacklisted( String accession );
+
+    /**
+     * @param  accession accession to search for (typically either a GPL or GSE)
+     * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
+     */
+    BlacklistedEntity findByAccession( String accession );
+
+    boolean isBlacklisted( ArrayDesign platform );
+
+    boolean isBlacklisted( ExpressionExperiment dataset );
+
+    Collection<ExpressionExperiment> getNonBlacklistedExpressionExperiments( ArrayDesign arrayDesign );
+
+    int removeAll();
+}

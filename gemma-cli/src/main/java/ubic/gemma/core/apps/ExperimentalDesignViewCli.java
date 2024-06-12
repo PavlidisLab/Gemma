@@ -3,6 +3,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
@@ -17,8 +18,8 @@ import java.util.*;
 public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.ANALYSIS;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.ANALYSIS;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
                     if ( f.getCharacteristics().size() > 0 ) {
                         for ( Characteristic c : f.getCharacteristics() ) {
-                            if ( c.getCategory().equals( category ) ) {
+                            if ( Objects.equals( c.getCategory(), category ) ) {
 
                                 String value = c.getValue();
 

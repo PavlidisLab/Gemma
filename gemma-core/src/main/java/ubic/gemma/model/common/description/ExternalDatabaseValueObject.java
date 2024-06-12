@@ -17,9 +17,8 @@ package ubic.gemma.model.common.description;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;

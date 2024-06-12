@@ -23,14 +23,18 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Switching of platforms that have no composite sequences.
@@ -73,6 +77,48 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         assertEquals( 1, arrayDesignsUsed.size() );
 
         assertEquals( arrayDesign, arrayDesignsUsed.iterator().next() );
+    }
+
+    @Test
+    public void testPlatformSwitchingWithExpressionData() {
+        ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+
+        assertEquals( 16, ee.getBioAssays().size() );
+        assertEquals( 24, ee.getRawExpressionDataVectors().size() );
+
+        Set<ArrayDesign> currentPlatforms = ee.getBioAssays().stream()
+                .map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() );
+        // create a new platform, mapped one-to-one to the existing AD
+        ArrayDesign newPlatform = new ArrayDesign();
+        newPlatform.setTechnologyType( currentPlatforms.iterator().next().getTechnologyType() );
+        newPlatform.setPrimaryTaxon( currentPlatforms.iterator().next().getPrimaryTaxon() );
+        for ( ArrayDesign currentPlatform : currentPlatforms ) {
+            for ( CompositeSequence probe : currentPlatform.getCompositeSequences() ) {
+                CompositeSequence cs = new CompositeSequence();
+                cs.setName( probe.getName() + "_remapped" );
+                cs.setArrayDesign( newPlatform );
+                cs.setBiologicalCharacteristic( probe.getBiologicalCharacteristic() );
+                newPlatform.getCompositeSequences().add( cs );
+            }
+        }
+        newPlatform = arrayDesignService.create( newPlatform );
+
+        experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, newPlatform );
+
+        // reload from the database
+        ee = experimentService.loadAndThaw( ee.getId() );
+        assertNotNull( ee );
+        assertEquals( 8, ee.getBioAssays().size() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertEquals( newPlatform, ba.getArrayDesignUsed() );
+            assertNotNull( ba.getOriginalPlatform() );
+            assertTrue( currentPlatforms.contains( ba.getOriginalPlatform() ) );
+        }
+
+        assertEquals( 24, ee.getRawExpressionDataVectors().size() );
+        for ( RawExpressionDataVector vector : ee.getRawExpressionDataVectors() ) {
+            assertEquals( 8, vector.getBioAssayDimension().getBioAssays().size() );
+        }
     }
 
     @After

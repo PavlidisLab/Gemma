@@ -56,8 +56,8 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
          * Five factors. Factor4 is a measurmeent.
          */
 
-        Collection<ExperimentalFactor> factors = new HashSet<>();
-        for ( int i = 0; i < 5; i++ ) {
+        Collection<ExperimentalFactor> categoricalfactors = new HashSet<>();
+        for ( int i = 0; i < 4; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setType( FactorType.CATEGORICAL );
             ef.setName( "factor" + i );
@@ -66,31 +66,28 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
             }
             ef.setId( ( long ) i );
 
+            // make three factor values for each factor (other than the measurement)
             for ( int j = 0; j < 3; j++ ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setValue( "fv" + ( j + 1 ) * ( i + 1 ) );
+                fv.setValue( "fv" + ( j + 1 ) * ( i + 1 ) + "x" + ( i + 1 ) );
                 fv.setId( ( long ) ( j + 1 ) * ( i + 1 ) );
                 fv.setExperimentalFactor( ef );
-                ef.getFactorValues().add( fv );
 
-                if ( j == 2 && i != 4 ) {
+                if ( j == 2 ) {
                     fv.setValue( "control_group" );
                 }
-
-                if ( i == 4 ) {
-                    ef.setType( FactorType.CONTINUOUS );
-                    Measurement m = Measurement.Factory.newInstance();
-                    m.setId( ( long ) j * ( i + 1 ) );
-                    m.setValue( j + ".00" );
-                    m.setRepresentation( PrimitiveType.DOUBLE );
-                    fv.setMeasurement( m );
-                }
+                // log.info( fv );
+                ef.getFactorValues().add( fv );
             }
-
-            factors.add( ef );
         }
 
+        ExperimentalFactor continuousFactor = ExperimentalFactor.Factory.newInstance();
+        continuousFactor.setType( FactorType.CONTINUOUS );
+        continuousFactor.setName( "measurement" );
+        continuousFactor.setId( ( long ) 400 );
+
         Random random = new Random();
+        Collection<BioMaterial> seen = new HashSet<>();
         for ( int i = 0; i < 100; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
             ba.setName( "ba" + i );
@@ -103,7 +100,24 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
             bm.setName( "bm" + i );
             ba.setSampleUsed( bm );
 
-            for ( ExperimentalFactor ef : factors ) {
+            if ( seen.contains( bm ) ) throw new IllegalStateException( "Duplicate biomaterial" );
+
+            seen.add( bm );
+
+            /// add the continuous factor
+            FactorValue contfv = FactorValue.Factory.newInstance();
+            contfv.setId( i + 1924904L );
+            contfv.setExperimentalFactor( continuousFactor );
+            Measurement measurement = Measurement.Factory.newInstance();
+            measurement.setId( ( long ) 4289 * ( i + 1 ) );
+            measurement.setValue( "" + random.nextDouble() );
+            measurement.setRepresentation( PrimitiveType.DOUBLE );
+            contfv.setMeasurement( measurement );
+            continuousFactor.getFactorValues().add( contfv );
+            bm.getFactorValues().add( contfv );
+
+            // Add the other factors.
+            for ( ExperimentalFactor ef : categoricalfactors ) {
 
                 /*
                  * Note: if we use 4, then some of the biomaterials will not have a factorvalue for each factor. This is
@@ -120,11 +134,34 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
                     m++;
                 }
 
-                if ( toUse != null )
+                if ( toUse != null ) {
+//                    Collection<FactorValue> fvs = bm.getFactorValues();
+//                    for ( FactorValue fv : fvs ) {
+//                        if ( fv.getExperimentalFactor().equals( ef ) ) {
+//                            throw new IllegalStateException( bm + " already has a factor value for " + ef );
+//                        }
+//                    }
+
                     bm.getFactorValues().add( toUse );
-                // log.info( ba + " -> " + bm + " -> " + ef + " -> " + toUse );
+                    // log.info( ba + " -> " + bm + " -> " + ef + " -> " + toUse );}
+                }
             }
         }
+
+        // check that each biomaterial has only one fator value for each experimental factor
+//        for ( BioAssay ba : bad.getBioAssays() ) {
+//            BioMaterial bm = ba.getSampleUsed();
+//            for ( ExperimentalFactor ef : categoricalfactors ) {
+//                int j = 0;
+//                Collection<FactorValue> fvs = bm.getFactorValues();
+//                for ( FactorValue fv : fvs ) {
+//                    if ( fv.getExperimentalFactor().equals( ef ) ) {
+//                        j++;
+//                    }
+//                }
+//                assertEquals( bm + " had more than one factorvalue for " + ef, 1, j );
+//            }
+//        }
 
         EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
 

@@ -5,18 +5,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.web.WebAppConfiguration;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -24,9 +24,7 @@ import ubic.gemma.rest.util.args.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ActiveProfiles("web")
-@WebAppConfiguration
-public class PlatformsWebServiceTest extends BaseSpringContextTest {
+public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Autowired
     private PlatformsWebService platformsWebService;
@@ -40,18 +38,24 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
 
+    @Autowired
+    private PersistentDummyObjectHelper testHelper;
+
+    @Autowired
+    private TestAuthenticationUtils testAuthenticationUtils;
+
     /* fixtures */
     private ExpressionExperiment expressionExperiment;
     private ArrayDesign arrayDesign;
 
     @Before
-    public void setUp() throws Exception {
-        expressionExperiment = getTestPersistentBasicExpressionExperiment();
+    public void setUpMocks() {
+        expressionExperiment = testHelper.getTestPersistentBasicExpressionExperiment();
         arrayDesign = expressionExperiment.getBioAssays().iterator().next().getArrayDesignUsed();
     }
 
     @After
-    public void tearDown() {
+    public void removeFixtures() {
         eeService.remove( expressionExperiment );
         arrayDesignService.remove( arrayDesign );
         blacklistedEntityService.removeAll();
@@ -112,11 +116,11 @@ public class PlatformsWebServiceTest extends BaseSpringContextTest {
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
         try {
-            runAsUser( "bob" );
+            testAuthenticationUtils.runAsUser( "bob", true );
             assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
                     .isInstanceOf( AccessDeniedException.class );
         } finally {
-            runAsAdmin();
+            testAuthenticationUtils.runAsAdmin();
         }
     }
 }

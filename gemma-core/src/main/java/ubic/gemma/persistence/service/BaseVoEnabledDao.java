@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;

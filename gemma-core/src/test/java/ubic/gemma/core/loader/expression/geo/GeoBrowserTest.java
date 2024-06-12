@@ -53,6 +53,7 @@ public class GeoBrowserTest {
 
     @Test
     public void testGetRecentGeoRecords() throws Exception {
+        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
         GeoBrowser b = new GeoBrowser();
         Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
         assertTrue( res.size() > 0 );

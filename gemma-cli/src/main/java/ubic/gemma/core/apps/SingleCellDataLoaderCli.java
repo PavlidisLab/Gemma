@@ -36,7 +36,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 }

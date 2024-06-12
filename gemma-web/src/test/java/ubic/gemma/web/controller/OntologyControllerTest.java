@@ -15,7 +15,7 @@ import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -34,7 +34,9 @@ public class OntologyControllerTest extends BaseWebTest {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL" );
+            return new TestPropertyPlaceholderConfigurer(
+                    "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL",
+                    "gemma.hosturl=https://gemma.msl.ubc.ca" );
         }
 
         @Bean
@@ -78,27 +80,27 @@ public class OntologyControllerTest extends BaseWebTest {
     @Test
     public void testGemmaOntologyUnavailable() throws Exception {
         when( gemmaOntology.isOntologyLoaded() ).thenReturn( false );
-        mvc.perform( get( "/ont/TGEMO_00001" ) )
+        perform( get( "/ont/TGEMO_00001" ) )
                 .andExpect( status().isServiceUnavailable() );
     }
 
     @Test
     public void testGetObo() throws Exception {
-        mvc.perform( get( "/ont/TGEMO.OWL" ) )
+        perform( get( "/ont/TGEMO.OWL" ) )
                 .andExpect( status().isFound() )
                 .andExpect( redirectedUrl( gemmaOntologyUrl ) );
     }
 
     @Test
     public void testGetTerm() throws Exception {
-        mvc.perform( get( "/ont/TGEMO_00001" ) )
+        perform( get( "/ont/TGEMO_00001" ) )
                 .andExpect( status().isFound() )
                 .andExpect( redirectedUrl( gemmaOntologyUrl + "#http://gemma.msl.ubc.ca/ont/TGEMO_00001" ) );
     }
 
     @Test
     public void testGetMissingTerm() throws Exception {
-        mvc.perform( get( "/ont/TGEMO_02312312" ) )
+        perform( get( "/ont/TGEMO_02312312" ) )
                 .andExpect( status().isNotFound() )
                 .andExpect( view().name( "error/404" ) )
                 .andExpect( model().attribute( "exception", instanceOf( EntityNotFoundException.class ) ) );
@@ -110,12 +112,13 @@ public class OntologyControllerTest extends BaseWebTest {
         OntologyIndividual oi = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1", "foo", fvClass );
         when( factorValueOntologyService.getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) )
                 .thenReturn( oi );
-        mvc.perform( get( "/ont/TGFVO/1" ) )
+        perform( get( "/ont/TGFVO/1" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().string( containsString( "FactorValue #1: foo" ) ) )
                 .andExpect( content().string( containsString( "instance of" ) ) )
                 .andExpect( content().string( containsString( "TGEMO_0000001" ) ) )
-                .andExpect( content().string( containsString( "bar" ) ) );
+                .andExpect( content().string( containsString( "bar" ) ) )
+                .andExpect( content().string( containsString( "curl -H Accept:application/rdf+xml https://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
         verify( factorValueOntologyService ).getFactorValueAnnotations( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
     }
@@ -126,7 +129,7 @@ public class OntologyControllerTest extends BaseWebTest {
         OntologyIndividual oi = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1", "foo", fvClass );
         when( factorValueOntologyService.getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) )
                 .thenReturn( oi );
-        mvc.perform( get( "/ont/TGFVO/1" ).accept( MediaType.parseMediaType( "application/rdf+xml" ) ) )
+        perform( get( "/ont/TGFVO/1" ).accept( MediaType.parseMediaType( "application/rdf+xml" ) ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentTypeCompatibleWith( "application/rdf+xml" ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );

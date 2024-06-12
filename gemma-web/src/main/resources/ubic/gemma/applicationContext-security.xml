@@ -4,8 +4,7 @@
 	   xmlns:s="http://www.springframework.org/schema/security"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
             http://www.springframework.org/schema/security
-            http://www.springframework.org/schema/security/spring-security.xsd"
-	   profile="web">
+            http://www.springframework.org/schema/security/spring-security.xsd">
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true"/>
@@ -35,12 +34,14 @@
 
 	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint">
 		<constructor-arg ref="objectMapper"/>
+		<constructor-arg ref="openApi"/>
+		<constructor-arg ref="buildInfo"/>
 	</bean>
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">
-		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
-		<s:http-basic/>
+		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
+		<s:http-basic entry-point-ref="restAuthEntryPoint"/>
 		<!-- accessing user details requires at the very least a user role -->
 		<s:intercept-url pattern="/rest/v2/users/**" access="GROUP_USER"/>
 	</s:http>
@@ -48,9 +49,8 @@
 	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
 		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma" pattern="/**">
-		<s:http-basic/>
-
 		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
+		<s:http-basic/>
 
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/monitoring" access="GROUP_ADMIN"/>
@@ -64,6 +64,14 @@
 		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN"/>
 		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER"/>
 		<s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER"/>
+
+		<!-- DWR -->
+		<s:intercept-url pattern="/dwr/engine.js" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/util.js" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/interface/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/call/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:intercept-url pattern="/dwr/**" access="GROUP_ADMIN"/>
+
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
 
 		<s:logout logout-success-url="/login.jsp"/>

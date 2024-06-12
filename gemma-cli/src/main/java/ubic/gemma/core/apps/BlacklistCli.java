@@ -23,19 +23,18 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.BlacklistedEntity;
-import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
-import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -58,6 +57,12 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     private boolean remove = false;
     private boolean proactive = false;
     private Collection<String> platformsToScreen;
+    private String reason = null;
+    private String accession = null;
+
+    public BlacklistCli() {
+        setRequireLogin( true );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -81,19 +86,18 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      */
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( Option.builder( "accession" ).longOpt( "accession" )
+                .desc( "Accession of the entity to blacklist" ).hasArg().argName( "GPL or GSE ID" ).build() );
+        options.addOption( Option.builder( "reason" )
+                .desc( "Reason for blacklist, please use standard language" ).hasArg().argName( "brief description" ).build() );
         options.addOption( Option.builder( "file" ).longOpt( null )
-                .desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
+                .desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; incompatible with --accession and --reason"
                         + "additional columns: name, description of entity; lines starting with '#' are ignored" )
                 .argName( "file name" ).hasArg().build() );
-        options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs" );
+        options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs, or you can provide -accession" );
         options.addOption( "pp",
                 "Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options except -a)" );
         options.addOption( "a", true, "A comma-delimited of GPL IDs to check. Combine with -pp, not relevant to any other option" );
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @Override
@@ -105,6 +109,44 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
+
+        if ( accession != null ) {
+            BlacklistedEntity blee = blacklistedEntityService.findByAccession( accession );
+            if ( blee != null ) { // so, already blacklisted.
+                if ( remove ) {
+                    blacklistedEntityService.remove( blee );
+                    log.info( "De-blacklisted " + accession );
+                } else {
+                    log.warn( accession + " is already blacklisted. To update the 'reason' please unblacklist it and blacklist again" );
+                }
+                return;
+            }
+
+            if ( reason.isEmpty() ) {
+                throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
+            }
+
+            BlacklistedEntity b = null;
+            if ( accession.startsWith( "GPL" ) ) {
+                b = new BlacklistedPlatform();
+            } else if ( accession.startsWith( "GSE" ) ) {
+                b = new BlacklistedExperiment();
+            } else {
+                throw new IllegalArgumentException( "Unrecognized ID class: " + accession
+                        + "; was expecting something starting with GPL or GSE" );
+            }
+
+            b.setShortName( accession );
+            b.setReason( reason );
+
+            DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
+            b.setExternalAccession( d );
+
+            blacklistedEntityService.create( b );
+
+            log.info( "Blacklisted " + accession + " for reason: " + reason );
+            return;
+        }
 
         if ( proactive ) {
             log.info( "Searching GEO for experiments to blacklist based on their use of blacklisted platforms" );
@@ -312,6 +354,22 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
+
+        if ( commandLine.hasOption( "accession" ) ) {
+            if ( !commandLine.hasOption( "reason" ) && !commandLine.hasOption( "undo" ) ) {
+                throw new IllegalArgumentException( "Must provide a reason for blacklisting (unless using -sundo)" );
+            }
+
+            if ( commandLine.hasOption( "file" ) ) {
+                throw new IllegalArgumentException( "The accession option cannot be combined with the file option" );
+
+            }
+
+            this.accession = commandLine.getOptionValue( "accession" );
+            this.reason = commandLine.getOptionValue( "reason" );
+            return;
+        }
+
 
         if ( commandLine.hasOption( "pp" ) ) {
             if ( this.remove || this.fileName != null ) {

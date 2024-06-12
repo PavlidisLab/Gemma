@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
@@ -164,7 +164,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
     @Test
     public void testShowAllForExperiments() {
         ModelAndView mv = brc
-                .showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
+                .showAllForExperiments( new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
         @SuppressWarnings("unchecked") Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
                 .getModel().get( "citationToEEs" );
         assertNotNull( citationToEEs );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,7 +86,7 @@ public class ExpressionDataSVDTest {
      *          header=T, row.names=1)
      * testdata.s <- testdata
      * for(i in 1:5) {
-     *   testdata.s <-  t(scale(t(scale(testdata.s))));  
+     *   testdata.s <-  t(scale(t(scale(testdata.s))));
      * }
      * s<-svd(testdata.s)
      * s$d
@@ -132,7 +132,7 @@ public class ExpressionDataSVDTest {
 
     /*
      * See testEigenvalues
-     * 
+     *
      * <pre>
      * cat( signif( p$sdev &circ; 2 / sum( p$sdev &circ; 2 ), 3 ), sep = &quot;,\n&quot; )
      * </pre>

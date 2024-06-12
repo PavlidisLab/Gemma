@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 import java.util.*;
 
@@ -331,6 +331,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         biomaterial3b.getBioAssaysUsedIn().add( bioAssay3b );
 
         expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
+        expressionExperiment.setNumberOfSamples( new HashSet<>( bioAssays ).size() );
 
         experimentalFactors = new ArrayList<>();
         experimentalFactors.add( experimentalFactorA_Area );
@@ -431,6 +432,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssays.remove( bioAssay3b );
 
         expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
+        expressionExperiment.setNumberOfSamples( new HashSet<>( bioAssays ).size() );
 
         bioAssayDimension.setBioAssays( bioAssays );
 
@@ -485,7 +487,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             compositeSequences.add( cs );
         }
-        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<>( vectors ) );
+        Set<ProcessedExpressionDataVector> vectorsSet = new HashSet<>( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( vectorsSet );
+        expressionExperiment.setNumberOfDataVectors( vectorsSet.size() );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }

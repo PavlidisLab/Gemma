@@ -11,6 +11,9 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Assertions for jax-rs {@link Response}.
@@ -22,6 +25,21 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
 
     public ResponseAssert( Response actual ) {
         super( actual, ResponseAssert.class );
+        info.description( "\nHTTP/1.1 %d %s\n%s\n\n%s\n",
+                actual.getStatus(), actual.getStatusInfo().getReasonPhrase(),
+                actual.getStringHeaders().entrySet().stream()
+                        .sorted( Map.Entry.comparingByKey() )
+                        .map( e -> e.getKey() + ": " + String.join( ", ", e.getValue() ) )
+                        .collect( Collectors.joining( "\n" ) ),
+                formatEntity( actual ) );
+    }
+
+    private String formatEntity( Response response ) {
+        if ( response.bufferEntity() ) {
+            return response.readEntity( String.class );
+        } else {
+            return response.getEntity().toString();
+        }
     }
 
     /**
@@ -61,6 +79,7 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         return new MapAssert<>( actual.getStringHeaders() );
     }
 
+
     /**
      * Asserts that the response has the given header.
      * <p>
@@ -69,6 +88,11 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
     public ResponseAssert hasHeader( String name, String value ) {
         maps.assertHasEntrySatisfying( info, actual.getStringHeaders(), name,
                 new Condition<>( l -> l.contains( value ), "associated to %s", name ) );
+        return myself;
+    }
+
+    public ResponseAssert hasHeaderSatisfying( String name, Consumer<List<String>> consumer ) {
+        maps.assertHasEntrySatisfying( info, actual.getStringHeaders(), name, consumer );
         return myself;
     }
 
@@ -98,6 +122,10 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         } catch ( ProcessingException e ) {
             throw failure( "Failed to read entity as %s: %s", clazz, ExceptionUtils.getRootCauseMessage( e ) );
         }
+    }
+
+    public StringAssert entityAsString() {
+        return new StringAssert( actual.readEntity( String.class ) );
     }
 
     public InputStreamAssert entityAsStream() {

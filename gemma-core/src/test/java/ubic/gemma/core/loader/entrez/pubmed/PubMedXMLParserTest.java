@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,16 +40,15 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
  */
-@Category(SlowTest.class)
 public class PubMedXMLParserTest {
 
     private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
 
-    private InputStream testStream;
     private PubMedXMLParser testParser;
 
     @Before
@@ -58,18 +56,9 @@ public class PubMedXMLParserTest {
         testParser = new PubMedXMLParser();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        testStream.close();
-        testParser = null;
-        testStream = null;
-    }
-
     @Test
     public void testParse() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
-
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
@@ -88,8 +77,7 @@ public class PubMedXMLParserTest {
 
     @Test
     public void testParseBook() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" );
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertNotNull( br );
@@ -124,8 +112,7 @@ public class PubMedXMLParserTest {
      */
     @Test
     public void testParseBookArticle() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" );
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertNotNull( br );
@@ -154,8 +141,7 @@ public class PubMedXMLParserTest {
 
     @Test
     public void testParseMesh() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             Collection<MedicalSubjectHeading> meshTerms = br.getMeshTerms();
@@ -175,9 +161,10 @@ public class PubMedXMLParserTest {
      * This uses a medline-format file, instead of the pubmed xml files we get from the eutils.
      */
     @Test
+    @Category(SlowTest.class)
     public void testParseMulti() throws Exception {
-        try {
-            testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() );
+        assumeThatResourceIsAvailable( "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd" );
+        try ( InputStream testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             assertEquals( 147, brl.size() );
             int expectedNumberofKeywords = 258;
@@ -210,9 +197,7 @@ public class PubMedXMLParserTest {
 
     @Test
     public void testParseMultipartAbstract() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
-
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertNotNull( br.getAbstractText() );
@@ -233,9 +218,8 @@ public class PubMedXMLParserTest {
      */
     @Test
     public void testParseRetracted() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
-
+        assumeThatResourceIsAvailable( "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_180101.dtd" );
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" ) ) {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertNotNull( br.getAbstractText() );

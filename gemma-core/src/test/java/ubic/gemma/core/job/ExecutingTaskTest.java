@@ -23,9 +23,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.job.executor.common.ExecutingTask;
-import ubic.gemma.core.tasks.AbstractTask;
-import ubic.gemma.core.tasks.Task;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Objects;

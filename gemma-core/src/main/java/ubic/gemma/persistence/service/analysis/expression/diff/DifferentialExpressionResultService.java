@@ -20,17 +20,12 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
-import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +37,12 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
+
+    /**
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, Map, double, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, double threshold );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
@@ -115,37 +116,8 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds,
-            int limit );
-
     List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
             int maxResultsToReturn, int minNumberOfResults );
-
-    /**
-     * Given a list of result sets finds the diff expression results that met the given threshold
-     *
-     * @param threshold threshold
-     * @param limit     limit
-     * @return map to diff ex VOs
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
-            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, int limit );
-
-    /**
-     * Fetch the analysis associated with a result set.
-     *
-     * @param rs result set
-     * @return diff ex.
-     */
-    DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
-
-    Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> getExperimentalFactors(
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**
      * @param ids ids

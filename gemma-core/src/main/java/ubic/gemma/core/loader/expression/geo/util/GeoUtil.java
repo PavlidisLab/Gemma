@@ -19,7 +19,7 @@
 package ubic.gemma.core.loader.expression.geo.util;
 
 import ubic.gemma.core.util.NetDatasourceUtil;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.config.Settings;
 
 /**
  * @author pavlidis

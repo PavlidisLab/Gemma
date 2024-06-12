@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
@@ -27,8 +25,9 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.Auditable;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -37,19 +36,14 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 /**
  * @author pavlidis
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
 @Repository
 public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditEventDao {
-
-    /**
-     * Classes that we track for 'updated since'. This is used for "What's new" functionality.
-     */
-    private static final String[] AUDITABLES_TO_TRACK_FOR_WHATS_NEW = {
-        "ubic.gemma.model.expression.arrayDesign.ArrayDesign",
-        "ubic.gemma.model.expression.experiment.ExpressionExperiment" };
 
     @Autowired
     public AuditEventDaoImpl( SessionFactory sessionFactory ) {
@@ -58,18 +52,13 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
     @Override
     public List<AuditEvent> getEvents( final Auditable auditable ) {
-        if ( auditable == null )
-            throw new IllegalArgumentException( "Auditable cannot be null" );
-
-        if ( auditable.getAuditTrail() == null ) {
-            throw new IllegalStateException( "Auditable did not have an audit trail: " + auditable );
-        }
-
-        Long id = auditable.getAuditTrail().getId();
+        Assert.notNull( auditable.getAuditTrail(), "Auditable did not have an audit trail: " + auditable );
+        Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-            .createQuery( "select e from AuditTrail t join t.events e where t.id = :id order by e.date,e.id " )
-            .setParameter( "id", id ).list();
+                .createQuery( "select e from AuditTrail t join t.events e where t = :at order by e.date,e.id " )
+                .setParameter( "at", auditable.getAuditTrail() )
+                .list();
 
     }
 
@@ -84,118 +73,97 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     @Override
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEventsByType(
-        Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<>();
-        for ( Class<? extends AuditEventType> ti : types ) {
-            Map<Auditable, AuditEvent> results2 = getLastEvents( auditables, ti, null );
-            results.put( ti, results2.entrySet().stream()
-                .filter( e -> ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
-                .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) );
-        }
-        return results;
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables, Class<? extends AuditEventType> type ) {
+        return getLastEvents( auditables, type, null );
     }
 
-    /**
-     * Note that this only returns selected classes of auditables.
-     *
-     * @param date date
-     * @return Collection of Auditables
-     * @see AuditEventDao#getNewSinceDate(java.util.Date)
-     */
     @Override
-    public Collection<Auditable> getNewSinceDate( Date date ) {
-        Collection<Auditable> result = new HashSet<>();
-        for ( String clazz : AuditEventDaoImpl.AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
-            String queryString = "select distinct adb from " + clazz
-                + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
-            this.tryAddAllToResult( result, queryString, date );
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type ) {
+        return getLastEvents( auditableClass, type, null );
+    }
+
+    @Override
+    public <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date ) {
+        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select adb from " + entityName + " adb "
+                        + "join adb.auditTrail atr "
+                        + "join atr.events as ae "
+                        + "where ae.date >= :date and ae.action='C' "
+                        + "group by adb" )
+                .setParameter( "date", date )
+                .list();
+    }
+
+    @Override
+    public <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date ) {
+        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select adb from " + entityName + " adb "
+                        + "join adb.auditTrail atr "
+                        + "join atr.events as ae "
+                        + "where ae.date >= :date and ae.action='U' "
+                        + "group by adb" )
+                .setParameter( "date", date )
+                .list();
+    }
+
+    public <T extends Auditable> Map<T, AuditEvent> getCreateEvents( final Collection<T> auditables ) {
+        if ( auditables.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
+        final Map<Long, T> atMap = auditables.stream()
+                .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
+        //noinspection unchecked
+        List<Object[]> qr = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select trail.id, ae from AuditTrail trail join trail.events" +
+                        " ae where trail.id in :trails and ae.action = 'C'" )
+                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) ).list();
+        for ( Object[] o : qr ) {
+            Long t = ( Long ) o[0];
+            AuditEvent e = ( AuditEvent ) o[1];
+            T a = atMap.get( t );
+            // only put the first create event encountered
+            if ( result.putIfAbsent( a, e ) != null ) {
+                log.warn( "Auditable has more than one creation event: " + a );
+            }
         }
         return result;
     }
 
-    /**
-     * Note that this only returns selected classes of auditables.
-     *
-     * @param date date
-     * @return Collection of Auditables
-     * @see AuditEventDao#getUpdatedSinceDate(Date)
-     */
-    @Override
-    public Collection<Auditable> getUpdatedSinceDate( Date date ) {
-        Collection<Auditable> result = new HashSet<>();
-        for ( String clazz : AuditEventDaoImpl.AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
-            String queryString = "select distinct adb from " + clazz
-                + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
-            this.tryAddAllToResult( result, queryString, date );
-        }
-        return result;
-    }
-
-    @Override
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
-        return this.getLastEvent( a, type ) != null;
-    }
-
-    @Override
-    public void retainHavingEvent( final Collection<? extends Auditable> a,
-        final Class<? extends AuditEventType> type ) {
-
-        final Map<Auditable, AuditEvent> events = this.getLastEvents( a, type, null );
-
-        CollectionUtils.filter( a, events::containsKey );
-
-    }
-
-    @Override
-    public void retainLackingEvent( final Collection<? extends Auditable> a,
-        final Class<? extends AuditEventType> type ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        final Map<Auditable, AuditEvent> events = this.getLastEvents( a, type, null );
-        AbstractDao.log.info( "Phase I: " + timer.getTime() + "ms" );
-
-        CollectionUtils.filter( a, ( Predicate<Auditable> ) arg0 -> !events.containsKey( arg0 ) );
-
-    }
-
-    private Map<Auditable, AuditEvent> getLastEvents( final Collection<? extends Auditable> auditables, Class<? extends AuditEventType> types, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
+    private <T extends Auditable> Map<T, AuditEvent> getLastEvents( final Collection<T> auditables, Class<? extends AuditEventType> types, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
         if ( auditables.isEmpty() ) {
             return Collections.emptyMap();
         }
 
         StopWatch timer = StopWatch.createStarted();
 
-        Map<Auditable, AuditEvent> result = new HashMap<>( auditables.size() );
+        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
 
         // getId() does not require proxy initialization, otherwise we might inadvertently initialize the audit trail
-        final Map<Long, Auditable> atMap = auditables.stream()
-            .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
+        final Map<Long, T> atMap = auditables.stream()
+                .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
 
-        Set<Class<?>> classes = getClassHierarchy( types );
-
-        // remove all the types we don't want
-        if ( excludedTypes != null ) {
-            for ( Class<? extends AuditEventType> excludedType : excludedTypes ) {
-                classes.removeAll( getClassHierarchy( excludedType ) );
-            }
-        }
+        Set<Class<? extends AuditEventType>> classes = getClassHierarchy( types, excludedTypes );
 
         //language=HQL
         final String queryString = "select trail.id, ae from AuditTrail trail "
-            + "join trail.events ae "
-            + "join fetch ae.eventType et " // fetching here prevents a separate select query
-            + "where trail.id in :trails and type(et) in :classes "
-            // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
-            // them all
-            + "group by trail, ae "
-            // latest by date or ID to break ties
-            + "order by ae.date desc, ae.id desc";
+                + "join trail.events ae "
+                + "join fetch ae.eventType et " // fetching here prevents a separate select query
+                + "where trail.id in :trails and type(et) in :classes "
+                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
+                // them all
+                + "group by trail, ae "
+                // latest by date or ID to break ties
+                + "order by ae.date desc, ae.id desc";
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
-            .createQuery( queryString )
-            .setParameterList( "trails", atMap.keySet() )
-            .setParameterList( "classes", classes );
+                .createQuery( queryString )
+                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) )
+                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
 
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {
@@ -209,39 +177,91 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         timer.stop();
         if ( timer.getTime() > 500 ) {
             AbstractDao.log.info( String.format( "Last event of type %s (closure: %s) retrieved for %d items in %d ms",
-                types.getName(), classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ),
-                auditables.size(), timer.getTime() ) );
+                    types.getName(), classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ),
+                    auditables.size(), timer.getTime() ) );
         }
 
         return result;
     }
 
-    private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        queryObject.setParameter( "date", date );
-        //noinspection unchecked
-        result.addAll( queryObject.list() );
+    private <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> types, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
+        StopWatch timer = StopWatch.createStarted();
+
+        // using a treeset to avoid initialization of proxies
+        Map<T, AuditEvent> result = new TreeMap<>( Comparator.comparing( Auditable::getId ) );
+
+        Set<Class<? extends AuditEventType>> classes = getClassHierarchy( types, excludedTypes );
+        if ( classes.isEmpty() ) {
+            throw new IllegalArgumentException( "No classes found" );
+        }
+
+        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        //language=HQL
+        final String queryString = "select a.id, ae from " + entityName + " a  "
+                + "join a.auditTrail trail "
+                + "join trail.events ae "
+                + "join fetch ae.eventType et " // fetching here prevents a separate select query
+                + "where type(et) in :classes "
+                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
+                // them all
+                + "group by trail, ae "
+                // latest by date or ID to break ties
+                + "order by ae.date desc, ae.id desc";
+
+        Query queryObject = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
+
+        List<?> qr = queryObject.list();
+        for ( Object o : qr ) {
+            Object[] ar = ( Object[] ) o;
+            Long t = ( Long ) ar[0];
+            AuditEvent e = ( AuditEvent ) ar[1];
+            // only retain the first one which is the latest (by date or ID)
+            //noinspection unchecked
+            result.putIfAbsent( ( T ) getSessionFactory().getCurrentSession().load( auditableClass, t ), e );
+        }
+
+        timer.stop();
+        if ( timer.getTime() > 500 ) {
+            AbstractDao.log.info( String.format( "Last event of type %s (closure: %s) retrieved for %d items in %d ms",
+                    types.getName(), classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ),
+                    result.keySet().size(), timer.getTime() ) );
+        }
+
+        return result;
     }
 
     /**
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
      *
      * @param type Class
+     * @param excludedTypes a list of types to exclude
      * @return A List of class names, including the given type.
      */
-    private Set<Class<?>> getClassHierarchy( Class<? extends AuditEventType> type ) {
+    private Set<Class<? extends AuditEventType>> getClassHierarchy( Class<? extends AuditEventType> type, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
         // how to determine subclasses? There is no way to do this but the hibernate way.
         ClassMetadata classMetadata = this.getSessionFactory().getClassMetadata( type );
         if ( classMetadata instanceof SingleTableEntityPersister ) {
-            Set<Class<?>> classes = new HashSet<>();
+            Set<Class<? extends AuditEventType>> classes = new HashSet<>();
             // this includes the superclass, fully qualified
             String[] subclasses = ( ( SingleTableEntityPersister ) classMetadata ).getSubclassClosure();
             for ( String className : subclasses ) {
                 try {
-                    classes.add( Class.forName( className ) );
+                    //noinspection unchecked
+                    classes.add( ( Class<? extends AuditEventType> ) Class.forName( className ) );
                 } catch ( ClassNotFoundException e ) {
-                    log.error( String.format( "Failed to find subclass %s of %s, it will not be included in the query."
-                        , className, type.getName() ), e );
+                    log.error( String.format( "Failed to find subclass %s of %s, it will not be included in the query.",
+                            className, type.getName() ), e );
+                }
+            }
+            // remove all the types we don't want
+            if ( excludedTypes != null ) {
+                for ( Class<? extends AuditEventType> excludedType : excludedTypes ) {
+                    classes.removeAll( getClassHierarchy( excludedType, null ) );
+                    if ( classes.isEmpty() ) {
+                        throw new IllegalStateException( "No event types are left after applying exclusions to " + type.getName() + "." );
+                    }
                 }
             }
             return classes;

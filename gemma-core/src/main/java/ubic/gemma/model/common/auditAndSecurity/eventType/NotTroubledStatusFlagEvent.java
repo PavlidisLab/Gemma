@@ -26,7 +26,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  *
  * @author Paul
  */
-public class NotTroubledStatusFlagEvent extends CurationDetailsEvent {
+public class NotTroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.

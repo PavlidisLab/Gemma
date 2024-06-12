@@ -19,20 +19,23 @@
 
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
-import ubic.gemma.persistence.util.Settings;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.gemma.core.config.Settings;
+
+import javax.annotation.Nullable;
 
 /**
  * Ontology created for Gemma. See bug 4312
  *
  * @author paul
  */
-public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
+public class GemmaOntologyService extends AbstractOntologyService {
+
     private static final String GEMMA_ONTOLOGY_URL_CONFIG = "url.gemmaOntology";
 
     @Override
     public String getOntologyName() {
-        return "gemmaOntology";
+        return "Gemma Ontology";
     }
 
     @Override
@@ -40,4 +43,14 @@ public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
         return Settings.getString( GEMMA_ONTOLOGY_URL_CONFIG );
     }
 
+    @Override
+    protected boolean isOntologyEnabled() {
+        return Settings.getBoolean( "load.gemmaOntology" );
+    }
+
+    @Nullable
+    @Override
+    protected String getCacheName() {
+        return "gemmaOntology";
+    }
 }

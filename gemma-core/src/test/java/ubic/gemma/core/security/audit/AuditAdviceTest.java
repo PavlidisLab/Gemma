@@ -27,7 +27,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -239,12 +239,12 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     private boolean checkDeletedAuditTrail( Long atid ) {
-        return this.jdbcTemplate
+        return getJdbcTemplate()
                 .queryForObject( "SELECT COUNT(*) FROM AUDIT_TRAIL WHERE ID = ?", Integer.class, atid ) == 0;
     }
 
     private boolean checkDeletedEvent( Long i ) {
-        return this.jdbcTemplate
+        return getJdbcTemplate()
                 .queryForObject( "SELECT COUNT(*) FROM AUDIT_EVENT WHERE ID = ?", Integer.class, i ) == 0;
     }
 

@@ -26,6 +26,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -61,15 +62,15 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean ignoreQuantitationMismatch = false;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         addForceOption( options );
-        addDateOption( options );
+        addLimitingDateOption( options );
         options.addOption( UPDATE_DIAGNOSTICS_OPTION, false,
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         options.addOption( UPDATE_RANKS_OPTION, false, "Only update the expression intensity rank information (may be combined with other options)" );
@@ -130,6 +131,12 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             } else {
                 // this does all of the steps including batch correction
                 this.preprocessorService.process( ee, ignoreQuantitationMismatch );
+            }
+
+            try {
+                refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+            } catch ( Exception e ) {
+                AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
             }
 
             // Note the auditing is done by the service.

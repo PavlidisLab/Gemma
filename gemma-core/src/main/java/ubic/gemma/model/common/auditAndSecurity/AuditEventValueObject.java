@@ -19,12 +19,12 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -70,6 +70,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         this.setDetail( ae.getDetail() );
     }
 
+    @Schema(implementation = AuditAction.class)
     public String getAction() {
         return this.action;
     }
@@ -78,6 +79,10 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         this.action = action;
     }
 
+    /**
+     * Use {@link #getAction()} instead.
+     */
+    @Deprecated
     public String getActionName() {
         if ( getAction() == null ) {
             return null;
@@ -88,11 +93,11 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         }
     }
 
-    public java.util.Date getDate() {
+    public Date getDate() {
         return this.date;
     }
 
-    public void setDate( java.util.Date date ) {
+    public void setDate( Date date ) {
         this.date = date;
     }
 

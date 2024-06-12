@@ -27,13 +27,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
@@ -44,8 +43,8 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -114,18 +113,12 @@ public class SecurityControllerImpl implements SecurityController {
         String emailAddress = u.getEmail();
         if ( StringUtils.isNotBlank( emailAddress ) ) {
             SecurityControllerImpl.log.debug( "Sending email notification to " + emailAddress );
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo( emailAddress );
-            msg.setFrom( Settings.getAdminEmailAddress() );
-            msg.setSubject( "You have been added to a group on Gemma" );
-
             String manageGroupsUrl = Settings.getHostUrl() + servletContext.getContextPath() + "/manageGroups.html";
-            msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
+            String body = userTakingAction.getUserName() + " has added you to the group '" + groupName
                     + "'.\nTo view groups you belong to, visit " + manageGroupsUrl
-                    + "\n\nIf you believe you received this email in error, contact " + Settings.getAdminEmailAddress()
-                    + "." );
-
-            mailEngine.send( msg );
+                    + "\n\nIf you believe you received this email in error, contact " + mailEngine.getAdminEmailAddress()
+                    + ".";
+            mailEngine.sendMessage( emailAddress, "You have been added to a group on Gemma", body );
         }
 
         return true;

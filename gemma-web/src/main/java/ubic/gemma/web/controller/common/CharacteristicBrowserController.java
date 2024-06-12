@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.maintenance.CharacteristicUpdateCommand;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -137,6 +137,8 @@ public class CharacteristicBrowserController {
 
         boolean searchEfs = true; // fixme, make this optional
 
+        queryString = queryString.trim();
+
         List<AnnotationValueObject> results = new ArrayList<>();
         if ( StringUtils.isBlank( queryString ) ) {
             return results;
@@ -147,7 +149,7 @@ public class CharacteristicBrowserController {
             chars = characteristicService.findByUri( queryString );
         } else {
 
-            chars = characteristicService.findByValue( queryString );
+            chars = characteristicService.findByValueStartingWith( queryString );
 
             if ( searchCategories ) {
                 chars.addAll( characteristicService.findByCategory( queryString ) );

@@ -25,10 +25,13 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Prints preferred data matrix to a file.
@@ -41,8 +44,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private String outFileName = null;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.EXPERIMENT;
     }
 
     @Override
@@ -84,7 +87,12 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             }
 
             try {
-                fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                Optional<File> f = fs.writeProcessedExpressionDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
+                if ( f.isPresent() ) {
+                    addSuccessObject( ee, "Written expression data to " + f );
+                } else {
+                    addErrorObject( ee, "No processed expression data vectors to write." );
+                }
             } catch ( IOException e ) {
                 addErrorObject( ee, e );
             }

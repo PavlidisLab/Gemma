@@ -4,7 +4,6 @@ Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
    layout : 'hbox',
    height : 60,
-   width : 500,
    padding : 5,
    layoutConfig : {
       align : 'middle',

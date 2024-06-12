@@ -1,20 +1,16 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -38,7 +34,7 @@ import java.util.*;
 @CommonsLog
 public class ProcessedExpressionDataVectorServiceImpl
         extends AbstractDesignElementDataVectorService<ProcessedExpressionDataVector>
-        implements ProcessedExpressionDataVectorService, InitializingBean {
+        implements ProcessedExpressionDataVectorService {
 
     private static final int DIFFEX_MIN_NUMBER_OF_RESULTS = 50;
 
@@ -56,13 +52,6 @@ public class ProcessedExpressionDataVectorServiceImpl
     private AuditTrailService auditTrailService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
-    @Autowired
-    private BeanFactory beanFactory;
-
-    /**
-     * For self-referencing transactional methods.
-     */
-    private ProcessedExpressionDataVectorService self;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -71,22 +60,67 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        self = beanFactory.getBean( ProcessedExpressionDataVectorService.class );
+    @Transactional
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+        try {
+            return createProcessedDataVectors( expressionExperiment, true );
+        } catch ( QuantitationMismatchException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
-    @Transactional(propagation = Propagation.NEVER)
-    public void replaceProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+    @Transactional
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
         try {
-            helperService.replaceProcessedDataVectors( ee, vectors );
+            int created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
+            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
+            return created;
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional
+    public int computeProcessedExpressionData( ExpressionExperiment ee ) {
+        try {
+            return computeProcessedExpressionData( ee, true );
+        } catch ( QuantitationMismatchException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    @Transactional
+    public int computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+        int created = createProcessedDataVectors( ee, ignoreQuantitationMismatch );
+        updateRanks( ee );
+        return created;
+    }
+
+    @Override
+    @Transactional
+    public int replaceProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vectors ) {
+        int replaced;
+        try {
+            replaced = helperService.replaceProcessedDataVectors( ee, vectors );
             auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
             throw e;
         }
-        self.updateRanks( ee );
+        updateRanks( ee );
+        return replaced;
+    }
+
+    @Override
+    @Transactional
+    public void reorderByDesign( ExpressionExperiment ee ) {
+        this.helperService.reorderByDesign( ee );
+        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
     }
 
     @Override
@@ -103,29 +137,6 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     public void clearCache() {
         this.processedExpressionDataVectorDao.clearCache();
-    }
-
-    @Override
-    @Transactional
-    public Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        try {
-            return createProcessedDataVectors( expressionExperiment, true );
-        } catch ( QuantitationMismatchException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    @Transactional
-    public Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        try {
-            Set<ProcessedExpressionDataVector> result = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
-            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
-            return result;
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw e;
-        }
     }
 
     @Override
@@ -283,12 +294,6 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    @Transactional
-    public void removeProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        this.processedExpressionDataVectorDao.removeProcessedDataVectors( expressionExperiment );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
             int maxNumberOfResults ) {
@@ -339,36 +344,6 @@ public class ProcessedExpressionDataVectorServiceImpl
         } );
 
         return dedvs;
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    public void computeProcessedExpressionData( ExpressionExperiment ee ) {
-        try {
-            computeProcessedExpressionData( ee, true );
-        } catch ( QuantitationMismatchException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    public void computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        self.createProcessedDataVectors( ee, ignoreQuantitationMismatch );
-        self.updateRanks( ee );
-    }
-
-    @Override
-    @Transactional
-    public void reorderByDesign( ExpressionExperiment ee ) {
-        this.helperService.reorderByDesign( ee );
-        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return processedExpressionDataVectorDao.findByExpressionExperiment( ee, quantitationType );
     }
 
     /**

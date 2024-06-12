@@ -47,7 +47,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
         assertNull( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) );
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-        sampleCoexpressionAnalysisService.compute( ee );
+        sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         assertNotNull( matrix );
         assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
@@ -55,7 +55,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
         this.check( matrix );
 
         // recompute ...
-        sampleCoexpressionAnalysisService.compute( ee );
+        sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         assertNotNull( matrix );
         assertTrue( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );

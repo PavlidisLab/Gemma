@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
@@ -79,7 +78,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Override
     protected void doWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
         Collection<Taxon> taxa = taxonService.loadAll();

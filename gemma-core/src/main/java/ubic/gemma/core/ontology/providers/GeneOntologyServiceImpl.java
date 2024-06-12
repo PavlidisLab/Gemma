@@ -22,36 +22,41 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.jena.AbstractOntologyMemoryBackedService;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.cache.CacheUtils;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Holds a complete copy of the GeneOntology. This gets loaded on startup.
+ * <a href="https://geneontology.org/">Gene Ontology</a>
  *
  * @author pavlidis
  */
 @Service
-public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService implements GeneOntologyService, InitializingBean, DisposableBean {
+@ParametersAreNonnullByDefault
+public class GeneOntologyServiceImpl extends AbstractOntologyService implements GeneOntologyService, InitializingBean {
 
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
@@ -76,6 +81,9 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
         if ( term == null )
             return null;
         String uri = term.getUri();
+        if ( uri == null ) {
+            return null;
+        }
         return GeneOntologyServiceImpl.asRegularGoId( uri );
     }
 
@@ -85,12 +93,23 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
     @Override
     protected String getOntologyName() {
-        return "geneOntology";
+        return "Gene Ontology";
     }
 
     @Override
     protected String getOntologyUrl() {
         return ontologyUrl;
+    }
+
+    @Override
+    protected boolean isOntologyEnabled() {
+        return loadOntology;
+    }
+
+    @Nullable
+    @Override
+    protected String getCacheName() {
+        return "geneOntology";
     }
 
     /**
@@ -109,11 +128,18 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    @Qualifier("ontologyTaskExecutor")
+    private TaskExecutor ontologyTaskExecutor;
+
     @Value("${load.ontologies}")
     private boolean autoLoadOntologies;
 
     @Value("${url.geneOntology}")
     private String ontologyUrl;
+
+    @Value("${load.geneOntology}")
+    private boolean loadOntology;
 
     /**
      * Cache of gene -> go terms.
@@ -127,18 +153,13 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
 
 
     @Override
-    public void afterPropertiesSet() throws InterruptedException {
+    public void afterPropertiesSet() {
         goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
         term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
         if ( autoLoadOntologies ) {
-            startInitializationThread( false, false );
-        }
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        if ( isInitializationThreadAlive() ) {
-            cancelInitializationThread();
+            ontologyTaskExecutor.execute( () -> {
+                initialize( false, false );
+            } );
         }
     }
 
@@ -205,16 +226,16 @@ public class GeneOntologyServiceImpl extends AbstractOntologyMemoryBackedService
     }
 
     @Override
-    public Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException {
+    public Collection<OntologySearchResult<OntologyTerm>> findTerm( String queryString, int maxResults ) throws OntologySearchException {
         // make sure we are all-inclusive
         queryString = queryString
                 .trim()
                 .replaceAll( "\\s+AND\\s+", "" )
                 .replaceAll( "\\s+", " AND " );
         StopWatch timer = StopWatch.createStarted();
-        Set<OntologyTerm> matches = super.findTerm( queryString )
+        Set<OntologySearchResult<OntologyTerm>> matches = super.findTerm( queryString, maxResults )
                 .stream()
-                .filter( r -> StringUtils.isNotBlank( r.getUri() ) )
+                .filter( r -> StringUtils.isNotBlank( r.getResult().getUri() ) )
                 .collect( Collectors.toSet() );
         if ( timer.getTime() > 100 ) {
             GeneOntologyServiceImpl.log.warn( String.format( "Finding %d GO terms for '%s' took %d ms",

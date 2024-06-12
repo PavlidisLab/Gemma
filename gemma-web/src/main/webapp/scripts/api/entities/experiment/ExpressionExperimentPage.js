@@ -32,7 +32,7 @@ function getStatusBadge(faIconClass, colorClass, title, qTip) {
 function getGeeqBadges(quality, suitability) {
     var val = '';
     val = val   +
-        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
+            '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
         'ext:qtip="Quality:&nbsp;' + roundScore(quality, 1) + '<br/>' +
         'Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data." >' +
         getGeeqIcon(Number(quality)) + "" +
@@ -77,17 +77,18 @@ function roundScore(value, valDecimals) {
 function getBatchInfoBadges(ee) {
     var result = "";
 
-    if (ee.batchConfound !== null && ee.batchConfound !== "") {
+    var hasBatchConfound = ee.batchConfound !== null && ee.batchConfound !== "";
+
+    if (hasBatchConfound) {
         result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch confound',
             ee.batchConfound);
-        return result;
     }
 
     // batch status, shown whether we have batch information or not.
-    if (ee.batchEffect !== null) {
+    if (!hasBatchConfound && ee.batchEffect !== null) {
 		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
-		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
+		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE" || ee.batchEffect === "PROBLEMATIC_BATCH_INFO_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
 		} else if (ee.batchEffect === "BATCH_CORRECTED_SUCCESS") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
             result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffectStatistics)
@@ -96,19 +97,20 @@ function getBatchInfoBadges(ee) {
             if (ee.batchConfound !== null && ee.batchConfound !== "") {
                 // no-op.
             } else {
-                result = result + getStatusBadge('cogs', 'green', 'no batch effect', "Batch information is present, but no substantial effect was detected, so the data are not corrected.")
+                result = result + getStatusBadge('cogs', 'green', 'negligible batch effect', "Batch information is present, but the batch effect was considered below the threshold for warranting correction")
             }
         } else if (ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
         } else if (ee.batchEffect === "NO_BATCH_INFO") {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo);
         } else if (ee.batchEffect === "BATCH_EFFECT_FAILURE") {
-            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffectStatistics )
+            // FIXME I'm not sure we should use this. It just indicates there was a batch effect, but it wasn't corrected for some reason.
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'uncorrectable batch effect', "Batch effect may be present but could not be corrected: " + ee.batchConfound )
         } else if (ee.batchEffect === "BATCH_EFFECT_UNDETERMINED_FAILURE") {
-            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect is undetermined, there was likely a problem with the SVD or a missing batch factor.');
+            result = result + getStatusBadge( 'exclamation-triangle', 'dark-yellow', 'undetermined batch effect', 'Batch effect could not be determined.');
         } else {
             // unsupported batch effect type
-            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Unsupported batch effect type')
+            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', ee.batchEffect, 'Some other batch effect situation')
         }
     }
 
@@ -315,9 +317,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     window.open(ctxBasePath + "/experimentalDesign/showExperimentalDesign.html?eeid=" + experimentDetails.id);
                 }
             }],
-            html: batchInfo + '<div id="eeDesignMatrix" style="height:80%">Loading...</div>',
+            html: batchInfo + "<span style='font-size:smaller;padding:4px'>Continuous factors are not shown in this view</span> " + '<div id="eeDesignMatrix" style="height:100%">Loading...</div>',
             layout: 'absolute',
-            // items -> bar chart and table?
             listeners: {
                 render: function () {
                     DesignMatrix.init({
@@ -367,20 +368,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
 
     makeDiagnosticsTab: function (experimentDetails, isAdmin) {
-// removed; update diagnostics from the admin tab instead
-//        var refreshDiagnosticsLink = '';
-//        if (this.editable || isAdmin) {
-//            refreshDiagnosticsLink = '<a href="refreshDiagnostics.html?id=' + experimentDetails.id + '"><img '
-//                + 'src="' + ctxBasePath + '/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
-//        }
-//        this.refreshDiagnosticsBtn = new Ext.Button({
-//            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
-//            text: 'Refresh diagnostics',
-//            handler: function () {
-//                window.location = "refreshDiagnostics.html?id=" + experimentDetails.id;
-//            },
-//            hidden: (this.editable || isAdmin)
-//        });
 
         var metaRow = new Ext.Panel(
             {

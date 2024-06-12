@@ -16,34 +16,34 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.search.SearchException;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.Responder;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.respond;
 
 /**
  * RESTful interface for taxa.
@@ -55,24 +55,18 @@ import java.util.Set;
 public class TaxaWebService {
 
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
-    private TaxonService taxonService;
-    private ExpressionExperimentService expressionExperimentService;
-    private TaxonArgService taxonArgService;
-    private DatasetArgService datasetArgService;
-    private GeneArgService geneArgService;
 
-    /**
-     * Required by spring
-     */
-    public TaxaWebService() {
-    }
+    private final TaxonService taxonService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final TaxonArgService taxonArgService;
+    private final DatasetArgService datasetArgService;
+    private final GeneArgService geneArgService;
 
     /**
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, TaxonArgService taxonArgService,
-            DatasetArgService datasetArgService, GeneArgService geneArgService ) {
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, TaxonArgService taxonArgService, DatasetArgService datasetArgService, GeneArgService geneArgService ) {
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
         this.taxonArgService = taxonArgService;
@@ -88,7 +82,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all available taxa")
     public ResponseDataObject<List<TaxonValueObject>> getTaxa() {
-        return Responder.respond( taxonService.loadAllValueObjects() );
+        return respond( taxonService.loadAllValueObjects() );
     }
 
     /**
@@ -110,7 +104,7 @@ public class TaxaWebService {
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
         Filters filters = taxonArgService.getFilters( taxaArg );
         Sort sort = taxonService.getSort( "id", null );
-        return Responder.respond( taxonService.loadValueObjects( filters, sort ) );
+        return respond( taxonService.loadValueObjects( filters, sort ) );
     }
 
     /**
@@ -144,7 +138,19 @@ public class TaxaWebService {
         if ( strand != null && !( strand.equals( "+" ) || strand.equals( "-" ) ) ) {
             throw new BadRequestException( "The 'strand' query parameter must be either '+', '-' or left unspecified." );
         }
-        return Responder.respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
+        return respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
+    }
+
+    @GET
+    @Path("/{taxon}/genes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all genes in a given taxon")
+    public PaginatedResponseDataObject<GeneValueObject> getTaxonGenes(
+            @PathParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        return paginate( geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -154,16 +160,39 @@ public class TaxaWebService {
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @see GeneWebService#getGenes(GeneArrayArg)
      */
     @GET
     @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes in a given taxon")
-    public ResponseDataObject<List<GeneValueObject>> getTaxonGenes( // Params:
+    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon")
+    public ResponseDataObject<List<GeneValueObject>> getTaxonGenesByIds( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @PathParam("gene") GeneArrayArg geneArg // Required
     ) {
-        return Responder.respond( geneArgService.getGenesOnTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        return respond( geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+    }
+
+    /**
+     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg)
+     */
+    @GET
+    @Path("/{taxon}/genes/{gene}/probes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
+        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+    }
+
+    /**
+     * @see GeneWebService#getGeneGoTerms(GeneArg)
+     */
+    @GET
+    @Path("/{taxon}/genes/{gene}/goTerms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon")
+    public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg ) {
+        return respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
@@ -178,16 +207,17 @@ public class TaxaWebService {
     @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve physical locations for a given gene and taxon")
-    public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocationsInTaxon( // Params:
+    public ResponseDataObject<List<PhysicalLocationValueObject>> getTaxonGeneLocations( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        Taxon taxon = taxonArgService.getEntity( taxonArg );
-        return Responder.respond( geneArgService.getGeneLocation( geneArg, taxon ) );
+        return respond( geneArgService.getGeneLocationInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
     /**
-     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(String, FilterArg, OffsetArg, LimitArg, SortArg)}.
+     * Retrieves datasets for the given taxon.
+     * <p>
+     * Filtering allowed exactly like in {@link DatasetsWebService#getDatasets(QueryArg, FilterArg, OffsetArg, LimitArg, SortArg)}.
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
@@ -201,15 +231,12 @@ public class TaxaWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<Taxon> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         // will raise a NotFoundException if the taxon is not found
-        taxonArgService.getEntity( taxonArg );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
         Filters filters = datasetArgService.getFilters( filter )
-                .and( taxonArgService.getFilters( taxonArg ) );
-        return Responder.paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" },
-                taxonArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+                .and( expressionExperimentService.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
+        return paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
-
-
 }

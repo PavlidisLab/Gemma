@@ -55,7 +55,6 @@ public class ExperimentalFactorServiceImpl
         experimentalFactor = ensureInSession( experimentalFactor );
 
         log.info( "Removing factor " + experimentalFactor + "..." );
-
         // First, check to see if there are any diff results that use this factor.
         int removedAnalysis = differentialExpressionAnalysisService.removeForExperimentalFactor( experimentalFactor );
         if ( removedAnalysis > 0 ) {
@@ -80,7 +79,13 @@ public class ExperimentalFactorServiceImpl
     @Override
     @Transactional
     public void remove( Collection<ExperimentalFactor> experimentalFactors ) {
-        experimentalFactors.forEach( this::remove );
+        experimentalFactors = ensureInSession( experimentalFactors );
+        // First, check to see if there are any diff results that use this factor.
+        int removedAnalysis = differentialExpressionAnalysisService.removeForExperimentalFactors( experimentalFactors );
+        if ( removedAnalysis > 0 ) {
+            log.info( String.format( "Removed %d analyses associated to %d factors", removedAnalysis, experimentalFactors.size() ) );
+        }
+        super.remove( experimentalFactors );
     }
 
     @Override

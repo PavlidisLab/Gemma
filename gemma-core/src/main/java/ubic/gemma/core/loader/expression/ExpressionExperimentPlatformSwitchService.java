@@ -21,24 +21,27 @@ package ubic.gemma.core.loader.expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -46,6 +49,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
@@ -67,7 +71,8 @@ import java.util.*;
  * @author pavlidis
  * @see    VectorMergingService
  */
-@Component
+@Service
+
 public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
 
     /**
@@ -95,9 +100,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ExperimentPlatformSwitchHelperService helperService;
-
-    @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
@@ -106,33 +108,39 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     @Autowired
     private AnalysisUtilService analysisUtilService;
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     /**
      * If you know the array designs are already in a merged state, you should use switchExperimentToMergedPlatform
      *
      * @param  ee          ee
      * @param  arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *                     changed for them.
-     * @return the switched experiment
      */
+    @Transactional
     public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
+        ee = expressionExperimentService.thaw( ee );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
+
         // remove stuff that will be in the way.
-        processedExpressionDataVectorService.removeProcessedDataVectors( ee );
+        expressionExperimentService.removeProcessedDataVectors( ee );
         sampleCoexpressionAnalysisService.removeForExperiment( ee );
         for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( ee ) ) {
             subsetService.remove( subset );
         }
         analysisUtilService.deleteOldAnalyses( ee );
 
+        Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+
         // get relation between sequence and designelements.
         Map<BioSequence, Collection<CompositeSequence>> designElementMap = new HashMap<>();
         Collection<CompositeSequence> elsWithNoSeq = new HashSet<>();
         this.populateCSeq( arrayDesign, designElementMap, elsWithNoSeq );
 
-        ee = expressionExperimentService.thaw( ee );
-
-        if ( elsWithNoSeq.size() > 0 ) {
+        if ( !elsWithNoSeq.isEmpty() ) {
             ExpressionExperimentPlatformSwitchService.log
                     .info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
             designElementMap.put( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE, elsWithNoSeq );
@@ -166,18 +174,26 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         /*
          * To account for cases where we have no data loaded yet.
          */
-        boolean hasData = expressionExperimentService.getQuantitationTypes( ee ).size() > 0 && ee.getRawExpressionDataVectors().size() > 0;
+        boolean hasData = !ee.getQuantitationTypes().isEmpty() && !ee.getRawExpressionDataVectors().isEmpty();
 
-        Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements = new HashMap<>();
         int totalVectorsSwitched = 0;
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
-            totalVectorsSwitched += this.switchDataForPlatform( ee, arrayDesign, designElementMap, targetBioAssayDimension, usedDesignElements,
-                    oldAd );
+            log.info( String.format( "Switching vectors from %s to %s", oldAd.getShortName(), arrayDesign.getShortName() ) );
+            totalVectorsSwitched += this.switchDataForPlatform( ee, arrayDesign, designElementMap,
+                    targetBioAssayDimension, usedDesignElements, oldAd );
         }
 
         if ( totalVectorsSwitched == 0 && hasData ) {
             throw new RuntimeException( "No vectors were switched" );
+        }
+
+        // a redundant check, but there have been problems.
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
+                throw new IllegalStateException( "A raw vector for QT =" + v.getQuantitationType()
+                        + " was not correctly switched to the target platform " + arrayDesign );
+            }
         }
 
         String descriptionUpdate = "[Switched to use " + arrayDesign.getShortName() + " by Gemma]";
@@ -185,32 +201,34 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             ee.setDescription( ee.getDescription() + " " + descriptionUpdate );
         }
 
-        helperService.persist( ee, arrayDesign );
-
-        log.info( "Finishing up" );
         if ( targetBioAssayDimension != null && !unusedBADs.isEmpty() ) {
-            this.cleanupUnused( unusedBADs, targetBioAssayDimension );
+            log.info( "Cleaning up unused BioAssays from previous platforms..." );
+            this.cleanupUnused( ee, unusedBADs, targetBioAssayDimension );
         }
 
-        ee = expressionExperimentService.loadOrFail( ee.getId() ); // refresh after cleanup
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.update( ee );
+        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+                "Switch to use " + arrayDesign.getShortName() );
+        log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
         if ( hasData ) {
+            log.info( ee + " has data, regenerating processed data vectors..." );
             processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
         }
     }
 
     /**
      * Automatically identify an appropriate merged platform
-     *
-     * @param  expExp ee
-     * @return ee
+     * @param expExp the experiment to switch to a merged platform
+     * @return the selected merged platform the experiment was switched to
      */
-    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
+    @Transactional
+    public ArrayDesign switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
         this.switchExperimentToArrayDesign( expExp, arrayDesign );
+        return arrayDesign;
     }
 
     private boolean switchPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
@@ -239,32 +257,33 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * Remove bioassays that are no longer needed
      *
      */
-    private void cleanupUnused( Collection<BioAssayDimension> unusedBADs, BioAssayDimension maxBAD ) {
+    private void cleanupUnused( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs, BioAssayDimension maxBAD ) {
         ExpressionExperimentPlatformSwitchService.log.info( "Checking for unused BioAssays after merge" );
 
+        for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
+            bioAssayDimensionService.remove( bioAssayDimension );
+            log.info( "Removed unused BioAssay dimension: " + bioAssayDimension );
+        }
+
+        // remove any BioAssays that are not kept in the newly created dimension
         Collection<BioAssay> removed = new HashSet<>();
         for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
             List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
             for ( BioAssay ba : bioAssays ) {
                 if ( !maxBAD.getBioAssays().contains( ba ) && !removed.contains( ba ) ) {
-                    try {
-                        ExpressionExperimentPlatformSwitchService.log.info( "Deleting unused bioassay: " + ba );
-                        bioAssayService.remove( ba );
-                        removed.add( ba );
-                    } catch ( Exception e ) {
-                        log.error( "Failed to delete: " + ba, e );
-                    }
+                    ee.getBioAssays().remove( ba );
+                    ba.getSampleUsed().getBioAssaysUsedIn().remove( ba );
+                    bioAssayService.remove( ba );
+                    removed.add( ba );
                 }
             }
-            try {
-                bioAssayDimensionService.remove( bioAssayDimension );
-                log.info( "Removed unused bioAssayDimension ID=" + bioAssayDimension.getId() );
-            } catch ( Exception e ) {
-                log.warn( "Failed to clean up unused bioassaydimension with ID=" + bioAssayDimension.getId() + ": " + e
-                        .getMessage() );
-            }
         }
-        log.info( "Removed " + removed.size() + " usused bioassays" );
+
+        ee.setNumberOfSamples( ee.getBioAssays().size() );
+
+        if ( !removed.isEmpty() ) {
+            log.info( "Removed " + removed.size() + " unused bioassays: " + removed.stream().map( BioAssay::toString ).collect( Collectors.joining( ", " ) ) );
+        }
     }
 
     /**
@@ -357,9 +376,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // find the AD they have been merged into, make sure it is exists and they are all merged into the same AD.
         for ( ArrayDesign design : oldArrayDesigns ) {
             ArrayDesign mergedInto = design.getMergedInto();
-            // TODO: use thaw for collection of platforms
-            mergedInto = arrayDesignService.thaw( mergedInto );
-
             if ( mergedInto == null ) {
                 throw new IllegalArgumentException(
                         design + " used by " + expExp + " is not merged into another design" );
@@ -372,7 +388,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             if ( arrayDesign == null ) {
                 arrayDesign = mergedInto;
-                arrayDesign = arrayDesignService.thaw( arrayDesign );
             }
 
             if ( !mergedInto.equals( arrayDesign ) ) {
@@ -483,9 +498,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         if ( oldAd.equals( arrayDesign ) )
             return 0;
 
-        oldAd = arrayDesignService.thaw( oldAd );
-
-        if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
+        if ( oldAd.getCompositeSequences().isEmpty() && !oldAd.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
             /*
              * Bug 3451 - this is okay if it is a RNA-seq experiment etc. prior to data upload.
              */
@@ -493,7 +506,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         }
 
         int totalSwitched = 0;
-        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( ee, oldAd );
+        Collection<QuantitationType> qts = ee.getQuantitationTypes();
         ExpressionExperimentPlatformSwitchService.log
                 .info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
         for ( QuantitationType type : qts ) {
@@ -533,8 +546,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             log.info( "Switching " + vecsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
                     + " to " + arrayDesign.getShortName()
                     + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
-
-            vecsForQt = rawExpressionDataVectorService.thaw( vecsForQt );
 
             int numwarns = 0;
             int maxwarns = 30;
@@ -644,6 +655,5 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         byte[] newDataAr = converter.toBytes( newData.toArray() );
         vector.setData( newDataAr );
         vector.setBioAssayDimension( bad );
-
     }
 }

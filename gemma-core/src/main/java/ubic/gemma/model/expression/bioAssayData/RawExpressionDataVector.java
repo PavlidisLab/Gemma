@@ -42,6 +42,5 @@ public class RawExpressionDataVector extends BulkExpressionDataVector {
         public static RawExpressionDataVector newInstance() {
             return new RawExpressionDataVector();
         }
-
     }
 }

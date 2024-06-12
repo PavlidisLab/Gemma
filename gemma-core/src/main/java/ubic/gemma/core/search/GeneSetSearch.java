@@ -14,11 +14,12 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.core.genome.gene.GOGroupValueObject;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -31,7 +32,7 @@ public interface GeneSetSearch {
     /**
      * @param gene gene
      * @return gene sets
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
+     * @see GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     Collection<GeneSet> findByGene( Gene gene );
 
@@ -81,7 +82,7 @@ public interface GeneSetSearch {
     /**
      * @param name name
      * @return gene sets
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#findByName(java.lang.String)
+     * @see GeneSetService#findByName(java.lang.String)
      */
     Collection<GeneSet> findByName( String name );
 

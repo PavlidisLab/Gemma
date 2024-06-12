@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,6 +27,18 @@ import java.util.Map;
  * @author Paul
  */
 public interface ExperimentalDesignVisualizationService {
+
+    /**
+     * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag
+     * of the dedVs to be set to true.
+     *
+     * @param dedVs dedVs, already sliced for the subset of samples needed for display (if necessary); will be modified
+     * @param primaryFactor if non-null this factor will be used to order the data, otherwise the first factor will be chosen using built-in heuristics. Set this to ensure that
+     *                      the data is ordered by the factor you want as in the case of showing DE genes
+     * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimental factors to doubles.
+     */
+    Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
+            Collection<DoubleVectorValueObject> dedVs, @Nullable ExperimentalFactor primaryFactor );
 
     /**
      * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag

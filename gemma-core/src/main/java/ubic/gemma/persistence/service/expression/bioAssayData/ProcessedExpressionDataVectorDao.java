@@ -20,8 +20,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -31,7 +29,6 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Paul
@@ -48,9 +45,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * @param expressionExperiment       ee
      * @param ignoreQuantitationMismatch use raw data to infer scale type and the adequate transformation for producing
      *                                   processed EVs instead of relying on the QT
-     * @return the created processed vectors
+     * @return the number of created vectors
      */
-    Set<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
 
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 
@@ -93,18 +90,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
-    void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-
-    Collection<ProcessedExpressionDataVector> find( ArrayDesign arrayDesign,
-            QuantitationType quantitationType );
-
-    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType );
-
-    Collection<ProcessedExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType );
-
     enum RankMethod {
         max, mean
     }
-
 }

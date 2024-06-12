@@ -1,5 +1,6 @@
 package ubic.gemma.core.util;
 
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI;
 
 import javax.annotation.Nonnull;
@@ -31,11 +32,26 @@ public interface CLI {
     /**
      * Obtain the command group for this CLI.
      */
-    GemmaCLI.CommandGroup getCommandGroup();
+    CommandGroup getCommandGroup();
+
+    /**
+     * Obtain the options for the CLI.
+     */
+    Options getOptions();
+
+    /**
+     * Indicate if this CLI allows positional arguments.
+     */
+    boolean allowPositionalArguments();
 
     /**
      * Execute the given command given CLI arguments.
      * @return an exit code
      */
     int executeCommand( String... args );
+
+    // order here is significant.
+    enum CommandGroup {
+        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, SYSTEM, MISC, DEPRECATED
+    }
 }

@@ -6,35 +6,25 @@ import org.hibernate.search.Search;
 import org.hibernate.search.impl.SimpleIndexingProgressMonitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 
-import java.util.Set;
-
-@Service
+@Service("indexerService")
 public class IndexerServiceImpl implements IndexerService {
 
     @Autowired
     private SessionFactory sessionFactory;
 
-    @Override
-    public void index( int numThreads ) {
-        doIndex( new Class[0], numThreads );
-    }
+    private int numThreads = 4;
+    private int loggingFrequency = 1000;
 
     @Override
-    public void index( Set<Class<? extends Identifiable>> classesToIndex, int numThreads ) {
-        if ( classesToIndex.isEmpty() ) {
-            return;
-        }
-        doIndex( classesToIndex.toArray( new Class[0] ), numThreads );
-    }
-
-    private void doIndex( Class<?>[] classesToIndex, int numThreads ) {
+    public void index( Class<? extends Identifiable> classToIndex ) {
         FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
         try {
-            fullTextSession.createIndexer( classesToIndex )
+            fullTextSession.createIndexer( classToIndex )
                     .threadsToLoadObjects( numThreads )
-                    .progressMonitor( new SimpleIndexingProgressMonitor( 10000 ) )
+                    .progressMonitor( new SimpleIndexingProgressMonitor( loggingFrequency ) )
                     .startAndWait();
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
@@ -42,5 +32,17 @@ public class IndexerServiceImpl implements IndexerService {
         } finally {
             fullTextSession.close();
         }
+    }
+
+    @Override
+    public void setNumThreads( int numThreads ) {
+        Assert.isTrue( numThreads > 0, "The number of threads must be strictly positive." );
+        this.numThreads = numThreads;
+    }
+
+    @Override
+    public void setLoggingFrequency( int loggingFrequency ) {
+        Assert.isTrue( loggingFrequency > 0, "The logging frequency must be strictly positive." );
+        this.loggingFrequency = loggingFrequency;
     }
 }

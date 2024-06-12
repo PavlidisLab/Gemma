@@ -15,7 +15,6 @@
 package ubic.gemma.core.ontology.providers;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -23,15 +22,15 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.persistence.util.TestComponent;
+import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +46,6 @@ import static org.mockito.Mockito.mock;
  *
  * @author Paul
  */
-@Category(SlowTest.class)
 @ContextConfiguration
 public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
@@ -57,12 +55,17 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "url.geneOntology=dummy" );
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "load.geneOntology=true", "url.geneOntology=dummy" );
         }
 
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
             return new GeneOntologyServiceImpl();
+        }
+
+        @Bean
+        public TaskExecutor ontologyTaskExecutor() {
+            return mock( TaskExecutor.class );
         }
 
         @Bean
@@ -87,6 +90,7 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
     @Override
     public void afterPropertiesSet() throws Exception {
         if ( !gos.isOntologyLoaded() ) {
+            gos.setSearchEnabled( false );
             InputStream is = new GZIPInputStream(
                     new ClassPathResource( "/data/loader/ontology/go.bptest.owl.gz" ).getInputStream() );
             gos.initialize( is, false );
@@ -94,7 +98,6 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
     }
 
     @Test
-    @Category(SlowTest.class)
     public final void testParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 

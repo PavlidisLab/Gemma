@@ -1,6 +1,6 @@
 package ubic.gemma.web.persistence;
 
-import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;

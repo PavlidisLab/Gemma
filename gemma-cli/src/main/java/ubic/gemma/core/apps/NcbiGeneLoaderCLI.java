@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
@@ -61,6 +60,10 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private boolean skipDownload = false;
     private Integer startNcbiId = null;
 
+    public NcbiGeneLoaderCLI() {
+        setRequireLogin( true );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;
@@ -93,11 +96,6 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
         options.addOption( Option.builder( "restart" ).longOpt( null ).desc( "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
                 + "and assumes you have the right -taxon option, if any)" ).argName( "ncbi id" ).hasArg().build() );
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @Override

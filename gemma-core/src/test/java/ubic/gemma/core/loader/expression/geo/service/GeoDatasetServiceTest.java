@@ -249,7 +249,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
-        File f = dataFileService.writeOrLocateDataFile( ee, true, true );
+        File f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true ).orElse( null );
+        assertNotNull( f );
         assertTrue( f.canRead() );
         assertTrue( f.length() > 0 );
     }
@@ -277,6 +278,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertEquals( 100, dataVectors.size() );
 
         ee = eeService.findByShortName( "GSE18707" );
+        assertNotNull( ee );
 
         qts = eeService.getQuantitationTypes( ee );
 
@@ -367,7 +369,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         eeService.update( ee );
         geoService.updateFromGEO( "GSE30521" );
         ee = eeService.load( ee.getId() );
+        assertNotNull( ee );
         ee = this.eeService.thawLite( ee );
+        assertNotNull( ee );
         assertNotNull( ee.getPrimaryPublication() );
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertTrue( !ba.getSampleUsed().getCharacteristics().isEmpty() );

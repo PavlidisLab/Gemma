@@ -120,7 +120,6 @@ public class BioMaterial extends AbstractDescribable implements gemma.gsec.model
     /**
      * @return The values that this BioAssay is associated with for the experiment.
      */
-    @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }

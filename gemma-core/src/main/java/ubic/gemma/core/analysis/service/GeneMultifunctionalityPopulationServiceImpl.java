@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.math.Rank;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -39,7 +39,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Compute gene multifunctionality and store it in the database.
@@ -233,6 +232,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
              */
             Set<OntologyTerm> terms = new HashSet<>( annots.size() );
             for ( Characteristic t : annots ) {
+                if ( t.getValueUri() == null ) {
+                    GeneMultifunctionalityPopulationServiceImpl.log
+                            .warn( "Free-text term annotated to " + gene + " : " + t );
+                    continue;
+                }
                 OntologyTerm term = goService.getTerm( t.getValueUri() );
                 if ( term == null || term.isObsolete() ) {
                     GeneMultifunctionalityPopulationServiceImpl.log

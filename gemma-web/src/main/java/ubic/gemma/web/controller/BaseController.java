@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,9 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
-import org.springframework.mail.SimpleMailMessage;
-import ubic.gemma.persistence.util.MailEngine;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.util.MessageUtil;
 
 import javax.servlet.ServletContext;
@@ -116,11 +115,7 @@ public abstract class BaseController {
             model.put( "confirmLink",
                     Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
 
-            SimpleMailMessage mailMessage = new SimpleMailMessage();
-            mailMessage.setFrom( Settings.getAdminEmailAddress() );
-            mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
-            mailMessage.setTo( username + "<" + email + ">" );
-            mailEngine.sendMessage( mailMessage, templateName, model );
+            mailEngine.sendMessage( username + "<" + email + ">", getText( "signup.email.subject", request.getLocale() ), templateName, model );
 
         } catch ( Exception e ) {
             log.error( "Couldn't send email to " + email, e );

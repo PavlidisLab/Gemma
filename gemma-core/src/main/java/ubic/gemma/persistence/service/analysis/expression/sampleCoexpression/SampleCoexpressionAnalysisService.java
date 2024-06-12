@@ -14,8 +14,11 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -57,6 +60,14 @@ public interface SampleCoexpressionAnalysisService {
     @Nullable
     DoubleMatrix<BioAssay, BioAssay> loadBestMatrix( ExpressionExperiment ee );
 
+
+    @Transactional(readOnly = true)
+    @Nullable
+    public DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee );
+
+    @Transactional(readOnly = true)
+    PreparedCoexMatrices prepare( ExpressionExperiment ee );
+
     /**
      * Computes sample correlation matrices for the given experiment. If the experiment already has any, they are
      * removed. See {@link SampleCoexpressionAnalysis} for the description of the matrices that are computed.
@@ -64,22 +75,8 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to create a sample correlation matrix for.
      * @return the regressed coexpression matrix if available, otherwise the full
      */
-    DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee );
-
-    /**
-     * Computes sample correlation matrices for the given experiment if necessary.
-     * <p>
-     * The computation happens if at least one of the following condition is met:
-     * <ul>
-     * <li>there is no {@link SampleCoexpressionAnalysis} for the given experiment</li>
-     * <li>the full coexpression matrix is null</li>
-     * <li>the regressed coexpression matrix is null and there is an important factor</li>
-     * </ul>
-     *
-     * @see #compute(ExpressionExperiment)
-     * @return the regressed coexpression matrix if available, otherwise the full
-     */
-    DoubleMatrix<BioAssay, BioAssay> computeIfNecessary( ExpressionExperiment ee );
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee, PreparedCoexMatrices matrices );
 
     boolean hasAnalysis( ExpressionExperiment ee );
 
@@ -90,3 +87,4 @@ public interface SampleCoexpressionAnalysisService {
      */
     void removeForExperiment( ExpressionExperiment ee );
 }
+

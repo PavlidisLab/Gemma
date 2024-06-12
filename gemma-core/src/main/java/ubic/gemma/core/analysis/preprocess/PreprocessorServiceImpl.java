@@ -89,7 +89,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
-        ee = expressionExperimentService.thaw( ee );
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
@@ -248,7 +247,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) throws SampleCoexpressionRelatedPreprocessingException {
         try {
-            sampleCoexpressionAnalysisService.compute( ee );
+            sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         } catch ( RuntimeException e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw new SampleCoexpressionRelatedPreprocessingException( ee, e );

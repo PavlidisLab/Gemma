@@ -17,7 +17,7 @@
 		</many-to-one>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
-					sql-type="VARCHAR(255)"/>
+					sql-type="VARCHAR(255)" index="INVESTIGATION_NAME"/>
 		</property>
 		<property name="description" type="org.hibernate.type.MaterializedClobType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
@@ -56,13 +56,15 @@
 				</property>
 				<property name="shortName" type="java.lang.String">
 					<column name="SHORT_NAME" not-null="false" unique="true"
-							sql-type="VARCHAR(255)"/>
+							sql-type="VARCHAR(255)" index="shortname"/>
 				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
-					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER"/>
+					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER"
+							index="INVESTIGATION_NUMBER_OF_DATA_VECTORS"/>
 				</property>
 				<property name="numberOfSamples" type="java.lang.Integer">
-					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER"/>
+					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER"
+							index="INVESTIGATION_NUMBER_OF_SAMPLES"/>
 				</property>
 				<property name="metadata" type="org.hibernate.type.MaterializedClobType">
 					<column name="METADATA" not-null="false" unique="false"
@@ -89,7 +91,7 @@
 							 fetch="select">
 					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
-				<set name="quantitationTypes" lazy="true" fetch="select" cascade="all-delete-orphan">
+				<set name="quantitationTypes" lazy="true" fetch="select" cascade="all">
 					<cache usage="read-write"/>
 					<key foreign-key="QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
@@ -136,14 +138,14 @@
 					<one-to-many class="ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector"/>
 				</set>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
-					 cascade="all,delete-orphan">
+					 cascade="all">
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
 					<one-to-many class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector"/>
 				</set>
 				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true"
-					 cascade="all,delete-orphan">
+					 cascade="all">
 					<key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>

@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.search.IndexerService;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -53,7 +53,9 @@ public class IndexerTaskImpl extends AbstractTask<IndexerTaskCommand> implements
         if ( taskCommand.isIndexGeneSet() ) {
             classesToIndex.add( GeneSet.class );
         }
-        indexerService.index( classesToIndex, 4 );
+        for ( Class<? extends Identifiable> clazz : classesToIndex ) {
+            indexerService.index( clazz );
+        }
         return new TaskResult( taskCommand, null );
     }
 }

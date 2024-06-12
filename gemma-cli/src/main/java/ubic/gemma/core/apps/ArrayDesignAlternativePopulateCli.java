@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -40,6 +39,10 @@ import java.io.InputStreamReader;
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI {
 
+    public ArrayDesignAlternativePopulateCli() {
+        setRequireLogin( true );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
@@ -53,11 +56,6 @@ public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI 
     @Override
     protected void buildOptions( Options options ) {
 
-    }
-
-    @Override
-    protected boolean requireLogin() {
-        return true;
     }
 
     @Override

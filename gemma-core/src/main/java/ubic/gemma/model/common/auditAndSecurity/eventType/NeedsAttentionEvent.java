@@ -28,7 +28,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  *
  * @author Paul
  */
-public class NeedsAttentionEvent extends CurationDetailsEvent {
+public class NeedsAttentionEvent extends NeedsAttentionAlteringEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.

@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 
 import javax.annotation.CheckReturnValue;
@@ -66,8 +67,8 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.MISC;
     }
 
     @Override
@@ -77,6 +78,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         options.addOption( MIGRATE_REMAINING_FACTOR_VALUES_OPTION, false, "Migrate remaining factor values that weren't mentioned in the migration file." );
         options.addOption( MIGRATE_NON_TRIVIAL_CASES_OPTION, false, "Migrate non-trivial cases (i.e. 2 or more old-style characteristics) to subject-only statements. The affected factor values will be marked as needs attention." );
         options.addOption( NOOP_OPTION, false, "Only validate migrations; no statements will be saved" );
+        addBatchOption( options );
     }
 
     @Value

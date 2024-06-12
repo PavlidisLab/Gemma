@@ -20,12 +20,11 @@
 package ubic.gemma.model.analysis;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 

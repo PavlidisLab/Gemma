@@ -7,7 +7,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.persistence.util.Nano;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
  * Transform various single-cell formats.
  * @author poirigui
  */
-@Nano
 @Component
 public class SingleCellDataTransformCli extends AbstractCLI {
 
@@ -98,8 +96,8 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
     @Nullable

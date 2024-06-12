@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.expression.diff.DiffExMetaAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 
