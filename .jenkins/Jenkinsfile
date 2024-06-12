@@ -152,7 +152,6 @@ pipeline {
                     post {
                         always {
                             junit testResults: '**/target/surefire-reports/*.xml'
-                            junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
                             setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
@@ -175,12 +174,11 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify -DskipUnitTests'
+                            sh 'mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true'
                         }
                     }
                     post {
                         always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
                             junit testResults: '**/target/failsafe-reports/*.xml'
                         }
                         success {
