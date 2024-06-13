@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.maintenance;
 
 import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -29,8 +30,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -41,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.core.util.MailEngine;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -236,6 +237,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Timed
     public int updateExpressionExperiment2CharacteristicEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
         if ( truncate ) {
@@ -259,9 +261,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 .setParameter( "edClass", ExperimentalDesign.class )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated%s.",
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated%s in %d ms.",
                 updated,
-                sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+                sinceLastUpdate != null ? " since " + sinceLastUpdate : "",
+                timer.getTime() ) );
         return updated;
     }
 
@@ -284,6 +287,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
         }
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level%s...",
                 level.getSimpleName(),
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
@@ -303,23 +307,25 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 .setParameter( levelParamName, level )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated%s.",
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated%s in %d ms.",
                 level.getSimpleName(), updated,
-                sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+                sinceLastUpdate != null ? " since " + sinceLastUpdate : "",
+                timer.getTime() ) );
         return updated;
     }
 
     @Override
     @Transactional
     public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate ) {
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
         int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table; %d entries were updated%s.",
-                updated, sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table; %d entries were updated%s in %d ms.",
+                updated, sinceLastUpdate != null ? " since " + sinceLastUpdate : "", timer.getTime() ) );
         return updated;
     }
 
@@ -338,12 +344,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() {
+        StopWatch timer = StopWatch.createStarted();
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         int updated = this.sessionFactory.getCurrentSession()
                 .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .executeUpdate();
-        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
+        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated in %d ms.", updated, timer.getTime() ) );
     }
 
     /**
