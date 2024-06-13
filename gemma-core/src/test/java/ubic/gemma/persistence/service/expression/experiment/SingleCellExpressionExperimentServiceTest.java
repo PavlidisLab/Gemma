@@ -155,7 +155,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 } );
 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors2.iterator().next().getQuantitationType(), vectors2 );
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, vectors2.iterator().next().getQuantitationType(), vectors2 ) )
+                .isEqualTo( 10 );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 20 );
 
@@ -182,7 +183,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );
         sessionFactory.getCurrentSession().flush();
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors2.iterator().next().getQuantitationType(), vectors2 );
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, vectors2.iterator().next().getQuantitationType(), vectors2 ) )
+                .isEqualTo( 10 );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
@@ -200,7 +202,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .hasSize( 10 );
 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( qt );
-        scExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors2 );
+        assertThat( scExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors2 ) )
+                .isEqualTo( 10 );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
@@ -227,7 +230,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 20 );
 
-        scExpressionExperimentService.removeSingleCellDataVectors( ee, qt );
+        assertThat( scExpressionExperimentService.removeSingleCellDataVectors( ee, qt ) )
+                .isEqualTo( 10 );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
@@ -290,7 +294,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .hasSize( 10 )
                 .allSatisfy( v -> assertThat( v.getSingleCellDimension().getCellTypeAssignments() ).contains( newLabelling ) );
         assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
-                .hasSize( 1 )
+                .hasSize( 2 )
                 .contains( newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEqualTo( newLabelling );
         assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )

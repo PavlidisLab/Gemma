@@ -1859,6 +1859,7 @@ public class ExpressionExperimentDaoImpl
         // those can also be removed in cascade, but it's much faster to use these instead
         removeAllRawDataVectors( ee );
         removeProcessedDataVectors( ee );
+        removeAllSingleCellDataVectors( ee );
 
         super.remove( ee );
 
@@ -2091,6 +2092,48 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", quantitationType )
                 .list();
+    }
+
+    @Override
+    public int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt ) {
+        Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) || ee.getSingleCellExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
+                "The quantitation must belong to at least one single-cell vector from experiment." );
+        ee.getSingleCellExpressionDataVectors()
+                .removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        int deletedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType )
+                .executeUpdate();
+        if ( deleteQt ) {
+            log.info( "Deleting " + quantitationType + "..." );
+            if ( !ee.getQuantitationTypes().remove( quantitationType ) ) {
+                log.warn( quantitationType + " was not attached to " + ee + ", but was attached to at least one of its single-cell data vectors, it will be removed." );
+            }
+            getSessionFactory().getCurrentSession().delete( quantitationType );
+        }
+        log.info( "Removed " + deletedVectors + " single-cell data vectors from " + ee + " for " + quantitationType );
+        return deletedVectors;
+    }
+
+    @Override
+    public int removeAllSingleCellDataVectors( ExpressionExperiment ee ) {
+        Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
+                .map( SingleCellExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+        ee.getSingleCellExpressionDataVectors().clear();
+        int deletedVectors = getSessionFactory().getCurrentSession()
+                .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
+        for ( QuantitationType qt : qtsToRemove ) {
+            if ( !ee.getQuantitationTypes().remove( qt ) ) {
+                log.warn( qt + " was not attached to " + ee + ", but was attached to at least one of its single-cell data vectors, it will be removed." );
+            }
+            getSessionFactory().getCurrentSession().delete( qt );
+        }
+        log.info( "Removed " + deletedVectors + " single-cell data vectors from " + ee );
+        return deletedVectors;
     }
 
     @Override

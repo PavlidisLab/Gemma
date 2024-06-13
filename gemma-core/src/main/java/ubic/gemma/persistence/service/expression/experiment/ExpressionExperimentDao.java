@@ -402,4 +402,17 @@ public interface ExpressionExperimentDao
      * Obtain a set of single-cell data vectors for the given quantitation type.
      */
     List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
+
+    /**
+     * Remove the given single-cell data vectors.
+     * @param quantitationType quantitation to remove
+     * @param deleteQt detach the QT from the experiment and delete it
+     *                 TODO: add a replaceSingleCellDataVectors to avoid needing this
+     */
+    int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
+
+    /**
+     * Remove all single-cell data vectors.
+     */
+    int removeAllSingleCellDataVectors( ExpressionExperiment ee );
 }

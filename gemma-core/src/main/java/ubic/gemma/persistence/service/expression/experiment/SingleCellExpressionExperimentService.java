@@ -25,23 +25,26 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Add single-cell data vectors.
+     * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+    int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
             Collection<SingleCellExpressionDataVector> vectors );
 
     /**
      * Replace existing single-cell data vectors for the given quantitation type.
+     * @return the number of vectors that were replaced
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+    int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
             Collection<SingleCellExpressionDataVector> vectors );
 
     /**
      * Remove single-cell data vectors for the given quantitation type.
+     * @return the number of vectors that were removed
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
+    int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
      * Obtain all the single-cell dimensions used by a given dataset.
