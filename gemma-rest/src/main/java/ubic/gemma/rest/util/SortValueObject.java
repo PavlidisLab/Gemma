@@ -5,6 +5,7 @@ import ubic.gemma.persistence.util.Sort;
 
 /**
  * Represents {@link Sort} as part of a {@link PaginatedResponseDataObject}.
+ *
  * @author poirigui
  */
 @Data

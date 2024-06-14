@@ -47,7 +47,6 @@ public class LimitArg extends AbstractArg<Integer> {
 
     /**
      * Obtain the value of the limit, explicitly disregarding the maximum defined by {@link #MAXIMUM}.
-     *
      */
     public Integer getValueNoMaximum() {
         return super.getValue();

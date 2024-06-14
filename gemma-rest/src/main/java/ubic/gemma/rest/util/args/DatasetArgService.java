@@ -59,7 +59,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Obtain a list of exclude URIs from an argument containing excluded URIs.
-     * @param excludedUrisArg    argument containing excluded URIs or null if unspecified
+     *
+     * @param excludedUrisArg argument containing excluded URIs or null if unspecified
      * @param excludeFreeText if true, null will be included in the returned list which will result in the exclusion of
      *                        free-text categories or terms
      * @return null if excludedUrisArg is null and excludeFreeText is false, otherwise a list of excluded URIs
@@ -116,9 +117,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Obtain the search results for a given query and highlighter.
+     *
      * @param highlighter a highlighter to use for the query or null to ignore
-     * @throws BadRequestException if the query is empty
-     * @throws ServiceUnavailableException if the search times out
+     * @throws BadRequestException          if the query is empty
+     * @throws ServiceUnavailableException  if the search times out
      * @throws InternalServerErrorException for any other search-related exceptions
      */
     public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter ) throws BadRequestException, ServiceUnavailableException, InternalServerErrorException {
@@ -141,6 +143,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Shortcut for extracting the result IDs and scores from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
+     *
      * @see #getResultsForSearchQuery(QueryArg, Highlighter)
      */
     public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById ) {
@@ -155,6 +158,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Shortcut for extracting the result IDs from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
+     *
      * @see #getResultsForSearchQuery(QueryArg, Highlighter)
      */
     public Set<Long> getIdsForSearchQuery( QueryArg query ) {

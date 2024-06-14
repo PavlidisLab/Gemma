@@ -2,9 +2,9 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;

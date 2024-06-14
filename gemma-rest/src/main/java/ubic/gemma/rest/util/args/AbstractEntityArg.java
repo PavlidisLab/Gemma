@@ -38,6 +38,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
 
     /**
      * Defines how to retrieve an entity from a service.
+     *
      * @param service the service to retrieve the entity from
      * @return the entity matching the argument if found, otherwise null
      */
@@ -49,6 +50,7 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      * <p>
      * This is only meaningful if the argument is ambiguous, otherwise {@link #getEntity(FilteringService)} should be
      * used.
+     *
      * @see #getEntities(FilteringService)
      */
     List<O> getEntities( S service ) {

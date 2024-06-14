@@ -26,6 +26,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * Utilities for working with {@link Arg}.
+ *
  * @author poirigui
  */
 public class ArgUtils {

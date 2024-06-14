@@ -145,7 +145,7 @@ public class TaxaWebService {
     @Path("/{taxon}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all genes in a given taxon")
-    public PaginatedResponseDataObject<GeneValueObject> getTaxonGenes(
+    public PaginatedResponseDataObject<List<GeneValueObject>> getTaxonGenes(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
@@ -160,7 +160,7 @@ public class TaxaWebService {
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     * @see GeneWebService#getGenes(GeneArrayArg)
+     * @see GeneWebService#getGenesByIds(GeneArrayArg)
      */
     @GET
     @Path("/{taxon}/genes/{gene}")
@@ -180,7 +180,7 @@ public class TaxaWebService {
     @Path("/{taxon}/genes/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
+    public PaginatedResponseDataObject<List<CompositeSequenceValueObject>> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
         return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
@@ -226,7 +226,7 @@ public class TaxaWebService {
     @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the datasets for a given taxon")
-    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
+    public FilteredAndPaginatedResponseDataObject<List<ExpressionExperimentValueObject>> getTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

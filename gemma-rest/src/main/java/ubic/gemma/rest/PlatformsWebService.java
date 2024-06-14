@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -31,9 +30,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.MediaTypeUtils;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -42,6 +45,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -90,7 +94,7 @@ public class PlatformsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
+    public FilteredAndPaginatedResponseDataObject<List<ArrayDesignValueObject>> getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -114,20 +118,20 @@ public class PlatformsWebService {
      * Retrieves all datasets matching the given identifiers.
      *
      * @param platformsArg a list of identifiers, separated by commas (','). Identifiers can either be the
-     *                    ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                    is more efficient.
-     *                    <p>
-     *                    Only datasets that user has access to will be available.
-     *                    </p>
-     *                    <p>
-     *                    Do not combine different identifiers in one query.
-     *                    </p>
+     *                     ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                     is more efficient.
+     *                     <p>
+     *                     Only datasets that user has access to will be available.
+     *                     </p>
+     *                     <p>
+     *                     Do not combine different identifiers in one query.
+     *                     </p>
      */
     @GET
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
+    public FilteredAndPaginatedResponseDataObject<List<ArrayDesignValueObject>> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg platformsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -145,7 +149,7 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured("GROUP_ADMIN")
     @Operation(summary = "Retrieve all blacklisted platforms", hidden = true)
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
+    public FilteredAndPaginatedResponseDataObject<List<ArrayDesignValueObject>> getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
@@ -168,7 +172,7 @@ public class PlatformsWebService {
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all experiments using a given platform")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getPlatformDatasets( // Params:
+    public PaginatedResponseDataObject<List<ExpressionExperimentValueObject>> getPlatformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
@@ -189,7 +193,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElements( // Params:
+    public PaginatedResponseDataObject<List<CompositeSequenceValueObject>> getPlatformElements( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
@@ -215,7 +219,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the selected probes for a given platform")
-    public FilteredAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
+    public FilteredAndPaginatedResponseDataObject<List<CompositeSequenceValueObject>> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -245,7 +249,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public FilteredAndPaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
+    public FilteredAndPaginatedResponseDataObject<List<GeneValueObject>> getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

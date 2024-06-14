@@ -24,7 +24,7 @@ public abstract class CompositeSequenceArg<T>
         super( propertyName, propertyType, arg );
     }
 
-    abstract CompositeSequence getEntityWithPlatform( CompositeSequenceService service, ArrayDesign platform);
+    abstract CompositeSequence getEntityWithPlatform( CompositeSequenceService service, ArrayDesign platform );
 
     /**
      * Used by RS to parse value of request parameters.

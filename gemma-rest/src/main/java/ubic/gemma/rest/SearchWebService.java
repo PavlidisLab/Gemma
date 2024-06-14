@@ -35,7 +35,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.MalformedArgException;
-import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseDataObjectImpl;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -305,7 +305,7 @@ public class SearchWebService {
         }
     }
 
-    public static class SearchResultsResponseDataObject extends ResponseDataObject<List<SearchResultValueObject<?>>> {
+    public static class SearchResultsResponseDataObject extends ResponseDataObjectImpl<List<SearchResultValueObject<?>>> {
 
         private final SearchSettingsValueObject searchSettings;
 

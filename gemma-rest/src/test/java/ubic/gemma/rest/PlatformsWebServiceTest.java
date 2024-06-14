@@ -7,19 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,7 +65,7 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testAll() {
-        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
+        FilteredAndPaginatedResponseDataObject<List<ArrayDesignValueObject>> response = platformsWebService.getPlatforms(
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
@@ -75,21 +77,21 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testPlatformDatasets() {
-        PaginatedResponseDataObject<ExpressionExperimentValueObject> response = platformsWebService.getPlatformDatasets(
+        PaginatedResponseDataObject<List<ExpressionExperimentValueObject>> response = platformsWebService.getPlatformDatasets(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
-        assertThat( response.getData() ).asList()
+        assertThat( response.getData() )
                 .hasSize( 1 )
                 .first().hasFieldOrPropertyWithValue( "id", expressionExperiment.getId() );
     }
 
     @Test
     public void testPlatformElements() {
-        PaginatedResponseDataObject<CompositeSequenceValueObject> response = platformsWebService.getPlatformElements(
+        PaginatedResponseDataObject<List<CompositeSequenceValueObject>> response = platformsWebService.getPlatformElements(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ) );
@@ -103,7 +105,7 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
         BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
-        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
+        FilteredAndPaginatedResponseDataObject<List<ArrayDesignValueObject>> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
         assertThat( payload.getData() )
                 .hasSize( 1 )
                 .first()

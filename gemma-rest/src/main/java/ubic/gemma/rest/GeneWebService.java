@@ -67,7 +67,7 @@ public class GeneWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all genes")
-    public PaginatedResponseDataObject<GeneValueObject> getGenes(
+    public PaginatedResponseDataObject<List<GeneValueObject>> getGenes(
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
@@ -123,7 +123,7 @@ public class GeneWebService {
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
+    public PaginatedResponseDataObject<List<CompositeSequenceValueObject>> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20

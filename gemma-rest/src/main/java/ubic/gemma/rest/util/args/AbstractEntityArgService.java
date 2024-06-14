@@ -146,7 +146,7 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     /**
      * Checks whether the given object is null, and throws an appropriate exception if necessary.
      *
-     * @param entity  the object that should be checked for being null.
+     * @param entity the object that should be checked for being null.
      * @return the same object as given.
      * @throws NotFoundException if the given entity is null.
      */

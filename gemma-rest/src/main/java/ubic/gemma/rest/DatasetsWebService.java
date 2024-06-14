@@ -198,7 +198,7 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
+    public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<List<ExpressionExperimentWithSearchResultValueObject>> getDatasets( // Params:
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
@@ -294,7 +294,7 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<List<ArrayDesignWithUsageStatisticsValueObject>> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("50") LimitArg limit
@@ -360,7 +360,7 @@ public class DatasetsWebService {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<List<CategoryWithUsageStatisticsValueObject>> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
@@ -425,7 +425,7 @@ public class DatasetsWebService {
                     @ApiResponse(useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<List<AnnotationWithUsageStatisticsValueObject>> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
@@ -618,7 +618,7 @@ public class DatasetsWebService {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public QueriedAndFilteredAndInferredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
+    public QueriedAndFilteredAndInferredResponseDataObject<List<TaxonWithUsageStatisticsValueObject>> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
     ) {
@@ -673,7 +673,7 @@ public class DatasetsWebService {
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
+    public FilteredAndInferredAndPaginatedResponseDataObject<List<ExpressionExperimentValueObject>> getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -694,7 +694,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured("GROUP_ADMIN")
     @Operation(summary = "Retrieve all blacklisted datasets", hidden = true)
-    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+    public FilteredAndInferredAndPaginatedResponseDataObject<List<ExpressionExperimentValueObject>> getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
@@ -805,7 +805,7 @@ public class DatasetsWebService {
     @Path("/analyses/differential/results/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the differential expression results for a given gene", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
-    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
+    public QueriedAndFilteredAndInferredResponseDataObject<List<DifferentialExpressionAnalysisResultByGeneValueObject>> getDatasetsDifferentialAnalysisResultsExpressionForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -822,7 +822,7 @@ public class DatasetsWebService {
     @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the differential expression results for a given gene and taxa", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
-    public QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
+    public QueriedAndFilteredAndInferredResponseDataObject<List<DifferentialExpressionAnalysisResultByGeneValueObject>> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
@@ -832,7 +832,7 @@ public class DatasetsWebService {
         return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold );
     }
 
-    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
+    private QueriedAndFilteredAndInferredResponseDataObject<List<DifferentialExpressionAnalysisResultByGeneValueObject>> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
         Gene gene;
         if ( taxonArg != null ) {
             Taxon taxon = taxonArgService.getEntity( taxonArg );
@@ -1311,7 +1311,7 @@ public class DatasetsWebService {
                 .build();
     }
 
-    public static class ResponseDataObjectExpressionExperimentValueObject extends ResponseDataObject<ExpressionExperimentValueObject> {
+    public static class ResponseDataObjectExpressionExperimentValueObject extends ResponseDataObjectImpl<ExpressionExperimentValueObject> {
 
         public ResponseDataObjectExpressionExperimentValueObject( ExpressionExperimentValueObject payload ) {
             super( payload );
@@ -1364,32 +1364,52 @@ public class DatasetsWebService {
         double[][] vMatrix;
     }
 
-    private <T> QueriedAndFilteredAndInferredResponseDataObject<T> all( List<T> results, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort by, Collection<OntologyTerm> inferredTerms ) {
-        return new QueriedAndFilteredAndInferredResponseDataObject<>( results, query, filters, groupBy, by, inferredTerms );
+    public interface InferredResponseObject {
+        List<CharacteristicValueObject> getInferredTerms();
     }
 
-    private <T> QueriedAndFilteredAndInferredAndLimitedResponseDataObject<T> top( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
-        return new QueriedAndFilteredAndInferredAndLimitedResponseDataObject<>( payload, query, filters, groupBy, sort, limit, inferredTerms );
+    public interface QueriedAndFilteredAndInferredResponseDataObject<T> extends ResponseDataObject<T>, QueriedResponseObject, FilteredResponseObject, InferredResponseObject {
+
     }
 
-    private <T> FilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
-        return new FilteredAndInferredAndPaginatedResponseDataObject<>( payload, filters, groupBy, inferredTerms );
+    public interface QueriedAndFilteredAndInferredAndLimitedResponseDataObject<T> extends ResponseDataObject<T>, QueriedResponseObject, FilteredResponseObject, InferredResponseObject, LimitedResponseObject {
+
     }
 
-    private <T> QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, String query, Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
-        return new QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<>( payload, query, filters, groupBy, inferredTerms );
+    public interface FilteredAndInferredAndPaginatedResponseDataObject<T> extends ResponseDataObject<T>, FilteredResponseObject, InferredResponseObject, PaginatedResponseObject {
+
     }
 
-    private <T> FilteredAndInferredAndPaginatedResponseDataObject<T> paginate( Responders.FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
+    public interface QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<T> extends ResponseDataObject<T>, QueriedResponseObject, FilteredResponseObject, InferredResponseObject, PaginatedResponseObject {
+
+    }
+
+    private <T> QueriedAndFilteredAndInferredResponseDataObject<List<T>> all( List<T> results, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort by, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredResponseDataObjectImpl<>( results, query, filters, groupBy, by, inferredTerms );
+    }
+
+    private <T> QueriedAndFilteredAndInferredAndLimitedResponseDataObject<List<T>> top( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredAndLimitedResponseDataObjectImpl<>( payload, query, filters, groupBy, sort, limit, inferredTerms );
+    }
+
+    private <T> FilteredAndInferredAndPaginatedResponseDataObject<List<T>> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
+        return new FilteredAndInferredAndPaginatedResponseDataObjectImpl<>( payload, filters, groupBy, inferredTerms );
+    }
+
+    private <T> QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<List<T>> paginate( Slice<T> payload, String query, Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+        return new QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectImpl<>( payload, query, filters, groupBy, inferredTerms );
+    }
+
+    private <T> FilteredAndInferredAndPaginatedResponseDataObject<List<T>> paginate( Responders.FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit, Collection<OntologyTerm> inferredTerms ) throws NotFoundException {
         return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy, inferredTerms );
     }
 
     @Getter
-    public static class QueriedAndFilteredAndInferredResponseDataObject<T> extends QueriedAndFilteredResponseDataObject<T> {
+    private static class QueriedAndFilteredAndInferredResponseDataObjectImpl<T> extends QueriedAndFilteredResponseDataObjectImpl<T> implements QueriedAndFilteredAndInferredResponseDataObject<List<T>> {
 
         private final List<CharacteristicValueObject> inferredTerms;
 
-        public QueriedAndFilteredAndInferredResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, Collection<OntologyTerm> inferredTerms ) {
+        public QueriedAndFilteredAndInferredResponseDataObjectImpl( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, Collection<OntologyTerm> inferredTerms ) {
             super( payload, query, filters, groupBy, sort );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
@@ -1398,11 +1418,11 @@ public class DatasetsWebService {
     }
 
     @Getter
-    public static class QueriedAndFilteredAndInferredAndLimitedResponseDataObject<T> extends QueriedAndFilteredAndLimitedResponseDataObject<T> {
+    private static class QueriedAndFilteredAndInferredAndLimitedResponseDataObjectImpl<T> extends QueriedAndFilteredAndLimitedResponseDataObjectImpl<T> implements QueriedAndFilteredAndInferredAndLimitedResponseDataObject<List<T>> {
 
         private final List<CharacteristicValueObject> inferredTerms;
 
-        public QueriedAndFilteredAndInferredAndLimitedResponseDataObject( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
+        public QueriedAndFilteredAndInferredAndLimitedResponseDataObjectImpl( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, @Nullable Integer limit, Collection<OntologyTerm> inferredTerms ) {
             super( payload, query, filters, groupBy, sort, limit );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
@@ -1411,11 +1431,11 @@ public class DatasetsWebService {
     }
 
     @Getter
-    public static class FilteredAndInferredAndPaginatedResponseDataObject<T> extends FilteredAndPaginatedResponseDataObject<T> {
+    private static class FilteredAndInferredAndPaginatedResponseDataObjectImpl<T> extends FilteredAndPaginatedResponseDataObjectImpl<T> implements FilteredAndInferredAndPaginatedResponseDataObject<List<T>> {
 
         private final List<CharacteristicValueObject> inferredTerms;
 
-        public FilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+        public FilteredAndInferredAndPaginatedResponseDataObjectImpl( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, filters, groupBy );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
@@ -1424,11 +1444,11 @@ public class DatasetsWebService {
     }
 
     @Getter
-    public static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<T> extends QueriedAndFilteredAndPaginatedResponseDataObject<T> {
+    private static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectImpl<T> extends QueriedAndFilteredAndPaginatedResponseDataObjectImpl<T> implements QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<List<T>> {
 
         private final List<CharacteristicValueObject> inferredTerms;
 
-        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectImpl( Slice<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, query, filters, groupBy );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )

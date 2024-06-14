@@ -32,10 +32,10 @@ public class Responders {
     private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Requested resource was not found in our database.";
 
     /**
-     * Produce a {@link ResponseDataObject} that wraps the given argument.
+     * Produce a {@link ResponseDataObjectImpl} that wraps the given argument.
      *
      * @param payload an object to be wrapped and published to the API
-     * @return a {@link ResponseDataObject} containing the argument
+     * @return a {@link ResponseDataObjectImpl} containing the argument
      * @throws NotFoundException if the argument is null, a suitable {@link ResponseErrorObject} will be subsequently
      *                           produced by {@link ubic.gemma.rest.providers.NotFoundExceptionMapper}
      */
@@ -43,50 +43,50 @@ public class Responders {
         if ( payload == null ) { // object is null.
             throw new NotFoundException( Responders.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new ResponseDataObject<>( payload );
+            return new ResponseDataObjectImpl<>( payload );
         }
     }
 
     /**
      * Produce all results.
      */
-    public static <T> FilteredResponseDataObject<T> all( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
-        return new FilteredResponseDataObject<>( payload, filters, groupBy, sort );
+    public static <T> FilteredResponseDataObject<List<T>> all( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
+        return new FilteredResponseDataObjectImpl<>( payload, filters, groupBy, sort );
     }
 
     /**
      * Produce top results.
      */
-    public static <T> FilteredAndLimitedResponseDataObject<T> top( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, Integer limit ) {
-        return new FilteredAndLimitedResponseDataObject<>( payload, filters, groupBy, sort, limit );
+    public static <T> FilteredAndLimitedResponseDataObject<List<T>> top( List<T> payload, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, Integer limit ) {
+        return new FilteredAndLimitedResponseDataObjectImpl<>( payload, filters, groupBy, sort, limit );
     }
 
     /**
      * Paginate results.
      */
-    public static <T> PaginatedResponseDataObject<T> paginate( Slice<T> payload, String[] groupBy ) {
-        return new PaginatedResponseDataObject<>( payload, groupBy );
+    public static <T> PaginatedResponseDataObject<List<T>> paginate( Slice<T> payload, String[] groupBy ) {
+        return new PaginatedResponseDataObjectImpl<>( payload, groupBy );
     }
 
     /**
      * Paginate results with a filter.
      */
-    public static <T> FilteredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) {
-        return new FilteredAndPaginatedResponseDataObject<>( payload, filters, groupBy );
+    public static <T> FilteredAndPaginatedResponseDataObject<List<T>> paginate( Slice<T> payload, @Nullable Filters filters, String[] groupBy ) {
+        return new FilteredAndPaginatedResponseDataObjectImpl<>( payload, filters, groupBy );
     }
 
     /**
      * Paginate results with a filter using a callback to produce the payload.
      */
-    public static <T> FilteredAndPaginatedResponseDataObject<T> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) {
+    public static <T> FilteredAndPaginatedResponseDataObject<List<T>> paginate( FilterMethod<T> filterMethod, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort, int offset, int limit ) {
         return paginate( filterMethod.load( filters, sort, offset, limit ), filters, groupBy );
     }
 
     /**
      * Paginate results with a filter and a full-text query.
      */
-    public static <T> QueriedAndFilteredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
-        return new QueriedAndFilteredAndPaginatedResponseDataObject<>( payload, query, filters, groupBy );
+    public static <T> QueriedAndFilteredAndPaginatedResponseDataObject<List<T>> paginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
+        return new QueriedAndFilteredAndPaginatedResponseDataObjectImpl<>( payload, query, filters, groupBy );
     }
 
     /**

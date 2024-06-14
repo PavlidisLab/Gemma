@@ -98,7 +98,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
+    public FilteredAndPaginatedResponseDataObject<List<DifferentialExpressionAnalysisResultSetValueObject>> getResultSets(
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
             @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
@@ -222,7 +222,7 @@ public class AnalysisResultSetsWebService {
         }
     }
 
-    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, int offset, int limit ) {
+    private FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, int offset, int limit ) {
         ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, offset, limit );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
@@ -231,7 +231,7 @@ public class AnalysisResultSetsWebService {
         return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), null, offset, limit, totalElements );
     }
 
-    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
+    private FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
         ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, threshold, offset, limit );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
@@ -253,16 +253,16 @@ public class AnalysisResultSetsWebService {
         };
     }
 
-    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
+    private FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
         return new PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject( resultSet, threshold, offset, limit, totalElements );
     }
 
     /**
-     * Similar to {@link ubic.gemma.rest.util.PaginatedResponseDataObject}, but the {@code data.results} is paginated
+     * Similar to {@link PaginatedResponseDataObject}, but the {@code data.results} is paginated
      * instead of {@code data}
      */
     @Getter
-    public static class PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject extends ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> {
+    private static class PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject extends ResponseDataObjectImpl<DifferentialExpressionAnalysisResultSetValueObject> implements FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> {
 
         private final String filter;
         private final SortValueObject sort;
