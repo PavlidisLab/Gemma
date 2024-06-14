@@ -229,22 +229,16 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public int addRawVectors( ExpressionExperiment ee,
+    public int addRawDataVectors( ExpressionExperiment ee,
+            QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
         Collection<BioAssayDimension> BADs = new HashSet<>();
-        Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
             BADs.add( vec.getBioAssayDimension() );
-            qts.add( vec.getQuantitationType() );
         }
 
         if ( BADs.size() > 1 ) {
             throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
-        }
-
-        if ( qts.size() > 1 ) {
-            throw new UnsupportedOperationException(
-                    "Can only replace with one type of vector (only one quantitation type)" );
         }
 
         BioAssayDimension bad = BADs.iterator().next();
@@ -261,9 +255,7 @@ public class ExpressionExperimentServiceImpl
             ba.setArrayDesignUsed( vectorAd );
         }
 
-        QuantitationType qt = newVectors.iterator().next().getQuantitationType();
-
-        return expressionExperimentDao.addRawDataVectors( ee, qt, newVectors );
+        return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
     @Override
@@ -298,8 +290,8 @@ public class ExpressionExperimentServiceImpl
                 .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
 
         int added = 0;
-        for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
-            added += this.addRawVectors( ee, vectors );
+        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : BADs.entrySet() ) {
+            added += this.addRawDataVectors( ee, e.getKey(), e.getValue() );
         }
 
         return added;

@@ -99,7 +99,7 @@ public interface ExpressionExperimentService
      * @return the number of added vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int addRawVectors( ExpressionExperiment eeToUpdate, Collection<RawExpressionDataVector> newVectors );
+    int addRawDataVectors( ExpressionExperiment eeToUpdate, QuantitationType quantitationType, Collection<RawExpressionDataVector> newVectors );
 
     /**
      * @see ExpressionExperimentDao#replaceRawDataVectors(ExpressionExperiment, QuantitationType, Collection)

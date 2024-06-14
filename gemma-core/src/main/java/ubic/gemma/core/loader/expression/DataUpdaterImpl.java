@@ -590,7 +590,7 @@ public class DataUpdaterImpl implements DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        experimentService.addRawVectors( ee, vectors );
+        experimentService.addRawDataVectors( ee, qt, vectors );
 
         this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
