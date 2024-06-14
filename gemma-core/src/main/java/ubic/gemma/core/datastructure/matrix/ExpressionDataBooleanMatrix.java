@@ -63,6 +63,18 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
+    public Boolean[][] getRows( Collection<Integer> indices ) {
+        if ( indices == null || indices.isEmpty() ) {
+            return null;
+        }
+
+        return indices.stream()
+                .map( index -> getRow( index ) )
+                .toArray( Boolean[][]::new );
+
+    }
+
+    @Override
     public int columns() {
         return matrix.columns();
     }
