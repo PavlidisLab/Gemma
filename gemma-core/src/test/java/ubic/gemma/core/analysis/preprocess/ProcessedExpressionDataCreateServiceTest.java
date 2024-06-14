@@ -97,9 +97,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     public void tearDown() {
         if ( ee != null ) {
             try {
-                Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+               // Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
                 eeService.remove( ee );
-                arrayDesignService.remove( arrayDesignsUsed );
+//                for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+//                    arrayDesign = arrayDesignService.thawLite( arrayDesign );
+//                    arrayDesignService.remove( arrayDesign.getMergees() );
+//                }
+//                arrayDesignService.remove( arrayDesignsUsed );
             } catch ( Exception e ) {
                 log.error( "Error during teardown", e );
             }
@@ -146,7 +150,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         assertNotNull( ee.getNumberOfDataVectors() );
         assertEquals( 500, ( long ) ee.getNumberOfDataVectors() );
-        assertEquals(2, ee.getBioAssays().size());
+        assertEquals( 2, ee.getBioAssays().size() );
         ExpressionExperimentValueObject s = expressionExperimentReportService.generateSummary( ee.getId() );
         assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
