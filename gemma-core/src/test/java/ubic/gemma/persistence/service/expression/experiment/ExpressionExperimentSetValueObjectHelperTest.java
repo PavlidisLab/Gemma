@@ -53,7 +53,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private ExpressionExperimentSetValueObjectHelperImpl expressionExperimentSetValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
     private ExpressionExperiment ee = null;
     private ExpressionExperimentSet eeSet = null;

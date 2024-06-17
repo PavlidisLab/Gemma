@@ -238,7 +238,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
      * @param setVO if null, returns null
      * @return ee set
      */
-    ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO ) {
+    public ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO ) {
         if ( setVO == null ) {
             return null;
         }

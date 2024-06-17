@@ -57,4 +57,6 @@ public interface ExpressionExperimentSetValueObjectHelper {
      * Delete the experiment set corresponding to the given VO.
      */
     void delete( ExpressionExperimentSetValueObject eesvo );
+
+    ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject eesvo );
 }
