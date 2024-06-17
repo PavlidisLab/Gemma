@@ -23,17 +23,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -49,6 +49,9 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
     private ExpressionExperiment ee1 = null;
     private ExpressionExperiment ee2 = null;
@@ -141,8 +144,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         Collection<Long> newMemberIds = new LinkedList<>();
         newMemberIds.add( ee1.getId() );
         newMemberIds.add( eeMouse.getId() );
-
-        expressionExperimentSetService.updateDatabaseEntityMembers( eeSet.getId(), newMemberIds );
+        expressionExperimentSetValueObjectHelper.updateMembers( eeSet.getId(), newMemberIds );
     }
 
     //
@@ -162,6 +164,5 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     public void testIsAutomaticallyGenerated() {
         assertTrue( expressionExperimentSetService.isAutomaticallyGenerated( eeSetAutoGen.getDescription() ) );
         assertFalse( expressionExperimentSetService.isAutomaticallyGenerated( eeSet.getDescription() ) );
-
     }
 }

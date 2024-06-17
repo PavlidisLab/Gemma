@@ -23,16 +23,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
@@ -56,7 +53,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelperImpl expressionExperimentSetValueObjectHelper;
 
     private ExpressionExperiment ee = null;
     private ExpressionExperimentSet eeSet = null;

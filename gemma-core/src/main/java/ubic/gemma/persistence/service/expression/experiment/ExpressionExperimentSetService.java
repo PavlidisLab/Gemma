@@ -39,8 +39,6 @@ import java.util.List;
 public interface ExpressionExperimentSetService
         extends BaseService<ExpressionExperimentSet>, BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
-    String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
-
     @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
@@ -64,16 +62,6 @@ public interface ExpressionExperimentSetService
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperimentSet expressionExperimentSet );
-
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
-
-    /**
-     * Security is handled within method, when the set is loaded
-     *
-     * @param eesvo ee value object
-     */
-    void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
@@ -161,35 +149,6 @@ public interface ExpressionExperimentSetService
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
-
-    /**
-     * Update corresponding entity based on value object
-     *
-     * @param eesvo ee value object
-     */
-    void updateDatabaseEntity( ExpressionExperimentSetValueObject eesvo );
-
-    /**
-     * Updates the database record for the param experiment set value object (permission permitting) with the members
-     * specified of the set, not the name or description etc.
-     *
-     * @param eeIds   ee ids
-     * @param groupId group id
-     */
-    void updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds );
-
-    /**
-     * Updates the database record for the param experiment set value object (permission permitting) with the value
-     * object's name and description.
-     *
-     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
-     *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
-     *                  EESets this might want to be avoided.
-     * @param eeSetVO   ee set value object
-     * @return ee vo
-     */
-    ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
-            boolean loadEEIds );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
