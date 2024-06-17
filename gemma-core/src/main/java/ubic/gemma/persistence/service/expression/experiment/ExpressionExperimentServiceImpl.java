@@ -1554,14 +1554,13 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public void remove( ExpressionExperiment ee ) {
+        ee = ensureInSession( ee );
+       
         if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
         }
-
-        // thaw everything
-        ee = thaw( ee );
 
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
