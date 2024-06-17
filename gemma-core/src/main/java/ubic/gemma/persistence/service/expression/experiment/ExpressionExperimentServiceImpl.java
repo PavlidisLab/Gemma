@@ -1595,7 +1595,6 @@ public class ExpressionExperimentServiceImpl
             } else {
                 AbstractService.log.info( "Removing " + ee + " from " + eeSet );
                 eeSet.getExperiments().remove( ee );
-                this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
             }
         }
 
