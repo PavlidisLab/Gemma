@@ -18,12 +18,13 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
+import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
@@ -36,8 +37,7 @@ import java.util.List;
  * @see    QuantitationTypeService
  */
 @Service
-public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject>
-        implements QuantitationTypeService {
+public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> implements QuantitationTypeService {
 
     private final QuantitationTypeDao quantitationTypeDao;
 
@@ -61,14 +61,23 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
+        return quantitationTypeDao.loadByIdAndVectorType( id, ee, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
         return this.quantitationTypeDao.find( ee, quantitationType );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType ) {
-        return this.quantitationTypeDao.existsByExpressionExperimentAndVectorType( quantitationType, ee, dataVectorType );
+    public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException {
+        try {
+            return this.quantitationTypeDao.findByNameAndVectorType( ee, name, dataVectorType );
+        } catch ( NonUniqueResultException e ) {
+            throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name in %s for vectors of type %s.", name, ee, dataVectorType ), e );
+        }
     }
-
 }
