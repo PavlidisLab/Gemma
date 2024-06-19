@@ -32,4 +32,8 @@ public class BatchInfoPopulationException extends PreprocessingException {
     public BatchInfoPopulationException( ExpressionExperiment ee, Throwable cause ) {
         super( ee, cause );
     }
+
+    public BatchInfoPopulationException( ExpressionExperiment ee, String message, Throwable cause ) {
+        super( ee, message, cause );
+    }
 }

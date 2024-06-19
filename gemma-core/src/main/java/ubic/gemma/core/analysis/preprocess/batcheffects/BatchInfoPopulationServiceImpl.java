@@ -20,16 +20,20 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -38,7 +42,6 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -120,25 +123,23 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         Collection<LocalFile> files = null;
         try {
             if ( isRNASeq ) {
-                this.getBatchDataFromFASTQHeaders( ee );
-                return;
+                this.createBatchFactorFromFASTQHeaders( ee );
+            } else {
+                // microarray case
+                files = this.fetchRawDataFiles( ee );
+                if ( files == null || files.isEmpty() ) {
+                    throw new BatchInfoMissingException( ee, "No file were found." );
+                }
+                this.getBatchDataFromRawFiles( ee, files );
             }
-
-            files = this.fetchRawDataFiles( ee );
-            if ( files == null || files.isEmpty() ) {
-                this.auditTrailService
-                        .addUpdateEvent( ee, BatchInformationMissingEvent.class, "No files were found" );
-                throw new BatchInfoPopulationException( ee, "No file were found." );
-            }
-            this.getBatchDataFromRawFiles( ee, files );
-
+        } catch ( BatchInfoMissingException e ) {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationMissingEvent.class, e.getMessage(), e );
+            throw e;
         } catch ( Exception e ) {
-
-            if ( BatchInfoPopulationException.class.isAssignableFrom( e.getClass() ) ) {
-                throw ( BatchInfoPopulationException ) e;
-            }
-
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
+            if ( e instanceof BatchInfoPopulationException ) {
+                throw e;
+            }
             throw new BatchInfoPopulationException( ee, e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
@@ -199,30 +200,26 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Look for batch information and create a Factor for batch if there is more than one batch.
-     *
-     * @throws IOException if there was a problem reading the FASTQ headers
      */
-    private void getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) throws IOException {
-
+    private void createBatchFactorFromFASTQHeaders( ExpressionExperiment ee ) {
         // Read and store header data.
-
-        Map<BioMaterial, String> headers;
+        // map of sample ID to raw headers
+        Map<String, String> rawHeaders;
         try {
-            headers = getFastqHeaders( ee );
+            rawHeaders = readFastqHeaders( ee );
         } catch ( IOException e ) {
-            this.auditTrailService
-                    .addUpdateEvent( ee, BatchInformationMissingEvent.class, "Failed to locate FASTQ header information", e.getMessage() );
-            throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
+            throw new BatchInfoMissingException( ee, "Failed to locate FASTQ header information", e );
         }
 
-        if ( headers == null || headers.isEmpty() ) {
-            this.auditTrailService
-                    .addUpdateEvent( ee, BatchInformationMissingEvent.class, "No FASTQ headers found", "" );
-            throw new IOException( "No FASTQ headers found for " + ee );
+        if ( rawHeaders == null || rawHeaders.isEmpty() ) {
+            throw new BatchInfoMissingException( ee, "FASTQ header file was empty." );
         }
+
+        Map<BioMaterial, String> headers = assignRawHeadersToSamples( ee, rawHeaders );
 
         // Create batch factor.
         this.removeExistingBatchFactor( ee );
+
         ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
 
         if ( bf != null ) {
@@ -252,22 +249,14 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             throw new IllegalArgumentException(
                     "The experiment does not seem to be from an external source that would have batch information available." );
         }
-        Map<BioMaterial, Date> dates = null;
-        try {
-            dates = batchInfoParser.getBatchInfo( ee, files );
-        } catch ( BatchInfoPopulationException e ) {
-            BatchInfoPopulationServiceImpl.log
-                    .info( "No batch informatino for: " + ee.getShortName() );
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationMissingEvent.class, e.getMessage(), e );
-            throw e;
-        }
+        Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
         this.removeExistingBatchFactor( ee );
 
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         // we don't make a batch factor if there is just one batch.
-        int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 1 : factor.getFactorValues().size();
+        int numberOfBatches = factor == null || factor.getFactorValues().isEmpty() ? 1 : factor.getFactorValues().size();
 
         List<Date> allDates = new ArrayList<>( dates.values() );
         Collections.sort( allDates );
@@ -289,17 +278,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Finds FASTQ headers
+     * Assign raw FASTQ headers to individual samples.
      *
      * @param  ee          experiment
      * @return map of Biomaterial to header
-     * @throws IOException if any files could not be read
      */
-    private Map<BioMaterial, String> getFastqHeaders( ExpressionExperiment ee ) throws IOException {
+    private Map<BioMaterial, String> assignRawHeadersToSamples( ExpressionExperiment ee, Map<String, String> rawHeaders ) {
         Map<BioMaterial, String> headers = new HashMap<>();
-
-        // map of sample ID to raw headers
-        Map<String, String> rawHeaders = readFastqHeaders( ee );
 
         if ( rawHeaders == null || rawHeaders.isEmpty() ) return null;
 
@@ -327,7 +312,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
             }
 
-            // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.  
+            // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.
             // The difference for RNAseq is that we want to store the entire header, which includes parts that are not needed for the batch information.
             bioAssayService.update( ba );
 

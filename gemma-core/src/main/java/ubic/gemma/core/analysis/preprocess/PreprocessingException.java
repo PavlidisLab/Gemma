@@ -19,7 +19,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Allows us to catch preprocessing errors and handle them correctly.
- *
+ * <p>
  * The main kind of preprocessing exceptions are {@link ubic.gemma.core.analysis.preprocess.filter.FilteringException}
  * and {@link ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException}.
  *
@@ -31,6 +31,10 @@ public class PreprocessingException extends RuntimeException {
 
     public PreprocessingException( ExpressionExperiment ee, String message ) {
         super( String.format( "Failed to pre-process %s: %s", ee.getShortName(), message ) );
+    }
+
+    public PreprocessingException( ExpressionExperiment ee, String message, Throwable cause ) {
+        super( String.format( "Failed to pre-process %s: %s", ee.getShortName(), message ), cause );
     }
 
     public PreprocessingException( ExpressionExperiment ee, Throwable cause ) {

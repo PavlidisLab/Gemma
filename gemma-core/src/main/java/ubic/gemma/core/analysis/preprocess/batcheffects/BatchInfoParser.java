@@ -90,7 +90,7 @@ public class BatchInfoParser {
                     }
                 }
             }
-            throw new BatchInfoPopulationException(ee,
+            throw new BatchInfoMissingException( ee,
                     "Did not get enough raw files :got " + bioAssays2Files.size() + ", expected " + assayAccessions
                             .size() + " while processing " + ee.getShortName() );
         }
