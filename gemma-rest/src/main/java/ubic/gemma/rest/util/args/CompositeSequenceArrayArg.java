@@ -2,7 +2,6 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao;
@@ -12,36 +11,20 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-@ArraySchema(schema = @Schema(implementation = CompositeSequenceArg.class))
+@ArraySchema(arraySchema = @Schema(description = CompositeSequenceArrayArg.ARRAY_SCHEMA_DESCRIPTION), schema = @Schema(implementation = CompositeSequenceArg.class), minItems = 1)
 public class CompositeSequenceArrayArg
         extends AbstractEntityArrayArg<CompositeSequence, CompositeSequenceService> {
-    private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
-            + "element ID or name, or multiple, separated by (',') character. "
-            + "All identifiers must be same type, i.e. do not combine IDs and names in one query.";
-    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Element identifiers";
+
+    public static final String OF_WHAT = "element IDs or names";
+
+    public static final String ARRAY_SCHEMA_DESCRIPTION =
+            AbstractArrayArg.ARRAY_SCHEMA_DESCRIPTION_PREFIX + CompositeSequenceArrayArg.OF_WHAT + ". "
+                    + AbstractArrayArg.ARRAY_SCHEMA_COMPRESSION_DESCRIPTION;
 
     private ArrayDesign arrayDesign;
 
     private CompositeSequenceArrayArg( List<String> values ) {
         super( CompositeSequenceArg.class, values );
-    }
-
-    /**
-     * Used by RS to parse value of request parameters.
-     *
-     * @param s the request arrayCompositeSequence argument
-     * @return an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from the
-     * input string, or a malformed ArrayCompositeSequenceArg that will throw an {@link javax.ws.rs.BadRequestException}
-     * when accessing its value, if the input String can not be converted into an array of CompositeSequence
-     * identifiers.
-     */
-    @SuppressWarnings("unused")
-    public static CompositeSequenceArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( StringUtils.isBlank( s ) ) {
-            throw new MalformedArgException( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
-        }
-        return new CompositeSequenceArrayArg( splitAndTrim( s ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
@@ -50,5 +33,9 @@ public class CompositeSequenceArrayArg
 
     public Filter getPlatformFilter() {
         return Filter.parse( CompositeSequenceDao.OBJECT_ALIAS, "arrayDesign.id", Long.class, Filter.Operator.eq, this.arrayDesign.getId().toString() );
+    }
+
+    public static CompositeSequenceArrayArg valueOf( final String s ) throws MalformedArgException {
+        return valueOf( s, OF_WHAT, CompositeSequenceArrayArg::new, true );
     }
 }

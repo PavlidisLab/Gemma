@@ -2,38 +2,24 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-@ArraySchema(schema = @Schema(implementation = DatasetArg.class))
+@ArraySchema(arraySchema = @Schema(description = DatasetArrayArg.ARRAY_SCHEMA_DESCRIPTION), schema = @Schema(implementation = DatasetArg.class), minItems = 1)
 public class DatasetArrayArg
         extends AbstractEntityArrayArg<ExpressionExperiment, ExpressionExperimentService> {
-    private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
-    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Dataset identifiers";
+
+    public static final String OF_WHAT = "dataset IDs or short names";
+    public static final String ARRAY_SCHEMA_DESCRIPTION = ARRAY_SCHEMA_DESCRIPTION_PREFIX + OF_WHAT + ". " + ARRAY_SCHEMA_COMPRESSION_DESCRIPTION;
 
     private DatasetArrayArg( List<String> values ) {
         super( DatasetArg.class, values );
     }
 
-    /**
-     * Used by RS to parse value of request parameters.
-     *
-     * @param s the request arrayDataset argument
-     * @return an instance of ArrayDatasetArg representing an array of Dataset identifiers from the input string, or a
-     * malformed ArrayDatasetArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if
-     * the input String can not be converted into an array of Dataset identifiers.
-     */
-    @SuppressWarnings("unused")
     public static DatasetArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( StringUtils.isBlank( s ) ) {
-            throw new MalformedArgException( String.format( DatasetArrayArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
-        }
-        return new DatasetArrayArg( splitAndTrim( s ) );
+        return valueOf( s, OF_WHAT, DatasetArrayArg::new, true );
     }
-
 }

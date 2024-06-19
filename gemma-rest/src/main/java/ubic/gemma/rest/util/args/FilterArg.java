@@ -246,7 +246,13 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
     public static <O extends Identifiable> FilterArg<O> valueOf( String s ) {
         LoggingErrorListener lel = new LoggingErrorListener();
 
-        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( decodeCompressedArg( s ) ) ) {
+        try {
+            s = decodeCompressedArg( s );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
+        }
+
+        FilterArgLexer lexer = new FilterArgLexer( CharStreams.fromString( s ) ) {
             @Override
             public void recover( RecognitionException re ) {
                 throw new ParseCancellationException( re );

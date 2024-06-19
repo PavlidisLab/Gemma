@@ -2,37 +2,23 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-@ArraySchema(schema = @Schema(implementation = PlatformArg.class))
+@ArraySchema(arraySchema = @Schema(description = PlatformArrayArg.ARRAY_SCHEMA_DESCRIPTION), schema = @Schema(implementation = PlatformArg.class), minItems = 1)
 public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayDesignService> {
-    private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
-    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Platform identifiers";
+
+    public static final String OF_WHAT = "platform IDs or short names";
+    public static final String ARRAY_SCHEMA_DESCRIPTION = ARRAY_SCHEMA_DESCRIPTION_PREFIX + OF_WHAT + ". " + ARRAY_SCHEMA_COMPRESSION_DESCRIPTION;
 
     private PlatformArrayArg( List<String> values ) {
         super( PlatformArg.class, values );
     }
 
-    /**
-     * Used by RS to parse value of request parameters.
-     *
-     * @param s the request arrayPlatform argument
-     * @return an instance of ArrayPlatformArg representing an array of Platform identifiers from the input string, or a
-     * malformed ArrayPlatformArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value,
-     * if the input String can not be converted into an array of Platform identifiers.
-     */
-    @SuppressWarnings("unused")
     public static PlatformArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( StringUtils.isBlank( s ) ) {
-            throw new MalformedArgException( String.format( PlatformArrayArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
-        }
-        return new PlatformArrayArg( splitAndTrim( s ) );
+        return valueOf( s, OF_WHAT, PlatformArrayArg::new, true );
     }
-
 }
