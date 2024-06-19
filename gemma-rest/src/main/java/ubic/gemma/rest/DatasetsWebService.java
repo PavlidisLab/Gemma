@@ -754,7 +754,7 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold );
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold, 2000 );
     }
 
     /**
@@ -772,10 +772,10 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @QueryParam("threshold") @DefaultValue("1.0") Double threshold
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold );
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold, 2000 );
     }
 
-    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
+    private QueriedAndFilteredResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold, int limit ) {
         Gene gene;
         if ( taxonArg != null ) {
             Taxon taxon = taxonArgService.getEntity( taxonArg );
@@ -792,7 +792,7 @@ public class DatasetsWebService {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, threshold ).entrySet().stream()
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, threshold, limit ).entrySet().stream()
                 .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), sourceExperimentIdMap.get( e.getValue() ), e.getKey() ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
                 .collect( Collectors.toList() );

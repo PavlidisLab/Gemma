@@ -88,7 +88,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold ) {
+    public Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold, int limit ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
@@ -123,17 +123,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             bioAssaySetIds.addAll( subsetIds );
         }
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select dear, e.id from DifferentialExpressionAnalysisResult dear "
+                .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysisResult dear "
                         + "join fetch dear.contrasts cr "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
-                        + "join dea.experimentAnalyzed e "
-                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
+                        + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
-                        + "group by e order by dear.correctedPvalue" )
+                        + "group by dea.experimentAnalyzed order by dear.correctedPvalue" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                 .setParameter( "threshold", threshold );
-        List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
+        List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048, limit );
         Map<Long, DifferentialExpressionAnalysisResult> rs = new HashMap<>();
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];

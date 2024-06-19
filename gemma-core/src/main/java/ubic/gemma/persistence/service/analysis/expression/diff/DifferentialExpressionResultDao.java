@@ -45,9 +45,10 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param includeSubsets        include results from experiment subsets
      * @param sourceExperimentIdMap a mapping of results to source experiment ID
      * @param threshold             a maximum threshold on the corrected P-value, between 0 and 1 inclusively
+     * @param limit                 maximum number of results to return, or -1 to retrieve everything
      * @return differential expression results, grouped by analyzed experiment ID
      */
-    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold );
+    Map<Long, DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, double threshold, int limit );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
