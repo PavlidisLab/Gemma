@@ -124,7 +124,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysisResult dear "
-                        + "join fetch dear.contrasts cr "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
                         + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
@@ -136,6 +135,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Map<Long, DifferentialExpressionAnalysisResult> rs = new HashMap<>();
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+            Hibernate.initialize( r.getContrasts() );
             Long bioAssaySetId = ( Long ) row[1];
             rs.put( bioAssaySetId, r );
             if ( sourceExperimentIdMap != null ) {
