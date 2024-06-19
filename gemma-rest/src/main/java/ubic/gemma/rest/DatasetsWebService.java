@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
@@ -44,6 +46,8 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -61,10 +65,14 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -132,13 +140,14 @@ public class DatasetsWebService {
     private OntologyService ontologyService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
-
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
     @Autowired
     private TaxonArgService taxonArgService;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Context
     private UriInfo uriInfo;
@@ -729,6 +738,110 @@ public class DatasetsWebService {
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();
+    }
+
+    /**
+     * Obtain differential expression analysis results for a given gene.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene")
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+    ) {
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, threshold, 2000 );
+    }
+
+    /**
+     * Obtain differential expression analysis results for a given gene in a given taxa.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/taxa/{taxa}/gene/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa")
+    public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxa(
+            @PathParam("taxa") TaxonArg<?> taxonArg,
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+    ) {
+        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, threshold, 2000 );
+    }
+
+    private QueriedAndFilteredAndInferredAndLimitedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold, int limit ) {
+        Gene gene;
+        if ( taxonArg != null ) {
+            Taxon taxon = taxonArgService.getEntity( taxonArg );
+            gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
+        } else {
+            gene = geneArgService.getEntity( geneArg );
+        }
+        Set<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, threshold, limit ).entrySet().stream()
+                .map( e -> new DifferentialExpressionAnalysisResultByGeneValueObject( e.getValue(), sourceExperimentIdMap.get( e.getValue() ), e.getKey() ) )
+                .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getPValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+        return top( payload, query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId" }, Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "correctedPvalue" ), 2000, inferredTerms );
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
+
+        /**
+         * The ID of the source experiment, which differs only if this result is from a subset. This is always referring
+         * to an {@link ExpressionExperiment}.
+         */
+        private Long sourceExperimentId;
+        /**
+         * The ID of the experiment analyzed which is either an {@link ExpressionExperiment} or an {@link ExpressionExperimentSubSet}.
+         */
+        private Long experimentAnalyzedId;
+        /**
+         * The result set ID to which this result belong.
+         */
+        private Long resultSetId;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
+            super( result );
+            this.sourceExperimentId = sourceExperimentId;
+            this.experimentAnalyzedId = experimentAnalyzedId;
+            this.resultSetId = result.getResultSet().getId();
+        }
+
+        @Override
+        @JsonIgnore
+        public Long getProbeId() {
+            return super.getProbeId();
+        }
+
+        @Override
+        @JsonIgnore
+        public String getProbeName() {
+            return super.getProbeName();
+        }
+
+        @Override
+        @JsonIgnore
+        public List<GeneValueObject> getGenes() {
+            return super.getGenes();
+        }
     }
 
     /**
