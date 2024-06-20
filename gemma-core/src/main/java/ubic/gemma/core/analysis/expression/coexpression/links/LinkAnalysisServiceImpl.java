@@ -59,6 +59,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -101,6 +102,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     @Override
     public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
@@ -441,7 +445,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         if ( config.isCheckForBatchEffect() ) {
-            BatchEffectDetails batchEffect = eeService.getBatchEffectDetails( ee );
+            BatchEffectDetails batchEffect = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
 
             if ( batchEffect.getDataWasBatchCorrected() ) {
                 LinkAnalysisServiceImpl.log.info( "Data are batch-corrected" );

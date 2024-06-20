@@ -31,6 +31,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
@@ -94,7 +95,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
     public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
     private static final String DE_EXCLUDE = "DE_Exclude";
+
     private final ExpressionExperimentService expressionExperimentService;
+    private final ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     private final ArrayDesignService arrayDesignService;
     private final ExpressionDataMatrixService expressionDataMatrixService;
     private final OutlierDetectionService outlierDetectionService;
@@ -102,12 +105,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
-    public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
+    public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService, ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
             SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
+        this.expressionExperimentBatchInformationService = expressionExperimentBatchInformationService;
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
@@ -498,7 +502,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private boolean scoreBatchInfo( ExpressionExperiment ee, Geeq gq ) {
         double score;
-        boolean hasUsableInfo = expressionExperimentService.checkHasUsableBatchInfo( ee );
+        boolean hasUsableInfo = expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee );
         score = !hasUsableInfo ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10;
         gq.setqScoreBatchInfo( score );
         return hasUsableInfo;
@@ -517,7 +521,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                 hasStrong = gq.isManualHasStrongBatchEffect();
                 hasNone = gq.isManualHasNoBatchEffect();
             } else {
-                BatchEffectDetails be = expressionExperimentService.getBatchEffectDetails( ee );
+                BatchEffectDetails be = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
                 hasInfo = be.hasBatchInformation();
                 corrected = be.getDataWasBatchCorrected();
                 BatchEffectDetails.BatchEffectStatistics statistics = be.getBatchEffectStatistics();
@@ -541,7 +545,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         if ( infoDetected ) {
             boolean manual = gq.isManualBatchConfoundActive();
             if ( !manual ) {
-                String confInfo = expressionExperimentService.getBatchConfound( ee );
+                String confInfo = expressionExperimentBatchInformationService.getBatchConfound( ee );
                 if ( confInfo != null ) {
                     // null can mean no confound but also no batch info, which is ok since both should result in score 0
                     hasConfound = true;
