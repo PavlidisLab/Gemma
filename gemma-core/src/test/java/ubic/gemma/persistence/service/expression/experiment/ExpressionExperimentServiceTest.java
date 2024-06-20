@@ -14,10 +14,6 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
@@ -32,12 +28,9 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -165,12 +158,9 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Autowired
     private OntologyService ontologyService;
 
-    @Autowired
-    private AuditEventService auditEventService;
-
     @After
     public void tearDown() {
-        reset( ontologyService, auditEventService );
+        reset( ontologyService );
     }
 
     @Test
@@ -206,62 +196,5 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
-    }
-
-    @Test
-    public void testBatchInfo() {
-        AuditEventType aet;
-        AuditEvent ae;
-        ExpressionExperiment ee;
-
-        // no batch factor, no batch info attempt
-        ee = new ExpressionExperiment();
-        assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) )
-
-        ee = new ExpressionExperiment();
-        aet = new BatchInformationFetchingEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertTrue( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
-
-        ee = new ExpressionExperiment();
-        aet = new SingleBatchDeterminationEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertTrue( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
-
-        ee = new ExpressionExperiment();
-        aet = new BatchInformationMissingEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
-
-        // batch info missing (after 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
-        ee = new ExpressionExperiment();
-        aet = new BatchInformationMissingEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
-
-        // batch info failed (prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
-        ee = new ExpressionExperiment();
-        aet = new FailedBatchInformationFetchingEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
-
-        // has batch information, but it's got some issues
-        ee = new ExpressionExperiment();
-        aet = new FailedBatchInformationFetchingEvent();
-        ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Invalid lane for sample GSM...", null, null, aet );
-        when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
-        assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
-        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
     }
 }

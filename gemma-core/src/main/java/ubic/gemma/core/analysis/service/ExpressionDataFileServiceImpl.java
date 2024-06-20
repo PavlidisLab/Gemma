@@ -32,11 +32,11 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MatrixWriter;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -53,10 +53,11 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -103,6 +104,8 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     private ExpressionDataMatrixService expressionDataMatrixService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private CoexpressionService gene2geneCoexpressionService = null;
     @Autowired
@@ -1106,7 +1109,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             }
         }
 
-        String batchConf = expressionExperimentService.getBatchConfound( ee );
+        String batchConf = expressionExperimentBatchInformationService.getBatchConfound( ee );
 
         if ( batchConf != null ) {
             buf.append( "# !!! Warning, this dataset has a batch confound with the factors analysed\n" );

@@ -70,9 +70,9 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -143,6 +143,8 @@ public class DatasetsWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     @Context
     private UriInfo uriInfo;
@@ -1005,11 +1007,10 @@ public class DatasetsWebService {
     }
 
     /**
-     * Returns true if the experiment has had batch information successfully filled in. This will be true even if there
-     * is only one batch. It does not reflect the presence or absence of a batch effect.
-     *
-     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient. Only datasets that user has access to will be available.
+     * Indicate if the experiment has batch information.
+     * <p>
+     * This does not imply that the batch information is usable. This will be true even if there is only one batch. It
+     * does not reflect the presence or absence of a batch effect.
      */
     @GET
     @Path("/{dataset}/hasbatch")
@@ -1019,7 +1020,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return respond( expressionExperimentService.checkHasBatchInfo( ee ) );
+        return respond( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
     }
 
     /**

@@ -36,6 +36,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -123,6 +124,8 @@ public class ExpressionExperimentController {
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
@@ -611,14 +614,14 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchConfound( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+        ee.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfound( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
-        ee.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
+        ee.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ) );
+        ee.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1167,13 +1170,13 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      */
     private void setBatchInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-        boolean hasUsableBatchInformation = expressionExperimentService.checkHasUsableBatchInfo( ee );
+        boolean hasUsableBatchInformation = expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee );
         finalResult.setHasBatchInformation( hasUsableBatchInformation );
         if ( hasUsableBatchInformation ) {
-            finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+            finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfound( ee ) );
         }
-        finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ).name() );
-        finalResult.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
+        finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
+        finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
     }
 
     /**

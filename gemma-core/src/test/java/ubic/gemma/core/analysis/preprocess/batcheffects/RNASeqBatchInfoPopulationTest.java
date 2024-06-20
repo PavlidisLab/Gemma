@@ -57,6 +57,9 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     @Autowired
     private ExpressionExperimentService eeService;
 
+    @Autowired
+    private ExpressionExperimentBatchInformationService eeBatchService;
+
     private ExpressionExperiment ee;
 
     @Autowired
@@ -120,7 +123,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
         batchInfoPopulationService.fillBatchInformation( ee, true );
 
-        BatchEffectDetails batchEffect = eeService.getBatchEffectDetails( ee );
+        BatchEffectDetails batchEffect = eeBatchService.getBatchEffectDetails( ee );
 
         assertNotNull( batchEffect );
 
@@ -160,7 +163,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertTrue( experimentalFactors.isEmpty() );
 
         assertTrue( auditService.hasEvent( ee, SingleBatchDeterminationEvent.class ) );
-        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+        assertTrue( this.eeBatchService.checkHasBatchInfo( ee ) );
     }
 
     /*
@@ -186,8 +189,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
         assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
-        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
-        assertFalse( this.eeService.checkHasUsableBatchInfo( ee ) );
+        assertTrue( this.eeBatchService.checkHasBatchInfo( ee ) );
+        assertFalse( this.eeBatchService.checkHasUsableBatchInfo( ee ) );
     }
 
     @Test(expected = FASTQHeadersPresentButNotUsableException.class)
