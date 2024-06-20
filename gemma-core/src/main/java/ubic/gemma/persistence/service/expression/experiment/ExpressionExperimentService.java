@@ -152,10 +152,19 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
 
+    /**
+     * Check if the given experiment has batch information.
+     * <p>
+     * This does not imply that the batch information is usable or valid. Use {@link #checkBatchFetchStatus(ExpressionExperiment)}
+     * to get more details about the state of batch information.
+     */
+    boolean checkHasBatchInfo( ExpressionExperiment ee );
+
+    /**
+     * Retrieve a batch information event that summarizes the state of batch information.
+     */
     @Nullable
     BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee );
-
-    boolean checkHasBatchInfo( ExpressionExperiment ee );
 
     /**
      * returns ids of search results.

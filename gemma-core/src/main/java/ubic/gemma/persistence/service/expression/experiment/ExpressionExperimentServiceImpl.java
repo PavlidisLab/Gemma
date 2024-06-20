@@ -336,52 +336,44 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null ) {
+        if ( hasBatchFactor( ee ) ) {
+            return true;
+        }
+
+        AuditEvent lastBatchInfoEvent = this.auditEventService.getLastEvent( ee, BatchInformationEvent.class );
+
+        if ( lastBatchInfoEvent == null )
+            return false;
+
+        // prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b, cases of missing batch information was incorrectly typed
+        // see https://github.com/PavlidisLab/Gemma/issues/1155 for details
+        if ( lastBatchInfoEvent.getEventType() instanceof FailedBatchInformationFetchingEvent
+                && lastBatchInfoEvent.getNote() != null && lastBatchInfoEvent.getNote().contains( "No header file for" ) ) {
             return false;
         }
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                return true;
-            }
-        }
-
-        AuditEvent ev1 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
-        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, FailedBatchInformationMissingEvent.class );
-        if ( ev1 != null || ev2 != null ) return false;
-
-        AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( ev == null ) return false;
-        return ev.getEventType().getClass().isAssignableFrom( BatchInformationFetchingEvent.class )
-                || ev.getEventType().getClass().isAssignableFrom( SingleBatchDeterminationEvent.class ); // 
+        return lastBatchInfoEvent.getEventType() instanceof BatchInformationFetchingEvent;
     }
 
     @Override
     @Transactional(readOnly = true)
     public BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null )
-            return null;
+        if ( hasBatchFactor( ee ) ) {
+            return new BatchInformationFetchingEvent();
+        }
+        AuditEvent ev = auditEventService.getLastEvent( ee, BatchInformationEvent.class );
+        return ev != null ? ( BatchInformationEvent ) ev.getEventType() : null;
+    }
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                return new BatchInformationFetchingEvent(); // signal success
+    private boolean hasBatchFactor( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() != null ) {
+            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                    return true;
+                }
             }
         }
-
-        AuditEvent ev3 = this.auditEventService.getLastEvent( ee, SingletonBatchInvalidEvent.class );
-        if ( ev3 != null ) {
-            return ( SingletonBatchInvalidEvent ) ev3.getEventType();
-        }
-
-        AuditEvent ev2 = this.auditEventService.getLastEvent( ee, BatchInformationMissingEvent.class );
-        if ( ev2 != null ) {
-            return ( BatchInformationMissingEvent ) ev2.getEventType();
-        }
-
-        AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( ev == null ) return null;
-        return ( BatchInformationFetchingEvent ) ev.getEventType();
-
+        return false;
     }
 
     /**
@@ -1114,7 +1106,7 @@ public class ExpressionExperimentServiceImpl
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
 
-        if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
+        if ( ev.getEventType() instanceof SingleBatchDeterminationEvent ) {
             return true;
         }
 
@@ -1555,7 +1547,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void remove( ExpressionExperiment ee ) {
         ee = ensureInSession( ee );
-       
+
         if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
@@ -1658,7 +1650,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
         AuditEvent ev = auditEventService.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
-        return ev == null || !UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getEventType().getClass() );
+        return ev == null || !( ev.getEventType() instanceof UnsuitableForDifferentialExpressionAnalysisEvent );
     }
 
     @Override

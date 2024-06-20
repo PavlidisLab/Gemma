@@ -35,7 +35,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Collection;
@@ -136,6 +135,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         // FIXME: one of the two date makes a round-trip in the database and is of type Timestamp (which is a subclass of Date)
         assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertNotNull( ev.getEventType() );
         assertEquals( AlignmentBasedGeneMappingEvent.class, ev.getEventType().getClass() );
     }
 
@@ -157,6 +157,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
+        assertNotNull( ev.getEventType() );
         assertEquals( NeedsAttentionEvent.class, ev.getEventType().getClass() );
 
         auditable = arrayDesignService.load( auditable.getId() );
@@ -183,6 +184,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditable.getAuditTrail().getLast();
         assertNotNull( ev );
         assertNotNull( ev.getId() );
+        assertNotNull( ev.getEventType() );
         assertEquals( DoesNotNeedAttentionEvent.class, ev.getEventType().getClass() );
 
         auditable = arrayDesignService.load( auditable.getId() );
@@ -254,6 +256,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent e = auditable.getAuditTrail().getLast();
         Assert.assertEquals( AuditAction.UPDATE, e.getAction() );
         assertEquals( "test", e.getNote() );
+        assertNotNull( e.getDetail() );
         assertTrue( e.getDetail().contains( "RuntimeException" ) );
         // ensure that the exception is logged
         assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
