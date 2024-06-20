@@ -10,15 +10,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.context.TestComponent;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +59,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
             return mock( ExpressionExperimentService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
+            return mock();
         }
 
         @Bean

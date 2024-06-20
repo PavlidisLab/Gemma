@@ -91,19 +91,18 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     @Autowired
     private AuditEventService auditEventService;
-
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
     private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
     @Autowired
     private BioAssayService bioAssayService;
-
     @Autowired
     private ExperimentalFactorService experimentalFactorService = null;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     @Override
     @Transactional
@@ -342,7 +341,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
 
         if ( rnaSeq ) {
-            return !expressionExperimentService.checkHasBatchInfo( ee );
+            return !expressionExperimentBatchInformationService.checkHasBatchInfo( ee );
         }
 
         if ( ee.getAccession() == null || StringUtils.isBlank( ee.getAccession().getAccession() ) ) {
