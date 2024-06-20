@@ -49,6 +49,8 @@ import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -1022,7 +1024,10 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
+        // BatchInformationEvent can either be BatchInformationFetchingEvent or BatchInformationMissingEvent, we
+        // consider the class of the latest one
+        AuditEvent event = this.auditEventService.getLastEvent( ee, BatchInformationEvent.class );
+        return respond( event != null && event.getEventType() instanceof BatchInformationFetchingEvent );
     }
 
     /**
