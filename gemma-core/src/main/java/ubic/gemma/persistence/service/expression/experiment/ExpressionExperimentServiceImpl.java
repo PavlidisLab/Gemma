@@ -366,6 +366,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean hasBatchFactor( ExpressionExperiment ee ) {
+        ee = ensureInSession( ee );
         if ( ee.getExperimentalDesign() != null ) {
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
                 if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
