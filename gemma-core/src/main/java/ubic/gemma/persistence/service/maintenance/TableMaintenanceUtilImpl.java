@@ -200,7 +200,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                             if ( ae == null )
                                 continue; // legacy of ordered-list which could end up with gaps; should
                             // not be needed any more
-                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
+                            if ( ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;
                                 annotation = a + " had probe mapping done since: " + status.getLastUpdate();

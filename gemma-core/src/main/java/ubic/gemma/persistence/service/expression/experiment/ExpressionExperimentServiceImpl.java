@@ -348,7 +348,7 @@ public class ExpressionExperimentServiceImpl
         // prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b, cases of missing batch information was incorrectly typed
         // see https://github.com/PavlidisLab/Gemma/issues/1155 for details
         if ( lastBatchInfoEvent.getEventType() instanceof FailedBatchInformationFetchingEvent
-                && lastBatchInfoEvent.getNote().contains( "No header file for" ) ) {
+                && lastBatchInfoEvent.getNote() != null && lastBatchInfoEvent.getNote().contains( "No header file for" ) ) {
             return false;
         }
 
@@ -1106,7 +1106,7 @@ public class ExpressionExperimentServiceImpl
         AuditEvent ev = this.auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( ev == null ) return false;
 
-        if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
+        if ( ev.getEventType() instanceof SingleBatchDeterminationEvent ) {
             return true;
         }
 
@@ -1650,7 +1650,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
         AuditEvent ev = auditEventService.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
-        return ev == null || !UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getEventType().getClass() );
+        return ev == null || !( ev.getEventType() instanceof UnsuitableForDifferentialExpressionAnalysisEvent );
     }
 
     @Override

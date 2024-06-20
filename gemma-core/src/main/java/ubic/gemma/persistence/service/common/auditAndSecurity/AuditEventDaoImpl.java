@@ -27,8 +27,8 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -92,7 +92,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         for ( Class<? extends AuditEventType> ti : types ) {
             Map<Auditable, AuditEvent> results2 = getLastEvents( auditables, ti, null );
             results.put( ti, results2.entrySet().stream()
-                    .filter( e -> ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
+                    .filter( e -> e.getValue().getEventType() != null && ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
                     .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) );
         }
         return results;

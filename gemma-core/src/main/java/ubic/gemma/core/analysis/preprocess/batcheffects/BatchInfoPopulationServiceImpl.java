@@ -355,12 +355,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         if ( e == null )
             return true;
 
-        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getEventType().getClass() ) )
+        if ( e.getEventType() instanceof FailedBatchInformationFetchingEvent )
             return true; // worth trying
         // again perhaps
 
         // on occasions the files appear or were missed the first time ...? GSE20842
-        if ( BatchInformationMissingEvent.class.isAssignableFrom( e.getEventType().getClass() ) ) {
+        if ( e.getEventType() instanceof BatchInformationMissingEvent ) {
             RawDataFetcher fetcher = new RawDataFetcher();
             return fetcher.checkForFile( ee.getAccession().getAccession() );
         }
