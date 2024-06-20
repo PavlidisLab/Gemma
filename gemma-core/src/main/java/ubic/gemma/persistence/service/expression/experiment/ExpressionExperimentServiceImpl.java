@@ -357,6 +357,22 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public boolean checkHasUsableBatchInfo( ExpressionExperiment ee ) {
+        if ( hasBatchFactor( ee ) ) {
+            return true;
+        }
+
+        AuditEvent lastBatchInfoEvent = this.auditEventService.getLastEvent( ee, BatchInformationEvent.class );
+
+        if ( lastBatchInfoEvent == null )
+            return false;
+
+        return lastBatchInfoEvent.getEventType() instanceof BatchInformationFetchingEvent
+                && !( lastBatchInfoEvent.getEventType() instanceof FailedBatchInformationFetchingEvent );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
         if ( hasBatchFactor( ee ) ) {
             return new BatchInformationFetchingEvent();
@@ -366,6 +382,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private boolean hasBatchFactor( ExpressionExperiment ee ) {
+        ee = ensureInSession( ee );
         if ( ee.getExperimentalDesign() != null ) {
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
                 if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
@@ -1048,8 +1065,8 @@ public class ExpressionExperimentServiceImpl
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = this.thawBioAssays( ee );
 
-        if ( !this.checkHasBatchInfo( ee ) ) {
-            log.info( "Experiment has no batch information, cannot check for confound: " + ee );
+        if ( !this.checkHasUsableBatchInfo( ee ) ) {
+            log.info( "Experiment has no usable batch information, cannot check for confound: " + ee );
             return null;
         }
 

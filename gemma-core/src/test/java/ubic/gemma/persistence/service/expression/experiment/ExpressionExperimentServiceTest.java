@@ -217,24 +217,28 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         // no batch factor, no batch info attempt
         ee = new ExpressionExperiment();
         assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) )
 
         ee = new ExpressionExperiment();
         aet = new BatchInformationFetchingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertTrue( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
 
         ee = new ExpressionExperiment();
         aet = new SingleBatchDeterminationEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertTrue( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
 
         ee = new ExpressionExperiment();
         aet = new BatchInformationMissingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
 
         // batch info missing (after 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
         ee = new ExpressionExperiment();
@@ -242,6 +246,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
 
         // batch info failed (prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
         ee = new ExpressionExperiment();
@@ -249,6 +254,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertFalse( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
 
         // has batch information, but it's got some issues
         ee = new ExpressionExperiment();
@@ -256,5 +262,6 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Invalid lane for sample GSM...", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
         assertTrue( expressionExperimentService.checkHasBatchInfo( ee ) );
+        assertFalse( expressionExperimentService.checkHasUsableBatchInfo( ee ) );
     }
 }

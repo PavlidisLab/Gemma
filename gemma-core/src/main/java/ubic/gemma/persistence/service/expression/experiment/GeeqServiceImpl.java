@@ -32,7 +32,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -499,11 +498,10 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private boolean scoreBatchInfo( ExpressionExperiment ee, Geeq gq ) {
         double score;
-        boolean hasInfo = expressionExperimentService.checkHasBatchInfo( ee );
-
-        score = !hasInfo ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10;
+        boolean hasUsableInfo = expressionExperimentService.checkHasUsableBatchInfo( ee );
+        score = !hasUsableInfo ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10;
         gq.setqScoreBatchInfo( score );
-        return hasInfo;
+        return hasUsableInfo;
     }
 
     private void scoreBatchEffect( ExpressionExperiment ee, Geeq gq, boolean infoDetected, boolean confound ) {

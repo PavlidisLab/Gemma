@@ -155,10 +155,15 @@ public interface ExpressionExperimentService
     /**
      * Check if the given experiment has batch information.
      * <p>
-     * This does not imply that the batch information is usable or valid. Use {@link #checkBatchFetchStatus(ExpressionExperiment)}
-     * to get more details about the state of batch information.
+     * This does not imply that the batch information is usable or valid. Use {@link #checkHasUsableBatchInfo(ExpressionExperiment)}
+     * for that purpose.
      */
     boolean checkHasBatchInfo( ExpressionExperiment ee );
+
+    /**
+     * Check if the given experiment has usable batch information.
+     */
+    boolean checkHasUsableBatchInfo( ExpressionExperiment ee );
 
     /**
      * Retrieve a batch information event that summarizes the state of batch information.
