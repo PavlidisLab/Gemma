@@ -87,7 +87,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             return false;
         }
 
-        String bConf = eeBatchService.getBatchConfound( ee );
+        String bConf = eeBatchService.getBatchConfoundAsHtmlString( ee );
         if ( bConf != null ) { // we used to let force override this, but that behavior is undesirable: if there is a confound, we don't batch correct
             ExpressionExperimentBatchCorrectionServiceImpl.log
                     .info( "Experiment cannot be batch corrected due to a confound: " + bConf );

@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -1029,10 +1030,18 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return respond( new BatchInformationValueObject(
-                expressionExperimentBatchInformationService.getBatchEffect( ee ),
-                expressionExperimentBatchInformationService.getBatchEffectDetails( ee ),
-                expressionExperimentBatchInformationService.getBatchConfound( ee ) ) );
+        BatchEffectType be = expressionExperimentBatchInformationService.getBatchEffect( ee );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        List<BatchConfound> confounds;
+        Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfounds;
+        if ( expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee ) ) {
+            confounds = expressionExperimentBatchInformationService.getSignificantBatchConfounds( ee );
+            subsetConfounds = expressionExperimentBatchInformationService.getSignificantBatchConfoundsForSubsets( ee );
+        } else {
+            confounds = null;
+            subsetConfounds = null;
+        }
+        return respond( new BatchInformationValueObject( be, details, confounds, subsetConfounds ) );
     }
 
     @Value
@@ -1052,9 +1061,11 @@ public class DatasetsWebService {
         boolean dataWasBatchCorrected;
 
         @Nullable
-        String batchConfound;
+        List<BatchConfoundValueObject> batchConfounds;
+        @Nullable
+        Map<Long, List<BatchConfoundValueObject>> subsetBatchConfounds;
 
-        public BatchInformationValueObject( BatchEffectType batchEffectType, BatchEffectDetails batchEffectDetails, @Nullable String batchConfound ) {
+        public BatchInformationValueObject( BatchEffectType batchEffectType, BatchEffectDetails batchEffectDetails, List<BatchConfound> batchConfound, Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetBatchConfounds ) {
             this.batchEffect = batchEffectType.name();
             this.batchEffectStatistics = batchEffectDetails.getBatchEffectStatistics() != null ? new BatchEffectStatisticsValueObject( batchEffectDetails.getBatchEffectStatistics() ) : null;
             this.hasBatchInformation = batchEffectDetails.hasBatchInformation();
@@ -1063,7 +1074,13 @@ public class DatasetsWebService {
             this.hasSingletonBatch = batchEffectDetails.hasSingletonBatches();
             this.isSingleBatch = batchEffectDetails.isSingleBatch();
             this.dataWasBatchCorrected = batchEffectDetails.dataWasBatchCorrected();
-            this.batchConfound = batchConfound;
+            this.batchConfounds = batchConfound != null ? batchConfound.stream()
+                    .map( BatchConfoundValueObject::new )
+                    .collect( Collectors.toList() ) : null;
+            this.subsetBatchConfounds = subsetBatchConfounds != null ? subsetBatchConfounds.entrySet().stream()
+                    .collect( Collectors.toMap(
+                            e -> e.getKey().getId(),
+                            e -> e.getValue().stream().map( BatchConfoundValueObject::new ).collect( Collectors.toList() ) ) ) : null;
 
         }
     }
@@ -1079,6 +1096,21 @@ public class DatasetsWebService {
             this.pvalue = stats.getPvalue();
             this.component = stats.getComponent();
             this.componentVarianceProportion = stats.getComponentVarianceProportion();
+        }
+    }
+
+    @Value
+    public static class BatchConfoundValueObject {
+        ExperimentalFactorValueObject factor;
+        double chiSquared;
+        int df;
+        double pvalue;
+
+        public BatchConfoundValueObject( BatchConfound batchConfound ) {
+            this.factor = new ExperimentalFactorValueObject( batchConfound.getEf(), false );
+            this.chiSquared = batchConfound.getChiSquare();
+            this.df = batchConfound.getDf();
+            this.pvalue = batchConfound.getP();
         }
     }
 

@@ -545,8 +545,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         if ( infoDetected ) {
             boolean manual = gq.isManualBatchConfoundActive();
             if ( !manual ) {
-                String confInfo = expressionExperimentBatchInformationService.getBatchConfound( ee );
-                if ( confInfo != null ) {
+                if ( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ee ) ) {
                     // null can mean no confound but also no batch info, which is ok since both should result in score 0
                     hasConfound = true;
                 }

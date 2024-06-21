@@ -1,7 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 @Service
 @CommonsLog
@@ -74,12 +76,12 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
     @Override
     @Transactional(readOnly = true)
-    public String getBatchConfound( ExpressionExperiment ee ) {
+    public boolean hasSignificantBatchConfound( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawBioAssays( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
-            log.info( "Experiment has no usable batch information, cannot check for confound: " + ee );
-            return null;
+            log.warn( ee + " has no usable batch information, cannot check for confound: " + ee );
+            return false;
         }
 
         Collection<BatchConfound> confounds;
@@ -87,48 +89,110 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             confounds = BatchConfoundUtils.test( ee );
         } catch ( NotStrictlyPositiveException e ) {
             log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException! Returning null.", ee ), e );
+            return false;
+        }
+
+        for ( BatchConfound c : confounds ) {
+            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                return true;
+            }
+        }
+
+        // no need to check for subsets since there's no confound in the experiment itself
+
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawBioAssays( ee );
+
+        if ( !this.checkHasUsableBatchInfo( ee ) ) {
+            log.warn( ee + " has no usable batch information, cannot check for confounds." );
+            return Collections.emptyList();
+        }
+
+        List<BatchConfound> significantConfounds = new ArrayList<>();
+        try {
+            List<BatchConfound> confounds;
+            confounds = new ArrayList<>( BatchConfoundUtils.test( ee ) );
+            // confounds have to be sorted in order to always get the same string
+            confounds.sort( Comparator.comparing( BatchConfound::toString ) );
+            for ( BatchConfound c : confounds ) {
+                if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                    significantConfounds.add( c );
+                }
+            }
+        } catch ( NotStrictlyPositiveException e ) {
+            log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException! Returning null.", ee ), e );
             return null;
         }
 
-        StringBuilder result = new StringBuilder();
-        // Confounds have to be sorted in order to always get the same string
-        List<BatchConfound> listConfounds = new ArrayList<>( confounds );
-        listConfounds.sort( Comparator.comparing( BatchConfound::toString ) );
+        return significantConfounds;
+    }
 
-        for ( BatchConfound c : listConfounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                String factorName = c.getEf().getName();
-                if ( result.toString().isEmpty() ) {
-                    result.append(
-                            "One or more factors were confounded with batches in the full design; batch correction was not performed. "
-                                    + "Analyses may not be affected if performed on non-confounded subsets. Factor(s) confounded were: " );
-                } else {
-                    result.append( ", " );
-                }
-                result.append( factorName );
-            }
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawBioAssays( ee );
+
+        if ( !this.checkHasUsableBatchInfo( ee ) ) {
+            log.info( ee + " has no usable batch information, cannot check for confounds for subsets." );
+            return Collections.emptyMap();
         }
 
-        // Now check subsets, if relevant.
-        if ( !listConfounds.isEmpty() && gemma.gsec.util.SecurityUtil.isUserAdmin() ) {
-            Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( ee );
-            if ( !subSets.isEmpty() ) {
-                for ( ExpressionExperimentSubSet subset : subSets ) {
-                    try {
-                        confounds = BatchConfoundUtils.test( subset );
-                        for ( BatchConfound c : confounds ) {
-                            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                                result.append( "<br/><br/>Confound still exists for " + c.getEf().getName() + " in " + subset );
-                            }
-                        }
-                    } catch ( NotStrictlyPositiveException e ) {
+        Map<ExpressionExperimentSubSet, List<BatchConfound>> significantSubsetConfounds = new HashMap<>();
 
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( ee );
+        for ( ExpressionExperimentSubSet subset : subSets ) {
+            try {
+                List<BatchConfound> subsetConfounds = new ArrayList<>( BatchConfoundUtils.test( subset ) );
+                // confounds have to be sorted in order to always get the same string
+                subsetConfounds.sort( Comparator.comparing( BatchConfound::toString ) );
+                for ( BatchConfound c : subsetConfounds ) {
+                    if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                        significantSubsetConfounds
+                                .computeIfAbsent( subset, k -> new ArrayList<>() )
+                                .add( c );
                     }
                 }
+            } catch ( NotStrictlyPositiveException e ) {
+                log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException, it will not be included in the batch confound summary of %s.", subset, ee ), e );
             }
         }
 
-        return StringUtils.stripToNull( result.toString() );
+        return significantSubsetConfounds;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getBatchConfoundAsHtmlString( ExpressionExperiment ee ) {
+        List<BatchConfound> confounds = getSignificantBatchConfounds( ee );
+
+        if ( confounds.isEmpty() )
+            return null;
+
+        StringBuilder result = new StringBuilder();
+
+        result.append( "One or more factors were confounded with batches in the full design; batch correction was not performed. "
+                + "Analyses may not be affected if performed on non-confounded subsets. Factor(s) confounded were: " );
+        result.append( confounds.stream()
+                .map( c -> escapeHtml4( c.getEf().getName() ) )
+                .collect( Collectors.joining( ", " ) ) );
+
+        Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfoundss = getSignificantBatchConfoundsForSubsets( ee );
+        for ( Map.Entry<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfounds : subsetConfoundss.entrySet() ) {
+            ExpressionExperimentSubSet subset = subsetConfounds.getKey();
+            for ( BatchConfound c : subsetConfounds.getValue() ) {
+                result.append( "<br/><br/>Confound still exists for " )
+                        .append( escapeHtml4( c.getEf().getName() ) )
+                        .append( " in " )
+                        .append( escapeHtml4( subset.toString() ) );
+            }
+        }
+
+        return result.toString();
     }
 
     @Override

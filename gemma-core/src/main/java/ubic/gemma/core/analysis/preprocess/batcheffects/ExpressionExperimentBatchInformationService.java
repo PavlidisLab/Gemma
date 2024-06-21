@@ -2,8 +2,11 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Provides status of batch information for datasets.
@@ -24,13 +27,26 @@ public interface ExpressionExperimentBatchInformationService {
     boolean checkHasUsableBatchInfo( ExpressionExperiment ee );
 
     /**
-     * Checks the experiment for a batch confound.
-     *
-     * @param ee the experiment to check.
-     * @return a string describing the batch confound, or null if there was no batch confound.[FIXME: String return value is unsafe]
+     * Check if a given experiment has a significant batch confound.
+     */
+    boolean hasSignificantBatchConfound( ExpressionExperiment ee );
+
+    /**
+     * Obtain the significant batch confounds for a dataset.
+     */
+    List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee );
+
+    /**
+     * Obtain the significant batch confounds for a dataset subsets.
+     */
+    Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee );
+
+    /**
+     * Summarize the batch confounds for a given dataset or its subsets in an HTML string.
+     * @return a summary or null if there is no batch confound
      */
     @Nullable
-    String getBatchConfound( ExpressionExperiment ee );
+    String getBatchConfoundAsHtmlString( ExpressionExperiment ee );
 
     /**
      * Obtain the full batch effect details of a given experiment.

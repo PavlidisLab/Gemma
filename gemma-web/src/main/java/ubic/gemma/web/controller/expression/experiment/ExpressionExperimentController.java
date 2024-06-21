@@ -614,7 +614,7 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchConfound( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfound( ee ) );
+        ee.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1173,7 +1173,7 @@ public class ExpressionExperimentController {
         boolean hasUsableBatchInformation = expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee );
         finalResult.setHasBatchInformation( hasUsableBatchInformation );
         if ( hasUsableBatchInformation ) {
-            finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfound( ee ) );
+            finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         }
         finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
         finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );

@@ -104,6 +104,22 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         assertEquals( 0.99, stats.getComponentVarianceProportion(), 0 );
     }
 
+    @Test
+    public void testGetBatchConfounds() {
+        ExperimentalFactor batchFactor = new ExperimentalFactor();
+        batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        batchFactor.setCategory( c );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        assertTrue( eeBatchService.getSignificantBatchConfounds( ee ).isEmpty() );
+        assertTrue( eeBatchService.getSignificantBatchConfoundsForSubsets( ee ).isEmpty() );
+    }
+
     /**
      * Cover various edge cases of missing batch information.
      */

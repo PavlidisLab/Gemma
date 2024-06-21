@@ -50,6 +50,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -424,8 +425,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         BatchEffectType effect = expressionExperimentBatchInformationService.getBatchEffect( ee );
         String effectStatistics = expressionExperimentBatchInformationService.getBatchEffectStatistics( ee );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
-        String confound = expressionExperimentBatchInformationService.getBatchConfound( ee );
-        String confoundSummary = confound != null ? confound : "<no confound>";
+        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
+        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );

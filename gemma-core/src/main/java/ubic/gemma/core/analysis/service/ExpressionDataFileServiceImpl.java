@@ -30,6 +30,7 @@ import ubic.basecode.util.FileTools;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.config.Settings;
@@ -53,7 +54,6 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
@@ -1109,9 +1109,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             }
         }
 
-        String batchConf = expressionExperimentBatchInformationService.getBatchConfound( ee );
-
-        if ( batchConf != null ) {
+        if ( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ee ) ) {
             buf.append( "# !!! Warning, this dataset has a batch confound with the factors analysed\n" );
         }
 
