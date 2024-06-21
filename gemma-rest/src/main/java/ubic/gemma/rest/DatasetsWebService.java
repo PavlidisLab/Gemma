@@ -36,6 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -60,10 +62,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -72,7 +71,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -1021,6 +1019,67 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return respond( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{dataset}/batchInformation")
+    @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
+    public ResponseDataObject<BatchInformationValueObject> getDatasetBatchInformation(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( new BatchInformationValueObject(
+                expressionExperimentBatchInformationService.getBatchEffect( ee ),
+                expressionExperimentBatchInformationService.getBatchEffectDetails( ee ),
+                expressionExperimentBatchInformationService.getBatchConfound( ee ) ) );
+    }
+
+    @Value
+    public static class BatchInformationValueObject {
+
+        @Schema(implementation = BatchEffectType.class)
+        String batchEffect;
+
+        @Nullable
+        BatchEffectStatisticsValueObject batchEffectStatistics;
+
+        boolean hasBatchInformation;
+        boolean hasProblematicBatchInformation;
+        boolean hasUninformativeBatchInformation;
+        boolean hasSingletonBatch;
+        boolean isSingleBatch;
+        boolean dataWasBatchCorrected;
+
+        @Nullable
+        String batchConfound;
+
+        public BatchInformationValueObject( BatchEffectType batchEffectType, BatchEffectDetails batchEffectDetails, @Nullable String batchConfound ) {
+            this.batchEffect = batchEffectType.name();
+            this.batchEffectStatistics = batchEffectDetails.getBatchEffectStatistics() != null ? new BatchEffectStatisticsValueObject( batchEffectDetails.getBatchEffectStatistics() ) : null;
+            this.hasBatchInformation = batchEffectDetails.hasBatchInformation();
+            this.hasProblematicBatchInformation = batchEffectDetails.hasProblematicBatchInformation();
+            this.hasUninformativeBatchInformation = batchEffectDetails.hasUninformativeBatchInformation();
+            this.hasSingletonBatch = batchEffectDetails.hasSingletonBatches();
+            this.isSingleBatch = batchEffectDetails.isSingleBatch();
+            this.dataWasBatchCorrected = batchEffectDetails.dataWasBatchCorrected();
+            this.batchConfound = batchConfound;
+
+        }
+    }
+
+    @Value
+    public static class BatchEffectStatisticsValueObject {
+
+        double pvalue;
+        int component;
+        double componentVarianceProportion;
+
+        public BatchEffectStatisticsValueObject( BatchEffectDetails.BatchEffectStatistics stats ) {
+            this.pvalue = stats.getPvalue();
+            this.component = stats.getComponent();
+            this.componentVarianceProportion = stats.getComponentVarianceProportion();
+        }
     }
 
     /**
