@@ -1445,28 +1445,31 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Taxon getTaxon( BioAssaySet ee ) {
-
         if ( ee instanceof ExpressionExperiment ) {
-            String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
-                    + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            if ( ( ( ExpressionExperiment ) ee ).getTaxon() != null ) {
+                return ( ( ExpressionExperiment ) ee ).getTaxon();
+            }
+            return getTaxonFromSamples( ( ExpressionExperiment ) ee );
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
-            String queryString =
-                    "select distinct su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
-                            + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            ExpressionExperiment sourceExperiment = ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment();
+            if ( sourceExperiment.getTaxon() != null ) {
+                return sourceExperiment.getTaxon();
+            } else {
+                return getTaxonFromSamples( sourceExperiment );
+            }
         } else {
             throw new UnsupportedOperationException(
                     "Can't get taxon of BioAssaySet of class " + ee.getClass().getName() );
         }
+    }
 
-        return null;
+    private Taxon getTaxonFromSamples( ExpressionExperiment ee ) {
+        String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
+                + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
+        return ( Taxon ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Value

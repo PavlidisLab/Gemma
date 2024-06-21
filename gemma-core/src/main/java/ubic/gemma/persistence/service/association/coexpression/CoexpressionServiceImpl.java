@@ -35,7 +35,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -66,7 +65,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     @Override
     public boolean hasLinks( BioAssaySet ee ) {
-        return coexpressionDao.hasLinks( this.experimentDao.getTaxon( ee ), ee );
+        Taxon taxon = this.experimentDao.getTaxon( ee );
+        return taxon != null && coexpressionDao.hasLinks( taxon, ee );
     }
 
     @Override
@@ -95,7 +95,12 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     @Transactional
     public void deleteLinks( BioAssaySet experiment ) {
-        this.coexpressionDao.deleteLinks( this.experimentDao.getTaxon( experiment ), experiment );
+        Taxon taxon = this.experimentDao.getTaxon( experiment );
+        if ( taxon == null ) {
+            log.warn( experiment + " does not have a taxon, cannot remove coexpression links." );
+            return;
+        }
+        this.coexpressionDao.deleteLinks( taxon, experiment );
     }
 
     @Override
@@ -166,7 +171,12 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionValueObject> getCoexpression( BioAssaySet experiment, boolean quick ) {
-        return this.coexpressionDao.getCoexpression( experimentDao.getTaxon( experiment ), experiment, quick );
+        Taxon taxon = experimentDao.getTaxon( experiment );
+        if ( taxon == null ) {
+            log.warn( experiment + " does not have a taxon, returning no coexpression links." );
+            return Collections.emptyList();
+        }
+        return this.coexpressionDao.getCoexpression( taxon, experiment, quick );
     }
 
     @Override
