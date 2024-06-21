@@ -108,6 +108,15 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     private SessionFactory sessionFactory;
 
     @Override
+    public boolean hasLinks( Taxon taxon, BioAssaySet ee ) {
+        return ( Boolean ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(*) > 0 from " + CoexpressionQueryUtils.getExperimentLinkClassName( taxon ) + " e "
+                        + "where e.experiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public Integer countLinks( Gene gene, BioAssaySet ee ) {
         // Looking at the first gene is enough if we save the flipped versions; we don't get a double-count here because
         // of the constraint on the first gene.

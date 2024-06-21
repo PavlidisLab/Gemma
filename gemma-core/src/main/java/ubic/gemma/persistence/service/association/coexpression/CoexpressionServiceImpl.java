@@ -65,6 +65,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     private GeneDao geneDao;
 
     @Override
+    public boolean hasLinks( BioAssaySet ee ) {
+        return coexpressionDao.hasLinks( this.experimentDao.getTaxon( ee ), ee );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Integer countLinks( BioAssaySet ee, Gene gene ) {
         return this.coexpressionDao.countLinks( gene, ee );
