@@ -30,10 +30,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -88,7 +88,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -421,10 +421,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        BatchEffectType effect = expressionExperimentService.getBatchEffect( ee );
-        String effectStatistics = expressionExperimentService.getBatchEffectStatistics( ee );
+        BatchEffectType effect = expressionExperimentBatchInformationService.getBatchEffect( ee );
+        String effectStatistics = expressionExperimentBatchInformationService.getBatchEffectStatistics( ee );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
-        String confound = expressionExperimentService.getBatchConfound( ee );
+        String confound = expressionExperimentBatchInformationService.getBatchConfound( ee );
         String confoundSummary = confound != null ? confound : "<no confound>";
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
