@@ -447,7 +447,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         if ( config.isCheckForBatchEffect() ) {
             BatchEffectDetails batchEffect = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
 
-            if ( batchEffect.getDataWasBatchCorrected() ) {
+            if ( batchEffect.dataWasBatchCorrected() ) {
                 LinkAnalysisServiceImpl.log.info( "Data are batch-corrected" );
                 return;
             }

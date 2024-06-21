@@ -523,7 +523,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             } else {
                 BatchEffectDetails be = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
                 hasInfo = be.hasBatchInformation();
-                corrected = be.getDataWasBatchCorrected();
+                corrected = be.dataWasBatchCorrected();
                 BatchEffectDetails.BatchEffectStatistics statistics = be.getBatchEffectStatistics();
                 if ( statistics != null ) {
                     hasStrong = statistics.getPvalue() < 0.0001;

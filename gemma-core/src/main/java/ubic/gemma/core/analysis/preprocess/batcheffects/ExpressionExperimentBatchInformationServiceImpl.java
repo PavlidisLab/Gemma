@@ -9,10 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -152,48 +149,56 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null ) {
-                    log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
-                    break;
+        if ( ee.getExperimentalDesign() == null ) {
+            log.warn( ee + " have batch information, but it does not have an experimental design to determine the batch effect." );
+            return details;
+        }
+
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
+                .stream()
+                .filter( BatchInfoPopulationServiceImpl::isBatchFactor )
+                .findFirst()
+                .orElse( null );
+
+        if ( ef == null ) {
+            log.warn( String.format( "No suitable batch factor was found for %s to obtain batch effect statistics.", ee ) );
+            return details;
+        }
+
+        SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
+        if ( svd == null ) {
+            log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
+            return details;
+        }
+
+        // Use the "date run" information as a first pass to decide if there is a batch association.
+        // This won't always be present.
+        double minP = 1.0;
+        if ( svd.getDatePvals() != null ) {
+            for ( Integer component : svd.getDatePvals().keySet() ) {
+                Double pVal = svd.getDatePvals().get( component );
+                if ( pVal != null && pVal < minP ) {
+                    details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
+                    minP = pVal;
                 }
-
-                // Use the "date run" information as a first pass to decide if there is a batch association.
-                // This won't always be present.
-                double minP = 1.0;
-                if ( svd.getDatePvals() != null ) {
-                    for ( Integer component : svd.getDatePvals().keySet() ) {
-                        Double pVal = svd.getDatePvals().get( component );
-                        if ( pVal != null && pVal < minP ) {
-                            details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
-                            minP = pVal;
-                        }
-                    }
-                }
-
-                // we can override the date-based p-value with the factor-based p-value if it is lower.
-                // The reason to do this is it can be underpowered. The date-based one is more sensitive.
-                for ( Integer component : svd.getFactorPvals().keySet() ) {
-                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-
-                    // could use the effect size instead of the p-values (or in addition)
-                    //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );
-
-                    Double pVal = cmpEffects.get( ef.getId() );
-                    if ( pVal != null && pVal < minP ) {
-                        details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
-                        minP = pVal;
-                    }
-
-                }
-                return details;
             }
         }
 
-        log.warn( String.format( "No suitable batch factor was found for %s to obtain batch effect statistics.", ee ) );
+        // we can override the date-based p-value with the factor-based p-value if it is lower.
+        // The reason to do this is it can be underpowered. The date-based one is more sensitive.
+        for ( Integer component : svd.getFactorPvals().keySet() ) {
+            Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
 
+            // could use the effect size instead of the p-values (or in addition)
+            //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );
+
+            Double pVal = cmpEffects.get( ef.getId() );
+            if ( pVal != null && pVal < minP ) {
+                details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
+                minP = pVal;
+            }
+
+        }
         return details;
     }
 
@@ -203,9 +208,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
         BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
 
-        if ( beDetails.getHasSingletonBatches() ) {
+        if ( beDetails.hasSingletonBatches() ) {
             return BatchEffectType.SINGLETON_BATCHES_FAILURE;
-        } else if ( beDetails.getHasUninformativeBatchInformation() ) {
+        } else if ( beDetails.hasUninformativeBatchInformation() ) {
             return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
         } else if ( !beDetails.hasBatchInformation() ) {
             return BatchEffectType.NO_BATCH_INFO;
@@ -213,7 +218,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
         } else if ( beDetails.isSingleBatch() ) {
             return BatchEffectType.SINGLE_BATCH_SUCCESS;
-        } else if ( beDetails.getDataWasBatchCorrected() ) {
+        } else if ( beDetails.dataWasBatchCorrected() ) {
             // Checked for in ExpressionExperimentDetails.js::renderStatus()
             return BatchEffectType.BATCH_CORRECTED_SUCCESS;
         } else {
@@ -263,8 +268,20 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         if ( hasBatchFactor( ee ) ) {
             return new BatchInformationFetchingEvent();
         }
+
         AuditEvent ev = auditEventService.getLastEvent( ee, BatchInformationEvent.class );
-        return ev != null ? ( BatchInformationEvent ) ev.getEventType() : null;
+
+        if ( ev == null )
+            return null;
+
+        // prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b, cases of missing batch information was incorrectly typed
+        // see https://github.com/PavlidisLab/Gemma/issues/1155 for details
+        if ( ev.getEventType() instanceof FailedBatchInformationFetchingEvent
+                && ev.getNote() != null && ev.getNote().contains( "No header file for" ) ) {
+            return new BatchInformationMissingEvent();
+        }
+
+        return ( BatchInformationEvent ) ev.getEventType();
     }
 
     private boolean hasBatchFactor( ExpressionExperiment ee ) {
