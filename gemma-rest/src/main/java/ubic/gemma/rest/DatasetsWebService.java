@@ -1103,12 +1103,14 @@ public class DatasetsWebService {
         double chiSquared;
         int df;
         double pvalue;
+        int numberOfBatches;
 
         public BatchConfoundValueObject( BatchConfound batchConfound ) {
             this.factor = new ExperimentalFactorValueObject( batchConfound.getEf(), false );
             this.chiSquared = batchConfound.getChiSquare();
             this.df = batchConfound.getDf();
             this.pvalue = batchConfound.getP();
+            this.numberOfBatches = batchConfound.getNumBatches();
         }
     }
 
