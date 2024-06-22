@@ -16,6 +16,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -41,7 +42,6 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -564,17 +564,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
         Gene brca1 = new Gene();
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
-        assertThat( target( "/datasets/analyses/differential/results/gene/BRCA1" ).request().get() )
+        assertThat( target( "/datasets/analyses/differential/results/genes/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "+" )
-                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), anyDouble(), eq( 2000 ) );
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble(), eq( false ) );
     }
 
     @Test
@@ -583,17 +583,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         Gene brca1 = new Gene();
         when( taxonArgService.getEntity( any() ) ).thenReturn( human );
         when( geneArgService.getEntityWithTaxon( any(), eq( human ) ) ).thenReturn( brca1 );
-        assertThat( target( "/datasets/analyses/differential/results/taxa/human/gene/BRCA1" ).request().get() )
+        assertThat( target( "/datasets/analyses/differential/results/taxa/human/genes/BRCA1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "+" )
-                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "sourceExperimentId", "experimentAnalyzedId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), anyDouble(), eq( 2000 ) );
+                .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble(), eq( false ) );
     }
 
     @Autowired
