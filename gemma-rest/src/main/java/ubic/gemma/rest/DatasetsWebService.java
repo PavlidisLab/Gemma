@@ -1010,6 +1010,7 @@ public class DatasetsWebService {
      * does not reflect the presence or absence of a batch effect.
      */
     @GET
+    @Secured("GROUP_ADMIN")
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
@@ -1021,6 +1022,7 @@ public class DatasetsWebService {
     }
 
     @GET
+    @Secured("GROUP_ADMIN")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{dataset}/batchInformation")
     @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
