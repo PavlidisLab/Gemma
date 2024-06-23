@@ -137,6 +137,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+            Hibernate.initialize( r.getProbe() );
             Hibernate.initialize( r.getContrasts() );
             Long bioAssaySetId = ( Long ) row[1];
             rs.add( r );

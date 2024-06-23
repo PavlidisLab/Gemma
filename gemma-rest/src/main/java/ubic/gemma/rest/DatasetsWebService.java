@@ -43,6 +43,7 @@ import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringExcept
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
@@ -142,6 +143,8 @@ public class DatasetsWebService {
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
+    @Autowired
+    private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
 
     @Context
     private UriInfo uriInfo;
@@ -734,8 +737,9 @@ public class DatasetsWebService {
                 .build();
     }
 
-    private static final String GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION = "Pagination is done on the datasets which may contain more or less results than the value of the `limit` parameter. If a result set has more than one probe for a given gene, the result corresponding to the lowest corrected P-value is retained. Results for non-specific probes (i.e. probes that map to more than one genes) are excluded.";
+    private static final String GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION = "Pagination with `offset` and `limit` is done on the datasets, thus `data` will hold a variable number of results.\n\nIf a result set has more than one probe for a given gene, the result corresponding to the lowest corrected P-value is retained. This statistic reflects the goodness of the fit of the linear model for the probe, and not the significance of the contrasts.\n\nResults for non-specific probes (i.e. probes that map to more than one genes) are excluded.";
     private static final String PVALUE_THRESHOLD_DESCRIPTION = "Maximum threshold on the corrected P-value to retain a result. The threshold is inclusive (i.e. 0.05 will match results with corrected P-values lower or equal to 0.05).";
+    private static final int GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT = 20;
 
     /**
      * Obtain differential expression analysis results for a given gene.
@@ -743,17 +747,35 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/genes/{gene}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential expression results for a given gene", description = GET_DATASET_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION)
-    public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGene(
+    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Operation(
+            summary = "Retrieve the differential expression results for a given gene",
+            description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
+            responses = {
+                    @ApiResponse(content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
+                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                    })
+            })
+    public Object getDatasetsDifferentialAnalysisResultsForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+            @QueryParam("offset") OffsetArg offsetArg,
+            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
+            @Context HttpHeaders headers
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( null, geneArg, query, filter, offset.getValue(), limit.getValue(), threshold );
+        Gene gene = geneArgService.getEntity( geneArg );
+        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
+        } else {
+            if ( offsetArg != null || limitArg != null ) {
+                throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( gene, query, filter, threshold );
+        }
     }
 
     /**
@@ -762,28 +784,42 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential expression results for a given gene and taxa")
-    public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialAnalysisResultsExpressionForGeneInTaxon(
+    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Operation(
+            summary = "Retrieve the differential expression results for a given gene and taxa",
+            description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
+            responses = {
+                    @ApiResponse(content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
+                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                    })
+            })
+    public Object getDatasetsDifferentialAnalysisResultsForGeneInTaxon(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold
+            @QueryParam("offset") OffsetArg offsetArg,
+            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
+            @Context HttpHeaders headers
     ) {
-        return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( taxonArg, geneArg, query, filter, offset.getValue(), limit.getValue(), threshold );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        Gene gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
+        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
+        } else {
+            if ( offsetArg != null || limitArg != null ) {
+                throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( gene, query, filter, threshold );
+        }
     }
 
-    private QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( @Nullable TaxonArg<?> taxonArg, GeneArg<?> geneArg, QueryArg query, FilterArg<ExpressionExperiment> filter, int offset, int limit, double threshold ) {
-        Gene gene;
-        if ( taxonArg != null ) {
-            Taxon taxon = taxonArgService.getEntity( taxonArg );
-            gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
-        } else {
-            gene = geneArgService.getEntity( geneArg );
-        }
+    private QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( Gene gene, QueryArg query, FilterArg<ExpressionExperiment> filter, OffsetArg offsetArg, LimitArg limitArg, double threshold ) {
+        int offset = offsetArg != null ? offsetArg.getValue() : 0;
+        int limit = limitArg != null ? limitArg.getValue() : GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
         if ( threshold < 0 || threshold > 1 ) {
@@ -812,6 +848,13 @@ public class DatasetsWebService {
                 inferredTerms );
     }
 
+    public static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject extends QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> {
+
+        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject( Slice<DifferentialExpressionAnalysisResultByGeneValueObject> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, inferredTerms );
+        }
+    }
+
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
@@ -836,6 +879,22 @@ public class DatasetsWebService {
             this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();
         }
+    }
+
+    private StreamingOutput getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( Gene gene, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false );
+        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, new OutputStreamWriter( output ) );
     }
 
     /**

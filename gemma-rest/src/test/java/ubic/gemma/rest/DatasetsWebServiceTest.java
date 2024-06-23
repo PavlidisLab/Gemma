@@ -19,6 +19,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.context.TestComponent;
@@ -197,6 +198,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
+            return mock();
+        }
+
+        @Bean
+        public DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService() {
             return mock();
         }
     }
