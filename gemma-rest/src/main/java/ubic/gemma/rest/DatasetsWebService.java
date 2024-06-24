@@ -723,7 +723,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the result sets of all differential analyses of a dataset", responses = {
             @ApiResponse(responseCode = "302", description = "If the dataset is found, a redirection to the corresponding getResultSets operation."),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetDifferentialExpressionAnalysesResultSets(
+    public Response getDatasetDifferentialExpressionAnalysisResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context UriInfo uriInfo ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -757,7 +757,7 @@ public class DatasetsWebService {
                             @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
                     })
             })
-    public Object getDatasetsDifferentialAnalysisResultsForGene(
+    public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -794,7 +794,7 @@ public class DatasetsWebService {
                             @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
                     })
             })
-    public Object getDatasetsDifferentialAnalysisResultsForGeneInTaxon(
+    public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg query,
