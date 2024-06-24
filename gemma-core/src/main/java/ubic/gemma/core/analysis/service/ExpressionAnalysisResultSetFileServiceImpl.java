@@ -72,6 +72,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                 contrastResultPrefix.append( fv.getId() ).append( "_" );
             }
             header.addAll( Arrays.asList(
+                    contrastResultPrefix + "coefficient",
                     contrastResultPrefix + "log2fc",
                     contrastResultPrefix + "tstat",
                     contrastResultPrefix + "pvalue" ) );
@@ -100,10 +101,12 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                 for ( Contrast contrast : allContrasts ) {
                     ContrastResult cr = contrastResultMap.get( contrast );
                     if ( cr != null ) {
+                        record.add( format( cr.getCoefficient() ) );
                         record.add( format( cr.getLogFoldChange() ) );
                         record.add( format( cr.getTstat() ) );
                         record.add( format( cr.getPvalue() ) );
                     } else {
+                        record.add( format( Double.NaN ) );
                         record.add( format( Double.NaN ) );
                         record.add( format( Double.NaN ) );
                         record.add( format( Double.NaN ) );

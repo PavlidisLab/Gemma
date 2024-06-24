@@ -83,8 +83,9 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
         } else {
             d = "[continuous]";
         }
-        return String.format( "factor=%s log2fc=%s tstat=%s pvalue=%s",
+        return String.format( "factor=%s coefficient=%s log2fc=%s tstat=%s pvalue=%s",
                 d,
+                format( contrast.getCoefficient() ),
                 format( contrast.getLogFoldChange() ),
                 format( contrast.getTstat() ),
                 format( contrast.getPvalue() ) );
