@@ -15,17 +15,33 @@ public interface ExpressionAnalysisResultSetFileService extends TsvFileService<E
 
     /**
      * Write the analysis result set to an {@link Appendable} using a tabular format.
-     *
+     * <p>
      * The format is borrowed from {@link ExpressionDataFileService} and contains the following columns:
-     *
+     * <p>
      *  - result id
      *  - probe id
      *  - probe name
-     *  - biological sequence name
      *  - pvalue
      *  - corrected pvalue (a.k.a. qvalue)
      *  - rank
-     *
+     *  Then for each contrast, a column with the {@code contrast_} prefix:
+     *  - coefficient
+     *  - log2 fold-change
+     *  - t statistic
+     *  - pvalue
      */
-    void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes, Writer writer ) throws IOException;
+    @Override
+    void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException;
+
+    /**
+     * Write the analysis result set with result-to-gene mappings.
+     * <p>
+     * The tabular format has the following additional columns:
+     * - gene id
+     * - gene name
+     * - gene NCBI ID
+     * - gene official symbol
+     * - gene official name
+     */
+    void writeTsv( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes, Writer writer ) throws IOException;
 }

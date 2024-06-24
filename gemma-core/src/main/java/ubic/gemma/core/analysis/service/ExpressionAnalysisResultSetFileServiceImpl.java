@@ -28,13 +28,28 @@ import static java.util.function.Function.identity;
 public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileService<ExpressionAnalysisResultSet> implements ExpressionAnalysisResultSetFileService {
 
     @Override
-    public void writeTsvToAppendable( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+    public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
+        writeTsvInternal( entity, null, writer );
+    }
+
+    @Override
+    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+        writeTsvInternal( analysisResultSet, resultId2Genes, appendable );
+    }
+
+    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
                 .map( this::formatExperimentalFactor )
                 .collect( Collectors.joining( ", " ) ) + "]";
 
         // add the basic columns
-        List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
+        List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name" ) );
+
+        if ( resultId2Genes != null ) {
+            header.addAll( Arrays.asList( "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name" ) );
+        }
+
+        header.addAll( Arrays.asList( "pvalue", "corrected_pvalue", "rank" ) );
 
         // for continuous
         Set<ExperimentalFactor> factorsIfContinuous = analysisResultSet.getExperimentalFactors().stream()
@@ -83,15 +98,19 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                 .build()
                 .print( appendable ) ) {
             for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
-                final List<Gene> genes = resultId2Genes.getOrDefault( analysisResult.getId(), Collections.emptyList() );
                 final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),
                         analysisResult.getProbe().getId(),
-                        analysisResult.getProbe().getName(),
-                        genes.stream().map( Gene::getId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
-                        genes.stream().map( Gene::getName ).collect( Collectors.joining( getSubDelimiter() ) ),
-                        genes.stream().map( Gene::getNcbiGeneId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
-                        genes.stream().map( Gene::getOfficialSymbol ).collect( Collectors.joining( getSubDelimiter() ) ),
-                        genes.stream().map( Gene::getOfficialName ).collect( Collectors.joining( getSubDelimiter() ) ),
+                        analysisResult.getProbe().getName() ) );
+                if ( resultId2Genes != null ) {
+                    final List<Gene> genes = resultId2Genes.getOrDefault( analysisResult.getId(), Collections.emptyList() );
+                    record.addAll( Arrays.asList(
+                            genes.stream().map( Gene::getId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
+                            genes.stream().map( Gene::getName ).collect( Collectors.joining( getSubDelimiter() ) ),
+                            genes.stream().map( Gene::getNcbiGeneId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
+                            genes.stream().map( Gene::getOfficialSymbol ).collect( Collectors.joining( getSubDelimiter() ) ),
+                            genes.stream().map( Gene::getOfficialName ).collect( Collectors.joining( getSubDelimiter() ) ) ) );
+                }
+                record.addAll( Arrays.asList(
                         format( analysisResult.getPvalue() ),
                         format( analysisResult.getCorrectedPvalue() ),
                         format( analysisResult.getRank() ) ) );
@@ -159,10 +178,5 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
 
     private String formatCharacteristics( Collection<? extends Characteristic> characteristics ) {
         return characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) );
-    }
-
-    @Override
-    public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
-        writeTsvToAppendable( entity, Collections.emptyMap(), writer );
     }
 }

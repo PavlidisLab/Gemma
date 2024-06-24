@@ -88,22 +88,8 @@ public abstract class AbstractFileService<T> implements TsvFileService<T>, JsonF
     }
 
     @Override
-    public void writeTsv( T entity, File file ) throws IOException {
-        try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {
-            writeTsv( entity, writer );
-        }
-    }
-
-    @Override
     public void writeJson( T entity, Writer writer ) throws IOException {
         objectMapper.writeValue( writer, entity );
-    }
-
-    @Override
-    public void writeJson( T entity, File file ) throws IOException {
-        try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {
-            writeJson( entity, writer );
-        }
     }
 
     @Override

@@ -251,7 +251,7 @@ public class AnalysisResultSetsWebService {
         final Map<Long, List<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
         return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, resultId2Genes, writer );
+                expressionAnalysisResultSetFileService.writeTsv( ears, resultId2Genes, writer );
             }
         };
     }
