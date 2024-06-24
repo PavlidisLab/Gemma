@@ -199,6 +199,9 @@ public class AnalysisResultSetsWebService {
                 return getResultSetAsJson( analysisResultSet, excludeResults );
             }
         } else {
+            if ( offsetArg != null || limitArg != null ) {
+                throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
             if ( excludeResults ) {
                 throw new BadRequestException( "The excludeResults parameter cannot be used with the TSV representation." );
             }
