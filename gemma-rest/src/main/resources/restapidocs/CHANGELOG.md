@@ -1,5 +1,15 @@
 ## Updates
 
+### Update 2.8.0
+
+- add `getAnnotationsParents` and `getAnnotationsChildren` endpoint to perform the exact same ontology inference we use
+  for searching datasets
+- add `getDatasetsDifferentialExpressionAnalysisResultsForGene`
+  and `getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon` endpoints for retrieving differential expression
+  analysis results for a given gene across all datasets matching typical filters and full-text query
+- improve descriptions of various parameters that accept identifiers
+- allow a quantitation type name to be used when retrieving raw vectors
+
 ### Update 2.7.6
 
 - add build information to the root and to individual error responses
