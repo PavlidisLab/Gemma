@@ -126,7 +126,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysisResult dear "
-                        + "join fetch dear.contrasts cr "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
                         + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
