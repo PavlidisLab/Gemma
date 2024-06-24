@@ -35,6 +35,7 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
         }
         extraHeaderComments.add( String.format( "The 'contrasts' column contains contrasts delimited by '%s'. Each contrast is structured as space-delimited key=value pairs. Factors are encoded by their factor value ID for the 'factor' key. Interaction of factors are encoded as 'id1:id2'. Continuous contrasts will use the '[continuous]' indicator.", getSubDelimiter() ) );
         List<String> header = new ArrayList<>();
+        header.add( "id" );
         if ( sourceExperimentIdMap != null ) {
             header.add( "source_experiment_id" );
         }
@@ -52,12 +53,14 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
                 .setHeader( header.toArray( new String[0] ) ).build().print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult result : payload ) {
                 List<Object> record = new ArrayList<>( header.size() );
+                record.add( result.getId() );
                 if ( sourceExperimentIdMap != null ) {
                     record.add( sourceExperimentIdMap.get( result ) );
                 }
                 if ( experimentAnalyzedIdMap != null ) {
                     record.add( experimentAnalyzedIdMap.get( result ) );
                 }
+                record.add( result.getResultSet().getId() );
                 record.add( result.getProbe().getId() );
                 record.add( result.getProbe().getName() );
                 record.add( format( result.getPvalue() ) );
