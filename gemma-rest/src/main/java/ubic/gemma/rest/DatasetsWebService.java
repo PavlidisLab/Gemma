@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
@@ -34,20 +35,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -59,13 +63,12 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -125,20 +128,23 @@ public class DatasetsWebService {
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
-    private AuditEventService auditEventService;
-    @Autowired
     private QuantitationTypeArgService quantitationTypeArgService;
     @Autowired
     private OntologyService ontologyService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
-
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
     private GeneArgService geneArgService;
     @Autowired
     private TaxonArgService taxonArgService;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
+    @Autowired
+    private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
 
     @Context
     private UriInfo uriInfo;
@@ -717,7 +723,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the result sets of all differential analyses of a dataset", responses = {
             @ApiResponse(responseCode = "302", description = "If the dataset is found, a redirection to the corresponding getResultSets operation."),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetDifferentialExpressionAnalysesResultSets(
+    public Response getDatasetDifferentialExpressionAnalysisResultSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context UriInfo uriInfo ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -729,6 +735,171 @@ public class DatasetsWebService {
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();
+    }
+
+    private static final String GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION = "Pagination with `offset` and `limit` is done on the datasets, thus `data` will hold a variable number of results.\n\nIf a result set has more than one probe for a given gene, the result corresponding to the lowest corrected P-value is retained. This statistic reflects the goodness of the fit of the linear model for the probe, and not the significance of the contrasts.\n\nResults for non-specific probes (i.e. probes that map to more than one genes) are excluded.";
+    private static final String PVALUE_THRESHOLD_DESCRIPTION = "Maximum threshold on the corrected P-value to retain a result. The threshold is inclusive (i.e. 0.05 will match results with corrected P-values lower or equal to 0.05).";
+    private static final int GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT = 20;
+
+    /**
+     * Obtain differential expression analysis results for a given gene.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/genes/{gene}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Operation(
+            summary = "Retrieve the differential expression results for a given gene",
+            description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
+            responses = {
+                    @ApiResponse(content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
+                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                    })
+            })
+    public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("offset") OffsetArg offsetArg,
+            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
+            @Context HttpHeaders headers
+    ) {
+        Gene gene = geneArgService.getEntity( geneArg );
+        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
+        } else {
+            if ( offsetArg != null || limitArg != null ) {
+                throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( gene, query, filter, threshold );
+        }
+    }
+
+    /**
+     * Obtain differential expression analysis results for a given gene in a given taxon.
+     */
+    @GET
+    @GZIP
+    @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
+    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Operation(
+            summary = "Retrieve the differential expression results for a given gene and taxa",
+            description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
+            responses = {
+                    @ApiResponse(content = {
+                            @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
+                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                    })
+            })
+    public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
+            @PathParam("taxon") TaxonArg<?> taxonArg,
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("offset") OffsetArg offsetArg,
+            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
+            @Context HttpHeaders headers
+    ) {
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        Gene gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
+        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
+        } else {
+            if ( offsetArg != null || limitArg != null ) {
+                throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
+            return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( gene, query, filter, threshold );
+        }
+    }
+
+    private QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( Gene gene, QueryArg query, FilterArg<ExpressionExperiment> filter, OffsetArg offsetArg, LimitArg limitArg, double threshold ) {
+        int offset = offsetArg != null ? offsetArg.getValue() : 0;
+        int limit = limitArg != null ? limitArg.getValue() : GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT;
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        // slice IDs
+        long totalElements = ids.size();
+        ids = ids.stream().sorted().skip( offset ).limit( limit ).collect( Collectors.toSet() );
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
+                .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ) ) )
+                // because of pagination, this is the most "adequate" order
+                .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
+                        .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
+                        .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ) )
+                .collect( Collectors.toList() );
+        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, totalElements ),
+                query != null ? query.getValue() : null,
+                filters,
+                new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" },
+                inferredTerms );
+    }
+
+    public static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject extends QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultByGeneValueObject> {
+
+        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject( Slice<DifferentialExpressionAnalysisResultByGeneValueObject> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, inferredTerms );
+        }
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class DifferentialExpressionAnalysisResultByGeneValueObject extends DifferentialExpressionAnalysisResultValueObject {
+
+        /**
+         * The ID of the source experiment, which differs only if this result is from a subset. This is always referring
+         * to an {@link ExpressionExperiment}.
+         */
+        private Long sourceExperimentId;
+        /**
+         * The ID of the experiment analyzed which is either an {@link ExpressionExperiment} or an {@link ExpressionExperimentSubSet}.
+         */
+        private Long experimentAnalyzedId;
+        /**
+         * The result set ID to which this result belong.
+         */
+        private Long resultSetId;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
+            super( result );
+            this.sourceExperimentId = sourceExperimentId;
+            this.experimentAnalyzedId = experimentAnalyzedId;
+            this.resultSetId = result.getResultSet().getId();
+        }
+    }
+
+    private StreamingOutput getDatasetsDifferentialExpressionAnalysisResultsForGeneInternalAsTsv( Gene gene, QueryArg query, FilterArg<ExpressionExperiment> filter, double threshold ) {
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        if ( query != null ) {
+            ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+        }
+        Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
+        //noinspection Convert2MethodRef
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
+                .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
+                        .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
+                        .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
+                .collect( Collectors.toList() );
+        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, new OutputStreamWriter( output ) );
     }
 
     /**
@@ -897,13 +1068,13 @@ public class DatasetsWebService {
     }
 
     /**
-     * Returns true if the experiment has had batch information successfully filled in. This will be true even if there
-     * is only one batch. It does not reflect the presence or absence of a batch effect.
-     *
-     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient. Only datasets that user has access to will be available.
+     * Indicate if the experiment has batch information.
+     * <p>
+     * This does not imply that the batch information is usable. This will be true even if there is only one batch. It
+     * does not reflect the presence or absence of a batch effect.
      */
     @GET
+    @Secured("GROUP_ADMIN")
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
@@ -911,10 +1082,102 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        // BatchInformationEvent can either be BatchInformationFetchingEvent or BatchInformationMissingEvent, we
-        // consider the class of the latest one
-        AuditEvent event = this.auditEventService.getLastEvent( ee, BatchInformationEvent.class );
-        return respond( event != null && event.getEventType() instanceof BatchInformationFetchingEvent );
+        return respond( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+    }
+
+    @GET
+    @Secured("GROUP_ADMIN")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{dataset}/batchInformation")
+    @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
+    public ResponseDataObject<BatchInformationValueObject> getDatasetBatchInformation(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BatchEffectType be = expressionExperimentBatchInformationService.getBatchEffect( ee );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        List<BatchConfound> confounds;
+        Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfounds;
+        if ( expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee ) ) {
+            confounds = expressionExperimentBatchInformationService.getSignificantBatchConfounds( ee );
+            subsetConfounds = expressionExperimentBatchInformationService.getSignificantBatchConfoundsForSubsets( ee );
+        } else {
+            confounds = null;
+            subsetConfounds = null;
+        }
+        return respond( new BatchInformationValueObject( be, details, confounds, subsetConfounds ) );
+    }
+
+    @Value
+    public static class BatchInformationValueObject {
+
+        @Schema(implementation = BatchEffectType.class)
+        String batchEffect;
+
+        @Nullable
+        BatchEffectStatisticsValueObject batchEffectStatistics;
+
+        boolean hasBatchInformation;
+        boolean hasProblematicBatchInformation;
+        boolean hasUninformativeBatchInformation;
+        boolean hasSingletonBatch;
+        boolean isSingleBatch;
+        boolean dataWasBatchCorrected;
+
+        @Nullable
+        List<BatchConfoundValueObject> batchConfounds;
+        @Nullable
+        Map<Long, List<BatchConfoundValueObject>> subsetBatchConfounds;
+
+        public BatchInformationValueObject( BatchEffectType batchEffectType, BatchEffectDetails batchEffectDetails, List<BatchConfound> batchConfound, Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetBatchConfounds ) {
+            this.batchEffect = batchEffectType.name();
+            this.batchEffectStatistics = batchEffectDetails.getBatchEffectStatistics() != null ? new BatchEffectStatisticsValueObject( batchEffectDetails.getBatchEffectStatistics() ) : null;
+            this.hasBatchInformation = batchEffectDetails.hasBatchInformation();
+            this.hasProblematicBatchInformation = batchEffectDetails.hasProblematicBatchInformation();
+            this.hasUninformativeBatchInformation = batchEffectDetails.hasUninformativeBatchInformation();
+            this.hasSingletonBatch = batchEffectDetails.hasSingletonBatches();
+            this.isSingleBatch = batchEffectDetails.isSingleBatch();
+            this.dataWasBatchCorrected = batchEffectDetails.dataWasBatchCorrected();
+            this.batchConfounds = batchConfound != null ? batchConfound.stream()
+                    .map( BatchConfoundValueObject::new )
+                    .collect( Collectors.toList() ) : null;
+            this.subsetBatchConfounds = subsetBatchConfounds != null ? subsetBatchConfounds.entrySet().stream()
+                    .collect( Collectors.toMap(
+                            e -> e.getKey().getId(),
+                            e -> e.getValue().stream().map( BatchConfoundValueObject::new ).collect( Collectors.toList() ) ) ) : null;
+
+        }
+    }
+
+    @Value
+    public static class BatchEffectStatisticsValueObject {
+
+        double pvalue;
+        int component;
+        double componentVarianceProportion;
+
+        public BatchEffectStatisticsValueObject( BatchEffectDetails.BatchEffectStatistics stats ) {
+            this.pvalue = stats.getPvalue();
+            this.component = stats.getComponent();
+            this.componentVarianceProportion = stats.getComponentVarianceProportion();
+        }
+    }
+
+    @Value
+    public static class BatchConfoundValueObject {
+        ExperimentalFactorValueObject factor;
+        double chiSquared;
+        int df;
+        double pvalue;
+        int numberOfBatches;
+
+        public BatchConfoundValueObject( BatchConfound batchConfound ) {
+            this.factor = new ExperimentalFactorValueObject( batchConfound.getEf(), false );
+            this.chiSquared = batchConfound.getChiSquare();
+            this.df = batchConfound.getDf();
+            this.pvalue = batchConfound.getP();
+            this.numberOfBatches = batchConfound.getNumBatches();
+        }
     }
 
     /**

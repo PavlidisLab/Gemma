@@ -44,6 +44,11 @@ import java.util.Set;
 public interface CoexpressionService {
 
     /**
+     * Check if a given dataset has coexpression links.
+     */
+    boolean hasLinks( BioAssaySet ee );
+
+    /**
      * @param gene gene
      * @param ee   bio assay set
      * @return the number of links the gene has in the given data set ("node degree")
@@ -173,5 +178,4 @@ public interface CoexpressionService {
 
     @Secured("GROUP_ADMIN")
     Map<Gene, Integer> countOldLinks( Collection<Gene> genes );
-
 }

@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.maintenance;
 
 import io.micrometer.core.annotation.Timed;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -29,8 +30,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -41,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.core.util.MailEngine;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -94,7 +95,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
 
     private static final String EE2C_EE_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:eeClass as char(255)) "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
@@ -103,7 +104,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_BM_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:bmClass as char(255)) "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.biomaterial.BioMaterial' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
@@ -114,7 +115,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_ED_QUERY =
-            "select MIN(C.ID), C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), cast(:edClass as char(255)) "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
@@ -125,7 +126,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     // remove C.class = 'Statement' once the old-style characteristics are removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
                     + "and C.class = 'Statement' "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -199,7 +200,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                             if ( ae == null )
                                 continue; // legacy of ordered-list which could end up with gaps; should
                             // not be needed any more
-                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
+                            if ( ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;
                                 annotation = a + " had probe mapping done since: " + status.getLastUpdate();
@@ -236,6 +237,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Timed
     public int updateExpressionExperiment2CharacteristicEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
         if ( truncate ) {
@@ -254,14 +256,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + EE2C_ED_QUERY + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                .setParameter( "eeClass", ExpressionExperiment.class )
-                .setParameter( "bmClass", BioMaterial.class )
-                .setParameter( "edClass", ExperimentalDesign.class )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated%s.",
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table; %d entries were updated%s in %d ms.",
                 updated,
-                sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+                sinceLastUpdate != null ? " since " + sinceLastUpdate : "",
+                timer.getTime() ) );
         return updated;
     }
 
@@ -270,20 +270,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     public int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
-        String levelParamName;
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
-            levelParamName = "eeClass";
             query = EE2C_EE_QUERY;
         } else if ( level.equals( BioMaterial.class ) ) {
-            levelParamName = "bmClass";
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
-            levelParamName = "edClass";
             query = EE2C_ED_QUERY;
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
         }
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level%s...",
                 level.getSimpleName(),
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
@@ -300,26 +297,27 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + query + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                .setParameter( levelParamName, level )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated%s.",
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table at %s level; %d entries were updated%s in %d ms.",
                 level.getSimpleName(), updated,
-                sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+                sinceLastUpdate != null ? " since " + sinceLastUpdate : "",
+                timer.getTime() ) );
         return updated;
     }
 
     @Override
     @Transactional
     public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate ) {
+        StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
         int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
-        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table; %d entries were updated%s.",
-                updated, sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+        log.info( String.format( "Done updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table; %d entries were updated%s in %d ms.",
+                updated, sinceLastUpdate != null ? " since " + sinceLastUpdate : "", timer.getTime() ) );
         return updated;
     }
 
@@ -338,12 +336,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() {
+        StopWatch timer = StopWatch.createStarted();
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         int updated = this.sessionFactory.getCurrentSession()
                 .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .executeUpdate();
-        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
+        TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated in %d ms.", updated, timer.getTime() ) );
     }
 
     /**

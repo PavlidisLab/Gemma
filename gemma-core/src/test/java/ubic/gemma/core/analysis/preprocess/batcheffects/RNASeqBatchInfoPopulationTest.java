@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -38,7 +39,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.config.Settings;
 
 import java.util.Collection;
 import java.util.Map;
@@ -56,6 +56,9 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService eeBatchService;
 
     private ExpressionExperiment ee;
 
@@ -120,7 +123,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
         batchInfoPopulationService.fillBatchInformation( ee, true );
 
-        BatchEffectDetails batchEffect = eeService.getBatchEffectDetails( ee );
+        BatchEffectDetails batchEffect = eeBatchService.getBatchEffectDetails( ee );
 
         assertNotNull( batchEffect );
 
@@ -160,7 +163,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertTrue( experimentalFactors.isEmpty() );
 
         assertTrue( auditService.hasEvent( ee, SingleBatchDeterminationEvent.class ) );
-        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+        assertTrue( this.eeBatchService.checkHasBatchInfo( ee ) );
     }
 
     /*
@@ -186,8 +189,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
         assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
-        assertFalse( this.eeService.checkHasBatchInfo( ee ) );
-
+        assertTrue( this.eeBatchService.checkHasBatchInfo( ee ) );
+        assertFalse( this.eeBatchService.checkHasUsableBatchInfo( ee ) );
     }
 
     @Test(expected = FASTQHeadersPresentButNotUsableException.class)

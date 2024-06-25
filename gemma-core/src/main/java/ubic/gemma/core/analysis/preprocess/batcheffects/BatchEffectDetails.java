@@ -54,28 +54,12 @@ public class BatchEffectDetails {
         }
     }
 
-    /**
-     * Indicate if the batch information is present.
-     */
     private final boolean hasBatchInformation;
-    /**
-     * Indicate if the batch information is uninformative.
-     */
     private final boolean hasUninformativeBatchInformation;
-    /**
-     * Indicate if the batch information is problematic.
-     */
     private final boolean hasProblematicBatchInformation;
-    /**
-     * Indicate if the dataset has singleton batches (i.e. a batch only one sample).
-     */
     private final boolean hasSingletonBatches;
-    /**
-     * Indicate if batch correction was performed on the expression data.
-     */
-    private final boolean dataWasBatchCorrected;
-
     private final boolean singleBatch;
+    private final boolean dataWasBatchCorrected;
 
     /* if present and suitable, those are filled */
     private boolean hasBatchEffectStatistics = false;
@@ -84,64 +68,71 @@ public class BatchEffectDetails {
     private double componentVarianceProportion;
 
     public BatchEffectDetails( @Nullable BatchInformationEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
-
-        if ( infoEvent != null && ( BatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) ) {
+        if ( infoEvent instanceof BatchInformationFetchingEvent ) {
+            this.hasBatchInformation = true;
+            // FIXME hasProblematicBatchInformation should not be assigned when there is no batch information available.
+            this.hasProblematicBatchInformation = infoEvent instanceof FailedBatchInformationFetchingEvent;
+            this.hasSingletonBatches = infoEvent instanceof SingletonBatchInvalidEvent;
+            this.hasUninformativeBatchInformation = infoEvent instanceof UninformativeFASTQHeadersForBatchingEvent;
+            this.dataWasBatchCorrected = dataWasBatchCorrected;
+            this.singleBatch = singleBatch;
+        } else {
+            // infoEvent is either null or a BatchInformationMissingEvent
+            Assert.isTrue( infoEvent == null || infoEvent instanceof BatchInformationMissingEvent );
             this.hasBatchInformation = false;
             this.hasProblematicBatchInformation = false;
             this.hasSingletonBatches = false;
             this.hasUninformativeBatchInformation = false;
             this.dataWasBatchCorrected = false;
             this.singleBatch = false;
-            this.pvalue = 1.0;
-            return;
         }
-
-        this.hasBatchInformation = infoEvent != null;
-        if ( infoEvent != null ) {
-            // FIXME hasProblematicBatchInformation should not be assigned when there is no batch information available.
-            this.hasProblematicBatchInformation = FailedBatchInformationFetchingEvent.class.isAssignableFrom( ( infoEvent.getClass() ) );
-
-            this.hasSingletonBatches = SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() );
-            this.hasUninformativeBatchInformation = UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() );
-        } else {
-            this.hasProblematicBatchInformation = false;
-            this.hasSingletonBatches = false;
-            this.hasUninformativeBatchInformation = false;
-        }
-        this.dataWasBatchCorrected = dataWasBatchCorrected;
-        this.singleBatch = singleBatch;
-        this.pvalue = 1.0;
     }
 
-    public boolean getDataWasBatchCorrected() {
-        return this.dataWasBatchCorrected;
-    }
-
-    public boolean getHasSingletonBatches() {
-        return hasSingletonBatches;
-    }
-
-    public boolean getHasUninformativeBatchInformation() {
-        return hasUninformativeBatchInformation;
-    }
-
+    /**
+     * Indicate if the batch information is present.
+     */
     public boolean hasBatchInformation() {
         return hasBatchInformation;
     }
 
+    /**
+     * Indicate if the batch information is present, but problematic.
+     */
     public boolean hasProblematicBatchInformation() {
         return hasProblematicBatchInformation;
     }
 
     /**
-     *
-     * @return true if the experiment was determined to have just one batch, or false for any other state (including we
-     *         don't know)
+     * Indicate if the batch information is present, but uninformative.
+     */
+    public boolean hasUninformativeBatchInformation() {
+        return hasUninformativeBatchInformation;
+    }
+
+    /**
+     * Indicate if the dataset has one or more singleton batches (i.e. a batch with only one sample).
+     */
+    public boolean hasSingletonBatches() {
+        return hasSingletonBatches;
+    }
+
+    /**
+     * Indicate if the experiment was determined to have just one batch, or false for any other state (including we don't know).
      */
     public boolean isSingleBatch() {
         return singleBatch;
     }
 
+    /**
+     * Indicate if batch correction was performed on the expression data.
+     */
+    public boolean dataWasBatchCorrected() {
+        return this.dataWasBatchCorrected;
+    }
+
+    /**
+     * Obtain an object describing the batch effect if available.
+     */
     @Nullable
     public BatchEffectStatistics getBatchEffectStatistics() {
         if ( hasBatchEffectStatistics ) {
@@ -151,6 +142,12 @@ public class BatchEffectDetails {
         }
     }
 
+    /**
+     * Set the batch effect statistics.
+     * @param pVal     P-value
+     * @param i        component connfounded by the bat
+     * @param variance variance explained by the component
+     */
     public void setBatchEffectStatistics( double pVal, int i, double variance ) {
         Assert.isTrue( pVal >= 0 );
         Assert.isTrue( pVal <= 1 );

@@ -24,7 +24,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -99,7 +98,7 @@ public interface ExpressionExperimentService
      * @return the number of added vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int addRawVectors( ExpressionExperiment eeToUpdate, Collection<RawExpressionDataVector> newVectors );
+    int addRawDataVectors( ExpressionExperiment eeToUpdate, QuantitationType quantitationType, Collection<RawExpressionDataVector> newVectors );
 
     /**
      * @see ExpressionExperimentDao#replaceRawDataVectors(ExpressionExperiment, QuantitationType, Collection)
@@ -151,11 +150,6 @@ public interface ExpressionExperimentService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( int start, int limit );
-
-    @Nullable
-    BatchInformationEvent checkBatchFetchStatus( ExpressionExperiment ee );
-
-    boolean checkHasBatchInfo( ExpressionExperiment ee );
 
     /**
      * returns ids of search results.
@@ -441,36 +435,6 @@ public interface ExpressionExperimentService
      * @see #getPerTaxonCount()
      */
     Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
-
-    /**
-     * Checks the experiment for a batch confound.
-     *
-     * @param ee the experiment to check.
-     * @return a string describing the batch confound, or null if there was no batch confound.[FIXME: String return value is unsafe]
-     */
-    @Nullable
-    String getBatchConfound( ExpressionExperiment ee );
-
-    /**
-     * Obtain the full batch effect details of a given experiment.
-     * @param ee experiment
-     * @return details for the principal component most associated with batches (even if it isn't "significant"). Note
-     * that we don't look at every component, just the first few.
-     */
-    BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
-
-    /**
-     * Obtain a {@link BatchEffectType} describing the batch effect state of the given experiment.
-     * @param ee the experiment to get the batch effect for.
-     */
-    BatchEffectType getBatchEffect( ExpressionExperiment ee );
-
-    /**
-     * Obtain a string describing the summary statistics of a batch effect is present in the given experiment.
-     * @return summary statistics or null if there is no batch effect
-     */
-    @Nullable
-    String getBatchEffectStatistics( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment experiment

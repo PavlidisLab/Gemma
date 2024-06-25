@@ -75,21 +75,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
         StopWatch timer = StopWatch.createStarted();
-        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) getSessionFactory().getCurrentSession()
-                .createQuery( "select ears from ExpressionAnalysisResultSet ears "
-                        + "left join fetch ears.results res "
-                        + "left join fetch res.contrasts "
-                        + "where ears.id = :rsId" )
-                .setParameter( "rsId", id )
-                .uniqueResult();
+        ExpressionAnalysisResultSet ears = load( id );
         if ( ears != null ) {
-            for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
-                // will also initialize the biological characteristics and sequence database entries
-                // this is efficient because of batch loading and second-level caching
+            //noinspection unchecked
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select res from DifferentialExpressionAnalysisResult res "
+                            + "where res.resultSet = :ears "
+                            + "order by res.correctedPvalue" )
+                    .setParameter( "ears", ears )
+                    .list();
+            for ( DifferentialExpressionAnalysisResult r : results ) {
                 Hibernate.initialize( r.getProbe() );
+                Hibernate.initialize( r.getContrasts() );
             }
+            // preserve order of results
+            ears.setResults( new LinkedHashSet<>( results ) );
         }
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 5000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
                     elementClass.getName(), id, timer.getTime() ) );
         }
@@ -115,14 +117,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                     .list();
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 Hibernate.initialize( r.getProbe() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
                 Hibernate.initialize( r.getContrasts() );
             }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
         }
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
                     elementClass.getName(), id, timer.getTime() ) );
         }
@@ -150,14 +150,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                     .list();
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 Hibernate.initialize( r.getProbe() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
                 Hibernate.initialize( r.getContrasts() );
             }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
         }
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
                     elementClass.getName(), id, timer.getTime() ) );
         }

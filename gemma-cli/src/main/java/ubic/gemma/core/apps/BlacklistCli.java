@@ -28,14 +28,14 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
-import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -54,12 +54,20 @@ import java.util.List;
 public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     private static final int MAX_RETRIES = 3;
-    String fileName = null;
+
+    // accessions of file containing accessions to blacklist
+    private String accession = null;
+    private String fileName = null;
+
+    // reason (if adding to blacklist)
+    private String reason = null;
+
+    // remove from blacklist
     private boolean remove = false;
+
+    // proactive mode
     private boolean proactive = false;
     private Collection<String> platformsToScreen;
-    private String reason = null;
-    private String accession = null;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -124,7 +132,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 return;
             }
 
-            if (reason.isEmpty()) {
+            if ( reason.isEmpty() ) {
                 throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
             }
 
@@ -356,46 +364,38 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-
         if ( commandLine.hasOption( "accession" ) ) {
-            if ( !commandLine.hasOption( "reason" ) && !commandLine.hasOption( "undo" ) ) {
-                throw new IllegalArgumentException( "Must provide a reason for blacklisting (unless using -sundo)" );
+            if ( commandLine.hasOption( "pp" ) || commandLine.hasOption( "file" ) ) {
+                throw new IllegalArgumentException( "The -accession option cannot be combined with -pp or -file" );
             }
-
-            if ( commandLine.hasOption( "file" ) ) {
-                throw new IllegalArgumentException( "The accession option cannot be combined with the file option" );
-
+            if ( !commandLine.hasOption( "undo" ) && StringUtils.isBlank( commandLine.getOptionValue( "reason" ) ) ) {
+                throw new IllegalArgumentException( "Must provide a reason for blacklisting (unless using -undo)" );
             }
-
             this.accession = commandLine.getOptionValue( "accession" );
             this.reason = commandLine.getOptionValue( "reason" );
-            return;
-        }
-
-
-        if ( commandLine.hasOption( "pp" ) ) {
-            if ( this.remove || this.fileName != null ) {
+            this.remove = commandLine.hasOption( "undo" );
+        } else if ( commandLine.hasOption( "pp" ) ) {
+            if ( commandLine.hasOption( "accession" ) || commandLine.hasOption( "file" ) ) {
                 throw new IllegalArgumentException( "The pp option cannot be combined with others" );
             }
+            if ( commandLine.hasOption( "undo" ) ) {
+                throw new IllegalArgumentException( "The -pp option cannot be compiled with -undo." );
+            }
             this.proactive = true;
-
             if ( commandLine.hasOption( "a" ) ) {
                 this.platformsToScreen = Arrays.asList( StringUtils.split( commandLine.getOptionValue( "a" ) ) );
             }
-
-            return;
-        }
-
-        if ( commandLine.hasOption( "file" ) ) {
+        } else if ( commandLine.hasOption( "file" ) ) {
+            if ( commandLine.hasOption( "accession" ) || commandLine.hasOption( "pp" ) ) {
+                throw new IllegalArgumentException( "The -file option cannot be combined with -pp or -accession." );
+            }
+            if ( commandLine.hasOption( "reason" ) ) {
+                throw new IllegalArgumentException( "The -file option cannot be combined with -reason, use the second column to specify blacklisting reason." );
+            }
             this.fileName = commandLine.getOptionValue( "file" );
+            this.remove = commandLine.hasOption( "undo" );
         } else {
-            throw new IllegalArgumentException( "Must provide an input file" );
+            throw new IllegalArgumentException( "Must provide one of -accession, -pp or -file option." );
         }
-
-        if ( commandLine.hasOption( "undo" ) ) {
-            this.remove = true;
-        }
-
     }
-
 }

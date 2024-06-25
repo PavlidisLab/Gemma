@@ -1,6 +1,5 @@
 package ubic.gemma.core.analysis.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -14,6 +13,4 @@ public interface TsvFileService<T> extends FileService<T> {
      * Write the given entity to tabular format.
      */
     void writeTsv( T entity, Writer writer ) throws IOException;
-
-    void writeTsv( T entity, File file ) throws IOException;
 }

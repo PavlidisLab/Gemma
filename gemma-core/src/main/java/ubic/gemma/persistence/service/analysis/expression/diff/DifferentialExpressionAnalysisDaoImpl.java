@@ -40,11 +40,11 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -664,28 +664,19 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
     @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
-        this.getSessionFactory().getCurrentSession().doWork( work -> {
-            PreparedStatement deleteContrast = work.prepareStatement( DELETE_CONTRAST_SQL );
-            PreparedStatement deleteResult = work.prepareStatement( DELETE_RESULT_SQL );
-            int numResults = 0;
-            int numContrasts = 0;
-            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-                for ( DifferentialExpressionAnalysisResult result : rs.getResults() ) {
-                    deleteResult.setLong( 1, result.getId() );
-                    deleteResult.addBatch();
-                    numResults++;
-                    for ( ContrastResult cr : result.getContrasts() ) {
-                        deleteContrast.setLong( 1, cr.getId() );
-                        deleteContrast.addBatch();
-                        numContrasts++;
-                    }
-                }
-            }
-            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_CONTRAST_SQL, numContrasts ) );
-            ensureExpectedRowsAreInserted( deleteContrast, deleteContrast.executeBatch() );
-            statementLogger.logStatement( String.format( "%s [repeated %d times]", DELETE_RESULT_SQL, numResults ) );
-            ensureExpectedRowsAreInserted( deleteResult, deleteResult.executeBatch() );
-        } );
+        log.info( "Removing " + analysis + "..." );
+        List<Long> resultSetIds = EntityUtils.getIds( analysis.getResultSets() );
+        if ( !resultSetIds.isEmpty() ) {
+            int removedContrasts = getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
+                    .setParameterList( "resultSetIds", resultSetIds )
+                    .executeUpdate();
+            int removedResults = getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
+                    .setParameterList( "resultSetIds", resultSetIds )
+                    .executeUpdate();
+            log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );
+        }
         super.remove( analysis );
     }
 

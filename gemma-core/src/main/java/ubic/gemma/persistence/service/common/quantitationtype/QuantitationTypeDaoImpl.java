@@ -27,6 +27,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -125,12 +126,24 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorClass ) {
-        return ( Boolean ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(v) > 0 from " + dataVectorClass.getName() + " v "
-                        + "where v.quantitationType = :qt and v.expressionExperiment = :ee" )
-                .setParameter( "qt", quantitationType )
+    public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) {
+        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.name = :name" )
                 .setParameter( "ee", ee )
+                .setParameter( "name", name )
+                .uniqueResult();
+    }
+
+    @Override
+    public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
+        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.id = :id" )
+                .setParameter( "ee", ee )
+                .setParameter( "id", id )
                 .uniqueResult();
     }
 

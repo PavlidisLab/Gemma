@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +20,11 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,21 +33,26 @@ import java.util.List;
  */
 public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
 
+    @Nullable
+    QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
     List<QuantitationType> loadByDescription( String description );
 
     /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
-     * 
-     * @return                  found QT
+     *
+     * @return found QT
      */
+    @Nullable
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
-     * Test if a given quantitation type is used by a given experiment for a given vector type.
+     * Find a quantitation type by experiment, name and data vector type.
+     * @throws org.hibernate.NonUniqueResultException if more than one QT with the name and vector type exists
      */
-    boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorClass );
+    @Nullable
+    QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType );
 
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment ee );
 }

@@ -225,11 +225,15 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     public void remove( DifferentialExpressionAnalysis toDelete ) {
         toDelete = ensureInSession( toDelete );
 
+        log.info( "Removing " + toDelete + "..." );
+
         // Remove meta analyses that use the analyzed experiment
-        log.info( "Removing meta analyses with this experiment..." );
         Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
                 .findByExperiment( toDelete.getExperimentAnalyzed() );
-        geneDiffExMetaAnalysisDao.remove( metas );
+        if ( !metas.isEmpty() ) {
+            log.info( "Removing " + metas.size() + " meta analyses with this experiment..." );
+            geneDiffExMetaAnalysisDao.remove( metas );
+        }
 
         // Remove the DEA
         super.remove( toDelete );

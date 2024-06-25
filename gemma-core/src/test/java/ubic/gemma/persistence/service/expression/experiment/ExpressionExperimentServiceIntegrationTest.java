@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -37,10 +38,10 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
-import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -72,6 +73,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private TableMaintenanceUtil tableMaintenanceUtil;
     @Autowired
     private CharacteristicService characteristicService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     /**
      * A collection of {@link ExpressionExperiment} that will be removed at the end of the test.
@@ -483,6 +486,40 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThatThrownBy( () -> expressionExperimentService.update( ee ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "ID is required to be non-null" );
+    }
+
+    @Test
+    public void testRemoveExperimentInSet() {
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ExpressionExperiment ee2 = createExpressionExperiment();
+        ExpressionExperimentSet eeSet = new ExpressionExperimentSet();
+        eeSet.setName( "test" );
+        eeSet.setTaxon( ee1.getTaxon() );
+        eeSet.getExperiments().add( ee1 );
+        eeSet.getExperiments().add( ee2 );
+        eeSet = expressionExperimentSetService.create( eeSet );
+        expressionExperimentService.remove( ee1 );
+        ees.remove( ee1 ); // prevent removal in teardown
+        eeSet = expressionExperimentSetService.load( eeSet.getId() );
+        assertNotNull( eeSet );
+        eeSet = expressionExperimentSetService.thaw( eeSet );
+        assertNotNull( eeSet );
+        assertThat( eeSet.getExperiments() )
+                .containsExactly( ee2 );
+    }
+
+    @Test
+    public void testRemoveExperimentInSingletonSet() {
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ExpressionExperimentSet eeSet = new ExpressionExperimentSet();
+        eeSet.setName( "test" );
+        eeSet.setTaxon( ee1.getTaxon() );
+        eeSet.getExperiments().add( ee1 );
+        eeSet = expressionExperimentSetService.create( eeSet );
+        expressionExperimentService.remove( ee1 );
+        ees.remove( ee1 ); // prevent removal in teardown
+        eeSet = expressionExperimentSetService.load( eeSet.getId() );
+        assertNull( eeSet );
     }
 
     private ExpressionExperiment createExpressionExperiment() {

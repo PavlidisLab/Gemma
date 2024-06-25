@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,11 +30,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -49,116 +46,16 @@ public class ExpressionExperimentSetServiceImpl
         extends AbstractVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject>
         implements ExpressionExperimentSetService {
 
+    private static final String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
+
     private final ExpressionExperimentSetDao expressionExperimentSetDao;
-    private SecurityService securityService;
-    private ExpressionExperimentService expressionExperimentService;
-    private TaxonService taxonService;
-    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+    private final ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentService expressionExperimentService ) {
         super( expressionExperimentSetDao );
         this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
-
-    @Autowired
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    @Autowired
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
-    }
-
-    @Autowired
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    @Autowired
-    public void setExpressionExperimentValueObjectHelper(
-            ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper ) {
-        this.expressionExperimentValueObjectHelper = expressionExperimentValueObjectHelper;
-    }
-
-    @Override
-    @Transactional
-    public ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo ) {
-
-        /*
-         * Sanity check.
-         */
-        Collection<ExpressionExperimentSet> dups = this.findByName( eesvo.getName() );
-        if ( dups == null || !dups.isEmpty() ) {
-            throw new IllegalArgumentException(
-                    "Sorry, there is already a set with that name (" + eesvo.getName() + ")" );
-        }
-
-        ExpressionExperimentSet newSet = ExpressionExperimentSet.Factory.newInstance();
-        newSet.setName( eesvo.getName() );
-        newSet.setDescription( eesvo.getDescription() );
-
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.load(
-                eesvo.getExpressionExperimentIds() );
-
-        newSet.getExperiments().addAll( datasetsAnalyzed );
-
-        if ( eesvo.getTaxonId() != null )
-            newSet.setTaxon( taxonService.load( eesvo.getTaxonId() ) );
-        else {
-            /*
-             * Figure out the taxon from the experiments. mustn't be heterogeneous.
-             */
-            Taxon taxon = null;
-            for ( BioAssaySet bioAssaySet : newSet.getExperiments() ) {
-                Taxon eeTaxon = this.getTaxonForSet( bioAssaySet );
-                /*
-                 * this can be null.
-                 */
-
-                if ( taxon == null ) {
-                    taxon = eeTaxon;
-                } else {
-                    assert eeTaxon != null;
-                    if ( !eeTaxon.equals( taxon ) ) {
-                        throw new UnsupportedOperationException( "EESets with mixed taxa are not supported" );
-                    }
-                }
-            }
-
-            if ( taxon == null ) {
-                throw new IllegalStateException( "Could not determine taxon for new EEset" );
-            }
-            newSet.setTaxon( taxon );
-
-        }
-
-        if ( newSet.getTaxon() == null ) {
-            throw new IllegalArgumentException( "Unable to determine the taxon for the EESet" );
-        }
-
-        ExpressionExperimentSet newEESet = this.create( newSet );
-
-        // make groups private by default
-        if ( eesvo.getIsPublic() ) {
-            securityService.makePublic( newEESet );
-        } else {
-            securityService.makePrivate( newEESet );
-        }
-
-        return newEESet;
-
-    }
-
-    @Override
-    @Transactional
-    public void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
-        try {
-            this.remove( this.loadOrFail( eesvo.getId() ) );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     @Override
@@ -208,10 +105,8 @@ public class ExpressionExperimentSetServiceImpl
         ExpressionExperimentSet eeSet;
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( taxon );
-        eeSet.setName( this.getMasterSetName( taxon ) );
-        eeSet.setDescription(
-                String.format( ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION,
-                        String.valueOf( expressionExperiments.size() ) ) );
+        eeSet.setName( "Master set for " + taxon.getCommonName() );
+        eeSet.setDescription( String.format( AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, expressionExperiments.size() ) );
         eeSet.getExperiments().addAll( expressionExperiments );
         return eeSet;
     }
@@ -226,8 +121,7 @@ public class ExpressionExperimentSetServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean isAutomaticallyGenerated( String experimentSetDescription ) {
-        String regexDesc = String.format(
-                ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
+        String regexDesc = String.format( AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
         return experimentSetDescription.matches( regexDesc );
     }
 
@@ -253,95 +147,6 @@ public class ExpressionExperimentSetServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds ) {
         return this.expressionExperimentSetDao.loadValueObject( id, loadEEIds );
-    }
-
-    @Override
-    @Transactional
-    public void updateDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
-        try {
-            ExpressionExperimentSet eeset = expressionExperimentValueObjectHelper.convertToEntity( eesvo );
-            if ( eeset == null ) {
-                throw new IllegalArgumentException( "Cannot update null set" );
-            }
-            this.update( eeset );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * update the members of the experiment set with the given ids
-     *
-     * @param groupId set to update
-     * @param eeIds   new set member ids
-     */
-    @Override
-    @Transactional
-    public void updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds ) {
-
-        if ( eeIds.isEmpty() ) {
-            throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
-
-        }
-        ExpressionExperimentSet eeSet = this.load( groupId );
-
-        if ( eeSet == null ) {
-            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded. "
-                    + "Either it does not exist or you do not have permission to view it." );
-        }
-
-        // check that new member ids are valid
-        Collection<ExpressionExperiment> newExperiments = expressionExperimentService.load( eeIds );
-
-        if ( newExperiments.isEmpty() ) {
-            throw new IllegalArgumentException(
-                    "None of the experiment ids were valid (out of " + eeIds.size() + " provided)" );
-        }
-        if ( newExperiments.size() < eeIds.size() ) {
-            throw new IllegalArgumentException(
-                    "Some of the experiment ids were invalid: only found " + newExperiments.size() + " out of "
-                            + eeIds.size() + " provided)" );
-        }
-
-        assert newExperiments.size() == eeIds.size();
-        Collection<BioAssaySet> basColl = new HashSet<>();
-        for ( ExpressionExperiment experiment : newExperiments ) {
-            Taxon eeTaxon = this.getTaxonForSet( experiment );
-
-            // make sure experiments being added are from the right taxon
-            if ( eeTaxon == null || !eeTaxon.equals( eeSet.getTaxon() ) ) {
-                throw new IllegalArgumentException(
-                        experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + eeSet.getTaxon() );
-            }
-
-            basColl.add( experiment );
-
-        }
-
-        eeSet.getExperiments().clear();
-        eeSet.getExperiments().addAll( basColl );
-
-        this.update( eeSet );
-    }
-
-    @Override
-    @Transactional
-    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
-            boolean loadEEIds ) {
-
-        Long groupId = eeSetVO.getId();
-        ExpressionExperimentSet eeSet = this.load( groupId );
-        if ( eeSet == null ) {
-            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
-        }
-
-        eeSet.setDescription( eeSetVO.getDescription() );
-        if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 )
-            eeSet.setName( eeSetVO.getName() );
-        this.update( eeSet );
-
-        return this.loadValueObjectById( eeSet.getId(), loadEEIds );
-
     }
 
     @Override
@@ -386,7 +191,7 @@ public class ExpressionExperimentSetServiceImpl
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
         for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
-            eeTaxon = this.getTaxonForSet( ee );
+            eeTaxon = expressionExperimentService.getTaxon( ee );
 
             if ( eeTaxon == null ) {
                 // this can happen if there are 0 samples
@@ -411,20 +216,5 @@ public class ExpressionExperimentSetServiceImpl
     @Transactional
     public void update( Collection<ExpressionExperimentSet> entities ) {
         entities.forEach( this::update );
-    }
-
-    private String getMasterSetName( Taxon taxon ) {
-        return "Master set for " + taxon.getCommonName();
-    }
-
-    private Taxon getTaxonForSet( BioAssaySet experiment ) {
-        Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
-
-        if ( eeTaxon == null ) {
-            // can happen if the experiment has no samples.
-            return null;
-        }
-
-        return eeTaxon;
     }
 }

@@ -30,10 +30,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,12 +43,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -86,7 +89,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -103,7 +106,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void afterPropertiesSet() {
         this.self = beanFactory.getBean( ExpressionExperimentReportService.class );
-        this.statsCache = Objects.requireNonNull( cacheManager.getCache( ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME ) );
+        this.statsCache = requireNonNull( cacheManager.getCache( ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME ) );
     }
 
     @Override
@@ -222,8 +225,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateLinkAnalysis( date );
-
-                    eeVo.setLinkAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setLinkAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -232,8 +236,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateMissingValueAnalysis( date );
-
-                    eeVo.setMissingValueAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setMissingValueAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -242,8 +247,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateProcessedDataVectorComputation( date );
-
-                    eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -260,8 +266,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDatePcaAnalysis( date );
-
-                    eeVo.setPcaAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setPcaAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -270,15 +277,18 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateBatchFetch( date );
-
-                    eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             } else if ( batchMissingEvents.containsKey( ee ) ) { // we use date.
                 AuditEvent event = batchMissingEvents.get( ee );
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateBatchFetch( date );
-                    eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -379,8 +389,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 // Don't update if the only recent event was another BatchProblemsUpdateEvent
                 if ( events != null && !events.isEmpty() ) {
                     AuditEvent ae = events.get( events.size() - 1 );
-                    if ( ae.getEventType() != null && BatchProblemsUpdateEvent.class
-                            .isAssignableFrom( ae.getEventType().getClass() ) ) {
+                    if ( ae.getEventType() instanceof BatchProblemsUpdateEvent ) {
                         continue;
                     }
                 }
@@ -413,11 +422,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        BatchEffectType effect = expressionExperimentService.getBatchEffect( ee );
-        String effectStatistics = expressionExperimentService.getBatchEffectStatistics( ee );
+        BatchEffectType effect = expressionExperimentBatchInformationService.getBatchEffect( ee );
+        String effectStatistics = expressionExperimentBatchInformationService.getBatchEffectStatistics( ee );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
-        String confound = expressionExperimentService.getBatchConfound( ee );
-        String confoundSummary = confound != null ? confound : "<no confound>";
+        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
+        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );

@@ -4,7 +4,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -13,15 +12,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.TimeZone;
 
 @Component
 @CommonsLog
 public class BuildInfo implements InitializingBean {
 
-    private static final String MAVEN_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    private static final DateFormat MAVEN_DATETIME_PATTERN;
+
+    static {
+        MAVEN_DATETIME_PATTERN = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH );
+        MAVEN_DATETIME_PATTERN.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+    }
 
     /**
      * Retrieve build information directly from the classpath.
@@ -64,9 +70,7 @@ public class BuildInfo implements InitializingBean {
     public void afterPropertiesSet() {
         if ( timestampAsString != null ) {
             try {
-                timestamp = new DateFormatter( MAVEN_DATETIME_PATTERN )
-                        .parse( timestampAsString, Locale.getDefault() );
-
+                timestamp = MAVEN_DATETIME_PATTERN.parse( timestampAsString );
             } catch ( ParseException e ) {
                 log.error( "Failed to parse build timestamp.", e );
             }

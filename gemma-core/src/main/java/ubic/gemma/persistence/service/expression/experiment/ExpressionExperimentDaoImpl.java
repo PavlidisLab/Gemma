@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
@@ -1446,28 +1445,31 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Taxon getTaxon( BioAssaySet ee ) {
-
         if ( ee instanceof ExpressionExperiment ) {
-            String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
-                    + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            if ( ( ( ExpressionExperiment ) ee ).getTaxon() != null ) {
+                return ( ( ExpressionExperiment ) ee ).getTaxon();
+            }
+            return getTaxonFromSamples( ( ExpressionExperiment ) ee );
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
-            String queryString =
-                    "select distinct su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
-                            + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
-            List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
-                    .list();
-            if ( list.size() > 0 )
-                return ( Taxon ) list.iterator().next();
+            ExpressionExperiment sourceExperiment = ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment();
+            if ( sourceExperiment.getTaxon() != null ) {
+                return sourceExperiment.getTaxon();
+            } else {
+                return getTaxonFromSamples( sourceExperiment );
+            }
         } else {
             throw new UnsupportedOperationException(
                     "Can't get taxon of BioAssaySet of class " + ee.getClass().getName() );
         }
+    }
 
-        return null;
+    private Taxon getTaxonFromSamples( ExpressionExperiment ee ) {
+        String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
+                + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
+        return ( Taxon ) this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Value
@@ -1822,14 +1824,20 @@ public class ExpressionExperimentDaoImpl
         ee.getCurationDetails().setLastNoteUpdateEvent( null );
         ee.getCurationDetails().setLastTroubledEvent( null );
 
-        // dissociate this EE from other parts
-        if ( !ee.getOtherParts().isEmpty() ) {
-            log.info( String.format( "Detaching split experiment from %d other parts", ee.getOtherParts().size() ) );
-            for ( ExpressionExperiment e : ee.getOtherParts() ) {
+        // dissociate this EE from other parts that refers to it
+        // it's not reliable to check the otherParts collection because the relation is bi-directional and some dataset
+        // might refer to this EE and not the other way around
+        //noinspection unchecked
+        List<ExpressionExperiment> otherParts = getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ee from ExpressionExperiment ee join ee.otherParts op where op = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+        if ( !otherParts.isEmpty() ) {
+            log.info( String.format( "Detaching split experiment from %d other parts", otherParts.size() ) );
+            for ( ExpressionExperiment e : otherParts ) {
                 log.debug( "Detaching from " + e );
                 e.getOtherParts().remove( ee );
             }
-            ee.getOtherParts().clear();
         }
 
         // detach from BAs from dimensions, completely detached dimension will be removed later

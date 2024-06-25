@@ -31,15 +31,14 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -58,6 +57,9 @@ public class ExpressionExperimentSetController extends BaseController {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
     @Autowired
     private SessionListManager sessionListManager;
@@ -385,8 +387,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     @SuppressWarnings("unused") // Used in front end
     public String updateMembers( Long groupId, Collection<Long> eeIds ) {
-
-        expressionExperimentSetService.updateDatabaseEntityMembers( groupId, eeIds );
+        expressionExperimentSetValueObjectHelper.updateMembers( groupId, eeIds );
         return null; //FIXME the called method never set the string property.
 
     }
@@ -399,9 +400,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return a value object for the updated set
      */
     public ExpressionExperimentSetValueObject updateNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
-
-        return expressionExperimentSetService.updateDatabaseEntityNameDesc( eeSetVO, false );
-
+        return expressionExperimentSetValueObjectHelper.updateNameAndDescription( eeSetVO, false );
     }
 
     /**
@@ -453,7 +452,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        return expressionExperimentSetService.createFromValueObject( obj );
+        return expressionExperimentSetValueObjectHelper.create( obj );
     }
 
     /**
@@ -488,7 +487,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     private void remove( ExpressionExperimentSetValueObject obj ) {
         try {
-            expressionExperimentSetService.deleteDatabaseEntity( obj );
+            expressionExperimentSetValueObjectHelper.delete( obj );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -496,11 +495,9 @@ public class ExpressionExperimentSetController extends BaseController {
 
     private void update( ExpressionExperimentSetValueObject obj ) {
         try {
-            expressionExperimentSetService.updateDatabaseEntity( obj );
+            expressionExperimentSetValueObjectHelper.update( obj );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-
     }
-
 }

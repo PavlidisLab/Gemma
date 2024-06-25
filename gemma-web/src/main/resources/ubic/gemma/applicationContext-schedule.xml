@@ -118,8 +118,8 @@
                 </property>
             </bean>
         </property>
-        <!-- hourly during working hours when the curators actively dataset tags -->
-        <property name="cronExpression" value="0 0 9-17 ? * MON-FRI"/>
+        <!-- every working day at 19:00 -->
+        <property name="cronExpression" value="0 0 19 ? * MON-FRI"/>
     </bean>
     <bean id="ee2cSampleUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
@@ -134,9 +134,8 @@
                 </property>
             </bean>
         </property>
-        <!-- hourly during working hours, when new experiments are imported -->
-        <!-- runs 10 minutes after tag update -->
-        <property name="cronExpression" value="0 10 9-17 ? * MON-FRI"/>
+        <!-- every working day at 19:10 -->
+        <property name="cronExpression" value="0 10 19 ? * MON-FRI"/>
     </bean>
     <bean id="ee2cExperimentalDesignUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
@@ -151,9 +150,8 @@
                 </property>
             </bean>
         </property>
-        <!-- every 30 minutes during working hours (when the curators actively update annotations) -->
-        <!-- runs 20 minutes after tag update -->
-        <property name="cronExpression" value="0 20/30 9-17 ? * MON-FRI"/>
+        <!-- every working day at 19:20 -->
+        <property name="cronExpression" value="0 20 19 ? * MON-FRI"/>
     </bean>
     <bean id="ee2adUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
@@ -167,9 +165,8 @@
                 </property>
             </bean>
         </property>
-        <!-- every hour during working hours (mostly when new datasets are added & RNA-Seq data is imported which produce a platform switch) -->
-        <!-- datasets are only made public during working hours, so even if they are imported by the pipeline, that will not be reflected until it is made public -->
-        <property name="cronExpression" value="0 0 9-17 ? * MON-FRI"/>
+        <!-- every working day at 19:30 -->
+        <property name="cronExpression" value="0 30 19 ? * MON-FRI"/>
     </bean>
     <bean id="indexExperimentsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
