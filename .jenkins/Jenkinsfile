@@ -1,6 +1,5 @@
 //file:noinspection GrUnresolvedAccess
 
-def testdbUrl
 def gemmaVersion
 def baseCodeVersion
 def dataDir
@@ -41,7 +40,6 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
@@ -173,8 +171,20 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true'
+                        // lock the first available test database
+                        script {
+                            def availableTestdbs = ['gemdtest', 'gemdtest2', 'gemdtest3', 'gemdtest4']
+                            def successfullyLocked = false
+                            for (def testdbName in availableTestdbs) {
+                                def testdbUrl = sh script: "mvn help:evaluate -Dgemma.testdb.name=${testdbName} -Dexpression=gemma.testdb.build.url -q -DforceStdout", returnStdout: true
+                                lock(resource: 'database/' + testdbUrl, skipIfLocked: availableTestdbs[-1] != testdbName) {
+                                    successfullyLocked = true
+                                    sh "mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true -Dgemma.testdb.name=${testdbName}"
+                                }
+                                if (successfullyLocked) {
+                                    break;
+                                }
+                            }
                         }
                     }
                     post {
