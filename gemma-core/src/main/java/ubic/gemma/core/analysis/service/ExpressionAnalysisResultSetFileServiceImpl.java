@@ -47,7 +47,14 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
 
         if ( analysisResultSet.getBaselineGroup() != null ) {
             // TODO: add support for interaction baselines, see https://github.com/PavlidisLab/Gemma/issues/1122
-            extraHeaderComments.add( "Baseline: " + formatFactorValue( analysisResultSet.getBaselineGroup() ) );
+            if ( analysisResultSet.getBaselineGroup().getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ) {
+                extraHeaderComments.add( "Baseline: " + formatFactorValue( analysisResultSet.getBaselineGroup() ) );
+            } else {
+                // we have a few experiments with continuous factors with a baseline set in the result set, this
+                // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
+                log.warn( String.format( "Unexpected factor type for baseline %s of result set with ID %d, it should be categorical.",
+                        analysisResultSet.getBaselineGroup(), analysisResultSet.getId() ) );
+            }
         }
 
         // add the basic columns

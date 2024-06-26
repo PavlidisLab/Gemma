@@ -164,7 +164,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     } else {
                         // we have a few experiments with continuous factors with a baseline set in the result set, this
                         // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
-                        String msg = "Unexpected factor type for baseline " + baseline + " of " + r + ": " + baselineType + ", it should be categorical.";
+                        String msg = String.format( "Unexpected factor type for baseline %s of %s: %s, it should be categorical.",
+                                baseline, r, baselineType );
                         if ( warns < 5 ) {
                             log.warn( msg );
                             warns++;
