@@ -507,7 +507,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -522,7 +522,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -756,10 +756,11 @@
 			-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
 			-Djava.awt.headless=true
 			-Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL
-			-Djava.library.path=${hdf5.libDir}
 			<!-- FIXME: remove this once we've migrated to Spring 5 -->
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
+		<!-- JVM options used in tests -->
+		<testJvmOptions>${jvmOptions} -Djava.library.path=${hdf5.libDir}</testJvmOptions>
 	</properties>
 </project>
