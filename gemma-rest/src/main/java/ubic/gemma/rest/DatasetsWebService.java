@@ -833,18 +833,17 @@ public class DatasetsWebService {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
         // slice IDs
-        long totalElements = ids.size();
-        List<Long> slicedIds = sliceIds( ids, offset, limit );
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
+                .findByGeneAndExperimentAnalyzed( gene, sliceIds( ids, offset, limit ), sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ) )
                 .collect( Collectors.toList() );
-        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, totalElements ),
+        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, ( long ) ids.size() ),
                 query != null ? query.getValue() : null,
                 filters,
                 new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" },
