@@ -47,13 +47,6 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public ExperimentalFactor load( Long id ) {
-        return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
-                .setParameter( "id", id ).uniqueResult();
-    }
-
-    @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
         BusinessKey.checkValidKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
@@ -97,7 +90,9 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     private List<BioMaterial> getBioMaterials( ExperimentalFactor ef ) {
-        return getSessionFactory().getCurrentSession().createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
                 .setParameter( "ef", ef )
                 .list();
     }
