@@ -16,8 +16,10 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.context.TestComponent;
@@ -199,6 +201,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         public TableMaintenanceUtil tableMaintenanceUtil() {
             return mock();
         }
+
+        @Bean
+        public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
+            return mock();
+        }
+
+        @Bean
+        public DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -246,7 +258,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @After
-    public void resetMocks() throws Exception {
+    public void resetMocks() {
         reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService );
     }
 
@@ -368,9 +380,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
         assertThat( target( "/datasets" ).queryParam( "filter", "allCharacteristic.valueUri in (a, b, c)" ).request().get() )
                 .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
-                .hasHeaderSatisfying( "Retry-After", values -> {
-                    assertThat( values ).isNotEmpty();
-                } )
+                .hasHeaderSatisfying( "Retry-After", values -> assertThat( values ).isNotEmpty() )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
@@ -460,7 +470,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsCategories() throws SearchException {
+    public void testGetDatasetsCategories() {
         assertThat( target( "/datasets/categories" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
@@ -490,7 +500,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetProcessedExpressionWhenNoProcessedVectorsExist() throws IOException {
+    public void testGetDatasetProcessedExpressionWhenNoProcessedVectorsExist() {
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( false );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
@@ -516,15 +526,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpressionByQuantitationTypeWhenQtIsNotFromTheDataset() throws IOException {
+    public void testGetDatasetRawExpressionByQuantitationTypeWhenQtIsNotFromTheDataset() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
-        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( false );
+        when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( null );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
-        verify( quantitationTypeService ).load( 12L );
-        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
         verifyNoInteractions( expressionDataFileService );
         assertThat( res )
                 .hasStatus( Response.Status.NOT_FOUND )
@@ -536,11 +545,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
-        when( quantitationTypeService.existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class ) ).thenReturn( true );
+        when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
-        verify( quantitationTypeService ).load( 12L );
-        verify( quantitationTypeService ).existsByExpressionExperimentAndVectorType( qt, ee, RawExpressionDataVector.class );
+        verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
         verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -580,11 +588,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble(), eq( false ) );
     }
 
     @Test
@@ -599,11 +607,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" )
                 .entity()
                 .hasFieldOrPropertyWithValue( "filter", "" )
-                .hasFieldOrPropertyWithValue( "sort.orderBy", "correctedPvalue" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "+" )
+                .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble() );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), anyDouble(), eq( false ) );
     }
 
     @Test

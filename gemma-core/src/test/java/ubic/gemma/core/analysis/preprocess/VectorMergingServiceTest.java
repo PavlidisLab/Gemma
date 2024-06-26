@@ -128,7 +128,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    @Ignore("There's a regression that will be fixed in a subsequent patch release (see https://github.com/PavlidisLab/Gemma/issues/651)")
     final public void test() throws Exception {
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,
@@ -208,7 +207,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
 
-        eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
+        eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA ); // prerequisite for vector merging
         ee = eeService.thaw( ee );
         // check we actually got switched over.
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -218,7 +217,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
             assertEquals( mergedAA, v.getDesignElement().getArrayDesign() );
         }
 
-        assertEquals( 16, ee.getQuantitationTypes().size() );
+        assertEquals( 15, ee.getQuantitationTypes().size() );
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         vectorMergingService.mergeVectors( ee );
@@ -228,6 +227,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 46, ee.getNumberOfSamples().intValue() );
         assertEquals( 978, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 15, ee.getQuantitationTypes().size() );
         assertTrue( ee.getProcessedExpressionDataVectors().isEmpty() );
         assertEquals( 0, ee.getNumberOfDataVectors().intValue() );
 
@@ -249,7 +249,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService
                 .getProcessedDataArrays( ee, 50 );
 
-        assertEquals( 50, processedDataArrays.size() );
+        assertEquals( 28, processedDataArrays.size() );
 
     }
 

@@ -59,8 +59,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         curationDetails.setLastUpdated( auditEvent.getDate() );
 
         // Update other curationDetails properties, if the event updates them.
-        if ( auditEvent.getEventType() != null
-                && CurationDetailsEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() ) ) {
+        if ( auditEvent.getEventType() instanceof CurationDetailsEvent ) {
             CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
             eventType.updateCurationDetails( curationDetails, auditEvent );
         }

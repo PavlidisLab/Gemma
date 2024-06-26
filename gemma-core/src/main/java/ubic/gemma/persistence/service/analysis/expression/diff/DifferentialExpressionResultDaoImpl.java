@@ -125,12 +125,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             bioAssaySetIds.addAll( subsetIds );
         }
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select dear, e.id from DifferentialExpressionAnalysisResult dear "
-                        + "join fetch dear.contrasts cr "
+                .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysisResult dear "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
-                        + "join dea.experimentAnalyzed e "
-                        + "where dear.probe.id in :probeIds and e.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
+                        + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
                         + "group by dears order by dear.correctedPvalue" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
@@ -139,6 +137,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+            Hibernate.initialize( r.getProbe() );
+            Hibernate.initialize( r.getContrasts() );
             Long bioAssaySetId = ( Long ) row[1];
             rs.add( r );
             if ( sourceExperimentIdMap != null ) {
@@ -148,7 +148,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 experimentAnalyzedIdMap.put( r, bioAssaySetId );
             }
         }
-        // pick the best result by experiment
+        // because of batching, results must be resorted
+        rs.sort( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         if ( timer.getTime() > 1000 ) {
             log.warn( String.format( "Retrieving %d diffex results for %s took %d ms",
                     rs.size(), gene, timer.getTime() ) );

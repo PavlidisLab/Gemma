@@ -16,12 +16,6 @@ public class QuantitationTypeArgService extends AbstractEntityArgService<Quantit
     }
 
     public QuantitationType getEntity( QuantitationTypeArg<?> quantitationTypeArg, ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
-        QuantitationType quantitationType = getEntity( quantitationTypeArg );
-        if ( service.existsByExpressionExperimentAndVectorType( quantitationType, ee, vectorType ) ) {
-            return quantitationType;
-        } else {
-            // will raise a 404 error
-            return checkEntity( quantitationTypeArg, null );
-        }
+        return checkEntity( quantitationTypeArg, quantitationTypeArg.getEntity( ee, service, vectorType ) );
     }
 }

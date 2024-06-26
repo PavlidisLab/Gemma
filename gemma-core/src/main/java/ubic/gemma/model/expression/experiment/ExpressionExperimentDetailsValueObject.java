@@ -54,6 +54,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Date dateProcessedDataVectorComputation;
     private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
+    /**
+     * FIXME: rename this to hasUsableBatchInformation
+     */
     private boolean hasBatchInformation;
     private Boolean hasBothIntensities = false;
     private Boolean hasCoexpressionAnalysis = false;

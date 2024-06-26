@@ -20,10 +20,10 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import lombok.ToString;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -34,12 +34,17 @@ import java.util.Date;
 public class AuditEvent implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1212093157703833905L;
+
+    private Long id = null;
     private AuditAction action = null;
     private Date date = null;
+    @Nullable
     private String detail = null;
+    @Nullable
     private AuditEventType eventType = null;
-    private Long id = null;
+    @Nullable
     private String note = null;
+    @Nullable
     private User performer = null;
 
     @Override
@@ -72,10 +77,12 @@ public class AuditEvent implements Identifiable, Serializable {
         return this.date;
     }
 
+    @Nullable
     public String getDetail() {
         return this.detail;
     }
 
+    @Nullable
     public AuditEventType getEventType() {
         return this.eventType;
     }
@@ -85,10 +92,12 @@ public class AuditEvent implements Identifiable, Serializable {
         return this.id;
     }
 
+    @Nullable
     public String getNote() {
         return this.note;
     }
 
+    @Nullable
     public User getPerformer() {
         return this.performer;
     }

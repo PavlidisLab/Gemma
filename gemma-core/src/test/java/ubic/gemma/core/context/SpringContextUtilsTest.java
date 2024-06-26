@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static org.junit.Assert.assertEquals;
+
 public class SpringContextUtilsTest {
 
     @Test
@@ -21,15 +23,13 @@ public class SpringContextUtilsTest {
         SpringContextUtils.prepareContext( context );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPrepareContextWithIncorrectSecurityContextHolderStrategyIsSet() {
         GenericApplicationContext context = new GenericApplicationContext();
         context.getEnvironment().addActiveProfile( EnvironmentProfiles.TEST );
-        try {
-            SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_THREADLOCAL );
-            SpringContextUtils.prepareContext( context );
-        } finally {
-            SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-        }
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_THREADLOCAL );
+        SpringContextUtils.prepareContext( context );
+        assertEquals( "org.springframework.security.core.context.InheritableThreadLocalSecurityContextHolderStrategy",
+                SecurityContextHolder.getContextHolderStrategy().getClass().getName() );
     }
 }

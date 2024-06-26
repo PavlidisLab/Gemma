@@ -17,7 +17,6 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -75,8 +74,11 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         assertEquals( ad1ad2ad3, ad1.getMergedInto() );
         assertEquals( ad1ad2ad3, ad2.getMergedInto() );
         assertEquals( ad1ad2ad3, ad3.getMergedInto() );
+        assertNotNull( ad1.getAuditTrail().getLast().getEventType() );
         assertEquals( ArrayDesignMergeEvent.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
+        assertNotNull( ad2.getAuditTrail().getLast().getEventType() );
         assertEquals( ArrayDesignMergeEvent.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
+        assertNotNull( ad3.getAuditTrail().getLast().getEventType() );
         assertEquals( ArrayDesignMergeEvent.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
 
         /*

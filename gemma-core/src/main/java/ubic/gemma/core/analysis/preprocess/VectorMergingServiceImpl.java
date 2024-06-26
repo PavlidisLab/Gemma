@@ -231,6 +231,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         // replace raw vectors with
         expressionExperimentService.removeAllRawDataVectors( ee );
         ee.getRawExpressionDataVectors().addAll( newVectors );
+        ee.getQuantitationTypes().addAll( qt2Vec.keySet() );
 
         // remove processed vectors
         expressionExperimentService.removeProcessedDataVectors( ee );

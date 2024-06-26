@@ -21,11 +21,12 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,21 +36,29 @@ import java.util.List;
 public interface QuantitationTypeService extends BaseService<QuantitationType>, FilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
     /**
-     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
-     * there isn't one.
-     *
-     * @return                  found QT
-     */
-    @Secured({ "GROUP_USER" })
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
-
-    /**
      * Find a quantitation type by ID and vector type.
      * <p>
      * While the QT can be retrieved uniquely by ID, the purpose of this method is to ensure that it also belongs to a
      * given expression experiment and data vector type.
      */
-    boolean existsByExpressionExperimentAndVectorType( QuantitationType quantitationType, ExpressionExperiment ee, Class<? extends DesignElementDataVector> dataVectorType );
+    @Nullable
+    QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
+
+    /**
+     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
+     * there isn't one.
+     *
+     * @return found QT
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
+     * @throws NonUniqueQuantitationTypeByNameException if more than one QT matches the given name and vector type
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
 
     @Override
     @Secured({ "GROUP_USER" })

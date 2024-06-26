@@ -166,10 +166,20 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     addSuccessObject( thawedEe );
                 } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
                     ad = asd.thawLite( ad );
-                    if ( GeoPlatform.isAffyPlatform( ad.getMergees().iterator().next().getShortName() ) ) {
+                    ArrayDesign mergee = ad.getMergees().iterator().next();
+
+                    // handle one level of sub-mergees....
+                    if ( asd.isMerged( Collections.singleton( mergee.getId() ) ).get( mergee.getId() ) ) {
+                        mergee = asd.thawLite( mergee );
+                        mergee = asd.thawLite( mergee.getMergees().iterator().next() );
+                    }
+
+                    if ( GeoPlatform.isAffyPlatform( mergee.getShortName() ) ) {
                         AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
                         serv.reprocessAffyDataFromCel( thawedEe );
                         addSuccessObject( thawedEe );
+                    } else {
+                        addErrorObject( ee, ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
                     }
                 } else {
 

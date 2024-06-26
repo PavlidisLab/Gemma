@@ -54,6 +54,10 @@ public class Responders {
         return new FilteredResponseDataObject<>( payload, filters, groupBy, sort );
     }
 
+    public static <T> QueriedAndFilteredResponseDataObject<T> all( List<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort sort ) {
+        return new QueriedAndFilteredResponseDataObject<>( payload, query, filters, groupBy, sort );
+    }
+
     /**
      * Produce top results.
      */
