@@ -17,7 +17,6 @@ http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
 http://purl.obolibrary.org/obo/RO_0002220	adjacent to
 http://purl.obolibrary.org/obo/RO_0002503	toward
-http://www.ebi.ac.uk/efo/EFO_0000784	has_disease_location
 http://gemma.msl.ubc.ca/ont/TGEMO_00167	delivered for duration
 http://gemma.msl.ubc.ca/ont/TGEMO_00166	delivered at dose
 http://gemma.msl.ubc.ca/ont/TGEMO_00168	has developmental stage
