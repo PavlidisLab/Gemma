@@ -23,12 +23,9 @@
                 <ref local="whatsNewTrigger"/>
                 <ref local="gene2CsUpdateTrigger"/>
                 <ref local="batchInfoTrigger"/>
-                <!--
-                FIXME: these are disabled because they are causing deadlocks (see https://github.com/PavlidisLab/Gemma/issues/1148 for details)
                 <ref local="ee2cExperimentUpdateTrigger"/>
                 <ref local="ee2cSampleUpdateTrigger"/>
                 <ref local="ee2cExperimentalDesignUpdateTrigger"/>
-                -->
                 <ref local="ee2adUpdateTrigger"/>
                 <ref local="indexExperimentsTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
