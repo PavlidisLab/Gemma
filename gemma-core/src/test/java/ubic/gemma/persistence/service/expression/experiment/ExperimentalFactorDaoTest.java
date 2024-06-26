@@ -6,16 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @ContextConfiguration
 public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
@@ -72,15 +71,20 @@ public class ExperimentalFactorDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertNotNull( ee );
         ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
+        assertNotNull( ef );
         experimentalFactorDao.remove( ef );
 
+        ed = ( ExperimentalDesign ) sessionFactory.getCurrentSession().get( ExperimentalDesign.class, ed.getId() );
+        assertNotNull( ed );
         assertFalse( ed.getExperimentalFactors().contains( ef ) );
 
         // reload and verify cascading behaviour
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( ee );
         ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertNotNull( ee );
         assertFalse( ee.getExperimentalDesign().getExperimentalFactors().contains( ef ) );
         assertFalse( ee.getBioAssays().iterator().next().getSampleUsed().getFactorValues().contains( fv ) );
         assertNull( sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() ) );

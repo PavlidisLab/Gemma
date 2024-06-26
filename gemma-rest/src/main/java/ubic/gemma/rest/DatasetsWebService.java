@@ -49,6 +49,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -834,8 +835,9 @@ public class DatasetsWebService {
         ids = ids.stream().sorted().skip( offset ).limit( limit ).collect( Collectors.toSet() );
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
-                .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ) ) )
+        Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+                .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 // because of pagination, this is the most "adequate" order
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
@@ -873,11 +875,24 @@ public class DatasetsWebService {
          */
         private Long resultSetId;
 
-        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private FactorValueBasicValueObject baseline;
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private FactorValueBasicValueObject secondBaseline;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId, @Nullable Baseline baseline ) {
             super( result );
             this.sourceExperimentId = sourceExperimentId;
             this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();
+            if ( baseline != null ) {
+                this.baseline = new FactorValueBasicValueObject( baseline.getFactorValue() );
+                if ( baseline.getSecondFactorValue() != null ) {
+                    this.secondBaseline = new FactorValueBasicValueObject( baseline.getSecondFactorValue() );
+                }
+            }
         }
     }
 
@@ -893,13 +908,14 @@ public class DatasetsWebService {
         }
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
                 .collect( Collectors.toList() );
-        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, new OutputStreamWriter( output ) );
+        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, new OutputStreamWriter( output ) );
     }
 
     /**

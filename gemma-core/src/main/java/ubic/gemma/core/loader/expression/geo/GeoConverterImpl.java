@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
@@ -56,7 +57,6 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.config.Settings;
 
 import java.io.BufferedReader;
 import java.io.IOException;

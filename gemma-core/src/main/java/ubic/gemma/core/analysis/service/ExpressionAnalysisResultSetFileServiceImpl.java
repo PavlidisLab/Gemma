@@ -38,9 +38,17 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
     }
 
     private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+        List<String> extraHeaderComments = new ArrayList<>();
+
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
                 .map( this::formatExperimentalFactor )
                 .collect( Collectors.joining( ", " ) ) + "]";
+        extraHeaderComments.add( "Experimental factors: " + experimentalFactorsMetadata );
+
+        if ( analysisResultSet.getBaselineGroup() != null ) {
+            // TODO: add support for interaction baselines, see https://github.com/PavlidisLab/Gemma/issues/1122
+            extraHeaderComments.add( "Baseline: " + formatFactorValue( analysisResultSet.getBaselineGroup() ) );
+        }
 
         // add the basic columns
         List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name" ) );
@@ -93,7 +101,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                     contrastResultPrefix + "pvalue" ) );
         }
 
-        try ( CSVPrinter printer = getTsvFormatBuilder( "Experimental factors: " + experimentalFactorsMetadata )
+        try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) )
                 .build()
                 .print( appendable ) ) {

@@ -105,8 +105,13 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
 
     @Override
     public String toString() {
-        return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() )
-                + " ressetId=" + ( this.getResultSet() == null ? "" : this.getResultSet().getId() );
+        return String.format( "DiffExRes Id=%d Probe Id=%d Pvalue=%g Qvalue=%g Rank=%g",
+                this.getId(),
+                this.getProbe().getId(),
+                this.getPvalue(),
+                this.getCorrectedPvalue(),
+                this.getRank()
+        );
     }
 
     /**
