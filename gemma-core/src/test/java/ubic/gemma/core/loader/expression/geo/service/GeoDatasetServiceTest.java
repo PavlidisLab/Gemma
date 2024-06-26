@@ -37,6 +37,7 @@ import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -302,8 +303,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         // creation, followed by a GeeqEvent
         assertEquals( AuditAction.CREATE, ee.getAuditTrail().getEvents().get( 0 ).getAction() );
         assertNull( ee.getAuditTrail().getEvents().get( 0 ).getEventType() );
-        assertEquals( AuditAction.UPDATE, ee.getAuditTrail().getEvents().get( 1 ).getAction() );
-        assertEquals( GeeqEvent.class, ee.getAuditTrail().getEvents().get( 1 ).getEventType().getClass() );
+        AuditEvent ev2 = ee.getAuditTrail().getEvents().get( 1 );
+        assertEquals( AuditAction.UPDATE, ev2.getAction() );
+        assertNotNull( ev2.getEventType() );
+        assertEquals( GeeqEvent.class, ev2.getEventType().getClass() );
     }
 
     @Test

@@ -1,7 +1,6 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -120,12 +119,12 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public OpenAPI openAPI() {
-            return new OpenAPI().info( new Info().version( "1.0.0" ) );
+            return mock();
         }
 
         @Bean
         public BuildInfo buildInfo() {
-            return mock( BuildInfo.class );
+            return mock();
         }
     }
 

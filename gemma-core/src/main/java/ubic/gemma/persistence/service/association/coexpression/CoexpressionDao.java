@@ -36,6 +36,8 @@ import java.util.Set;
  */
 public interface CoexpressionDao {
 
+    boolean hasLinks( Taxon taxon, BioAssaySet ee );
+
     Integer countLinks( Gene gene, BioAssaySet ee );
 
     /**

@@ -50,8 +50,9 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result ) {
         super( result );
+        // getId() does not initialize proxies
+        this.probeId = result.getProbe().getId();
         if ( Hibernate.isInitialized( result.getProbe() ) ) {
-            this.probeId = result.getProbe().getId();
             this.probeName = result.getProbe().getName();
         }
         this.pValue = result.getPvalue();

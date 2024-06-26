@@ -11,27 +11,29 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 /**
@@ -148,6 +150,11 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
         }
+
+        @Bean
+        public CoexpressionService coexpressionService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -159,9 +166,15 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Autowired
     private OntologyService ontologyService;
 
+    @Autowired
+    private CoexpressionService coexpressionService;
+
+    @Autowired
+    private SecurityService securityService;
+
     @After
     public void tearDown() {
-        reset( ontologyService );
+        reset( ontologyService, coexpressionService, securityService );
     }
 
     @Test
@@ -197,5 +210,14 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
+    }
+
+    @Test
+    public void testRemoveDatasetWithCoexpressionLinks() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        when( coexpressionService.hasLinks( ee ) ).thenReturn( true );
+        when( securityService.isEditable( ee ) ).thenReturn( true );
+        assertThatThrownBy( () -> expressionExperimentService.remove( ee ) )
+                .isInstanceOf( IllegalStateException.class );
     }
 }

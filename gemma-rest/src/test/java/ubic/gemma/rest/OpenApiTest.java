@@ -6,6 +6,7 @@ import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import lombok.Data;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
@@ -37,6 +38,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -190,17 +192,23 @@ public class OpenApiTest extends BaseJerseyTest {
 
     @Test
     public void testEnsureThatAllErrorResponsesUseResponseErrorObjectWithJsonMediaType() {
-        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
-            assertThat( operations.getGet().getResponses() ).allSatisfy( ( code, response ) -> {
+        SoftAssertions assertions = new SoftAssertions();
+        for ( Map.Entry<String, PathItem> entry : spec.getPaths().entrySet() ) {
+            String path = entry.getKey();
+            PathItem operations = entry.getValue();
+            for ( Map.Entry<String, ApiResponse> e : operations.getGet().getResponses().entrySet() ) {
+                String code = e.getKey();
+                ApiResponse response = e.getValue();
                 if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
-                    assertThat( response.getContent() )
+                    assertions.assertThat( response.getContent() )
                             .describedAs( "GET %s -> %s", path, code )
                             .hasEntrySatisfying( "application/json", content -> {
                                 assertThat( content.getSchema().get$ref() ).isEqualTo( "#/components/schemas/ResponseErrorObject" );
                             } );
                 }
-            } );
-        } );
+            }
+        }
+        assertions.assertAll();
     }
 
     @Test

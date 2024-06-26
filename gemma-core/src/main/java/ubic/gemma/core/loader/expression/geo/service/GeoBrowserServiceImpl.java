@@ -52,6 +52,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
  * @author pavlidis
@@ -289,17 +291,17 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble = "&nbsp;<img src='" + contextPath
-                                + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                                + lastTroubleEvent.getNote() + "\"/>";
+                        trouble = "&nbsp;<img src=\"" + contextPath + "/images/icons/warning.png\" height=\"16\" width=\"16\" alt=\"troubled\""
+                                + ( lastTroubleEvent.getNote() != null ? " title=\"" + escapeHtml4( lastTroubleEvent.getNote() ) + "\"" : "" )
+                                + "/>";
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
                         .append( contextPath ).append( "/arrays/showArrayDesign.html?id=" )
-                        .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
+                        .append( arrayDesign.getId() ).append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
                         .append( trouble );
             } else {
-                buf.append( "<p><strong>" ).append( gpl ).append( " [New to Gemma]</strong>" );
+                buf.append( "<p><strong>" ).append( escapeHtml4( gpl ) ).append( " [New to Gemma]</strong>" );
             }
         }
     }

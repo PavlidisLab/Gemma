@@ -1,3 +1,0 @@
-eclipse.preferences.version=1
-excluded=src/main/webapp/scripts/cytoscape//*.js\:src/main/webapp/scripts/lib//*.js
-included=src/main/webapp/scripts//*.js

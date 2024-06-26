@@ -2,8 +2,6 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
@@ -18,10 +16,6 @@ public class ExcludeArg<T> extends AbstractArrayArg<String> {
     }
 
     public static ExcludeArg<?> valueOf( String s ) {
-        if ( StringUtils.isBlank( s ) ) {
-            throw new MalformedArgException( String.format( ERROR_MSG, s ), new IllegalArgumentException(
-                    "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
-        }
-        return new ExcludeArg<>( splitAndTrim( s ) );
+        return valueOf( s, "excluded fields", ExcludeArg::new, false );
     }
 }

@@ -1,6 +1,5 @@
 package ubic.gemma.core.analysis.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -15,6 +14,4 @@ public interface JsonFileService<T> extends FileService<T> {
      * Write a given entity to JSON.
      */
     void writeJson( T entity, Writer writer ) throws IOException;
-
-    void writeJson( T entity, File file ) throws IOException;
 }

@@ -268,7 +268,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         AuditEvent lastEventOfCurrentType = eventsOfCurrentType.get( eventsOfCurrentType.size() - 1 );
         assert lastEventOfCurrentType != null;
 
-        if ( lastEventOfCurrentType.getEventType().getClass().isAssignableFrom( eventClass ) ) {
+        if ( lastEventOfCurrentType.getEventType() != null && eventClass.isAssignableFrom( lastEventOfCurrentType.getEventType().getClass() ) ) {
             // then definitely don't run it. The last event was the same as the one we're trying to renew.
             AbstractCLI.log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
             return false;

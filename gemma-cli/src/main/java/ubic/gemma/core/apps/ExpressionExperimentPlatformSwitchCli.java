@@ -77,7 +77,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
-                        "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+                        "Array design short name to be switched to - no need to specify if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
         options.addOption( arrayDesignOption );
         this.addForceOption( options );
@@ -115,7 +115,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     /**
      * @param  name               of the array design to find.
-     * @param  arrayDesignService the arrayDesignService to use for the AD retrieval
      * @return an array design, if found. Bails otherwise with an error exit code
      */
     private ArrayDesign locateArrayDesign( String name ) {

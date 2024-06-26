@@ -173,7 +173,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         StopWatch timer = StopWatch.createStarted();
         if ( StringUtils.isBlank( name ) )
             return new HashSet<>();
-        // slow? would it be faster to just findByName and then restrict taxon?
+        // slow? would it be faster to just findByNameAndVectorType and then restrict taxon?
         Query query = this.getSessionFactory().getCurrentSession().createQuery(
                         "select gs from GeneSet gs join gs.members gm join gm.gene g "
                                 + "where gs.name like :query "

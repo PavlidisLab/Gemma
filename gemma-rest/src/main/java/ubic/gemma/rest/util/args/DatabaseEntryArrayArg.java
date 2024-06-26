@@ -2,28 +2,23 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.List;
 
-@ArraySchema(schema = @Schema(implementation = DatabaseEntryArg.class))
+@ArraySchema(arraySchema = @Schema(description = DatabaseEntryArrayArg.ARRAY_SCHEMA_DESCRIPTION), schema = @Schema(implementation = DatabaseEntryArg.class), minItems = 1)
 public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry, DatabaseEntryService> {
 
-    private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
-    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Database entry identifiers";
+    public static final String OF_WHAT = "database entry IDs or accessions";
+    public static final String ARRAY_SCHEMA_DESCRIPTION = ARRAY_SCHEMA_DESCRIPTION_PREFIX + OF_WHAT + ". " + ARRAY_SCHEMA_COMPRESSION_DESCRIPTION;
 
     private DatabaseEntryArrayArg( List<String> values ) {
         super( DatabaseEntryArg.class, values );
     }
 
     public static DatabaseEntryArrayArg valueOf( final String s ) throws MalformedArgException {
-        if ( StringUtils.isBlank( s ) ) {
-            throw new MalformedArgException( String.format( DatabaseEntryArrayArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( DatabaseEntryArrayArg.ERROR_MSG_DETAIL ) );
-        }
-        return new DatabaseEntryArrayArg( splitAndTrim( s ) );
+        return valueOf( s, OF_WHAT, DatabaseEntryArrayArg::new, true );
     }
 }

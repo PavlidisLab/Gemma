@@ -208,6 +208,11 @@ public interface ExpressionExperimentDao
 
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
+    /**
+     * Determine the taxon for a given experiment or subset.
+     * @return a unique taxon for the dataset, or null if no taxon could be determined
+     */
+    @Nullable
     Taxon getTaxon( BioAssaySet ee );
 
     /**

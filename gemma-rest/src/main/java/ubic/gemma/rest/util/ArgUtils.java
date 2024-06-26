@@ -26,6 +26,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * Utilities for working with {@link Arg}.
+ *
  * @author poirigui
  */
 public class ArgUtils {
@@ -46,7 +47,7 @@ public class ArgUtils {
             try {
                 return IOUtils.toString( new GZIPInputStream( new ByteArrayInputStream( decodedS ) ), StandardCharsets.UTF_8 );
             } catch ( IOException e ) {
-                throw new MalformedArgException( "Invalid base64-encoded filter, make sure that your filter is first gzipped and then base64-encoded.", e );
+                throw new IllegalArgumentException( "Invalid base64-encoded filter, make sure that your filter is first gzipped and then base64-encoded.", e );
             }
         } else {
             return s;

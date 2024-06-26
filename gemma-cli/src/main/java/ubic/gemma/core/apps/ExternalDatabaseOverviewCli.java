@@ -70,7 +70,10 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
     }
 
     private String summarize( AuditEvent auditEvent ) {
-        String s = String.format( "%s: %s by %s", auditEvent.getDate(), auditEvent.getAction(), auditEvent.getPerformer().getUserName() );
+        String s = String.format( "%s: %s", auditEvent.getDate(), auditEvent.getAction() );
+        if ( auditEvent.getPerformer() != null ) {
+            s += " by " + auditEvent.getPerformer().getUserName();
+        }
         if ( auditEvent.getNote() != null ) {
             s += "\n\t" + auditEvent.getNote();
         }

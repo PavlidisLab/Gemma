@@ -105,8 +105,9 @@ public class SpringContextUtils {
      */
     public static void prepareContext( ApplicationContext context ) {
         if ( !SecurityContextHolder.getContextHolderStrategy().getClass().getName().equals( "org.springframework.security.core.context.InheritableThreadLocalSecurityContextHolderStrategy" ) ) {
-            throw new IllegalStateException( String.format( "The security context holder strategy is not set to be inherited in new threads, make sure -D%s=%s is set in your JVM options.",
+            log.warn( String.format( "The security context holder strategy is not set to be inherited in new threads. The strategy will be applied manually. Use -D%s=%s explicitly to remove this warning.",
                     SecurityContextHolder.SYSTEM_PROPERTY, SecurityContextHolder.MODE_INHERITABLETHREADLOCAL ) );
+            SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         }
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;

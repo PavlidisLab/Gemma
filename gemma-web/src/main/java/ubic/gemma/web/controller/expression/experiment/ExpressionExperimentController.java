@@ -36,21 +36,19 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -68,6 +66,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -125,6 +124,8 @@ public class ExpressionExperimentController {
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
@@ -613,14 +614,14 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchConfound( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+        ee.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         expressionExperimentService.update( ee );
     }
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchEffect( expressionExperimentService.getBatchEffect( ee ) );
-        ee.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
+        ee.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ) );
+        ee.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1169,13 +1170,13 @@ public class ExpressionExperimentController {
      * @param  finalResult result
      */
     private void setBatchInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-        boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
-        finalResult.setHasBatchInformation( hasBatchInformation );
-        if ( hasBatchInformation ) {
-            finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+        boolean hasUsableBatchInformation = expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee );
+        finalResult.setHasBatchInformation( hasUsableBatchInformation );
+        if ( hasUsableBatchInformation ) {
+            finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         }
-        finalResult.setBatchEffect( expressionExperimentService.getBatchEffect( ee ).name() );
-        finalResult.setBatchEffectStatistics( expressionExperimentService.getBatchEffectStatistics( ee ) );
+        finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
+        finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
     }
 
     /**

@@ -26,7 +26,6 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -35,10 +34,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BatchEffectType;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -60,8 +56,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     public static final String COLLECTION_OF_MATERIAL_URI = "http://www.ebi.ac.uk/efo/EFO_0005066";
     public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
     public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService eeBatchService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -75,7 +75,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             return false;
         }
 
-        BatchEffectType bet = expressionExperimentService.getBatchEffect( ee );
+        BatchEffectType bet = eeBatchService.getBatchEffect( ee );
         if ( BatchEffectType.NO_BATCH_EFFECT_SUCCESS.equals( bet ) || BatchEffectType.SINGLE_BATCH_SUCCESS.equals( bet ) ) {
             ExpressionExperimentBatchCorrectionServiceImpl.log.info( "Experiment does not require batch correction as " +
                     "batch effect is negligible or it's a single batch: " + ee );
@@ -87,7 +87,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             return false;
         }
 
-        String bConf = expressionExperimentService.getBatchConfound( ee );
+        String bConf = eeBatchService.getBatchConfoundAsHtmlString( ee );
         if ( bConf != null ) { // we used to let force override this, but that behavior is undesirable: if there is a confound, we don't batch correct
             ExpressionExperimentBatchCorrectionServiceImpl.log
                     .info( "Experiment cannot be batch corrected due to a confound: " + bConf );

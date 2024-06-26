@@ -18,14 +18,16 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -41,18 +43,23 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     private static final long serialVersionUID = -2615804031123874251L;
 
+    private String name;
+    private String description;
+
+    @Schema(allowableValues = { "categorical", "continuous" })
+    private String type = "categorical"; // continuous or categorical.
+
     private String category;
     private String categoryUri;
 
-    private String description;
-
+    @Nullable
     @Deprecated
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "This is deprecated, use `values` directly instead.", deprecated = true)
     private String factorValues;
 
-    private String name;
-    @Schema(allowableValues = { "categorical", "continuous" })
-    private String type = "categorical"; // continuous or categorical.
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<FactorValueValueObject> values;
 
     /**
@@ -67,6 +74,13 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     }
 
     public ExperimentalFactorValueObject( ExperimentalFactor factor ) {
+        this( factor, true );
+    }
+
+    /**
+     * @param includeValues whether to include factor values or not in the serialization
+     */
+    public ExperimentalFactorValueObject( ExperimentalFactor factor, boolean includeValues ) {
         super( factor );
         this.name = factor.getName();
         this.description = factor.getDescription();
@@ -75,11 +89,6 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             this.category = factor.getCategory().getCategory();
             this.categoryUri = factor.getCategory().getCategoryUri();
         }
-
-        /*
-         * Note: this code copied from the ExperimentalDesignController.
-         */
-        Collection<FactorValueValueObject> vals = new HashSet<>();
 
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
@@ -99,7 +108,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             }
         }
 
-        if ( factor.getFactorValues() == null || factor.getFactorValues().isEmpty() ) {
+        if ( !includeValues || factor.getFactorValues() == null || factor.getFactorValues().isEmpty() ) {
             return;
         }
 
@@ -119,12 +128,14 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
         this.factorValues = factorValuesAsString.toString();
 
         /*
+         * Note: this code copied from the ExperimentalDesignController.
          * NOTE this replaces code that previously made no sense. PP
+         * TODO: replace with FactorValueBasicValueObject
          */
+        Collection<FactorValueValueObject> vals = new HashSet<>();
         for ( FactorValue value : factor.getFactorValues() ) {
             vals.add( new FactorValueValueObject( value ) );
         }
-
         this.values = vals;
     }
 

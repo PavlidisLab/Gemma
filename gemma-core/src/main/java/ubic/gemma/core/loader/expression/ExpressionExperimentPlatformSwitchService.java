@@ -181,7 +181,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             log.info( String.format( "Switching vectors from %s to %s", oldAd.getShortName(), arrayDesign.getShortName() ) );
             totalVectorsSwitched += this.switchDataForPlatform( ee, arrayDesign, designElementMap,
-                    targetBioAssayDimension, usedDesignElements, oldAd );
+                    targetBioAssayDimension /* for case 1, will be null */, usedDesignElements, oldAd );
         }
 
         if ( totalVectorsSwitched == 0 && hasData ) {
@@ -201,7 +201,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             ee.setDescription( ee.getDescription() + " " + descriptionUpdate );
         }
 
-        if ( targetBioAssayDimension != null && !unusedBADs.isEmpty() ) {
+        if ( targetBioAssayDimension != null && !unusedBADs.isEmpty() ) { // Case 2
             log.info( "Cleaning up unused BioAssays from previous platforms..." );
             this.cleanupUnused( ee, unusedBADs, targetBioAssayDimension );
         }
@@ -211,7 +211,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 "Switch to use " + arrayDesign.getShortName() );
         log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
-        if ( hasData ) {
+        if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {
             log.info( ee + " has data, regenerating processed data vectors..." );
             processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
         }

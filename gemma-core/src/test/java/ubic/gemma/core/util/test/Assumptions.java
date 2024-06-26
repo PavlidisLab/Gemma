@@ -42,7 +42,7 @@ public class Assumptions {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
         } catch ( SSLException e ) {
             assumeNoException( String.format( "SSL issue attempting to connect to %s.", url ), e );
-        } catch ( Exception e ) {
+        } catch ( IOException e ) {
             throw new RuntimeException( e );
         } finally {
             if ( con instanceof HttpURLConnection ) {

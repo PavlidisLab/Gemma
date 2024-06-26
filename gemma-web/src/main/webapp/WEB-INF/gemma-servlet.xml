@@ -18,6 +18,13 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
+    <!-- The servlet uses a different Spring context with gemma-core's context as parent -->
+    <!-- Unfortunately, bean post-processor do not get applied, so they must be redeclared here if we want them to apply
+    to controllers -->
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="propertySources" ref="settingsPropertySources"/>
+    </bean>
+
     <!-- Mapping URLS to controllers -->
 
 

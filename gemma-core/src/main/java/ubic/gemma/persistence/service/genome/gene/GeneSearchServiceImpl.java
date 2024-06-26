@@ -215,7 +215,15 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // convert result object to a value object
             List<SearchResult<DatabaseBackedGeneSetValueObject>> dbsgvo = taxonCheckedSets.stream()
                     .filter( Objects::nonNull )
-                    .map( sr -> sr.withResultObject( geneSetValueObjectHelper.convertToValueObject( sr.getResultObject() ) ) )
+                    .map( sr -> {
+                        try {
+                            return sr.withResultObject( geneSetValueObjectHelper.convertToValueObject( sr.getResultObject() ) );
+                        } catch ( AccessDeniedException e ) {
+                            // ignore gene sets current user is not allowed to see
+                            return null;
+                        }
+                    } )
+                    .filter( Objects::nonNull )
                     .collect( Collectors.toList() );
             geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( dbsgvo );
 
@@ -241,7 +249,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
                 taxon = geneSetService.getTaxon( gs );
-                GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
+                GeneSetValueObject gsVo;
+                try {
+                    gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
+                } catch ( AccessDeniedException e ) {
+                    // ignore gene sets current user is not allowed to see
+                    continue;
+                }
                 srDo = new SearchResultDisplayObject( gsVo );
                 if ( taxon != null ) {
                     srDo.setTaxonId( taxon.getId() );
