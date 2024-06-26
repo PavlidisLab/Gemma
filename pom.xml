@@ -292,7 +292,7 @@
 		<dependency>
 			<groupId>org.jfree</groupId>
 			<artifactId>jfreechart</artifactId>
-			<version>1.5.4</version>
+			<version>1.5.5</version>
 		</dependency>
 
 		<!-- Apache Commons -->
@@ -440,6 +440,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
+			<version>3.26.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -728,8 +729,8 @@
 		<swagger.version>2.2.22</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.39.3</slack.version>
-		<micrometer.version>1.13.0</micrometer.version>
+		<slack.version>1.40.1</slack.version>
+		<micrometer.version>1.13.1</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- HDF5 -->
 		<hdf5.version>1.14.3</hdf5.version>
@@ -740,9 +741,9 @@
 		<!-- full path to the HDF5 JAR -->
 		<hdf5.jarPath>${hdf5.prefix}/lib/jarhdf5-${hdf5.version}.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.89</tomcat.version>
+		<tomcat.version>9.0.90</tomcat.version>
 		<mockito.version>5.12.0</mockito.version>
-		<prettytime.version>5.0.7.Final</prettytime.version>
+		<prettytime.version>5.0.8.Final</prettytime.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
