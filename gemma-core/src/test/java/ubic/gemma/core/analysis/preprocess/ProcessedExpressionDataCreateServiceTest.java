@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +113,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Test
     @Category(SlowTest.class)
+    @Ignore("This test randomly fails, see https://github.com/PavlidisLab/Gemma/issues/1158")
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
         try {
