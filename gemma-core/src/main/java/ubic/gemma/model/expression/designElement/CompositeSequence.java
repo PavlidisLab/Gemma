@@ -133,6 +133,14 @@ public class CompositeSequence extends AbstractDescribable implements Serializab
             cs.setArrayDesign( ad );
             return cs;
         }
+
+        public static CompositeSequence newInstance( String name, ArrayDesign ad, BioSequence bioSequence ) {
+            CompositeSequence cs = new CompositeSequence();
+            cs.setName( name );
+            cs.setArrayDesign( ad );
+            cs.setBiologicalCharacteristic( bioSequence );
+            return cs;
+        }
     }
 
 }

@@ -31,8 +31,13 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -240,6 +245,15 @@ public abstract class AbstractCLI implements CLI {
         }
     }
 
+    /**
+     * Describe the intended usage for the command.
+     * <p>
+     * This will be included in the 'Usage: ...' error message when the CLI is misused.
+     */
+    protected String getUsage() {
+        return "gemma-cli [options] " + this.getCommandName() + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
+    }
+
     private void printHelp( Options options, PrintWriter writer ) {
         HelpUtils.printHelp( writer, getCommandName(), options, allowPositionalArguments, getShortDesc(), null );
     }
@@ -292,12 +306,14 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Add the {@code -threads} option.
      * <p>
-     * This is used to configure the internal batch processing thread pool which can be used with
-     * {@link #executeBatchTasks(Collection)}. You may also use {@link #getNumThreads()} to retrieve the number of
-     * threads to use.
+     * This is used to configure the internal batch processing thread pool which can be used with {@link #getBatchTaskExecutor()}.
+     * <p>
+     * You may also use {@link #getNumThreads()} to retrieve the number of threads to use.
      */
     protected void addThreadsOption( Options options ) {
-        options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
+        options.addOption( Option.builder( THREADS_OPTION )
+                .longOpt( "threads" )
+                .argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
                 .type( Number.class )
                 .build() );

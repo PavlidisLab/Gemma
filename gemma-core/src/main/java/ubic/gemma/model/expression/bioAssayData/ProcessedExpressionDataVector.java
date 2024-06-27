@@ -18,81 +18,47 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
-public class ProcessedExpressionDataVector extends DesignElementDataVector {
+@Getter
+@Setter
+public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3948846630785289034L;
 
+    /**
+     * relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
+     * about the expession level without referring to any absolute baseline other than the minimum in the entire
+     * dataset, based on the mean expression measurement for the probe. For two-color data sets, this is computed using
+     * the intensity values for the probe in the two channels, not from the ratios stored in this vector. For one-color
+     * data sets, this is computed directly from the intensity levels in this vector.
+     */
     private Double rankByMean;
-    private Double rankByMax;
-
-    @Override
-    public String toString() {
-        return "ProcessedExpressionDataVector [ID=" + this.getId() + "]";
-    }
 
     /**
-     * @return The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
+     * The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
      * about the expession level without referring to any absolute baseline other than the minimum in the entire
      * dataset, based on the maximum expression measurement for the probe (so the probe with the lowest expression is
      * the one with the lowest maximum value). For two-color data sets, this is computed using the intensity values for
      * the probe in the two channels, not from the ratios stored in this vector. For one-color data sets, this is
      * computed directly from the intensity levels in this vector.
      */
-    public Double getRankByMax() {
-        return this.rankByMax;
-    }
-
-    public void setRankByMax( Double rankByMax ) {
-        this.rankByMax = rankByMax;
-    }
-
-    /**
-     * @return The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
-     * about the expession level without referring to any absolute baseline other than the minimum in the entire
-     * dataset, based on the mean expression measurement for the probe. For two-color data sets, this is computed using
-     * the intensity values for the probe in the two channels, not from the ratios stored in this vector. For one-color
-     * data sets, this is computed directly from the intensity levels in this vector.
-     */
-    public Double getRankByMean() {
-        return this.rankByMean;
-    }
-
-    public void setRankByMean( Double rankByMean ) {
-        this.rankByMean = rankByMean;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash( getExpressionExperiment(), getQuantitationType(), getDesignElement(), getBioAssayDimension() );
-    }
+    private Double rankByMax;
 
     @Override
     public boolean equals( Object object ) {
-        if ( this == object ) {
+        if ( this == object )
             return true;
-        }
-        if ( !( object instanceof ProcessedExpressionDataVector ) ) {
+        if ( !( object instanceof ProcessedExpressionDataVector ) )
             return false;
-        }
-        final ProcessedExpressionDataVector that = ( ProcessedExpressionDataVector ) object;
-        if ( this.getId() != null || that.getId() != null ) {
-            return getId().equals( that.getId() );
-        }
-        return Objects.equals( getExpressionExperiment(), that.getExpressionExperiment() )
-                && Objects.equals( getDesignElement(), that.getDesignElement() )
-                && Objects.equals( getQuantitationType(), that.getQuantitationType() )
-                && Objects.equals( getBioAssayDimension(), that.getBioAssayDimension() );
+        return super.equals( object );
     }
 
     public static final class Factory {

@@ -22,11 +22,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
@@ -56,7 +58,6 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.config.Settings;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -67,18 +68,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
- * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
- * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
- * than one dataset. GEO also supports the concept of a superseries. See
- * http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * Convert GEO domain objects into Gemma objects.
+ * <p>
+ * Usually we trigger this by passing in {@link GeoSeries} objects.
+ * <p>
+ * GEO has four basic kinds of objects: Platforms ({@link ArrayDesign}), Samples ({@link BioMaterial}), Series ({@link ExpressionExperiment})
+ * and DataSets (which are curated {@link ExpressionExperiment}). Note that a sample can belong to more than one series.
+ * A series can include more than one dataset. GEO also supports the concept of a super-series. See <a href="https://www.ncbi.nlm.nih.gov/geo/info/soft.html">SOFT submission instructions</a>.
+ * <p>
  * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
- * arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * arrays were both run on the same samples. Thus, we actually normally go by GSE.
+ * <p>
  * This service can be used in database-aware or unaware states. However, it has prototype scope as it has some 'global'
  * data structures used during processing.
  *
- * @author keshav
+ * @author kesv
  * @author pavlidis
  */
 @Component
@@ -123,7 +128,9 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
      */
-    private int tooManyElements = Settings.getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
+    @Value("${geo.platform.import.maxelements}")
+    private int tooManyElements = Settings
+            .getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
@@ -535,25 +542,30 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( GeoSample sample : series.getSamples() ) {
-            if ( sample.getType().equals( "RNA" ) ) {
+            if ( sample.getType().equals( GeoSampleType.RNA ) ) {
                 // this is apparently what we get for microarrays
                 continue;
-            } else if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
+            } else if ( sample.getType().equals( GeoSampleType.MPSS ) ) {
 
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
-                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
-                    // no-op, just making explicit.
-                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
+                if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.TRANSCRIPTOMIC ) ) {
 
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
+                    if ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) || sample.getLibStrategy()
+                            .equals( GeoLibraryStrategy.SSRNA_SEQ ) || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
                 }
             }
 
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed'; 
+            // single-cell RNA-Seq
+            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA
+            else if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
+                    && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                continue;
+            }
+
+            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
 
             GeoConverterImpl.log.info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType() + " LibSource=" + sample.getLibSource() + " LibStrategy=" + sample.getLibStrategy() );
             samplesToSkip.add( sample );

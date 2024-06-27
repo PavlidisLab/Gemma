@@ -193,16 +193,28 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         return this.type;
     }
 
-    public void setType( ubic.gemma.model.expression.experiment.FactorType type ) {
+    public void setType( FactorType type ) {
         this.type = type;
+    }
+
+
+    @Override
+    public String toString() {
+        return super.toString() + ( type != null ? " Type=" + type : "" );
     }
 
     public static final class Factory {
 
-        public static ubic.gemma.model.expression.experiment.ExperimentalFactor newInstance() {
-            return new ubic.gemma.model.expression.experiment.ExperimentalFactor();
+        public static ExperimentalFactor newInstance() {
+            return new ExperimentalFactor();
         }
 
+        public static ExperimentalFactor newInstance( String name, FactorType factorType ) {
+            ExperimentalFactor experimentalFactor = new ExperimentalFactor();
+            experimentalFactor.setName( name );
+            experimentalFactor.setType( factorType );
+            return experimentalFactor;
+        }
     }
 
 }

@@ -12,6 +12,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,10 +21,11 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.cache.EhcacheConfig;
-import ubic.gemma.core.context.TestComponent;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -35,6 +37,7 @@ import static org.junit.Assert.*;
 
 @CommonsLog
 @ContextConfiguration
+@Category(SlowTest.class)
 public class HibernateConfigTest extends BaseDatabaseTest {
 
     private static Path cacheDir;

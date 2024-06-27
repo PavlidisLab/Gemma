@@ -18,15 +18,22 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
- * An abstract class representing a one-dimensional vector of data about some aspect of an experiment.
+ * An abstract class representing a one-dimensional vector of data about some aspect of an {@link ExpressionExperiment}.
+ * @see DesignElementDataVector
  */
+@Getter
+@Setter
 public abstract class DataVector implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -5823802521832643417L;
@@ -36,42 +43,34 @@ public abstract class DataVector implements Identifiable, Serializable {
     private QuantitationType quantitationType;
     private byte[] data;
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public byte[] getData() {
-        return this.data;
-    }
-
-    public void setData( byte[] data ) {
-        this.data = data;
-    }
-
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
     @Override
-    public Long getId() {
-        return this.id;
+    public int hashCode() {
+        // also, we cannot hash the ID because it is assigned on creation
+        // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
+        return Objects.hash( expressionExperiment, quantitationType );
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public QuantitationType getQuantitationType() {
-        return this.quantitationType;
-    }
-
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
-    }
-
+    /**
+     * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
+     * identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
     @Override
-    public abstract boolean equals( Object obj );
-
-    @Override
-    public abstract int hashCode();
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof DataVector ) ) {
+            return false;
+        }
+        final DataVector that = ( DataVector ) object;
+        if ( this.id != null && that.id != null ) {
+            return Objects.equals( id, that.id );
+        }
+        return Objects.equals( expressionExperiment, that.expressionExperiment )
+                && Objects.equals( quantitationType, that.quantitationType )
+                && Arrays.equals( data, that.data );
+    }
 }

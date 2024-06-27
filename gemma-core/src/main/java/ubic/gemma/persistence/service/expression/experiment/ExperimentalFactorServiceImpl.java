@@ -17,6 +17,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
@@ -36,6 +38,7 @@ public class ExperimentalFactorServiceImpl
 
     private final ExperimentalFactorDao experimentalFactorDao;
     private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private final BioMaterialService bioMaterialService;
 
     @Autowired
     public ExperimentalFactorServiceImpl( ExperimentalFactorDao experimentalFactorDao,
@@ -43,18 +46,33 @@ public class ExperimentalFactorServiceImpl
         super( experimentalFactorDao );
         this.experimentalFactorDao = experimentalFactorDao;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+        this.bioMaterialService = bioMaterialService;
     }
 
     @Override
     @Transactional
     public void remove( ExperimentalFactor experimentalFactor ) {
         experimentalFactor = ensureInSession( experimentalFactor );
+
         log.info( "Removing factor " + experimentalFactor + "..." );
         // First, check to see if there are any diff results that use this factor.
         int removedAnalysis = differentialExpressionAnalysisService.removeForExperimentalFactor( experimentalFactor );
         if ( removedAnalysis > 0 ) {
             log.info( String.format( "Removed %d analyses associated to factor %s", removedAnalysis, experimentalFactor ) );
         }
+
+        // detach the experimental factor from its experimental design, otherwise it will be re-saved in cascade
+        ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
+        ed.getExperimentalFactors().remove( experimentalFactor );
+
+        // remove associations with the experimental factor values in related expression experiments
+        Collection<BioMaterial> bioMaterials = bioMaterialService.findByFactor( experimentalFactor );
+        for ( BioMaterial bm : bioMaterials ) {
+            if ( bm.getFactorValues().removeAll( experimentalFactor.getFactorValues() ) ) {
+                log.info( "Removed factor value(s) of " + experimentalFactor + " from " + bm );
+            }
+        }
+
         super.remove( experimentalFactor );
     }
 

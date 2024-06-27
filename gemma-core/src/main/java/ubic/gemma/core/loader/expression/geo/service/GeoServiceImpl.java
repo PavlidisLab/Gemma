@@ -25,10 +25,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
+import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -40,16 +41,18 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -262,6 +265,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         this.getSubSeriesInformation( series );
 
+        this.retrieveSingleCellData( series );
+
         geoConverter.clear();
         geoConverter.setSplitByPlatform( splitByPlatform );
 
@@ -386,7 +391,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     @Override
     @Transactional
-    public  Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform ) {
+    public Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform ) {
         File f = new File( softFile );
         this.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( f.getParent() ) );
@@ -821,6 +826,24 @@ public class GeoServiceImpl extends AbstractGeoService {
                     + subSeries.getGeoAccession() + ": " + subSeries
                     .getSummaries();
             superSeries.setSummaries( seriesSummary );
+        }
+    }
+
+    /**
+     * Retrieve single-cell data from supplementary material if available.
+     * @param series
+     */
+    private void retrieveSingleCellData( GeoSeries series ) {
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            // TODO: configure the detector
+            if ( detector.hasSingleCellData( series ) ) {
+                AbstractGeoService.log.info( "Single-cell data detected in " + series.getGeoAccession() + ", retrieving it..." );
+                try {
+                    detector.downloadSingleCellData( series );
+                } catch ( NoSingleCellDataFoundException | IOException e ) {
+                    AbstractGeoService.log.error( "Failed to retrieve single-cell data for " + series.getGeoAccession(), e );
+                }
+            }
         }
     }
 

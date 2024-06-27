@@ -49,7 +49,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         super( id );
     }
 
-    protected DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+    protected DataVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badvo ) {
         super( dedv );
         if ( badvo == null ) {
             BioAssayDimension badim = dedv.getBioAssayDimension();
@@ -63,7 +63,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
     }
 
-    protected DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+    protected DataVectorValueObject( BulkExpressionDataVector dedv, Collection<Long> genes,
             BioAssayDimensionValueObject badvo ) {
         this( dedv, badvo );
         this.genes = genes;

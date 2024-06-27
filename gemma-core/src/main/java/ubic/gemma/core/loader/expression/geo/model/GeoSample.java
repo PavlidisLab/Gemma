@@ -20,7 +20,10 @@ package ubic.gemma.core.loader.expression.geo.model;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
+import ubic.gemma.core.loader.expression.geo.GeoSampleType;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,10 +37,6 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public class GeoSample extends GeoData implements Comparable<GeoData> {
-
-    public enum LibraryStrategy {
-        OTHER, RNASEQ
-    }
 
     private static final Log log = LogFactory.getLog( GeoSample.class.getName() );
     private static final long serialVersionUID = -8820012224856178673L;
@@ -54,14 +53,15 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private String hybProtocol = "";
     private boolean isGenePix = false;
     private String lastUpdateDate = "";
-    private String libSource;
-    private String libStrategy;
+    @Nullable
+    private GeoLibrarySource libSource = null;
+    private GeoLibraryStrategy libStrategy;
     private boolean mightNotHaveDataInFile = false;
     private Collection<GeoPlatform> platforms;
     private final Collection<GeoReplication> replicates;
     private String scanProtocol = "";
     private Collection<String> seriesAppearsIn = new HashSet<>();
-    private String supplementaryFile = "";
+    private Collection<String> supplementaryFiles = new HashSet<>();
     private int tagCount;
     private int tagLength;
 
@@ -69,9 +69,10 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      * This is used to store the title for the sample as found in the GDS file, if it differs from the one in the GSE
      * file
      */
+    @Nullable
     private String titleInDataset = null;
 
-    private String type = "DNA";
+    private GeoSampleType type;
 
     private final Collection<GeoVariable> variables;
     private boolean warnedAboutGenePix = false;
@@ -270,11 +271,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return lastUpdateDate;
     }
 
-    public String getLibSource() {
+    @Nullable
+    public GeoLibrarySource getLibSource() {
         return this.libSource;
     }
 
-    public String getLibStrategy() {
+    public GeoLibraryStrategy getLibStrategy() {
         return this.libStrategy;
     }
 
@@ -335,11 +337,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return seriesAppearsIn;
     }
 
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
+    public Collection<String> getSupplementaryFiles() {
+        return supplementaryFiles;
     }
 
     /**
@@ -356,6 +355,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.tagLength;
     }
 
+    @Nullable
     public String getTitleInDataset() {
         return titleInDataset;
     }
@@ -365,7 +365,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      *
      * @return String
      */
-    public String getType() {
+    public GeoSampleType getType() {
         return this.type;
     }
 
@@ -445,11 +445,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.lastUpdateDate = lastUpdateDate;
     }
 
-    public void setLibSource( String libSource ) {
+    public void setLibSource( GeoLibrarySource libSource ) {
         this.libSource = libSource;
     }
 
-    public void setLibStrategy( String libStrategy ) {
+    public void setLibStrategy( GeoLibraryStrategy libStrategy ) {
         this.libStrategy = libStrategy;
     }
 
@@ -468,8 +468,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.seriesAppearsIn = otherSeriesAppearsIn;
     }
 
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public void setSupplementaryFiles( Collection<String> supplementaryFiles ) {
+        this.supplementaryFiles = supplementaryFiles;
+    }
+
+    public void addToSupplementaryFiles( String s ) {
+        this.supplementaryFiles.add( s );
     }
 
     /**
@@ -495,7 +499,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      *
      * @param type new type
      */
-    public void setType( String type ) {
+    public void setType( GeoSampleType type ) {
         this.type = type;
     }
 

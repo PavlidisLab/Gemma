@@ -29,9 +29,9 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -62,10 +62,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public ExpressionDataDoubleMatrix() {
     }
 
-    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         this.init();
 
-        for ( DesignElementDataVector dedv : vectors ) {
+        for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
                         "Cannot convert non-double quantitation types into double matrix:" + dedv
@@ -77,7 +77,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.vectorsToMatrix( vectors );
     }
 
-    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> dataVectors,
+    public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
         this.init();
         for ( QuantitationType qt : quantitationTypes ) {
@@ -86,18 +86,18 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                         "Cannot convert non-double quantitation types into double matrix: " + qt );
             }
         }
-        Collection<DesignElementDataVector> selectedVectors = this.selectVectors( dataVectors, quantitationTypes );
+        Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( dataVectors, quantitationTypes );
         this.vectorsToMatrix( selectedVectors );
     }
 
-    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> dataVectors,
+    public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
         this.init();
         if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalStateException(
                     "Cannot convert non-double quantitation types into double matrix: " + quantitationType );
         }
-        Collection<DesignElementDataVector> selectedVectors = this.selectVectors( dataVectors, quantitationType );
+        Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( dataVectors, quantitationType );
         this.vectorsToMatrix( selectedVectors );
     }
 
@@ -314,7 +314,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[] getColumn( Integer index ) {
+    public Double[] getColumn( int index ) {
         double[] rawResult = this.matrix.getColumn( index );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
@@ -350,25 +350,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[] getRow( Integer index ) {
+    public Double[] getRow( int index ) {
         double[] rawRow = matrix.getRow( index );
         return ArrayUtils.toObject( rawRow );
-    }
-
-    @Override
-    public Double[][] getRows( List<CompositeSequence> designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        Double[][] result = new Double[designElements.size()][];
-        int i = 0;
-        for ( CompositeSequence element : designElements ) {
-            Double[] rowResult = this.getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
     }
 
     @Override
@@ -546,15 +530,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
-     * Convert {@link DesignElementDataVector}s into Double matrix.
+     * Convert {@link BulkExpressionDataVector}s into Double matrix.
      */
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
 
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             if ( vector instanceof ProcessedExpressionDataVector ) {
                 this.ranks
                         .put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
@@ -572,7 +556,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @return DoubleMatrixNamed
      */
     private DoubleMatrix<CompositeSequence, BioMaterial> createMatrix(
-            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
+            Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
@@ -592,7 +576,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         ByteArrayConverter bac = new ByteArrayConverter();
 
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
             byte[] bytes = vector.getData();
 

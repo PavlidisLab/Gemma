@@ -14,6 +14,9 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -78,6 +81,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private TaxonValueObject taxonObject;
 
     private String technologyType;
+
+    /**
+     * The single-cell dimension of the preferred single-cell vectors.
+     */
+    @Nullable
+    private SingleCellDimensionValueObject singleCellDimension;
 
     /**
      * Required when using the class as a spring bean.
@@ -152,6 +161,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
     }
 
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment ) {
+        this( ee );
+        this.singleCellDimension = new SingleCellDimensionValueObject( singleCellDimension, cellTypeAssignment );
+    }
+
     public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
         this( ee, false, false );
     }
@@ -206,6 +220,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.isShared = vo.getIsShared();
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
+        this.singleCellDimension = vo.getSingleCellDimension();
     }
 
     /**

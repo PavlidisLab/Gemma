@@ -9,6 +9,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -27,7 +28,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataIntegerMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         this.init();
 
         for ( DesignElementDataVector dedv : vectors ) {
@@ -69,7 +70,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer[] getColumn( Integer index ) {
+    public Integer[] getColumn( int index ) {
         return this.matrix.getColumn( index );
     }
 
@@ -97,17 +98,8 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer[] getRow( Integer index ) {
+    public Integer[] getRow( int index ) {
         return this.matrix.getRow( index );
-    }
-
-    @Override
-    public Integer[][] getRows( List<CompositeSequence> designElements ) {
-        Integer[][] res = new Integer[this.rows()][];
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
-        }
-        return res;
     }
 
     @Override
@@ -142,7 +134,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
@@ -158,7 +150,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * @return DoubleMatrixNamed
      */
     private IntegerMatrix<CompositeSequence, Integer> createMatrix(
-            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
+            Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
@@ -177,7 +169,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
         ByteArrayConverter bac = new ByteArrayConverter();
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
 
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No design element for " + vector;
