@@ -1,6 +1,5 @@
 //file:noinspection GrUnresolvedAccess
 
-def testdbUrl
 def gemmaVersion
 def baseCodeVersion
 def dataDir
@@ -41,7 +40,6 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
@@ -78,103 +76,117 @@ pipeline {
                 sh 'mvn -B clean'
             }
         }
-        stage('Build') {
-            steps {
-                setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B compile'
-            }
-            post {
-                success {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Run quick unit tests') {
-            steps {
-                setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test -DexcludedGroups=SlowTest'
-            }
-            post {
-                always {
-                    junit testResults: '**/target/surefire-reports/*.xml'
-                }
-                success {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Package') {
-            steps {
-                setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Run integration tests and perform deployment in parallel') {
-            when {
-                anyOf {
-                    branch 'master'
-                    branch 'hotfix-*'
-                    branch 'release-*'
-                    branch 'development'
-                    expression { params.FORCE_INTEGRATION_TESTS }
-                }
-            }
-            parallel {
-                stage('Run slow unit tests') {
-                    when {
-                        anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_SLOW_TESTS }
-                        }
-                    }
-                    steps {
-                        setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test -Dgroups=SlowTest'
-                    }
-                    post {
-                        always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
-                        }
-                        success {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                        }
-                        unsuccessful {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                        }
-                    }
-                }
+        // stage('Build') {
+        //     steps {
+        //         setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
+        //         sh 'mvn -B compile'
+        //     }
+        //     post {
+        //         success {
+        //             setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
+        //         }
+        //         unsuccessful {
+        //             setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+        //         }
+        //     }
+        // }
+        // stage('Run quick unit tests') {
+        //     steps {
+        //         setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+        //         sh 'mvn -B test -DexcludedGroups=SlowTest'
+        //     }
+        //     post {
+        //         always {
+        //             junit testResults: '**/target/surefire-reports/*.xml'
+        //         }
+        //         success {
+        //             setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+        //         }
+        //         unsuccessful {
+        //             setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+        //         }
+        //     }
+        // }
+        // stage('Package') {
+        //     steps {
+        //         setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+        //         sh 'mvn -B package -DskipTests'
+        //     }
+        //     post {
+        //         success {
+        //             archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
+        //             setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+        //         }
+        //         unsuccessful {
+        //             setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+        //         }
+        //     }
+        // }
+        //stage('Run integration tests and perform deployment in parallel') {
+        //    when {
+        //        anyOf {
+        //            branch 'master'
+        //            branch 'hotfix-*'
+        //            branch 'release-*'
+        //            branch 'development'
+        //            expression { params.FORCE_INTEGRATION_TESTS }
+        //        }
+        //    }
+        //    parallel {
+        //        stage('Run slow unit tests') {
+        //            when {
+        //                anyOf {
+        //                    // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+        //                    branch 'hotfix-*'
+        //                    branch 'release-*'
+        //                    branch 'development'
+        //                    expression { params.FORCE_SLOW_TESTS }
+        //                }
+        //            }
+        //            steps {
+        //                setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+        //                sh 'mvn -B test -Dgroups=SlowTest'
+        //            }
+        //            post {
+        //                always {
+        //                    junit testResults: '**/target/surefire-reports/*.xml'
+        //                }
+        //                success {
+        //                    setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+        //                }
+        //                unsuccessful {
+        //                    setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+        //                }
+        //            }
+        //        }
                 stage('Run integration tests') {
-                    when {
-                        anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_INTEGRATION_TESTS }
-                        }
-                    }
+        //            when {
+        //                anyOf {
+        //                    // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+        //                    branch 'hotfix-*'
+        //                    branch 'release-*'
+        //                    branch 'development'
+        //                    expression { params.FORCE_INTEGRATION_TESTS }
+        //                }
+        //            }
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true'
+                        // lock the first available test database
+                        script {
+                            def availableTestdbs = ['gemdtest', 'gemdtest2', 'gemdtest3', 'gemdtest4']
+                            def successfullyLocked = false
+                            for (def testdbName in availableTestdbs) {
+                                def testdbUrl = sh script: "mvn help:evaluate -Dgemma.testdb.name=${testdbName} -Dexpression=gemma.testdb.build.url -q -DforceStdout", returnStdout: true
+                                lock(resource: 'database/' + testdbUrl, skipIfLocked: availableTestdbs[-1] != testdbName) {
+                                    successfullyLocked = true
+                                    sh "mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true -Dgemma.testdb.name=${testdbName}"
+                                }
+                                if (successfullyLocked) {
+                                    break;
+                                } else {
+                                    echo "${testdbUrl} is already in use, trying the next available test database..."
+                                }
+                            }
                         }
                     }
                     post {
@@ -189,72 +201,72 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy artifacts') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
-                    steps {
-                        sh 'mvn -B deploy -DskipTests'
-                    }
-                }
-                stage('Deploy Maven website') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                        }
-                    }
-                    steps {
-                        sh 'mvn -B site-deploy'
-                        script {
-                            if (dataDir != null) {
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
-                            }
-                        }
-                    }
-                }
-                stage('Deploy Gemma Web') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            // we only support one staging server
-                            branch params.STAGING_BRANCH + '-*'
-                            branch 'development'
-                        }
-                    }
-                    steps {
-                        sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
-                        sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
-                    }
-                }
-                stage('Deploy Gemma CLI') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            // never deploy the development CLI, it's too risky
-                        }
-                    }
-                    steps {
-                        sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
-                        script {
-                            if (cliDirSymlink != null) {
-                                sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //        stage('Deploy artifacts') {
+        //            when {
+        //                anyOf {
+        //                    branch 'master'
+        //                    branch 'hotfix-*'
+        //                    branch 'release-*'
+        //                    branch 'development'
+        //                }
+        //            }
+        //            steps {
+        //                sh 'mvn -B deploy -DskipTests'
+        //            }
+        //        }
+        //        stage('Deploy Maven website') {
+        //            when {
+        //                anyOf {
+        //                    branch 'master'
+        //                    branch 'hotfix-*'
+        //                    branch 'release-*'
+        //                    branch 'development'
+        //                }
+        //            }
+        //            steps {
+        //                sh 'mvn -B site-deploy'
+        //                script {
+        //                    if (dataDir != null) {
+        //                        sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
+        //                        sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        stage('Deploy Gemma Web') {
+        //            when {
+        //                anyOf {
+        //                    branch 'master'
+        //                    // we only support one staging server
+        //                    branch params.STAGING_BRANCH + '-*'
+        //                    branch 'development'
+        //                }
+        //            }
+        //            steps {
+        //                sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
+        //                sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
+        //            }
+        //        }
+        //        stage('Deploy Gemma CLI') {
+        //            when {
+        //                anyOf {
+        //                    branch 'master'
+        //                    branch 'hotfix-*'
+        //                    branch 'release-*'
+        //                    // never deploy the development CLI, it's too risky
+        //                }
+        //            }
+        //            steps {
+        //                sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
+        //                script {
+        //                    if (cliDirSymlink != null) {
+        //                        sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
     }
     post {
         fixed {

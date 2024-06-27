@@ -503,7 +503,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -518,7 +518,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -647,6 +647,18 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>custom-testdb</id>
+			<activation>
+				<property>
+					<name>gemma.testdb.name</name>
+				</property>
+			</activation>
+			<properties>
+				<!-- when passing -Dgemma.testdb.name, we need to override the value from Gemma.properties -->
+				<testJvmOptions>${jvmOptions} -Dgemma.testdb.name=${gemma.testdb.name}</testJvmOptions>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
@@ -745,5 +757,6 @@
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
+		<testJvmOptions>${jvmOptions}</testJvmOptions>
 	</properties>
 </project>
