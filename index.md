@@ -44,6 +44,9 @@ programatically.
 However, most users will find more convenient programmatic access to Gemma's data and analyses via <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">gemma.R</a> (R/Bioconductor)
  and <a href="https://github.com/PavlidisLab/gemmapy">gemmapy</a> (Python).
 
+The R and Python packages offer similar functionality and have their own documentation and examples/vignettes. For convenience we have 
+gathered some examples in both languages here **[here](R-python-examples.html)**.
+
 ## Data sources
 We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [here (full list)](https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html) and [here (search)](https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html).
 
