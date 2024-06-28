@@ -410,7 +410,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             if ( b != null ) {
                 vo.setBaselineGroup( new FactorValueBasicValueObject( b.getFactorValue() ) );
                 if ( b.getSecondFactorValue() != null ) {
-                    vo.setBaselineGroup( new FactorValueBasicValueObject( b.getSecondFactorValue() ) );
+                    vo.setSecondBaselineGroup( new FactorValueBasicValueObject( b.getSecondFactorValue() ) );
                 }
             }
         }

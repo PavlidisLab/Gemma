@@ -43,7 +43,10 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
         extraHeaderComments.add( "Experimental factors: " + experimentalFactorsMetadata );
 
         if ( baseline != null ) {
-            extraHeaderComments.add( "Baseline: " + formatFactorValue( baseline.getFactorValue() ) + ( baseline.getSecondFactorValue() != null ? ":" + baseline.getSecondFactorValue() : "" ) );
+            extraHeaderComments.add( "Baseline: " + formatFactorValue( baseline.getFactorValue() ) );
+            if ( baseline.getSecondFactorValue() != null ) {
+                extraHeaderComments.add( "Second baseline: " + formatFactorValue( baseline.getSecondFactorValue() ) );
+            }
         }
 
         // add the basic columns
