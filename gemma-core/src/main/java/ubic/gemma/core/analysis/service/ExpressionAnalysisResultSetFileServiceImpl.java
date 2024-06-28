@@ -4,10 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.gemma.model.analysis.expression.diff.Contrast;
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -29,15 +26,15 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
 
     @Override
     public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
-        writeTsvInternal( entity, null, writer );
+        writeTsvInternal( entity, null, null, writer );
     }
 
     @Override
-    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
-        writeTsvInternal( analysisResultSet, resultId2Genes, appendable );
+    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+        writeTsvInternal( analysisResultSet, baseline, resultId2Genes, appendable );
     }
 
-    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
         List<String> extraHeaderComments = new ArrayList<>();
 
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
@@ -45,16 +42,8 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                 .collect( Collectors.joining( ", " ) ) + "]";
         extraHeaderComments.add( "Experimental factors: " + experimentalFactorsMetadata );
 
-        if ( analysisResultSet.getBaselineGroup() != null ) {
-            // TODO: add support for interaction baselines, see https://github.com/PavlidisLab/Gemma/issues/1122
-            if ( analysisResultSet.getBaselineGroup().getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ) {
-                extraHeaderComments.add( "Baseline: " + formatFactorValue( analysisResultSet.getBaselineGroup() ) );
-            } else {
-                // we have a few experiments with continuous factors with a baseline set in the result set, this
-                // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
-                log.warn( String.format( "Unexpected factor type for baseline %s of result set with ID %d, it should be categorical.",
-                        analysisResultSet.getBaselineGroup(), analysisResultSet.getId() ) );
-            }
+        if ( baseline != null ) {
+            extraHeaderComments.add( "Baseline: " + formatFactorValue( baseline.getFactorValue() ) + ( baseline.getSecondFactorValue() != null ? ":" + baseline.getSecondFactorValue() : "" ) );
         }
 
         // add the basic columns

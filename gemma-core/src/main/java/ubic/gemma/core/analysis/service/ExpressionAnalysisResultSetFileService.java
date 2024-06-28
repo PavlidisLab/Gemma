@@ -1,8 +1,10 @@
 package ubic.gemma.core.analysis.service;
 
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
@@ -42,6 +44,9 @@ public interface ExpressionAnalysisResultSetFileService extends TsvFileService<E
      * - gene NCBI ID
      * - gene official symbol
      * - gene official name
+     * @param baseline    baseline to include in the TSV header
+     * @param result2Genes mapping of results to genes
+     *
      */
-    void writeTsv( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes, Writer writer ) throws IOException;
+    void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, Map<Long, List<Gene>> result2Genes, Writer writer ) throws IOException;
 }

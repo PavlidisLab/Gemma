@@ -49,10 +49,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
-import ubic.gemma.model.analysis.expression.diff.Baseline;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -70,6 +67,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -96,6 +94,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -146,6 +145,8 @@ public class DatasetsWebService {
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Context
     private UriInfo uriInfo;
@@ -843,6 +844,23 @@ public class DatasetsWebService {
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ) )
                 .collect( Collectors.toList() );
+
+        // obtain result set IDs of results that lack baselines (i.e. for interactions)
+        Set<Long> missingBaselines = payload.stream()
+                .filter( vo -> vo.getBaseline() == null )
+                .map( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ).collect( Collectors.toSet() );
+        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesByIds( missingBaselines );
+        for ( DifferentialExpressionAnalysisResultByGeneValueObject r : payload ) {
+            Baseline b2 = b.get( r.getResultSetId() );
+            if ( b2 == null ) {
+                continue;
+            }
+            r.setBaseline( new FactorValueBasicValueObject( b2.getFactorValue() ) );
+            if ( b2.getSecondFactorValue() != null ) {
+                r.setSecondBaseline( new FactorValueBasicValueObject( b2.getSecondFactorValue() ) );
+            }
+        }
+
         return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, ( long ) ids.size() ),
                 query != null ? query.getValue() : null,
                 filters,
@@ -915,6 +933,19 @@ public class DatasetsWebService {
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
                 .collect( Collectors.toList() );
+        // obtain result set IDs of results that lack baselines (i.e. for interactions)
+        Set<ExpressionAnalysisResultSet> missingBaselines = payload.stream()
+                .filter( vo -> baselineMap.get( vo ) == null )
+                .map( DifferentialExpressionAnalysisResult::getResultSet )
+                .collect( toIdentifiableSet() );
+        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselines( missingBaselines );
+        for ( DifferentialExpressionAnalysisResult r : payload ) {
+            Baseline b2 = b.get( r.getResultSet() );
+            if ( b2 == null ) {
+                continue;
+            }
+            baselineMap.put( r, b2 );
+        }
         return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, new OutputStreamWriter( output ) );
     }
 
