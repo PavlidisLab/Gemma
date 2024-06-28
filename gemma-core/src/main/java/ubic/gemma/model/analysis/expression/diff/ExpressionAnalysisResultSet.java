@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +41,10 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     private static final long serialVersionUID = 7226901182513177574L;
     private Integer numberOfProbesTested;
     private Integer numberOfGenesTested;
+    @Nullable
     private FactorValue baselineGroup;
+    @Nullable
+    private FactorValue secondBaselineGroup;
     private Set<DifferentialExpressionAnalysisResult> results = new HashSet<>();
     private DifferentialExpressionAnalysis analysis;
     private PvalueDistribution pvalueDistribution;
@@ -91,16 +95,36 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     }
 
     /**
-     * @return The group considered baseline when computing scores and 'upRegulated'. This might be a control group if it could
-     * be recognized. For continuous factors, this would be null. For interaction terms we do not compute this so it
-     * will also be null.
+     * The group considered baseline when computing scores and 'upRegulated'. This might be a control group if it could
+     * be recognized.
+     * <p>
+     * Corresponds to {@link ContrastResult#getFactorValue()}.
+     * <p>
+     * For interactions, {@link #getSecondBaselineGroup()} will also be populated.
+     * <p>
+     * For continuous factors, this would be {@code null}.
      */
+    @Nullable
     public FactorValue getBaselineGroup() {
         return this.baselineGroup;
     }
 
-    public void setBaselineGroup( FactorValue baselineGroup ) {
+    public void setBaselineGroup( @Nullable FactorValue baselineGroup ) {
         this.baselineGroup = baselineGroup;
+    }
+
+    /**
+     * If this result set is for an interaction of factors, this is the second baseline group.
+     * <p>
+     * Corresponds to {@link ContrastResult#getSecondFactorValue()}.
+     */
+    @Nullable
+    public FactorValue getSecondBaselineGroup() {
+        return this.secondBaselineGroup;
+    }
+
+    public void setSecondBaselineGroup( @Nullable FactorValue secondBaselineGroup ) {
+        this.secondBaselineGroup = secondBaselineGroup;
     }
 
     public Set<HitListSize> getHitListSizes() {

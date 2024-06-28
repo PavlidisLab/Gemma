@@ -46,6 +46,9 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         if ( analysisResultSet.getBaselineGroup() != null ) {
             this.baselineGroup = new FactorValueBasicValueObject( analysisResultSet.getBaselineGroup() );
         }
+        if ( analysisResultSet.getSecondBaselineGroup() != null ) {
+            this.secondBaselineGroup = new FactorValueBasicValueObject( analysisResultSet.getSecondBaselineGroup() );
+        }
     }
 
     /**

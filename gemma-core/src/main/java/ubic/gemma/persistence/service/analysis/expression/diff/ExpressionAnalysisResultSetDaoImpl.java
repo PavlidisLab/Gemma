@@ -228,6 +228,15 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
         }
+
+        if ( ears.getBaselineGroup() != null ) {
+            Hibernate.initialize( ears.getBaselineGroup() );
+            Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
+        }
+        if ( ears.getSecondBaselineGroup() != null ) {
+            Hibernate.initialize( ears.getSecondBaselineGroup() );
+            Hibernate.initialize( ears.getSecondBaselineGroup().getExperimentalFactor() );
+        }
     }
 
     @Override
@@ -371,7 +380,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
      */
     private void populateBaselines( List<DifferentialExpressionAnalysisResultSetValueObject> vos ) {
         Collection<DifferentialExpressionAnalysisResultSetValueObject> vosWithMissingBaselines = vos.stream()
-                .filter( vo -> vo.getBaselineGroup() == null )
+                .filter( vo -> vo.getBaselineGroup() == null && vo.getSecondBaselineGroup() == null )
                 .collect( Collectors.toList() );
         if ( vosWithMissingBaselines.isEmpty() ) {
             return;

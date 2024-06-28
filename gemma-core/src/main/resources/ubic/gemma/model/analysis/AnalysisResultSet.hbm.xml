@@ -38,6 +38,10 @@
                              lazy="proxy" fetch="select">
                     <column name="BASELINE_GROUP_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
+                <many-to-one name="secondBaselineGroup" class="ubic.gemma.model.expression.experiment.FactorValue"
+                             lazy="proxy" fetch="select">
+                    <column name="SECOND_BASELINE_GROUP_FK" not-null="false" sql-type="BIGINT"/>
+                </many-to-one>
                 <!-- FIXME: use cascade="all" when https://github.com/PavlidisLab/Gemma/issues/825 is resolved -->
                 <set name="results" lazy="true" fetch="select" inverse="true" mutable="false">
                     <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_RESULT_SET_FKC">
