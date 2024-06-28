@@ -56,13 +56,17 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
+    /**
+     * FIXME: this projection only selects the ID of the result set, which is subsequently fetched. It would be more
+     *        efficient to fetch all the necessary columns instead, but I don't know how to do that.
+     */
     private final Projection rootEntityProjection;
 
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
         rootEntityProjection = Projections.sqlGroupProjection(
-                "{alias}.*",
+                "{alias}.ID",
                 "{alias}.ID",
                 new String[] { "ID" },
                 new Type[] { sessionFactory.getTypeHelper().entity( ExpressionAnalysisResultSet.class ) } );
