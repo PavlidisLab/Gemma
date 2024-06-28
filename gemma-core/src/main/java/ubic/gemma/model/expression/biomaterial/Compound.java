@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.*;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
@@ -63,6 +66,20 @@ public class Compound extends AbstractDescribable implements Serializable {
 
     public void setRegistryNumber( String registryNumber ) {
         this.registryNumber = registryNumber;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Compound ) )
+            return false;
+        Compound that = ( Compound ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
     }
 
     public static final class Factory {

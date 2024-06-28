@@ -152,7 +152,7 @@ public class ExpressionDataMatrixColumnSort {
                         // make sure we choose a fv that is actually used (see above for non-arbitrary case)
                         for ( FactorValue fv : factor.getFactorValues() ) {
                             for ( BioMaterial bm : samplesUsed ) {
-                                for ( FactorValue bfv : bm.getFactorValues() ) {
+                                for ( FactorValue bfv : bm.getAllFactorValues() ) {
                                     if ( fv.equals( bfv ) ) {
                                         arbitraryBaselineFV = fv;
                                         break;
@@ -365,7 +365,7 @@ public class ExpressionDataMatrixColumnSort {
 
         for ( BioMaterial bm : bms ) {
             // boolean used = false;
-            Collection<FactorValue> factorValues = bm.getFactorValues();
+            Collection<FactorValue> factorValues = bm.getAllFactorValues();
             for ( FactorValue fv : factorValues ) {
                 if ( !fv2bms.containsKey( fv ) ) {
                     fv2bms.put( fv, new ArrayList<BioMaterial>() );
@@ -399,7 +399,7 @@ public class ExpressionDataMatrixColumnSort {
 
         Collection<FactorValue> usedValues = new HashSet<>();
         for ( BioMaterial bm : bms ) {
-            usedValues.addAll( bm.getFactorValues() );
+            usedValues.addAll( bm.getAllFactorValues() );
         }
 
         for ( ExperimentalFactor ef : factors ) {
@@ -449,7 +449,7 @@ public class ExpressionDataMatrixColumnSort {
          * Get the factor values in the order we have things right now
          */
         for ( BioMaterial bm : bms ) {
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( !ef.getFactorValues().contains( fv ) ) {
                     continue;
                 }
@@ -470,7 +470,7 @@ public class ExpressionDataMatrixColumnSort {
 
         for ( BioMaterial bm : bms ) {
             boolean found = false;
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( ef.getFactorValues().contains( fv ) ) {
                     found = true;
                     assert chunks.containsKey( fv );
@@ -530,7 +530,7 @@ public class ExpressionDataMatrixColumnSort {
     private static Collection<ExperimentalFactor> getFactors( Collection<BioMaterial> bms ) {
         Map<ExperimentalFactor, Collection<FactorValue>> usedFactorValues = new HashMap<>();
         for ( BioMaterial bm : bms ) {
-            Collection<FactorValue> factorValues = bm.getFactorValues();
+            Collection<FactorValue> factorValues = bm.getAllFactorValues();
             for ( FactorValue fv : factorValues ) {
 
                 if ( fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( "DE_Exclude"::equalsIgnoreCase ) ) {
@@ -591,7 +591,7 @@ public class ExpressionDataMatrixColumnSort {
 
         if ( ExpressionDataMatrixColumnSort.log.isDebugEnabled() ) {
             for ( BioMaterial b : organized ) {
-                for ( FactorValue f : b.getFactorValues() ) {
+                for ( FactorValue f : b.getAllFactorValues() ) {
                     if ( f.getExperimentalFactor().equals( ef ) ) {
                         System.err.println( b.getId() + " " + f );
                     }
@@ -838,7 +838,7 @@ public class ExpressionDataMatrixColumnSort {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
         for ( BioMaterial bm : samplesUsed ) {
-            for ( FactorValue bfv : bm.getFactorValues() ) {
+            for ( FactorValue bfv : bm.getAllFactorValues() ) {
                 if ( fv.equals( bfv ) ) {
                     return true;
                 }

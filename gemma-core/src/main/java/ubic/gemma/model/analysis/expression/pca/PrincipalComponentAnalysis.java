@@ -143,6 +143,20 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
         return result;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof PrincipalComponentAnalysis ) )
+            return false;
+        PrincipalComponentAnalysis that = ( PrincipalComponentAnalysis ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
         public static PrincipalComponentAnalysis newInstance() {
             return new PrincipalComponentAnalysis();

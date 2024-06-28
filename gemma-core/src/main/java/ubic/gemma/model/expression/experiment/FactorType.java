@@ -12,4 +12,9 @@ public enum FactorType {
     public static final FactorType
             CONTINUOUS = continuous,
             CATEGORICAL = categorical;
+
+    @Override
+    public String toString() {
+        return super.toString().toUpperCase();
+    }
 }

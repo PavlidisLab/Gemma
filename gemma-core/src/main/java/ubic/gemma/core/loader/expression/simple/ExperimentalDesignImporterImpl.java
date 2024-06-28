@@ -424,7 +424,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private boolean checkForDuplicateFactorOnBioMaterial( BioMaterial bioMaterial, FactorValue factorValue ) {
         boolean foundMatch = false;
         // make sure we don't add two values.
-        for ( FactorValue existingfv : bioMaterial.getFactorValues() ) {
+        for ( FactorValue existingfv : bioMaterial.getAllFactorValues() ) {
             if ( factorValue.equals( existingfv ) || existingfv.getExperimentalFactor()
                     .equals( factorValue.getExperimentalFactor() ) ) {
                 ExperimentalDesignImporterImpl.log

@@ -25,6 +25,7 @@ import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Indexed
 public class GeneAlias implements Identifiable, Serializable {
@@ -46,10 +47,7 @@ public class GeneAlias implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( alias );
     }
 
     @Override

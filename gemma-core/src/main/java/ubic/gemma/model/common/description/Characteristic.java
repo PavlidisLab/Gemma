@@ -236,7 +236,7 @@ public class Characteristic extends AbstractDescribable implements Serializable,
             return false;
         Characteristic that = ( Characteristic ) object;
         if ( this.getId() != null && that.getId() != null )
-            return super.equals( object );
+            return getId().equals( that.getId() );
 
         /*
          * at this point, we know we have two Characteristics, at least one of which is transient, so we have to look at
@@ -280,6 +280,22 @@ public class Characteristic extends AbstractDescribable implements Serializable,
 
         public static Characteristic newInstance() {
             return new Characteristic();
+        }
+
+        /**
+         * Create a copy from the given characteristic.
+         */
+        public static Characteristic newInstance( Characteristic from ) {
+            final Characteristic entity = newInstance();
+            entity.setName( from.getName() );
+            entity.setDescription( from.getDescription() );
+            entity.setCategory( from.getCategory() );
+            entity.setCategoryUri( from.getCategoryUri() );
+            entity.setValue( from.getValue() );
+            entity.setValueUri( from.getValueUri() );
+            entity.setEvidenceCode( from.getEvidenceCode() );
+            // no need to copy originalValue, this is only relevant for historical reasons
+            return entity;
         }
 
         public static Characteristic newInstance( String name, String description, String value, @Nullable String valueUri,

@@ -21,7 +21,6 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,6 +72,20 @@ public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis i
 
     public void setResultSetsIncluded( Set<ExpressionAnalysisResultSet> resultSetsIncluded ) {
         this.resultSetsIncluded = resultSetsIncluded;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof GeneDifferentialExpressionMetaAnalysis ) )
+            return false;
+        GeneDifferentialExpressionMetaAnalysis that = ( GeneDifferentialExpressionMetaAnalysis ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
     }
 
     public static final class Factory {

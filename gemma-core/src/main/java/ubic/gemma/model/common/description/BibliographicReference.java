@@ -68,6 +68,19 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     }
 
     @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BibliographicReference ) )
+            return false;
+        BibliographicReference that = ( BibliographicReference ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return false;
+    }
+
+    @Override
     @Field
     public String getName() {
         return super.getName();

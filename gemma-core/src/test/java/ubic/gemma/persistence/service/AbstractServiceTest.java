@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDaoImpl;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,8 +41,6 @@ public class AbstractServiceTest extends BaseDatabaseTest {
 
     @Autowired
     private MyService myService;
-
-    private int i = 0;
 
     public static class ExceptionWithoutMessage extends Exception {
 
@@ -98,7 +96,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
     public void testEnsureInSessionReturnsOriginalCollectionIfAlreadyInSession() {
         List<ExternalDatabase> entities = new ArrayList<>();
         for ( int k = 0; k < 100; k++ ) {
-            entities.add( createFixture() );
+            entities.add( createFixture( k ) );
         }
         assertThat( myService.ensureInSession( entities ) )
                 .isSameAs( entities )
@@ -110,7 +108,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
         List<ExternalDatabase> entities = new ArrayList<>();
 
         for ( int k = 0; k < 100; k++ ) {
-            entities.add( createFixture() );
+            entities.add( createFixture( k ) );
         }
 
         // elements must honor the input order
@@ -131,7 +129,7 @@ public class AbstractServiceTest extends BaseDatabaseTest {
             if ( k % 15 == 0 ) {
                 entities.add( ExternalDatabase.Factory.newInstance( "test" + k, DatabaseType.OTHER ) ); // a transient instance
             } else {
-                entities.add( createFixture() );
+                entities.add( createFixture( k ) );
             }
         }
 
@@ -160,8 +158,8 @@ public class AbstractServiceTest extends BaseDatabaseTest {
         }
     }
 
-    private ExternalDatabase createFixture() {
-        return myService.create( ExternalDatabase.Factory.newInstance( "test" + ( ++i ), DatabaseType.OTHER ) );
+    private ExternalDatabase createFixture( int i ) {
+        return myService.create( ExternalDatabase.Factory.newInstance( "test" + i, DatabaseType.OTHER ) );
     }
 
     private static class MyService extends AbstractService<ExternalDatabase> {

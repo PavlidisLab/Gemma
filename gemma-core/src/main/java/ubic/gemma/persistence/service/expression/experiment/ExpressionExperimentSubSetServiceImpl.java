@@ -17,7 +17,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -26,6 +25,7 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @author pavlidis
@@ -55,8 +55,12 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
-        return this.expressionExperimentSubSetDao.getFactorValuesUsed( subSetId, experimentalFactor );
-
+        Collection<FactorValue> list = this.expressionExperimentSubSetDao.getFactorValuesUsed( subSetId, experimentalFactor );
+        Collection<FactorValueValueObject> result = new HashSet<>();
+        for ( FactorValue fv : list ) {
+            result.add( new FactorValueValueObject( fv ) );
+        }
+        return result;
     }
 
     /**
@@ -68,17 +72,9 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     @Override
     @Transactional
     public void remove( ExpressionExperimentSubSet subset ) {
-        if ( subset == null ) {
-            throw new IllegalArgumentException( "ExperimentSubSet cannot be null" );
-        }
-
+        subset = ensureInSession( subset );
         // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisService
-                .findByExperiment( subset );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            this.differentialExpressionAnalysisService.remove( de );
-        }
-
+        this.differentialExpressionAnalysisService.removeForExperiment( subset );
         super.remove( subset );
     }
 

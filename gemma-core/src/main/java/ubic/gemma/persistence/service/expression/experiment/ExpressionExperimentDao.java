@@ -194,6 +194,12 @@ public interface ExpressionExperimentDao
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
+     * Obtain the preferred quantitation type for single cell data, if available.
+     */
+    @Nullable
+    QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
+
+    /**
      * Obtain the preferred quantitation type, if available.
      */
     @Nullable
@@ -361,6 +367,10 @@ public interface ExpressionExperimentDao
 
     /**
      * Create processed data vectors
+     * <p>
+     * The QT is created if it doesn't exist and is attached to the experiment.
+     * <p>
+     * The number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * @return the number of created processed vectors
      */
     int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
@@ -368,7 +378,7 @@ public interface ExpressionExperimentDao
     /**
      * Remove processed data vectors.
      * <p>
-     * Their corresponding QT is removed and the number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
+     * Their corresponding QT is detached from the experiment and removed. The number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
      * is set to zero.
      * @return the number of removed processed vectors
      */
@@ -376,14 +386,30 @@ public interface ExpressionExperimentDao
 
     /**
      * Replace processed data vectors.
+     * <p>
+     * The QT is reused and the number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * @return the number of vectors replaced
      */
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
+    /**
+     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     */
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
+
+    /**
+     * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
 
     void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
+    void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Delete the given single cell dimension.
+     */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
@@ -402,7 +428,7 @@ public interface ExpressionExperimentDao
      * <p>
      * If the new labelling is preferred, any existing one is marked as non-preferred.
      */
-    void addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment );
+    CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, CellTypeAssignment cellTypeAssignment );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
@@ -414,13 +440,13 @@ public interface ExpressionExperimentDao
     /**
      * Remove the given single-cell data vectors.
      * @param quantitationType quantitation to remove
-     * @param deleteQt detach the QT from the experiment and delete it
-     *                 TODO: add a replaceSingleCellDataVectors to avoid needing this
+     * @param deleteQt         if true, detach the QT from the experiment and delete it
+     *                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 
     /**
-     * Remove all single-cell data vectors.
+     * Remove all single-cell data vectors and their quantitation types.
      */
     int removeAllSingleCellDataVectors( ExpressionExperiment ee );
 }

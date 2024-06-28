@@ -20,6 +20,8 @@ package ubic.gemma.model.genome;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
+import java.util.Objects;
+
 @SuppressWarnings("FieldCanBeLocal") // Constant is preferred
 public class PhysicalLocation extends ChromosomeLocation {
 
@@ -99,19 +101,7 @@ public class PhysicalLocation extends ChromosomeLocation {
 
     @Override
     public int hashCode() {
-        int hashCode;
-        hashCode = 29;
-
-        assert this.getChromosome() != null;
-        hashCode += this.getChromosome().hashCode();
-
-        if ( this.getNucleotide() != null )
-            hashCode += this.getNucleotide().hashCode();
-
-        if ( this.getNucleotideLength() != null )
-            hashCode += this.getNucleotideLength().hashCode();
-
-        return hashCode;
+        return Objects.hash( getChromosome(), getNucleotide(), getNucleotideLength() );
     }
 
     @Override
@@ -124,7 +114,8 @@ public class PhysicalLocation extends ChromosomeLocation {
         }
         final PhysicalLocation that = ( PhysicalLocation ) object;
 
-        // if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+        if ( getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
 
         if ( !this.getChromosome().equals( that.getChromosome() ) ) {
             return false;

@@ -71,7 +71,16 @@ public class CellTypeAssignment extends Analysis {
 
     @Override
     public boolean equals( Object object ) {
-        return super.equals( object );
+        if ( this == object )
+            return true;
+        if ( !( object instanceof CellTypeAssignment ) )
+            return false;
+        CellTypeAssignment that = ( CellTypeAssignment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( cellTypes, that.cellTypes )
+                && Arrays.equals( cellTypeIndices, that.cellTypeIndices );
     }
 
     @Override

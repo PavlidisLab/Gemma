@@ -70,21 +70,19 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
     private String fastqHeaders;
 
     @Override
-    public int hashCode() {
-        return Objects.hash( getName() );
-    }
-
-    @Override
     public boolean equals( Object object ) {
         if ( this == object )
             return true;
         if ( !( object instanceof BioAssay ) )
             return false;
         final BioAssay that = ( BioAssay ) object;
-        if ( this.getId() != null && that.getId() != null )
+        if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
-        return Objects.equals( this.getName(), that.getName() )
-                && Objects.equals( this.getDescription(), that.getDescription() );
+        } else if ( getName() != null && that.getName() != null ) {
+            return getName().equals( that.getName() );
+        } else {
+            return false;
+        }
     }
 
     @Override

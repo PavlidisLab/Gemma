@@ -52,6 +52,20 @@ public class Treatment extends AbstractDescribable implements Serializable {
         this.orderApplied = orderApplied;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Treatment ) )
+            return false;
+        Treatment that = ( Treatment ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
 
         public static ubic.gemma.model.expression.biomaterial.Treatment newInstance() {

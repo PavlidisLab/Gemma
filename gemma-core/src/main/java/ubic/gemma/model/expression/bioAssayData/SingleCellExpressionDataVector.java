@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -44,16 +43,11 @@ public class SingleCellExpressionDataVector extends DesignElementDataVector {
         }
         SingleCellExpressionDataVector other = ( SingleCellExpressionDataVector ) object;
         if ( getId() != null && other.getId() != null ) {
-            return Objects.equals( getId(), other.getId() );
+            return getId().equals( other.getId() );
         }
-        return super.equals( object )
-                && Objects.equals( singleCellDimension, other.singleCellDimension )
-                && Arrays.equals( dataIndices, other.dataIndices );
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( super.hashCode(), singleCellDimension );
+        return Objects.equals( getExpressionExperiment(), other.getExpressionExperiment() )
+                && Objects.equals( getQuantitationType(), other.getQuantitationType() )
+                && Objects.equals( getDesignElement(), other.getDesignElement() );
     }
 
     @Override

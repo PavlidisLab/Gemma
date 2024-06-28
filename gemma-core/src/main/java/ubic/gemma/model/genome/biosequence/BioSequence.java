@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import org.hibernate.search.annotations.*;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -26,6 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -170,11 +174,6 @@ public class BioSequence extends AbstractDescribable implements Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode;
-
-        if ( this.getId() != null ) {
-            return 29 * this.getId().hashCode();
-        }
         int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
         int taxonHash = this.getTaxon() == null ? 0 : this.getTaxon().hashCode();
         int lengthHash = this.getLength() == null ? 0 : this.getLength().hashCode();
@@ -182,38 +181,24 @@ public class BioSequence extends AbstractDescribable implements Serializable {
         int seqHash = 0;
         if ( dbHash == 0 && nameHash == 0 && lengthHash == 0 && this.getSequence() != null )
             seqHash = this.getSequence().hashCode();
-        hashCode = 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
-
-        return hashCode;
+        return 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
     }
 
     @Override
     public boolean equals( Object object ) {
-
+        if ( this == object )
+            return true;
         if ( !( object instanceof BioSequence ) ) {
             return false;
         }
         final BioSequence that = ( BioSequence ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-
-        // The way this is constructed, ALL of the items must be the same.
-        if ( this.getSequenceDatabaseEntry() != null && that.getSequenceDatabaseEntry() != null && !this
-                .getSequenceDatabaseEntry().equals( that.getSequenceDatabaseEntry() ) )
-            return false;
-
-        if ( this.getTaxon() != null && that.getTaxon() != null && !this.getTaxon().equals( that.getTaxon() ) )
-            return false;
-
-        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
-            return false;
-
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( this.getSequence() != null && that.getSequence() != null && !this.getSequence()
-                .equals( that.getSequence() ) )
-            return false;
-
-        return this.getLength() == null || that.getLength() == null || this.getLength().equals( that.getLength() );
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getSequenceDatabaseEntry(), that.getSequenceDatabaseEntry() )
+                && Objects.equals( getTaxon(), that.getTaxon() )
+                && Objects.equals( getLength(), that.getLength() )
+                && Objects.equals( getSequence(), that.getSequence() );
     }
 
     public static final class Factory {

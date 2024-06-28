@@ -48,14 +48,6 @@ public class AuditEvent implements Identifiable, Serializable {
     private User performer = null;
 
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        //noinspection ConstantConditions // Hibernate populates id through reflection
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-        return hashCode;
-    }
-
-    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;

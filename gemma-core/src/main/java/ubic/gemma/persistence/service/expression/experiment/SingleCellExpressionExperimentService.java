@@ -17,10 +17,16 @@ import java.util.List;
 
 public interface SingleCellExpressionExperimentService {
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Collection<SingleCellExpressionDataVector> getPreferredSingleCellDataVectors( ExpressionExperiment ee );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
+
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 
     /**
@@ -53,6 +59,15 @@ public interface SingleCellExpressionExperimentService {
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
+     * Obtain the single-cell dimension associated to the preferred set of single-cell vectors.
+     * <p>
+     * Cell type assignments are eagerly initialized.
+     */
+    @Nullable
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    SingleCellDimension getPreferredSingleCellDimensionWithCellTypeAssignments( ExpressionExperiment ee );
+
+    /**
      * Relabel the cell types of an existing set of single-cell vectors.
      *
      * @param newCellTypeLabels the new cell types labels, must match the number of cells
@@ -63,12 +78,12 @@ public interface SingleCellExpressionExperimentService {
     CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description );
 
     /**
-     * Remove the given cell type labelling.
-     *
-     * If the cell type labelling is preferred and applies the the preferred vectors as per {@link #getPreferredCellTypeAssignment(ExpressionExperiment)}, the cell type factor will be removed.
+     * Remove the given cell type assignment.
+     * <p>
+     * If the cell type labelling is preferred and applies to the preferred vectors as per {@link #getPreferredCellTypeAssignment(ExpressionExperiment)}, the cell type factor will be removed.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    void removeCellTypeLabels( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment );
+    void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment );
 
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
@@ -92,6 +107,15 @@ public interface SingleCellExpressionExperimentService {
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
     /**
+     * Obtain the cell type factor.
+     * @return a cell type factor, or null of none exist
+     * @throws IllegalStateException if there is more than one such factor
+     */
+    @Nullable
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    ExperimentalFactor getCellTypeFactor( ExpressionExperiment ee );
+
+    /**
      * Recreate the cell type factor based on the preferred labelling of the preferred single-cell vectors.
      * <p>
      * Analyses involving the factor are removed and samples mentioning the factor values are updated as per
@@ -99,8 +123,9 @@ public interface SingleCellExpressionExperimentService {
      *
      * @return the created cell type factor
      * @throws IllegalStateException if the dataset does not have a preferred cell type labelling for its preferred set
-     *                               of single-cell vectors
+     *                               of single-cell vectors or if there is more than one cell type factor present in the
+     *                               dataset
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee );
 }

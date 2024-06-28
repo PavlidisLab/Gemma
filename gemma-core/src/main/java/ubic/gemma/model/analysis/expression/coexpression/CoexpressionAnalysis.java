@@ -58,6 +58,18 @@ public class CoexpressionAnalysis extends SingleExperimentAnalysis {
         this.numberOfLinks = numberOfLinks;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof CoexpressionAnalysis ) )
+            return false;
+        CoexpressionAnalysis that = ( CoexpressionAnalysis ) object;
+        if ( getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
+        return false;
+    }
+
     public static final class Factory {
         public static CoexpressionAnalysis newInstance() {
             return new CoexpressionAnalysis();

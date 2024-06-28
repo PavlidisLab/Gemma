@@ -2,6 +2,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
@@ -19,7 +20,7 @@ import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
  */
 @Getter
 @Setter
-public class SingleCellDimension implements Identifiable {
+public class SingleCellDimension extends AbstractDescribable implements Identifiable {
 
     private Long id;
 
@@ -99,9 +100,6 @@ public class SingleCellDimension implements Identifiable {
 
     @Override
     public int hashCode() {
-        if ( id != null ) {
-            return Objects.hash( id );
-        }
         // no need to hash numberOfCells, it's derived from cellIds's size
         return Objects.hash( cellIds, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
     }

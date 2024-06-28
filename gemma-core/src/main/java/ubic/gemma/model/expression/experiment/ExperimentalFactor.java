@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -143,6 +144,20 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @Deprecated
     public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( !( obj instanceof ExperimentalFactor ) )
+            return false;
+        ExperimentalFactor other = ( ExperimentalFactor ) obj;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getCategory(), other.getCategory() )
+                && Objects.equals( getName(), other.getName() )
+                && Objects.equals( getDescription(), other.getDescription() );
     }
 
     @Override

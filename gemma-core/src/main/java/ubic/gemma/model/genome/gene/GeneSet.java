@@ -105,6 +105,18 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.sourceAccession = sourceAccession;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof GeneSet ) )
+            return false;
+        GeneSet that = ( GeneSet ) object;
+        if ( getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
+        return false;
+    }
+
     public static final class Factory {
         public static GeneSet newInstance() {
             return new GeneSet();

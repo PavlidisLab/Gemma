@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,12 +67,22 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
 
         @Bean
-        public ExperimentalFactorService experimentalFactorService() {
-            return mock();
+        public ExperimentalFactorService experimentalFactorService( ExperimentalFactorDao experimentalFactorDao ) {
+            return new ExperimentalFactorServiceImpl( experimentalFactorDao, mock(), mock() );
+        }
+
+        @Bean
+        public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
+            return new ExperimentalFactorDaoImpl( sessionFactory );
         }
 
         @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
     }
@@ -86,7 +97,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
-    private ExperimentalFactorService experimentalFactorService;
+    private SessionFactory sessionFactory;
 
     private ArrayDesign ad;
     private ExpressionExperiment ee;
@@ -119,7 +130,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @After
     public void resetMocks() {
-        reset( experimentalFactorService, auditTrailService );
+        reset( auditTrailService );
     }
 
     @Test
@@ -188,7 +199,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
-                .satisfiesOnlyOnce( qt -> assertThat( qt.getIsPreferred() ).isTrue() );
+                .satisfiesOnlyOnce( qt -> assertThat( qt.getIsSingleCellPreferred() ).isTrue() );
         verify( auditTrailService, times( 2 ) ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
     }
 
@@ -301,12 +312,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .extracting( Characteristic::getValue )
                 .containsExactlyInAnyOrder( "A", "B" );
 
-        scExpressionExperimentService.removeCellTypeLabels( ee, scd, newLabelling );
+        scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isNull();
-
-        // FIXME: add proper assertions for the created factor, but the ExperimentalFactorService is mocked
-        verify( experimentalFactorService, times( 2 ) ).create( any( ExperimentalFactor.class ) );
-        verify( experimentalFactorService, times( 2 ) ).remove( any( ExperimentalFactor.class ) );
     }
 
     /**
@@ -322,11 +329,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2 );
-        assertThat( qt.getIsPreferred() ).isFalse();
-        assertThat( qt2.getIsPreferred() ).isTrue();
+        assertThat( qt.getIsSingleCellPreferred() ).isFalse();
+        assertThat( qt2.getIsSingleCellPreferred() ).isTrue();
 
         // now we're going to do something really bad...
-        qt.setIsPreferred( true );
+        qt.setIsSingleCellPreferred( true );
 
         assertThatThrownBy( () -> scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .isInstanceOf( NonUniqueResultException.class );
@@ -334,7 +341,6 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testRecreateCellTypeFactor() {
-        when( experimentalFactorService.create( any( ExperimentalFactor.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );
         ExperimentalFactor factor = scExpressionExperimentService.recreateCellTypeFactor( ee );
@@ -371,7 +377,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.LOG2 );
-        qt.setIsPreferred( preferred );
+        qt.setIsSingleCellPreferred( preferred );
         sessionFactory.getCurrentSession().persist( qt );
         return createSingleCellVectors( createSingleCellDimension(), qt );
     }
@@ -386,7 +392,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.LOG2 );
-        qt.setIsPreferred( false );
+        qt.setIsSingleCellPreferred( false );
         sessionFactory.getCurrentSession().persist( qt );
         return createSingleCellVectors( singleCellDimension, qt );
     }

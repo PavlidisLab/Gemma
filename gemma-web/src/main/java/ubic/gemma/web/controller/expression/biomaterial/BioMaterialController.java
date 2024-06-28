@@ -177,6 +177,7 @@ public class BioMaterialController {
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
         bioM = bioMaterialService.thaw( bioM );
         Collection<FactorValueValueObject> results = new HashSet<>();
+        // TODO: include inherited factor values (but the UI is not ready yet for that)
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
         for ( FactorValue value : factorValues )

@@ -21,35 +21,45 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
 @Getter
 @Setter
-public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
+public class ProcessedExpressionDataVector extends BulkExpressionDataVector implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3948846630785289034L;
 
     /**
-     * relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
-     * about the expession level without referring to any absolute baseline other than the minimum in the entire
-     * dataset, based on the mean expression measurement for the probe. For two-color data sets, this is computed using
-     * the intensity values for the probe in the two channels, not from the ratios stored in this vector. For one-color
-     * data sets, this is computed directly from the intensity levels in this vector.
+     * Relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
+     * about the expression level without referring to any absolute baseline other than the minimum in the entire
+     * dataset, based on the mean expression measurement for the probe.
+     * <p>
+     * For two-color data sets, this is computed using the intensity values for the probe in the two channels, not from
+     * the ratios stored in this vector. For one-color data sets, this is computed directly from the intensity levels in
+     * this vector.
      */
+    @Nullable
     private Double rankByMean;
 
     /**
      * The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
-     * about the expession level without referring to any absolute baseline other than the minimum in the entire
+     * about the expression level without referring to any absolute baseline other than the minimum in the entire
      * dataset, based on the maximum expression measurement for the probe (so the probe with the lowest expression is
-     * the one with the lowest maximum value). For two-color data sets, this is computed using the intensity values for
-     * the probe in the two channels, not from the ratios stored in this vector. For one-color data sets, this is
-     * computed directly from the intensity levels in this vector.
+     * the one with the lowest maximum value).
+     * <p>
+     * For two-color data sets, this is computed using the intensity values for the probe in the two channels, not from
+     * the ratios stored in this vector. For one-color data sets, this is computed directly from the intensity levels in
+     * this vector.
      */
+    @Nullable
     private Double rankByMax;
 
     @Override
@@ -58,7 +68,12 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
             return true;
         if ( !( object instanceof ProcessedExpressionDataVector ) )
             return false;
-        return super.equals( object );
+        ProcessedExpressionDataVector other = ( ProcessedExpressionDataVector ) object;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getExpressionExperiment(), other.getExpressionExperiment() )
+                && Objects.equals( getQuantitationType(), other.getQuantitationType() )
+                && Objects.equals( getDesignElement(), other.getDesignElement() );
     }
 
     public static final class Factory {

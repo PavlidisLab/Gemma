@@ -143,7 +143,7 @@ public class DifferentialExpressionAnalysisUtil {
         Map<FactorValue, Integer> counts = new HashMap<>();
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
 
                     if ( !counts.containsKey( fv ) ) {
@@ -219,7 +219,7 @@ public class DifferentialExpressionAnalysisUtil {
         Map<Collection<FactorValue>, BioMaterial> seenPairings = new HashMap<>();
         for ( BioMaterial m : biomaterials ) {
 
-            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
+            Collection<FactorValue> factorValuesFromBioMaterial = m.getAllFactorValues();
 
             if ( factorValuesFromBioMaterial.size() < experimentalFactors.size() ) {
                 DifferentialExpressionAnalysisUtil.log
@@ -312,7 +312,7 @@ public class DifferentialExpressionAnalysisUtil {
         Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<>();
         int numHaveAny = 0;
         for ( BioMaterial b : biomaterials ) {
-            Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
+            Collection<FactorValue> biomaterialFactorValues = b.getAllFactorValues();
             Set<FactorValue> factorValuesToConsider = new HashSet<>( biomaterialFactorValues );
             for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
                 numHaveAny++;
@@ -354,7 +354,7 @@ public class DifferentialExpressionAnalysisUtil {
      */
     private static Collection<FactorValue> getRelevantFactorValues( Collection<ExperimentalFactor> factors,
             BioMaterial biomaterial ) {
-        Collection<FactorValue> factorValues = biomaterial.getFactorValues();
+        Collection<FactorValue> factorValues = biomaterial.getAllFactorValues();
 
         Collection<FactorValue> factorValuesToCheck = new HashSet<>();
         for ( FactorValue factorValue : factorValues ) {

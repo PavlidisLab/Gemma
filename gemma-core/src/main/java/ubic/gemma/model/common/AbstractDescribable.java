@@ -18,11 +18,12 @@
  */
 package ubic.gemma.model.common;
 
-public abstract class AbstractDescribable implements Describable {
+import java.util.Objects;
+
+public abstract class AbstractDescribable extends AbstractIdentifiable implements Describable {
 
     private String name;
     private String description;
-    private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -33,40 +34,13 @@ public abstract class AbstractDescribable implements Describable {
     public AbstractDescribable() {
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+    public String getName() {
+        return this.name;
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an Describable instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof AbstractDescribable ) ) {
-            return false;
-        }
-        final Describable that = ( Describable ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    /**
-     * @see AbstractDescribable#toString()
-     */
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() ) + (
-                this.getName() == null ? "" : " Name=" + this.getName() );
+    public void setName( String name ) {
+        this.name = name;
     }
 
     @Override
@@ -79,21 +53,12 @@ public abstract class AbstractDescribable implements Describable {
     }
 
     @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
+    public int hashCode() {
+        return Objects.hash( getName() );
     }
 
     @Override
-    public String getName() {
-        return this.name;
+    public String toString() {
+        return super.toString() + ( this.getName() == null ? "" : " Name=" + this.getName() );
     }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
 }

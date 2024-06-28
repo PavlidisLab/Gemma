@@ -40,6 +40,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
+
 /**
  * @author paul
  * @author keshav
@@ -152,9 +154,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
         for ( BioAssay bm : differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() ) {
-            for ( FactorValue fv : bm.getSampleUsed().getFactorValues() ) {
-                Hibernate.initialize( fv.getExperimentalFactor() );
-            }
+            visitBioMaterials( bm.getSampleUsed(), b -> {
+                for ( FactorValue fv : b.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
+            } );
         }
 
         Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );

@@ -33,7 +33,6 @@ import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -479,7 +478,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             BioAssay ba = bas.iterator().next();
 
-            Collection<FactorValue> fvs = bm.getFactorValues();
+            Collection<FactorValue> fvs = bm.getAllFactorValues();
 
 
             BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
