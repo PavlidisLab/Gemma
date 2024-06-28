@@ -268,9 +268,7 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
-            int maxNumberOfResults ) {
-
+    public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, double threshold, int maxNumberOfResults ) {
         ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
         if ( ar == null ) {
             log.warn( "No diff ex result set with ID=" + resultSetId );
@@ -304,9 +302,8 @@ public class ProcessedExpressionDataVectorServiceImpl
             v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
         }
 
-        // nulls first, really?
         dedvs.sort( Comparator.comparing( DoubleVectorValueObject::getPvalue,
-                Comparator.nullsFirst( Comparator.naturalOrder() ) ) );
+                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         return dedvs;
     }

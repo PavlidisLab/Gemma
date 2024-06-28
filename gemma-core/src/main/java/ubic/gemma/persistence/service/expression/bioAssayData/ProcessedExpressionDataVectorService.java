@@ -191,5 +191,5 @@ public interface ProcessedExpressionDataVectorService
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes,
             ProcessedExpressionDataVectorDao.RankMethod method );
 
-    List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
+    List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, double threshold, int maxNumberOfResults );
 }

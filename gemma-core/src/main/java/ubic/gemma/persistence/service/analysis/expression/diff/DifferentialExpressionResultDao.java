@@ -95,7 +95,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
+    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
             int maxResultsToReturn, int minNumberOfResults );
 
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );

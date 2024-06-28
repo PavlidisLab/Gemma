@@ -136,7 +136,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                         + ( baselineMap != null ? "left join dears.baselineGroup b left join b.experimentalFactor be " : "" )
                         + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
-                        + "group by dears order by dear.correctedPvalue" )
+                        + "group by dears "
+                        // ascending, nulls last
+                        + "order by -dear.correctedPvalue desc" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                 .setParameter( "threshold", threshold );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
@@ -198,7 +200,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         StopWatch timer = StopWatch.createStarted();
         List<?> qResult = getSessionFactory().getCurrentSession()
-                .createQuery( DIFF_EX_RESULTS_BY_GENE_QUERY + " and e.id in (:experimentAnalyzed)"
+                .createQuery( DIFF_EX_RESULTS_BY_GENE_QUERY
+                        + " and e.id in (:experimentAnalyzed) "
+                        + "and r.correctedPvalue <= :threshold"
+                        // no need for the hack, nulls are filtered by the threshold
                         + ( limit > 0 ? " order by r.correctedPvalue" : "" ) )
                 .setParameter( "gene", gene )
                 .setParameterList( "experimentsAnalyzed", optimizeParameterList( experimentsAnalyzed ) )
@@ -230,8 +235,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<?> qResult = getSessionFactory().getCurrentSession()
                 .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                         + "join a.experimentAnalyzed e  "
-                        + "join a.resultSets rs join rs.results r "
-                        + "where e.id in (:experimentsAnalyzed) and r.correctedPvalue < :threshold"
+                        + "join a.resultSets rs "
+                        + "join rs.results r "
+                        + "where e.id in (:experimentsAnalyzed) "
+                        + "and r.correctedPvalue <= :threshold"
                         + ( limit > 0 ? " order by r.correctedPvalue" : "" ) )
                 .setParameterList( "experimentsAnalyzed", optimizeParameterList( experiments ) )
                 .setParameter( "threshold", qvalueThreshold )
@@ -489,7 +496,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, int limit, int minNumberOfResults ) {
+            double threshold, int limit, int minNumberOfResults ) {
         Assert.notNull( resultSet, "The result set must not be null." );
         Assert.isTrue( minNumberOfResults > 0, "Minimum number of results must be greater than zero." );
 
@@ -505,6 +512,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         timer.start();
         String qs = "select r from DifferentialExpressionAnalysisResult r "
                 + "where r.resultSet = :resultSet and r.correctedPvalue <= :threshold "
+                // nulls are filtered out by the threshold, no need for the hack
                 + "order by r.correctedPvalue";
 
         List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
@@ -519,7 +527,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             AbstractDao.log.info( "Too few results met threshold, repeating to just get the top hits" );
             qs = "select r from DifferentialExpressionAnalysisResult r "
                     + "where r.resultSet = :resultSet "
-                    + "order by r.correctedPvalue";
+                    // ascending, nulls last
+                    + "order by -r.correctedPvalue desc";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                     .setParameter( "resultSet", resultSet )
                     .setMaxResults( minNumberOfResults )
@@ -619,7 +628,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 + "where g2s.CS = d.PROBE_FK and c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK = d.ID and g2s.GENE = :gene_id";
 
         if ( threshold > 0.0 ) {
-            sql = sql + " and d.CORRECTED_PVALUE < :threshold ";
+            sql = sql + " and d.CORRECTED_PVALUE <= :threshold ";
         }
 
         if ( limit > 0 ) {
