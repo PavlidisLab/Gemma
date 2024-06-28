@@ -36,8 +36,8 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -61,6 +61,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -408,7 +409,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                         return troubledIds.contains( ee.getId() );
                     }
                 } )
-                .collect( Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) ) ) );
+                .collect( toIdentifiableSet() );
 
         // only retain non-troubled experiments
         expressionExperiments.removeAll( troubledExpressionExperiments );
