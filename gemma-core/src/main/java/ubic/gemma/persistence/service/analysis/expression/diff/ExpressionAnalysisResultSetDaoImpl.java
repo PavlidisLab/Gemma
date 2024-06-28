@@ -21,10 +21,12 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -54,9 +56,16 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
+    private final Projection rootEntityProjection;
+
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
+        rootEntityProjection = Projections.sqlGroupProjection(
+                "{alias}.*",
+                "{alias}.ID",
+                new String[] { "ID" },
+                new Type[] { sessionFactory.getTypeHelper().entity( ExpressionAnalysisResultSet.class ) } );
     }
 
     @Override
@@ -281,6 +290,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
+                .setProjection( rootEntityProjection )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
