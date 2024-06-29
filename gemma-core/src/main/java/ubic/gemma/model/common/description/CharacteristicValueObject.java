@@ -17,12 +17,11 @@ package ubic.gemma.model.common.description;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
@@ -175,7 +174,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
-    public int compareTo( @Nonnull CharacteristicValueObject that ) {
+    public int compareTo( CharacteristicValueObject that ) {
         return COMPARATOR.compare( this, that );
     }
 

@@ -29,6 +29,7 @@ import ubic.gemma.core.completion.BashCompletionGenerator;
 import ubic.gemma.core.completion.CompletionGenerator;
 import ubic.gemma.core.completion.FishCompletionGenerator;
 import ubic.gemma.core.context.SpringContextUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
 import ubic.gemma.core.util.BuildInfo;
@@ -36,7 +37,6 @@ import ubic.gemma.core.util.CLI;
 import ubic.gemma.core.util.HelpUtils;
 import ubic.gemma.core.util.ShellUtils;
 
-import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.*;
@@ -359,6 +359,7 @@ public class GemmaCLI {
         String beanName;
         @Nullable
         String commandName;
+        @Nullable
         String shortDesc;
         Options options;
         boolean allowsPositionalArguments;

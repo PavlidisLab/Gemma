@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

@@ -23,7 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseDao;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;

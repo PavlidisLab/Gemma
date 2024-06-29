@@ -1,7 +1,7 @@
 /**
  * Classes and utilities for profiling the performance of Gemma.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.profiling;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

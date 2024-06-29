@@ -15,10 +15,12 @@ import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -39,8 +41,6 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -93,7 +93,7 @@ public class SearchWebService {
     /**
      * Highlights search result.
      */
-    @ParametersAreNonnullByDefault
+    @NonNullApi
     private class Highlighter extends DefaultHighlighter {
 
         private int highlightedDocuments = 0;

@@ -27,6 +27,8 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Spring Service base class for <code>BlatResultService</code>, provides access to all services and entities referenced
  * by this service.
@@ -59,6 +61,12 @@ public class BlatResultServiceImpl extends AbstractVoEnabledService<BlatResult, 
     @Transactional(readOnly = true)
     public BlatResult thaw( BlatResult blatResult ) {
         return this.blatResultDao.thaw( blatResult );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BlatResult thawOrFail( BlatResult toView ) {
+        return requireNonNull( thaw( toView ) );
     }
 
     @Override

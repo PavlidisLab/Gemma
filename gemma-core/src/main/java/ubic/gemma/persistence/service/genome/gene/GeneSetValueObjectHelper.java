@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -34,7 +35,7 @@ public interface GeneSetValueObjectHelper {
      * @param searchTerm search term
      * @return Go group VO
      */
-    GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
+    GOGroupValueObject convertToGOValueObject( GeneSet gs, @Nullable String goId, String searchTerm );
 
     /**
      * Constructor to build value object from GeneSet. This is a light version and *does not include member ids*! (But

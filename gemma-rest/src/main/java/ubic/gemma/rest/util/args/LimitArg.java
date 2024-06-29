@@ -3,8 +3,6 @@ package ubic.gemma.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nonnull;
-
 /**
  * Argument used to represent a limit.
  */
@@ -23,7 +21,6 @@ public class LimitArg extends AbstractArg<Integer> {
     /**
      * Obtain the value of the limit ensuring that it is smaller than {@link #MAXIMUM}
      */
-    @Nonnull
     @Override
     public Integer getValue() {
         return this.getValue( MAXIMUM );

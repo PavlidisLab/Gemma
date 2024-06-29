@@ -1,6 +1,7 @@
 package ubic.gemma.core.search;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
+
 import java.util.Map;
 
 /**

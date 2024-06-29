@@ -87,7 +87,7 @@ import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -1668,7 +1668,7 @@ public class ExpressionExperimentController {
             }
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject( expressionExperiment );
             result.setPubmedId( Integer.parseInt( pubmedId ) );
-            publication = bibliographicReferenceService.thaw( publication );
+            publication = bibliographicReferenceService.thawOrFail( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );
             return new TaskResult( taskCommand, result );
         }

@@ -25,7 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
@@ -35,9 +36,8 @@ import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing gene sets
@@ -46,7 +46,7 @@ import java.util.*;
  */
 @Service
 @CommonsLog
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> implements GeneSetService {
 
     private static final Double DEFAULT_SCORE = 0.0;
@@ -192,7 +192,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
             securityService.makePrivate( gset );
         }
 
-        return geneSetValueObjectHelper.convertToValueObject( this.load( gset.getId() ) );
+        return geneSetValueObjectHelper.convertToValueObject( gset );
     }
 
     @Override
@@ -220,7 +220,7 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
         }
 
         gset.setDescription( geneSetVO.getDescription() );
-        if ( geneSetVO.getName() != null && geneSetVO.getName().length() > 0 )
+        if ( geneSetVO.getName() != null && !geneSetVO.getName().isEmpty() )
             gset.setName( geneSetVO.getName() );
         this.update( gset );
 
@@ -379,28 +379,20 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
-
-        Collection<GeneValueObject> results;
-
-        GeneSet gs = this.load( object.getId() );
-        if ( gs == null )
-            return null;
-
-        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
-
-        return results;
+        GeneSet gs = this.loadOrFail( object.getId() );
+        return GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
 
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
-        DatabaseBackedGeneSetValueObject vo = loadValueObjectById( object.getId() );
-        if ( vo == null ) {
-            log.warn( String.format( "GeneSet %d was null when reloading it from the database, was it removed?", object.getId() ) );
+        GeneSet gs = load( object.getId() );
+        if ( gs == null ) {
+            log.warn( String.format( "GeneSet with ID %d was null when reloading it from the database, was it removed?", object.getId() ) );
             return Collections.emptySet();
         }
-        return vo.getGeneIds();
+        return gs.getMembers().stream().map( GeneSetMember::getGene ).map( Gene::getId ).collect( Collectors.toSet() );
     }
 
     @Override

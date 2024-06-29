@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.biosequence;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -35,6 +36,7 @@ import java.util.Map;
  */
 public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
 
+    @Nullable
     BioSequence findByAccession( DatabaseEntry accession );
 
     /**
@@ -76,7 +78,11 @@ public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnab
 
     Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
 
+    @Nullable
     BioSequence thaw( BioSequence bs );
 
+    BioSequence thawOrFail( BioSequence bs );
+
+    @Nullable
     BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

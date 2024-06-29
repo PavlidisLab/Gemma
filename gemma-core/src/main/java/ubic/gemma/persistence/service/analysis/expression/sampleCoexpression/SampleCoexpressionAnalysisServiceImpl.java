@@ -34,9 +34,9 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -232,21 +233,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                             matrix.getBioAssayDimension().getId() ) );
         }
 
-        try {
-            double[][] rawMatrix = SampleCoexpressionAnalysisServiceImpl.bac
-                    .byteArrayToDoubleMatrix( matrixBytes, numBa );
-            DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
-            result.setRowNames( bioAssays );
-            result.setColumnNames( bioAssays );
-            result = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( result );
-            result = result.subsetRows( result.getColNames() ); // enforce same order on rows.
-            return result;
-        } catch ( IllegalArgumentException e ) {
-            SampleCoexpressionAnalysisServiceImpl.log.error( e.getMessage(), e );
-            return null;
-        }
+        double[][] rawMatrix = SampleCoexpressionAnalysisServiceImpl.bac
+                .byteArrayToDoubleMatrix( matrixBytes, numBa );
+        DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
+        result.setRowNames( bioAssays );
+        result.setColumnNames( bioAssays );
+        result = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( result );
+        result = result.subsetRows( result.getColNames() ); // enforce same order on rows.
+        return result;
     }
 
+    @Nullable
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
             Collection<ProcessedExpressionDataVector> vectors ) {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
@@ -284,6 +281,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return MatrixStats.correlationMatrix( transpose );
     }
 
+    @Nullable
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
             Collection<ProcessedExpressionDataVector> vectors ) {
         if ( vectors.isEmpty() ) {
@@ -324,6 +322,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
+    @Nullable
     private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
         if ( !importantFactors.isEmpty() ) {
@@ -360,6 +359,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      *        ignored)
      * @return residuals from the regression.
      */
+    @Nullable
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
             DifferentialExpressionAnalysisConfig config ) {
 

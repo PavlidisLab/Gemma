@@ -35,17 +35,13 @@ import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.lang.NonNullApi;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.persistence.util.Pointcuts;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
+import ubic.gemma.persistence.util.Pointcuts;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -58,7 +54,7 @@ import java.util.*;
  */
 @Aspect
 @Component
-@ParametersAreNonnullByDefault
+@NonNullApi
 // Note that we have a special logger configured for this class, so remove events get stored.
 @CommonsLog
 public class AuditAdvice {

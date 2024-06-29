@@ -26,6 +26,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.tasks.maintenance.CharacteristicUpdateCommand;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -41,7 +42,6 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.util.AnchorTagUtil;
 
-import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import java.util.*;
 

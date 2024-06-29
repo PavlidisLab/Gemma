@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.hibernate;
 
 import org.hibernate.transform.ResultTransformer;
+import ubic.gemma.core.lang.Nullable;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  */
 public interface TypedResultTransformer<T> extends ResultTransformer {
 
+    @Nullable
     @Override
     T transformTuple( Object[] tuple, String[] aliases );
 

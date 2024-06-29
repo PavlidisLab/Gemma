@@ -18,9 +18,9 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -198,7 +198,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             log.trace( String.format( "No client ID is could be retrieved; the %s event will be ignored.", eventName ) );
             return;
         }
-        _Event e = new _Event( clientIdRetrievalStrategy.get(), userIdRetrievalStrategy.get(), eventName, date, params );
+        _Event e = new _Event( clientId, userIdRetrievalStrategy.get(), eventName, date, params );
         Errors errors = validateEvent( e );
         if ( errors.hasErrors() ) {
             if ( debug ) {

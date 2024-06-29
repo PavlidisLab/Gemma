@@ -2,8 +2,8 @@ package ubic.gemma.persistence.util;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.*;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;

@@ -31,7 +31,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

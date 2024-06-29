@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -809,12 +809,11 @@ public class ExpressionDataMatrixColumnSort {
         Collections.sort( factorValues, new Comparator<FactorValue>() {
             @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
+                if ( o1 == null || o1.getMeasurement() == null || o1.getMeasurement().getValue() == null )
+                    return -1;
+                if ( o2 == null || o2.getMeasurement() == null || o2.getMeasurement().getValue() == null )
+                    return 1;
                 try {
-                    if ( o1 == null || o1.getMeasurement() == null || o1.getMeasurement().getValue() == null )
-                        return -1;
-                    if ( o2 == null || o2.getMeasurement() == null || o2.getMeasurement().getValue() == null )
-                        return 1;
-
                     double d1 = Double.parseDouble( o1.getMeasurement().getValue() );
                     double d2 = Double.parseDouble( o2.getMeasurement().getValue() );
                     if ( d1 < d2 )
@@ -822,7 +821,6 @@ public class ExpressionDataMatrixColumnSort {
                     else if ( d1 > d2 )
                         return 1;
                     return 0;
-
                 } catch ( NumberFormatException e ) {
                     return o1.getMeasurement().getValue().compareTo( o2.getMeasurement().getValue() );
                 }

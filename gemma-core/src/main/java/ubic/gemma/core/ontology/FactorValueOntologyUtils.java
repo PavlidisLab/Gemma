@@ -2,11 +2,11 @@ package ubic.gemma.core.ontology;
 
 import lombok.Value;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

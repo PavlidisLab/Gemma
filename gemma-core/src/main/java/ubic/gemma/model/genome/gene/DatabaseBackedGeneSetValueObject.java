@@ -38,9 +38,8 @@
 package ubic.gemma.model.genome.gene;
 
 import lombok.extern.apachecommons.CommonsLog;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Taxon;
-
-import javax.annotation.Nullable;
 
 /**
  * @author tvrossum

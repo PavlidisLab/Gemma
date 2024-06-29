@@ -1,9 +1,9 @@
 package ubic.gemma.core.search;
 
 import org.junit.Test;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +18,7 @@ public class SearchResultTest {
 
     private static class FooBar implements Identifiable {
 
+        @Nullable
         private final Long id;
 
         private FooBar( @Nullable Long id ) {
@@ -25,6 +26,7 @@ public class SearchResultTest {
         }
 
         @Override
+        @Nullable
         public Long getId() {
             return id;
         }

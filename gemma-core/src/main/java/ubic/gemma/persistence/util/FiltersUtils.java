@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.ArrayUtils;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**

@@ -15,11 +15,12 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 

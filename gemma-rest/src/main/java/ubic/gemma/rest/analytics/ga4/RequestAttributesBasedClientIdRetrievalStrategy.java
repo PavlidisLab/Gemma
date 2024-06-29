@@ -4,8 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 import static ubic.gemma.rest.analytics.ga4.GoogleAnalytics4Provider.isValidClientId;
 

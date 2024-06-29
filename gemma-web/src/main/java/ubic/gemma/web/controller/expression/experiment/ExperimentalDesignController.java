@@ -32,7 +32,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
@@ -45,12 +44,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -135,7 +132,13 @@ public class ExperimentalDesignController extends BaseController {
     public void createExperimentalFactor( EntityDelegator<ExperimentalDesign> e, ExperimentalFactorValueWebUIObject efvo ) {
         if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
+        if ( ed == null ) {
+            throw new EntityNotFoundException( "No ExperimentalDesign with ID " + e.getId() );
+        }
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No ExpressionExperiment found for ExperimentalDesign with ID " + e.getId() );
+        }
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.valueOf( efvo.getType() ) );
@@ -236,7 +239,6 @@ public class ExperimentalDesignController extends BaseController {
             }
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-
     }
 
     public void createFactorValue( EntityDelegator<ExperimentalFactor> e ) {
@@ -247,9 +249,13 @@ public class ExperimentalDesignController extends BaseController {
             throw new EntityNotFoundException( "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No ExpressionExperiment found for ExperimentalDesign with ID " + e.getId() );
+        }
+
         Set<Statement> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
-            //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
             for ( Statement c : fv.getCharacteristics() ) {
                 chars.add( this.createTemplateStatement( c ) );
                 break;
@@ -265,8 +271,6 @@ public class ExperimentalDesignController extends BaseController {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setExperimentalFactor( ef );
         fv.setCharacteristics( chars );
-
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
 
         // this is just a placeholder factor value; use has to edit it.
         expressionExperimentService.addFactorValue( ee, fv );
@@ -572,6 +576,9 @@ public class ExperimentalDesignController extends BaseController {
         }
         // ugly fix for bug 3746
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.loadOrFail( designId ) );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No ExpressionExperiment for ExperimentalDesign with ID " + designId );
+        }
         ee = expressionExperimentService.thawLite( ee );
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -644,7 +651,15 @@ public class ExperimentalDesignController extends BaseController {
         String desc = ee.getDescription();
         ee.setDescription( StringUtils.strip( desc ) );
         RequestContextHolder.getRequestAttributes().setAttribute( "id", ee.getExperimentalDesign().getId(), RequestAttributes.SCOPE_REQUEST );
-        return new ModelAndView( "experimentalDesign.detail" ).addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() ).addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ).addObject( "experimentalDesign", ee.getExperimentalDesign() ).addObject( "expressionExperiment", ee ).addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" ).addAllObjects( getNeedsAttentionDetails( ee ) ).addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
+        Taxon taxon = expressionExperimentService.getTaxon( ee );
+        return new ModelAndView( "experimentalDesign.detail" )
+                .addObject( "taxonId", taxon != null ? taxon.getId() : null )
+                .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
+                .addObject( "experimentalDesign", ee.getExperimentalDesign() )
+                .addObject( "expressionExperiment", ee )
+                .addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" )
+                .addAllObjects( getNeedsAttentionDetails( ee ) )
+                .addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
     }
 
     private Map<String, ?> getNeedsAttentionDetails( ExpressionExperiment ee ) {

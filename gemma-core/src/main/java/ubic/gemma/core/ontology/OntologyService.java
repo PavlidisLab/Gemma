@@ -17,11 +17,11 @@ package ubic.gemma.core.ontology;
 import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;

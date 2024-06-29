@@ -2,10 +2,10 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import org.hibernate.Hibernate;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**

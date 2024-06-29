@@ -14,9 +14,9 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.AnalysisDao;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 /**
@@ -24,6 +24,6 @@ import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
  */
 interface SampleCoexpressionAnalysisDao extends SingleExperimentAnalysisDao<SampleCoexpressionAnalysis> {
 
+    @Nullable
     SampleCoexpressionAnalysis load( ExpressionExperiment ee );
-
 }

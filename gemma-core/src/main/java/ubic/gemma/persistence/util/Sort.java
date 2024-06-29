@@ -3,8 +3,7 @@ package ubic.gemma.persistence.util;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 

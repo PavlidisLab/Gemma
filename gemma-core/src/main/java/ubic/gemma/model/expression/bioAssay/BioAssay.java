@@ -20,13 +20,13 @@ package ubic.gemma.model.expression.bioAssay;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;

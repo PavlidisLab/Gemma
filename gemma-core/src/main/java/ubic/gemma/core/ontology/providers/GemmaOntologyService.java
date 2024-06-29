@@ -21,8 +21,7 @@ package ubic.gemma.core.ontology.providers;
 
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.core.config.Settings;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * Ontology created for Gemma. See bug 4312

@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
@@ -15,7 +16,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +23,13 @@ import java.util.Set;
 
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit );
 
     long countResults( ExpressionAnalysisResultSet ears );
@@ -36,6 +39,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
     @CheckReturnValue
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes );
@@ -44,6 +48,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 
+    @Nullable
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
     Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
@@ -52,5 +57,4 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     @Nullable
     Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resulSet );
-
 }

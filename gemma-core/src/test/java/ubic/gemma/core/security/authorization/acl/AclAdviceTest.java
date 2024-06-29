@@ -93,6 +93,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         String groupName = this.randomName();
         securityService.createGroup( groupName );
         UserGroup g = userService.findGroupByName( groupName );
+        assertNotNull( g );
         aclTestUtils.checkHasAcl( g );
         aclTestUtils.checkHasAces( g );
         userService.delete( g );

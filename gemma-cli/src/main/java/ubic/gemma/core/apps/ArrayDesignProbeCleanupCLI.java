@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.*;
 
 /**

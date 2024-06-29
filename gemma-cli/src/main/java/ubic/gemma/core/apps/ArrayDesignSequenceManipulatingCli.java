@@ -25,6 +25,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -131,7 +132,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
-    protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
+    protected boolean shouldRun( @Nullable Date skipIfLastRunLaterThan, ArrayDesign design,
             Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) || design.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
             log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
@@ -183,7 +184,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( @Nullable Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( isAutoSeek() ) {
@@ -211,10 +212,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             if ( StringUtils.isBlank( shortName ) )
                 continue;
             ArrayDesign ad = this.locateArrayDesign( shortName );
-            if ( ad == null ) {
-                log.warn( shortName + " not found" );
-                continue;
-            }
             arrayDesignsToProcess.add( ad );
         }
         if ( arrayDesignsToProcess.isEmpty() ) {
@@ -226,7 +223,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
      * @param eventClass if null, then all events are added.
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            @Nullable Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditEventService.getEvents( arrayDesign ) ) {
@@ -352,8 +349,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         }
 
         if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
+            throw new RuntimeException( "No arrayDesign " + name + " found" );
         }
+
         return arrayDesign;
     }
 }

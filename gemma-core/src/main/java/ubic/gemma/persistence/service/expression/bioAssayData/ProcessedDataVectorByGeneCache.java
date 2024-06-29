@@ -14,11 +14,11 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

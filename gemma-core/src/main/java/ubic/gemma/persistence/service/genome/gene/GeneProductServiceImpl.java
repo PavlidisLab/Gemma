@@ -38,6 +38,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @see GeneProductService
  */
@@ -85,6 +87,12 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public GeneProduct thawOrFail( GeneProduct gp ) {
+        return requireNonNull( thaw( gp ) );
+    }
+
+    @Override
     @Transactional
     public void remove( GeneProduct entity ) {
         remove( Collections.singleton( entity ) );
@@ -113,7 +121,7 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
 
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
-            gp = this.thaw( gp );
+            gp = this.thawOrFail( gp );
             Collection<DatabaseEntry> accessions = gp.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<>();
             for ( DatabaseEntry de : accessions ) {

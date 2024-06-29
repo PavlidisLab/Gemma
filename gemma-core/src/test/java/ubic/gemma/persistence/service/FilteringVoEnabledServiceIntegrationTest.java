@@ -5,6 +5,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -77,6 +78,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
         }
     }
 
+    @Nullable
     private static String getStubForPropType( FilteringService<?> filteringService, String prop ) {
         List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( prop );
         if ( allowedValues != null ) {

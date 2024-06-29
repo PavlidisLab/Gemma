@@ -16,7 +16,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.FiltersUtils;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -18,7 +19,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
-import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -103,7 +103,11 @@ public class RootWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
     public ResponseDataObject<UserValueObject> getMyself() {
-        return respond( getUserVo( userManager.getCurrentUser() ) );
+        User user = userManager.getCurrentUser();
+        if ( user == null ) {
+            throw new NotFoundException( "There is no current user." );
+        }
+        return respond( getUserVo( user ) );
     }
 
     /**

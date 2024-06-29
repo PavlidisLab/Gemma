@@ -1,0 +1,6 @@
+<root>
+    <item
+        name='org.springframework.security.core.context.SecurityContext org.springframework.security.core.Authentication getAuthentication()'>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
+    </item>
+</root>

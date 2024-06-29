@@ -1,7 +1,7 @@
 /**
  *
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.metrics.binder.database;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

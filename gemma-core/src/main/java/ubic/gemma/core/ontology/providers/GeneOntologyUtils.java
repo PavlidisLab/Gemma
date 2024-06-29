@@ -4,7 +4,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class GeneOntologyUtils {
 

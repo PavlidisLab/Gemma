@@ -18,16 +18,16 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.genome.gene.GOGroupValueObject;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**

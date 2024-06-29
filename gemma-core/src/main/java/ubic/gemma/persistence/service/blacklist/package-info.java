@@ -3,7 +3,7 @@
  * <p>
  * For now, only platforms and experiments can be blacklisted.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.persistence.service.blacklist;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

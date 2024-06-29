@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.BaseImmutableService;
@@ -31,5 +32,6 @@ public interface DatabaseEntryService extends BaseImmutableService<DatabaseEntry
     /**
      * Find the latest (as per its version or ID) database entry by accession.
      */
+    @Nullable
     DatabaseEntry findLatestByAccession( String accession );
 }

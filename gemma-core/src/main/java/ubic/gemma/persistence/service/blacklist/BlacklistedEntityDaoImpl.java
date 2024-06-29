@@ -25,20 +25,20 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -86,11 +86,11 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
 
     @Override
     public boolean isBlacklisted( ExpressionExperiment dataset ) {
-        Long c = ( Long ) getSessionFactory().getCurrentSession().createQuery(
+        Long c = ( Long ) requireNonNull( getSessionFactory().getCurrentSession().createQuery(
                         "select count(distinct be) from BlacklistedExperiment be where be.shortName = :shortName or be.externalAccession.accession = :accession" )
                 .setParameter( "shortName", dataset.getShortName() )
                 .setParameter( "accession", dataset.getAccession() != null ? dataset.getAccession().getAccession() : null )
-                .uniqueResult();
+                .uniqueResult() );
         return c > 0;
     }
 
@@ -114,7 +114,7 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
      */
     @Override
     protected BlacklistedValueObject doLoadValueObject( BlacklistedEntity entity ) {
-        return BlacklistedValueObject.fromEntity( Objects.requireNonNull( this.load( entity.getId() ),
+        return BlacklistedValueObject.fromEntity( requireNonNull( this.load( entity.getId() ),
                 String.format( "No BlacklistedEntity with ID %d.", entity.getId() ) ) );
     }
 

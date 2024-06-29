@@ -3,11 +3,10 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
@@ -242,7 +241,7 @@ public class Statement extends Characteristic {
     }
 
     @Override
-    public int compareTo( @Nonnull Characteristic characteristic ) {
+    public int compareTo( Characteristic characteristic ) {
         if ( characteristic instanceof Statement ) {
             return COMPARATOR.compare( this, ( Statement ) characteristic );
         }

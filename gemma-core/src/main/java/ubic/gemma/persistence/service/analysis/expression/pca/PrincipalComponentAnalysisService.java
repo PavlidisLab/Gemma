@@ -16,6 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.pca;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -43,6 +44,7 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );
 }

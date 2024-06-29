@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.association.coexpression;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
@@ -126,6 +127,7 @@ public interface CoexpressionDao {
      */
     int queryAndCache( Gene gene );
 
+    @Nullable
     Map<SupportDetails, Gene2GeneCoexpression> initializeFromOldData( Gene gene, Map<Long, Gene> geneIdMap,
             Map<NonPersistentNonOrderedCoexpLink, SupportDetails> linksSoFar, Set<Long> skipGenes );
 

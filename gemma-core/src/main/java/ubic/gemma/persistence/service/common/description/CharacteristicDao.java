@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import lombok.Value;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -27,7 +28,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -106,6 +106,7 @@ public interface CharacteristicDao
     /**
      * Return the characteristic with the most frequently used non-null value by URI.
      */
+    @Nullable
     Characteristic findBestByUri( String uri );
 
     /**
@@ -137,6 +138,7 @@ public interface CharacteristicDao
      * <p>
      * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
      */
+    @Nullable
     String normalizeByValue( Characteristic characteristic );
 
     Collection<Characteristic> findByValue( String search );

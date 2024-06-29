@@ -18,17 +18,13 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseDao;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

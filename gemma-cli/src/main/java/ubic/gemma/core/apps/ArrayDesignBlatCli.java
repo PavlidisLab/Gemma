@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.Blat;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
@@ -259,9 +260,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private class ProcessArrayDesign implements Runnable {
 
         private ArrayDesign arrayDesign;
+        @Nullable
         private final Date skipIfLastRunLaterThan;
 
-        private ProcessArrayDesign( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
+        private ProcessArrayDesign( ArrayDesign arrayDesign, @Nullable  Date skipIfLastRunLaterThan ) {
             this.arrayDesign = arrayDesign;
             this.skipIfLastRunLaterThan = skipIfLastRunLaterThan;
         }

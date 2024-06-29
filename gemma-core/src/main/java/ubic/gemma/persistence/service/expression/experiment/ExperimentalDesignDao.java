@@ -18,19 +18,20 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseDao;
-
-import javax.annotation.Nullable;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
  */
 public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
 
+    @Nullable
     ExperimentalDesign loadWithExperimentalFactors( Long id );
 
+    @Nullable
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
     /**

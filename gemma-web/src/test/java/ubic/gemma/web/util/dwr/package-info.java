@@ -2,7 +2,7 @@
  * Utilities for testing DWR endpoints.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.web.util.dwr;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

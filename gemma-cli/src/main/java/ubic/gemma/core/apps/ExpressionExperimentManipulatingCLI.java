@@ -27,6 +27,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -53,7 +54,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -530,7 +530,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * @param eventClass can be null
      * @return boolean
      */
-    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
+    protected boolean noNeedToRun( Auditable auditable, @Nullable Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
         Date skipIfLastRunLaterThan = this.getLimitingDate();
         List<AuditEvent> events = this.auditEventService.getEvents( auditable );

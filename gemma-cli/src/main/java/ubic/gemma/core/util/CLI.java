@@ -2,8 +2,7 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * Interface for CLI tools.

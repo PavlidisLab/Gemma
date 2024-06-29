@@ -1,10 +1,10 @@
 package ubic.gemma.core.analysis.service;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;

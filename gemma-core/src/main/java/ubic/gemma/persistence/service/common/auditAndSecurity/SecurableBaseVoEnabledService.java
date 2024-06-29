@@ -5,7 +5,7 @@ import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 

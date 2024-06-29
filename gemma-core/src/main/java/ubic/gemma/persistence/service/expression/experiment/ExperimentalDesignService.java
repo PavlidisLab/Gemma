@@ -19,11 +19,11 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -39,6 +39,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign load( Long id );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign loadWithExperimentalFactors( Long id );
 
@@ -60,6 +61,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
      * @param experimentalDesign experimental design
      * @return experiment the given design belongs to
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 

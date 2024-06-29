@@ -92,14 +92,12 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
 
         List<?> results = queryObject.list();
 
-        if ( results != null ) {
-            for ( Object object : results ) {
-                BlatResult br = ( BlatResult ) object;
-                if ( br.getTargetChromosome() != null ) {
-                    Hibernate.initialize( br.getTargetChromosome() );
-                }
-                Hibernate.initialize( br.getQuerySequence() );
+        for ( Object object : results ) {
+            BlatResult br = ( BlatResult ) object;
+            if ( br.getTargetChromosome() != null ) {
+                Hibernate.initialize( br.getTargetChromosome() );
             }
+            Hibernate.initialize( br.getQuerySequence() );
         }
 
         return ( Collection<BlatResult> ) results;

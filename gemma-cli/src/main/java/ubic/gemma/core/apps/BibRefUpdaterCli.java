@@ -96,7 +96,7 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
                 log.info( "No reference with id=" + id );
                 continue;
             }
-            bibref = bibliographicReferenceService.thaw( bibref );
+            bibref = bibliographicReferenceService.thawOrFail( bibref );
             try {
                 BibliographicReference updated = bibliographicReferenceService.refresh( bibref.getPubAccession()
                         .getAccession() );

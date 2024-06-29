@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -44,7 +45,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -324,6 +324,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @param force force-update the GENE2CS table
      * @return the reason for updating, or null not to update
      */
+    @Nullable
     private String needsToRefreshGene2Cs( boolean force ) {
         if ( force ) {
             return "Force-updating the GENE2CS table.";

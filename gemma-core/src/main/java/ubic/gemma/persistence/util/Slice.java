@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.util;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
+
 import java.util.AbstractList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;

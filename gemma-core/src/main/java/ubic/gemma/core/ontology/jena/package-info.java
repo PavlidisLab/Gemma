@@ -3,7 +3,7 @@
  * <p>
  * Try to avoid depending directly on Jena more than necessary and favour high-level abstractions supplied by baseCode.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.ontology.jena;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

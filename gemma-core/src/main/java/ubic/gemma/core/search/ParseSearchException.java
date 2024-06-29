@@ -1,8 +1,7 @@
 package ubic.gemma.core.search;
 
 import org.apache.lucene.queryParser.ParseException;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * An exception that indicate that the search query could not be parsed.

@@ -5,8 +5,8 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

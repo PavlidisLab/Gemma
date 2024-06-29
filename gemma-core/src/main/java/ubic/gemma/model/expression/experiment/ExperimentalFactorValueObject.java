@@ -24,10 +24,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.stream.Collectors;
 

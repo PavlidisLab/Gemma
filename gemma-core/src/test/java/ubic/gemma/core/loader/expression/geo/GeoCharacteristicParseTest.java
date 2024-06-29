@@ -120,6 +120,7 @@ public class GeoCharacteristicParseTest {
         boolean found1 = false;
         boolean found2 = false;
         for ( Characteristic ch : t.getCharacteristics() ) {
+            assertNotNull( ch.getCategory() );
             if ( ch.getCategory().equals( "biological sex" ) ) {
                 assertEquals( "male", ch.getValue() );
                 assertEquals( "http://purl.obolibrary.org/obo/PATO_0000047", ch.getCategoryUri() );

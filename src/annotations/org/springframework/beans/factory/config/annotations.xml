@@ -1,0 +1,6 @@
+<root>
+    <item
+        name='org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor java.lang.Object postProcessBeforeInstantiation(java.lang.Class&lt;?&gt;, java.lang.String)'>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
+    </item>
+</root>

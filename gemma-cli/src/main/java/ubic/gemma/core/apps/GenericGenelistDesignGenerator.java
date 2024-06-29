@@ -44,6 +44,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.File;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Create (or update) an array design based on a list of NCBI gene IDs desired to be on the platform.
  *
@@ -111,7 +113,8 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     @Override
     protected void doWork() throws Exception {
 
-        ArrayDesign platform = arrayDesignService.findByShortName( this.platformShortName );
+        ArrayDesign platform = requireNonNull( arrayDesignService.findByShortName( this.platformShortName ),
+                "No platform with shortname " + this.platformShortName );
         platform = arrayDesignService.thaw( platform );
 
         // test whether the geneListFileName file exists and is readable
@@ -167,14 +170,13 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
             }
 
-            boolean geneExists = gene != null;
-            if ( !geneExists ) {
+            if ( gene == null ) {
                 log.warn( "No gene for NCBI ID = " + ncbiId + " but adding dummy sequence anyway (no gene product association wil be made)" );
                 geneNotFound++;
                 // continue;
                 // but still make sure there is an element on the platform for it.
             } else {
-                gene = geneService.thawLite( gene );
+                gene = requireNonNull( geneService.thawLite( gene ), "No Gene with ID " + gene.getId() );
             }
 
             if ( gene != null && gene.getProducts().isEmpty() ) {
@@ -230,7 +232,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                     if ( !noDB ) bioSequence = bioSequenceService.create( bioSequence );
                 }
 
-                if ( geneExists ) { // we only create the Biosequence side if the gene doesn't exist. But we make this dummy gene product even if the gene has no transcripts in Gemma.
+                if ( gene != null ) { // we only create the Biosequence side if the gene doesn't exist. But we make this dummy gene product even if the gene has no transcripts in Gemma.
                     GeneProduct geneProduct = GeneProduct.Factory.newInstance();
                     geneProduct.setGene( gene );
                     geneProduct.setDummy( true );

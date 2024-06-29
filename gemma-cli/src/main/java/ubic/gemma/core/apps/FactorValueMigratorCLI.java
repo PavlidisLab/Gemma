@@ -9,6 +9,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
@@ -155,7 +156,8 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
         noop = commandLine.hasOption( NOOP_OPTION );
     }
 
-    private Long parseLongIfNonBlank( String s ) {
+    @Nullable
+    private Long parseLongIfNonBlank( @Nullable String s ) {
         return StringUtils.isBlank( s ) ? null : Long.parseLong( StringUtils.strip( s ) );
     }
 

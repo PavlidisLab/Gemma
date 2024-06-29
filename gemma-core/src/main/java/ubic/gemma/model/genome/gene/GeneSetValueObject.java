@@ -25,12 +25,12 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.model.SecureValueObject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

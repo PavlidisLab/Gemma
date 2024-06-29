@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssay;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -31,7 +32,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;

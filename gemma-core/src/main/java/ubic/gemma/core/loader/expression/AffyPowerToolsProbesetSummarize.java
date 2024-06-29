@@ -14,51 +14,37 @@
  */
 package ubic.gemma.core.loader.expression;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.config.Settings;
+
+import java.io.*;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author paul
@@ -87,7 +73,7 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * @param  bmap     bMap
      * @param  fileName file name
-     * @return          BioAssay, or null if not found.
+     * @return BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
 
@@ -180,7 +166,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  originalPlatform original platform
      * @param  bioAssays        BAs to use
      * @param  files            list of CEL files (any other files included will be ignored)
-     * @return                  raw data vectors
+     * @return raw data vectors
      */
     Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
@@ -208,7 +194,7 @@ public class AffyPowerToolsProbesetSummarize {
      *                               than one
      *                               original platform, so we're not trying to match up bioassays that are not relevant.
      * @param  bioAssaysToUse        that we're dealing with (could be a subset of a multi-platform experiment)
-     * @return                       raw data vectors
+     * @return raw data vectors
      * @throws IOException           io problem
      * @throws FileNotFoundException file not found
      */
@@ -220,7 +206,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         AffyPowerToolsProbesetSummarize.log.info( "Parsing " + aptOutputFileToRead );
 
-        try (InputStream is = new FileInputStream( aptOutputFileToRead )) {
+        try ( InputStream is = new FileInputStream( aptOutputFileToRead ) ) {
             DoubleMatrix<String, String> matrix = this.parse( is );
 
             if ( matrix.rows() == 0 ) {
@@ -320,7 +306,6 @@ public class AffyPowerToolsProbesetSummarize {
                         + "data column for at least one sample; got " + obtained + ", expected " + expected + "; problems with:\n"
                         + StringUtils.join( extras, "\n" ) );
             } else if ( obtained < expected ) {
-                //noinspection unchecked
                 Collection<BioAssay> missing = CollectionUtils.subtract( bioAssaysToUse, bad.getBioAssays() );
                 throw new IllegalStateException(
                         "Failed to find a data column for every bioassay in the experiment on the given platform " + targetPlatform
@@ -380,7 +365,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  bioAssayDimension    BA dim
      * @param  targetPlatform       target design (thawed)
      * @param  matrix               matrix read from apt output.
-     * @return                      raw data vectors
+     * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign targetPlatform,
@@ -421,7 +406,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param  ad platform
-     * @return    file or null if not found
+     * @return file or null if not found
      */
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
@@ -451,16 +436,16 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  cdfFileName    e g. HG-U133A_2.cdf
      * @param  celfiles       celfiles
      * @param  outputPath     path
-     * @return                string
+     * @return string
      */
     private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName, List<String> celfiles,
             String outputPath ) {
-        String toolPath = Settings.getString( "affy.power.tools.exec" );
+        String toolPath = requireNonNull( Settings.getString( "affy.power.tools.exec" ) );
 
         /*
          * locate the CDF file
          */
-        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
+        String cdfPath = requireNonNull( Settings.getString( "affy.power.tools.cdf.path" ) );
         String cdfName;
         if ( cdfFileName != null ) {
             cdfName = cdfFileName;
@@ -488,7 +473,7 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * @param  files                files
      * @param  accessionsOfInterest Used for multiplatform studies; if null, ignored
-     * @return                      strings
+     * @return strings
      */
     private List<String> getCelFiles( Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
 
@@ -545,14 +530,14 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  ad         ad
      * @param  celfiles   celfiles
      * @param  outputPath directory
-     * @return            string or null if not found.s
+     * @return string or null if not found.s
      */
     private String getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.
          */
-        String toolPath = Settings.getString( "affy.power.tools.exec" );
-        String refPath = Settings.getString( "affy.power.tools.ref.path" );
+        String toolPath = requireNonNull( Settings.getString( "affy.power.tools.exec" ) );
+        String refPath = requireNonNull( Settings.getString( "affy.power.tools.ref.path" ) );
 
         this.checkFileReadable( toolPath );
 
@@ -600,7 +585,7 @@ public class AffyPowerToolsProbesetSummarize {
      *                          for the data set
      * @param  files            files
      * @param  bioAssays        that we're dealing with (would be a subset of a dataset if multiplatform)
-     * @return                  raw data vectors
+     * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<BioAssay> bioAssays ) {
@@ -660,7 +645,7 @@ public class AffyPowerToolsProbesetSummarize {
 
                 if ( ++i % AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_S == 0 ) {
                     File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
-                    Long size = outputFile.length();
+                    long size = outputFile.length();
 
                     String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
                     AffyPowerToolsProbesetSummarize.log

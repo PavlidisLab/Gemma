@@ -26,7 +26,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.lang.Nullable;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +43,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -321,16 +324,14 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentSets;
     }
 
-    private SearchService.SearchResultMap initialSearch( String query, Long taxonId ) throws SearchException {
+    private SearchService.SearchResultMap initialSearch( String query, @Nullable Long taxonId ) throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )
                 .resultType( ExpressionExperimentSet.class ) // add searching for experimentSets
                 .build();
-        Taxon taxonParam;
         if ( taxonId != null ) {
-            taxonParam = taxonService.load( taxonId );
-            settings.setTaxonConstraint( taxonParam );
+            settings.setTaxonConstraint( taxonService.loadOrFail( taxonId ) );
         }
         return searchService.search( settings );
     }

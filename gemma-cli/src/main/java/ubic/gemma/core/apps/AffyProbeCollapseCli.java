@@ -24,11 +24,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 

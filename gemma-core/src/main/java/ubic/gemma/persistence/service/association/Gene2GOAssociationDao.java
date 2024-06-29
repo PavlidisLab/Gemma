@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.association;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;

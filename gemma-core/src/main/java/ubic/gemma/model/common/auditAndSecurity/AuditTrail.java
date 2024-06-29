@@ -20,7 +20,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;

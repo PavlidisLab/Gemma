@@ -33,6 +33,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
@@ -62,9 +63,10 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Update or fill in the data associated with an experiment. Cases include reprocessing data from CEL files (Affymetrix,
@@ -816,7 +818,8 @@ public class DataUpdaterImpl implements DataUpdater {
                 throw new IllegalStateException( "Couldn't figure out the GPL for " + chipname );
             }
 
-            ArrayDesign originalPlatform = arrayDesignService.findByShortName( originalPlatName );
+            ArrayDesign originalPlatform = requireNonNull( arrayDesignService.findByShortName( originalPlatName ),
+                    "No platform with short name " + originalPlatName );
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
 
             log.info( targetPlatform + " associated with " + chip2bms.get( chipname ).size() + " samples based on CEL files ('" + chipname + "')" );

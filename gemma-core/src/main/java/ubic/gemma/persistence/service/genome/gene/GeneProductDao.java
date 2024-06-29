@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -31,6 +32,7 @@ import java.util.Collection;
  */
 public interface GeneProductDao extends BaseVoEnabledDao<GeneProduct, GeneProductValueObject> {
 
+    @Nullable
     GeneProduct findByNcbiId( String ncbiGi );
 
     Collection<Gene> getGenesByName( String search );
@@ -39,6 +41,6 @@ public interface GeneProductDao extends BaseVoEnabledDao<GeneProduct, GeneProduc
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
 
+    @Nullable
     GeneProduct thaw( GeneProduct existing );
-
 }

@@ -49,12 +49,10 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
@@ -242,7 +240,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         // we have to find the right generic platform to use.
         targetArrayDesign = this
-                .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+                .getTestPersistentArrayDesign( probeNames, requireNonNull( taxonService.findByCommonName( "human" ) ) );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
         assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
@@ -332,7 +330,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
             // we have to find the right generic platform to use.
             targetArrayDesign = this
-                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+                    .getTestPersistentArrayDesign( probeNames, requireNonNull( taxonService.findByCommonName( "human" ) ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
             try {
                 dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );

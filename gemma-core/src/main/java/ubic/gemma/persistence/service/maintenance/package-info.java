@@ -1,7 +1,7 @@
 /**
  * Contains classes related to database maintenance.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.persistence.service.maintenance;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

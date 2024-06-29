@@ -23,7 +23,7 @@ import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.Collection;
 
 /**

@@ -44,7 +44,7 @@ import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;

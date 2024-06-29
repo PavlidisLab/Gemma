@@ -46,9 +46,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisServiceImpl;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
@@ -132,8 +131,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
         assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
 
+        Taxon mouse = taxonService.findByCommonName( "mouse" );
+        assertNotNull( mouse );
         assertTrue( differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
+                .getExperimentsWithAnalysis( mouse ).contains( ee.getId() ) );
 
         differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
@@ -289,6 +290,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( "Should have quietly ignored one of the subsets that is not analyzable", 1, analyses.size() );
 
         DifferentialExpressionAnalysis analysis = analyses.iterator().next();
+        assertNotNull( analysis.getSubsetFactorValue() );
         assertEquals( "Subsetting was not done correctly", subsetFactor,
                 analysis.getSubsetFactorValue().getExperimentalFactor() );
         // FIXME: use an assertion here, see https://github.com/PavlidisLab/Gemma/issues/419

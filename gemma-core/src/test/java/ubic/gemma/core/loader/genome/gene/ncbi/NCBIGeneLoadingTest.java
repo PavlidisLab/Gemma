@@ -102,7 +102,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         assertEquals( 1, geneCollection.size() );
 
         g = geneCollection.iterator().next();
-        g = geneService.thaw( g );
+        g = geneService.thawOrFail( g );
 
         Collection<GeneProduct> products = g.getProducts();
         Collection<String> expectedAccessions = new ArrayList<>();

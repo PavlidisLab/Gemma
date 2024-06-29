@@ -22,13 +22,13 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;

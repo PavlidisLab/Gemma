@@ -1,9 +1,9 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import lombok.Value;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**

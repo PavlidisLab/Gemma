@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -36,7 +37,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -204,6 +204,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      */
     Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
 
+    @Nullable
     Taxon getTaxon( Long id );
 
     Map<Long, Boolean> isMerged( Collection<Long> ids );

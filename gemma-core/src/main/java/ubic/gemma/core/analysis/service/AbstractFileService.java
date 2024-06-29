@@ -3,8 +3,8 @@ package ubic.gemma.core.analysis.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.ArrayUtils;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

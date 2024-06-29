@@ -18,13 +18,14 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -48,7 +49,7 @@ public interface GeneSearchService {
 
     Collection<Gene> getGOGroupGenes( String goQuery, @Nullable Taxon taxon ) throws SearchException;
 
-    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException;
+    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, @Nullable Long taxonId ) throws SearchException;
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.

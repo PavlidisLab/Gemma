@@ -21,7 +21,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;

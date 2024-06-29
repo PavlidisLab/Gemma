@@ -1,0 +1,6 @@
+<root>
+    <item
+        name='org.apache.commons.configuration2.AbstractConfiguration java.lang.Object getPropertyInternal(java.lang.String)'>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
+    </item>
+</root>

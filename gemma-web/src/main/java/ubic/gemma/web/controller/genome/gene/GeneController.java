@@ -37,6 +37,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
+import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,6 +78,9 @@ public class GeneController extends BaseController {
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
+        if ( gvo == null ) {
+            throw new EntityNotFoundException( "No gene found with ID " + geneId );
+        }
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
         return gvo;
     }

@@ -3,12 +3,11 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
@@ -41,7 +40,6 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         }
     }
 
-    @Nonnull
     @Override
     @Transactional(readOnly = true)
     public BioAssaySet findOrFail( BioAssaySet entity ) {
@@ -73,7 +71,6 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         return expressionExperimentSubSetService.load( id );
     }
 
-    @Nonnull
     @Override
     public BioAssaySet loadOrFail( Long id ) throws NullPointerException {
         BioAssaySet bas;
@@ -84,7 +81,6 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         return expressionExperimentSubSetService.loadOrFail( id );
     }
 
-    @Nonnull
     @Override
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
         BioAssaySet bas;
@@ -95,7 +91,6 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         return expressionExperimentSubSetService.loadOrFail( id, exceptionSupplier );
     }
 
-    @Nonnull
     @Override
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
         BioAssaySet bas;
@@ -106,7 +101,6 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         return expressionExperimentSubSetService.loadOrFail( id, exceptionSupplier );
     }
 
-    @Nonnull
     @Override
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         BioAssaySet bas;

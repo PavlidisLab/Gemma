@@ -46,7 +46,7 @@ import ubic.gemma.persistence.cache.CacheUtils;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.InputStream;
 import java.util.*;

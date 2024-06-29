@@ -47,7 +47,9 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 /**
@@ -226,7 +228,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
             // we have to find the right generic platform to use.
             ArrayDesign targetArrayDesign = this
-                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+                    .getTestPersistentArrayDesign( probeNames, requireNonNull( taxonService.findByCommonName( "human" ) ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             try {

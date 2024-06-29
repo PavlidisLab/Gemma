@@ -2,7 +2,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class BatchEffectUtils {
 

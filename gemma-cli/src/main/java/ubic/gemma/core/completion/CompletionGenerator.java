@@ -1,8 +1,8 @@
 package ubic.gemma.core.completion;
 
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.PrintWriter;
 
 public interface CompletionGenerator {

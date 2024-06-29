@@ -29,10 +29,10 @@ import org.springframework.security.concurrent.DelegatingSecurityContextCallable
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
+import ubic.gemma.core.lang.NonNullApi;
 import ubic.gemma.core.metrics.binder.ThreadPoolExecutorMetrics;
 import ubic.gemma.core.util.SimpleThreadFactory;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -45,7 +45,7 @@ import java.util.concurrent.*;
  */
 // Valid, inspection is not parsing the context file for some reason
 @Component("taskRunningService")
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class TaskRunningServiceImpl implements TaskRunningService, InitializingBean, DisposableBean {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
 

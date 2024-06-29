@@ -2,8 +2,7 @@ package ubic.gemma.core.ontology;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class OntologyIndividualSimple extends AbstractOntologyResourceSimple implements OntologyIndividual {
 

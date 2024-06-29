@@ -3,8 +3,7 @@ package ubic.gemma.rest.util;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.internal.Iterables;
 import org.springframework.validation.Errors;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class ErrorsAssert extends AbstractAssert<ErrorsAssert, Errors> {
 

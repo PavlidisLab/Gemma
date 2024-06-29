@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -34,6 +35,7 @@ import java.util.Map;
 public interface BibliographicReferenceDao extends BrowsingDao<BibliographicReference>,
         BaseVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject> {
 
+    @Nullable
     BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
@@ -42,11 +44,13 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
      * @param externalId external database id
      * @return found bibliographic reference
      */
+    @Nullable
     BibliographicReference findByExternalId( DatabaseEntry externalId );
 
     Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
-    BibliographicReference thaw( BibliographicReference bibliographicReference );
+    @Nullable
+    BibliographicReference thaw( @Nullable BibliographicReference bibliographicReference );
 
     Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
 

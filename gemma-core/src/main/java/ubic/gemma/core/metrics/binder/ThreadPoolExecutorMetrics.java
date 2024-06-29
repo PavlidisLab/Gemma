@@ -3,11 +3,11 @@ package ubic.gemma.core.metrics.binder;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import ubic.gemma.core.lang.NonNullApi;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class ThreadPoolExecutorMetrics implements MeterBinder {
 
     private final ThreadPoolExecutor executor;

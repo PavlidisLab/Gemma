@@ -54,6 +54,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * This class will handle population of ExpressionExperimentSetValueObjects. Services need to be accessed in order to
  * fill size, experiment ids, and publik/private fields.
@@ -173,7 +175,8 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             eeSet.setName( eeSetVO.getName() );
         expressionExperimentSetService.update( eeSet );
 
-        return expressionExperimentSetService.loadValueObjectById( eeSet.getId(), loadEEIds );
+        return requireNonNull( expressionExperimentSetService.loadValueObjectById( eeSet.getId(), loadEEIds ),
+                "No ExpressionExperimentSet with ID " + eeSet.getId() + " after updating it." );
     }
 
     @Override
@@ -238,10 +241,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
      * @param setVO if null, returns null
      * @return ee set
      */
-    public ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO ) {
-        if ( setVO == null ) {
-            return null;
-        }
+    ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO ) {
         ExpressionExperimentSet entity;
         if ( setVO.getId() == null || setVO.getId() < 0 ) {
             entity = ExpressionExperimentSet.Factory.newInstance();

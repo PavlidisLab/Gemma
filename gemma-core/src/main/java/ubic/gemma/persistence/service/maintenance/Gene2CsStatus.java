@@ -18,7 +18,8 @@
  */
 package ubic.gemma.persistence.service.maintenance;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
+
 import java.io.Serializable;
 import java.util.Date;
 

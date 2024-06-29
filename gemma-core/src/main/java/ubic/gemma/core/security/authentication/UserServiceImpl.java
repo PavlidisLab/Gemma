@@ -133,14 +133,19 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException( "Cannot remove that group, it is required for system operation." );
         }
 
-        if ( !securityService.isOwnedByCurrentUser( this.findGroupByName( groupName ) ) && !SecurityUtil
-                .isUserAdmin() ) {
+        UserGroup userGroup = this.findGroupByName( groupName );
+        if ( userGroup == null ) {
+            // nothing to delete, group is already gone
+            return;
+        }
+
+        if ( !securityService.isOwnedByCurrentUser( userGroup ) && !SecurityUtil.isUserAdmin() ) {
             throw new AccessDeniedException( "Only administrator or owner of a group can remove it" );
         }
 
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
 
-        this.userGroupDao.remove( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        this.userGroupDao.remove( userGroup );
 
         /*
          * clean up acls that use this group...do that last!
@@ -157,7 +162,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final String userName ) {
+    public User findByUserName( final String userName ) {
         return this.userDao.findByUserName( userName );
     }
 

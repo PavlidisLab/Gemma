@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * Represents a mapping between a query/criteria property and some original property space.

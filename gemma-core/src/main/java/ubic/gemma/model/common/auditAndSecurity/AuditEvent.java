@@ -20,10 +20,10 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import lombok.ToString;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
 

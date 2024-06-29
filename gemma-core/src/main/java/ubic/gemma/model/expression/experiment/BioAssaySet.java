@@ -19,11 +19,11 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 

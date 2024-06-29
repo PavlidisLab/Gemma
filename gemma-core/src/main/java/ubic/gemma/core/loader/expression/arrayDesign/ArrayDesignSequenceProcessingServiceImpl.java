@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -46,6 +45,8 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.io.*;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
@@ -348,7 +349,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             } else {
                 BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) {
-                    biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+                    biologicalCharacteristic = requireNonNull( bioSequenceService.thaw( biologicalCharacteristic ) );
                     if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null && gbIdMap
                             .containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
                         match = gbIdMap.get( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() );
@@ -799,7 +800,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
                 sequence = this.createOrUpdateGenbankSequence( sequence, force );
-                sequence = this.bioSequenceService.thaw( sequence );
+                sequence = requireNonNull( this.bioSequenceService.thaw( sequence ) );
                 String accession = sequence.getSequenceDatabaseEntry().getAccession();
                 found.put( accession, sequence );
                 accessionsToFetch.remove( accession );
@@ -840,7 +841,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        bs = this.bioSequenceService.thaw( bs );
+        bs = this.bioSequenceService.thawOrFail( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
@@ -12,7 +13,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -117,7 +117,8 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
             @Override
             public VO transformTuple( Object[] tuple, String[] aliases ) {
-                return doLoadValueObject( entityTransformer.transformTuple( tuple, aliases ) );
+                O entity = entityTransformer.transformTuple( tuple, aliases );
+                return entity != null ? doLoadValueObject( entity ) : null;
             }
 
             @Override

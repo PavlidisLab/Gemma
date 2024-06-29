@@ -22,10 +22,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -131,7 +130,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * For consistency with {@link Identifiable#getId()}, thus returns a {@link Long}. It is however backed internally
      * by a native long and cannot ever be null.
      */
-    @Nonnull
     public Long getResultId() {
         return resultId;
     }

@@ -21,14 +21,14 @@ package ubic.gemma.core.datastructure.matrix;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.AbstractFileService;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import java.util.Map;
  * @author pavlidis
  */
 @CommonsLog
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class MatrixWriter extends AbstractFileService<ExpressionDataMatrix<?>> {
 
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,

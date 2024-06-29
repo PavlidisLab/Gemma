@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.blacklist;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -30,6 +31,7 @@ public interface BlacklistedEntityService extends BaseImmutableService<Blacklist
     /**
      * @see BlacklistedEntityDao#findByAccession(String)
      */
+    @Nullable
     BlacklistedEntity findByAccession( String accession );
 
     /**

@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -26,7 +27,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -49,6 +49,7 @@ public interface ExpressionExperimentDao
      * <p>
      * The cache mode will be effective for the remainder of the Hibernate session.
      */
+    @Nullable
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
     @Nullable
@@ -56,6 +57,7 @@ public interface ExpressionExperimentDao
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    @Nullable
     ExpressionExperiment findByShortName( String shortName );
 
     Collection<ExpressionExperiment> findByName( String name );
@@ -72,26 +74,33 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
 
+    @Nullable
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
+    @Nullable
     ExpressionExperiment findByBioMaterial( BioMaterial bm );
 
     Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bms );
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
+    @Nullable
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
+    @Nullable
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
 
+    @Nullable
     ExpressionExperiment findByFactorValue( FactorValue fv );
 
+    @Nullable
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
     Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> fvs );
 
     Collection<ExpressionExperiment> findByGene( Gene gene );
 
+    @Nullable
     ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );

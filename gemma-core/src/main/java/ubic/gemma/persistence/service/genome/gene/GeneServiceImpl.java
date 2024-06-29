@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.context.AsyncFactoryBeanUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -33,7 +34,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -52,11 +52,12 @@ import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author pavlidis
@@ -230,13 +231,10 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             return Collections.emptyList();
         }
 
-        gene = this.thaw( gene );
+        gene = this.thawOrFail( gene );
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
         List<PhysicalLocationValueObject> locations = new LinkedList<>();
-
-        if ( gpCollection == null )
-            return null;
 
         for ( GeneProduct gp : gpCollection ) {
 
@@ -290,7 +288,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         if ( gene == null ) {
             return null;
         }
+
         gene = this.geneDao.thaw( gene );
+        if ( gene == null ) {
+            return null;
+        }
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
@@ -306,8 +308,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             gvo.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
         }
 
-        Long compositeSequenceCount = this.getCompositeSequenceCountById( id );
-        gvo.setCompositeSequenceCount( compositeSequenceCount.intValue() );
+        long compositeSequenceCount = this.getCompositeSequenceCountById( id );
+        gvo.setCompositeSequenceCount( ( int ) compositeSequenceCount );
 
         Integer platformCount = this.geneDao.getPlatformCountById( id );
         gvo.setPlatformCount( platformCount );
@@ -406,6 +408,12 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
+    public Gene thawOrFail( Gene gene ) {
+        return requireNonNull( thaw( gene ), "No gene with ID " + gene.getId() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Gene thawAliases( Gene gene ) {
         return this.geneDao.thawAliases( gene );
     }
@@ -436,7 +444,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
+    public Collection<GeneValueObject> searchGenes( String query, @Nullable Long taxonId ) throws SearchException {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
@@ -455,7 +463,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         for ( SearchResult<Gene> sr : geneSearchResults ) {
             Gene g = sr.getResultObject();
             if ( g != null ) {
-                g = this.thaw( g );
+                g = this.thawOrFail( g );
                 genes.add( g );
                 log.debug( "Gene search result: " + g.getOfficialSymbol() );
             }

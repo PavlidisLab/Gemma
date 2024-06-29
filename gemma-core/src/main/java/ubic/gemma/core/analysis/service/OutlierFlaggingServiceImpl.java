@@ -37,6 +37,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collection;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
  * we treat this synonymous with "outlier removal".
@@ -67,7 +69,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
     @Transactional(propagation = Propagation.NEVER)
     public void markAsMissing( Collection<BioAssay> bioAssays ) {
 
-        if ( bioAssays == null || bioAssays.size() == 0 )
+        if ( bioAssays == null || bioAssays.isEmpty() )
             return;
 
         boolean hasNewOutliers = false;
@@ -89,7 +91,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             //   log.info( "No new outliers." );
             return;
         }
-        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        ExpressionExperiment expExp = requireNonNull( expressionExperimentService.findByBioAssay( bioAssays.iterator().next() ) );
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
                 bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 
@@ -124,11 +126,9 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             return;
         }
 
-        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        ExpressionExperiment expExp = requireNonNull( expressionExperimentService.findByBioAssay( bioAssays.iterator().next() ) );
         auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.class,
                 "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
-
-        assert expExp != null;
 
         // several transactions
         try {

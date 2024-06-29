@@ -1,10 +1,10 @@
 package ubic.gemma.rest.util;
 
 import lombok.Getter;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 @Getter

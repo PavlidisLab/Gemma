@@ -1,8 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.junit.Test;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

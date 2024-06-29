@@ -295,7 +295,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     }
                 }
 
-                if ( geneListProbe.size() == 0 ) {
+                if ( geneListProbe.isEmpty() ) {
                     ArrayDesignProbeMapperServiceImpl.log
                             .warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
                     numSkipped++;
@@ -312,7 +312,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                 if ( bs != null ) {
                     if ( StringUtils.isNotBlank( seqName ) ) {
-                        bs = bioSequenceService.thaw( bs );
+                        bs = bioSequenceService.thawOrFail( bs );
                         if ( !bs.getName().equals( seqName ) ) {
                             ArrayDesignProbeMapperServiceImpl.log
                                     .warn( "Sequence name '" + seqName + "' given for " + probeId
@@ -348,11 +348,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     compositeSequenceService.update( c );
                 }
 
-                assert bs != null;
                 assert bs.getId() != null;
                 for ( Gene gene : geneListProbe ) {
-                    gene = geneService.thaw( gene );
-                    if ( gene.getProducts().size() == 0 ) {
+                    gene = geneService.thawOrFail( gene );
+                    if ( gene.getProducts().isEmpty() ) {
                         ArrayDesignProbeMapperServiceImpl.log.warn( "There are no gene products for " + gene
                                 + ", it cannot be mapped to probes. Skipping" );
                         numSkipped++;
@@ -363,7 +362,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                         association.setBioSequence( bs );
                         association.setGeneProduct( gp );
                         association.setSource( sourceDB );
-                        annotationAssociationService.create( association );
+                        association = annotationAssociationService.create( association );
                     }
 
                 }
@@ -443,9 +442,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                    persisterHelper.persist( bacs.ba );
-
-                    if ( ++loadedAssociationCount % 1000 == 0 ) {
+                    BlatAssociation ba = ( BlatAssociation ) persisterHelper.persist( bacs.ba );
+                    if ( ++loadedAssociationCount % 1001 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log
                                 .info( "Persisted " + loadedAssociationCount + " blat associations. "
                                         + "Current queue has " + queue.size() + " items." );
@@ -512,13 +510,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      */
     private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
             final AtomicBoolean loaderDone, final boolean persist ) {
-        this.taskExecutor.execute( new DelegatingSecurityContextRunnable( new Runnable() {
-            @Override
-            public void run() {
-                ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist );
-            }
-        } ) );
-
+        this.taskExecutor.execute( new DelegatingSecurityContextRunnable( () -> ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist ) ) );
     }
 
     /**
@@ -535,7 +527,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     /**
      * Wrapper
      */
-    private class BACS {
+    private static class BACS {
         final BlatAssociation ba;
 
         final CompositeSequence cs;

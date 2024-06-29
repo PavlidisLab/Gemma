@@ -15,6 +15,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -79,6 +80,7 @@ public class ArrayDesignsForExperimentCache {
         return arrayDesignCache;
     }
 
+    @Nullable
     public CompositeSequence getFromCache( CompositeSequence cs ) {
 
         String key = this.makeKey( cs );

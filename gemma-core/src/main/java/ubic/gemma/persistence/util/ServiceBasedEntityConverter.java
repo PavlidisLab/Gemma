@@ -3,10 +3,10 @@ package ubic.gemma.persistence.util;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**

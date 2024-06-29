@@ -19,8 +19,8 @@
 package ubic.gemma.persistence.service.maintenance;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Date;
 
 /**

@@ -84,7 +84,11 @@ public class UserFormMultiActionController extends BaseController {
             /*
              * Pulling username out of security context to ensure users are logged in and can only update themselves.
              */
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if ( auth == null ) {
+                throw new RuntimeException( "No authentication available." );
+            }
+            String username = auth.getName();
 
             if ( !username.equals( originalUserName ) ) {
                 throw new AccessDeniedException( "You must be logged in to edit your profile." );
@@ -134,7 +138,7 @@ public class UserFormMultiActionController extends BaseController {
     public void loadUser( HttpServletResponse response ) throws IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAuthenticated = authentication.isAuthenticated();
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated();
 
         if ( !isAuthenticated ) {
             log.error( "User not authenticated.  Cannot populate user data." );

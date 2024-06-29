@@ -189,8 +189,7 @@ public class GenePickerController {
         Collections.sort( sessionSets );
 
         // maintain order: session sets first
-        Collection<SearchResultDisplayObject> results = new ArrayList<>();
-        results.addAll( sessionSets );
+        Collection<SearchResultDisplayObject> results = new ArrayList<>( sessionSets );
         try {
             results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
         } catch ( ParseSearchException e ) {

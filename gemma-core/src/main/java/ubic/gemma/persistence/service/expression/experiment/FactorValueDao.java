@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
@@ -40,6 +41,7 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
     @Deprecated
     Collection<FactorValue> findByValue( String valuePrefix );
 
+    @Nullable
     @Deprecated
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 

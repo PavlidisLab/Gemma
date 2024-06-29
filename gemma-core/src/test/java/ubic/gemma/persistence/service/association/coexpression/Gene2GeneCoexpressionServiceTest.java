@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,21 +22,18 @@ package ubic.gemma.persistence.service.association.coexpression;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.association.coexpression.MouseGeneCoExpression;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.association.coexpression.MouseGeneCoExpression;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
-import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
-import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author klc
@@ -61,6 +58,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
 
         Taxon mouseTaxon = taxonS.findByCommonName( "mouse" );
+        assertNotNull( mouseTaxon );
 
         firstGene = Gene.Factory.newInstance();
         firstGene.setName( "test_gene2geneCoexpression" );

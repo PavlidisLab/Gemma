@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 /**
@@ -397,7 +398,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         for ( IncludedResultSetInfoValueObject gdemairsivo : mdvo.getIncludedResultSetsInfo() ) {
             this.differentialExpressionAnalysisService
-                    .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
+                    .thawFully( requireNonNull( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) ) );
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {

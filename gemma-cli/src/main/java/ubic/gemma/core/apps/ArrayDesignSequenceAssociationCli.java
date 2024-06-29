@@ -24,6 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -145,7 +146,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     /**
      */
-    private String[] chooseBLASTdbs( Taxon taxon ) {
+    private String[] chooseBLASTdbs( @Nullable Taxon taxon ) {
         String[] databases = null;
 
         if ( taxon != null && taxon.getCommonName().equals( "mouse" ) ) {

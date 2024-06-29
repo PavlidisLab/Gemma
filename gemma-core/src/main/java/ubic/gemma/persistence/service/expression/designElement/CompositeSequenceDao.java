@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.designElement;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,6 +50,7 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     Collection<CompositeSequence> findByName( String name );
 
+    @Nullable
     CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     /**

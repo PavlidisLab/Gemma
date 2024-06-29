@@ -29,6 +29,7 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressedGenes;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
 import ubic.gemma.model.analysis.expression.coexpression.IdArrayValueObject;
@@ -42,7 +43,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1209,6 +1209,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      *                        zero)
      * @return gene 2 gene coexp
      */
+    @Nullable
     private Gene2GeneCoexpression findLink( Query q, NonPersistentNonOrderedCoexpLink g2g,
             Map<NonPersistentNonOrderedCoexpLink, Boolean> existingResults ) {
 

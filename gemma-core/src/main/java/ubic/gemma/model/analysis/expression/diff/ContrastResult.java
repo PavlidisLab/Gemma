@@ -18,10 +18,10 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 

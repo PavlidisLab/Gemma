@@ -42,6 +42,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -123,20 +124,28 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Transactional(readOnly = true)
-    public User findByEmail( String emailAddress ) {
-        return userService.findByEmail( emailAddress );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public gemma.gsec.model.User findbyEmail( String emailAddress ) {
+    public User findbyEmail( String emailAddress ) throws UsernameNotFoundException {
         return findByEmail( emailAddress );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public User findByUserName( String userName ) {
-        return this.userService.findByUserName( userName );
+    public User findByEmail( String emailAddress ) throws UsernameNotFoundException {
+        User user = userService.findByEmail( emailAddress );
+        if ( user == null ) {
+            throw new UsernameNotFoundException( "No user with email " + emailAddress + " found." );
+        }
+        return user;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User findByUserName( String userName ) throws UsernameNotFoundException {
+        User user = this.userService.findByUserName( userName );
+        if ( user == null ) {
+            throw new UsernameNotFoundException( "No user with username " + userName + " found." );
+        }
+        return user;
     }
 
     @Override
@@ -436,11 +445,11 @@ public class UserManagerImpl implements UserManager {
     @Override
     @Transactional
     public void renameGroup( String oldName, String newName ) {
-
         UserGroup group = userService.findGroupByName( oldName );
-
+        if ( group == null ) {
+            throw new IllegalArgumentException( "No group with name " + oldName );
+        }
         group.setName( newName );
-
         userService.update( group );
     }
 
@@ -604,6 +613,7 @@ public class UserManagerImpl implements UserManager {
      * @return user, or null if the user is anonymous.
      * @throws UsernameNotFoundException if the user does not exist in the system
      */
+    @Nullable
     private User getUserForUserName( String username ) throws UsernameNotFoundException {
 
         if ( AuthorityConstants.ANONYMOUS_USER_NAME.equals( username ) ) {

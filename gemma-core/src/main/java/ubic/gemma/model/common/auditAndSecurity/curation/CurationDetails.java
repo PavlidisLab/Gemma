@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Date;
 

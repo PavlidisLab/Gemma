@@ -7,7 +7,7 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

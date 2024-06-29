@@ -8,7 +8,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.Collection;
@@ -62,7 +61,6 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      * @throws NotFoundException   if the entity does not exist
      * @throws BadRequestException if the argument is malformed
      */
-    @Nonnull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
     /**

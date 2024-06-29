@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -41,7 +42,6 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -165,7 +165,7 @@ public class CompositeSequenceServiceImpl
         }
 
         if ( compositeSequencesMap.isEmpty() )
-            return null;
+            return Collections.emptyList();
 
         return compositeSequencesMap.values();
     }
@@ -209,15 +209,19 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
+    public Collection<GeneMappingSummary> getGeneMappingSummary( @Nullable BioSequence biologicalCharacteristic,
             @Nullable CompositeSequenceValueObject cs ) {
+        if ( biologicalCharacteristic == null ) {
+            return Collections.emptySet();
+        }
 
-        biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+        biologicalCharacteristic = bioSequenceService.thawOrFail( biologicalCharacteristic );
+
+        if ( biologicalCharacteristic.getBioSequence2GeneProduct() == null ) {
+            return Collections.emptySet();
+        }
 
         Map<Integer, GeneMappingSummary> results = new HashMap<>();
-        if ( biologicalCharacteristic == null || biologicalCharacteristic.getBioSequence2GeneProduct() == null ) {
-            return results.values();
-        }
 
         Collection<BioSequence2GeneProduct> bs2gps = biologicalCharacteristic.getBioSequence2GeneProduct();
 
@@ -231,7 +235,7 @@ public class CompositeSequenceServiceImpl
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {
                 BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-                blatResult = new BlatResultValueObject( blatResultService.thaw( blatAssociation.getBlatResult() ) );
+                blatResult = new BlatResultValueObject( blatResultService.thawOrFail( blatAssociation.getBlatResult() ) );
             } else if ( bs2gp instanceof AnnotationAssociation ) {
                 /*
                  * Make a dummy blat result
@@ -258,7 +262,7 @@ public class CompositeSequenceServiceImpl
 
         this.addBlatResultsLackingGenes( biologicalCharacteristic, results, cs );
 
-        if ( results.size() == 0 ) {
+        if ( results.isEmpty() ) {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
             summary.setCompositeSequence( cs );

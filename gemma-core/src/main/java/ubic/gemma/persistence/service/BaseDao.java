@@ -18,11 +18,10 @@
  */
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -130,7 +129,6 @@ public interface BaseDao<T> {
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    @Nonnull
     T loadReference( Long id );
 
     /**

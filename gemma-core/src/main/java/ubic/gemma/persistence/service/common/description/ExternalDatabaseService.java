@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
@@ -44,12 +44,16 @@ public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
     @Secured({ "GROUP_ADMIN" })
     ExternalDatabase create( ExternalDatabase entity );
 
+    @Nullable
     ExternalDatabase loadWithExternalDatabases( Long id );
 
+    @Nullable
     ExternalDatabase findByName( String name );
 
+    @Nullable
     ExternalDatabase findByNameWithExternalDatabases( String name );
 
+    @Nullable
     @Secured({ "GROUP_AGENT" })
     ExternalDatabase findByNameWithAuditTrail( String name );
 

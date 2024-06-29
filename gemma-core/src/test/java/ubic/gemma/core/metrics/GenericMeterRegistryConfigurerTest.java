@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.lang.Nullable;
 
 import java.util.Collections;
 
@@ -114,6 +115,7 @@ public class GenericMeterRegistryConfigurerTest extends AbstractJUnit4SpringCont
         assertThat( getTimer( MyService2.class, "test" ) ).isNotNull();
     }
 
+    @Nullable
     private Timer getTimer( Class<?> clazz, String methodName ) {
         return meterRegistry.find( "method.timed" )
                 .tag( "class", GenericMeterRegistryConfigurerTest.class.getName() + "$" + clazz.getSimpleName() )

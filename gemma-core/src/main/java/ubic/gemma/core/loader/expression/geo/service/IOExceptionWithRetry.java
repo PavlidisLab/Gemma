@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
+
 import java.io.IOException;
 
 /**

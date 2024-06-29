@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service.blacklist;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,6 +39,7 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
      * @param  accession accession to search for (typically either a GPL or GSE)
      * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
      */
+    @Nullable
     BlacklistedEntity findByAccession( String accession );
 
     boolean isBlacklisted( ArrayDesign platform );

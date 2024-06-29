@@ -25,6 +25,8 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
@@ -34,11 +36,10 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -49,7 +50,7 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
  * @see    GeneSet
  */
 @Repository
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Autowired
@@ -59,9 +60,10 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Override
     public int getGeneCount( Long id ) {
-        return ( Integer ) this.getSessionFactory().getCurrentSession()
+        return ( Integer ) requireNonNull( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select count(i) from GeneSet g join g.members i where g.id = :id" )
-                .setParameter( "id", id ).uniqueResult();
+                .setParameter( "id", id )
+                .uniqueResult() );
     }
 
     @Override

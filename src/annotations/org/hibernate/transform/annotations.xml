@@ -1,0 +1,6 @@
+<root>
+    <item
+        name='org.hibernate.transform.ResultTransformer java.lang.Object transformTuple(java.lang.Object[], java.lang.String[])'>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
+    </item>
+</root>

@@ -17,7 +17,7 @@ package ubic.gemma.rest.util;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Value;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.*;
 
 /**

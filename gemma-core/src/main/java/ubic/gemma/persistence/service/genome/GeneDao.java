@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.genome;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -27,7 +28,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +48,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
+    @Nullable
     Gene findByAccession( String accession, @Nullable ExternalDatabase source );
 
     /**
@@ -58,8 +59,10 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> findByAlias( String search );
 
+    @Nullable
     Gene findByEnsemblId( String exactString );
 
+    @Nullable
     Gene findByNcbiId( Integer accession );
 
     Collection<Gene> findByOfficialSymbol( String officialSymbol );
@@ -68,6 +71,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> findByOfficialNameInexact( String officialName );
 
+    @Nullable
     Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
@@ -125,14 +129,18 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
+    @Nullable
     Gene thaw( Gene gene );
 
+    @Nullable
     Gene thawAliases( Gene gene );
 
     Collection<Gene> thawLite( Collection<Gene> genes );
 
+    @Nullable
     Gene thawLite( Gene gene );
 
+    @Nullable
     Gene thawLiter( Gene gene );
 
     int removeAll();

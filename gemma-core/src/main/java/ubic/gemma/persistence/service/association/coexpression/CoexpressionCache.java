@@ -15,6 +15,7 @@
 package ubic.gemma.persistence.service.association.coexpression;
 
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.lang.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -50,6 +51,7 @@ public interface CoexpressionCache {
      * @param g gene id
      * @return results sorted in descending order of support, or null if the gene was not in the cache
      */
+    @Nullable
     List<CoexpressionValueObject> get( Long g );
 
     boolean isEnabled();

@@ -17,12 +17,10 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import javax.annotation.Nullable;
 
 /**
  * @author Paul

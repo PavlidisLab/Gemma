@@ -2,8 +2,8 @@ package ubic.gemma.model.common.description;
 
 import org.assertj.core.groups.Tuple;
 import org.junit.Test;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;

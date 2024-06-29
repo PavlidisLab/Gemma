@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
@@ -57,6 +58,4 @@ public interface ExpressionExperimentSetValueObjectHelper {
      * Delete the experiment set corresponding to the given VO.
      */
     void delete( ExpressionExperimentSetValueObject eesvo );
-
-    ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject eesvo );
 }

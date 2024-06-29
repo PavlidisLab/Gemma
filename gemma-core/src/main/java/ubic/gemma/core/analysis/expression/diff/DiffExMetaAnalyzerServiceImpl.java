@@ -172,6 +172,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
              */
             assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
             Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
+            assert logFoldChange != null : "Fold change is null for contrast: " + r.getContrasts().iterator().next();
 
             if ( ( upperTail && logFoldChange < 0 ) || ( !upperTail && logFoldChange > 0 ) ) {
                 pvalue = 1.0 - pvalue;

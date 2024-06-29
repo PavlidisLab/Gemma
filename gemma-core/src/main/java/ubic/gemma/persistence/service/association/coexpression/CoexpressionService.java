@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.association.coexpression;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
@@ -161,6 +162,7 @@ public interface CoexpressionService {
     @Secured("GROUP_ADMIN")
     void updateNodeDegrees( Taxon taxon );
 
+    @Nullable
     GeneCoexpressionNodeDegreeValueObject getNodeDegree( Gene g );
 
     Map<Long, GeneCoexpressionNodeDegreeValueObject> getNodeDegrees( Collection<Long> genes );
@@ -172,6 +174,7 @@ public interface CoexpressionService {
      * @param skipGenes  skip genes
      * @return links that were made
      */
+    @Nullable
     @Secured("GROUP_ADMIN")
     Map<SupportDetails, Gene2GeneCoexpression> initializeLinksFromOldData( Gene gene, Map<Long, Gene> idMap,
             Map<NonPersistentNonOrderedCoexpLink, SupportDetails> linksSoFar, Set<Long> skipGenes );

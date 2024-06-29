@@ -1,19 +1,19 @@
 <root>
     <item name='org.hibernate.Query java.lang.Object uniqueResult()'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
     <item name='org.hibernate.Session java.lang.Object get(java.lang.Class, java.io.Serializable)'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
     <item
         name='org.hibernate.Session java.lang.Object get(java.lang.Class, java.io.Serializable, org.hibernate.LockOptions)'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
     <item name='org.hibernate.Session java.lang.Object get(java.lang.String, java.io.Serializable)'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
     <item
         name='org.hibernate.Session java.lang.Object get(java.lang.String, java.io.Serializable, org.hibernate.LockOptions)'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
 </root>

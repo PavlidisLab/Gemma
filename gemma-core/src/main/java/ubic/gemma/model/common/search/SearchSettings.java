@@ -24,6 +24,7 @@ import lombok.Singular;
 import lombok.With;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.OntologyHighlighter;
 import ubic.gemma.core.search.lucene.LuceneHighlighter;
@@ -35,7 +36,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -29,8 +30,10 @@ import java.util.List;
  */
 public interface ExternalDatabaseDao extends BaseDao<ExternalDatabase> {
 
+    @Nullable
     ExternalDatabase findByName( String name );
 
+    @Nullable
     ExternalDatabase findByNameWithAuditTrail( String name );
 
     List<ExternalDatabase> findAllByNameIn( Collection<String> names );

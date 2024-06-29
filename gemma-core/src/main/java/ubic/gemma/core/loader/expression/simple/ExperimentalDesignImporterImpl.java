@@ -382,12 +382,17 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         Measurement m = Measurement.Factory.newInstance();
         m.setType( MeasurementType.ABSOLUTE );
         m.setValue( factorValue.getValue() );
-        try {
-            //noinspection ResultOfMethodCallIgnored // check if it is a number, don't need the value.
-            Double.parseDouble( factorValue.getValue() );
+        if ( factorValue.getValue() != null ) {
+            try {
+                // check if it is a number, don't need the value.
+                Double.parseDouble( factorValue.getValue() );
+                m.setRepresentation( PrimitiveType.DOUBLE );
+            } catch ( NumberFormatException e ) {
+                m.setRepresentation( PrimitiveType.STRING );
+            }
+        } else {
+            // null is translated to Double.NaN
             m.setRepresentation( PrimitiveType.DOUBLE );
-        } catch ( NumberFormatException e ) {
-            m.setRepresentation( PrimitiveType.STRING );
         }
 
         factorValue.setMeasurement( m );

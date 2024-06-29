@@ -34,6 +34,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -49,8 +50,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 @Service
 @CommonsLog
@@ -318,7 +320,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         int i = 0;
         for ( ArrayDesign ad : ads ) {
 
-            Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+            Taxon taxon = requireNonNull( arrayDesignService.getTaxon( ad.getId() ) );
             long cnt = arrayDesignService.numGenes( ad );
 
             /*

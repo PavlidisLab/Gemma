@@ -9,18 +9,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.core.context.TestComponent;
 
-import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -101,17 +102,17 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
 
         @Override
         public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
-            return null;
+            return Collections.emptyList();
         }
 
         @Override
         public List<FakeModel> load( @Nullable Filters filters, @Nullable Sort sort ) {
-            return null;
+            return Collections.emptyList();
         }
 
         @Override
         public Slice<FakeModel> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-            return null;
+            return new Slice<>( Collections.emptyList(), null, null, null, null );
         }
 
         @Override
@@ -121,12 +122,12 @@ public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringConte
 
         @Override
         public Slice<FakeModelVo> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-            return null;
+            return new Slice<>( Collections.emptyList(), null, null, null, null );
         }
 
         @Override
         public List<FakeModelVo> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
-            return null;
+            return Collections.emptyList();
         }
     }
 

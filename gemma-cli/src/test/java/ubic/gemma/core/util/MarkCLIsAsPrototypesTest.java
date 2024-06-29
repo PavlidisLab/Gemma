@@ -8,9 +8,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.TestCli;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.test.BaseCLIIntegrationTest;
-
-import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;

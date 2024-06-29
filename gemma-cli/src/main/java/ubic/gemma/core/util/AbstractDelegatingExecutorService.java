@@ -1,7 +1,7 @@
 package ubic.gemma.core.util;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * A delegating executor service inspired by {@link org.springframework.security.concurrent.DelegatingSecurityContextExecutorService}.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 abstract class AbstractDelegatingExecutorService implements ExecutorService {
 
     protected abstract Runnable wrap( Runnable runnable );
@@ -33,7 +33,6 @@ abstract class AbstractDelegatingExecutorService implements ExecutorService {
         delegate.shutdown();
     }
 
-    @Nonnull
     @Override
     public List<Runnable> shutdownNow() {
         return delegate.shutdownNow();
@@ -54,37 +53,31 @@ abstract class AbstractDelegatingExecutorService implements ExecutorService {
         return delegate.awaitTermination( l, timeUnit );
     }
 
-    @Nonnull
     @Override
     public <T> Future<T> submit( Callable<T> callable ) {
         return delegate.submit( wrap( callable ) );
     }
 
-    @Nonnull
     @Override
     public <T> Future<T> submit( Runnable runnable, T t ) {
         return delegate.submit( wrap( runnable ), t );
     }
 
-    @Nonnull
     @Override
     public Future<?> submit( Runnable runnable ) {
         return delegate.submit( wrap( runnable ) );
     }
 
-    @Nonnull
     @Override
     public <T> List<Future<T>> invokeAll( Collection<? extends Callable<T>> collection ) throws InterruptedException {
         return delegate.invokeAll( wrap( collection ) );
     }
 
-    @Nonnull
     @Override
     public <T> List<Future<T>> invokeAll( Collection<? extends Callable<T>> collection, long l, TimeUnit timeUnit ) throws InterruptedException {
         return delegate.invokeAll( wrap( collection ), l, timeUnit );
     }
 
-    @Nonnull
     @Override
     public <T> T invokeAny( Collection<? extends Callable<T>> collection ) throws InterruptedException, ExecutionException {
         return delegate.invokeAny( wrap( collection ) );

@@ -22,7 +22,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.Serializable;
 
 @SuppressWarnings("unused") // fields are assigned by Hibernate

@@ -2,10 +2,10 @@ package ubic.gemma.persistence.service;
 
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.security.access.ConfigAttribute;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -69,9 +69,9 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     /**
      * @see FilteringDao#getFilterableProperties()
      */
-    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, @Nullable String value ) throws IllegalArgumentException;
 
-    Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException;
+    Filter getFilter( String property, Filter.Operator operator, @Nullable String value, SubqueryMode subqueryMode ) throws IllegalArgumentException;
 
     /**
      * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
@@ -83,7 +83,7 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
      */
-    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value );
 
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)

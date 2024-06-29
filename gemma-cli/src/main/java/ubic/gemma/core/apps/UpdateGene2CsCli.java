@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
 

@@ -99,7 +99,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ZYXMMMM" );
         Gene gene = geneCollection.iterator().next();
 
-        gene = geneService.thaw( gene );
+        gene = geneService.thawOrFail( gene );
 
         Collection<GeneProduct> geneProducts = gene.getProducts();
 

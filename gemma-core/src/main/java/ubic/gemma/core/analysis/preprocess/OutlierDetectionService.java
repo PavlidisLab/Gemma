@@ -15,10 +15,10 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

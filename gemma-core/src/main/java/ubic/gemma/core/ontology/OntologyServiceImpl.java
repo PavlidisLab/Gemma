@@ -57,7 +57,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -702,7 +702,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         for ( int start = 0; ; start += step ) {
             Collection<Characteristic> chars = characteristicService.browse( start, step );
 
-            if ( chars == null || chars.isEmpty() ) {
+            if ( chars.isEmpty() ) {
                 break;
             }
 
@@ -720,7 +720,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
 
-                    if ( !term.getLabel().equals( ch.getValue() ) ) {
+                    if ( !Objects.equals( term.getLabel(), ch.getValue() ) ) {
                         mismatchedTerms.put( ch.getValue(), term );
                         lastFixedLabel = ch.getValue();
                         ch.setValue( term.getLabel() );
@@ -745,7 +745,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             continue;
                         }
 
-                        if ( !term.getLabel().equals( statement.getObject() ) ) {
+                        if ( !Objects.equals( term.getLabel(), statement.getObject() ) ) {
                             lastFixedLabel = statement.getObject();
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
@@ -765,7 +765,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             continue;
                         }
 
-                        if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
+                        if ( !Objects.equals( term.getLabel(), statement.getSecondObject() ) ) {
                             lastFixedLabel = statement.getSecondObject();
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );

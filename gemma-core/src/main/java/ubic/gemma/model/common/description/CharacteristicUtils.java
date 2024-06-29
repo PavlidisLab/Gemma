@@ -1,8 +1,7 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang.StringUtils;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 public class CharacteristicUtils {
 

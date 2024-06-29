@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.taxon;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.BaseService;
@@ -31,10 +32,13 @@ import java.util.Collection;
  */
 public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
 
+    @Nullable
     Taxon findByCommonName( String commonName );
 
+    @Nullable
     Taxon findByScientificName( String scientificName );
 
+    @Nullable
     Taxon findByNcbiId( Integer ncbiId );
 
     @Override

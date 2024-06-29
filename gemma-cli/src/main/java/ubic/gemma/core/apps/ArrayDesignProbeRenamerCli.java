@@ -27,7 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenami
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;

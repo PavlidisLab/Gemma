@@ -8,7 +8,7 @@ import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.Date;
 
 public class UpdateEE2CCli extends AbstractAuthenticatedCLI {

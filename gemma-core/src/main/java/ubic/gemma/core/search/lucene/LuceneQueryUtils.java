@@ -14,7 +14,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.util.QueryUtils;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;

@@ -71,7 +71,7 @@ public class BlatResultTrackController extends AbstractController {
 
         BlatResult toView = res.iterator().next();
 
-        toView = blatResultService.thaw( toView );
+        toView = blatResultService.thawOrFail( toView );
 
         String val = BlatResult2Psl.blatResult2PslTrack( toView );
 

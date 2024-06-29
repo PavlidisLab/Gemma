@@ -20,21 +20,16 @@ package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +39,7 @@ import java.util.Set;
  *
  * @author kelsey, paul
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     @Override
@@ -132,7 +127,6 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> load( Collection<Long> ids );
 
-    @Nonnull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     GeneSet loadOrFail( Long id ) throws NullPointerException;
@@ -254,7 +248,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      *                          or private
      */
     @Secured({ "GROUP_USER" })
-    Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly );
+    Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, @Nullable Long taxonId, boolean sharedPublicOnly );
 
     /**
      * Returns just the current users gene sets
@@ -264,13 +258,13 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * @return gene set value objects
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly, Long taxonId );
+    Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly, @Nullable Long taxonId );
 
     /**
      * Get the gene value objects for the members of the group param
      *
      * @param  object can be just a wrapper to trigger security
-     * @return gene value object
+     * @return a collection gene value object or null if the gene set does not exist
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object );
@@ -296,6 +290,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * @param  geneSetVO gene set value object
      * @return the taxon or null if the gene set param was null
      */
+    @Nullable
     TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO );
 
     /**

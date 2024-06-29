@@ -1,17 +1,15 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject.*;
 
 @SuppressWarnings("unused") // Used in rest api
 public class ExperimentExpressionLevelsValueObject implements Serializable {

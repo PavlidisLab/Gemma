@@ -99,7 +99,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         assertEquals( 1, baselineLevels.size() );
         FactorValue fv = baselineLevels.values().iterator().next();
-
+        assertNotNull( fv.getMeasurement() );
         assertEquals( 24.0, Double.parseDouble( fv.getMeasurement().getValue() ), 0.0001 );
 
         // checkResults( analysis );

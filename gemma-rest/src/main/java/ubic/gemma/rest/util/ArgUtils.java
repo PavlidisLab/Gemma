@@ -15,9 +15,9 @@
 package ubic.gemma.rest.util;
 
 import org.apache.commons.io.IOUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.rest.util.args.Arg;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

@@ -18,13 +18,13 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 

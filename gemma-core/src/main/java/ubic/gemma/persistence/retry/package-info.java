@@ -1,4 +1,4 @@
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.persistence.retry;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;

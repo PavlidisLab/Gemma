@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.util;
 
 import org.junit.Test;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 

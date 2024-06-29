@@ -1,8 +1,7 @@
 package ubic.gemma.core.ontology;
 
 import ubic.basecode.ontology.model.OntologyProperty;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * Simple in-memory implementation of {@link OntologyProperty}.

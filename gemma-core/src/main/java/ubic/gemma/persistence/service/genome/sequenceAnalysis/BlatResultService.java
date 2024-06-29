@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -43,8 +44,10 @@ public interface BlatResultService extends BaseService<BlatResult>, BaseVoEnable
     @Secured({ "GROUP_USER" })
     void update( BlatResult blatResult );
 
+    @Nullable
     BlatResult thaw( BlatResult blatResult );
 
-    Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
+    BlatResult thawOrFail( BlatResult toView );
 
+    Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
 }

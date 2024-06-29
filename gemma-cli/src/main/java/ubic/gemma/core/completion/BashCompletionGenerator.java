@@ -2,8 +2,8 @@ package ubic.gemma.core.completion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;

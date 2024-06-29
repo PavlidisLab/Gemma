@@ -1,0 +1,6 @@
+<root>
+    <item
+        name='org.springframework.core.convert.converter.GenericConverter java.lang.Object convert(java.lang.Object, org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)'>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
+    </item>
+</root>

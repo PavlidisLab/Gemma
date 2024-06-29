@@ -19,10 +19,9 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import javax.annotation.Nullable;
 
 /**
  * @author ptan

@@ -4,9 +4,9 @@ import lombok.Value;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * A task executor that automatically reports errors in batch tasks.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
 
     private final AtomicInteger batchTaskCounter = new AtomicInteger( 0 );

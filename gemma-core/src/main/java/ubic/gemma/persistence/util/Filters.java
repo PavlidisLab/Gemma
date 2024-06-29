@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.util;
 
 import lombok.EqualsAndHashCode;
+import ubic.gemma.core.lang.Nullable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

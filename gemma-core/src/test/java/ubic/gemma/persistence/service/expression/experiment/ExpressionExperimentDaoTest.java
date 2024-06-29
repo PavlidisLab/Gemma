@@ -16,6 +16,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -30,13 +31,16 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Subquery;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
@@ -724,7 +728,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperiment reload( ExpressionExperiment e ) {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( e );
-        return expressionExperimentDao.load( e.getId() );
+        return requireNonNull( expressionExperimentDao.load( e.getId() ) );
     }
 
     private ExpressionExperiment createExpressionExperiment() {

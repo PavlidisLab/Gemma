@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -44,13 +45,13 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractC
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -401,7 +402,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "where ad = :ad" )
                 .setParameter( "ad", arrayDesign );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        return ( Long ) query.uniqueResult();
+        return ( Long ) requireNonNull( query.uniqueResult() );
     }
 
     @Override
@@ -446,9 +447,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        return ( Long ) query
+        return ( Long ) requireNonNull( query
                 .setCacheable( true )
-                .uniqueResult();
+                .uniqueResult() );
     }
 
     @Override
@@ -582,34 +583,32 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public long numAllCompositeSequenceWithBioSequences() {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where cs.biologicalCharacteristic.sequence is not null";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count (distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar "
+                        + "where cs.biologicalCharacteristic.sequence is not null" )
+                .uniqueResult() );
     }
 
     @Override
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
-
         if ( ids.isEmpty() )
             return 0L;
-
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count (distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar "
+                        + "where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null" )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
+                .uniqueResult() );
     }
 
     @Override
     public long numAllCompositeSequenceWithBlatResults() {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BlatResult as blat "
+                        + "where blat.querySequence=cs.biologicalCharacteristic" )
+                .uniqueResult() );
     }
 
     @Override
@@ -617,22 +616,22 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return 0;
         }
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BlatResult as blat where blat.querySequence != null and ar.id in (:ids)";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from  CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BlatResult as blat "
+                        + "where blat.querySequence != null and ar.id in (:ids)" )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
+                .uniqueResult() );
     }
 
     @Override
     public long numAllCompositeSequenceWithGenes() {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count (distinct cs) from  CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
+                        + "join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp" )
+                .uniqueResult() );
     }
 
     @Override
@@ -640,24 +639,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return 0;
         }
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar.id in (:ids)";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
+                        + "join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp and ar.id in (:ids)" )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
+                .uniqueResult() );
     }
 
     @Override
     public long numAllGenes() {
-        //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct gene) from  CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
+                        + "join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp" )
+                .uniqueResult() );
     }
 
     @Override
@@ -665,96 +663,92 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( ids.isEmpty() ) {
             return 0;
         }
-        //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", optimizeParameterList( ids ) ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct gene) from  CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
+                        + "join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp  and ar.id in (:ids)" )
+                .setParameterList( "ids", optimizeParameterList( ids ) )
+                .uniqueResult() );
     }
 
     @Override
     public long numBioSequences( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs.biologicalCharacteristic) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar "
+                        + "where ar = :ar and cs.biologicalCharacteristic.sequence is not null" )
+                .setParameter( "ar", arrayDesign )
+                .uniqueResult() );
     }
 
     @Override
     public long numBlatResults( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString =
-                "select count (distinct bs2gp) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct as bs2gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct bs2gp) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct as bs2gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar" )
+                .setParameter( "ar", arrayDesign )
+                .uniqueResult() );
     }
 
     @Override
     public long numCompositeSequences( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString = "select count (*) from  CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ad";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar "
+                        + "where ar = :ad" )
                 .setParameter( "ad", arrayDesign )
-                .uniqueResult();
+                .uniqueResult() );
     }
 
     @Override
     public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar "
+                        + " where ar = :ar and cs.biologicalCharacteristic.sequence is not null" )
+                .setParameter( "ar", arrayDesign )
+                .uniqueResult() );
     }
 
     @Override
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from  CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BlatResult as blat "
+                        + "where blat.querySequence=cs.biologicalCharacteristic and ar = :ar" )
+                .setParameter( "ar", arrayDesign )
+                .uniqueResult() );
     }
 
     @Override
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar = :ar";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).uniqueResult();
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from CompositeSequence as cs "
+                        + "join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
+                        + "join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp and ar = :ar" )
+                .setParameter( "ar", arrayDesign )
+                .uniqueResult() );
     }
 
     @Override
     public long numExperiments( ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString = "select count(distinct ee.id) from ExpressionExperiment ee "
-                + "inner join ee.bioAssays bas "
-                + "join bas.arrayDesignUsed ad "
-                + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
-                + "and ad = :ad";
         Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+                .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee "
+                        + "inner join ee.bioAssays bas "
+                        + "join bas.arrayDesignUsed ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ad = :ad" )
                 .setParameter( "ad", arrayDesign );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        return ( Long ) query.uniqueResult();
+        return ( Long ) requireNonNull( query.uniqueResult() );
     }
 
     @Override
     public long numGenes( ArrayDesign arrayDesign ) {
-        return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
+        return requireNonNull( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
                         "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                 + "where g2cs.AD = :arrayDesignId" )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
@@ -788,8 +782,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-        arrayDesign = ( ArrayDesign ) session.get( ArrayDesign.class, arrayDesign.getId() );
+        arrayDesign = load( arrayDesign.getId() );
+        if ( arrayDesign == null )
+            return;
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             cs.setBiologicalCharacteristic( null );

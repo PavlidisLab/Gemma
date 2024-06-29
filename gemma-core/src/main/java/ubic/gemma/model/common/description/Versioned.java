@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.description;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
+
 import java.net.URL;
 import java.util.Date;
 

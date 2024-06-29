@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.ontology.jena.TGFVO;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import javax.annotation.Nullable;
 import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;

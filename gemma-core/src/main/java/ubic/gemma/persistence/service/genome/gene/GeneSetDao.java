@@ -18,14 +18,14 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author kelsey
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     /**
@@ -58,6 +58,7 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
      */
     List<Taxon> getTaxa( GeneSet geneSet );
 
+    @Nullable
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
     List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );

@@ -3,12 +3,11 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Comparator;
 
 import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
@@ -100,7 +99,7 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     }
 
     @Override
-    public int compareTo( @Nonnull StatementValueObject other ) {
+    public int compareTo( StatementValueObject other ) {
         return COMPARATOR.compare( this, other );
     }
 }

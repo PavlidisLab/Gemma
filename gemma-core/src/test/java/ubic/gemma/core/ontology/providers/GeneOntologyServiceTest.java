@@ -42,8 +42,10 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
@@ -65,7 +67,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
         }
 
         @Bean
-        public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
+        public GeneOntologyService geneOntologyService() {
             return new GeneOntologyServiceImpl();
         }
 
@@ -166,11 +168,11 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
 
     @Test
     public final void testGetAspect() {
-        String aspect = gos.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        String aspect = requireNonNull( gos.getTermAspect( "GO:0000107" ) ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = gos.getTermAspect( "GO:0016791" ).toString().toLowerCase();
+        aspect = requireNonNull( gos.getTermAspect( "GO:0016791" ) ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = gos.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        aspect = requireNonNull( gos.getTermAspect( "GO:0000107" ) ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
     }
 

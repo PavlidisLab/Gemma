@@ -1,8 +1,8 @@
 package ubic.gemma.core.ontology;
 
 import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 

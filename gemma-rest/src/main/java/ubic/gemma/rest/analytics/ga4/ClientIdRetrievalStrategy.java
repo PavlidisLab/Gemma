@@ -1,6 +1,6 @@
 package ubic.gemma.rest.analytics.ga4;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * Strategy for retrieving a client ID.

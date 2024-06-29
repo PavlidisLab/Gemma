@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.util.List;
 import java.util.Map;
 

@@ -1,9 +1,8 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.CLI;
-
-import javax.annotation.Nullable;
 
 public class TestCli implements CLI {
 
@@ -21,12 +20,12 @@ public class TestCli implements CLI {
 
     @Override
     public CommandGroup getCommandGroup() {
-        return null;
+        return CommandGroup.MISC;
     }
 
     @Override
     public Options getOptions() {
-        return null;
+        return new Options();
     }
 
     @Override

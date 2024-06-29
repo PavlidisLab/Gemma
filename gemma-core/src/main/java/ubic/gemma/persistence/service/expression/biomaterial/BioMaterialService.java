@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -77,6 +78,7 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioMaterial bioMaterial );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( Long id );
 

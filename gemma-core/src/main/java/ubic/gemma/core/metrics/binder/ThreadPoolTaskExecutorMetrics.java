@@ -3,11 +3,10 @@ package ubic.gemma.core.metrics.binder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class ThreadPoolTaskExecutorMetrics implements MeterBinder {
 
     private final ThreadPoolTaskExecutor executor;

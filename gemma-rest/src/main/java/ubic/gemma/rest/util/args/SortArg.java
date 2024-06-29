@@ -16,11 +16,10 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.rest.util.MalformedArgException;
-
-import javax.annotation.Nullable;
 
 /**
  * Class representing an API argument that should be an integer.

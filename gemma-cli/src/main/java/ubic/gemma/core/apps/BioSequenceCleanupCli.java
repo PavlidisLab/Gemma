@@ -218,8 +218,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
      */
     private boolean equals( BioSequence one, BioSequence that ) {
 
-        one = bss.thaw( one );
-        that = bss.thaw( that );
+        one = bss.thawOrFail( one );
+        that = bss.thawOrFail( that );
 
         if ( one.getSequenceDatabaseEntry() != null
                 && that.getSequenceDatabaseEntry() != null

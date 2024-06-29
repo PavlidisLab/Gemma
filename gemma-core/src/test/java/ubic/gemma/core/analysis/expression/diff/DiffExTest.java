@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 /**
@@ -141,7 +142,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
             // we have to find the right generic platform to use.
             targetArrayDesign = this
-                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+                    .getTestPersistentArrayDesign( probeNames, requireNonNull( taxonService.findByCommonName( "human" ) ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             // the experiment has 8 samples but the data has 4 columns so allow missing samples
@@ -183,6 +184,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 assertEquals( 0.007055717, r.getPvalue(),
                         0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
                 // up to sign
+                assertNotNull( contrast.getCoefficient() );
                 assertEquals( 2.2300049, Math.abs( contrast.getCoefficient() ), 0.001 );
                 break;
             }

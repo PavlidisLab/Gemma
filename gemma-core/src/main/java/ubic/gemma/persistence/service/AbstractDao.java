@@ -28,11 +28,10 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -257,7 +256,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return results;
     }
 
-    @Nonnull
     @Override
     public T loadReference( Long id ) {
         //noinspection unchecked

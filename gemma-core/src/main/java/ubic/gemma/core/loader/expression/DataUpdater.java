@@ -2,11 +2,11 @@ package ubic.gemma.core.loader.expression;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 
 public interface DataUpdater {

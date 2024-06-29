@@ -244,6 +244,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             log.info( resultSet.getBaselineGroup() );
 
+            assertNotNull( resultSet.getBaselineGroup() );
             assertTrue( resultSet.getBaselineGroup().equals( factorValueA2 ) || resultSet.getBaselineGroup()
                     .equals( fcbase ) );
 

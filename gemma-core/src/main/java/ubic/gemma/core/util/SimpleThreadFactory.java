@@ -1,6 +1,7 @@
 package ubic.gemma.core.util;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import ubic.gemma.core.lang.NonNullApi;
+
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A simple thread factory based on a preferably unique thread name prefix.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class SimpleThreadFactory implements ThreadFactory {
 
     private final String threadNamePrefix;

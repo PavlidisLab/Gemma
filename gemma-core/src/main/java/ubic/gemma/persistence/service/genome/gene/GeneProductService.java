@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -75,6 +76,8 @@ public interface GeneProductService extends BaseService<GeneProduct>, BaseVoEnab
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
 
+    @Nullable
     GeneProduct thaw( GeneProduct geneProduct );
 
+    GeneProduct thawOrFail( GeneProduct gp );
 }

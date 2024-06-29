@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -111,6 +110,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         // grant read permission to group
         ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         UserGroup group = this.userService.findGroupByName( this.groupName );
+        assertNotNull( group );
 
         this.securityService.makeOwnedByUser( ee, userName1 );
         this.securityService.makeOwnedByUser( group, userName1 );
@@ -152,7 +152,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Make sure user can see group (from bug 2822)
          */
         UserGroup group = this.userService.findGroupByName( this.groupName );
-        this.securityService.isViewableByUser( group, this.userName1 );
+        assertNotNull( group );
+        assertTrue( this.securityService.isViewableByUser( group, this.userName1 ) );
 
         /*
          * Remove a user from the group.

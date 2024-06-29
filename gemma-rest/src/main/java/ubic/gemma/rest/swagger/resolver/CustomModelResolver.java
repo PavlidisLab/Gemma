@@ -22,12 +22,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;

@@ -3,6 +3,7 @@ package ubic.gemma.rest.util.args;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.security.access.ConfigAttribute;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
@@ -11,8 +12,6 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.EntityNotFoundException;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.lang.reflect.InvocationTargetException;
@@ -71,7 +70,6 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    @Nonnull
     public T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
         return checkEntity( entityArg, entityArg.getEntity( service ) );
     }

@@ -44,6 +44,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Add entries to the blacklist
  *
@@ -186,7 +188,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                         log.warn( "Attempting to de-blacklist " + accession + " but it is not blacklisted" );
                         continue;
                     }
-                    blacklistedEntityService.remove( blacklistedEntityService.findByAccession( accession ) );
+                    blacklistedEntityService.remove( requireNonNull( blacklistedEntityService.findByAccession( accession ) ) );
                     log.info( "De-blacklisted " + accession );
                     continue;
                 } else if ( alreadyBlacklisted ) {

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.lang.NonNullApi;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -32,9 +33,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -44,7 +46,7 @@ import java.util.*;
  * @see    BibliographicReferenceService
  */
 @Service
-@ParametersAreNonnullByDefault
+@NonNullApi
 public class BibliographicReferenceServiceImpl
         extends AbstractVoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceService {
@@ -97,18 +99,14 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( String id ) {
-
-        return this.bibliographicReferenceDao
-                .findByExternalId( id, BibliographicReferenceServiceImpl.PUB_MED_DATABASE_NAME );
-
+        return this.bibliographicReferenceDao.findByExternalId( id, BibliographicReferenceServiceImpl.PUB_MED_DATABASE_NAME );
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( String id, String databaseName ) {
-
         return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
     }
 
@@ -133,7 +131,7 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
     }
@@ -186,7 +184,7 @@ public class BibliographicReferenceServiceImpl
             return null;
         }
 
-        existingBibRef = this.thaw( existingBibRef );
+        existingBibRef = this.thawOrFail( existingBibRef );
 
         String oldAccession = existingBibRef.getPubAccession().getAccession();
 
@@ -289,6 +287,12 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
         return this.bibliographicReferenceDao.thaw( bibliographicReference );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BibliographicReference thawOrFail( BibliographicReference bibliographicReference ) {
+        return requireNonNull( thaw( bibliographicReference ), "No BibliographicReference with ID " + bibliographicReference.getId() );
     }
 
     @Override

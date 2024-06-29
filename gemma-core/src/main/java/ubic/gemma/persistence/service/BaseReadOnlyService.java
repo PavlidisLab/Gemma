@@ -1,10 +1,9 @@
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -33,7 +32,6 @@ public interface BaseReadOnlyService<O extends Identifiable> {
      * @return the version of entity retrieved from persistent storage
      * @throws NullPointerException if the entity is not found
      */
-    @Nonnull
     @CheckReturnValue
     O findOrFail( O entity ) throws NullPointerException;
 
@@ -60,28 +58,24 @@ public interface BaseReadOnlyService<O extends Identifiable> {
      * @return the entity as per {@link #load(Long)}, never null
      * @throws NullPointerException if the entity does not exist in the persistent storage
      */
-    @Nonnull
     O loadOrFail( Long id ) throws NullPointerException;
 
     /**
      * Load an entity or fail with the supplied exception.
      * @throws T if the entity does not exist in the persistent storage
      */
-    @Nonnull
     <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T;
 
     /**
      * Load an entity or fail with the supplied exception; the message is generated automatically.
      * @throws T if the entity does not exist in the persistent storage
      */
-    @Nonnull
     <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
     /**
      * Load an entity or fail with the supplied exception and message.
      * @throws T if the entity does not exist in the persistent storage
      */
-    @Nonnull
     <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     /**

@@ -9,6 +9,7 @@ import ubic.gemma.model.common.Identifiable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntBinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -130,8 +131,7 @@ public class QueryUtils {
         return result;
     }
 
-    public static <S extends
-            Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list,
+    public static <S extends Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list,
             int batchSize ) {
         return listByIdentifiableBatch( query, batchParam, list, batchSize, -1 );
     }

@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
@@ -59,11 +60,11 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
@@ -975,7 +976,7 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.bioAssays ba "
                         + "join ba.sampleUsed bm",
                 filters, null, null );
-        return ( Long ) query.setCacheable( true ).uniqueResult();
+        return ( Long ) requireNonNull( query.setCacheable( true ).uniqueResult() );
     }
 
     @Override
@@ -1199,17 +1200,13 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public long getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
-        //language=HQL
-        final String queryString =
-                "select count(distinct sample) from ExpressionExperiment as ee "
-                        + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample "
-                        + "where ee = :ee";
-
-        return ( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct sample) from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "join ba.sampleUsed as sample "
+                        + "where ee = :ee" )
                 .setParameter( "ee", expressionExperiment )
-                .uniqueResult();
+                .uniqueResult() );
     }
 
     /**
@@ -1218,13 +1215,11 @@ public class ExpressionExperimentDaoImpl
      */
     @Override
     public long getDesignElementDataVectorCount( ExpressionExperiment ee ) {
-        //language=HQL
-        final String queryString = "select count(distinct dedv) from ExpressionExperiment ee "
-                + "inner join ee.rawExpressionDataVectors dedv where ee = :ee";
-        return ( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+        return ( Long ) requireNonNull( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct dedv) from ExpressionExperiment ee "
+                        + "inner join ee.rawExpressionDataVectors dedv where ee = :ee" )
                 .setParameter( "ee", ee )
-                .uniqueResult();
+                .uniqueResult() );
     }
 
     @Override
@@ -1411,11 +1406,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
-        return ( Boolean ) getSessionFactory().getCurrentSession()
+        return ( Boolean ) requireNonNull( getSessionFactory().getCurrentSession()
                 .createQuery( "select count(pedv) > 0 from ProcessedExpressionDataVector pedv "
                         + "where pedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
-                .uniqueResult();
+                .uniqueResult() );
     }
 
     @Override
@@ -1515,11 +1510,11 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+    @Nullable
     private Taxon getTaxonFromSamples( ExpressionExperiment ee ) {
-        String queryString = "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
-                + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee";
         return ( Taxon ) this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+                .createQuery( "select distinct SU.sourceTaxon from ExpressionExperiment as EE "
+                        + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }

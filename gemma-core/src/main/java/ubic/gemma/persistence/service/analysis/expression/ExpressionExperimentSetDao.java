@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -25,7 +26,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 

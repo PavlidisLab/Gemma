@@ -133,8 +133,8 @@ public class BatchConfoundUtils {
             assert numBioMaterials > 0 : "No biomaterials for " + ef;
 
             double p = Double.NaN;
-            double chiSquare = Double.NaN;
-            int df = 0;
+            double chiSquare;
+            int df;
 
             int numBatches = batchFactor.getFactorValues().size();
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {

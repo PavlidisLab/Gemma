@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -218,7 +219,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( commandLine.hasOption( "probes" ) ) {
 
-            if ( this.getArrayDesignsToProcess() == null || this.getArrayDesignsToProcess().size() > 1 ) {
+            if ( this.getArrayDesignsToProcess().size() > 1 ) {
                 throw new IllegalArgumentException( "With '-probes' you must provide exactly one platform" );
             }
 
@@ -266,7 +267,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * Override to do additional checks to make sure the array design is in a state of readiness for probe mapping.
      */
     @Override
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( @Nullable Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.force ) {
@@ -501,7 +502,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    private void batchRun( final Date skipIfLastRunLaterThan ) throws InterruptedException {
+    private void batchRun( @Nullable final Date skipIfLastRunLaterThan ) throws InterruptedException {
         Collection<ArrayDesign> allArrayDesigns;
 
         if ( this.taxon != null ) {
@@ -516,7 +517,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    private void configure( ArrayDesign arrayDesign ) {
+    private void configure( @Nullable ArrayDesign arrayDesign ) {
         this.config = new ProbeMapperConfig();
 
         /*
@@ -526,7 +527,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
-            isRat = t.getCommonName().equals( "rat" );
+            isRat = t != null && t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
         }
@@ -590,7 +591,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     }
 
-    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+    private void processArrayDesign( @Nullable Date skipIfLastRunLaterThan, ArrayDesign design ) {
         if ( taxon != null && !getArrayDesignService().getTaxa( design ).contains( taxon ) ) {
             return;
         }
@@ -674,9 +675,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private class ProcessADProbeMapper implements Runnable {
 
         private final ArrayDesign arrayDesign;
+        @Nullable
         private final Date skipIfLastRunLaterThan;
 
-        private ProcessADProbeMapper( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
+        private ProcessADProbeMapper( ArrayDesign arrayDesign, @Nullable Date skipIfLastRunLaterThan ) {
             this.arrayDesign = arrayDesign;
             this.skipIfLastRunLaterThan = skipIfLastRunLaterThan;
         }
@@ -700,9 +702,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     private Taxon getTaxonByName( CommandLine commandLine ) {
         String taxonName = commandLine.getOptionValue( 't' );
-        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
-            log.error( "ERROR: Cannot find taxon " + taxonName );
+            throw new RuntimeException( "Cannot find taxon with common name " + taxonName );
         }
         return taxon;
     }

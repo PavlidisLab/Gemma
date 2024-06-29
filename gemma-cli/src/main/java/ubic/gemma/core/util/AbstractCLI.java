@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Date;

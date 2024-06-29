@@ -3,8 +3,8 @@ package ubic.gemma.core.ontology;
 import lombok.Value;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyProperty;
+import ubic.gemma.core.lang.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.Writer;
 import java.util.Set;
 

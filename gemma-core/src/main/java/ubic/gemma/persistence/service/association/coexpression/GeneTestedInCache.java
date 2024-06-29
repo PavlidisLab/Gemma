@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
 
 import java.util.Map;
@@ -36,6 +37,7 @@ public interface GeneTestedInCache {
 
     void clearCache();
 
+    @Nullable
     GeneCoexpressionTestedIn get( Long geneId );
 
     void cache( Map<Long, GeneCoexpressionTestedIn> idMap );

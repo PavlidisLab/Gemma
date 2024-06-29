@@ -19,13 +19,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import java.util.*;
 
@@ -51,7 +52,6 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
-        //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
                         "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
                 .setParameter( "id", id ).setParameter( "databaseName", databaseName ).uniqueResult();
@@ -59,7 +59,6 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
-        //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference b where b.pubAccession=:externalId" )
                 .setParameter( "externalId", externalId ).uniqueResult();
@@ -78,7 +77,7 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
-    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+    public BibliographicReference thaw( @Nullable BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getId() == null )
             return bibliographicReference;
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(

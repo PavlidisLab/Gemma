@@ -1,5 +1,5 @@
 <root>
     <item name='javax.ws.rs.container.ResourceContext T getResource(java.lang.Class&lt;T&gt;)'>
-        <annotation name='javax.annotation.Nullable'/>
+        <annotation name='ubic.gemma.core.lang.Nullable'/>
     </item>
 </root>

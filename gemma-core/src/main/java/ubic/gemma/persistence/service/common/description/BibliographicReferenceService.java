@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.NonNullApi;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -28,7 +30,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-@ParametersAreNonnullByDefault
+@NonNullApi
 public interface BibliographicReferenceService
         extends BaseImmutableService<BibliographicReference>, BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
@@ -66,6 +67,7 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_ADMIN" })
     void remove( BibliographicReference BibliographicReference );
 
+    @Nullable
     BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
@@ -74,7 +76,8 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference
      */
-    BibliographicReference findByExternalId( java.lang.String id );
+    @Nullable
+    BibliographicReference findByExternalId( String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
@@ -83,7 +86,8 @@ public interface BibliographicReferenceService
      * @param databaseName db name
      * @return reference
      */
-    BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
+    @Nullable
+    BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
      * <p>
@@ -93,7 +97,8 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference VO
      */
-    BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
+    @Nullable
+    BibliographicReferenceValueObject findVOByExternalId( String id );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
@@ -120,6 +125,7 @@ public interface BibliographicReferenceService
      */
     Collection<Long> listAll();
 
+    @Nullable
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
@@ -127,8 +133,10 @@ public interface BibliographicReferenceService
 
     List<BibliographicReferenceValueObject> search( String query ) throws SearchException;
 
+    @Nullable
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 
-    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
+    BibliographicReference thawOrFail( BibliographicReference bibref );
 
+    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
 }

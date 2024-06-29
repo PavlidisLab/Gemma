@@ -14,11 +14,11 @@
  */
 package ubic.gemma.rest.util;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
 import java.util.List;
 

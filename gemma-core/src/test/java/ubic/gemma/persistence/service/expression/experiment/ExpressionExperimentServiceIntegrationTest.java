@@ -161,6 +161,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     public void testGetByTaxon() {
         ExpressionExperiment ee = createExpressionExperiment();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
+        assertNotNull( taxon );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
         assertTrue( list.contains( ee ) );

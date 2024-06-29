@@ -24,11 +24,10 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
@@ -246,7 +245,7 @@ public class Characteristic extends AbstractDescribable implements Serializable,
     }
 
     @Override
-    public int compareTo( @Nonnull Characteristic characteristic ) {
+    public int compareTo( Characteristic characteristic ) {
         return COMPARATOR.compare( this, characteristic );
     }
 

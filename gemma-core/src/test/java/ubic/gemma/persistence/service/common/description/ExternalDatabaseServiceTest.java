@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -17,8 +17,9 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.Assert.assertNotNull;
 
-public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
+public class ExternalDatabaseServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -45,6 +46,7 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
         User currentUser = userManager.getCurrentUser();
         assertThat( currentUser ).isNotNull();
         ExternalDatabase externalDatabase = externalDatabaseService.findByNameWithAuditTrail( "test" );
+        assertNotNull( externalDatabase );
         assertThat( externalDatabase.getAuditTrail() ).isNotNull();
         assertThat( externalDatabase.getAuditTrail().getEvents() ).hasSize( 1 );
         assertThat( externalDatabase ).isEqualTo( ed );
@@ -79,10 +81,12 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     @Test
     public void testExternalDatabaseWithRelatedDatabases() {
         ExternalDatabase hg19 = externalDatabaseService.findByName( "hg19" );
+        assertNotNull( hg19 );
         assertThat( hg19.getExternalDatabases() )
                 .hasSize( 1 )
                 .extracting( "name" ).contains( "hg19 annotations" );
         ExternalDatabase hg38 = externalDatabaseService.findByName( "hg38" );
+        assertNotNull( hg38 );
         assertThat( hg38.getExternalDatabases() )
                 .hasSize( 2 )
                 .extracting( "name" ).contains( "hg38 annotations", "hg38 RNA-Seq annotations" );
@@ -99,6 +103,7 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
         assertThat( ed2.getExternalDatabases() ).contains( ed );
         assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 2 );
         ed = externalDatabaseService.findByNameWithAuditTrail( ed.getName() );
+        assertNotNull( ed );
         assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
     }
 }

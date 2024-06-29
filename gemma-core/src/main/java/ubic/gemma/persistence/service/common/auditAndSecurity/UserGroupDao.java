@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.BaseDao;
@@ -29,7 +30,8 @@ import java.util.Collection;
  */
 public interface UserGroupDao extends BaseDao<UserGroup> {
 
-    UserGroup findByName( java.lang.String name );
+    @Nullable
+    UserGroup findByName( String name );
 
     Collection<UserGroup> findGroupsForUser( User user );
 }

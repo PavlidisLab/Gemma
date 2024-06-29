@@ -1,14 +1,13 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.authentication.UserDetailsImpl;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Overrides gsec's UserManager to provide Gemma-specific types.
@@ -16,18 +15,23 @@ import java.util.Set;
  */
 public interface UserManager extends gemma.gsec.authentication.UserManager {
 
+    /**
+     * @deprecated Use {@link #findByEmail(String)}, this is a typo in gsec.
+     */
+    @Deprecated
+    @Override
+    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
+    User findbyEmail( String emailAddress ) throws UsernameNotFoundException;
+
     @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     User findByEmail( String s ) throws UsernameNotFoundException;
 
     @Override
-    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
-    gemma.gsec.model.User findbyEmail( String emailAddress );
-
-    @Override
     User findByUserName( String s ) throws UsernameNotFoundException;
 
     @Override
+    @Nullable
     UserGroup findGroupByName( String s );
 
     @Override
@@ -39,6 +43,7 @@ public interface UserManager extends gemma.gsec.authentication.UserManager {
     boolean userWithEmailExists( String emailAddress );
 
     @Override
+    @Nullable
     User getCurrentUser();
 
     @Override

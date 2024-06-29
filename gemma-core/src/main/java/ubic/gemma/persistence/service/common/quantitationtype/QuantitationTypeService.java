@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.quantitationtype;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -26,7 +27,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,6 +50,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      *
      * @return found QT
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
@@ -57,6 +58,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
      * @throws NonUniqueQuantitationTypeByNameException if more than one QT matches the given name and vector type
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
 

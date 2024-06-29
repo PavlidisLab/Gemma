@@ -2,8 +2,7 @@ package ubic.gemma.core.ontology.providers;
 
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.core.config.Settings;
-
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 
 /**
  * <a href="https://obofoundry.org/ontology/mondo.html">Mondo Disease Ontology</a>

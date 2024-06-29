@@ -27,11 +27,11 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix1D;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**

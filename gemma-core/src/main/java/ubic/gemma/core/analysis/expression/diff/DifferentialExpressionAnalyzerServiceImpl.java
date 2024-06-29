@@ -299,7 +299,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
-        return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
+        return Objects.equals( temprs.getBaselineGroup(), oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
                 .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }

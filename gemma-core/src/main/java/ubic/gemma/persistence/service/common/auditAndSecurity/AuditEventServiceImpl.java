@@ -88,7 +88,7 @@ public class AuditEventServiceImpl implements AuditEventService {
         for ( Class<? extends AuditEventType> ti : types ) {
             Map<T, AuditEvent> results2 = auditEventDao.getLastEvents( auditables, ti );
             results.put( ti, results2.entrySet().stream()
-                    .filter( e -> ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
+                    .filter( e -> ti.isInstance( e.getValue().getEventType() ) )
                     .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) );
         }
         return results;

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -31,6 +32,7 @@ import java.util.Collection;
  */
 public interface BlatResultDao extends BaseVoEnabledDao<BlatResult, BlatResultValueObject> {
 
+    @Nullable
     BlatResult thaw( BlatResult blatResult );
 
     Collection<BlatResult> thaw( Collection<BlatResult> blatResults );

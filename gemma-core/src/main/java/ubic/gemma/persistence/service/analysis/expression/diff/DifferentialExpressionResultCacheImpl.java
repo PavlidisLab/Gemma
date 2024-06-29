@@ -50,7 +50,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     @Autowired
     private CacheManager cacheManager;
 
-    private Boolean enabled = true;
+    private boolean enabled = true;
 
     private Cache cache;
 
@@ -112,12 +112,12 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
-    public Boolean isEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 
     @Override
-    public void setEnabled( Boolean enabled ) {
+    public void setEnabled( boolean enabled ) {
         this.enabled = enabled;
     }
 

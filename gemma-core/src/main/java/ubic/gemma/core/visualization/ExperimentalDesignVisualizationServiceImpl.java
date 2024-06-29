@@ -34,6 +34,7 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -45,7 +46,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -156,8 +156,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             LayoutSelection cacheKey = null;
 
-            if ( vec.getExpressionExperiment().getClass()
-                    .isInstance( ExpressionExperimentSubsetValueObject.class ) ) {
+            if ( vec.getExpressionExperiment() instanceof ExpressionExperimentSubsetValueObject ) {
                 cacheKey = new LayoutSelection( ( ( ExpressionExperimentSubsetValueObject ) vec.getExpressionExperiment() ).getSourceExperiment(), primaryFactor );
             } else {
                 cacheKey = new LayoutSelection( vec.getExpressionExperiment().getId(), primaryFactor );

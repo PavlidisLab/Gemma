@@ -32,6 +32,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Spring Service base class for <code>BioSequenceService</code>, provides access to
  * all services and entities referenced by this service.
@@ -102,6 +104,12 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
     @Transactional(readOnly = true)
     public BioSequence thaw( BioSequence bioSequence ) {
         return this.bioSequenceDao.thaw( bioSequence );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioSequence thawOrFail( BioSequence bs ) {
+        return requireNonNull( thaw( bs ), "No BioSequence with ID " + bs.getId() );
     }
 
     @Override

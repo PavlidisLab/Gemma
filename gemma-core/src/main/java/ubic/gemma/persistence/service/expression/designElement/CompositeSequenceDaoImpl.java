@@ -29,6 +29,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -43,7 +44,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
@@ -390,9 +390,9 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public Collection<Object[]> getRawSummary( @Nullable Collection<CompositeSequence> compositeSequences ) {
-        if ( compositeSequences == null || compositeSequences.size() == 0 )
-            return null;
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences ) {
+        if ( compositeSequences.isEmpty() )
+            return Collections.emptyList();
 
         StringBuilder buf = new StringBuilder();
 

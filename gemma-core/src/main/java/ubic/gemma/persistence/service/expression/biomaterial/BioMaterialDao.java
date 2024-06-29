@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,6 +39,7 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
      * @param bioMaterialId biomaterial id
      * @return the experiment the biomaterial appears in
      */
+    @Nullable
     ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
 
     /**

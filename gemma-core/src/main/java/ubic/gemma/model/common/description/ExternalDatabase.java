@@ -19,12 +19,12 @@
 
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.Date;

@@ -32,8 +32,7 @@ import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorComm
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -51,12 +50,12 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.Map.Entry;
@@ -412,28 +411,32 @@ public class DEDVController {
      * @return collection of visualization value objects
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId,
-            Double givenThreshold, @Nullable Long primaryFactorID ) {
-
+            @Nullable Double givenThreshold, @Nullable Long primaryFactorID ) {
         if ( resultSetId == null ) {
             throw new IllegalArgumentException( "The resultSetId parameter cannot be null" );
         }
 
-        double threshold = DEFAULT_THRESHOLD;
-
+        double threshold;
         if ( givenThreshold != null ) {
-            threshold = givenThreshold;
             log.debug( "Threshold specified not using default value: " + givenThreshold );
+            threshold = givenThreshold;
+        } else {
+            threshold = DEFAULT_THRESHOLD;
+        }
+
+        ExperimentalFactor primaryFactor;
+        if ( primaryFactorID != null ) {
+            primaryFactor = this.experimentalFactorService.load( primaryFactorID );
+            if ( primaryFactor == null ) {
+                throw new IllegalArgumentException( "No factor found for id=" + primaryFactorID );
+            }
+        } else {
+            primaryFactor = null;
         }
 
         List<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService
                 .getDiffExVectors( resultSetId, threshold, MAX_RESULTS_TO_RETURN );
         // at this point the dedvs are reduced down to the subset we need to visualize
-
-        ExperimentalFactor primaryFactor = this.experimentalFactorService.load( primaryFactorID );
-
-        if ( primaryFactor == null ) {
-            throw new IllegalArgumentException( "No factor found for id=" + primaryFactorID );
-        }
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs, primaryFactor );

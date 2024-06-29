@@ -3,11 +3,10 @@ package ubic.gemma.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
-
-import javax.annotation.Nullable;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.

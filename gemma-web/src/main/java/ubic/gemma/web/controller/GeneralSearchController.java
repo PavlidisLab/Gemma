@@ -53,7 +53,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
-import javax.annotation.Nullable;
+import ubic.gemma.core.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;

@@ -1,12 +1,11 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-
-import javax.annotation.Nullable;
 
 @Schema(type = "integer", format = "int64", description = "A quantitation type ID.")
 public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {

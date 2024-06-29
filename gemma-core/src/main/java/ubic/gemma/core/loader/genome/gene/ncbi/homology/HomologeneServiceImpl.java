@@ -24,10 +24,10 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.BufferedReader;
@@ -140,6 +140,9 @@ public class HomologeneServiceImpl implements HomologeneService {
             return null;
         }
         final Taxon taxon = this.taxonService.findByCommonName( taxonCommonName );
+        if ( taxon == null ) {
+            throw new RuntimeException( "No taxon found for " + taxonCommonName );
+        }
         Gene geneToReturn;
         if ( Objects.equals( gene.getTaxon().getId(), taxon.getId() ) ) {
             geneToReturn = gene;

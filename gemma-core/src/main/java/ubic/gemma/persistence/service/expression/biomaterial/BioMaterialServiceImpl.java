@@ -205,7 +205,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {
-        BioMaterial bm = Objects.requireNonNull( this.load( bmvo.getId() ),
+        BioMaterial bm = Objects.requireNonNull( bioMaterialDao.load( bmvo.getId() ),
                 String.format( "No BioMaterial with ID %d.", bmvo.getId() ) );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<>();
@@ -270,10 +270,10 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
                     fv.setValue( factorValueString );
                     Measurement m = Measurement.Factory.newInstance();
                     m.setType( MeasurementType.ABSOLUTE );
-                    m.setValue( fv.getValue() );
+                    m.setValue( factorValueString );
                     try {
-                        //noinspection ResultOfMethodCallIgnored // check if it is a number, don't need the value.
-                        Double.parseDouble( fv.getValue() );
+                        // check if it is a number, don't need the value.
+                        Double.parseDouble( factorValueString );
                         m.setRepresentation( PrimitiveType.DOUBLE );
                     } catch ( NumberFormatException e ) {
                         m.setRepresentation( PrimitiveType.STRING );
@@ -297,7 +297,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
         bm.getFactorValues().clear();
         bm.getFactorValues().addAll( updatedFactorValues );
         assert !bm.getFactorValues().isEmpty();
-        this.update( bm );
+        bioMaterialDao.update( bm );
         assert !bm.getFactorValues().isEmpty();
         return bm;
     }

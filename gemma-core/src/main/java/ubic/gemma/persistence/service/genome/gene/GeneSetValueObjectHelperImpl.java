@@ -21,12 +21,15 @@ package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class will handle population of GeneSetValueObjects. Services need to be accessed in order to define values for
@@ -41,7 +44,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
     private GeneSetService geneSetService;
 
     @Override
-    public GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm ) {
+    public GOGroupValueObject convertToGOValueObject( GeneSet gs, @Nullable String goId, String searchTerm ) {
 
         GOGroupValueObject ggvo = new GOGroupValueObject();
         fillSessionBoundValueObject( ggvo, gs );
@@ -54,11 +57,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     @Override
     public DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs ) {
-        if ( gs == null ) {
-            return null;
-        }
-
-        return this.geneSetService.loadValueObjectByIdLite( gs.getId() );
+        return requireNonNull( this.geneSetService.loadValueObjectByIdLite( gs.getId() ), "No GeneSet with ID " + gs.getId() );
     }
 
     @Override
@@ -69,16 +68,11 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     @Override
     public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
-        if ( gs == null )
-            return null;
-
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
-
         Collection<Long> ids = EntityUtils
                 .getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs.getId() ) ) );
         dbgsvo.setGeneIds( ids );
         dbgsvo.setSize( ids.size() );
-
         return dbgsvo;
     }
 

@@ -24,11 +24,14 @@ import org.apache.commons.configuration2.ConfigurationUtils;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.PropertyPlaceholderHelper;
+import ubic.gemma.core.lang.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Convenience class to access Gemma properties defined in a resource. Methods will look in Gemma.properties,
@@ -92,6 +95,7 @@ public class Settings {
         return val + File.separator;
     }
 
+    @Nullable
     public static String getAnalyticsKey() {
         return Settings.getString( Settings.ANALYTICS_TRACKER_PROPERTY );
     }
@@ -114,7 +118,7 @@ public class Settings {
      * unix).
      */
     public static String getDownloadPath() {
-        String val = Settings.getString( "gemma.download.path" );
+        String val = requireNonNull( Settings.getString( "gemma.download.path" ) );
         if ( val.endsWith( File.separator ) )
             return val;
         return val + File.separatorChar;
@@ -156,6 +160,7 @@ public class Settings {
         Settings.config.setProperty( key, val );
     }
 
+    @Nullable
     public static String getString( String key ) {
         try {
             return StringUtils.strip( Settings.config.getString( key ), "\"'" );

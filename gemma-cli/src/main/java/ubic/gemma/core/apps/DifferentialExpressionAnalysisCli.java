@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.*;
@@ -369,6 +370,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
     }
 
+    @Nullable
     private ExperimentalFactor getSubsetFactor( ExpressionExperiment ee ) {
         Assert.notNull( ee.getExperimentalDesign() );
         ExperimentalFactor subsetFactor = null;

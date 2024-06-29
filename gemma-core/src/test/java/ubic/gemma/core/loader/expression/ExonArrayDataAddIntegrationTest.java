@@ -24,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -31,12 +32,12 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -59,7 +60,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
     @BeforeClass
     public static void checkAptIsAvailable() {
-        String apt = Settings.getString( "affy.power.tools.exec" );
+        String apt = requireNonNull( Settings.getString( "affy.power.tools.exec" ) );
         assumeTrue( "Test skipped due to lack of Affy Power Tools executable", new File( apt ).canExecute() );
     }
 

@@ -3,6 +3,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -10,7 +11,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 

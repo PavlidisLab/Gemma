@@ -1,9 +1,9 @@
 package ubic.gemma.rest.util.args;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 

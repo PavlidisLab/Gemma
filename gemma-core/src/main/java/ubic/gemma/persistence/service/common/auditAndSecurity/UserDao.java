@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -31,8 +32,10 @@ import java.util.Collection;
  */
 public interface UserDao extends BaseDao<User> {
 
+    @Nullable
     User findByEmail( String email );
 
+    @Nullable
     User findByUserName( String userName );
 
     Collection<GroupAuthority> loadGroupAuthorities( User u );

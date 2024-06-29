@@ -27,9 +27,9 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -41,7 +41,6 @@ import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -321,12 +320,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return results;
     }
 
+    @Nullable
     private String uri2goid( OntologyTerm t ) {
-        return t.getUri().replaceFirst( ".*/", "" );
+        return t.getUri() != null ? t.getUri().replaceFirst( ".*/", "" ) : null;
     }
-
-    private String uri2phenoID( CharacteristicValueObject t ) {
-        return t.getValueUri().replaceFirst( ".*/", "" );
-    }
-
 }

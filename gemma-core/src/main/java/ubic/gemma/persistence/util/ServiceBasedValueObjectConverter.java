@@ -2,11 +2,11 @@ package ubic.gemma.persistence.util;
 
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
