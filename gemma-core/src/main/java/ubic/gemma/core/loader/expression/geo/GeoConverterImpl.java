@@ -542,32 +542,46 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( GeoSample sample : series.getSamples() ) {
+            String reason;
+            // this is apparently what we get for microarrays
             if ( sample.getType().equals( GeoSampleType.RNA ) ) {
-                // this is apparently what we get for microarrays
                 continue;
-            } else if ( sample.getType().equals( GeoSampleType.MPSS ) ) {
+            }
 
+            // RNA-Seq
+            // FIXME: are we really seeing MPSS out there?
+            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
+            else if ( sample.getType().equals( GeoSampleType.MPSS ) || sample.getType().equals( GeoSampleType.SRA ) ) {
+                // bulk RNA-Seq
                 if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.TRANSCRIPTOMIC ) ) {
-
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) || sample.getLibStrategy()
-                            .equals( GeoLibraryStrategy.SSRNA_SEQ ) || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) {
+                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ )
+                            || sample.getLibStrategy().equals( GeoLibraryStrategy.SSRNA_SEQ )
+                            || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
+                    } else {
+                        reason = "Unsupported transcriptomic library strategy.";
                     }
                 }
+                // single-cell RNA-Seq
+                // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA
+                else if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC ) ) {
+                    if ( sample.getLibStrategy() != null && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                        continue;
+                    } else {
+                        reason = "Unsupported single-cell transcriptomic library strategy.";
+                    }
+                } else {
+                    reason = "Unsupported library source.";
+                }
+            } else {
+                reason = "Unsupported sample type.";
             }
 
-            // single-cell RNA-Seq
-            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA
-            else if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
-                    && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
-                continue;
-            }
 
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
-
-            GeoConverterImpl.log.info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType() + " LibSource=" + sample.getLibSource() + " LibStrategy=" + sample.getLibStrategy() );
+            GeoConverterImpl.log.info( String.format( "Skipping ineligible sample: %s: Type=%s LibSource=%s LibStrategy=%s Reason=%s",
+                    sample.getGeoAccession(), sample.getType(), sample.getLibSource(), sample.getLibStrategy(), reason ) );
             samplesToSkip.add( sample );
         }
 

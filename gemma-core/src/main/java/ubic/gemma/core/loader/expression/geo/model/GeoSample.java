@@ -55,7 +55,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private String lastUpdateDate = "";
     @Nullable
     private GeoLibrarySource libSource = null;
-    private GeoLibraryStrategy libStrategy;
+    @Nullable
+    private GeoLibraryStrategy libStrategy = null;
     private boolean mightNotHaveDataInFile = false;
     private Collection<GeoPlatform> platforms;
     private final Collection<GeoReplication> replicates;
@@ -276,6 +277,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.libSource;
     }
 
+    @Nullable
     public GeoLibraryStrategy getLibStrategy() {
         return this.libStrategy;
     }
@@ -445,11 +447,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.lastUpdateDate = lastUpdateDate;
     }
 
-    public void setLibSource( GeoLibrarySource libSource ) {
+    public void setLibSource( @Nullable GeoLibrarySource libSource ) {
         this.libSource = libSource;
     }
 
-    public void setLibStrategy( GeoLibraryStrategy libStrategy ) {
+    public void setLibStrategy( @Nullable GeoLibraryStrategy libStrategy ) {
         this.libStrategy = libStrategy;
     }
 

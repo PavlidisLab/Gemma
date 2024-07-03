@@ -188,8 +188,10 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             sample.setType( GeoSampleType.MIXED );
         } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
             sample.setType( GeoSampleType.SAGE );
-        } else if ( string.equalsIgnoreCase( "MPSS" ) || string.equalsIgnoreCase( "SRA" ) ) {
+        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
             sample.setType( GeoSampleType.MPSS );
+        } else if ( string.equalsIgnoreCase( "SRA" ) ) {
+            sample.setType( GeoSampleType.SRA );
         } else if ( string.equalsIgnoreCase( "SARST" ) ) {
             sample.setType( GeoSampleType.PROTEIN );
         } else if ( string.equalsIgnoreCase( "other" ) ) {
