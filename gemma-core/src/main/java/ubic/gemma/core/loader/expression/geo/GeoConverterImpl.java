@@ -535,30 +535,38 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         for ( GeoSample sample : series.getSamples() ) {
+            String reason;
             if ( sample.getType().equals( "RNA" ) ) {
                 // this is apparently what we get for microarrays
                 continue;
-            } else if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
+            }
 
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
-                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
-                    // no-op, just making explicit.
-                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
-
+            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
+            if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
+                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
                     // have to drill down.
-                    if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ssRNA-seq" ) || sample.getLibStrategy().equalsIgnoreCase( "Other" ) ) {
+                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( "RNA-Seq" )
+                            || sample.getLibStrategy().equals( "ssRNA-seq" )
+                            || sample.getLibStrategy().equalsIgnoreCase( "OTHER" ) ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     }
+                    reason = "Unsupported library strategy for transcriptomic data.";
+                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
+                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
+                    // no-op, just making explicit.
+                    reason = "Single-cell library source is not supported yet.";
+                } else {
+                    reason = "Unsupported library source.";
                 }
+            } else {
+                reason = "Unsupported sample type.";
             }
 
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed'; 
-
-            GeoConverterImpl.log.info( "Skipping ineligible sample: " + sample.getGeoAccession() + ": Type=" + sample.getType() + " LibSource=" + sample.getLibSource() + " LibStrategy=" + sample.getLibStrategy() );
+            GeoConverterImpl.log.info( String.format( "Skipping ineligible sample: %s: Type=%s LibSource=%s LibStrategy=%s Reason=%s",
+                    sample.getGeoAccession(), sample.getType(), sample.getLibSource(), sample.getLibStrategy(), reason ) );
             samplesToSkip.add( sample );
         }
-
     }
 
     /**
