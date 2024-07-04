@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.AbstractCLI;
@@ -21,6 +22,9 @@ import java.util.stream.Collectors;
  */
 @Component
 public class SingleCellDataTransformCli extends AbstractCLI {
+
+    @Value("${python.exe}")
+    private String pythonExecutable;
 
     private SingleCellInputOutputFileTransformation transformation;
 
@@ -71,6 +75,9 @@ public class SingleCellDataTransformCli extends AbstractCLI {
                         .setNumberOfGenes( Integer.parseInt( positionalArguments.removeFirst() ) );
             default:
                 throw new ParseException( "Unknown operation: " + operation + ". Possible values are: transpose, pack, sortBySample, sample." );
+        }
+        if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
+            ( ( AbstractPythonScriptBasedAnnDataTransformation ) transformation ).setPythonExecutable( pythonExecutable );
         }
         transformation.setInputFile( inputFile );
         transformation.setInputDataType( SingleCellDataType.ANNDATA );

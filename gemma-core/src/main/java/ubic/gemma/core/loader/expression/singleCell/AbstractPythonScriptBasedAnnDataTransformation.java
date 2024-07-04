@@ -19,13 +19,38 @@ import static java.util.Objects.requireNonNull;
 @CommonsLog
 public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCellInputOutputFileTransformation {
 
+    public static final String DEFAULT_PYTHON_EXECUTABLE = "python";
+
     private final String scriptName;
 
+    /**
+     * Location of the Python executable.
+     */
+    private String pythonExecutable = DEFAULT_PYTHON_EXECUTABLE;
+
+    // input/output for the transformation
     private Path inputFile, outputFile;
     private SingleCellDataType inputDataType, outputDataType;
 
     protected AbstractPythonScriptBasedAnnDataTransformation( String scriptName ) {
         this.scriptName = scriptName;
+    }
+
+    /**
+     * Check if a Python package is installed.
+     */
+    public boolean isPackageInstalled( String packageName ) throws IOException {
+        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable, "-c", "import " + packageName } );
+        try {
+            if ( process.waitFor() != 0 ) {
+                log.warn( "import " + packageName + " failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
+                return false;
+            }
+            return true;
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
@@ -35,7 +60,7 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
         Assert.isTrue( inputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as input for this transformation." );
         Assert.isTrue( outputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as output for this transformation." );
         try ( InputStream in = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/" + scriptName + "-anndata.py" ) ) ) {
-            Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { "python", "-" }, createScriptArgs() ) );
+            Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { pythonExecutable, "-" }, createScriptArgs() ) );
             IOUtils.copy( in, process.getOutputStream() );
             process.getOutputStream().close();
             try ( BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ) {

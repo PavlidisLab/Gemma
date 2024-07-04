@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
@@ -11,8 +12,16 @@ import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 public class SingleCellDataTransformationsTest {
+
+    @BeforeClass
+    public static void checkIfAnnDataAndScipyAreInstalled() throws IOException {
+        SingleCellDataTranspose transpose = new SingleCellDataTranspose();
+        assumeTrue( "scipy is required to run this test", transpose.isPackageInstalled( "scipy" ) );
+        assumeTrue( "anndata is required to run this test", transpose.isPackageInstalled( "anndata" ) );
+    }
 
     @Test
     public void testTranspose() throws IOException {
