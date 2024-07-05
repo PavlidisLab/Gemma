@@ -64,7 +64,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         this.init();
-
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
@@ -72,7 +71,20 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                                 .getQuantitationType() );
             }
         }
+        this.selectVectors( vectors );
+        this.vectorsToMatrix( vectors );
+    }
 
+    public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        this.init();
+        for ( DesignElementDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException(
+                        "Cannot convert non-double quantitation types into double matrix:" + dedv
+                                .getQuantitationType() );
+            }
+        }
+        this.expressionExperiment = ee;
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }

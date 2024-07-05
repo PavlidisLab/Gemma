@@ -55,10 +55,10 @@ import java.util.*;
  * @see    ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
  */
 @Service
-class ProcessedExpressionDataVectorCreateHelperServiceImpl
-        implements ProcessedExpressionDataVectorCreateHelperService {
+class ProcessedExpressionDataVectorHelperServiceImpl
+        implements ProcessedExpressionDataVectorHelperService {
 
-    private static final Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateHelperServiceImpl.class );
+    private static final Log log = LogFactory.getLog( ProcessedExpressionDataVectorHelperServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -70,32 +70,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
-    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Override
-    @Transactional
-    public int replaceProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vecs ) {
-        // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
-        QuantitationType qt = vecs.iterator().next().getQuantitationType();
-        if ( qt.getId() == null ) {
-            QuantitationType existingQt = quantitationTypeService.find( ee, qt );
-            if ( existingQt != null ) {
-                log.info( "Reusing existing QT for replacement vectors: " + existingQt );
-                qt = existingQt;
-            } else {
-                log.info( "Creating a new QT for replacement vectors: " + qt );
-                qt = quantitationTypeService.create( qt );
-            }
-            for ( ProcessedExpressionDataVector v : vecs ) {
-                v.setQuantitationType( qt );
-            }
-        }
-        return eeService.replaceProcessedDataVectors( ee, vecs );
-    }
 
     @Override
     @Transactional
@@ -183,12 +158,12 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
             return;
         }
 
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Load intensities: " + timer.getTime() + "ms" );
+        ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Load intensities: " + timer.getTime() + "ms" );
 
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks data for " + processedVectors.size() + " vectors..." );
+        ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Updating ranks data for " + processedVectors.size() + " vectors..." );
         this.computeRanks( processedVectors, intensities );
         eeService.update( ee );
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Updating ranks is done" );
+        ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Updating ranks is done" );
     }
 
     /**
@@ -212,7 +187,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR )
                 || arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE ) ) {
 
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+            ProcessedExpressionDataVectorHelperServiceImpl.log
                     .info( "Computing intensities for two-color data from underlying data" );
 
             /*
@@ -235,7 +210,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
                 throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
             }
 
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
+            ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Vectors loaded ..." );
 
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
@@ -243,24 +218,24 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
 
             if ( missingValues == null ) {
-                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                ProcessedExpressionDataVectorHelperServiceImpl.log
                         .warn( "Could not locate missing value matrix for " + ee
                                 + ", rank computation skipped (needed for two-color data)" );
                 return intensities;
             }
 
             if ( intensities == null ) {
-                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                ProcessedExpressionDataVectorHelperServiceImpl.log
                         .warn( "Could not locate intensity matrix for " + ee
                                 + ", rank computation skipped (needed for two-color data)" );
                 return null;
             }
 
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Masking ..." );
+            ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Masking ..." );
             this.maskMissingValues( intensities, missingValues );
 
         } else {
-            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+            ProcessedExpressionDataVectorHelperServiceImpl.log
                     .info( "Computing intensities directly from processed data" );
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
         }
@@ -272,7 +247,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
      * Make sure we have only one ordering!!! If the sample matching is botched, there will be problems.
      */
     private void checkAllBioAssayDimensionsMatch( Collection<BioAssayDimension> dims ) {
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+        ProcessedExpressionDataVectorHelperServiceImpl.log
                 .info( "Data set has more than one bioassaydimension for its processed data vectors" );
         List<BioMaterial> ordering = new ArrayList<>();
         int i = 0;
@@ -307,7 +282,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( intensities.getRow( de ) == null ) {
-                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                ProcessedExpressionDataVectorHelperServiceImpl.log
                         .warn( "No intensity value for " + de + ", rank for vector will be null" );
                 vector.setRankByMean( null );
                 vector.setRankByMax( null );
@@ -323,7 +298,7 @@ class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
             ProcessedExpressionDataVectorDao.RankMethod method ) {
-        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.debug( "Getting ranks" );
+        ProcessedExpressionDataVectorHelperServiceImpl.log.debug( "Getting ranks" );
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {

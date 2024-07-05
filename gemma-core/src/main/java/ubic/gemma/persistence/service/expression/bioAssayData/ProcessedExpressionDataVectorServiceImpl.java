@@ -49,7 +49,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateHelperService helperService;
+    private ProcessedExpressionDataVectorHelperService helperService;
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
@@ -112,7 +112,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             Collection<ProcessedExpressionDataVector> vectors ) {
         int replaced;
         try {
-            replaced = helperService.replaceProcessedDataVectors( ee, vectors );
+            replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
             auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
