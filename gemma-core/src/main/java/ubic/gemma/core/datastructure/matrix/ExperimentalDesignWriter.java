@@ -40,6 +40,8 @@ public class ExperimentalDesignWriter {
 
     private final Log log = LogFactory.getLog( this.getClass() );
 
+    private static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
+
     /**
      * @param writer      writer
      * @param ee          ee
@@ -140,7 +142,7 @@ public class ExperimentalDesignWriter {
         }
 
         for ( ExperimentalFactor ef : factors ) {
-            buf.append( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
+            buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
             buf.append( ef.getName().replaceAll( "\\s", "." ) ).append( " :" );
             if ( ef.getCategory() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
