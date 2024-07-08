@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -54,7 +55,9 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private String hybProtocol = "";
     private boolean isGenePix = false;
     private String lastUpdateDate = "";
+    @Nullable
     private String libSource;
+    @Nullable
     private String libStrategy;
     private boolean mightNotHaveDataInFile = false;
     private Collection<GeoPlatform> platforms;
@@ -270,10 +273,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return lastUpdateDate;
     }
 
+    @Nullable
     public String getLibSource() {
         return this.libSource;
     }
 
+    @Nullable
     public String getLibStrategy() {
         return this.libStrategy;
     }
@@ -445,11 +450,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.lastUpdateDate = lastUpdateDate;
     }
 
-    public void setLibSource( String libSource ) {
+    public void setLibSource( @Nullable String libSource ) {
         this.libSource = libSource;
     }
 
-    public void setLibStrategy( String libStrategy ) {
+    public void setLibStrategy( @Nullable String libStrategy ) {
         this.libStrategy = libStrategy;
     }
 

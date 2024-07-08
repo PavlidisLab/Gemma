@@ -29,6 +29,7 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -41,7 +42,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.core.config.Settings;
 
 import java.util.*;
 

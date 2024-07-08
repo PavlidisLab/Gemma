@@ -22,7 +22,9 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
+import org.hibernate.FlushMode;
+import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.type.LongType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -56,19 +58,13 @@ public class CommonQueries {
         if ( ees == null || ees.isEmpty() )
             return eeAdMap;
 
-        final String eeAdQuery = "select distinct ee.id,ad from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id in (:ees)";
-
-        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-        queryObject.setParameterList( "ees", optimizeParameterList( ees ) );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        List<?> qr = queryObject.list();
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            Long ee = ( Long ) ar[0];
-            ArrayDesign ad = ( ArrayDesign ) ar[1];
+        List<Object[]> qr = listByBatch( session.createQuery( "select ee.id, ad from ExpressionExperiment as ee "
+                + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                + "where ee.id in (:ees) "
+                + "group by ee, ad" ), "ees", ees, 2048 );
+        for ( Object[] o : qr ) {
+            Long ee = ( Long ) o[0];
+            ArrayDesign ad = ( ArrayDesign ) o[1];
             if ( !eeAdMap.containsKey( ad ) ) {
                 eeAdMap.put( ad, new HashSet<Long>() );
             }
@@ -94,7 +90,7 @@ public class CommonQueries {
         final String eeAdQuery = "select distinct ee.id,ad.id from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
 
-        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+        Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setParameterList( "ees", optimizeParameterList( ees ) );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -168,7 +164,7 @@ public class CommonQueries {
         final String eeAdQuery = "select distinct ad.id from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id = :eeId";
 
-        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+        Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
         queryObject.setParameter( "eeId", eeId );
         queryObject.setReadOnly( true );
@@ -191,7 +187,7 @@ public class CommonQueries {
                 + " join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                 + " where ba.bioSequence.id=cs.biologicalCharacteristic.id and ba.geneProduct.id = gp.id and gene.id = :gene ";
 
-        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        Query queryObject = session.createQuery( csQueryString );
         queryObject.setParameter( "gene", gene.getId(), LongType.INSTANCE );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -212,18 +208,12 @@ public class CommonQueries {
     }
 
     private static void addGeneIds( Map<Long, Collection<Long>> cs2genes, Query queryObject ) {
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        try {
-            while ( results.next() ) {
-                Long csid = results.getLong( 0 );
-                Long geneId = results.getLong( 1 );
-                if ( !cs2genes.containsKey( csid ) ) {
-                    cs2genes.put( csid, new HashSet<Long>() );
-                }
-                cs2genes.get( csid ).add( geneId );
-            }
-        } finally {
-            results.close();
+        //noinspection unchecked
+        List<Object[]> results = queryObject.list();
+        for ( Object[] row : results ) {
+            Long csid = ( Long ) row[0];
+            Long geneId = ( Long ) row[1];
+            cs2genes.computeIfAbsent( csid, k -> new HashSet<>() ).add( geneId );
         }
     }
 
@@ -297,7 +287,7 @@ public class CommonQueries {
                 + " and gene in (:genes)  ";
 
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<>();
-        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", optimizeIdentifiableParameterList( genes ) );
         queryObject.setReadOnly( true );
@@ -311,18 +301,12 @@ public class CommonQueries {
     }
 
     private static void addGenes( Map<CompositeSequence, Collection<Gene>> cs2gene, Query queryObject ) {
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        try {
-            while ( results.next() ) {
-                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
-                Gene g = ( Gene ) results.get( 1 );
-                if ( !cs2gene.containsKey( cs ) ) {
-                    cs2gene.put( cs, new HashSet<Gene>() );
-                }
-                cs2gene.get( cs ).add( g );
-            }
-        } finally {
-            results.close();
+        //noinspection unchecked
+        List<Object[]> results = queryObject.list();
+        for ( Object[] row : results ) {
+            CompositeSequence cs = ( CompositeSequence ) row[0];
+            Gene g = ( Gene ) row[1];
+            cs2gene.computeIfAbsent( cs, k -> new HashSet<>() ).add( g );
         }
     }
 

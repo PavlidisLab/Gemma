@@ -186,7 +186,7 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         factorValue.setNeedsAttention( true );
         factorValueDao.update( factorValue );
         if ( ee != null ) {
-            auditTrailService.addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, String.format( "%s needs attention: %s", factorValue, note ) );
+            auditTrailService.addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, String.format( "%s: %s", factorValue, note ) );
         }
     }
 

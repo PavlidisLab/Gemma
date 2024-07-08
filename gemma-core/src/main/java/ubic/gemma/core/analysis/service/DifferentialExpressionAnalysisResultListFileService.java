@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.genome.Gene;
@@ -36,5 +37,5 @@ public interface DifferentialExpressionAnalysisResultListFileService extends Tsv
      * - source experiment ID
      * - experiment analyzed ID
      */
-    void writeTsv( List<DifferentialExpressionAnalysisResult> payload, Gene gene, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Writer writer ) throws IOException;
+    void writeTsv( List<DifferentialExpressionAnalysisResult> payload, Gene gene, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException;
 }

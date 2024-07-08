@@ -16,9 +16,11 @@ public class ContrastTest {
         FactorValue fv1 = new FactorValue();
         fv1.setExperimentalFactor( ef );
         fv1.setId( 1L );
-        assertEquals( Contrast.categorical( fv1 ), Contrast.categorical( fv1 ) );
-        assertFalse( Contrast.categorical( fv1 ).isInteraction() );
-        assertFalse( Contrast.categorical( fv1 ).isContinuous() );
+        Contrast c = Contrast.categorical( fv1 );
+        assertEquals( Contrast.categorical( fv1 ), c );
+        assertFalse( c.isInteraction() );
+        assertFalse( c.isContinuous() );
+        assertEquals( "Contrast for FactorValue Id=1", c.toString() );
     }
 
 
@@ -34,15 +36,20 @@ public class ContrastTest {
         FactorValue fv2 = new FactorValue();
         fv2.setId( 2L );
         fv2.setExperimentalFactor( ef2 );
-        assertEquals( Contrast.categorical( fv1 ), Contrast.categorical( fv1 ) );
-        assertFalse( Contrast.categorical( fv1 ).isInteraction() );
-        assertFalse( Contrast.categorical( fv1 ).isContinuous() );
+        Contrast c = Contrast.categorical( fv1 );
+        assertEquals( c, Contrast.categorical( fv1 ) );
+        assertFalse( c.isInteraction() );
+        assertFalse( c.isContinuous() );
+        assertEquals( "Contrast for FactorValue Id=1", c.toString() );
     }
 
     @Test
     public void testContinuous() {
         ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setId( 1L );
         ef.setType( FactorType.CONTINUOUS );
-        assertTrue( Contrast.continuous( ef ).isContinuous() );
+        Contrast c = Contrast.continuous( ef );
+        assertTrue( c.isContinuous() );
+        assertEquals( "Contrast for ExperimentalFactor Id=1 Type=CONTINUOUS", c.toString() );
     }
 }

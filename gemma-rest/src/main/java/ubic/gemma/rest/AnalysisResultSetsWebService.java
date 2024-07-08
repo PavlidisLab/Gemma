@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -249,9 +250,10 @@ public class AnalysisResultSetsWebService {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         final Map<Long, List<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
+        Baseline baseline = expressionAnalysisResultSetService.getBaseline( ears );
         return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsv( ears, resultId2Genes, writer );
+                expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
             }
         };
     }

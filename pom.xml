@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.31.8</version>
+	<version>1.31.9</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.13</version>
+		<version>1.2.14</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -293,7 +293,7 @@
 		<dependency>
 			<groupId>org.jfree</groupId>
 			<artifactId>jfreechart</artifactId>
-			<version>1.5.4</version>
+			<version>1.5.5</version>
 		</dependency>
 
 		<!-- Apache Commons -->
@@ -440,6 +440,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
+			<version>3.26.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -694,22 +695,6 @@
 					</reportSet>
 				</reportSets>
 			</plugin>
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>9.1.0</version>
-				<configuration>
-					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-				</configuration>
-				<reportSets>
-					<reportSet>
-						<inherited>false</inherited>
-						<reports>
-							<report>aggregate</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
 		</plugins>
 	</reporting>
 	<properties>
@@ -722,8 +707,8 @@
 		<swagger.version>2.2.22</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.39.2</slack.version>
-		<micrometer.version>1.13.0</micrometer.version>
+		<slack.version>1.40.1</slack.version>
+		<micrometer.version>1.13.1</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<mysql.version>8.4.0</mysql.version>
 		<!-- this ensures that -DexcludedGroups works properly -->

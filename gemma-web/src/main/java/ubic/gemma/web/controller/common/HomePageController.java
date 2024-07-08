@@ -23,10 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.WebConstants;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -38,6 +41,8 @@ import java.util.Map.Entry;
  */
 @Controller
 public class HomePageController {
+
+    private static final TaxonComparator TAXON_COMPARATOR = new TaxonComparator();
 
     private static final class TaxonComparator implements Comparator<Map.Entry<Taxon, Long>> {
         @Override
@@ -63,30 +68,38 @@ public class HomePageController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    private ModelAndView mav = new ModelAndView();
+    @RequestMapping("/")
+    public RedirectView redirectToHomePage( HttpServletRequest request ) {
+        String uri = ServletUriComponentsBuilder.fromRequest( request )
+                .scheme( null ).host( null ).port( -1 )
+                .replacePath( WebConstants.HOME_PAGE )
+                .build()
+                .toUriString();
+        return new RedirectView( uri );
+    }
 
-    private Taxon otherTaxa;
-
-    public HomePageController() {
-        otherTaxa = Taxon.Factory.newInstance();
-        otherTaxa.setId( -1L );
-        otherTaxa.setCommonName( "Other" );
-        otherTaxa.setScientificName( "Other" );
-        otherTaxa.setIsGenesUsable( false );
+    @RequestMapping(WebConstants.HOME_PAGE)
+    public ModelAndView showHomePage() {
+        ModelAndView mav = new ModelAndView( "home" );
+        /*
+         * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
+         * functionality here without considering that.
+         */
+        addCountsForTaxonPieChart( mav );
+        return mav;
     }
 
     /**
      * For the show-off graph that shows number of data sets per taxon.
      */
-    public void getCountsForTaxonPieChart() {
+    public void addCountsForTaxonPieChart( ModelAndView mav ) {
 
         Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
 
         /*
          * Sort taxa by count.
          */
-        TreeSet<Map.Entry<Taxon, Long>> eesPerTaxonValueSorted = new TreeSet<Map.Entry<Taxon, Long>>(
-                new TaxonComparator() );
+        TreeSet<Map.Entry<Taxon, Long>> eesPerTaxonValueSorted = new TreeSet<>( TAXON_COMPARATOR );
 
         eesPerTaxonValueSorted.addAll( unsortedEEsPerTaxon.entrySet() );
 
@@ -96,9 +109,9 @@ public class HomePageController {
         String googleData = encodeDataForGoogle( eesPerTaxonValueSorted.descendingSet(), expressionExperimentCount,
                 groupBelow );
 
-        List<String> googleLabelsColls = new ArrayList<String>();
+        List<String> googleLabelsColls = new ArrayList<>();
         boolean grouped = false;
-        List<String> others = new ArrayList<String>();
+        List<String> others = new ArrayList<>();
 
         for ( Entry<Taxon, Long> entry : eesPerTaxonValueSorted.descendingSet() ) {
             String tname = entry.getKey().getCommonName();
@@ -125,42 +138,28 @@ public class HomePageController {
 
     }
 
-    @RequestMapping(WebConstants.HOME_PAGE)
-    public ModelAndView showHomePage() {
-
-        /*
-         * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
-         * functionality here without considering that.
-         */
-        getCountsForTaxonPieChart();
-        return mav;
-    }
-
-    private final static char[] simpleEncoding = new String(
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" ).toCharArray();
+    private final static char[] simpleEncoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 
     private String encodeDataForGoogle( Set<Entry<Taxon, Long>> eesPerTaxonValueSorted, long maxValue, double groupBelow ) {
-
         // This function scales the submitted values so that
         // maxVal becomes the highest value.
-        String chartData = "s:";
+        StringBuilder chartData = new StringBuilder( "s:" );
         int otherSum = 0;
         for ( Entry<Taxon, Long> currentValue : eesPerTaxonValueSorted ) {
             if ( groupIntoOther( currentValue.getValue(), maxValue, groupBelow ) ) {
                 otherSum += currentValue.getValue();
             } else {
-                chartData += simpleEncoding[Math.round( ( simpleEncoding.length - 1 ) * currentValue.getValue()
-                        / maxValue )];
+                chartData.append( simpleEncoding[Math.round( ( float ) ( ( simpleEncoding.length - 1 ) * currentValue.getValue() ) / maxValue )] );
             }
         }
         if ( otherSum != 0 ) {
-            chartData += simpleEncoding[Math.round( ( simpleEncoding.length - 1 ) * otherSum / maxValue )];
+            chartData.append( simpleEncoding[Math.round( ( float ) ( ( simpleEncoding.length - 1 ) * otherSum ) / maxValue )] );
         }
-        return chartData;
+        return chartData.toString();
     }
 
     private boolean groupIntoOther( long value, long maxValue, double threshold ) {
-        double a = ( new Double( value ) / new Double( maxValue ) );
+        double a = ( ( double ) value / ( double ) maxValue );
         return threshold > a;
     }
 }

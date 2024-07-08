@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
@@ -40,4 +42,10 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
     Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
+
+    Baseline getBaseline( ExpressionAnalysisResultSet ears );
+
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Set<ExpressionAnalysisResultSet> resultSets );
+
+    Map<Long, Baseline> getBaselinesByIds( Collection<Long> rsIds );
 }
