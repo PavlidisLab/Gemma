@@ -1,6 +1,5 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
@@ -55,17 +54,4 @@ public interface ExpressionExperimentBatchInformationService {
      * that we don't look at every component, just the first few.
      */
     BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee );
-
-    /**
-     * Obtain a {@link BatchEffectType} describing the batch effect state of the given experiment.
-     * @param ee the experiment to get the batch effect for.
-     */
-    BatchEffectType getBatchEffect( ExpressionExperiment ee );
-
-    /**
-     * Obtain a string describing the summary statistics of a batch effect is present in the given experiment.
-     * @return summary statistics or null if there is no batch effect
-     */
-    @Nullable
-    String getBatchEffectStatistics( ExpressionExperiment ee );
 }

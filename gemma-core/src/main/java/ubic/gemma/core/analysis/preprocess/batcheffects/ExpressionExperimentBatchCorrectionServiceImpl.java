@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * Methods for correcting batch effects.
@@ -75,7 +76,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             return false;
         }
 
-        BatchEffectType bet = eeBatchService.getBatchEffect( ee );
+        BatchEffectDetails details = eeBatchService.getBatchEffectDetails( ee );
+        BatchEffectType bet = getBatchEffectType( details );
         if ( BatchEffectType.NO_BATCH_EFFECT_SUCCESS.equals( bet ) || BatchEffectType.SINGLE_BATCH_SUCCESS.equals( bet ) ) {
             ExpressionExperimentBatchCorrectionServiceImpl.log.info( "Experiment does not require batch correction as " +
                     "batch effect is negligible or it's a single batch: " + ee );

@@ -96,6 +96,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -1148,8 +1149,8 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        BatchEffectType be = expressionExperimentBatchInformationService.getBatchEffect( ee );
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        BatchEffectType be = getBatchEffectType( details );
         List<BatchConfound> confounds;
         Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfounds;
         if ( expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee ) ) {

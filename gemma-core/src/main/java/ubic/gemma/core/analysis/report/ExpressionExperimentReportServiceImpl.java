@@ -30,11 +30,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,6 +51,8 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -422,8 +424,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        BatchEffectType effect = expressionExperimentBatchInformationService.getBatchEffect( ee );
-        String effectStatistics = expressionExperimentBatchInformationService.getBatchEffectStatistics( ee );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        BatchEffectType effect = getBatchEffectType( details );
+        String effectStatistics = getBatchEffectStatistics( details );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
         String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
         String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );

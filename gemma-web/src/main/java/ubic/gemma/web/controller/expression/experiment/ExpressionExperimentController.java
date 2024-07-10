@@ -36,6 +36,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -93,6 +94,9 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * @author keshav
@@ -620,8 +624,9 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ) );
-        ee.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        ee.setBatchEffect( getBatchEffectType( details ) );
+        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
         expressionExperimentService.update( ee );
     }
 
@@ -1175,8 +1180,9 @@ public class ExpressionExperimentController {
         if ( hasUsableBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         }
-        finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
-        finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        finalResult.setBatchEffect( getBatchEffectType( details ).name() );
+        finalResult.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
     }
 
     /**
