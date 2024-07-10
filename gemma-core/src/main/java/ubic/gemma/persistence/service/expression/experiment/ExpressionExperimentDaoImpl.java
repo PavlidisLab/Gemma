@@ -446,9 +446,10 @@ public class ExpressionExperimentDaoImpl
         if ( date == null )
             return Collections.emptyList();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
-                .setDate( "date", date ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated >= :date" )
+                .setParameter( "date", date )
+                .list();
     }
 
     @Override

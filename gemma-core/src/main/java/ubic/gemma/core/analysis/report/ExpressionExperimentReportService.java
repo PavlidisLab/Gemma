@@ -76,14 +76,6 @@ public interface ExpressionExperimentReportService {
     Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
     /**
-     * Recalculates the batch effect and batch confound information for datasets that have been updated
-     * in the last 24 hours.
-     */
-    @SuppressWarnings("unused") // Used by scheduler
-    @Secured({ "GROUP_AGENT" })
-    void recalculateBatchInfo();
-
-    /**
      * Recalculates the batch effect and batch confound information for the given dataset.
      * @param ee the experiment to recalculate the batch properties for.
      */

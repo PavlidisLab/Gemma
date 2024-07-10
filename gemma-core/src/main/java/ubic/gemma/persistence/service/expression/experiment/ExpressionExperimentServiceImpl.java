@@ -91,7 +91,7 @@ import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
  * @author keshav
  * @see ExpressionExperimentService
  */
-@Service
+@Service("expressionExperimentService")
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -157,6 +157,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAllReferences() {
         return expressionExperimentDao.loadReference( expressionExperimentDao.loadIds( null, null ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithAuditTrail( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getAuditTrail() );
+        }
+        return ee;
     }
 
     @Override

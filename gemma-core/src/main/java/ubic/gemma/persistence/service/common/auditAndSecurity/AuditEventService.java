@@ -42,6 +42,10 @@ public interface AuditEventService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    AuditEvent getLastEvent( Auditable auditable );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     @Nullable

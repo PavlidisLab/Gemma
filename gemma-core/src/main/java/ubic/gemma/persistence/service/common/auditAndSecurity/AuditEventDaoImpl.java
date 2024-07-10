@@ -62,6 +62,12 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
     }
 
+    @Nullable
+    @Override
+    public AuditEvent getLastEvent( Auditable auditable ) {
+        return getLastEvents( Collections.singleton( auditable ), null, null ).get( auditable );
+    }
+
     @Override
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return getLastEvents( Collections.singleton( auditable ), type, null ).get( auditable );
@@ -134,7 +140,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         return result;
     }
 
-    private <T extends Auditable> Map<T, AuditEvent> getLastEvents( final Collection<T> auditables, Class<? extends AuditEventType> types, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
+    private <T extends Auditable> Map<T, AuditEvent> getLastEvents( final Collection<T> auditables, @Nullable Class<? extends AuditEventType> types, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
         if ( auditables.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -147,13 +153,19 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         final Map<Long, T> atMap = auditables.stream()
                 .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
 
-        Set<Class<? extends AuditEventType>> classes = getClassHierarchy( types, excludedTypes );
+        Set<Class<? extends AuditEventType>> classes;
+        if ( types != null ) {
+            classes = getClassHierarchy( types, excludedTypes );
+        } else {
+            classes = null;
+        }
 
         //language=HQL
         final String queryString = "select trail.id, ae from AuditTrail trail "
                 + "join trail.events ae "
                 + "join fetch ae.eventType et " // fetching here prevents a separate select query
-                + "where trail.id in :trails and type(et) in :classes "
+                + "where trail.id in :trails "
+                + ( classes != null ? "and type(et) in :classes " : "" )
                 // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
                 // them all
                 + "group by trail, ae "
@@ -162,8 +174,11 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
-                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) )
-                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
+                .setParameterList( "trails", optimizeParameterList( atMap.keySet() ) );
+
+        if ( classes != null ) {
+            queryObject.setParameterList( "classes", classes ); // optimizing this one is unnecessary
+        }
 
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {
@@ -176,8 +191,8 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         timer.stop();
         if ( timer.getTime() > 500 ) {
-            AbstractDao.log.info( String.format( "Last event of type %s (closure: %s) retrieved for %d items in %d ms",
-                    types.getName(), classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ),
+            AbstractDao.log.info( String.format( "Last event%s retrieved for %d items in %d ms",
+                    types != null ? " of type " + types.getName() + "(closure: " + classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ) + ")" : "",
                     auditables.size(), timer.getTime() ) );
         }
 
