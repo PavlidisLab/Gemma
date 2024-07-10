@@ -75,7 +75,7 @@
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
 							sql-type="TEXT"/>
 					<!-- FIXME: use EnumType once the 1.31 is out and the database has been migrated (see https://github.com/PavlidisLab/Gemma/issues/894 for details) -->
-					<type name="ubic.gemma.persistence.hibernate.BatchEffectType">
+					<type name="org.hibernate.type.EnumType">
 						<param name="enumClass">ubic.gemma.model.expression.experiment.BatchEffectType</param>
 						<param name="useNamed">true</param>
 					</type>
