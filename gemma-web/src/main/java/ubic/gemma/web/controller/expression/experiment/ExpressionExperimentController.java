@@ -915,13 +915,13 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" })
-    public ModelAndView showExpressionExperiment( @RequestParam(value = "id") Long id ) {
-        BioAssaySet bioAssaySet;
-        bioAssaySet = expressionExperimentService.loadBioAssaySet( id );
-        if ( bioAssaySet == null ) {
+    public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
+        ExpressionExperiment expressionExperiment;
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
-        return showBioAssaySet( bioAssaySet );
+        return showExpressionExperiment( expressionExperiment );
     }
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" })
@@ -930,10 +930,10 @@ public class ExpressionExperimentController {
         if ( experimentExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
         }
-        return showBioAssaySet( experimentExperiment );
+        return showExpressionExperiment( experimentExperiment );
     }
 
-    private ModelAndView showBioAssaySet( BioAssaySet ee ) {
+    private ModelAndView showExpressionExperiment( ExpressionExperiment ee ) {
         return new ModelAndView( "expressionExperiment.detail" )
                 .addObject( "expressionExperiment", ee )
                 .addObject( "eeId", ee.getId() )
