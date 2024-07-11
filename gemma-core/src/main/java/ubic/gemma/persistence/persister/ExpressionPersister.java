@@ -332,14 +332,16 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         // validate categorical v.s. continuous factor values
         FactorType factorType = factorValue.getExperimentalFactor().getType();
         if ( factorType.equals( FactorType.CONTINUOUS ) && factorValue.getMeasurement() == null ) {
-            throw new IllegalStateException( "Continuous factor value must have a measurement." );
-        } else if ( factorType.equals( FactorType.CATEGORICAL ) && factorValue.getCharacteristics().isEmpty() ) {
-            throw new IllegalStateException( "Categorical factor value must have at least one characteristic." );
+            throw new IllegalStateException( "Continuous factor values must have a measurement: " + factorValue );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) && factorValue.getCharacteristics().isEmpty()
+                && !factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+            // by convention, batch / block factors in Gemma don't have their own characteristics
+            throw new IllegalStateException( "Non-batch categorical factor values must have at least one characteristic: " + factorValue );
         }
 
         // sanity check
         if ( factorValue.getCharacteristics().size() > 0 && factorValue.getMeasurement() != null ) {
-            throw new IllegalStateException( "FactorValue can only have one of ontology entry or measurement." );
+            throw new IllegalStateException( "FactorValue can only have one of ontology entry or measurement: " + factorValue );
         }
 
         // measurement will cascade, but not unit.
