@@ -205,47 +205,10 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
          * the fields; pain in butt
          */
 
-        if ( this.getExperimentalFactor() != null ) {
-            if ( that.getExperimentalFactor() == null )
-                return false;
-            if ( !this.getExperimentalFactor().equals( that.getExperimentalFactor() ) ) {
-                return false;
-            }
-        }
-
-        if ( !this.getCharacteristics().isEmpty() ) {
-            if ( that.getCharacteristics().size() != this.getCharacteristics().size() )
-                return false;
-
-            for ( Characteristic c : this.getCharacteristics() ) {
-                boolean match = false;
-                for ( Characteristic c2 : that.getCharacteristics() ) {
-                    if ( c.equals( c2 ) ) {
-                        if ( match ) {
-                            return false;
-                        }
-                        match = true;
-                    }
-                }
-                if ( !match )
-                    return false;
-            }
-
-        }
-
-        if ( this.getMeasurement() != null ) {
-            if ( that.getMeasurement() == null )
-                return false;
-            if ( !this.getMeasurement().equals( that.getMeasurement() ) )
-                return false;
-        }
-
-        if ( this.getValue() != null ) {
-            return that.getValue() != null && this.getValue().equals( that.getValue() );
-        }
-
-        // everything is empty...
-        return true;
+        return Objects.equals( getExperimentalFactor(), that.getExperimentalFactor() )
+                && Objects.equals( getMeasurement(), that.getMeasurement() )
+                && Objects.equals( getCharacteristics(), that.getCharacteristics() )
+                && Objects.equals( getValue(), that.getValue() );
     }
 
     @Override
