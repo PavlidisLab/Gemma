@@ -18,17 +18,14 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -37,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see ExpressionAnalysisResultSet
@@ -119,4 +117,21 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Count the number of results in a given result set below a given corrected P-value threshold.
      */
     long countResults( ExpressionAnalysisResultSet ears, double threshold );
+
+    /**
+     * Retrieve the baseline for the given result set.
+     * @return a baseline, or null if none could be determined for the given result set
+     */
+    @Nullable
+    Baseline getBaseline( ExpressionAnalysisResultSet ears );
+
+    /**
+     * Retrieve baselines for all the given result sets.
+     */
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Collection<ExpressionAnalysisResultSet> resultSets );
+
+    /**
+     * Retrieve baselines using result set IDs.
+     */
+    Map<Long, Baseline> getBaselinesByIds( Collection<Long> ids );
 }

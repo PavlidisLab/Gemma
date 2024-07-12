@@ -29,10 +29,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -88,7 +85,15 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, double threshold, boolean keepNonSpecificProbes ) {
+    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed(
+            Gene gene,
+            Collection<Long> experimentAnalyzedIds,
+            boolean includeSubsets,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap,
+            double threshold,
+            boolean keepNonSpecificProbes ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
@@ -125,16 +130,20 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             bioAssaySetIds.addAll( subsetIds );
         }
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select dear, dea.experimentAnalyzed.id from DifferentialExpressionAnalysisResult dear "
+                .createQuery( "select dear, dea.experimentAnalyzed.id" + ( baselineMap != null ? ", b, be.type" : "" ) + " from DifferentialExpressionAnalysisResult dear "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
+                        + ( baselineMap != null ? "left join dears.baselineGroup b left join b.experimentalFactor be " : "" )
                         + "where dear.probe.id in :probeIds and dea.experimentAnalyzed.id in :bioAssaySetIds and dear.correctedPvalue <= :threshold "
                         // if more than one probe is found, pick the one with the lowest corrected p-value
-                        + "group by dears order by dear.correctedPvalue" )
+                        + "group by dears "
+                        // ascending, nulls last
+                        + "order by -dear.correctedPvalue desc" )
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                 .setParameter( "threshold", threshold );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
         List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
+        int warns = 0;
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Hibernate.initialize( r.getProbe() );
@@ -146,6 +155,31 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             }
             if ( experimentAnalyzedIdMap != null ) {
                 experimentAnalyzedIdMap.put( r, bioAssaySetId );
+            }
+            if ( baselineMap != null ) {
+                // TODO: add support for interaction of factors, requires https://github.com/PavlidisLab/Gemma/issues/1122
+                FactorValue baseline = ( FactorValue ) row[2];
+                FactorType baselineType = ( FactorType ) row[3];
+                if ( baseline != null ) {
+                    if ( baselineType.equals( FactorType.CATEGORICAL ) ) {
+                        baselineMap.put( r, Baseline.categorical( baseline ) );
+                    } else {
+                        // we have a few experiments with continuous factors with a baseline set in the result set, this
+                        // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
+                        String msg = String.format( "Unexpected factor type for baseline %s of %s: %s, it should be categorical.",
+                                baseline, r, baselineType );
+                        if ( warns < 5 ) {
+                            log.warn( msg );
+                            warns++;
+                        } else {
+                            if ( warns == 5 ) {
+                                log.warn( "Only showing first 5 warnings, additional warnings will be emitted in debug logs." );
+                                warns++;
+                            }
+                            log.debug( msg );
+                        }
+                    }
+                }
             }
         }
         // because of batching, results must be resorted
@@ -166,7 +200,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         StopWatch timer = StopWatch.createStarted();
         List<?> qResult = getSessionFactory().getCurrentSession()
-                .createQuery( DIFF_EX_RESULTS_BY_GENE_QUERY + " and e.id in (:experimentAnalyzed)"
+                .createQuery( DIFF_EX_RESULTS_BY_GENE_QUERY
+                        + " and e.id in (:experimentAnalyzed) "
+                        + "and r.correctedPvalue <= :threshold"
+                        // no need for the hack, nulls are filtered by the threshold
                         + ( limit > 0 ? " order by r.correctedPvalue" : "" ) )
                 .setParameter( "gene", gene )
                 .setParameterList( "experimentsAnalyzed", optimizeParameterList( experimentsAnalyzed ) )
@@ -198,8 +235,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         List<?> qResult = getSessionFactory().getCurrentSession()
                 .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                         + "join a.experimentAnalyzed e  "
-                        + "join a.resultSets rs join rs.results r "
-                        + "where e.id in (:experimentsAnalyzed) and r.correctedPvalue < :threshold"
+                        + "join a.resultSets rs "
+                        + "join rs.results r "
+                        + "where e.id in (:experimentsAnalyzed) "
+                        + "and r.correctedPvalue <= :threshold"
                         + ( limit > 0 ? " order by r.correctedPvalue" : "" ) )
                 .setParameterList( "experimentsAnalyzed", optimizeParameterList( experiments ) )
                 .setParameter( "threshold", qvalueThreshold )
@@ -457,7 +496,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, int limit, int minNumberOfResults ) {
+            double threshold, int limit, int minNumberOfResults ) {
         Assert.notNull( resultSet, "The result set must not be null." );
         Assert.isTrue( minNumberOfResults > 0, "Minimum number of results must be greater than zero." );
 
@@ -473,6 +512,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         timer.start();
         String qs = "select r from DifferentialExpressionAnalysisResult r "
                 + "where r.resultSet = :resultSet and r.correctedPvalue <= :threshold "
+                // nulls are filtered out by the threshold, no need for the hack
                 + "order by r.correctedPvalue";
 
         List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
@@ -487,7 +527,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             AbstractDao.log.info( "Too few results met threshold, repeating to just get the top hits" );
             qs = "select r from DifferentialExpressionAnalysisResult r "
                     + "where r.resultSet = :resultSet "
-                    + "order by r.correctedPvalue";
+                    // ascending, nulls last
+                    + "order by -r.correctedPvalue desc";
             qResult = getSessionFactory().getCurrentSession().createQuery( qs )
                     .setParameter( "resultSet", resultSet )
                     .setMaxResults( minNumberOfResults )
@@ -587,7 +628,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 + "where g2s.CS = d.PROBE_FK and c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK = d.ID and g2s.GENE = :gene_id";
 
         if ( threshold > 0.0 ) {
-            sql = sql + " and d.CORRECTED_PVALUE < :threshold ";
+            sql = sql + " and d.CORRECTED_PVALUE <= :threshold ";
         }
 
         if ( limit > 0 ) {

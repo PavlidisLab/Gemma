@@ -49,9 +49,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -69,6 +67,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -86,10 +85,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -97,6 +96,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
+import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -149,6 +149,8 @@ public class DatasetsWebService {
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Context
     private UriInfo uriInfo;
@@ -217,12 +219,7 @@ public class DatasetsWebService {
             ids.sort( Comparator.comparingDouble( i -> -scoreById.get( i ) ) );
 
             // slice the ranked IDs
-            List<Long> idsSlice;
-            if ( offset < ids.size() ) {
-                idsSlice = ids.subList( offset, Math.min( offset + limit, ids.size() ) );
-            } else {
-                idsSlice = Collections.emptyList();
-            }
+            List<Long> idsSlice = sliceIds( ids, offset, limit );
 
             // now highlight the results in the slice
             List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ) );
@@ -756,13 +753,20 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
     ) {
-        return respond(
-                this.getDiffExVos( datasetArgService.getEntity( datasetArg ).getId(),
-                        offset.getValue(), limit.getValue() )
-        );
+        List<DifferentialExpressionAnalysisValueObject> result;
+        Long eeId = datasetArgService.getEntity( datasetArg ).getId();
+        int offset = offsetArg.getValue();
+        int limit = limitArg.getValue();
+        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
+        if ( map == null || map.isEmpty() ) {
+            result = Collections.emptyList();
+        } else {
+            result = map.get( map.keySet().iterator().next() );
+        }
+        return respond( result );
     }
 
     /**
@@ -804,7 +808,7 @@ public class DatasetsWebService {
     @Path("/analyses/differential/results/genes/{gene}")
     @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Operation(
-            summary = "Retrieve the differential expression results for a given gene",
+            summary = "Retrieve the differential expression results for a given gene among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(content = {
@@ -841,7 +845,7 @@ public class DatasetsWebService {
     @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
     @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Operation(
-            summary = "Retrieve the differential expression results for a given gene and taxa",
+            summary = "Retrieve the differential expression results for a given gene and taxa among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(content = {
@@ -880,23 +884,39 @@ public class DatasetsWebService {
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
-        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
         }
         // slice IDs
-        long totalElements = ids.size();
-        ids = ids.stream().sorted().skip( offset ).limit( limit ).collect( Collectors.toSet() );
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
-        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
-                .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ) ) )
-                // because of pagination, this is the most "adequate" order
+        Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
+        List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
+                .findByGeneAndExperimentAnalyzed( gene, sliceIds( ids, offset, limit ), sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+                .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ) )
                 .collect( Collectors.toList() );
-        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, totalElements ),
+
+        // obtain result set IDs of results that lack baselines (i.e. for interactions)
+        Set<Long> missingBaselines = payload.stream()
+                .filter( vo -> vo.getBaseline() == null )
+                .map( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ).collect( Collectors.toSet() );
+        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesByIds( missingBaselines );
+        for ( DifferentialExpressionAnalysisResultByGeneValueObject r : payload ) {
+            Baseline b2 = b.get( r.getResultSetId() );
+            if ( b2 == null ) {
+                continue;
+            }
+            r.setBaseline( new FactorValueBasicValueObject( b2.getFactorValue() ) );
+            if ( b2.getSecondFactorValue() != null ) {
+                r.setSecondBaseline( new FactorValueBasicValueObject( b2.getSecondFactorValue() ) );
+            }
+        }
+
+        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, ( long ) ids.size() ),
                 query != null ? query.getValue() : null,
                 filters,
                 new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" },
@@ -928,11 +948,24 @@ public class DatasetsWebService {
          */
         private Long resultSetId;
 
-        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId ) {
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private FactorValueBasicValueObject baseline;
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private FactorValueBasicValueObject secondBaseline;
+
+        public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId, @Nullable Baseline baseline ) {
             super( result );
             this.sourceExperimentId = sourceExperimentId;
             this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();
+            if ( baseline != null ) {
+                this.baseline = new FactorValueBasicValueObject( baseline.getFactorValue() );
+                if ( baseline.getSecondFactorValue() != null ) {
+                    this.secondBaseline = new FactorValueBasicValueObject( baseline.getSecondFactorValue() );
+                }
+            }
         }
     }
 
@@ -948,13 +981,27 @@ public class DatasetsWebService {
         }
         Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
                 .collect( Collectors.toList() );
-        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, new OutputStreamWriter( output ) );
+        // obtain result set IDs of results that lack baselines (i.e. for interactions)
+        Set<ExpressionAnalysisResultSet> missingBaselines = payload.stream()
+                .filter( vo -> baselineMap.get( vo ) == null )
+                .map( DifferentialExpressionAnalysisResult::getResultSet )
+                .collect( toIdentifiableSet() );
+        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselines( missingBaselines );
+        for ( DifferentialExpressionAnalysisResult r : payload ) {
+            Baseline b2 = b.get( r.getResultSet() );
+            if ( b2 == null ) {
+                continue;
+            }
+            baselineMap.put( r, b2 );
+        }
+        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, new OutputStreamWriter( output ) );
     }
 
     /**
@@ -1028,7 +1075,12 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            return this.outputDataFile( ee, filterData );
+            ee = expressionExperimentService.thawLite( ee );
+            File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData ).orElse( null );
+            if ( file == null || !file.exists() ) {
+                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() ) );
+            }
+            return this.outputFile( file );
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
@@ -1116,7 +1168,12 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            return this.outputDesignFile( ee );
+            ee = expressionExperimentService.thawLite( ee );
+            File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+            if ( file == null || !file.exists() ) {
+                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
+            }
+            return this.outputFile( file );
         } catch ( IOException e ) {
             throw new InternalServerErrorException( e.getMessage(), e );
         }
@@ -1257,6 +1314,65 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieve the expression levels of a given gene across all datasets.
+     */
+    @GET
+    @Path("/expressions/genes/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the expression levels of a gene among datasets matching the provided query and filter")
+    public PaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGene(
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg queryArg,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+
+    ) {
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntity( geneArg ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate );
+    }
+
+    /**
+     * Retrieve the expression levels of a given gene and taxon across all datasets.
+     */
+    @GET
+    @Path("/expressions/taxa/{taxon}/genes/{gene}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the expression levels of a gene and taxa among datasets matching the provided query and filter")
+    public PaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGeneInTaxon(
+            @PathParam("taxon") TaxonArg<?> taxonArg,
+            @PathParam("gene") GeneArg<?> geneArg,
+            @QueryParam("query") QueryArg queryArg,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+
+    ) {
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntityWithTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate );
+    }
+
+    private QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGeneInTaxonInternal( Gene gene, @Nullable QueryArg queryArg, FilterArg<ExpressionExperiment> filterArg, OffsetArg offsetArg, LimitArg limitArg, boolean keepNonSpecific, @Nullable ExpLevelConsolidationArg consolidate ) {
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filter = datasetArgService.getFilters( filterArg, null, inferredTerms );
+        Sort sort = datasetArgService.getSort( SortArg.valueOf( "+id" ) );
+        List<Long> datasetIds = expressionExperimentService.loadIdsWithCache( filter, sort );
+        if ( queryArg != null ) {
+            datasetIds.retainAll( datasetArgService.getIdsForSearchQuery( queryArg ) );
+        }
+        int offset = offsetArg.getValue();
+        int limit = limitArg.getValue();
+        Slice<ExperimentExpressionLevelsValueObject> slice = new Slice<>( processedExpressionDataVectorService
+                .getExpressionLevelsByIds( sliceIds( datasetIds, offset, limit ),
+                        Collections.singleton( gene ),
+                        keepNonSpecific,
+                        consolidate == null ? null : consolidate.getValue() ), sort, offset, limit, ( long ) datasetIds.size() );
+        return paginate( slice, queryArg != null ? queryArg.getValue() : null, filter, new String[] { "datasetId" }, inferredTerms );
+    }
+
+    /**
      * Retrieves the expression levels of given genes on given datasets.
      *
      * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
@@ -1290,12 +1406,12 @@ public class DatasetsWebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets}/expressions/taxa/{taxa}/genes/{genes}")
+    @Path("/{datasets}/expressions/taxa/{taxon}/genes/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenesInTaxa( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenesInTaxon( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @PathParam("taxa") TaxonArg<?> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
@@ -1312,7 +1428,7 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/genes/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionForGenes( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
@@ -1354,7 +1470,7 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetExpressionPca( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
@@ -1398,8 +1514,7 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
-    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetDifferentialExpression
-    ( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsDifferentialExpression( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
             @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION) @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
@@ -1467,40 +1582,16 @@ public class DatasetsWebService {
         }
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException, IOException {
-        ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filter ).orElse( null );
-        return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
-    }
-
-    private Response outputDesignFile( ExpressionExperiment ee ) throws IOException {
-        ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-        return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
-    }
-
-    private Response outputFile( @Nullable File file, String error, String shortName ) throws IOException {
-        if ( file == null || !file.exists() ) {
-            throw new NotFoundException( String.format( error, shortName ) );
-        }
+    private Response outputFile( File file ) throws IOException {
         // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
+        return Response.ok( new GZIPInputStream( Files.newInputStream( file.toPath() ) ) )
                 .header( "Content-Encoding", "gzip" )
                 .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();
     }
 
-    private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
-        if ( map == null || map.isEmpty() ) {
-            return Collections.emptyList();
-        }
-        return map.get( map.keySet().iterator().next() );
-    }
-
     @Value
-    private static class SimpleSVDValueObject {
+    public static class SimpleSVDValueObject {
         /**
          * Order same as the rows of the v matrix.
          */
@@ -1582,6 +1673,14 @@ public class DatasetsWebService {
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
                     .collect( Collectors.toList() );
+        }
+    }
+
+    private List<Long> sliceIds( List<Long> ids, int offset, int limit ) {
+        if ( offset < ids.size() ) {
+            return ids.subList( offset, Math.min( offset + limit, ids.size() ) );
+        } else {
+            return Collections.emptyList();
         }
     }
 }

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
@@ -22,10 +21,13 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
@@ -47,11 +49,15 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateHelperService helperService;
+    private ProcessedExpressionDataVectorHelperService helperService;
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private CachedProcessedExpressionDataVectorService cachedProcessedExpressionDataVectorService;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -106,7 +112,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             Collection<ProcessedExpressionDataVector> vectors ) {
         int replaced;
         try {
-            replaced = helperService.replaceProcessedDataVectors( ee, vectors );
+            replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
             auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
@@ -135,58 +141,44 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    public void clearCache() {
-        this.processedExpressionDataVectorDao.clearCache();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Long> genes ) {
-        this.clearCache(); // Fix for 4320
-        return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
-    }
-
-    @Override
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, Collection<Long> genes ) {
-        this.clearCache(); // Fix for 4320
-        return processedExpressionDataVectorDao.getProcessedDataArrays( Collections.singleton( ee ), genes );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
-        Collection<DoubleVectorValueObject> vectors = this.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
+        Map<Long, List<DoubleVectorValueObject>> vectorsByExperiment = cachedProcessedExpressionDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) )
+                .stream()
+                .collect( Collectors.groupingBy( vector -> vector.getExpressionExperiment().getId(), Collectors.toList() ) );
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
-
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
             Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+            List<DoubleVectorValueObject> vectors = vectorsByExperiment.get( ee.getId() );
+            if ( vectors == null ) {
+                continue;
+            }
             for ( DoubleVectorValueObject v : vectors ) {
-                if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
-                    continue;
-                }
-
                 if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
                     continue;
                 }
-
                 for ( Gene g : genes ) {
                     if ( v.getGenes().contains( g.getId() ) ) {
                         if ( !vectorsPerGene.containsKey( g ) ) {
-                            vectorsPerGene.put( g, new LinkedList<DoubleVectorValueObject>() );
+                            vectorsPerGene.put( g, new LinkedList<>() );
                         }
                         vectorsPerGene.get( g ).add( v );
                     }
                 }
-
             }
             vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
                     consolidateMode ) );
         }
 
         return vos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExperimentExpressionLevelsValueObject> getExpressionLevelsByIds( Collection<Long> eeIds, Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
+        return getExpressionLevels( expressionExperimentService.loadReferences( eeIds ), genes, keepGeneNonSpecific, consolidateMode );
     }
 
     @Override
@@ -224,31 +216,32 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<ExpressionExperiment> expressionExperiments, Collection<Long> genes ) {
+        return cachedProcessedExpressionDataVectorService.getProcessedDataArrays( expressionExperiments, genes );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet bioAssaySet, Collection<Long> genes ) {
+        return cachedProcessedExpressionDataVectorService.getProcessedDataArrays( bioAssaySet, genes );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
-        return this.processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiment );
+        return this.cachedProcessedExpressionDataVectorService.getProcessedDataArrays( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit ) {
-        return this.processedExpressionDataVectorDao.getProcessedDataArrays( ee, limit );
+    public Collection<DoubleVectorValueObject> getRandomProcessedDataArrays( ExpressionExperiment ee, int limit ) {
+        return this.cachedProcessedExpressionDataVectorService.getRandomProcessedDataArrays( ee, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments,
-            Collection<CompositeSequence> compositeSequences ) {
-
-        return this.processedExpressionDataVectorDao
-                .getProcessedDataArraysByProbe( expressionExperiments, compositeSequences );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee,
-            Collection<Long> probes ) {
-        return this.processedExpressionDataVectorDao.getProcessedDataArraysByProbeIds( ee, probes );
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
+        return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( expressionExperiments, compositeSequences );
     }
 
     @Override
@@ -275,36 +268,14 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
-            RankMethod method ) {
-        return processedExpressionDataVectorDao.getRanks( expressionExperiment, genes, method );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
-        return processedExpressionDataVectorDao.getRanks( expressionExperiment, method );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
-        return this.processedExpressionDataVectorDao.getRanksByProbe( eeCol, genes );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
-            int maxNumberOfResults ) {
-
+    public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, double threshold, int maxNumberOfResults ) {
         ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
         if ( ar == null ) {
             log.warn( "No diff ex result set with ID=" + resultSetId );
-            return null;
+            return Collections.emptyList();
         }
 
-        expressionAnalysisResultSetService.thaw( ar );
+        ar = expressionAnalysisResultSetService.thaw( ar );
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
@@ -321,8 +292,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             pvalues.put( par.getProbeId(), par.getP() );
         }
 
-        Collection<DoubleVectorValueObject> processedDataArraysByProbe = this
-                .getProcessedDataArraysByProbeIds( analyzedSet, probes );
+        Collection<DoubleVectorValueObject> processedDataArraysByProbe = cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbeIds( analyzedSet, probes );
         List<DoubleVectorValueObject> dedvs = new ArrayList<>( processedDataArraysByProbe );
 
         /*
@@ -332,16 +302,8 @@ public class ProcessedExpressionDataVectorServiceImpl
             v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
         }
 
-        dedvs.sort( new Comparator<DoubleVectorValueObject>() {
-            @Override
-            public int compare( DoubleVectorValueObject o1, DoubleVectorValueObject o2 ) {
-                if ( o1.getPvalue() == null )
-                    return -1;
-                if ( o2.getPvalue() == null )
-                    return 1;
-                return o1.getPvalue().compareTo( o2.getPvalue() );
-            }
-        } );
+        dedvs.sort( Comparator.comparing( DoubleVectorValueObject::getPvalue,
+                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         return dedvs;
     }
@@ -358,9 +320,6 @@ public class ProcessedExpressionDataVectorServiceImpl
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
             @Nullable String consolidateMode ) {
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
-        if ( vectors == null ) {
-            return;
-        }
         for ( DoubleVectorValueObject v : vectors ) {
             if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
                 continue;
@@ -368,7 +327,7 @@ public class ProcessedExpressionDataVectorServiceImpl
 
             if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
                 if ( !vectorsPerGene.containsKey( null ) ) {
-                    vectorsPerGene.put( null, new LinkedList<DoubleVectorValueObject>() );
+                    vectorsPerGene.put( null, new LinkedList<>() );
                 }
                 vectorsPerGene.get( null ).add( v );
             }
@@ -377,7 +336,7 @@ public class ProcessedExpressionDataVectorServiceImpl
                 Gene g = geneService.load( gId );
                 if ( g != null ) {
                     if ( !vectorsPerGene.containsKey( g ) ) {
-                        vectorsPerGene.put( g, new LinkedList<DoubleVectorValueObject>() );
+                        vectorsPerGene.put( g, new LinkedList<>() );
                     }
                     vectorsPerGene.get( g ).add( v );
                 }

@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.genome.Gene;
@@ -20,20 +21,21 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
 
     @Override
     public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, Writer writer ) throws IOException {
-        writeTsvInternal( entity, null, null, null, writer );
+        writeTsvInternal( entity, null, null, null, null, writer );
     }
 
     @Override
-    public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, Gene gene, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Writer writer ) throws IOException {
-        writeTsvInternal( entity, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, writer );
+    public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, Gene gene, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
+        writeTsvInternal( entity, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, writer );
     }
 
-    private void writeTsvInternal( List<DifferentialExpressionAnalysisResult> payload, @Nullable Gene gene, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Writer writer ) throws IOException {
+    private void writeTsvInternal( List<DifferentialExpressionAnalysisResult> payload, @Nullable Gene gene, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
         List<String> extraHeaderComments = new ArrayList<>();
         if ( gene != null ) {
             extraHeaderComments.add( "Results for " + gene );
         }
         extraHeaderComments.add( String.format( "The 'contrasts' column contains contrasts delimited by '%s'. Each contrast is structured as space-delimited key=value pairs. Factors are encoded by their factor value ID for the 'factor' key. Interaction of factors are encoded as 'id1:id2'. Continuous contrasts will use the '[continuous]' indicator.", getSubDelimiter() ) );
+        extraHeaderComments.add( "Baselines are encoded as a factor value ID. Baselines for interactions are encoded as 'id1:id2'." );
         List<String> header = new ArrayList<>();
         header.add( "id" );
         if ( sourceExperimentIdMap != null ) {
@@ -49,6 +51,9 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
         header.add( "corrected_pvalue" );
         header.add( "rank" );
         header.add( "contrasts" );
+        if ( baselineMap != null ) {
+            header.add( "baseline" );
+        }
         try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) ).build().print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult result : payload ) {
@@ -67,6 +72,9 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
                 record.add( format( result.getCorrectedPvalue() ) );
                 record.add( format( result.getRank() ) );
                 record.add( formatContrasts( result.getContrasts() ) );
+                if ( baselineMap != null ) {
+                    record.add( formatBaseline( baselineMap.get( result ) ) );
+                }
                 printer.printRecord( record );
             }
         }
@@ -92,5 +100,12 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
                 format( contrast.getLogFoldChange() ),
                 format( contrast.getTstat() ),
                 format( contrast.getPvalue() ) );
+    }
+
+    private String formatBaseline( @Nullable Baseline baseline ) {
+        if ( baseline == null ) {
+            return null;
+        }
+        return baseline.getFactorValue().getId() + ( baseline.getSecondFactorValue() != null ? ":" + baseline.getSecondFactorValue().getId() : "" );
     }
 }

@@ -38,10 +38,10 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
@@ -52,8 +52,9 @@ import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.
 @Component
 public class ExpressionExperimentBatchCorrectionServiceImpl implements ExpressionExperimentBatchCorrectionService {
 
-    private static final String QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED = "(batch-corrected)";
     private static final Log log = LogFactory.getLog( ExpressionExperimentBatchCorrectionServiceImpl.class );
+
+    private static final String QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED = "(batch-corrected)";
     public static final String COLLECTION_OF_MATERIAL_URI = "http://www.ebi.ac.uk/efo/EFO_0005066";
     public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
     public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
@@ -141,13 +142,28 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     @Override
-    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix ) {
+    public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee ) {
+        /*
+         * is there a batch to use?
+         */
+        ExperimentalFactor batch = this.getBatchFactor( ee );
+        if ( batch == null ) {
+            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found" );
+            return null;
+        }
 
-        ExpressionExperiment ee = requireNonNull( originalDataMatrix.getExpressionExperiment(),
-                "The data matrix must have an associated experiment to perform ComBat." );
+        /*
+         * Extract data
+         */
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectorsAndThaw( ee );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, vectors );
 
-        ee = expressionExperimentService.thawLite( ee );
+        return this.comBat( ee, mat );
+    }
 
+    @Override
+    public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix originalDataMatrix ) {
         /*
          * is there a batch to use?
          */
@@ -163,16 +179,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExpressionDataDoubleMatrix correctedMatrix = this.doComBat( ee, finalMatrix, design );
 
-        return restoreOutliers( originalDataMatrix, correctedMatrix );
-
+        return correctedMatrix != null ? restoreOutliers( originalDataMatrix, correctedMatrix ) : null;
     }
 
     /**
      * Restore the outliers by basically overwriting the original matrix with the corrected values, leaving outlier samples as they were.
      * This is a lot easier than starting over with a new matrix.
-     * @param originalDataMatrix
-     * @param correctedMatrix
-     * @return the originalDataMatrix with the correctedvalues now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
+     * @return the originalDataMatrix with the corrected values now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
      */
     private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
         if ( originalDataMatrix.getBestBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
@@ -238,28 +251,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     @Override
-    public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee ) {
-        /*
-         * is there a batch to use?
-         */
-        ExperimentalFactor batch = this.getBatchFactor( ee );
-        if ( batch == null ) {
-            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found" );
-            return null;
-        }
-
-        /*
-         * Extract data
-         */
-        Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
-                .getProcessedDataVectorsAndThaw( ee );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
-
-        return this.comBat( mat );
-
-    }
-
-    @Override
     public ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
 
         ExperimentalFactor batch = null;
@@ -299,6 +290,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         return designU;
     }
 
+    @Nullable
     private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix
             originalDataMatrix,
             ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
@@ -432,7 +424,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         newQt.setName( oldQt.getName() );
         newQt.setType( oldQt.getType() );
         newQt.setIsRecomputedFromRawData( oldQt.getIsRecomputedFromRawData() );
-
         if ( !newQt.getDescription().toLowerCase().contains(
                 ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED ) ) {
             newQt.setDescription( newQt.getDescription() + " "
@@ -446,14 +437,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      *
      * @return updated designU
      */
-    private ObjectMatrix<BioMaterial, String, Object> orderMatrix
-    ( DoubleMatrix<CompositeSequence, BioMaterial> matrix,
-            ObjectMatrix<BioMaterial, String, Object> designU ) {
-
+    private ObjectMatrix<BioMaterial, String, Object> orderMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix, ObjectMatrix<BioMaterial, String, Object> designU ) {
         ObjectMatrix<BioMaterial, String, Object> result = new ObjectMatrixImpl<>( designU.rows(), designU.columns() );
-
         List<BioMaterial> rowNames = matrix.getColNames();
-
         for ( int j = 0; j < designU.columns(); j++ ) {
             for ( int i = 0; i < designU.rows(); i++ ) {
                 result.set( i, j, designU.get( designU.getRowIndexByName( rowNames.get( i ) ), j ) );
@@ -462,7 +448,5 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         result.setRowNames( matrix.getColNames() );
         result.setColumnNames( designU.getColNames() );
         return result;
-
     }
-
 }

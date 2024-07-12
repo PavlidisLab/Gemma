@@ -1,5 +1,6 @@
 package ubic.gemma.model.analysis.expression.diff;
 
+import org.hibernate.Hibernate;
 import org.springframework.util.Assert;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
@@ -23,7 +24,8 @@ public class Contrast {
      * Create a contrast for a continuous factor.
      */
     public static Contrast continuous( ExperimentalFactor ef ) {
-        Assert.isTrue( ef.getType().equals( FactorType.CONTINUOUS ) );
+        Assert.isTrue( ef.getType().equals( FactorType.CONTINUOUS ),
+                "A continuous baseline must belong to a continuous factor." );
         return new Contrast( ef );
     }
 
@@ -31,7 +33,10 @@ public class Contrast {
      * Create a contrast for a categorical factor.
      */
     public static Contrast categorical( FactorValue fv ) {
-        Assert.isTrue( fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) );
+        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+            Assert.isTrue( fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
+                    "A categorical baseline must belong to a categorical factor." );
+        }
         return new Contrast( fv );
     }
 
@@ -39,10 +44,17 @@ public class Contrast {
      * Create an interaction of two categorical factors.
      */
     public static Contrast interaction( FactorValue fv1, FactorValue fv2 ) {
-        Assert.isTrue( fv1.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) );
-        Assert.isTrue( fv2.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) );
-        Assert.isTrue( !fv1.getExperimentalFactor().equals( fv2.getExperimentalFactor() ),
+        // IDs can be safely retrieved for proxies
+        Assert.isTrue( !Objects.equals( fv1.getExperimentalFactor().getId(), fv2.getExperimentalFactor().getId() ),
                 "An interaction must be of two different experimental factors." );
+        if ( Hibernate.isInitialized( fv1.getExperimentalFactor() ) ) {
+            Assert.isTrue( fv1.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
+                    "A categorical baseline must belong to a categorical factor." );
+        }
+        if ( Hibernate.isInitialized( fv2.getExperimentalFactor() ) ) {
+            Assert.isTrue( fv2.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
+                    "A categorical baseline must belong to a categorical factor." );
+        }
         return new Contrast( fv1, fv2 );
     }
 
@@ -133,7 +145,7 @@ public class Contrast {
     @Override
     public String toString() {
         return "Contrast for "
-                + ( factorValue != null ? factorValue : "[continuous]" )
+                + ( factorValue != null ? factorValue : experimentalFactor )
                 + ( secondFactorValue != null ? ":" + secondFactorValue : "" );
     }
 }

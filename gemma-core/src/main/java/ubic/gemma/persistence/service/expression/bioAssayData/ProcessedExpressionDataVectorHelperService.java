@@ -14,27 +14,22 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import java.util.Collection;
 
 /**
  * @author Paul
  */
-interface ProcessedExpressionDataVectorCreateHelperService {
+interface ProcessedExpressionDataVectorHelperService {
 
-    int replaceProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vecs );
-
+    /**
+     * @see ProcessedExpressionDataVectorService#reorderByDesign(ExpressionExperiment)
+     */
     void reorderByDesign( ExpressionExperiment ee );
 
     /**
      * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
      * provided, ranks will not be computable.
-     *
-     * @param ee the experiment
-     * @return processed vectors with updated ranks
+     * @see ProcessedExpressionDataVectorService#updateRanks(ExpressionExperiment)
      */
     void updateRanks( ExpressionExperiment ee );
 }

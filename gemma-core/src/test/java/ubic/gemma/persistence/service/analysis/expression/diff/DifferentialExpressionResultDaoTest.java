@@ -52,13 +52,13 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                 .setParameter( 1, cs.getId() )
                 .setParameter( 2, ad.getId() )
                 .executeUpdate();
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, 1.0, false );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, 1.0, false );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, 1.0, false );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, 1.0, false );
-        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, 1.2, false ) )
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, false );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, false );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, false );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, false );
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.2, false ) )
                 .isInstanceOf( IllegalArgumentException.class );
-        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, -1, false ) )
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, -1, false ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
 

@@ -118,19 +118,14 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             return;
         }
 
-        String note = "ComBat batch correction";
-
         Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
 
         ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
         // Convert to vectors (persist QT)
-        processedExpressionDataVectorService
-                .replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
+        processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
-        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, note, "" );
-
-
+        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, "ComBat batch correction", "" );
     }
 
     @Override
@@ -278,7 +273,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
          */
 
         ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
-                .comBat( new ExpressionDataDoubleMatrix( vecs ) );
+                .comBat( ee, new ExpressionDataDoubleMatrix( ee, vecs ) );
 
         /*
          * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.
@@ -326,7 +321,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             }
 
             if ( !unknownOutliers.isEmpty() ) {
-                String newline = System.getProperty( "line.separator" );
+                String newline = System.lineSeparator();
 
                 StringBuilder newOutliersString = new StringBuilder();
 

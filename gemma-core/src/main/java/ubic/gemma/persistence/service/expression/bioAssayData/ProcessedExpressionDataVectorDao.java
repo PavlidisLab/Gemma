@@ -20,10 +20,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
-import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -34,8 +31,6 @@ import java.util.Map;
  * @author Paul
  */
 public interface ProcessedExpressionDataVectorDao extends DesignElementDataVectorDao<ProcessedExpressionDataVector> {
-
-    void clearCache();
 
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
@@ -49,23 +44,6 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
 
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
-
-    @SuppressWarnings("unused")
-        // Possible external use
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
-            Collection<Long> genes );
-
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment, int limit );
-
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> expressionExperiments,
-            Collection<Long> genes );
-
-    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> probes );
-
-    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes );
-
     /**
      * @param expressionExperiment ee
      * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
@@ -78,19 +56,12 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
-    Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
-
-    /**
-     * Retrieve expression level information for genes in experiments.
-     *
-     * @param genes                 genes
-     * @param expressionExperiments expression experiments
-     * @return A map of experiment -&gt; gene -&gt; probe -&gt; array of doubles holding the 1) mean and 2) max expression rank.
-     */
-    Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
-
     enum RankMethod {
         max, mean
     }
+
+    /**
+     * Obtain the genes associated to each vector.
+     */
+    Map<ProcessedExpressionDataVector, Collection<Long>> getGenes( Collection<ProcessedExpressionDataVector> vectors );
 }

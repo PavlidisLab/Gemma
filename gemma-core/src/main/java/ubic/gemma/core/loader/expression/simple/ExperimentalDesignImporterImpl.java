@@ -25,10 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -39,8 +37,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,6 +44,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * See interface for docs.
@@ -57,21 +54,17 @@ import java.util.regex.Pattern;
 @Service
 public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporter {
 
-    public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
-    private static final int NUMBER_OF_EXTRA_COLUMNS_ALLOWED = 2;
     private static final Log log = LogFactory.getLog( ExperimentalDesignImporterImpl.class.getName() );
-    @Autowired
-    FactorValueService factorValueServiceService = null;
-    @Autowired
-    ExpressionExperimentService expressionExperimentService;
+
+    private static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
+    private static final int NUMBER_OF_EXTRA_COLUMNS_ALLOWED = 2;
+
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
     private OntologyService ontologyService;
-    @Autowired
-    private ExperimentalFactorOntologyService efoService;
 
     @Override
     @Transactional
@@ -82,7 +75,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
         String line;
 
-        //    experiment = expressionExperimentService.thawBioAssays( experiment );
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
@@ -111,7 +103,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         }
         String[] headerFields = StringUtils.splitPreserveAllTokens( sampleHeaderLine, "\t" );
 
-        Collection<BioMaterial> experimentBioMaterials = this.bioMaterialService.findByExperiment( experiment );
+        Collection<BioMaterial> experimentBioMaterials = experiment.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toSet() );
 
         this.validateFileComponents( experimentalFactorLines, sampleHeaderLine, factorValueLines );
         this.validateExperimentalFactorFileContent( experimentalFactorLines, sampleHeaderLine );
@@ -150,14 +144,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     private void addExperimentalFactorsToExperimentalDesign( ExperimentalDesign experimentalDesign,
             List<String> experimentalFactorFileLines, String[] headerFields, List<String> factorValueLines ) {
-
-        // make sure that EFO is initialized
-        try {
-            OntologyUtils.ensureInitializedLite( efoService );
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException( e );
-        }
 
         Collection<OntologyTerm> terms = ontologyService.getCategoryTerms();
         if ( experimentalDesign.getExperimentalFactors() == null ) {

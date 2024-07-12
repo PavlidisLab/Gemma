@@ -178,7 +178,7 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvMap;
 
         if ( geneIds == null || geneIds.isEmpty() ) {
-            dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), 50 );
+            dedvMap = processedExpressionDataVectorService.getRandomProcessedDataArrays( ees.iterator().next(), 50 );
         } else {
             dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees, geneIds );
         }
@@ -479,7 +479,7 @@ public class DEDVController {
 
         Collection<DoubleVectorValueObject> dedvs;
         if ( geneIds == null || geneIds.isEmpty() ) {
-            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE  );
+            dedvs = processedExpressionDataVectorService.getRandomProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE  );
             if ( dedvs.size() > SAMPLE_SIZE ) {
                 dedvs = new ArrayList<>( dedvs ).subList( 0, SAMPLE_SIZE );
             }

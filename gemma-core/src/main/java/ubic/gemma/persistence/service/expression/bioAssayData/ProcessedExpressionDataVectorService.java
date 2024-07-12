@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
@@ -37,7 +36,6 @@ import java.util.Map;
 /**
  * @author Paul
  */
-@SuppressWarnings("unused") // Possible external use
 public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
@@ -94,21 +92,6 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updateRanks( ExpressionExperiment ee );
 
-    @Secured({ "GROUP_ADMIN" })
-    void clearCache();
-
-    /**
-     * @param expressionExperiments - expressionExperiments or expressionExperimentSubSets
-     * @param genes                 genes
-     * @return vectors, which will be subsetted if the bioassayset is a subset.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<ExpressionExperiment> expressionExperiments,
-            Collection<Long> genes );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, Collection<Long> genes );
-
     /**
      * @param ees                 expressionExperiments
      * @param genes               genes
@@ -121,6 +104,14 @@ public interface ProcessedExpressionDataVectorService
             Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
     /**
+     * Retrieve expression levels by dataset IDs.
+     * @see #getExpressionLevels(Collection, Collection, boolean, String)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    List<ExperimentExpressionLevelsValueObject> getExpressionLevelsByIds( Collection<Long> datasetIds,
+            Collection<Gene> genes, boolean keepNonSpecific, @Nullable String consolidationMode );
+
+    /**
      * @param ees                 expressionExperiments
      * @param component           the principal component
      * @param threshold           threshold
@@ -130,7 +121,6 @@ public interface ProcessedExpressionDataVectorService
      * the given principal component.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    @Transactional(readOnly = true)
     List<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
             int threshold, int component, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
@@ -145,67 +135,61 @@ public interface ProcessedExpressionDataVectorService
      * the given principal component.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    @Transactional(readOnly = true)
     List<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
             Long diffExResultSetId, double threshold, int max, boolean keepGeneNonSpecific, @Nullable String consolidateMode );
 
     /**
-     * @param expressionExperiment ee
-     * @return double vector vos
+     * @see CachedProcessedExpressionDataVectorService#getProcessedDataArrays(Collection, Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<ExpressionExperiment> expressionExperiments, Collection<Long> genes );
+
+    /**
+     * @see CachedProcessedExpressionDataVectorService#getProcessedDataArrays(BioAssaySet, Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet bioAssaySet, Collection<Long> genes );
+
+    /**
+     * @see CachedProcessedExpressionDataVectorService#getProcessedDataArrays(BioAssaySet)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     /**
-     * @param limit (null limit = default hibernate limit).
-     * @param ee    ee
-     * @return double vector vos
+     * @see CachedProcessedExpressionDataVectorService#getRandomProcessedDataArrays(BioAssaySet, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit );
+    Collection<DoubleVectorValueObject> getRandomProcessedDataArrays( ExpressionExperiment ee, int limit );
 
     /**
-     * Retrieves DEDV's by probes and experiments
-     *
-     * @param expressionExperiments EEs
-     * @param compositeSequences    composite sequences
-     * @return double vector vos
+     * @see CachedProcessedExpressionDataVectorService#getProcessedDataArraysByProbe(Collection, Collection)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
+    /**
+     * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
-            Collection<Long> probes );
-
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Retrieve and thaw a collection of vectors for a given experiment.
+     * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
+     * @see ProcessedExpressionDataVectorDao#thaw(Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ProcessedExpressionDataVector> getProcessedDataVectorsAndThaw( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @see ProcessedExpressionDataVectorDao#getRanks(ExpressionExperiment, Collection, ProcessedExpressionDataVectorDao.RankMethod)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes,
             ProcessedExpressionDataVectorDao.RankMethod method );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
-            ProcessedExpressionDataVectorDao.RankMethod method );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment,
-            ProcessedExpressionDataVectorDao.RankMethod method );
-
-    /**
-     * Retrieve expression level information for genes in experiments.
-     *
-     * @param eeCol ees
-     * @param pars  genes
-     * @return A map of experiment -&gt; gene -&gt; probe -&gt; array of doubles holding the 1) mean and 2) max expression rank.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
-
-    List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
+    List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, double threshold, int maxNumberOfResults );
 }

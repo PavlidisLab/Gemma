@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
@@ -100,5 +102,23 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
                 offset,
                 limit,
                 sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Baseline getBaseline( ExpressionAnalysisResultSet ears ) {
+        return voDao.getBaseline( ears );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Set<ExpressionAnalysisResultSet> resultSets ) {
+        return voDao.getBaselines( resultSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, Baseline> getBaselinesByIds( Collection<Long> rsIds ) {
+        return voDao.getBaselinesByIds( rsIds );
     }
 }
