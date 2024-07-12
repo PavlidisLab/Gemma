@@ -62,7 +62,7 @@
                 <!-- assumed available in DifferentialExpressionAnalysisValueObject -->
                 <many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet"
                              lazy="false"
-                             fetch="join">
+                             fetch="select">
                     <column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
                 <subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
