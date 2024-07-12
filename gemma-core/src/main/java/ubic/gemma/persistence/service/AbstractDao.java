@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.hibernate.WrongClassException;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
@@ -183,11 +184,16 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public T load( Long id ) {
-        // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
-        //noinspection unchecked
-        T result = ( T ) sessionFactory.getCurrentSession().get( elementClass, id );
-        AbstractDao.log.trace( String.format( String.format( "Loaded %s.", formatEntity( result ) ) ) );
-        return result;
+        try {
+            // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
+            //noinspection unchecked
+            T result = ( T ) sessionFactory.getCurrentSession().get( elementClass, id );
+            AbstractDao.log.trace( String.format( String.format( "Loaded %s.", formatEntity( result ) ) ) );
+            return result;
+        } catch ( WrongClassException e ) {
+            AbstractDao.log.warn( "Wrong class for ID " + id + ", will return null.", e );
+            return null;
+        }
     }
 
     @Override
