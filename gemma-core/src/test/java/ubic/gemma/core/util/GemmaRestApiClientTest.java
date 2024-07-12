@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
@@ -65,7 +66,9 @@ public class GemmaRestApiClientTest {
         assertThat( client.perform( "/datasets/1/analyses/differential/resultSets" ) )
                 .asInstanceOf( type( GemmaRestApiClient.DataResponse.class ) )
                 .extracting( GemmaRestApiClient.DataResponse::getData )
-                .hasFieldOrPropertyWithValue( "id", 1 );
+                .asInstanceOf( list( Object.class ) )
+                .isNotEmpty()
+                .allSatisfy( o -> assertThat( o ).hasFieldOrPropertyWithValue( "analysis.bioAssaySetId", 1 ) );
     }
 
     @Test
