@@ -23,7 +23,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -52,6 +54,18 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
         super( FactorValue.class, sessionFactory );
+    }
+
+    @Override
+    public FactorValue create( FactorValue factorValue ) {
+        // validate categorical v.s. continuous factor values
+        FactorType factorType = factorValue.getExperimentalFactor().getType();
+        if ( factorType.equals( FactorType.CONTINUOUS ) ) {
+            Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) ) {
+            Assert.isNull( factorValue.getMeasurement(), "Categorical factor values must not have a measurement: " + factorValue );
+        }
+        return super.create( factorValue );
     }
 
     @Override
