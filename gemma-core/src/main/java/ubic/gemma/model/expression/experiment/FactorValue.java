@@ -187,8 +187,6 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
 
     @Override
     public boolean equals( Object object ) {
-        if ( object == null )
-            return false;
         if ( this == object )
             return true;
         if ( !( object instanceof FactorValue ) )
@@ -196,15 +194,10 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
         FactorValue that = ( FactorValue ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-
-        if ( that.getId() == null && this.getId() != null )
-            return false;
-
         /*
          * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
          * the fields; pain in butt
          */
-
         return Objects.equals( getExperimentalFactor(), that.getExperimentalFactor() )
                 && Objects.equals( getMeasurement(), that.getMeasurement() )
                 && Objects.equals( getCharacteristics(), that.getCharacteristics() )
