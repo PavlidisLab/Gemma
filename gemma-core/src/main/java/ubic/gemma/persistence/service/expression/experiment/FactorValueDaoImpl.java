@@ -33,7 +33,10 @@ import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -162,8 +165,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         FactorType factorType = factorValue.getExperimentalFactor().getType();
         if ( factorType.equals( FactorType.CONTINUOUS ) ) {
             Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
-            Assert.isTrue( Objects.equals( factorValue.getValue(), factorValue.getMeasurement().getValue() ),
-                    "The value of the factor must match the measurement value." );
+            Assert.isTrue( factorValue.getValue() == null || factorValue.getValue().equals( factorValue.getMeasurement().getValue() ),
+                    "If provided, the value of the factor must match the measurement value." );
             Assert.isNull( factorValue.getIsBaseline(), "Continuous factor values cannot be (or not be) a baseline: " + factorValue );
         } else if ( factorType.equals( FactorType.CATEGORICAL ) ) {
             Assert.isNull( factorValue.getMeasurement(), "Categorical factor values must not have a measurement: " + factorValue );
