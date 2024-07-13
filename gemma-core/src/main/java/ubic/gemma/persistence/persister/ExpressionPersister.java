@@ -324,7 +324,9 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
     private void fillInFactorValueAssociations( FactorValue factorValue, Caches caches ) {
         this.fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor(), caches );
-        factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor(), caches ) );
+        if ( factorValue.getExperimentalFactor().getId() == null ) {
+            factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor(), caches ) );
+        }
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
             factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );

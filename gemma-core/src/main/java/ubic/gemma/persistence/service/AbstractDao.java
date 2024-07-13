@@ -98,6 +98,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public T create( T entity ) {
+        Assert.isNull( entity.getId(), "Cannot create an already persistent entity." );
         sessionFactory.getCurrentSession().persist( entity );
         AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
         return entity;
@@ -256,6 +257,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
+        Assert.notNull( entity.getId(), "Cannot delete a transient entity." );
         sessionFactory.getCurrentSession().delete( entity );
         AbstractDao.log.trace( String.format( "Removed %s.", formatEntity( entity ) ) );
     }
@@ -272,6 +274,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
+        Assert.notNull( entity.getId(), "Cannot update a transient entity." );
         sessionFactory.getCurrentSession().update( entity );
     }
 
