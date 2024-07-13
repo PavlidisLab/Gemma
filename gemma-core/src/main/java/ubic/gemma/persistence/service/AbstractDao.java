@@ -119,9 +119,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @OverridingMethodsMustInvokeSuper
     public T save( T entity ) {
         if ( entity.getId() == null ) {
-            sessionFactory.getCurrentSession().persist( entity );
-            AbstractDao.log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
-            return entity;
+            return create( entity );
         } else {
             //noinspection unchecked
             T result = ( T ) sessionFactory.getCurrentSession().merge( entity );
@@ -212,7 +210,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         //noinspection unchecked
         Collection<T> results = ids.stream()
                 .distinct().sorted() // this will make the output appear similar to load(Collection)
-                .map( id -> ( T ) sessionFactory.getCurrentSession().load( elementClass, id ) )
+                .map( this::loadReference )
                 .collect( Collectors.toList() ); // no HashSet here because otherwise proxies would get initialized
         AbstractDao.log.debug( String.format( "Loaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(),
                 timer.getTime( TimeUnit.MILLISECONDS ) ) );
