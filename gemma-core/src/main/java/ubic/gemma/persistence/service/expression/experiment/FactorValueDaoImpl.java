@@ -33,10 +33,7 @@ import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -58,14 +55,20 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     public FactorValue create( FactorValue factorValue ) {
-        // validate categorical v.s. continuous factor values
-        FactorType factorType = factorValue.getExperimentalFactor().getType();
-        if ( factorType.equals( FactorType.CONTINUOUS ) ) {
-            Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
-        } else if ( factorType.equals( FactorType.CATEGORICAL ) ) {
-            Assert.isNull( factorValue.getMeasurement(), "Categorical factor values must not have a measurement: " + factorValue );
-        }
+        validate( factorValue );
         return super.create( factorValue );
+    }
+
+    @Override
+    public FactorValue save( FactorValue entity ) {
+        validate( entity );
+        return super.save( entity );
+    }
+
+    @Override
+    public void update( FactorValue entity ) {
+        validate( entity );
+        super.update( entity );
     }
 
     @Override
@@ -152,6 +155,19 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Override
     protected FactorValueValueObject doLoadValueObject( FactorValue entity ) {
         return new FactorValueValueObject( entity );
+    }
+
+    private void validate( FactorValue factorValue ) {
+        // validate categorical v.s. continuous factor values
+        FactorType factorType = factorValue.getExperimentalFactor().getType();
+        if ( factorType.equals( FactorType.CONTINUOUS ) ) {
+            Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
+            Assert.isTrue( Objects.equals( factorValue.getValue(), factorValue.getMeasurement().getValue() ),
+                    "The value of the factor must match the measurement value." );
+            Assert.isNull( factorValue.getIsBaseline(), "Continuous factor values cannot be (or not be) a baseline: " + factorValue );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) ) {
+            Assert.isNull( factorValue.getMeasurement(), "Categorical factor values must not have a measurement: " + factorValue );
+        }
     }
 
     private void debug( List<?> results ) {
