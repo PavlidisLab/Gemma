@@ -50,21 +50,21 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
 
     Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes );
 
-    Collection<Gene> findByGOTerm( String goID, Taxon taxon );
+    /**
+     * Find all the genes that match any of the terms.
+     * <p>
+     * Used to fetch genes associated with a term + children.
+     */
+    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon );
+
+    /**
+     * Find all genes associated with a given set of GO terms, grouped by taxon.
+     */
+    Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
 
     /**
      * Remove all Gene2GO associations in batch.
      */
     @Secured({ "GROUP_ADMIN" })
     int removeAll();
-
-    /**
-     * @param  termsToFetch terms
-     * @param  taxon        constraint
-     * @return all the genes that match any of the terms. Used to fetch genes associated with a term +
-     *                      children.
-     */
-    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon );
-
-    Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
 }

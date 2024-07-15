@@ -20,18 +20,12 @@ import java.util.Map;
  */
 public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchResult<T>> {
 
-    private final SearchSettings settings;
-
     private final Map<SearchResult<T>, SearchResult<T>> results;
+    private final int maxResults;
 
     public SearchResultSet( SearchSettings settings ) {
-        this.settings = settings;
         this.results = new HashMap<>();
-    }
-
-    public SearchResultSet( SearchSettings settings, int initialCapacity ) {
-        this.settings = settings;
-        this.results = new HashMap<>( initialCapacity );
+        this.maxResults = settings.getMaxResults();
     }
 
     @Override
@@ -54,7 +48,7 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
         SearchResult<T> newValue;
         boolean replaced;
         if ( previousValue == null ) {
-            if ( settings.getMaxResults() > 0 && size() >= settings.getMaxResults() ) {
+            if ( maxResults > 0 && size() >= maxResults ) {
                 // max size reached and not replacing a previous value
                 return false;
             }

@@ -312,6 +312,8 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         StopWatch timer;
         if ( isDebugEnabled ) {
             timer = StopWatch.createStarted();
+        } else {
+            timer = null;
         }
         for ( T entity : entities ) {
             this.update( entity );

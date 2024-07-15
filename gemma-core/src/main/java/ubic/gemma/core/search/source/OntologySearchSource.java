@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
@@ -273,16 +274,18 @@ public class OntologySearchSource implements SearchSource {
                 .mapToDouble( s -> s )
                 .filter( s -> s != EXACT_MATCH_SCORE )
                 .summaryStatistics();
+        double m = summaryStatistics.getMin();
+        double d = summaryStatistics.getMax() - summaryStatistics.getMin();
 
         for ( OntologyResult term : terms ) {
             uris.add( term.getUri() );
             uri2value.put( term.getUri(), term.getLabel() );
             if ( term.getScore() == EXACT_MATCH_SCORE ) {
                 uri2score.put( term.getUri(), 1.0 );
-            } else if ( summaryStatistics.getMax() == summaryStatistics.getMin() ) {
+            } else if ( d == 0 ) {
                 uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY );
             } else {
-                uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY * ( term.getScore() - summaryStatistics.getMin() ) / ( summaryStatistics.getMax() - summaryStatistics.getMin() ) );
+                uri2score.put( term.getUri(), FULL_TEXT_SCORE_PENALTY * ( term.getScore() - m ) / d );
             }
         }
 
@@ -327,20 +330,11 @@ public class OntologySearchSource implements SearchSource {
     }
 
     /**
-     * Check if a collection of search results is already filled.
-     *
-     * @return true if the search results are filled and cannot accept more results, false otherwise
-     */
-    private static <T extends Identifiable> boolean isFilled( Collection<SearchResult<T>> results, SearchSettings settings ) {
-        return settings.getMaxResults() > 0 && results.size() >= settings.getMaxResults();
-    }
-
-    /**
      * Obtain a limit suitable for the given search results and settings.
      *
      * @return the difference between the maximum results and the collection size or -1 if the settings are for
      * unlimited results
-     * @throws IllegalArgumentException if the search results are already fully filled as per {@link #isFilled(Collection, SearchSettings)}
+     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSettingsUtils#isFilled(Collection, SearchSettings)}
      */
     private static <T extends Identifiable> int getLimit( Collection<SearchResult<T>> results, SearchSettings settings ) {
         if ( isFilled( results, settings ) ) {

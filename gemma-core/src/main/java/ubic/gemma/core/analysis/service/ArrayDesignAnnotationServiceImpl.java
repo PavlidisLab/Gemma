@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -29,8 +28,9 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,7 +41,6 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.util.*;
@@ -327,13 +326,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     @Autowired
     private GeneOntologyService goService;
-
-    private final Transformer goTermExtractor = new Transformer() {
-        @Override
-        public Object transform( Object input ) {
-            return GeneOntologyServiceImpl.asRegularGoId( ( ( OntologyTerm ) input ) );
-        }
-    };
 
     /*
      * (non-Javadoc)
@@ -738,7 +730,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         writer.write( probeId + "\t" + gene + "\t" + formattedDescription + "\t" );
 
         if ( goTerms != null && !goTerms.isEmpty() ) {
-            String terms = StringUtils.join( new TransformIterator( goTerms.iterator(), goTermExtractor ), "|" );
+            String terms = StringUtils.join( new TransformIterator<>( goTerms.iterator(), GeneOntologyUtils::asRegularGoId ), "|" );
             writer.write( terms );
         } // otherwise we will just have a blank column
 
