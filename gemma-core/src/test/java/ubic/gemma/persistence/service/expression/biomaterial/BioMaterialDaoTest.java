@@ -95,6 +95,6 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
         bm.getFactorValues().add( fv2 );
         assertThatThrownBy( () -> bioMaterialDao.create( bm ) )
                 .isInstanceOf( IllegalArgumentException.class )
-                .hasMessage( "BioMaterial has more than one factor values for ExperimentalFactor Id=" + ef.getId() + "." );
+                .hasMessageStartingWith( "BioMaterial has more than one factor values for ExperimentalFactor Id=" + ef.getId() + " Type=CATEGORICAL:" );
     }
 }
