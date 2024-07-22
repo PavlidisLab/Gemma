@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -161,8 +162,18 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     private void validate( FactorValue factorValue ) {
+        FactorType factorType;
+        if ( Hibernate.isInitialized( factorValue.getExperimentalFactor() ) ) {
+            factorType = factorValue.getExperimentalFactor().getType();
+        } else {
+            // if the EF is not initialized, just obtain the FactorType directly instead of loading the EF (which also
+            // loads potentially many other FVs)
+            factorType = requireNonNull( ( FactorType ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select ef.type from ExperimentalFactor ef where ef = :ef" )
+                    .setParameter( "ef", factorValue.getExperimentalFactor() )
+                    .uniqueResult() );
+        }
         // validate categorical v.s. continuous factor values
-        FactorType factorType = factorValue.getExperimentalFactor().getType();
         if ( factorType.equals( FactorType.CONTINUOUS ) ) {
             Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
             Assert.isTrue( factorValue.getValue() == null || factorValue.getValue().equals( factorValue.getMeasurement().getValue() ),
