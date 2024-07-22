@@ -630,6 +630,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) {
         boolean doAclFiltering = eeIds == null;
+        boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -666,7 +667,10 @@ public class ExpressionExperimentDaoImpl
         } else {
             query += "where T.EXPRESSION_EXPERIMENT_FK is not null";
         }
-        query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+        String c = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+        if ( !c.isEmpty() ) {
+            useRetainedTermUris = retainedTermUris != null && !retainedTermUris.isEmpty();
+        }
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
             // troubled filtering
@@ -689,7 +693,7 @@ public class ExpressionExperimentDaoImpl
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", optimizeParameterList( excludedTermUris ) );
         }
-        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+        if ( useRetainedTermUris ) {
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         if ( doAclFiltering ) {
@@ -731,6 +735,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         boolean doAclFiltering = eeIds == null;
+        boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -782,10 +787,18 @@ public class ExpressionExperimentDaoImpl
                 query += " and T.CATEGORY = :category";
             }
             // no need to filter out excluded categories if a specific one is requested
-            query += getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            String c = getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            if ( !c.isEmpty() ) {
+                useRetainedTermUris = retainedTermUris != null && !retainedTermUris.isEmpty();
+            }
+            query += c;
         } else {
             // all categories are requested, we may filter out excluded ones
-            query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            String c = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            if ( !c.isEmpty() ) {
+                useRetainedTermUris = retainedTermUris != null && !retainedTermUris.isEmpty();
+            }
+            query += c;
         }
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
@@ -801,6 +814,7 @@ public class ExpressionExperimentDaoImpl
             query += " having EE_COUNT >= :minFrequency";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
                 query += " or VALUE_URI in (:retainedTermUris)";
+                useRetainedTermUris = true;
             }
         }
         if ( maxResults > 0 ) {
@@ -826,7 +840,8 @@ public class ExpressionExperimentDaoImpl
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", optimizeParameterList( excludedTermUris ) );
         }
-        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+        if ( useRetainedTermUris ) {
+            assert retainedTermUris != null;
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         if ( level != null ) {
