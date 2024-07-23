@@ -1688,20 +1688,20 @@ public class GeoConverterImpl implements GeoConverter {
 
         // Taxon lastTaxon = null;
 
-        if ( !this.skipDataVectors ) {
-            for ( GeoPlatform platform : sample.getPlatforms() ) {
-                ArrayDesign arrayDesign;
-                if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
-                    arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
-                } else {
-                    // platform not exist yet
-                    arrayDesign = this.convertPlatform( platform );
-                }
-
-                bioAssay.setArrayDesignUsed( arrayDesign );
-
+        //    if ( !this.skipDataVectors ) { // this is commented out to allow updating of the originalPlatform via GeoService.
+        for ( GeoPlatform platform : sample.getPlatforms() ) {
+            ArrayDesign arrayDesign;
+            if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
+                arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
+            } else {
+                // platform not exist yet
+                arrayDesign = this.convertPlatform( platform );
             }
+
+            bioAssay.setArrayDesignUsed( arrayDesign );
+
         }
+        //  }
 
         return bioAssay;
     }
