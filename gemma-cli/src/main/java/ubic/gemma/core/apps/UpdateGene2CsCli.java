@@ -8,49 +8,41 @@ import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 
-public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
-
-    private static final String TRUNCATE_OPTION = "truncate";
+public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
-    private boolean truncate;
-    private Date since;
-
     @Nullable
     @Override
     public String getCommandName() {
-        return "updateEe2c";
+        return "updateGene2Cs";
     }
 
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table";
+        return "Update the GENE2CS table";
     }
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
+        return GemmaCLI.CommandGroup.MISC;
     }
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
-        addDateOption( options );
+
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        truncate = commandLine.hasOption( TRUNCATE_OPTION );
-        since = getLimitingDate();
+
     }
 
     @Override
     protected void doWork() throws Exception {
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( since, truncate );
+        tableMaintenanceUtil.updateGene2CsEntries();
     }
 }
