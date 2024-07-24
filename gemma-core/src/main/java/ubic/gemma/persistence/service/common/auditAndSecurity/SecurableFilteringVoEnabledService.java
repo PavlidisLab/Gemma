@@ -9,46 +9,17 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * A base service for securable entities with filtering and VO capabilities.
+ * <p>
  * @author poirigui
- * @see gemma.gsec.model.Securable
  * @see FilteringVoEnabledService
  */
-public interface SecurableFilteringVoEnabledService<C extends Securable, VO extends IdentifiableValueObject<C>> extends FilteringVoEnabledService<C, VO> {
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
-
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    VO loadValueObject( C entity );
-
-    @Override
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    VO loadValueObjectById( Long entityId );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<VO> loadValueObjects( Collection<C> entities );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<VO> loadValueObjectsByIds( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<VO> loadAllValueObjects();
+public interface SecurableFilteringVoEnabledService<C extends Securable, VO extends IdentifiableValueObject<C>> extends
+        FilteringVoEnabledService<C, VO>,
+        SecurableBaseVoEnabledService<C, VO> {
 
     // The methods below using Filters do not require AFTER_ACL_COLLECTION_READ because the ACL filtering is performed
     // in the query itself.
@@ -64,4 +35,12 @@ public interface SecurableFilteringVoEnabledService<C extends Securable, VO exte
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Slice<C> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 }
