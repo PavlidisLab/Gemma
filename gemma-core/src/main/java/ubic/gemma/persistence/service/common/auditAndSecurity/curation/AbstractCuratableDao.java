@@ -64,7 +64,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
             eventType.updateCurationDetails( curationDetails, auditEvent );
         }
 
-        update( curatable );
+        curatable.setCurationDetails( ( CurationDetails ) getSessionFactory().getCurrentSession().merge( curationDetails ) );
     }
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {
