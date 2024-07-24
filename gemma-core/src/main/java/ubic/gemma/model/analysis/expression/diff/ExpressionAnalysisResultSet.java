@@ -19,8 +19,8 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

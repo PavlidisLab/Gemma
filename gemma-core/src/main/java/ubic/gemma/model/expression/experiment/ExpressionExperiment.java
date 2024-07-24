@@ -14,10 +14,10 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.SecuredNotChild;
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
+import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.BibliographicReference;

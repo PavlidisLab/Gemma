@@ -21,7 +21,9 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.search.SearchSettings;
 
-public class UserQuery implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
+import java.io.Serializable;
+
+public class UserQuery implements Serializable, SecuredNotChild {
 
     private static final long serialVersionUID = -2790140985613402440L;
     private String url;

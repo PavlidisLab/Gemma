@@ -18,9 +18,10 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -36,7 +37,7 @@ import java.util.Date;
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
 @Indexed
-public class BioAssay extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
+public class BioAssay extends AbstractDescribable implements SecuredChild, Serializable {
 
     private static final long serialVersionUID = -7868768731812964045L;
 

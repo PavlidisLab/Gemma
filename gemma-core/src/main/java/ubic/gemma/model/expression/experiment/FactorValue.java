@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;

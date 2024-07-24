@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.analysis.expression;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;

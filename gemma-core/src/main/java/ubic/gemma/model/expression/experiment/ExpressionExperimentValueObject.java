@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;

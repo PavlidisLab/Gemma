@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.persistence.Transient;

@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 public class ExpressionExperimentSubsetValueObject extends ExpressionExperimentValueObject {
 

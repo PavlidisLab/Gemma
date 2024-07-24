@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import gemma.gsec.model.SecuredNotChild;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;

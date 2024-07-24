@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.util;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
