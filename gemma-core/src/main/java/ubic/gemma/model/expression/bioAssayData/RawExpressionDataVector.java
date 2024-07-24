@@ -47,7 +47,7 @@ public class RawExpressionDataVector extends DesignElementDataVector {
             return false;
         }
         final RawExpressionDataVector that = ( RawExpressionDataVector ) object;
-        if ( this.getId() != null || that.getId() != null ) {
+        if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
         return Objects.equals( getExpressionExperiment(), that.getExpressionExperiment() )
