@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -260,6 +261,55 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertTrue( e.getDetail().contains( "RuntimeException" ) );
         // ensure that the exception is logged
         assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
+    }
+
+    @Test
+    public final void testAddTroubleEventWhenCurationDetailsAreModified() {
+        Session session = sessionFactory.openSession();
+        try {
+            TransactionStatus t = pta.getTransaction( new DefaultTransactionDefinition() );
+            auditable = arrayDesignService.load( auditable.getId() );
+            assertNotNull( auditable );
+            auditable.setDescription( "foo" );
+            assertFalse( auditable.getCurationDetails().getNeedsAttention() );
+            // modify the curation details and audit trail (those must be rolled-back)
+            auditable.getCurationDetails().setNeedsAttention( true );
+            auditTrailService.addUpdateEvent( auditable, "this should be rolled back" );
+            auditTrailService.addUpdateEvent( auditable, TroubledStatusFlagEvent.class, "nothing special, just testing", new RuntimeException() );
+            pta.rollback( t );
+        } finally {
+            session.close();
+        }
+        auditable = arrayDesignService.load( auditable.getId() );
+        assertNotNull( auditable );
+        auditable = arrayDesignService.thawLite( auditable );
+        assertNull( auditable.getDescription() );
+        assertFalse( auditable.getCurationDetails().getNeedsAttention() );
+        assertTrue( auditable.getCurationDetails().getTroubled() );
+        Assertions.assertThat( auditable.getAuditTrail().getEvents() )
+                .extracting( AuditEvent::getNote )
+                .doesNotContain( "this should be rolled back" )
+                .contains( "nothing special, just testing" );
+    }
+
+    @Test
+    public void testAddTroubleEventOnTransientEntity() {
+        ArrayDesign auditable;
+        Session session = sessionFactory.openSession();
+        try {
+            TransactionStatus t = pta.getTransaction( new DefaultTransactionDefinition() );
+            auditable = new ArrayDesign();
+            auditable.setPrimaryTaxon( getTaxon( "human" ) );
+            auditable = arrayDesignService.create( auditable );
+            assertNotNull( auditable );
+            // now, the AD does not exist yet because the transaction will be suspended
+            auditTrailService.addUpdateEvent( auditable, TroubledStatusFlagEvent.class, "nothing special, just testing", new RuntimeException() );
+            pta.rollback( t );
+        } finally {
+            session.close();
+        }
+        auditable = arrayDesignService.load( auditable.getId() );
+        assertNull( auditable );
     }
 
     @Test

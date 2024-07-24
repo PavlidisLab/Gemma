@@ -4,6 +4,7 @@ import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -44,12 +45,11 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
-    public void updateCurationDetailsFromAuditEvent( Curatable curatable, AuditEvent auditEvent ) {
-        if ( curatable.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot update curation details for a transient entity." );
-        }
+    public void updateCurationDetailsFromAuditEvent( C curatable, AuditEvent auditEvent ) {
+        Assert.notNull( curatable.getId(), "Cannot update curation details for a transient entity." );
 
         if ( curatable.getCurationDetails() == null ) {
+            log.info( curatable + " has no curation details, creating a new one..." );
             curatable.setCurationDetails( new CurationDetails() );
         }
 
@@ -64,7 +64,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
             eventType.updateCurationDetails( curationDetails, auditEvent );
         }
 
-        curatable.setCurationDetails( ( CurationDetails ) getSessionFactory().getCurrentSession().merge( curationDetails ) );
+        update( curatable );
     }
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {

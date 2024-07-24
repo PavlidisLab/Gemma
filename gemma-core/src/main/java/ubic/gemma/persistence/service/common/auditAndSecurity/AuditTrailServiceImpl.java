@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
@@ -27,10 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractService;
@@ -93,6 +94,17 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable ) {
+        Class<?> entityClass = Hibernate.getClass( auditable );
+        Long id = auditable.getId();
+        // because of the REQUIRES_NEW, the auditable might originate from a different session, so it would be unsafe to
+        // modify it
+        auditable = ( Auditable ) sessionFactory.getCurrentSession().get( entityClass, id );
+        if ( auditable == null ) {
+            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.\n\tEvent Type: %s%s",
+                    entityClass.getName(), id, type.getName(), note != null ? "\n\tNote: " + note : "" ), throwable );
+
+            return AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, userManager.getCurrentUser(), getAuditEventType( type ) );
+        }
         return doAddUpdateEvent( auditable, getAuditEventType( type ), note, ExceptionUtils.getStackTrace( throwable ), null );
     }
 
