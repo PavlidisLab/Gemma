@@ -186,7 +186,7 @@ public class DatasetCombiner {
              * Bug 2690. There must be a better way.
              */
             details = details.replaceAll( "encoding=\"UTF-8\"", "" );
-            try (StringInputStream sis = new StringInputStream( StringUtils.trim( details ) )) {
+            try ( StringInputStream sis = new StringInputStream( StringUtils.strip( details ) ) ) {
 
                 Document document = builder.parse( sis );
 
