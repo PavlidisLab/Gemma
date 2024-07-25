@@ -343,6 +343,47 @@ public class ExperimentalDesignController extends BaseController {
         }
     }
 
+    /**
+     * Make an exact copy of a factorvalue and add it to the experiment.
+     * As per https://github.com/PavlidisLab/Gemma/issues/1160
+     * @param e the experimental factor
+     * @param fvId the id of the FV to duplicate
+     */
+    public void duplicateFactorValue( EntityDelegator<ExperimentalFactor> e, Long fvId ) {
+        if ( e == null || e.getId() == null ) return;
+        ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
+        if ( ef == null ) return;
+        FactorValue fv = factorValueService.load( fvId );
+        if ( fv == null ) return;
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+        if ( ee == null ) return;
+
+        FactorValue newFv = FactorValue.Factory.newInstance();
+        newFv.setExperimentalFactor( ef );
+        Set<Statement> chars = new HashSet<>();
+
+        for ( Statement c : fv.getCharacteristics() ) {
+            Statement newC = new Statement();
+            newC.setCategory( c.getCategory() );
+            newC.setCategoryUri( c.getCategoryUri() );
+            newC.setSubject( c.getSubject() );
+            newC.setSubjectUri( c.getSubjectUri() );
+            newC.setPredicate( c.getPredicate() );
+            newC.setPredicateUri( c.getPredicateUri() );
+            newC.setSecondObject( c.getSecondObject() );
+            newC.setSecondObjectUri( c.getSecondObjectUri() );
+            newC.setSecondPredicate( c.getSecondPredicate() );
+            newC.setSecondPredicateUri( c.getSecondPredicateUri() );
+            newC.setEvidenceCode( GOEvidenceCode.IC );
+            chars.add( newC );
+        }
+
+        newFv.setCharacteristics( chars );
+        expressionExperimentService.addFactorValue( ee, newFv );
+
+        this.experimentReportService.evictFromCache( ee.getId() );
+    }
+
     public void deleteFactorValues( EntityDelegator<ExperimentalFactor> e, Long[] fvIds ) {
 
         if ( e == null || e.getId() == null ) return;

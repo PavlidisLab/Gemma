@@ -438,6 +438,7 @@
             <dwr:include method="getFactorValues"/>
             <dwr:include method="createFactorValue"/>
             <dwr:include method="deleteFactorValues"/>
+            <dwr:include method="duplicateFactorValue"/>
             <dwr:include method="getFactorValuesWithCharacteristics"/>
             <dwr:include method="createFactorValueCharacteristic"/>
             <dwr:include method="deleteFactorValueCharacteristics"/>
