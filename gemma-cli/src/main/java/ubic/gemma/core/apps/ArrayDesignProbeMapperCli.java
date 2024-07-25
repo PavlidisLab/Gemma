@@ -296,7 +296,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         AbstractCLI.log.debug( "Re-Checking status of " + arrayDesign );
 
-        List<AuditEvent> allEvents = this.auditTrailService.getEvents( arrayDesign );
+        List<AuditEvent> allEvents = this.auditEventService.getEvents( arrayDesign );
         AuditEvent lastSequenceAnalysis = null;
         AuditEvent lastRepeatMask = null;
         AuditEvent lastSequenceUpdate = null;
