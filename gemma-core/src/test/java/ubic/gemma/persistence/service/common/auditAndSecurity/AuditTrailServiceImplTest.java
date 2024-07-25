@@ -51,6 +51,9 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     private AuditTrailService auditTrailService;
 
     @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
     private ArrayDesign auditable;
@@ -218,7 +221,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         Collection<AuditEvent> events = auditTrail.getEvents();
         assertTrue( events.contains( ev ) );
 
-        events = auditTrailService.getEvents( auditable );
+        events = auditEventService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
     }
 
@@ -275,6 +278,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
             // modify the curation details and audit trail (those must be rolled-back)
             auditable.getCurationDetails().setNeedsAttention( true );
             auditTrailService.addUpdateEvent( auditable, "this should be rolled back" );
+            session.flush(); // make sure CURATION_DETAILS are updated
             auditTrailService.addUpdateEvent( auditable, TroubledStatusFlagEvent.class, "nothing special, just testing", new RuntimeException() );
             pta.rollback( t );
         } finally {
@@ -285,7 +289,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = arrayDesignService.thawLite( auditable );
         assertNull( auditable.getDescription() );
         assertFalse( auditable.getCurationDetails().getNeedsAttention() );
-        assertTrue( auditable.getCurationDetails().getTroubled() );
+        // unfortunately, curation details cannot be altered because that would cause a deadlock
+        assertFalse( auditable.getCurationDetails().getTroubled() );
         Assertions.assertThat( auditable.getAuditTrail().getEvents() )
                 .extracting( AuditEvent::getNote )
                 .doesNotContain( "this should be rolled back" )

@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -86,6 +87,9 @@ public class DataUpdaterImpl implements DataUpdater {
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -875,7 +879,7 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     private boolean hasVectorMergeEvent( Auditable a ) {
 
-        for ( AuditEvent event : this.auditTrailService.getEvents( a ) ) {
+        for ( AuditEvent event : this.auditEventService.getEvents( a ) ) {
             if ( event == null )
                 continue; // just in case; should not happen
             if ( event.getEventType() instanceof ExpressionExperimentVectorMergeEvent ) {
