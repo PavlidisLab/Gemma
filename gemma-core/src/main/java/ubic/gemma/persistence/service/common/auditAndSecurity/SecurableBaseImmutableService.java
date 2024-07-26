@@ -35,7 +35,6 @@ public interface SecurableBaseImmutableService<C extends Securable> extends Base
     void remove( C entity );
 
     @Override
-    // FIXME: this does not work with generics
-    // @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void remove( Collection<C> entities );
 }
