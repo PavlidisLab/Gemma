@@ -217,4 +217,22 @@ public class ExpressionExperimentSetServiceImpl
     public void update( Collection<ExpressionExperimentSet> entities ) {
         entities.forEach( this::update );
     }
+
+    @Override
+    @Transactional
+    public int removeFromSets( BioAssaySet bas ) {
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetDao.find( bas );
+        for ( ExpressionExperimentSet eeSet : sets ) {
+            log.info( "Removing " + bas + " from " + eeSet );
+            eeSet.getExperiments().remove( bas );
+            if ( eeSet.getExperiments().isEmpty() ) {
+                // remove the set because in only contains this experiment
+                // TODO: do we want to check for ACLs? the current user might not have the right to do that, even if the
+                //       set is now empty
+                log.info( "Removing now empty set " + eeSet );
+                expressionExperimentSetDao.remove( eeSet );
+            }
+        }
+        return sets.size();
+    }
 }
