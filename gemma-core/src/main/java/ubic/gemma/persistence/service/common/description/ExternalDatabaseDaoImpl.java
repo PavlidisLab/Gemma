@@ -36,7 +36,7 @@ public class ExternalDatabaseDaoImpl extends AbstractDao<ExternalDatabase> imple
     }
 
     @Override
-    public ExternalDatabase find( ExternalDatabase externalDatabase ) {
+    protected ExternalDatabase findByBusinessKey( ExternalDatabase externalDatabase ) {
         return this.findOneByProperty( "name", externalDatabase.getName() );
     }
 

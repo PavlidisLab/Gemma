@@ -97,7 +97,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     }
 
     @Override
-    public User find( User user ) {
+    protected User findByBusinessKey( User user ) {
         BusinessKey.checkKey( user );
         return this.findByUserName( user.getUserName() );
     }

@@ -155,7 +155,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public ExpressionExperiment find( ExpressionExperiment entity ) {
+    protected ExpressionExperiment findByBusinessKey( ExpressionExperiment entity ) {
 
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
 

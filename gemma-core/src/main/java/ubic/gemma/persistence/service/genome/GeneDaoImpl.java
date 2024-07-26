@@ -512,7 +512,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Gene find( Gene gene ) {
+    protected Gene findByBusinessKey( Gene gene ) {
 
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
 

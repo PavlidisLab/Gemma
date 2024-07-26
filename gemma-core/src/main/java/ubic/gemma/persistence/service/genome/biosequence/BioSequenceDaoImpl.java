@@ -188,9 +188,8 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         return BioSequenceValueObject.fromEntity( entity );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public BioSequence find( BioSequence bioSequence ) {
+    protected BioSequence findByBusinessKey( BioSequence bioSequence ) {
 
         BusinessKey.checkValidKey( bioSequence );
 
@@ -201,8 +200,9 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         /*
          * this initially matches on name and taxon only.
          */
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
+        //noinspection unchecked
+        List<BioSequence> results = queryObject.list();
+        BioSequence result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
                 this.debug( bioSequence, results );
@@ -210,7 +210,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 // Try to find the best match. See BusinessKey for more
                 // explanation of why this is needed.
                 BioSequence match = null;
-                for ( BioSequence res : ( Collection<BioSequence> ) results ) {
+                for ( BioSequence res : results ) {
                     if ( res.equals( bioSequence ) ) {
                         if ( match != null ) {
                             AbstractDao.log.warn( "More than one sequence in the database matches " + bioSequence
@@ -227,7 +227,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 result = results.iterator().next();
             }
         }
-        return ( BioSequence ) result;
+        return result;
     }
 
     private void debug( @Nullable BioSequence query, List<?> results ) {

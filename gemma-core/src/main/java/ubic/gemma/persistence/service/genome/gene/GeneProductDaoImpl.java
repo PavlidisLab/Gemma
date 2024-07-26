@@ -103,7 +103,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     }
 
     @Override
-    public GeneProduct find( GeneProduct geneProduct ) {
+    protected GeneProduct findByBusinessKey( GeneProduct geneProduct ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 

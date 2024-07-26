@@ -56,7 +56,7 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
+    protected BioAssayDimension findByBusinessKey( BioAssayDimension bioAssayDimension ) {
 
         if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
             throw new IllegalArgumentException();

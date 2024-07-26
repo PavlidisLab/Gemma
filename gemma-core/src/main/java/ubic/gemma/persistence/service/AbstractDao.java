@@ -338,10 +338,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( entity.getId() != null ) {
             return this.load( entity.getId() );
         } else {
-            if ( AbstractDao.log.isTraceEnabled() ) {
-                AbstractDao.log.trace( String.format( "No persistent entity found for %s, returning null.", formatEntity( entity ) ) );
-            }
-            return null;
+            return this.findByBusinessKey( entity );
         }
     }
 
@@ -367,6 +364,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
+     * Implement this to provide custom lookup logic by business key for {@link T}.
+     */
+    @Nullable
+    protected T findByBusinessKey( T entity ) {
+        if ( AbstractDao.log.isTraceEnabled() ) {
+            AbstractDao.log.trace( String.format( "No persistent entity found for %s, returning null.", formatEntity( entity ) ) );
+        }
+        return null;
+    }
+
+    /**
      * Retrieve one entity whose given property matches the given value.
      * <p>
      * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
@@ -376,6 +384,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * @param  propertyValue the value to look for.
      * @return an entity whose property matched the given value
      */
+    @Nullable
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
         return ( T ) sessionFactory.getCurrentSession()

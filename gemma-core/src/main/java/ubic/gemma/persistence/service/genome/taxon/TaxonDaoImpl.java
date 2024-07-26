@@ -55,7 +55,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    public Taxon find( Taxon taxon ) {
+    protected Taxon findByBusinessKey( Taxon taxon ) {
 
         BusinessKey.checkValidKey( taxon );
 

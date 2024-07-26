@@ -56,14 +56,13 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
+    protected Gene2GOAssociation findByBusinessKey( Gene2GOAssociation gene2GOAssociation ) {
         BusinessKey.checkValidKey( gene2GOAssociation );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene2GOAssociation.class );
         BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
         return ( Gene2GOAssociation ) queryObject.uniqueResult();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene ) {
         return this.findByProperty( "gene", gene );

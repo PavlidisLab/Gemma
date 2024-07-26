@@ -202,7 +202,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public GeneSet find( GeneSet entity ) {
+    protected GeneSet findByBusinessKey( GeneSet entity ) {
         return this.findByName( entity.getName() ).iterator().next();
     }
 

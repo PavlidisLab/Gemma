@@ -79,7 +79,7 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
     }
 
     @Override
-    public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
+    protected RawExpressionDataVector findByBusinessKey( RawExpressionDataVector designElementDataVector ) {
 
         BusinessKey.checkKey( designElementDataVector );
 

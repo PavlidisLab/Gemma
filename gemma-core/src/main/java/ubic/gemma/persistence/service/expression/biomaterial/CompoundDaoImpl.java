@@ -43,7 +43,7 @@ public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDa
     }
 
     @Override
-    public Compound find( Compound compound ) {
+    protected Compound findByBusinessKey( Compound compound ) {
         return this.findByProperty( "name", compound.getName() )
                 .stream()
                 .max( Comparator.comparing( Compound::getId ) )

@@ -76,11 +76,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .uniqueResult();
     }
 
-    @Override
-    public PhenotypeAssociation find( PhenotypeAssociation entity ) {
-        return this.load( entity.getId() );
-    }
-
     /**
      * counts the evidence that from neurocarta that came from a specific MetaAnalysis
      */

@@ -44,7 +44,7 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
     }
 
     @Override
-    public Unit find( Unit unit ) {
+    protected Unit findByBusinessKey( Unit unit ) {
         BusinessKey.checkValidKey( unit );
         Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
         return ( Unit ) queryObject.uniqueResult();

@@ -48,12 +48,8 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public UserGroup find( UserGroup entity ) {
-        if ( entity.getId() != null ) {
-            return super.find( entity );
-        } else {
-            return this.findByName( entity.getName() );
-        }
+    protected UserGroup findByBusinessKey( UserGroup entity ) {
+        return this.findByName( entity.getName() );
     }
 
     @Override

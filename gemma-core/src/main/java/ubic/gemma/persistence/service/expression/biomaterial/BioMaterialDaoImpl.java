@@ -74,7 +74,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public BioMaterial find( BioMaterial bioMaterial ) {
+    protected BioMaterial findByBusinessKey( BioMaterial bioMaterial ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );

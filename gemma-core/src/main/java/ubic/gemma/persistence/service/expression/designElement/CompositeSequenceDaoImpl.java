@@ -551,7 +551,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     //    }
 
     @Override
-    public CompositeSequence find( CompositeSequence compositeSequence ) {
+    protected CompositeSequence findByBusinessKey( CompositeSequence compositeSequence ) {
 
         if ( compositeSequence.getName() == null )
             return null;

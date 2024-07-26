@@ -43,7 +43,7 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
     }
 
     @Override
-    public BioAssay find( BioAssay bioAssay ) {
+    protected BioAssay findByBusinessKey( BioAssay bioAssay ) {
         return ( BioAssay ) BusinessKey
                 .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
                 .uniqueResult();

@@ -61,7 +61,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public QuantitationType find( QuantitationType quantitationType ) {
+    protected QuantitationType findByBusinessKey( QuantitationType quantitationType ) {
         //        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
         //        BusinessKey.addRestrictions( queryObject, quantitationType );
         //        return ( QuantitationType ) queryObject.uniqueResult();

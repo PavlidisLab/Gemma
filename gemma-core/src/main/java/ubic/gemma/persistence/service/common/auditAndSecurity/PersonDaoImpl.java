@@ -41,7 +41,7 @@ public class PersonDaoImpl extends AbstractDao<Person> implements PersonDao {
     }
 
     @Override
-    public Person find( Person person ) {
+    protected Person findByBusinessKey( Person person ) {
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Person.class );
         BusinessKey.addRestrictions( queryObject, person );
         return ( Person ) queryObject.uniqueResult();

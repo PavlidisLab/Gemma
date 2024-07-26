@@ -47,7 +47,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
+    protected ExperimentalFactor findByBusinessKey( ExperimentalFactor experimentalFactor ) {
         BusinessKey.checkValidKey( experimentalFactor );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );

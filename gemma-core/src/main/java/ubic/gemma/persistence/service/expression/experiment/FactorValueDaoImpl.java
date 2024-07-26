@@ -146,7 +146,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public FactorValue find( FactorValue factorValue ) {
+    protected FactorValue findByBusinessKey( FactorValue factorValue ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
         BusinessKey.checkKey( factorValue );

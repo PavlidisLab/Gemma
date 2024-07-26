@@ -40,7 +40,7 @@ public class ProtocolDaoImpl extends AbstractDao<Protocol> implements ProtocolDa
     }
 
     @Override
-    public Protocol find( Protocol protocol ) {
+    protected Protocol findByBusinessKey( Protocol protocol ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Protocol.class );
         queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
 

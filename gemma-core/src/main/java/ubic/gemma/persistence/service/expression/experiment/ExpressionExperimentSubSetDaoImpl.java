@@ -51,7 +51,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     }
 
     @Override
-    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
+    protected ExpressionExperimentSubSet findByBusinessKey( ExpressionExperimentSubSet entity ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionExperimentSubSet.class );
         BusinessKey.checkKey( entity );

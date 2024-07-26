@@ -39,7 +39,7 @@ public class ContactDaoImpl extends AbstractDao<Contact> implements ContactDao {
     }
 
     @Override
-    public Contact find( Contact contact ) {
+    protected Contact findByBusinessKey( Contact contact ) {
         BusinessKey.checkKey( contact );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
         BusinessKey.addRestrictions( queryObject, contact );

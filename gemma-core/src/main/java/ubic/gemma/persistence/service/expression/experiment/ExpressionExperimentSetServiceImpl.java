@@ -34,6 +34,7 @@ import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSe
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
@@ -189,24 +190,23 @@ public class ExpressionExperimentSetServiceImpl
 
         // make sure potentially new experiment members are of the right taxon
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
-        Taxon eeTaxon;
-        for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
-            eeTaxon = expressionExperimentService.getTaxon( ee );
 
+        if ( groupTaxon == null ) {
+            throw new IllegalArgumentException( "A EE set must have a non-null taxon." );
+        }
+
+        Map<BioAssaySet, Taxon> taxa = expressionExperimentService.getTaxa( expressionExperimentSet.getExperiments() );
+        for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
+            Taxon eeTaxon = taxa.get( ee );
             if ( eeTaxon == null ) {
                 // this can happen if there are 0 samples
                 continue;
             }
-
             if ( !eeTaxon.equals( groupTaxon ) ) {
                 throw new IllegalArgumentException(
                         "Failed to add experiments of wrong taxa (" + ee + ") to eeset. " + "EESet taxon is "
                                 + groupTaxon + ", experiment was " + eeTaxon );
             }
-        }
-
-        if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
-            throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
         }
 
         super.update( expressionExperimentSet );

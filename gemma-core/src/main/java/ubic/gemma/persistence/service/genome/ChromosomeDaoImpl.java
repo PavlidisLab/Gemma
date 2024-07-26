@@ -52,7 +52,7 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
     }
 
     @Override
-    public Chromosome find( Chromosome entity ) {
+    protected Chromosome findByBusinessKey( Chromosome entity ) {
         Collection<Chromosome> hits = this.find( entity.getName(), entity.getSequence().getTaxon() );
         if ( hits.isEmpty() ) {
             return null;
