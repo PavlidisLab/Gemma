@@ -39,7 +39,6 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -62,7 +61,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
@@ -1352,17 +1350,7 @@ public class ExpressionExperimentServiceImpl
          * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
          * analyses!
          */
-        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
-        for ( ExpressionExperimentSet eeSet : sets ) {
-            if ( eeSet.getExperiments().size() == 1 && eeSet.getExperiments().iterator().next().equals( ee ) ) {
-                AbstractService.log.info( "Removing from set " + eeSet );
-                this.expressionExperimentSetService
-                        .remove( eeSet ); // remove the set because in only contains this experiment
-            } else {
-                AbstractService.log.info( "Removing " + ee + " from " + eeSet );
-                eeSet.getExperiments().remove( ee );
-            }
-        }
+        this.expressionExperimentSetService.removeFromSets( ee );
 
         super.remove( ee );
     }

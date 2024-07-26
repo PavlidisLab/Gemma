@@ -12,12 +12,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +47,11 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
 
         @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
             return mock();
         }
 

@@ -30,6 +30,6 @@ public interface SecurableBaseService<C extends Securable> extends BaseService<C
     void update( C entity );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void update( Collection<C> entities );
 }
