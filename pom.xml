@@ -692,9 +692,9 @@
 		<micrometer.version>1.13.2</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.90</tomcat.version>
+		<tomcat.version>9.0.91</tomcat.version>
 		<mockito.version>5.12.0</mockito.version>
-		<prettytime.version>5.0.8.Final</prettytime.version>
+		<prettytime.version>5.0.9.Final</prettytime.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
