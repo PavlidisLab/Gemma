@@ -66,19 +66,19 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        return doAddUpdateEvent( auditable, null, note, null, null, true );
+        return doAddUpdateEvent( auditable, null, note, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note ) {
-        return doAddUpdateEvent( auditable, type, note, null, null, true );
+        return doAddUpdateEvent( auditable, type, note, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail ) {
-        return doAddUpdateEvent( auditable, type, note, detail, null, true );
+        return doAddUpdateEvent( auditable, type, note, detail, new Date(), true );
     }
 
     /**
@@ -98,9 +98,9 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         if ( auditable == null ) {
             log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.\n\tEvent Type: %s%s",
                     entityClass.getName(), id, type.getName(), note != null ? "\n\tNote: " + note : "" ), throwable );
-            return createAuditEvent( type, note, ExceptionUtils.getStackTrace( throwable ), null );
+            return createAuditEvent( type, note, ExceptionUtils.getStackTrace( throwable ), new Date() );
         }
-        return doAddUpdateEvent( auditable, type, note, ExceptionUtils.getStackTrace( throwable ), null, false );
+        return doAddUpdateEvent( auditable, type, note, ExceptionUtils.getStackTrace( throwable ), new Date(), false );
     }
 
     @Override
@@ -109,7 +109,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         return doAddUpdateEvent( auditable, type, note, detail, performedDate, true );
     }
 
-    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, @Nullable Date performedDate, boolean updateCurationDetails ) {
+    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate, boolean updateCurationDetails ) {
         if ( auditable.getId() == null ) {
             throw new IllegalArgumentException( "Cannot add an update event on a transient entity." );
         }
@@ -126,11 +126,8 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         return auditEvent;
     }
 
-    private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, @Nullable Date performedDate ) {
-        Assert.isTrue( performedDate == null || performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
-        if ( performedDate == null ) {
-            performedDate = new Date();
-        }
+    private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate ) {
+        Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
         return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
     }
 
