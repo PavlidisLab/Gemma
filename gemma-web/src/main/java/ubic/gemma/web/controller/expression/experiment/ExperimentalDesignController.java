@@ -366,15 +366,20 @@ public class ExperimentalDesignController extends BaseController {
             Statement newC = new Statement();
             newC.setCategory( c.getCategory() );
             newC.setCategoryUri( c.getCategoryUri() );
+            newC.setValue( c.getValue() ); // deprecated
+            newC.setValueUri( c.getOriginalValue() );// deprecated
             newC.setSubject( c.getSubject() );
             newC.setSubjectUri( c.getSubjectUri() );
             newC.setPredicate( c.getPredicate() );
+            newC.setObject( c.getObject() );
+            newC.setObjectUri( c.getObjectUri() );
             newC.setPredicateUri( c.getPredicateUri() );
             newC.setSecondObject( c.getSecondObject() );
             newC.setSecondObjectUri( c.getSecondObjectUri() );
             newC.setSecondPredicate( c.getSecondPredicate() );
             newC.setSecondPredicateUri( c.getSecondPredicateUri() );
-            newC.setEvidenceCode( GOEvidenceCode.IC );
+            newC.setEvidenceCode( c.getEvidenceCode() );
+            newC.setOriginalValue( c.getOriginalValue() );
             chars.add( newC );
         }
 
