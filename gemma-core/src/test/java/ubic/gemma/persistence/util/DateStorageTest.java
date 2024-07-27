@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import com.mysql.cj.jdbc.Driver;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -24,6 +26,7 @@ import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(IntegrationTest.class)
 @ContextConfiguration
 public class DateStorageTest extends AbstractJUnit4SpringContextTests {
 
