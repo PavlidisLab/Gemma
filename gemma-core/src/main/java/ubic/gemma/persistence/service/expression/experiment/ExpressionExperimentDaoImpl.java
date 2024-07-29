@@ -1870,16 +1870,31 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
-        // detach BAs from the samples, completely detached samples will be removed later
-        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        // find BMs attached to BAs
+        Set<BioMaterial> bms = new HashSet<>();
+        if ( !ee.getBioAssays().isEmpty() ) {
+            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "select distinct bm from BioMaterial bm join bm.bioAssaysUsedIn ba where ba in :bas" ),
+                    "bas", ee.getBioAssays(), MAX_PARAMETER_LIST_SIZE ) );
+        }
+
+        // find BMs attached to FVs
         Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.getSampleUsed().getFactorValues().removeAll( fvs );
-            ba.getSampleUsed().getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
-            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
-                samplesToRemove.add( ba.getSampleUsed() );
+        if ( !fvs.isEmpty() ) {
+            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv in :fvs" ),
+                    "fvs", fvs, MAX_PARAMETER_LIST_SIZE ) );
+        }
+
+        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        for ( BioMaterial bm : bms ) {
+            // detach BAs and FVs from the samples, completely detached samples will be removed later
+            bm.getFactorValues().removeAll( fvs );
+            bm.getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
+            if ( bm.getBioAssaysUsedIn().isEmpty() && bm.getFactorValues().isEmpty() ) {
+                samplesToRemove.add( bm );
             } else {
-                log.warn( ba.getSampleUsed() + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
+                log.warn( bm + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
             }
         }
 
