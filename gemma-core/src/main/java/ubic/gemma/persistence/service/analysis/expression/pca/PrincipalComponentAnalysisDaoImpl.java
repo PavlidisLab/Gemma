@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -71,21 +72,20 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
                 .createSQLQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
+        entity.setEigenValues( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
                 .createSQLQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
+        entity.setEigenVectors( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
                 .createSQLQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
+        entity.setProbeLoadings( new HashSet<>() );
 
-        // re-retrieve the PCA from the database
-        entity = load( entity.getId() );
-        if ( entity != null ) {
-            super.remove( entity );
-        }
+        super.remove( entity );
     }
 }
