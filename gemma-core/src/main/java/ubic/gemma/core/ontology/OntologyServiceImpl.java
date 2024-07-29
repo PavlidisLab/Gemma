@@ -19,7 +19,7 @@
 package ubic.gemma.core.ontology;
 
 import io.micrometer.core.annotation.Timed;
-import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -43,7 +43,6 @@ import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.*;
@@ -56,6 +55,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -979,7 +979,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         double recheckMs = Math.min( checkFrequencyMillis, timeoutMs );
         // a fuzz factor to prevent concurrent tasks from all timing out at the same time
         // up to 10% of the initial timeout
-        double fuzzyMs = RandomUtils.nextDouble( 0.0, checkFrequencyMillis / 10.0 );
+        double fuzzyMs = RandomUtils.nextDouble() * checkFrequencyMillis / 10.0;
         while ( ( future = completionService.poll( ( long ) recheckMs, TimeUnit.MILLISECONDS ) ) == null ) {
             long remainingTimeMs = Math.max( timeoutMs - timer.getTime(), 0 );
             long i = futures.stream().filter( Future::isDone ).count();
