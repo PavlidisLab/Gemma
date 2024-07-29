@@ -75,6 +75,8 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                         + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
                 .setParameter( "edId", excludedDesign.getId() )
                 .uniqueResult();
+        if (numThatNeedsAttention == 0)
+            return null;
         return ( ExperimentalDesign ) getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ed from ExperimentalDesign ed join ed.experimentalFactors ef "
                         + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
