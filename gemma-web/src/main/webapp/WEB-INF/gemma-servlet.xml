@@ -105,7 +105,9 @@
         <property name="exceptionResolvers">
             <list>
                 <!-- handle all Spring MVC built-in exceptions -->
-                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver"/>
+                <bean class="org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver">
+                    <property name="warnLogCategory" value="ubic.gemma.web.loggers.HandledException"/>
+                </bean>
                 <!-- handles Gemma-specific exceptions -->
                 <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
                     <property name="statusCodes">
@@ -124,9 +126,12 @@
                             <prop key="java.lang.IllegalArgumentException">error/400</prop>
                         </props>
                     </property>
+                    <property name="warnLogCategory" value="ubic.gemma.web.loggers.HandledException"/>
                 </bean>
                 <!-- handle Tomcat's ClientAbortException, only needed for Tomact deployments -->
-                <bean class="ubic.gemma.web.util.ClientAbortExceptionResolver"/>
+                <bean class="ubic.gemma.web.util.ClientAbortExceptionResolver">
+                    <property name="warnLogCategory" value="ubic.gemma.web.loggers.HandledException"/>
+                </bean>
                 <!-- logs unhandled exceptions -->
                 <bean class="ubic.gemma.web.util.UnhandledExceptionResolver">
                     <property name="errorCategory" value="ubic.gemma.web.loggers.UnhandledException"/>

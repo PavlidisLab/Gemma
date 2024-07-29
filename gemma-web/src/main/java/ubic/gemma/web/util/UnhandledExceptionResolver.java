@@ -30,7 +30,7 @@ public class UnhandledExceptionResolver implements HandlerExceptionResolver {
 
     @Override
     public ModelAndView resolveException( HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex ) {
-        if ( this.errorLogger != null ) {
+        if ( this.errorLogger != null && this.errorLogger.isErrorEnabled() ) {
             this.errorLogger.error( "An unhandled exception was intercepted: " + ExceptionUtils.getRootCauseMessage( ex ), ex );
         }
         return delegate.resolveException( request, response, handler, ex );

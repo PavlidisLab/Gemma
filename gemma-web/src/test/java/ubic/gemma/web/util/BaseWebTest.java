@@ -35,11 +35,19 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests {
 
     public abstract static class BaseWebTestContextConfiguration {
 
+        private static final String HANDLED_EXCEPTION_LOGGER_NAME = "ubic.gemma.web.loggers.HandledException";
+
         @Bean
         public HandlerExceptionResolver exceptionResolver() {
             HandlerExceptionResolverComposite compositeResolver = new HandlerExceptionResolverComposite();
-            compositeResolver.setExceptionResolvers( Arrays.asList( new DefaultHandlerExceptionResolver(), simpleMappingExceptionResolver(), clientAbortExceptionResolver(), unhandledExceptionResolver() ) );
+            compositeResolver.setExceptionResolvers( Arrays.asList( springExceptionResolver(), simpleMappingExceptionResolver(), clientAbortExceptionResolver(), unhandledExceptionResolver() ) );
             return compositeResolver;
+        }
+
+        private DefaultHandlerExceptionResolver springExceptionResolver() {
+            DefaultHandlerExceptionResolver resolver = new DefaultHandlerExceptionResolver();
+            resolver.setWarnLogCategory( HANDLED_EXCEPTION_LOGGER_NAME );
+            return resolver;
         }
 
         private SimpleMappingExceptionResolver simpleMappingExceptionResolver() {
@@ -56,11 +64,14 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests {
             mappings.setProperty( ServiceUnavailableException.class.getName(), "error/503" );
             mappings.setProperty( IllegalArgumentException.class.getName(), "error/400" );
             resolver.setExceptionMappings( mappings );
+            resolver.setWarnLogCategory( HANDLED_EXCEPTION_LOGGER_NAME );
             return resolver;
         }
 
         private ClientAbortExceptionResolver clientAbortExceptionResolver() {
-            return new ClientAbortExceptionResolver();
+            ClientAbortExceptionResolver resolver = new ClientAbortExceptionResolver();
+            resolver.setWarnLogCategory( HANDLED_EXCEPTION_LOGGER_NAME );
+            return resolver;
         }
 
         private UnhandledExceptionResolver unhandledExceptionResolver() {
