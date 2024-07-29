@@ -62,4 +62,30 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
     }
 
+    @Override
+    public void remove( PrincipalComponentAnalysis entity ) {
+        // detach the entity because we're going to do some manual removal
+        getSessionFactory().getCurrentSession().evict( entity );
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+
+        // re-retrieve the PCA from the database
+        entity = load( entity.getId() );
+        if ( entity != null ) {
+            super.remove( entity );
+        }
+    }
 }
