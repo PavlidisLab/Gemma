@@ -19,8 +19,8 @@
 
 package ubic.gemma.core.analysis.service;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,6 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -44,6 +43,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -95,7 +95,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
-                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 0, 5000 ), true ) );
+                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 5000 ), true ) );
 
         /*
          * Create genes
