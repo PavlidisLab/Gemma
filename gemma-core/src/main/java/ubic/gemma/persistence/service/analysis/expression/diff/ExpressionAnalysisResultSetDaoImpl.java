@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
+import static ubic.gemma.persistence.util.QueryUtils.streamByBatch;
 
 /**
  * @author Paul
@@ -469,7 +470,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             return Collections.emptyMap();
         }
         // pick baseline groups from other result sets from the same analysis
-        //noinspection unchecked
         List<Object[]> otherBaselineGroups = listByBatch( getSessionFactory().getCurrentSession()
                 .createQuery( "select rs.id, otherBg.id, otherBg.experimentalFactor.id from ExpressionAnalysisResultSet rs "
                         + "join rs.analysis a "
@@ -480,25 +480,42 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // maps rs ID to [fv ID, ef ID]
         Map<Long, Set<FactorValueIdAndExperimentalFactorId>> baselineMapping = otherBaselineGroups.stream()
                 .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> new FactorValueIdAndExperimentalFactorId( ( Long ) row[1], ( Long ) row[2] ), Collectors.toSet() ) ) );
+
         // pick one representative contrasts to order the first and second baseline group consistently
-        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession()
-                .createQuery( "select rs.id, fv.experimentalFactor.id, fv2.experimentalFactor.id from ExpressionAnalysisResultSet rs "
-                        + "join rs.results r "
-                        + "join r.contrasts c "
+        // NOTE: I tried to do this in a single query, but it's just too slow
+
+        // result ID -> result set ID
+        Map<Long, Long> representativeResults = streamByBatch( getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                        "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
+                        "where dear.RESULT_SET_FK in :rsIds " +
+                        "group by dear.RESULT_SET_FK" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
+                .addScalar( "RESULT_SET_ID", StandardBasicTypes.LONG ), "rsIds", rsIds, 2048, Object[].class )
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+
+        // result ID -> [ef1 ID, ef2 ID]
+        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createSQLQuery(
+                "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, fv1.EXPERIMENTAL_FACTOR_FK as EF1_ID, fv2.EXPERIMENTAL_FACTOR_FK as EF2_ID " +
+                        "from CONTRAST_RESULT cr " +
                         // A left join is critical for performance, because otherwise the database will scan every
                         // single contrast results until it finds a non-null one. We know however that they are all
                         // identical for a given result set.
                         // This is a problem with continuous factors that do not have FVs set in the CR
-                        + "left join c.factorValue fv "
-                        + "left join c.secondFactorValue fv2 "
-                        + "where rs.id in :rsIds "
-                        + "group by rs" ), "rsIds", rsIds, 2048 );
+                        "left join FACTOR_VALUE fv1 on cr.FACTOR_VALUE_FK = fv1.ID " +
+                        "left join FACTOR_VALUE fv2 on cr.SECOND_FACTOR_VALUE_FK = fv2.ID " +
+                        "where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in :resultIds " +
+                        "group by cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" )
+                        .addScalar("RESULT_ID", StandardBasicTypes.LONG)
+                        .addScalar("EF1_ID", StandardBasicTypes.LONG)
+                        .addScalar("EF2_ID", StandardBasicTypes.LONG), "resultIds", representativeResults.keySet(), 2048 );
+
         Map<Long, Long> ef1Mapping = representativeContrasts.stream()
                 .filter( row -> row[1] != null )
-                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+                .collect( Collectors.toMap( row -> representativeResults.get( ( Long ) row[0] ), row -> ( Long ) row[1] ) );
         Map<Long, Long> ef2Mapping = representativeContrasts.stream()
                 .filter( row -> row[2] != null )
-                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[2] ) );
+                .collect( Collectors.toMap( row -> representativeResults.get( ( Long ) row[0] ), row -> ( Long ) row[2] ) );
         Map<Long, Baseline> results = new HashMap<>();
         for ( Long rsId : rsIds ) {
             Long ef1 = ef1Mapping.get( rsId );
