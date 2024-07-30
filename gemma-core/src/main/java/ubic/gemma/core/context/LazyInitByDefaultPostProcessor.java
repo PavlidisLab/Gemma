@@ -7,6 +7,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
 import org.springframework.core.type.MethodMetadata;
 
 import java.util.Set;
@@ -18,11 +19,15 @@ import java.util.TreeSet;
  * Beans annotated with {@link Lazy} or annotated with the {@code ubic.gemma.core.context.LazyInitByDefaultPostProcessor.ignore}
  * attribute are excluded.
  * <p>
+ * Beans part of the infrastructure role are excluded.
+ * <p>
  * This is a necessary workaround because Spring 3 does not support lazy-by-default for annotated components.
+ * <p>
+ * Spring Boot provides a similar functionality with <a href="https://docs.spring.io/spring-boot/api/java/org/springframework/boot/LazyInitializationBeanFactoryPostProcessor.html">LazyInitializationBeanFactoryPostProcessor</a>.
  * @author poirigui
  */
 @CommonsLog
-public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor {
+public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor, Ordered {
 
     private static final String IGNORE_ATTRIBUTE = "ubic.gemma.core.context.LazyInitByDefaultPostProcessor.ignore";
 
@@ -36,6 +41,10 @@ public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor 
             BeanDefinition def = beanFactory.getBeanDefinition( beanName );
             if ( def.hasAttribute( IGNORE_ATTRIBUTE ) && Boolean.parseBoolean( ( String ) def.getAttribute( IGNORE_ATTRIBUTE ) ) ) {
                 log.debug( "Ignoring " + formatBeanDefinition( beanName, def ) + " marked as ignored with " + IGNORE_ATTRIBUTE + "." );
+                continue;
+            }
+            if ( def.getRole() == BeanDefinition.ROLE_INFRASTRUCTURE ) {
+                log.debug( "Ignoring infrastructure bean " + formatBeanDefinition( beanName, def ) );
                 continue;
             }
             if ( def.isLazyInit() ) {
@@ -64,6 +73,11 @@ public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor 
             markedAsLazyInitBeans.add( beanName );
         }
         log.debug( "Marked the following beans as lazy-init: " + String.join( ", ", markedAsLazyInitBeans ) );
+    }
+
+    @Override
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE;
     }
 
     private String formatBeanDefinition( String beanName, BeanDefinition def ) {
