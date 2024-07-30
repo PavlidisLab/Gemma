@@ -206,7 +206,8 @@
 		<dependency>
 			<groupId>opensymphony</groupId>
 			<artifactId>sitemesh</artifactId>
-			<version>2.6.0</version>
+			<!-- 2.6+ requires Java 17 and Jakarta namespace -->
+			<version>2.5.0</version>
 			<scope>runtime</scope>
 		</dependency>
 

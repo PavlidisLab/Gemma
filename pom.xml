@@ -638,6 +638,7 @@
 								<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
 								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
 								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
+								<dependencyExclude>opensymphony:sitemesh:*</dependencyExclude>
 							</dependencyExcludes>
 							<pluginDependencyExcludes>
 								<pluginDependencyExclude>org.antlr:antlr4-maven-plugin:*</pluginDependencyExclude>
