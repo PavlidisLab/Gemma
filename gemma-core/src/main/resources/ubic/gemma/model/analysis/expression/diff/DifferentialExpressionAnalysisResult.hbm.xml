@@ -14,7 +14,8 @@
             <column name="PVALUE" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="correctedPvalue" type="java.lang.Double">
-            <column name="CORRECTED_PVALUE" not-null="false" unique="false" sql-type="DOUBLE"/>
+            <column name="CORRECTED_PVALUE" not-null="false" unique="false" sql-type="DOUBLE"
+                    index="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_CORRECTED_PVALUE"/>
         </property>
         <property name="rank" type="java.lang.Double">
             <column name="RANK" not-null="false" unique="false" sql-type="DOUBLE"/>
