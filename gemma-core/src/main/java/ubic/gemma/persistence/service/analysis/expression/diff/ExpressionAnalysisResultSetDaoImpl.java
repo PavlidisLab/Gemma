@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * @author Paul
@@ -471,14 +470,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         // pick baseline groups from other result sets from the same analysis
         //noinspection unchecked
-        List<Object[]> otherBaselineGroups = getSessionFactory().getCurrentSession()
+        List<Object[]> otherBaselineGroups = listByBatch( getSessionFactory().getCurrentSession()
                 .createQuery( "select rs.id, otherBg.id, otherBg.experimentalFactor.id from ExpressionAnalysisResultSet rs "
                         + "join rs.analysis a "
                         + "join a.resultSets otherRs "
                         + "join otherRs.baselineGroup otherBg "
-                        + "where rs.id in :rsIds and otherRs.id not in :rsIds" )
-                .setParameterList( "rsIds", optimizeParameterList( rsIds ) )
-                .list();
+                        + "where rs.id in :rsIds and otherRs.id not in :rsIds" ),
+                "rsIds", rsIds, 2048 );
         // maps rs ID to [fv ID, ef ID]
         Map<Long, Set<FactorValueIdAndExperimentalFactorId>> baselineMapping = otherBaselineGroups.stream()
                 .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> new FactorValueIdAndExperimentalFactorId( ( Long ) row[1], ( Long ) row[2] ), Collectors.toSet() ) ) );
@@ -494,7 +492,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         + "left join c.factorValue fv "
                         + "left join c.secondFactorValue fv2 "
                         + "where rs.id in :rsIds "
-                        + "group by rs" ), "rsIds", rsIds, 128 );
+                        + "group by rs" ), "rsIds", rsIds, 2048 );
         Map<Long, Long> ef1Mapping = representativeContrasts.stream()
                 .filter( row -> row[1] != null )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
