@@ -93,13 +93,15 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap,
             @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap,
             double threshold,
-            boolean keepNonSpecificProbes ) {
+            boolean keepNonSpecificProbes,
+            boolean initializeFactorValues ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
         if ( experimentAnalyzedIds.isEmpty() ) {
             return Collections.emptyList();
         }
         StopWatch timer = StopWatch.createStarted();
+        StopWatch retrieveProbesTimer = StopWatch.createStarted();
         //noinspection unchecked
         List<Long> probeIds = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select CS from GENE2CS where GENE = :geneId"
@@ -108,10 +110,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .addScalar( "CS", StandardBasicTypes.LONG )
                 .setParameter( "geneId", gene.getId() )
                 .list();
+        retrieveProbesTimer.stop();
         if ( probeIds.isEmpty() ) {
             log.warn( String.format( "%s has no associated probes in the GENE2CS table, no differential expression results will be returned.", gene ) );
             return Collections.emptyList();
         }
+        StopWatch retrieveBioAssayIdsTimer = StopWatch.createStarted();
         Set<Long> bioAssaySetIds = new HashSet<>( experimentAnalyzedIds );
         Map<Long, Long> subsetIdToExperimentId = null;
         // create a mapping of subset ID to source experiment ID
@@ -129,8 +133,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                             + " where eess.sourceExperiment.id in :eeIds or eess.id in :eeIds" ), "eeIds", experimentAnalyzedIds, 2048 );
             bioAssaySetIds.addAll( subsetIds );
         }
+        retrieveBioAssayIdsTimer.stop();
+        StopWatch retrieveResultsTimer = StopWatch.createStarted();
         Query query = getSessionFactory().getCurrentSession()
-                .createQuery( "select dear, dea.experimentAnalyzed.id" + ( baselineMap != null ? ", b, be.type" : "" ) + " from DifferentialExpressionAnalysisResult dear "
+                .createQuery( "select dear, dea.experimentAnalyzed.id" + ( baselineMap != null ? ", b.id, be.type" : "" ) + " from DifferentialExpressionAnalysisResult dear "
                         + "join dear.resultSet dears "
                         + "join dears.analysis dea "
                         + ( baselineMap != null ? "left join dears.baselineGroup b left join b.experimentalFactor be " : "" )
@@ -142,12 +148,36 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                 .setParameter( "threshold", threshold );
         List<Object[]> result = QueryUtils.listByBatch( query, "bioAssaySetIds", bioAssaySetIds, 2048 );
+        retrieveResultsTimer.stop();
         List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
         int warns = 0;
+        // using separate loops ensure that hibernate can batch-initialize without interleaving queries
+        StopWatch probeInitializationTimer = StopWatch.createStarted();
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Hibernate.initialize( r.getProbe() );
+        }
+        probeInitializationTimer.stop();
+
+        StopWatch contrastInitializationTimer = StopWatch.createStarted();
+        for ( Object[] row : result ) {
+            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Hibernate.initialize( r.getContrasts() );
+        }
+        contrastInitializationTimer.stop();
+
+        if ( initializeFactorValues ) {
+            for ( Object[] row : result ) {
+                DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+                for ( ContrastResult c : r.getContrasts() ) {
+                    Hibernate.initialize( c.getFactorValue() );
+                    Hibernate.initialize( c.getSecondFactorValue() );
+                }
+            }
+        }
+
+        for ( Object[] row : result ) {
+            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
             Long bioAssaySetId = ( Long ) row[1];
             rs.add( r );
             if ( sourceExperimentIdMap != null ) {
@@ -158,16 +188,18 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             }
             if ( baselineMap != null ) {
                 // TODO: add support for interaction of factors, requires https://github.com/PavlidisLab/Gemma/issues/1122
-                FactorValue baseline = ( FactorValue ) row[2];
+                Long baselineId = ( Long ) row[2];
                 FactorType baselineType = ( FactorType ) row[3];
-                if ( baseline != null ) {
+                if ( baselineId != null ) {
+                    // create a proxy, cheap
                     if ( baselineType.equals( FactorType.CATEGORICAL ) ) {
+                        FactorValue baseline = ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, baselineId );
                         baselineMap.put( r, Baseline.categorical( baseline ) );
                     } else {
                         // we have a few experiments with continuous factors with a baseline set in the result set, this
                         // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
-                        String msg = String.format( "Unexpected factor type for baseline %s of %s: %s, it should be categorical.",
-                                baseline, r, baselineType );
+                        String msg = String.format( "Unexpected factor type for baseline FactorValue Id=%d of %s: %s, it should be categorical.",
+                                baselineId, r, baselineType );
                         if ( warns < 5 ) {
                             log.warn( msg );
                             warns++;
@@ -182,11 +214,21 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 }
             }
         }
+        if ( baselineMap != null && initializeFactorValues ) {
+            for ( Baseline baseline : baselineMap.values() ) {
+                Hibernate.initialize( baseline.getFactorValue() );
+                Hibernate.initialize( baseline.getSecondFactorValue() );
+            }
+        }
         // because of batching, results must be resorted
         rs.sort( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms",
-                    rs.size(), gene, timer.getTime() ) );
+            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (retrieving probes from genes: %d ms, retrieving subsets: %d ms, retrieving results: %d ms, initializing contrasts: %d ms, initializing probes: %d ms)",
+                    rs.size(), gene, timer.getTime(),
+                    retrieveProbesTimer.getTime(),
+                    retrieveBioAssayIdsTimer.getTime(),
+                    retrieveResultsTimer.getTime(),
+                    contrastInitializationTimer.getTime(), probeInitializationTimer.getTime() ) );
         }
         return rs;
     }

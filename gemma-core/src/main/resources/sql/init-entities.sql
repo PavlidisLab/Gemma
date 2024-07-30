@@ -15,6 +15,8 @@ alter table AUDIT_EVENT_TYPE
     add index AUDIT_EVENT_TYPE_CLASS (class);
 alter table ANALYSIS
     add index ANALYSIS_CLASS (class);
+alter table ANALYSIS_RESULT_SET
+    add index ANALYSIS_RESULT_CLASS (class);
 
 alter table CHARACTERISTIC
     add index CHARACTERISTIC_CLASS (class);
@@ -26,6 +28,10 @@ alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
     add index resultSetProbes (RESULT_SET_FK, PROBE_FK);
 alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
     add index probeResultSets (PROBE_FK, RESULT_SET_FK);
+alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
+    add index corrpvalbin (CORRECTED_P_VALUE_BIN);
+alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
+    add index DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_CORRECTED_PVALUE (CORRECTED_PVALUE);
 
 alter table CONTACT
     add index fullname (NAME, LAST_NAME);

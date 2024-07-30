@@ -23,11 +23,11 @@
             <column name="LOG_FOLD_CHANGE" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <!-- assumed available in ContrastResultValueObject, and almost always needed -->
-        <many-to-one name="factorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="false"
+        <many-to-one name="factorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="proxy"
                      fetch="select">
             <column name="FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="secondFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="false"
+        <many-to-one name="secondFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="proxy"
                      fetch="select">
             <column name="SECOND_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

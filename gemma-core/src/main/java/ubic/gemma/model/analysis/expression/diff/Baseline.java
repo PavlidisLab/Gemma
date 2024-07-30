@@ -18,7 +18,7 @@ public class Baseline {
      * Create a baseline for a single categorical factor.
      */
     public static Baseline categorical( FactorValue fv ) {
-        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+        if ( Hibernate.isInitialized( fv ) && Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
             Assert.isTrue( fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }
@@ -29,14 +29,16 @@ public class Baseline {
      * Create a baseline for an interaction of factors.
      */
     public static Baseline interaction( FactorValue fv1, FactorValue fv2 ) {
-        // IDs can be safely retrieved for proxies
-        Assert.isTrue( !Objects.equals( fv1.getExperimentalFactor().getId(), fv2.getExperimentalFactor().getId() ),
-                "An interaction must be of two different experimental factors." );
-        if ( Hibernate.isInitialized( fv1.getExperimentalFactor() ) ) {
+        if ( Hibernate.isInitialized( fv1 ) && Hibernate.isInitialized( fv2 ) ) {
+            // IDs can be safely retrieved for proxies
+            Assert.isTrue( !Objects.equals( fv1.getExperimentalFactor().getId(), fv2.getExperimentalFactor().getId() ),
+                    "An interaction must be of two different experimental factors." );
+        }
+        if ( Hibernate.isInitialized( fv1 ) && Hibernate.isInitialized( fv1.getExperimentalFactor() ) ) {
             Assert.isTrue( fv1.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }
-        if ( Hibernate.isInitialized( fv2.getExperimentalFactor() ) ) {
+        if ( Hibernate.isInitialized( fv2 ) && Hibernate.isInitialized( fv2.getExperimentalFactor() ) ) {
             Assert.isTrue( fv2.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }
@@ -52,7 +54,7 @@ public class Baseline {
         this.secondFactorValue = null;
     }
 
-    private Baseline( FactorValue fv1, FactorValue fv2 ) {
+    private Baseline( FactorValue fv1, @Nullable FactorValue fv2 ) {
         this.factorValue = fv1;
         this.secondFactorValue = fv2;
     }
@@ -90,6 +92,6 @@ public class Baseline {
 
     @Override
     public String toString() {
-        return "Baseline for " + factorValue + ( secondFactorValue != null ? ":" + secondFactorValue : "" );
+        return "Baseline for " + factorValue.getId() + ( secondFactorValue != null ? ":" + secondFactorValue.getId() : "" );
     }
 }

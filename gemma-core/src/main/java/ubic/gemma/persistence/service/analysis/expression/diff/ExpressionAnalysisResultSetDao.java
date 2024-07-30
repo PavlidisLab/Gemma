@@ -34,7 +34,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @see ExpressionAnalysisResultSet
@@ -126,12 +125,12 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
     /**
-     * Retrieve baselines for all the given result sets.
+     * Retrieve baselines for all the given result sets representing factor interactions.
      */
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Collection<ExpressionAnalysisResultSet> resultSets );
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets );
 
     /**
-     * Retrieve baselines using result set IDs.
+     * Retrieve baselines using result set IDs representing factor interactions.
      */
-    Map<Long, Baseline> getBaselinesByIds( Collection<Long> ids );
+    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids );
 }
