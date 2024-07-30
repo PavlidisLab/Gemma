@@ -10,6 +10,8 @@ import java.util.Objects;
 
 /**
  * Represents a baseline for a single factor or an interaction of factors.
+ * <p>
+ * This class is proxy-safe as long as {@link #hashCode()} isn't being used.
  * @author poirigui
  */
 public class Baseline {
@@ -92,6 +94,16 @@ public class Baseline {
 
     @Override
     public String toString() {
-        return "Baseline for " + factorValue.getId() + ( secondFactorValue != null ? ":" + secondFactorValue.getId() : "" );
+        return "Baseline for " + formatFactorValue( factorValue ) + ( secondFactorValue != null ? ":" + formatFactorValue( secondFactorValue ) : "" );
+    }
+
+    private String formatFactorValue( FactorValue fv ) {
+        if ( Hibernate.isInitialized( fv ) ) {
+            return String.valueOf( fv.toString() );
+        } else if ( fv.getId() != null ) {
+            return "FactorValue Id=" + fv.getId();
+        } else {
+            return "FactorValue";
+        }
     }
 }
