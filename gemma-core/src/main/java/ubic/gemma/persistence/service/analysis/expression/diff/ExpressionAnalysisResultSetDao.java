@@ -128,11 +128,13 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Retrieve baselines for all the given result sets representing factor interactions.
+     * @param initializeFactorValues whether to initialize factor values
      */
     Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
     /**
      * Retrieve baselines using result set IDs representing factor interactions.
+     * @param initializeFactorValues whether to initialize factor values
      */
     Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues );
 }
