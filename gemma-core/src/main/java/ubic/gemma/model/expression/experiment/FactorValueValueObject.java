@@ -37,6 +37,7 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
 
     // fields of the characteristic being focused on
     // this is used by the FV editor to model each individual characteristic with its FV
+
     /**
      * ID of the experimental factor this FV belongs to.
      */
@@ -48,8 +49,6 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     private String category;
     @Schema(description = "Use experimentalFactorCategory.categoryUri instead.", deprecated = true)
     private String categoryUri;
-    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
-    private String factorValue;
 
     /**
      * It could be the id of the measurement if there is no characteristic.
@@ -117,18 +116,14 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
 
         if ( value.getMeasurement() != null ) {
             this.charId = value.getMeasurement().getId();
-            this.factorValue = value.getMeasurement().getValue();
         } else if ( value.getCharacteristics().size() == 1 ) {
             this.charId = value.getCharacteristics().iterator().next().getId();
-            this.factorValue = FactorValueUtils.getSummaryString( value );
         } else {
             // TODO: pick an arbitrary characteristic?
-            this.factorValue = FactorValueUtils.getSummaryString( value );
         }
 
         this.needsAttention = value.getNeedsAttention();
     }
-
 
     /**
      * Create a FactorValue VO focusing on a specific statement.
@@ -183,13 +178,23 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     }
 
     @Deprecated
-    @Schema(description = "This property is never filled nor used; use `summary` if you need a human-readable representation of this factor value.", deprecated = true)
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     public String getDescription() {
+        return getSummary();
+    }
+
+    @Deprecated
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
+    public String getFactorValue() {
+        if ( getMeasurement() != null ) {
+            // for backward-compatibility
+            return getMeasurement().getValue();
+        }
         return getSummary();
     }
 
     @Override
     public String toString() {
-        return "FactorValueValueObject [factor=" + factorValue + ", value=" + value + "]";
+        return "FactorValueValueObject [factor=" + getSummary() + ", value=" + value + "]";
     }
 }
