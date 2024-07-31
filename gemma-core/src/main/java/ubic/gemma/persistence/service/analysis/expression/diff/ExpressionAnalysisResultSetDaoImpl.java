@@ -303,20 +303,20 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 return null;
             }
         } else {
-            return getBaselinesForInteractionsInternal( Collections.singleton( ears.getId() ) ).get( ears.getId() );
+            return getBaselinesForInteractionsInternal( Collections.singleton( ears.getId() ), true ).get( ears.getId() );
         }
     }
 
     @Override
-    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets ) {
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
         Map<Long, ExpressionAnalysisResultSet> idMap = EntityUtils.getIdMap( resultSets );
-        return getBaselinesForInteractionsInternal( EntityUtils.getIds( resultSets ) ).entrySet().stream()
+        return getBaselinesForInteractionsInternal( EntityUtils.getIds( resultSets ), initializeFactorValues ).entrySet().stream()
                 .collect( IdentifiableUtils.toIdentifiableMap( e -> idMap.get( e.getKey() ), Map.Entry::getValue ) );
     }
 
     @Override
-    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids ) {
-        return getBaselinesForInteractionsInternal( ids );
+    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues ) {
+        return getBaselinesForInteractionsInternal( ids, initializeFactorValues );
     }
 
     @Override
@@ -450,7 +450,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             return;
         }
         // pick baseline groups from other result sets from the same analysis
-        Map<Long, Baseline> baselines = getBaselinesForInteractionsInternal( EntityUtils.getIds( vosWithMissingBaselines ) );
+        Map<Long, Baseline> baselines = getBaselinesForInteractionsInternal( EntityUtils.getIds( vosWithMissingBaselines ), true );
         for ( DifferentialExpressionAnalysisResultSetValueObject vo : vos ) {
             Baseline b = baselines.get( vo.getId() );
             if ( b != null ) {
@@ -464,8 +464,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     /**
      * Retrieve the baselines for the given result set IDs representing factor interactions.
+     * @param initializeFactorValues initialize baseline's factors
      */
-    private Map<Long, Baseline> getBaselinesForInteractionsInternal( Collection<Long> rsIds ) {
+    private Map<Long, Baseline> getBaselinesForInteractionsInternal( Collection<Long> rsIds, boolean initializeFactorValues ) {
         if ( rsIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -551,6 +552,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 );
             } else {
                 log.warn( "Could not fill the baseline groups for " + rsId + ": one or more baselines were not found in other result sets from the same analysis." );
+            }
+        }
+        if ( initializeFactorValues ) {
+            for ( Baseline b : results.values() ) {
+                Hibernate.initialize( b.getFactorValue() );
+                Hibernate.initialize( b.getSecondFactorValue() );
             }
         }
         return results;

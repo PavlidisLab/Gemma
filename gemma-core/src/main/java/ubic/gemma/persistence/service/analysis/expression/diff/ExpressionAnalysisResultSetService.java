@@ -45,7 +45,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets );
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
-    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds );
+    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues );
 }

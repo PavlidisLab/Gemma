@@ -112,13 +112,13 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets ) {
-        return voDao.getBaselinesForInteractions( resultSets );
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractions( resultSets, initializeFactorValues );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds ) {
-        return voDao.getBaselinesForInteractionsByIds( rsIds );
+    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractionsByIds( rsIds, initializeFactorValues );
     }
 }

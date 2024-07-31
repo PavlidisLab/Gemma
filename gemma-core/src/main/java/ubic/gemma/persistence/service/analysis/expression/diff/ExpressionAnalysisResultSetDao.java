@@ -119,6 +119,8 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Retrieve the baseline for the given result set.
+     * <p>
+     * Factor values are always initialized.
      * @return a baseline, or null if none could be determined for the given result set
      */
     @Nullable
@@ -127,10 +129,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     /**
      * Retrieve baselines for all the given result sets representing factor interactions.
      */
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets );
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
     /**
      * Retrieve baselines using result set IDs representing factor interactions.
      */
-    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids );
+    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues );
 }

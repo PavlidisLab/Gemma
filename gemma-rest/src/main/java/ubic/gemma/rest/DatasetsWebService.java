@@ -849,7 +849,7 @@ public class DatasetsWebService {
         Set<Long> missingBaselines = payload.stream()
                 .filter( vo -> vo.getBaseline() == null )
                 .map( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ).collect( Collectors.toSet() );
-        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractionsByIds( missingBaselines );
+        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractionsByIds( missingBaselines, true );
         for ( DifferentialExpressionAnalysisResultByGeneValueObject r : payload ) {
             Baseline b2 = b.get( r.getResultSetId() );
             if ( b2 == null ) {
@@ -938,7 +938,7 @@ public class DatasetsWebService {
                 .filter( vo -> baselineMap.get( vo ) == null )
                 .map( DifferentialExpressionAnalysisResult::getResultSet )
                 .collect( toIdentifiableSet() );
-        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines );
+        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
         for ( DifferentialExpressionAnalysisResult r : payload ) {
             Baseline b2 = b.get( r.getResultSet() );
             if ( b2 == null ) {
