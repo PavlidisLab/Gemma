@@ -48,14 +48,14 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     private String category;
     @Schema(description = "Use experimentalFactorCategory.categoryUri instead.", deprecated = true)
     private String categoryUri;
-    /**
-     * It could be the id of the measurement if there is no characteristic.
-     */
-    @Schema(description = "Use `measurement.id` or `characteristics.id` instead.", deprecated = true)
-    private Long charId;
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     private String factorValue;
 
+    /**
+     * It could be the id of the measurement if there is no characteristic.
+     */
+    @GemmaWebOnly
+    private Long charId;
     @GemmaWebOnly
     private String value;
     @GemmaWebOnly

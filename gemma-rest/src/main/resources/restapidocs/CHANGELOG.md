@@ -12,6 +12,7 @@
   is not initialized
 - omit `subsetFactorId` if `subsetFactor` is rendered
 - omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
+  omit `charId` in `FactorValueValueObject`
 
 ### Update 2.8.0
 
