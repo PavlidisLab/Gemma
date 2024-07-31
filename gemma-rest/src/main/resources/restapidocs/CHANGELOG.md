@@ -13,6 +13,7 @@
 - omit `subsetFactorId` if `subsetFactor` is rendered
 - omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
 - omit `charId` in `FactorValueValueObject`
+- omit `accessions`, `aliases` and `multifunctionalityRank` in `GeneValueObject` when not set
 
 ### Update 2.8.0
 
