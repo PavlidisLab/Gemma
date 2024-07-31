@@ -6,6 +6,12 @@
   make the payload slimmer since the factors can be looked up by ID in `experimentalFactors`
 - don't render the details of the experimental factor in `FactorValueValueObject` when it is rendered in the context of
   an `ExperimentalFactorValueObject`
+- rename `bioAssaySetId` to `experimentAnalyzedId` and `sourceExperiment` to `sourceExperimentId` in
+  `DifferentialExpressionAnalysisValueObject`, previous names are deprecated
+- add `subsetFactorValueId` in `DifferentialExpressionAnalysisValueObject` and populate it when`subsetFactorValue`
+  is not initialized
+- omit `subsetFactorId` if `subsetFactor` is rendered
+- omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
 
 ### Update 2.8.0
 
