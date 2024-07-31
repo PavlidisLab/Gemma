@@ -14,6 +14,7 @@
 - omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
 - omit `charId` in `FactorValueValueObject`
 - omit `accessions`, `aliases` and `multifunctionalityRank` in `GeneValueObject` when not set
+- populate `baselineGroup` and `secondBaselineGroup` in `getResultSet()` for interaction and continuous factors
 
 ### Update 2.8.0
 
