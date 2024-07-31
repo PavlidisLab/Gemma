@@ -483,7 +483,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity ) {
-        return new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+        postProcessValueObjects( Collections.singletonList( r ) );
+        return r;
     }
 
     @Override
