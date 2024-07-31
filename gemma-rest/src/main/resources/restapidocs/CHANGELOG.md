@@ -1,5 +1,12 @@
 ## Updates
 
+### Update 2.8.1
+
+- add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet` to
+  make the payload slimmer since the factors can be looked up by ID in `experimentalFactors`
+- don't render the details of the experimental factor in `FactorValueValueObject` when it is rendered in the context of
+  an `ExperimentalFactorValueObject`
+
 ### Update 2.8.0
 
 - add `getAnnotationsParents` and `getAnnotationsChildren` endpoint to perform the exact same ontology inference we use
