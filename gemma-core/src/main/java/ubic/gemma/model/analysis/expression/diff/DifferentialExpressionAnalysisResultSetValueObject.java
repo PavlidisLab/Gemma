@@ -6,6 +6,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +20,10 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject baselineGroup;
+    @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject secondBaselineGroup;
 
@@ -77,19 +81,22 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.experimentalFactors = experimentalFactors;
     }
 
+    @Nullable
     public FactorValueBasicValueObject getBaselineGroup() {
         return baselineGroup;
     }
 
-    public void setBaselineGroup( FactorValueBasicValueObject baselineGroup ) {
+    public void setBaselineGroup( @Nullable FactorValueBasicValueObject baselineGroup ) {
         this.baselineGroup = baselineGroup;
     }
 
+    @Nullable
+    @SuppressWarnings("unused")
     public FactorValueBasicValueObject getSecondBaselineGroup() {
         return secondBaselineGroup;
     }
 
-    public void setSecondBaselineGroup( FactorValueBasicValueObject secondBaselineGroup ) {
+    public void setSecondBaselineGroup( @Nullable FactorValueBasicValueObject secondBaselineGroup ) {
         this.secondBaselineGroup = secondBaselineGroup;
     }
 
