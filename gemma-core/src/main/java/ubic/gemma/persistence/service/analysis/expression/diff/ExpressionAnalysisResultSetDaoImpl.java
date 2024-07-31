@@ -219,14 +219,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
 
+        // this is important to thaw because it does not appear in the experimental factors
         if ( ears.getAnalysis().getSubsetFactorValue() != null ) {
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
-        }
-
-        if ( ears.getBaselineGroup() != null ) {
-            Hibernate.initialize( ears.getBaselineGroup() );
-            Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
         }
 
         // it is faster to query those separately because there's a large number of rows fetched via the results &
@@ -235,6 +231,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // I still think it's neat to use stream API for that though in case we ever make them lazy:
         // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
         Hibernate.initialize( ears.getExperimentalFactors() );
+
+        // this should already be covered by initializing the experimental factors, but we're being extra careful
+        if ( ears.getBaselineGroup() != null ) {
+            Hibernate.initialize( ears.getBaselineGroup() );
+            Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
+        }
     }
 
     private void thawResultsAndContrasts( ExpressionAnalysisResultSet ears ) {
@@ -246,14 +248,18 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
             Hibernate.initialize( r.getContrasts() );
         }
+        // this should already be covered by initializing the experimental factors, but to be extra-safe, we should make
+        // sure it's thawed as well
         for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
             for ( ContrastResult cr : r.getContrasts() ) {
                 Hibernate.initialize( cr );
                 if ( cr.getFactorValue() != null ) {
                     Hibernate.initialize( cr.getFactorValue() );
+                    Hibernate.initialize( cr.getFactorValue().getExperimentalFactor() );
                 }
                 if ( cr.getSecondFactorValue() != null ) {
                     Hibernate.initialize( cr.getSecondFactorValue() );
+                    Hibernate.initialize( cr.getSecondFactorValue().getExperimentalFactor() );
                 }
             }
         }
