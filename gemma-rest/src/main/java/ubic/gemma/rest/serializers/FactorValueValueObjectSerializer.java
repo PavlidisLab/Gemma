@@ -20,9 +20,7 @@ public class FactorValueValueObjectSerializer extends AbstractFactorValueValueOb
             jsonGenerator.writeStringField( "category", factorValueValueObject.getCategory() );
             jsonGenerator.writeStringField( "categoryUri", factorValueValueObject.getCategoryUri() );
         }
-        jsonGenerator.writeObjectField( "charId", factorValueValueObject.getCharId() );
         jsonGenerator.writeStringField( "description", factorValueValueObject.getDescription() );
         jsonGenerator.writeObjectField( "factorValue", factorValueValueObject.getFactorValue() );
-        jsonGenerator.writeBooleanField( "isMeasurement", factorValueValueObject.isMeasurement() );
     }
 }
