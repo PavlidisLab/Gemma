@@ -52,13 +52,14 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<Long> arrayDesignsUsed;
     private Long experimentAnalyzedId;
-    private Long sourceExperimentId;
 
+    // for subsets
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long sourceExperimentId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ExperimentalFactorValueObject subsetFactor;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long subsetFactorId;
-
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueValueObject subsetFactorValue;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -81,6 +82,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
             // sourceExperiment is eagerly fetched too
             this.sourceExperimentId = ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment().getId();
         }
+        // this is only populated for subsets, but it's safer to always check
         if ( analysis.getSubsetFactorValue() != null ) {
             if ( Hibernate.isInitialized( analysis.getSubsetFactorValue() ) ) {
                 this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue(), false );
@@ -93,8 +95,8 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
             } else {
                 this.subsetFactorValueId = analysis.getSubsetFactorValue().getId();
             }
-            // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
+        // fill in the factorValuesUsed separately, needs access to details of the subset.
     }
 
     /**
@@ -110,6 +112,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
      * @deprecated use {@link #getSourceExperimentId()} instead
      */
     @Deprecated
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "This is deprecated, use sourceExperimentId instead.", deprecated = true)
     public Long getSourceExperiment() {
         return sourceExperimentId;
@@ -140,8 +143,9 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     }
 
     @JsonProperty("isSubset")
+    @Schema(description = "Indicate if this analysis is a subset of another experiment. if this is set, additional fields relevant to the subset will be populated.")
     public boolean isSubset() {
-        return this.sourceExperimentId != null || this.subsetFactorValue != null || this.subsetFactorValueId != null;
+        return this.sourceExperimentId != null;
     }
 
     @Override
