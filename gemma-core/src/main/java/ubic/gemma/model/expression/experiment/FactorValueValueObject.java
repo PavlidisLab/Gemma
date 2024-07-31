@@ -162,7 +162,13 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
         this.secondObjectUri = c.getSecondObjectUri();
     }
 
-    @GemmaWebOnly
+    /**
+     * @deprecated use {@link #getMeasurement()} instead, this is only named like this for the Gemma Web frontend.
+     */
+    @Deprecated
+    @Schema(description = "This property exists only if this factor value is a measurement")
+    @JsonProperty("measurement")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public MeasurementValueObject getMeasurementObject() {
         return getMeasurement();
     }
