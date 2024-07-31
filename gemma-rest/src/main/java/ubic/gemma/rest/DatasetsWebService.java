@@ -901,7 +901,7 @@ public class DatasetsWebService {
         private FactorValueBasicValueObject secondBaseline;
 
         public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId, @Nullable Baseline baseline ) {
-            super( result );
+            super( result, true );
             this.sourceExperimentId = sourceExperimentId;
             this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();

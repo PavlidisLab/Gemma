@@ -37,14 +37,14 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
     /**
      * Create a contrast value object from a given {@link ContrastResult}.
      */
-    public ContrastResultValueObject( ContrastResult contrastResult ) {
+    public ContrastResultValueObject( ContrastResult contrastResult, boolean includeFactorValue ) {
         super( contrastResult );
         this.pvalue = contrastResult.getPvalue();
         this.tStat = contrastResult.getTstat();
         this.coefficient = contrastResult.getCoefficient();
         this.logFoldChange = contrastResult.getLogFoldChange();
         if ( contrastResult.getFactorValue() != null ) {
-            if ( Hibernate.isInitialized( contrastResult.getFactorValue() ) ) {
+            if ( includeFactorValue && Hibernate.isInitialized( contrastResult.getFactorValue() ) ) {
                 this.factorValue = new FactorValueBasicValueObject( contrastResult.getFactorValue() );
             } else {
                 this.factorValueId = contrastResult.getFactorValue().getId();
@@ -54,7 +54,7 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
         }
         // not all contrast results have a second factor value
         if ( contrastResult.getSecondFactorValue() != null ) {
-            if ( Hibernate.isInitialized( contrastResult.getSecondFactorValue() ) ) {
+            if ( includeFactorValue && Hibernate.isInitialized( contrastResult.getSecondFactorValue() ) ) {
                 this.secondFactorValue = new FactorValueBasicValueObject( contrastResult.getSecondFactorValue() );
             } else {
                 this.secondFactorValueId = contrastResult.getSecondFactorValue().getId();

@@ -49,7 +49,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param baselineMap             a mapping of results to baselines
      * @param threshold               a maximum threshold on the corrected P-value, between 0 and 1 inclusively
      * @param keepNonSpecificProbes   whether to keep probes that map to more than one gene
-     * @param initializeFactorValues  whether to initialize factor values in contrasts and baselines
+     * @param initializeFactorValues  whether to initialize factor values in contrasts and baselines, note that their
+     *                                experimental factors will not be initialized
      * @return differential expression results, grouped by analyzed experiment ID
      */
     List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed(

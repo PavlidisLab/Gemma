@@ -166,15 +166,21 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         contrastInitializationTimer.stop();
 
+        StopWatch factorInitializationTimer = StopWatch.createStarted();
         if ( initializeFactorValues ) {
             for ( Object[] row : result ) {
                 DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
                 for ( ContrastResult c : r.getContrasts() ) {
-                    Hibernate.initialize( c.getFactorValue() );
-                    Hibernate.initialize( c.getSecondFactorValue() );
+                    if ( c.getFactorValue() != null ) {
+                        Hibernate.initialize( c.getFactorValue() );
+                    }
+                    if ( c.getSecondFactorValue() != null ) {
+                        Hibernate.initialize( c.getSecondFactorValue() );
+                    }
                 }
             }
         }
+        factorInitializationTimer.stop();
 
         for ( Object[] row : result ) {
             DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
@@ -216,19 +222,25 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         if ( baselineMap != null && initializeFactorValues ) {
             for ( Baseline baseline : baselineMap.values() ) {
-                Hibernate.initialize( baseline.getFactorValue() );
-                Hibernate.initialize( baseline.getSecondFactorValue() );
+                if ( baseline.getFactorValue() != null ) {
+                    Hibernate.initialize( baseline.getFactorValue() );
+                }
+                if ( baseline.getSecondFactorValue() != null ) {
+                    Hibernate.initialize( baseline.getSecondFactorValue() );
+                }
             }
         }
         // because of batching, results must be resorted
         rs.sort( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (retrieving probes from genes: %d ms, retrieving subsets: %d ms, retrieving results: %d ms, initializing contrasts: %d ms, initializing probes: %d ms)",
+            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (retrieving probes from genes: %d ms, retrieving subsets: %d ms, retrieving results: %d ms, initializing contrasts: %d ms, initializing probes: %d ms, initializing factors: %d ms)",
                     rs.size(), gene, timer.getTime(),
                     retrieveProbesTimer.getTime(),
                     retrieveBioAssayIdsTimer.getTime(),
                     retrieveResultsTimer.getTime(),
-                    contrastInitializationTimer.getTime(), probeInitializationTimer.getTime() ) );
+                    contrastInitializationTimer.getTime(),
+                    probeInitializationTimer.getTime(),
+                    factorInitializationTimer.getTime() ) );
         }
         return rs;
     }

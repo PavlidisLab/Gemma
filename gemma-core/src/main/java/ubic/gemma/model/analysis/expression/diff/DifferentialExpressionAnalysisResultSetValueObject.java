@@ -57,7 +57,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this( analysisResultSet );
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, false, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
                 .collect( Collectors.toList() );
     }
 

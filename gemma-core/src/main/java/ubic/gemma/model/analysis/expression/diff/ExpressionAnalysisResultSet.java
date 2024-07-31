@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +41,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     private static final long serialVersionUID = 7226901182513177574L;
     private Integer numberOfProbesTested;
     private Integer numberOfGenesTested;
+    @Nullable
     private FactorValue baselineGroup;
     private Set<DifferentialExpressionAnalysisResult> results = new HashSet<>();
     private DifferentialExpressionAnalysis analysis;
@@ -95,6 +97,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
      * be recognized. For continuous factors, this would be null. For interaction terms we do not compute this so it
      * will also be null.
      */
+    @Nullable
     public FactorValue getBaselineGroup() {
         return this.baselineGroup;
     }

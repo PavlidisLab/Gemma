@@ -97,21 +97,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                             + "order by -res.correctedPvalue desc" )
                     .setParameter( "ears", ears )
                     .list();
-            // using separate loops ensure that hibernate can batch-initialize without interleaving queries
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getContrasts() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                for ( ContrastResult cr : r.getContrasts() ) {
-                    Hibernate.initialize( cr.getFactorValue() );
-                    Hibernate.initialize( cr.getSecondFactorValue() );
-                }
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 5000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -138,21 +126,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
-            // using separate loops ensure that hibernate can batch-initialize without interleaving queries
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getContrasts() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                for ( ContrastResult cr : r.getContrasts() ) {
-                    Hibernate.initialize( cr.getFactorValue() );
-                    Hibernate.initialize( cr.getSecondFactorValue() );
-                }
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -181,21 +157,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
-            // using separate loops ensure that hibernate can batch-initialize without interleaving queries
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getContrasts() );
-            }
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                for ( ContrastResult cr : r.getContrasts() ) {
-                    Hibernate.initialize( cr.getFactorValue() );
-                    Hibernate.initialize( cr.getSecondFactorValue() );
-                }
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -237,12 +201,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .setProjection( Projections.countDistinct( "id" ) )
                 .uniqueResult();
 
-        // initialize subset factor values
         for ( ExpressionAnalysisResultSet d : data ) {
-            Hibernate.initialize( d.getAnalysis().getSubsetFactorValue() );
+            thaw( d );
         }
 
-        return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
+        return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
     @Override
@@ -250,25 +213,49 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         populateBaselines( differentialExpressionAnalysisResultSetValueObjects );
     }
 
-
     @Override
     public void thaw( ExpressionAnalysisResultSet ears ) {
         // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
 
-        // it is faster to query those separately because there's a large number of rows fetched via the results &
-        // contrasts and only a handful of factors
-        Hibernate.initialize( ears.getExperimentalFactors() );
-
-        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
-        // I still think it's neat to use stream API for that though in case we ever make them lazy:
-        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
-
-        // this needs to be initialized because it does not appear in the experimental factors
         if ( ears.getAnalysis().getSubsetFactorValue() != null ) {
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
+        }
+
+        if ( ears.getBaselineGroup() != null ) {
+            Hibernate.initialize( ears.getBaselineGroup() );
+            Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
+        }
+
+        // it is faster to query those separately because there's a large number of rows fetched via the results &
+        // contrasts and only a handful of factors
+        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
+        // I still think it's neat to use stream API for that though in case we ever make them lazy:
+        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
+        Hibernate.initialize( ears.getExperimentalFactors() );
+    }
+
+    private void thawResultsAndContrasts( ExpressionAnalysisResultSet ears ) {
+        thaw( ears );
+        // using separate loops ensure that hibernate can batch-initialize without interleaving queries
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            Hibernate.initialize( r.getProbe() );
+        }
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            Hibernate.initialize( r.getContrasts() );
+        }
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            for ( ContrastResult cr : r.getContrasts() ) {
+                Hibernate.initialize( cr );
+                if ( cr.getFactorValue() != null ) {
+                    Hibernate.initialize( cr.getFactorValue() );
+                }
+                if ( cr.getSecondFactorValue() != null ) {
+                    Hibernate.initialize( cr.getSecondFactorValue() );
+                }
+            }
         }
     }
 
@@ -556,6 +543,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         if ( initializeFactorValues ) {
             for ( Baseline b : results.values() ) {
+                // those are interaction baselines, so both are non-null
                 Hibernate.initialize( b.getFactorValue() );
                 Hibernate.initialize( b.getSecondFactorValue() );
             }
