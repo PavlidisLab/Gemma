@@ -168,15 +168,6 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
         return getMeasurement();
     }
 
-    /**
-     * Indicate if this FactorValue is a measurement.
-     */
-    @Schema(description = "Check if a `measurement` key exists instead.", deprecated = true)
-    @JsonProperty("isMeasurement")
-    public boolean isMeasurement() {
-        return getMeasurement() != null;
-    }
-
     @Deprecated
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     public String getDescription() {

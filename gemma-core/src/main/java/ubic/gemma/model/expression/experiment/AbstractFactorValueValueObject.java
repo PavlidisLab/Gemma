@@ -1,6 +1,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -95,5 +97,14 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
                 .collect( Collectors.toList() );
 
         this.summary = FactorValueUtils.getSummaryString( fv );
+    }
+
+    /**
+     * Indicate if this FactorValue is a measurement.
+     */
+    @Schema(description = "Indicate if this factor value represents a measurement. When this is true, the `measurement` field will be populated.")
+    @JsonProperty("isMeasurement")
+    public boolean isMeasurement() {
+        return getMeasurement() != null;
     }
 }
