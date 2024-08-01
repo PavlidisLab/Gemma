@@ -270,6 +270,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return ( Long ) getSessionFactory().getCurrentSession()
                 .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results where ears = :ears" )
                 .setParameter( "ears", ears )
+                .setCacheable( true )
                 .uniqueResult();
     }
 
@@ -279,6 +280,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results r where ears = :ears and r.correctedPvalue <= :threshold" )
                 .setParameter( "ears", ears )
                 .setParameter( "threshold", threshold )
+                .setCacheable( true )
                 .uniqueResult();
     }
 
