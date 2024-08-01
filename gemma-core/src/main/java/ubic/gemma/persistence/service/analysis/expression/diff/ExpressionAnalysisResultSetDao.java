@@ -75,10 +75,12 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Load an analysis result set with its all of its associated results.
-     *
+     * @param queryGenesByResult query genes by results instead of result set, this is considerably faster if the
+     *                           results are sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
      * @see #loadValueObject(Identifiable)
+     * @see #loadResultToGenesMap(ExpressionAnalysisResultSet, boolean)
      */
-    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet, boolean queryGenesByResult );
 
     /**
      * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.
@@ -88,8 +90,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * <p>
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
+     * @param queryByResult query by results instead of result set, this is considerably faster if the results are
+     *                      sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
      */
-    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
+    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.

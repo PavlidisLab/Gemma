@@ -222,7 +222,7 @@ public class AnalysisResultSetsWebService {
             if ( ears == null ) {
                 throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
             }
-            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
+            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, false ) );
         }
     }
 
@@ -232,7 +232,7 @@ public class AnalysisResultSetsWebService {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         long totalElements = expressionAnalysisResultSetService.countResults( ears );
-        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), null, offset, limit, totalElements );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, true ), null, offset, limit, totalElements );
     }
 
     private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
@@ -241,7 +241,7 @@ public class AnalysisResultSetsWebService {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         long totalElements = expressionAnalysisResultSetService.countResults( ears, threshold );
-        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), threshold, offset, limit, totalElements );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, true ), threshold, offset, limit, totalElements );
     }
 
     private StreamingOutput getResultSetAsTsv( ExpressionAnalysisResultSetArg analysisResultSet ) {

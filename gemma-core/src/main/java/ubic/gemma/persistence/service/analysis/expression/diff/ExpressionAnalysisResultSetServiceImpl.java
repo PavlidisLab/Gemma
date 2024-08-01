@@ -84,14 +84,14 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears ) {
-        return voDao.loadValueObjectWithResults( ears );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean queryByResult ) {
+        return voDao.loadValueObjectWithResults( ears, queryByResult );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
-        return voDao.loadResultToGenesMap( resultSet );
+        return voDao.loadResultToGenesMap( resultSet, false );
     }
 
     @Override

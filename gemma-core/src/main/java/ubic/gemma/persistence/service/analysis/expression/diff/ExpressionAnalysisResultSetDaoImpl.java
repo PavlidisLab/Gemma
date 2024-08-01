@@ -488,29 +488,36 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity ) {
-        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity, boolean queryGenesByResult ) {
+        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity, queryGenesByResult ) );
         postProcessValueObjects( Collections.singletonList( r ) );
         return r;
     }
 
     @Override
-    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult ) {
+        String q = "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
+                + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
+                + "where " + ( queryByResult ? "result.ID in :rids" : "result.RESULT_SET_FK = :rsid" );
+
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
-                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
-                        + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where result.RESULT_SET_FK = :rsid" )
+                .createSQLQuery( q )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
                 .addSynchronizedEntityClass( Gene.class )
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
-                .setParameter( "rsid", resultSet.getId() )
                 // analysis results are immutable and the GENE2CS is generated, so flushing is pointless
                 .setFlushMode( FlushMode.MANUAL )
                 .setCacheable( true );
+
+        if ( queryByResult ) {
+            query.setParameterList( "rids", EntityUtils.getIds( resultSet.getResults() ) );
+        } else {
+            query.setParameter( "rsid", resultSet.getId() );
+        }
 
         //noinspection unchecked
         List<Object[]> list = query.list();
@@ -519,10 +526,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return list.stream()
                 .collect( Collectors.groupingBy(
                         l -> ( Long ) l[0],
-                        Collectors.collectingAndThen( Collectors.toList(),
-                                elem -> elem.stream()
-                                        .map( l -> ( Gene ) l[1] )
-                                        .collect( Collectors.toList() ) ) ) );
+                        Collectors.mapping( l -> ( Gene ) l[1], Collectors.toList() ) ) );
     }
 
     /**
