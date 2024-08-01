@@ -349,7 +349,7 @@ public class DifferentialExpressionSearchTaskImpl
          */
         if ( !filtered.isEmpty() ) {
             DifferentialExpressionSearchTaskImpl.log
-                    .info( "Using subsetted analyses for " + analyses.iterator().next().getBioAssaySetId() + "("
+                    .info( "Using subsetted analyses for " + analyses.iterator().next().getExperimentAnalyzedId() + "("
                             + analyses.size() + " analyses)" );
             return filtered;
         }
@@ -358,7 +358,7 @@ public class DifferentialExpressionSearchTaskImpl
             //noinspection ConstantConditions // Defensiveness for future changes
             assert filtered.isEmpty();
             DifferentialExpressionSearchTaskImpl.log
-                    .info( "No analyses were usable for " + analyses.iterator().next().getBioAssaySetId() );
+                    .info( "No analyses were usable for " + analyses.iterator().next().getExperimentAnalyzedId() );
             return filtered;
         }
 
@@ -551,7 +551,7 @@ public class DifferentialExpressionSearchTaskImpl
         Collection<FactorValueValueObject> keepForSubSet = null;
         if ( analysis.isSubset() ) {
 
-            Long eeid = analysis.getBioAssaySetId();
+            Long eeid = analysis.getExperimentAnalyzedId();
             keepForSubSet = this.experimentSubSetService.getFactorValuesUsed( eeid, experimentalFactor );
             // could this be empty?
             if ( keepForSubSet.isEmpty() ) {

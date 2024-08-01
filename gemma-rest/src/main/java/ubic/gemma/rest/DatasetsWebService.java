@@ -838,7 +838,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzed( gene, sliceIds( ids, offset, limit ), sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+                .findByGeneAndExperimentAnalyzed( gene, sliceIds( ids, offset, limit ), sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false, true ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
@@ -849,7 +849,7 @@ public class DatasetsWebService {
         Set<Long> missingBaselines = payload.stream()
                 .filter( vo -> vo.getBaseline() == null )
                 .map( DifferentialExpressionAnalysisResultByGeneValueObject::getResultSetId ).collect( Collectors.toSet() );
-        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesByIds( missingBaselines );
+        Map<Long, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractionsByIds( missingBaselines, true );
         for ( DifferentialExpressionAnalysisResultByGeneValueObject r : payload ) {
             Baseline b2 = b.get( r.getResultSetId() );
             if ( b2 == null ) {
@@ -901,7 +901,7 @@ public class DatasetsWebService {
         private FactorValueBasicValueObject secondBaseline;
 
         public DifferentialExpressionAnalysisResultByGeneValueObject( DifferentialExpressionAnalysisResult result, Long sourceExperimentId, Long experimentAnalyzedId, @Nullable Baseline baseline ) {
-            super( result );
+            super( result, true );
             this.sourceExperimentId = sourceExperimentId;
             this.experimentAnalyzedId = experimentAnalyzedId;
             this.resultSetId = result.getResultSet().getId();
@@ -928,7 +928,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
@@ -938,7 +938,7 @@ public class DatasetsWebService {
                 .filter( vo -> baselineMap.get( vo ) == null )
                 .map( DifferentialExpressionAnalysisResult::getResultSet )
                 .collect( toIdentifiableSet() );
-        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselines( missingBaselines );
+        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
         for ( DifferentialExpressionAnalysisResult r : payload ) {
             Baseline b2 = b.get( r.getResultSet() );
             if ( b2 == null ) {

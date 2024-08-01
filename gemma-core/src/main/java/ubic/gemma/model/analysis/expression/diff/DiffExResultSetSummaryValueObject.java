@@ -61,7 +61,7 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     /**
      * Analyzed {@link ubic.gemma.model.expression.experiment.BioAssaySet} ID.
      * <p>
-     * This is redundant because of {@link DifferentialExpressionAnalysisValueObject#getBioAssaySetId()}, and always
+     * This is redundant because of {@link DifferentialExpressionAnalysisValueObject#getExperimentAnalyzedId()}, and always
      * displayed in that context in the RESTful API.
      */
     @JsonIgnore

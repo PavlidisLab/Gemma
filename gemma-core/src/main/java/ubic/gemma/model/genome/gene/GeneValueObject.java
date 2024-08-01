@@ -20,6 +20,7 @@
 package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
@@ -49,6 +50,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     /**
      * Gene aliases, sorted alphabetically.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private SortedSet<String> aliases;
     /**
      * How many experiments "involve" (manipulate, etc.) this gene
@@ -69,11 +71,13 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @JsonIgnore
     private Boolean isQuery = true;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double multifunctionalityRank;
     @JsonIgnore
     private String name;
     private Integer ncbiId;
     private String ensemblId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<DatabaseEntryValueObject> accessions;
     @JsonIgnore
     private double[] nodeDegreeNegRanks;
