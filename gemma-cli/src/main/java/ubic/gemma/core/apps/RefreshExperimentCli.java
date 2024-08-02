@@ -27,14 +27,14 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Refresh the given experiments on the Gemma Website";
+        return "Refresh the cache for experiments on the Gemma Website";
     }
 
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
-        options.addOption( "v", "refreshVectors", false, "Refresh raw and processed data vectors" );
-        options.addOption( "r", "refreshReports", false, "Refresh experiment reports (i.e. batch information, diff ex. analyses, etc.)" );
+        options.addOption( "v", "refreshVectors", false, "Refresh cache of raw and processed data vectors" );
+        options.addOption( "r", "refreshReports", false, "Refresh cache of experiment reports (i.e. batch information, diff ex. analyses, etc.)" );
         addThreadsOption( options );
     }
 
