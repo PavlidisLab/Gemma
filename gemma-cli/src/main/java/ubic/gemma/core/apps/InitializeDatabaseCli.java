@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
-import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.initialization.BootstrappedDataSourceInitializer;
+import ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory;
 import ubic.gemma.persistence.initialization.CreateDatabasePopulator;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
 import ubic.gemma.persistence.initialization.InitialDataPopulator;
@@ -68,20 +68,15 @@ public class InitializeDatabaseCli extends AbstractCLI {
             jdbcUrl = dataSource.toString();
         }
         promptConfirmationOrAbort( "The following data source will be initialized: " + jdbcUrl );
-        BootstrappedDataSourceInitializer bdi = new BootstrappedDataSourceInitializer();
-        bdi.setDataSource( dataSource );
-        CreateDatabasePopulator cdb = new CreateDatabasePopulator( databaseName );
-        cdb.setDropIfExists( true );
-        bdi.setDatabasePopulator( cdb );
-        bdi.afterPropertiesSet();
-        DataSourceInitializer di = new DataSourceInitializer();
-        di.setDataSource( dataSource );
+        try ( HikariDataSource bootstrappedDataSource = BootstrappedDataSourceFactory.createBootstrappedDataSource( dataSource ) ) {
+            CreateDatabasePopulator cdb = new CreateDatabasePopulator( databaseName );
+            cdb.setDropIfExists( true );
+            DatabasePopulatorUtils.execute( cdb, bootstrappedDataSource );
+        }
         CompositeDatabasePopulator cdp = new CompositeDatabasePopulator();
         cdp.addPopulators(
                 new DatabaseSchemaPopulator( factory, "mysql" ),
                 new InitialDataPopulator( false ) );
-        di.setDatabasePopulator( cdp );
-        di.setEnabled( true );
-        di.afterPropertiesSet();
+        DatabasePopulatorUtils.execute( cdp, dataSource );
     }
 }

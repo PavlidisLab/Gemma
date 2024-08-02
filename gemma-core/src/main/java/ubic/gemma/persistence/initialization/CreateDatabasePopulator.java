@@ -9,9 +9,10 @@ import java.sql.SQLException;
 /**
  * Create a new database and drop an existing one if desired.
  * <p>
- * This populator needs to be run with a {@link BootstrappedDataSourceInitializer} because the database might not exist.
+ * This populator needs to be run with a data source that has been passed through {@link BootstrappedDataSourceFactory},
+ * because the database might not exist.
  * @author poirigui
- * @see BootstrappedDataSourceInitializer
+ * @see BootstrappedDataSourceFactory
  */
 @CommonsLog
 public class CreateDatabasePopulator implements DatabasePopulator {
