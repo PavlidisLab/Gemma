@@ -34,7 +34,6 @@ import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -54,6 +53,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
@@ -149,8 +149,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Array design has sequence from multiple taxa and has no primary taxon set: " + arrayDesign );
         }
 
-        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
-
         BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( ArrayDesignProbeMapperServiceImpl.QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
@@ -167,30 +165,32 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         int numWithNoResults = 0;
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
-        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+        try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+            for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            Map<String, Collection<BlatAssociation>> results = this
-                    .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
+                Map<String, Collection<BlatAssociation>> results = this
+                        .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
 
-            if ( results == null ) {
-                numWithNoResults++;
-                continue;
-            }
-
-            for ( Collection<BlatAssociation> col : results.values() ) {
-                for ( BlatAssociation association : col ) {
-                    if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
-                        ArrayDesignProbeMapperServiceImpl.log.debug( association );
-                    persistingQueue.add( new BACS( compositeSequence, association ) );
-
+                if ( results == null ) {
+                    numWithNoResults++;
+                    continue;
                 }
-                ++hits;
-            }
 
-            if ( ++count % 200 == 0 ) {
-                ArrayDesignProbeMapperServiceImpl.log
-                        .info( "Processed " + count + " composite sequences" + " with blat results; " + hits
-                                + " mappings found." );
+                for ( Collection<BlatAssociation> col : results.values() ) {
+                    for ( BlatAssociation association : col ) {
+                        if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                            ArrayDesignProbeMapperServiceImpl.log.debug( association );
+                        persistingQueue.add( new BACS( compositeSequence, association ) );
+
+                    }
+                    ++hits;
+                }
+
+                if ( ++count % 200 == 0 ) {
+                    ArrayDesignProbeMapperServiceImpl.log
+                            .info( "Processed " + count + " composite sequences" + " with blat results; " + hits
+                                    + " mappings found." );
+                }
             }
         }
 
@@ -396,13 +396,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             return null;
         }
 
-        GoldenPathSequenceAnalysis db;
-        if ( goldenPathDb == null ) {
-            db = new GoldenPathSequenceAnalysis( bs.getTaxon() );
-        } else {
-            db = goldenPathDb;
-        }
-
         final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
 
         ProbeMapUtils.removeDuplicates( blatResults );
@@ -410,7 +403,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         if ( blatResults.isEmpty() )
             return null;
 
-        return probeMapper.processBlatResults( db, blatResults, config );
+        return probeMapper.processBlatResults( goldenPathDb, blatResults, config );
     }
 
     private void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,

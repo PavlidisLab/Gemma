@@ -6,6 +6,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -20,7 +22,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.io.IOException;
@@ -660,8 +661,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             probe = compositeSequenceService.thaw( probe );
 
-            Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
-                    .processCompositeSequence( this.config, taxon, null, probe );
+            Map<String, Collection<BlatAssociation>> results;
+            try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+                results = this.arrayDesignProbeMapperService
+                        .processCompositeSequence( this.config, taxon, goldenPathDb, probe );
+            }
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
