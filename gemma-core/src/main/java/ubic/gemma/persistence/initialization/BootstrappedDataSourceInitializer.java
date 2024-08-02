@@ -12,15 +12,29 @@ import javax.sql.DataSource;
  */
 public class BootstrappedDataSourceInitializer extends DataSourceInitializer {
 
+    private HikariDataSource bootstrappedDataSource;
+
     @Override
     public void setDataSource( DataSource dataSource ) {
         Assert.isInstanceOf( HikariDataSource.class, dataSource, "No idea how to bootstrap a data source of type " + dataSource.getClass().getName() + "." );
         HikariDataSource hikariDataSource = ( HikariDataSource ) dataSource;
         HikariDataSource bootstrappedDataSource = new HikariDataSource();
         hikariDataSource.copyStateTo( bootstrappedDataSource );
-        bootstrappedDataSource.setJdbcUrl( stripPathComponent( bootstrappedDataSource.getJdbcUrl() ) );
+        bootstrappedDataSource.setJdbcUrl( stripPathComponent( hikariDataSource.getJdbcUrl() ) );
         bootstrappedDataSource.setCatalog( null );
+        this.bootstrappedDataSource = bootstrappedDataSource;
         super.setDataSource( bootstrappedDataSource );
+    }
+
+    @Override
+    public void destroy() {
+        try {
+            super.destroy();
+        } finally {
+            if ( bootstrappedDataSource != null ) {
+                bootstrappedDataSource.close();
+            }
+        }
     }
 
     String stripPathComponent( String jdbcUrl ) {
