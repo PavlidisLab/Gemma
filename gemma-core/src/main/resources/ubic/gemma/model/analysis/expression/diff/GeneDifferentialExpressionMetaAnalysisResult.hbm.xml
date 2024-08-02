@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping>
     <class name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"
            table="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT">
         <id name="id" type="java.lang.Long" unsaved-value="null">
