@@ -75,12 +75,14 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Load an analysis result set with its all of its associated results.
-     * @param queryGenesByResult query genes by results instead of result set, this is considerably faster if the
-     *                           results are sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
+     *
+     * @param includeFactorValuesInContrasts
+     * @param queryGenesByResult             query genes by results instead of result set, this is considerably faster if the
+     *                                       results are sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
      * @see #loadValueObject(Identifiable)
      * @see #loadResultToGenesMap(ExpressionAnalysisResultSet, boolean)
      */
-    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet, boolean queryGenesByResult );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet, boolean includeFactorValuesInContrasts, boolean queryGenesByResult );
 
     /**
      * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.

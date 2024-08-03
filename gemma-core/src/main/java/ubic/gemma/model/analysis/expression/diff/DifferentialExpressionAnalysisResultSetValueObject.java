@@ -56,12 +56,16 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      * Create an expression analysis result set VO with all its associated results.
      * <p>
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
+     * @param includeFactorValuesInContrasts include complete factorValue and secondFactorValue when serializing
+     *                                       {@link ContrastResultValueObject} if true, else only the {@code factorValueId}
+     *                                        and {@code secondFactorValueId} fields are populated. The latter approach
+     *                                        is more compact and the full factors can be retrieved via {@link #experimentalFactors}.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, List<Gene>> result2Genes ) {
         this( analysisResultSet );
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, false, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
                 .collect( Collectors.toList() );
     }
 

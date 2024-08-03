@@ -61,8 +61,10 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long subsetFactorId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `subsetFactorValueId`.")
     private FactorValueValueObject subsetFactorValue;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `subsetFactorValue`.")
     private Long subsetFactorValueId;
 
     public DifferentialExpressionAnalysisValueObject() {
@@ -89,9 +91,9 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
                 if ( Hibernate.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
                     this.subsetFactor = new ExperimentalFactorValueObject(
                             analysis.getSubsetFactorValue().getExperimentalFactor() );
-                } else {
-                    this.subsetFactorId = analysis.getSubsetFactorValue().getExperimentalFactor().getId();
                 }
+                // TODO: make this mutually exclusive with subsetFactor
+                this.subsetFactorId = analysis.getSubsetFactorValue().getExperimentalFactor().getId();
             } else {
                 this.subsetFactorValueId = analysis.getSubsetFactorValue().getId();
             }

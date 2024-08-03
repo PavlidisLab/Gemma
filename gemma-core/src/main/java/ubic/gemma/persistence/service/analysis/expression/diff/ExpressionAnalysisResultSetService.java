@@ -37,7 +37,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
-    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean queryByResult );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult );
 
     Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 

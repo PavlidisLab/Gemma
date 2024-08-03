@@ -490,8 +490,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity, boolean queryGenesByResult ) {
-        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity, queryGenesByResult ) );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity, boolean includeFactorValuesInContrasts, boolean queryGenesByResult ) {
+        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, includeFactorValuesInContrasts, loadResultToGenesMap( entity, queryGenesByResult ) );
         postProcessValueObjects( Collections.singletonList( r ) );
         return r;
     }

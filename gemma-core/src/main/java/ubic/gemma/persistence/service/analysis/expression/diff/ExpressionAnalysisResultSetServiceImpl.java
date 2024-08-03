@@ -84,8 +84,8 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean queryByResult ) {
-        return voDao.loadValueObjectWithResults( ears, queryByResult );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult ) {
+        return voDao.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, queryByResult );
     }
 
     @Override

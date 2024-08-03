@@ -2,19 +2,24 @@
 
 ### Update 2.8.1
 
-- add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet` to
-  make the payload slimmer since the factors can be looked up by ID in `experimentalFactors`
+- add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet`
+- when the query parameter `includeFactorValuesInContrasts` is set to `true` to make the payload slimmer since the
+- factors can be looked up by ID in `experimentalFactors`. It will default to `false` in the 2.9.0.
 - don't render the details of the experimental factor in `FactorValueValueObject` when it is rendered in the context of
   an `ExperimentalFactorValueObject`
 - rename `bioAssaySetId` to `experimentAnalyzedId` and `sourceExperiment` to `sourceExperimentId` in
   `DifferentialExpressionAnalysisValueObject`, previous names are deprecated
 - add `subsetFactorValueId` in `DifferentialExpressionAnalysisValueObject` and populate it when`subsetFactorValue`
   is not initialized
-- omit `subsetFactorId` if `subsetFactor` is rendered
 - omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
 - omit `charId` in `FactorValueValueObject`
 - omit `accessions`, `aliases` and `multifunctionalityRank` in `GeneValueObject` when not set
 - populate `baselineGroup` and `secondBaselineGroup` in `getResultSet()` for interaction and continuous factors
+
+#### Future breaking changes for 2.9.0
+
+In 2.9.0, `subsetFactorId` and `subsetFactor` in `DifferentialExpressionAnalysisValueObject` will become mutually
+exclusives.
 
 ### Update 2.8.0
 

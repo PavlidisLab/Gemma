@@ -1,6 +1,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -22,12 +23,16 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
     private Double coefficient;
     private Double logFoldChange;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `factorValue`.")
     private Long factorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `factorValueId`.")
     private FactorValueBasicValueObject factorValue;
+    @Schema(description = "This property is mutually exclusive with `secondFactorValue`.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long secondFactorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `secondFactorValueId`.")
     private FactorValueBasicValueObject secondFactorValue;
 
     public ContrastResultValueObject() {
