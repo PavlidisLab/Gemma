@@ -3,8 +3,11 @@
 ### Update 2.8.1
 
 - add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet`
-- when the query parameter `includeFactorValuesInContrasts` is set to `true` to make the payload slimmer since the
-- factors can be looked up by ID in `experimentalFactors`. It will default to `false` in the 2.9.0.
+  when the query parameter `includeFactorValuesInContrasts` is set to `true` to make the payload slimmer since the
+  factors can be looked up by ID in `experimentalFactors`. It will default to `false` in the 2.9.0.
+- add `taxonId` in `GeneValueObject` and a `includeTaxonInGenes` query parameter to `getResultSet`. When set to `true`,
+  taxa information will be omitted from individual genes; a `taxonId` field will be populated and a `taxa` collection
+  in `DifferentialExpressionAnalysisResultSetValueObject` will be available. It will default to `false` in the 2.9.0.
 - don't render the details of the experimental factor in `FactorValueValueObject` when it is rendered in the context of
   an `ExperimentalFactorValueObject`
 - rename `bioAssaySetId` to `experimentAnalyzedId` and `sourceExperiment` to `sourceExperimentId` in
@@ -14,12 +17,19 @@
 - omit `factorValuesUsedByExperimentalFactorId` in `DifferentialExpressionAnalysisValueObject` when not set
 - omit `charId` in `FactorValueValueObject`
 - omit `accessions`, `aliases` and `multifunctionalityRank` in `GeneValueObject` when not set
-- populate `baselineGroup` and `secondBaselineGroup` in `getResultSet()` for interaction and continuous factors
+- add `taxonId` in `GeneValueObject` and use it in `getResultSet` to avoid producing a full taxon for every single
+  result, taxa are made available in a `taxa` field in `DifferentialExpressionAnalysisResultSetValueObject`
+- populate `baselineGroup` and `secondBaselineGroup` in `getResultSet` for interaction and continuous factors
 
 #### Future breaking changes for 2.9.0
 
-In 2.9.0, `subsetFactorId` and `subsetFactor` in `DifferentialExpressionAnalysisValueObject` will become mutually
-exclusives.
+- `subsetFactorId` and `subsetFactor` in `DifferentialExpressionAnalysisValueObject` will become mutually exclusives.
+- `includeFactorValuesInContrasts` will default to `false` in `getResultSet` and as a result, `factorValue`
+  and `secondFactorValue` will be omitted from `ContrastResultValueObject` in `getResultSet`.
+- `includeTaxonInGenes` will default to `false` in `getResultSet` and as a result, `taxon` will no longer be populated
+  in genes
+
+Discussion related to these changes are available in https://github.com/PavlidisLab/Gemma/issues/1198.
 
 ### Update 2.8.0
 

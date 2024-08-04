@@ -21,16 +21,19 @@ package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -50,6 +53,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     /**
      * Gene aliases, sorted alphabetically.
      */
+    @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private SortedSet<String> aliases;
     /**
@@ -71,12 +75,14 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @JsonIgnore
     private Boolean isQuery = true;
+    @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Double multifunctionalityRank;
     @JsonIgnore
     private String name;
     private Integer ncbiId;
     private String ensemblId;
+    @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<DatabaseEntryValueObject> accessions;
     @JsonIgnore
@@ -105,8 +111,13 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Integer platformCount;
     @JsonIgnore
     private Double score; // This is for genes in gene sets might have a rank or a score associated with them.
+
+    // those are serialized manually for the REST API
     @Nullable
+    @JsonIgnore
     private TaxonValueObject taxon;
+    @JsonIgnore
+    private boolean includeTaxon = true;
 
     /**
      * Required when using the class as a spring bean.
@@ -120,8 +131,6 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     /**
-     * Aliases are not filled in.
-     *
      * @param gene gene
      */
     public GeneValueObject( Gene gene ) {
@@ -129,7 +138,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
-        if ( gene.getTaxon() != null && Hibernate.isInitialized( gene.getTaxon() ) ) {
+        if ( gene.getTaxon() != null ) {
             this.taxon = new TaxonValueObject( gene.getTaxon() );
         }
         this.name = gene.getName();
@@ -151,12 +160,20 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     /**
+     * @param includeTaxon include full taxon details in {@link #getTaxonForGemmaRest()}, otherwise only
+     *                     {@link #getTaxonIdForGemmaRest()} is filled
+     */
+    public GeneValueObject( Gene gene, boolean includeTaxon ) {
+        this( gene );
+        this.includeTaxon = includeTaxon;
+    }
+
+    /**
      * Copies constructor from other GeneValueObject
      *
      * @param otherBean, cannot be <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
-    @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
         super( otherBean );
         this.name = otherBean.name;
@@ -166,7 +183,14 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.description = otherBean.description;
         this.score = otherBean.score;
         this.taxon = otherBean.taxon;
-        this.aliases = null;
+        this.includeTaxon = otherBean.includeTaxon;
+        if ( otherBean.aliases != null ) {
+            this.aliases = new TreeSet<>( otherBean.aliases );
+        }
+        this.multifunctionalityRank = otherBean.multifunctionalityRank;
+        if ( otherBean.accessions != null ) {
+            this.accessions = new HashSet<>( otherBean.accessions );
+        }
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
@@ -227,6 +251,22 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     @GemmaWebOnly
     public Long getTaxonId() {
         return taxon == null ? null : taxon.getId();
+    }
+
+    @GemmaRestOnly
+    @JsonProperty("taxon")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `taxonId`.")
+    public TaxonValueObject getTaxonForGemmaRest() {
+        return includeTaxon ? taxon : null;
+    }
+
+    @GemmaRestOnly
+    @JsonProperty("taxonId")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `taxon`.")
+    public Long getTaxonIdForGemmaRest() {
+        return !includeTaxon && taxon != null ? taxon.getId() : null;
     }
 
     @GemmaWebOnly

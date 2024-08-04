@@ -5,12 +5,10 @@ import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +24,13 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject secondBaselineGroup;
+
+    /**
+     * When genes are included, this field is populated.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<TaxonValueObject> taxa;
 
     /**
      * Related analysis results.
@@ -61,11 +66,20 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      *                                        and {@code secondFactorValueId} fields are populated. The latter approach
      *                                        is more compact and the full factors can be retrieved via {@link #experimentalFactors}.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, List<Gene>> result2Genes, boolean includeTaxonInGenes ) {
         this( analysisResultSet );
+        if ( !includeTaxonInGenes ) {
+            // when taxon are not rendered in genes, they need to be enumerated somewhere in the payload
+            this.taxa = result2Genes.values().stream()
+                    .flatMap( List::stream )
+                    .map( Gene::getTaxon )
+                    .distinct()
+                    .map( TaxonValueObject::new )
+                    .collect( Collectors.toSet() );
+        }
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ), includeTaxonInGenes ) )
                 .collect( Collectors.toList() );
     }
 
@@ -102,6 +116,15 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     public void setSecondBaselineGroup( @Nullable FactorValueBasicValueObject secondBaselineGroup ) {
         this.secondBaselineGroup = secondBaselineGroup;
+    }
+
+    @Nullable
+    public Set<TaxonValueObject> getTaxa() {
+        return taxa;
+    }
+
+    public void setTaxa( @Nullable Set<TaxonValueObject> taxa ) {
+        this.taxa = taxa;
     }
 
     @Override

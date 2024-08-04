@@ -67,8 +67,8 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         }
     }
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValues, List<Gene> genes ) {
-        this( result, includeFactorValues );
-        this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValuesInContrasts, List<Gene> genes, boolean includeTaxonInGenes ) {
+        this( result, includeFactorValuesInContrasts );
+        this.genes = genes.stream().map( g -> new GeneValueObject( g, includeTaxonInGenes ) ).collect( Collectors.toList() );
     }
 }
