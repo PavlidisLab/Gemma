@@ -3,7 +3,7 @@ package ubic.gemma.persistence.initialization;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.util.Assert;
+import org.springframework.jdbc.datasource.AbstractDriverBasedDataSource;
 
 import javax.sql.DataSource;
 
@@ -26,7 +26,7 @@ public class BootstrappedDataSourceFactory implements FactoryBean<DataSource>, D
 
     @Override
     public Class<?> getObjectType() {
-        return HikariDataSource.class;
+        return this.dataSource.getClass();
     }
 
     @Override
@@ -40,13 +40,29 @@ public class BootstrappedDataSourceFactory implements FactoryBean<DataSource>, D
     }
 
     public static HikariDataSource createBootstrappedDataSource( DataSource dataSource ) {
-        Assert.isInstanceOf( HikariDataSource.class, dataSource,
-                "Don't know how to bootstrap a data source of type " + dataSource.getClass().getName() + "." );
-        HikariDataSource hikariDataSource = ( HikariDataSource ) dataSource;
+        if ( dataSource instanceof HikariDataSource ) {
+            return bootstrapHikariDataSource( ( HikariDataSource ) dataSource );
+        } else if ( dataSource instanceof AbstractDriverBasedDataSource ) {
+            return bootstrapDriverBasedDataSource( ( AbstractDriverBasedDataSource ) dataSource );
+        } else {
+            throw new IllegalArgumentException( "Don't know how to bootstrap a data source of type " + dataSource.getClass().getName() + "." );
+        }
+    }
+
+    private static HikariDataSource bootstrapHikariDataSource( HikariDataSource dataSource ) {
         HikariDataSource bootstrappedDataSource = new HikariDataSource();
-        hikariDataSource.copyStateTo( bootstrappedDataSource );
-        bootstrappedDataSource.setJdbcUrl( stripPathComponent( hikariDataSource.getJdbcUrl() ) );
+        dataSource.copyStateTo( bootstrappedDataSource );
+        bootstrappedDataSource.setJdbcUrl( stripPathComponent( dataSource.getJdbcUrl() ) );
         bootstrappedDataSource.setCatalog( null );
+        return bootstrappedDataSource;
+    }
+
+    private static HikariDataSource bootstrapDriverBasedDataSource( AbstractDriverBasedDataSource dataSource ) {
+        HikariDataSource bootstrappedDataSource = new HikariDataSource();
+        bootstrappedDataSource.setJdbcUrl( stripPathComponent( dataSource.getUrl() ) );
+        bootstrappedDataSource.setUsername( dataSource.getUsername() );
+        bootstrappedDataSource.setPassword( dataSource.getPassword() );
+        bootstrappedDataSource.setDataSourceProperties( dataSource.getConnectionProperties() );
         return bootstrappedDataSource;
     }
 

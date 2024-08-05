@@ -11,13 +11,14 @@ import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory;
 import ubic.gemma.persistence.initialization.CreateDatabasePopulator;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
 import ubic.gemma.persistence.initialization.InitialDataPopulator;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
+
+import static ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory.createBootstrappedDataSource;
 
 /**
  * This is exclusively available for the test database.
@@ -68,7 +69,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
             jdbcUrl = dataSource.toString();
         }
         promptConfirmationOrAbort( "The following data source will be initialized: " + jdbcUrl );
-        try ( HikariDataSource bootstrappedDataSource = BootstrappedDataSourceFactory.createBootstrappedDataSource( dataSource ) ) {
+        try ( HikariDataSource bootstrappedDataSource = createBootstrappedDataSource( dataSource ) ) {
             CreateDatabasePopulator cdb = new CreateDatabasePopulator( databaseName );
             cdb.setDropIfExists( true );
             DatabasePopulatorUtils.execute( cdb, bootstrappedDataSource );
