@@ -34,15 +34,15 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
@@ -57,6 +57,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
@@ -93,8 +95,6 @@ public class GeoBrowser {
     private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
     private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
 
-    private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-
     private static final XPathExpression characteristics;
     private static final XPathExpression source;
     private static final XPathExpression xaccession;
@@ -121,8 +121,6 @@ public class GeoBrowser {
     private static final String GEO_BROWSE_SUFFIX = "&display=";
 
     static {
-        GeoBrowser.docFactory.setIgnoringComments( true );
-        GeoBrowser.docFactory.setValidating( false );
         XPathFactory xFactory = XPathFactory.newInstance();
         XPath xpath = xFactory.newXPath();
         try {
@@ -832,7 +830,7 @@ public class GeoBrowser {
 
     private Document parseMiniMLDocument( URL url, int maxRetries, @Nullable IOExceptionWithRetry errorFromPreviousAttempt ) throws EmptyXmlDocumentException, IOException {
         try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
-            return GeoBrowser.docFactory.newDocumentBuilder().parse( is );
+            return createDocumentBuilder().parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
             if ( isCausedByAnEmptyXmlDocument( e ) ) {
                 throw new EmptyXmlDocumentException( e );

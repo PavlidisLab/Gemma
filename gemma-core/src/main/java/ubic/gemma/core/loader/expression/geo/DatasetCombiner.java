@@ -45,6 +45,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
  * two ways:
@@ -72,7 +74,6 @@ import java.util.regex.Pattern;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DatasetCombiner {
 
-    static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     @SuppressWarnings("Annotator")
     private static final String PUNCTUATION_REGEXP = "[()\\s-._]";
     /**
@@ -180,7 +181,7 @@ public class DatasetCombiner {
             XPathExpression xgds = xpath.compile(
                     "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
 
-            DocumentBuilder builder = DatasetCombiner.factory.newDocumentBuilder();
+            DocumentBuilder builder = createDocumentBuilder();
 
             /*
              * Bug 2690. There must be a better way.
