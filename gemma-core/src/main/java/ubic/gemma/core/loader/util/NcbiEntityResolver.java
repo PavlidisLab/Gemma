@@ -32,6 +32,7 @@ public class NcbiEntityResolver implements EntityResolver {
                 }
             }
         }
+        log.warn( String.format( "Could not find a schema for %s %s in the classpath.", publicId, systemId ) );
         return null;
     }
 }
