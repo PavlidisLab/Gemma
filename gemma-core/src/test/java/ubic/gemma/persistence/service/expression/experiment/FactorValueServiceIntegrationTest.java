@@ -19,21 +19,18 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author paul
@@ -68,17 +65,9 @@ public class FactorValueServiceIntegrationTest extends BaseSpringContextTest {
         FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues()
                 .iterator().next();
 
-        // attach the FV to all the samples
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            bm.getFactorValues().add( fv );
-            bioMaterialService.update( bm );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
-            BioMaterial bm = ba.getSampleUsed();
-            assertTrue( bm.getFactorValues().contains( fv ) );
+        // ensure that the FV is being used
+        assertThat( ee.getBioAssays() ).anySatisfy( ba -> {
+            assertThat( ba.getSampleUsed().getFactorValues() ).contains( fv );
         } );
 
         // delete the FV
@@ -87,9 +76,9 @@ public class FactorValueServiceIntegrationTest extends BaseSpringContextTest {
         assertNull( factorValueService.load( id ) );
 
         ee = expressionExperimentService.thawLite( ee );
-        Assertions.assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
+        assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
             BioMaterial bm = ba.getSampleUsed();
-            assertFalse( bm.getFactorValues().contains( fv ) );
+            assertThat( bm.getFactorValues() ).doesNotContain( fv );
         } );
     }
 

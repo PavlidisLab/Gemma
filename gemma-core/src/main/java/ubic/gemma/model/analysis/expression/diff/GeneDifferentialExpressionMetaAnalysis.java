@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 
 import java.util.Collection;

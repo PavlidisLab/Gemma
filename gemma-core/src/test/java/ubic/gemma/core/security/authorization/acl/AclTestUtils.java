@@ -2,8 +2,8 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;

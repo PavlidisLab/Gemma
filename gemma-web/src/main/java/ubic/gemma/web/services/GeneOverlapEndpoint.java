@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
+
 /**
  * given a query gene id &amp; collection of target gene ids will determine the overlapping Go terms (intersection) between
  * each pair of Query Gene and Target Gene. The actual overlapping go terms will be returned as a single string
@@ -123,7 +125,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
             // get the labels and store them
             Collection<String> goTerms = new HashSet<String>();
             for ( OntologyTerm ot : gene2Ot.get( geneId ) ) {
-                goTerms.add( GeneOntologyServiceImpl.asRegularGoId( ot ) );
+                goTerms.add( asRegularGoId( ot ) );
             }
 
             String elementString1 = geneId.toString();

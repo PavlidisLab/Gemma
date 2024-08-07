@@ -20,6 +20,7 @@ package ubic.gemma.model.association.phenotype;
 
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -35,7 +36,7 @@ import java.util.Set;
  * @author Paul
  */
 @Deprecated
-public abstract class PhenotypeAssociation extends AbstractAuditable implements gemma.gsec.model.Securable {
+public abstract class PhenotypeAssociation extends AbstractAuditable implements Securable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

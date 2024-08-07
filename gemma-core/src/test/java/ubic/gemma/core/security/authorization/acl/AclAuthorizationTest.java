@@ -20,7 +20,7 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;

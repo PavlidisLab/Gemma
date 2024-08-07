@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.Gene;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
+
 /**
  * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their corresponding
  * descriptions.
@@ -107,7 +109,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
                     e1.appendChild( document.createTextNode( gene.getId().toString() ) );
                     responseElement.appendChild( e1 );
 
-                    String goTerm = GeneOntologyServiceImpl.asRegularGoId( ot );
+                    String goTerm = asRegularGoId( ot );
                     Element e2 = document.createElement( "go_id" );
                     e2.appendChild( document.createTextNode( goTerm ) );
                     responseElement.appendChild( e2 );

@@ -42,10 +42,10 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -223,7 +223,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
             BindException errors ) {
 
-        command.setQuery( StringUtils.trim( command.getQuery().trim() ) );
+        command.setQuery( StringUtils.strip( command.getQuery() ) );
 
         ModelAndView mav = new ModelAndView( "generalSearch" );
 

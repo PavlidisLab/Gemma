@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.model.SecureValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 

@@ -161,4 +161,16 @@ public interface ExpressionExperimentSetService
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperimentSet thaw( ExpressionExperimentSet set );
+
+    /**
+     * Remove an experiment from all sets it is in.
+     * <p>
+     * Using this allows one to bypass the requirement of "owning edit rights" on the set as long as the current user
+     * has the right to edit the experiment itself.
+     * <p>
+     * If a set ends-up empty as a result, it is removed as well.
+     * @return the number of sets this experiment was removed from
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    int removeFromSets( BioAssaySet bas );
 }

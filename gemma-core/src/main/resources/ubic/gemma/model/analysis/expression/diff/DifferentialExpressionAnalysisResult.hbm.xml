@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-<hibernate-mapping>
     <class name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            table="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT" mutable="false">
         <id name="id" type="java.lang.Long" unsaved-value="null">
@@ -14,7 +14,8 @@
             <column name="PVALUE" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="correctedPvalue" type="java.lang.Double">
-            <column name="CORRECTED_PVALUE" not-null="false" unique="false" sql-type="DOUBLE"/>
+            <column name="CORRECTED_PVALUE" not-null="false" unique="false" sql-type="DOUBLE"
+                    index="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_CORRECTED_PVALUE"/>
         </property>
         <property name="rank" type="java.lang.Double">
             <column name="RANK" not-null="false" unique="false" sql-type="DOUBLE"/>

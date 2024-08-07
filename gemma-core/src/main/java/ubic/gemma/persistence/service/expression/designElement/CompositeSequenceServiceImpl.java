@@ -153,7 +153,7 @@ public class CompositeSequenceServiceImpl
         for ( ArrayDesign arrayDesign : arrayDesigns ) {
             for ( String obj : compositeSequenceNames ) {
                 String name = obj;
-                name = StringUtils.trim( name );
+                name = StringUtils.strip( name );
                 AbstractService.log.debug( "entered: " + name );
                 CompositeSequence cs = this.findByName( arrayDesign, name );
                 if ( cs != null && !compositeSequencesMap.containsKey( cs.getName() ) ) {

@@ -5,11 +5,10 @@ import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.TaxonValueObject;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -19,9 +18,19 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
 
     private DifferentialExpressionAnalysisValueObject analysis;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject baselineGroup;
+    @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private FactorValueBasicValueObject secondBaselineGroup;
+
+    /**
+     * When genes are included, this field is populated.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<TaxonValueObject> taxa;
 
     /**
      * Related analysis results.
@@ -52,12 +61,25 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      * Create an expression analysis result set VO with all its associated results.
      * <p>
      * Note: this constructor assumes that {@link ExpressionAnalysisResultSet#getResults()} has already been initialized.
+     * @param includeFactorValuesInContrasts include complete factorValue and secondFactorValue when serializing
+     *                                       {@link ContrastResultValueObject} if true, else only the {@code factorValueId}
+     *                                        and {@code secondFactorValueId} fields are populated. The latter approach
+     *                                        is more compact and the full factors can be retrieved via {@link #experimentalFactors}.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> result2Genes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, List<Gene>> result2Genes, boolean includeTaxonInGenes ) {
         this( analysisResultSet );
+        if ( !includeTaxonInGenes ) {
+            // when taxon are not rendered in genes, they need to be enumerated somewhere in the payload
+            this.taxa = result2Genes.values().stream()
+                    .flatMap( List::stream )
+                    .map( Gene::getTaxon )
+                    .distinct()
+                    .map( TaxonValueObject::new )
+                    .collect( Collectors.toSet() );
+        }
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ) ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ), includeTaxonInGenes ) )
                 .collect( Collectors.toList() );
     }
 
@@ -77,20 +99,32 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         this.experimentalFactors = experimentalFactors;
     }
 
+    @Nullable
     public FactorValueBasicValueObject getBaselineGroup() {
         return baselineGroup;
     }
 
-    public void setBaselineGroup( FactorValueBasicValueObject baselineGroup ) {
+    public void setBaselineGroup( @Nullable FactorValueBasicValueObject baselineGroup ) {
         this.baselineGroup = baselineGroup;
     }
 
+    @Nullable
+    @SuppressWarnings("unused")
     public FactorValueBasicValueObject getSecondBaselineGroup() {
         return secondBaselineGroup;
     }
 
-    public void setSecondBaselineGroup( FactorValueBasicValueObject secondBaselineGroup ) {
+    public void setSecondBaselineGroup( @Nullable FactorValueBasicValueObject secondBaselineGroup ) {
         this.secondBaselineGroup = secondBaselineGroup;
+    }
+
+    @Nullable
+    public Set<TaxonValueObject> getTaxa() {
+        return taxa;
+    }
+
+    public void setTaxa( @Nullable Set<TaxonValueObject> taxa ) {
+        this.taxa = taxa;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Query;
 import org.hibernate.dialect.function.SQLFunction;

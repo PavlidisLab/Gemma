@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
     <class name="ubic.gemma.model.analysis.expression.diff.ContrastResult" table="CONTRAST_RESULT" mutable="false"
     >
         <id name="id" type="java.lang.Long" unsaved-value="null">
@@ -23,11 +21,11 @@
             <column name="LOG_FOLD_CHANGE" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <!-- assumed available in ContrastResultValueObject, and almost always needed -->
-        <many-to-one name="factorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="false"
+        <many-to-one name="factorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="proxy"
                      fetch="select">
             <column name="FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="secondFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="false"
+        <many-to-one name="secondFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue" lazy="proxy"
                      fetch="select">
             <column name="SECOND_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

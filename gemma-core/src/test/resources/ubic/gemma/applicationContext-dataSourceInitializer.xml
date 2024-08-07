@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+       profile="test">
+    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer">
+        <property name="dataSource" >
+            <bean class="ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory">
+                <constructor-arg ref="dataSource"/>
+            </bean>
+        </property>
+        <property name="databasePopulator">
+            <bean class="ubic.gemma.persistence.initialization.CreateDatabasePopulator">
+                <constructor-arg value="${gemma.testdb.name}"/>
+                <property name="dropIfExists" value="true"/>
+            </bean>
+        </property>
+        <property name="enabled" value="${gemma.testdb.initialize}"/>
+    </bean>
+    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="databasePopulator">
+            <bean class="org.springframework.jdbc.datasource.init.CompositeDatabasePopulator">
+                <property name="populators">
+                    <list>
+                        <bean class="ubic.gemma.persistence.initialization.DatabaseSchemaPopulator">
+                            <!-- the ampersand refers to the LocalSessionFactoryBean -->
+                            <constructor-arg ref="&amp;sessionFactory"/>
+                            <constructor-arg value="mysql"/>
+                        </bean>
+                        <bean class="ubic.gemma.persistence.initialization.InitialDataPopulator">
+                            <constructor-arg value="false"/>
+                        </bean>
+                    </list>
+                </property>
+            </bean>
+        </property>
+        <property name="enabled" value="${gemma.testdb.initialize}"/>
+    </bean>
+</beans>

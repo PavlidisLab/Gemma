@@ -37,7 +37,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
-    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes );
 
     Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
@@ -45,7 +45,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Set<ExpressionAnalysisResultSet> resultSets );
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
-    Map<Long, Baseline> getBaselinesByIds( Collection<Long> rsIds );
+    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues );
 }

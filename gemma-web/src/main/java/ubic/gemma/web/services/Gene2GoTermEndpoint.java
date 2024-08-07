@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
+
 /**
  * Given a collection of Gene IDs, will return a collection of Gene Ontology URIs for each gene.
  * 
@@ -109,7 +111,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
             Collection<String> goTerms = new HashSet<String>();
             if ( terms != null ) {
                 for ( OntologyTerm ot : terms ) {
-                    goTerms.add( GeneOntologyServiceImpl.asRegularGoId( ot ) );
+                    goTerms.add( asRegularGoId( ot ) );
                 }
             } else
                 goTerms.add( "NaN" );

@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -84,24 +85,23 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     @Override
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
-
-        Taxon tax = taxonService.load( taxonId );
-
-        if ( !StringUtils.isBlank( goId ) && tax != null && goId.toUpperCase().startsWith( "GO" ) ) {
-
-            Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
-            if ( results != null ) {
-                results = geneService.thawLite( results );
-                return geneService.loadValueObjects( results );
-            }
+        if ( StringUtils.isBlank( goId ) || !goId.toUpperCase().startsWith( "GO" ) ) {
+            return Collections.emptySet();
         }
-
+        Taxon tax = taxonService.load( taxonId );
+        if ( tax == null ) {
+            return Collections.emptySet();
+        }
+        Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
+        if ( results != null ) {
+            results = geneService.thawLite( results );
+            return geneService.loadValueObjects( results );
+        }
         return new HashSet<>();
-
     }
 
     @Override
-    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) throws SearchException {
+    public Collection<Gene> getGOGroupGenes( String goQuery, @Nullable Taxon taxon ) throws SearchException {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();

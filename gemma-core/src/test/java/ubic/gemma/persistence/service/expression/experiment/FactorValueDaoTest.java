@@ -6,18 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 
 import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
@@ -146,6 +148,21 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         bm = ( BioMaterial ) sessionFactory.getCurrentSession().get( BioMaterial.class, bm.getId() );
         assertFalse( ef.getFactorValues().contains( fv ) );
         assertFalse( bm.getFactorValues().contains( fv ) );
+    }
+
+    @Test
+    public void createFactorWithMeasurementThatDiffersFromValue() {
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setType( FactorType.CONTINUOUS );
+        FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( ef );
+        fv.setValue( "2" );
+        Measurement m = new Measurement();
+        m.setValue( "3" );
+        fv.setMeasurement( m );
+        assertThatThrownBy( () -> factorValueDao.create( fv ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "If provided, the value of the factor must match the measurement value." );
     }
 
     private FactorValue createFactorValue() {

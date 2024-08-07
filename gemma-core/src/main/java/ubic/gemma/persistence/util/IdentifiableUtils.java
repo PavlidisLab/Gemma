@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.util;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.*;
@@ -33,5 +34,16 @@ public class IdentifiableUtils {
      */
     public static <T, K extends Identifiable, U> Collector<T, ?, Map<K, U>> toIdentifiableMap( Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U> valueMapper ) {
         return Collectors.toMap( keyMapper, valueMapper, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Identifiable::getId ) ) );
+    }
+
+    /**
+     * Converts an identifiable to string, avoiding its initialization of it is a proxy.
+     */
+    public static <T extends Identifiable> String toString( T identifiable, Class<T> clazz ) {
+        if ( Hibernate.isInitialized( identifiable ) ) {
+            return Objects.toString( identifiable );
+        } else {
+            return clazz.getSimpleName() + ( identifiable.getId() != null ? " Id=" + identifiable.getId() : "" );
+        }
     }
 }

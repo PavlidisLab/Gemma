@@ -2,6 +2,6 @@
  *
  */
 @ParametersAreNonnullByDefault
-package ubic.gemma.persistence.service.auditAndSecurity.curation;
+package ubic.gemma.persistence.initialization;
 
 import javax.annotation.ParametersAreNonnullByDefault;

@@ -28,12 +28,13 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.util.*;
+
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
 
 /**
  * @author meeta
@@ -707,13 +708,8 @@ public class GoMetricImpl implements GoMetric {
     }
 
     private boolean isRoot( OntologyTerm term ) {
-
-        String id = GeneOntologyServiceImpl.asRegularGoId( term );
-        boolean root = false;
-        if ( ( id.equalsIgnoreCase( "GO:0008150" ) ) || ( id.equalsIgnoreCase( "GO:0003674" ) ) || ( id
-                .equalsIgnoreCase( "GO:0005575" ) ) )
-            root = true;
-        return root;
+        String id = asRegularGoId( term );
+        return "GO:0008150".equalsIgnoreCase( id ) || "GO:0003674".equalsIgnoreCase( id ) || "GO:0005575".equalsIgnoreCase( id );
     }
 
 }

@@ -78,8 +78,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
-    private OutlierDetectionService outlierDetectionService;
-    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
     private GeeqService geeqService;
@@ -305,34 +303,5 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             vecs = this.processedExpressionDataVectorService.getProcessedDataVectorsAndThaw( ee );
         }
         return vecs;
-    }
-
-    @SuppressWarnings("unused")
-    private void checkOutliers( ExpressionExperiment ee ) {
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        if ( !outliers.isEmpty() ) {
-            Collection<OutlierDetails> knownOutliers = this.getAlreadyKnownOutliers( ee );
-            Collection<OutlierDetails> unknownOutliers = new LinkedList<>();
-
-            for ( OutlierDetails od : outliers ) {
-                if ( !knownOutliers.contains( od ) ) {
-                    unknownOutliers.add( od );
-                }
-            }
-
-            if ( !unknownOutliers.isEmpty() ) {
-                String newline = System.lineSeparator();
-
-                StringBuilder newOutliersString = new StringBuilder();
-
-                for ( OutlierDetails od : unknownOutliers ) {
-                    newOutliersString.append( od.getBioAssay().toString() ).append( newline );
-                }
-
-                throw new PreprocessingException( ee,
-                        String.format( "Could not be batch-corrected because new outliers were identified. Please remove the outliers and try again.%s Newly detected outliers: %s%s",
-                                newline, newline, newOutliersString ) );
-            }
-        }
     }
 }

@@ -26,9 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
-import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.goldenpath.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -312,44 +312,44 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
             Map<BioSequence, Collection<BlatResult>> results ) {
 
-        GoldenPathQuery gpq = new GoldenPathQuery( taxon );
+        try ( GoldenPathQuery gpq = new GoldenPathQuery( taxon ) ) {
+            Collection<BioSequence> needBlat = new HashSet<>();
+            int count = 0;
+            int totalFound = 0;
+            for ( BioSequence sequence : sequencesToBlat ) {
+                boolean found = false;
+                if ( sequence.getSequenceDatabaseEntry() != null ) {
+                    Collection<BlatResult> brs = gpq.findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
 
-        Collection<BioSequence> needBlat = new HashSet<>();
-        int count = 0;
-        int totalFound = 0;
-        for ( BioSequence sequence : sequencesToBlat ) {
-            boolean found = false;
-            if ( sequence.getSequenceDatabaseEntry() != null ) {
-                Collection<BlatResult> brs = gpq.findAlignments( sequence.getSequenceDatabaseEntry().getAccession() );
-
-                if ( brs != null && brs.size() > 0 ) {
-                    for ( BlatResult result : brs ) {
-                        this.copyLengthInformation( sequence, result );
-                        result.setQuerySequence( sequence );
+                    if ( brs != null && brs.size() > 0 ) {
+                        for ( BlatResult result : brs ) {
+                            this.copyLengthInformation( sequence, result );
+                            result.setQuerySequence( sequence );
+                        }
+                        results.put( sequence, brs );
+                        found = true;
+                        totalFound++;
                     }
-                    results.put( sequence, brs );
-                    found = true;
-                    totalFound++;
                 }
+
+                if ( ++count % 1000 == 0 && totalFound > 0 ) {
+                    ArrayDesignSequenceAlignmentServiceImpl.log
+                            .info( "Alignments in Golden Path database for " + totalFound + "/" + count
+                                    + " checked so far." );
+                }
+
+                if ( !found ) {
+                    needBlat.add( sequence );
+                }
+
             }
 
-            if ( ++count % 1000 == 0 && totalFound > 0 ) {
+            if ( totalFound > 0 ) {
                 ArrayDesignSequenceAlignmentServiceImpl.log
-                        .info( "Alignments in Golden Path database for " + totalFound + "/" + count
-                                + " checked so far." );
+                        .info( "Found " + totalFound + "/" + count + " alignments in Golden Path database" );
             }
-
-            if ( !found ) {
-                needBlat.add( sequence );
-            }
-
+            return needBlat;
         }
-
-        if ( totalFound > 0 ) {
-            ArrayDesignSequenceAlignmentServiceImpl.log
-                    .info( "Found " + totalFound + "/" + count + " alignments in Golden Path database" );
-        }
-        return needBlat;
     }
 
     /**

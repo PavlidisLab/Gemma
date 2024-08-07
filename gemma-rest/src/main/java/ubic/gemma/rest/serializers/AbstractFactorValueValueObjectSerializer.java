@@ -1,9 +1,11 @@
 package ubic.gemma.rest.serializers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import lombok.SneakyThrows;
 import ubic.gemma.core.ontology.FactorValueOntologyServiceImpl;
+import ubic.gemma.core.ontology.FactorValueOntologyUtils;
+import ubic.gemma.model.expression.experiment.AbstractFactorValueValueObject;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
 import java.io.IOException;
@@ -17,12 +19,36 @@ import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitStatements;
  * <p>
  * See {@link FactorValueOntologyServiceImpl} for the logic related to how URIs are generated.
  */
-public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSerializer<T> {
+public abstract class AbstractFactorValueValueObjectSerializer<T extends AbstractFactorValueValueObject> extends StdSerializer<T> {
     protected AbstractFactorValueValueObjectSerializer( Class<T> t ) {
         super( t );
     }
 
-    protected void writeCharacteristics( Long factorValueId, Collection<StatementValueObject> cvos, JsonGenerator jsonGenerator ) throws IOException {
+    @Override
+    public void serialize( T factorValueValueObject, JsonGenerator jsonGenerator, SerializerProvider serializerProvider ) throws IOException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeObjectField( "id", factorValueValueObject.getId() );
+        jsonGenerator.writeStringField( "ontologyId", FactorValueOntologyUtils.getUri( factorValueValueObject.getId() ) );
+        if ( factorValueValueObject.getExperimentalFactorId() != null ) {
+            jsonGenerator.writeObjectField( "experimentalFactorId", factorValueValueObject.getExperimentalFactorId() );
+        }
+        if ( factorValueValueObject.getExperimentalFactorCategory() != null ) {
+            jsonGenerator.writeObjectField( "experimentalFactorCategory", factorValueValueObject.getExperimentalFactorCategory() );
+        }
+        serializeInternal( factorValueValueObject, jsonGenerator, serializerProvider );
+        jsonGenerator.writeBooleanField( "isMeasurement", factorValueValueObject.isMeasurement() );
+        if ( factorValueValueObject.getMeasurement() != null ) {
+            jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurement() );
+        }
+        writeCharacteristics( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
+        writeStatements( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
+        jsonGenerator.writeStringField( "summary", factorValueValueObject.getSummary() );
+        jsonGenerator.writeEndObject();
+    }
+
+    protected abstract void serializeInternal( T t, JsonGenerator jsonGenerator, SerializerProvider serializerProvider ) throws IOException;
+
+    private void writeCharacteristics( Long factorValueId, Collection<StatementValueObject> cvos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "characteristics" );
         visitCharacteristics( factorValueId, cvos, ( cvo, valueId ) -> {
             writeCharacteristic( cvo.getId(), cvo.getCategory(), cvo.getCategoryUri(), valueId, cvo.getSubject(), cvo.getSubjectUri(), jsonGenerator );
@@ -30,7 +56,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSer
         jsonGenerator.writeEndArray();
     }
 
-    protected void writeStatements( Long factorValueId, Collection<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
+    private void writeStatements( Long factorValueId, Collection<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "statements" );
         visitStatements( factorValueId, svos, ( svo, assignedIds ) -> {
             if ( assignedIds.getObjectId() != null ) {
@@ -43,8 +69,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T> extends StdSer
         jsonGenerator.writeEndArray();
     }
 
-    @SneakyThrows
-    private void writeCharacteristic( Long id, String category, String categoryUri, String valueId, String value, String valueUri, JsonGenerator jsonGenerator ) {
+    private void writeCharacteristic( Long id, String category, String categoryUri, String valueId, String value, String valueUri, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeStringField( "category", category );

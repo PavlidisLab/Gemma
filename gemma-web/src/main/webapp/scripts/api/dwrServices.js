@@ -428,6 +428,11 @@ ExperimentalDesignController.deleteFactorValues = function( p0, p1, callback ) {
     dwr.engine._execute( ExperimentalDesignController._path, 'ExperimentalDesignController', 'deleteFactorValues', p0,
         p1, callback );
 };
+ExperimentalDesignController.duplicateFactorValue = function( p0, p1, callback ) {
+    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ExperimentalDesignController/duplicateFactorValue" );
+    dwr.engine._execute( ExperimentalDesignController._path, 'ExperimentalDesignController', 'duplicateFactorValue', p0,
+        p1, callback );
+};
 ExperimentalDesignController.getFactorValuesWithCharacteristics = function( p0, callback ) {
     dwr.engine._execute( ExperimentalDesignController._path, 'ExperimentalDesignController',
         'getFactorValuesWithCharacteristics', p0, callback );

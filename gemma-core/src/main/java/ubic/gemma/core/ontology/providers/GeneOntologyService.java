@@ -74,13 +74,17 @@ public interface GeneOntologyService extends OntologyService {
     Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf );
 
     /**
-     * @param  taxon taxon
-     * @param  goId  go id
+     * Find genes for a given of GO term.
      * @return Collection of all genes in the given taxon that are annotated with the given id, including its
      *         child terms in the hierarchy, or null if the GO term is not found
      */
-    @Nullable
-    Collection<Gene> getGenes( String goId, Taxon taxon );
+    Collection<Gene> getGenes( OntologyTerm goTerm, @Nullable Taxon taxon );
+
+    /**
+     * Find genes for a given GO term by GO ID.
+     * @see #getGenes(OntologyTerm, Taxon)
+     */
+    Collection<Gene> getGenes( String goId, @Nullable Taxon taxon );
 
     /**
      * @param  gene Take a gene and return a set of all GO terms including the parents of each GO term

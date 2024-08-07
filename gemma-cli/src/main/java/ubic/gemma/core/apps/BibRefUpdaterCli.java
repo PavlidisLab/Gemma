@@ -22,11 +22,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.RandomUtils;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import org.apache.commons.lang.math.RandomUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,7 +106,7 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
             } catch ( Exception e ) {
                 log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
             }
-            Thread.sleep( RandomUtils.nextInt( 0, 1000 ) );
+            Thread.sleep( RandomUtils.nextInt( 1000 ) );
         }
     }
 

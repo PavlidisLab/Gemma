@@ -481,11 +481,7 @@ public class GeoConverterImpl implements GeoConverter {
             // find the matching biomaterial(s) in the expression experiment.
             for ( BioAssay bioAssay : expExp.getBioAssays() ) {
                 if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
-                    BioMaterial material = bioAssay.getSampleUsed();
-                    if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                        GeoConverterImpl.log.debug( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to " + material );
-                    }
-                    material.getFactorValues().add( factorValue );
+                    addFactorValueToBioMaterial( bioAssay.getSampleUsed(), factorValue );
                 }
 
             }
@@ -493,21 +489,21 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    /**
-     * @param  bioMaterial        BA
-     * @param  experimentalFactor exp factor
-     * @return true if the biomaterial already has a factorvalue for the given experimentalFactor;
-     *                            false otherwise.
-     */
-    private boolean alreadyHasFactorValueForFactor( BioMaterial bioMaterial, ExperimentalFactor experimentalFactor ) {
+    private void addFactorValueToBioMaterial( BioMaterial bioMaterial, FactorValue matchingFactorValue ) {
+        ExperimentalFactor experimentalFactor = matchingFactorValue.getExperimentalFactor();
         for ( FactorValue fv : bioMaterial.getFactorValues() ) {
             ExperimentalFactor existingEf = fv.getExperimentalFactor();
             // This is a weak form of 'equals' - we just check the name.
             if ( existingEf.getName().equals( experimentalFactor.getName() ) ) {
-                return true;
+                GeoConverterImpl.log.warn( String.format( "%s already has a factor value for %s: %s, ignoring %s.",
+                        bioMaterial, matchingFactorValue.getExperimentalFactor(), fv, matchingFactorValue ) );
+                return;
             }
         }
-        return false;
+        if ( GeoConverterImpl.log.isDebugEnabled() ) {
+            GeoConverterImpl.log.debug( "Adding " + matchingFactorValue.getExperimentalFactor() + " : " + matchingFactorValue + " to " + bioMaterial );
+        }
+        bioMaterial.getFactorValues().add( matchingFactorValue );
     }
 
     /**
@@ -1692,20 +1688,20 @@ public class GeoConverterImpl implements GeoConverter {
 
         // Taxon lastTaxon = null;
 
-        if ( !this.skipDataVectors ) {
-            for ( GeoPlatform platform : sample.getPlatforms() ) {
-                ArrayDesign arrayDesign;
-                if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
-                    arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
-                } else {
-                    // platform not exist yet
-                    arrayDesign = this.convertPlatform( platform );
-                }
-
-                bioAssay.setArrayDesignUsed( arrayDesign );
-
+        //    if ( !this.skipDataVectors ) { // this is commented out to allow updating of the originalPlatform via GeoService.
+        for ( GeoPlatform platform : sample.getPlatforms() ) {
+            ArrayDesign arrayDesign;
+            if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
+                arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
+            } else {
+                // platform not exist yet
+                arrayDesign = this.convertPlatform( platform );
             }
+
+            bioAssay.setArrayDesignUsed( arrayDesign );
+
         }
+        //  }
 
         return bioAssay;
     }
@@ -2874,7 +2870,7 @@ public class GeoConverterImpl implements GeoConverter {
         FactorValue convertVariableToFactorValue = this.convertReplicationToFactorValue( replication );
         FactorValue matchingFactorValue = this.findMatchingExperimentalFactorValue( experimentalFactors, convertVariableToFactorValue );
         if ( matchingFactorValue != null ) {
-            bioMaterial.getFactorValues().add( matchingFactorValue );
+            addFactorValueToBioMaterial( bioMaterial, matchingFactorValue );
         } else {
             throw new IllegalStateException( "Could not find matching factor value for " + replication + " in experimental design for sample " + bioMaterial );
         }
@@ -2909,13 +2905,7 @@ public class GeoConverterImpl implements GeoConverter {
             throw new IllegalStateException( "Could not find matching factor value for " + variable + " in experimental design for sample " + bioMaterial );
         }
 
-        // make sure we don't put the factor value on more than once.
-        if ( this.alreadyHasFactorValueForFactor( bioMaterial, matchingFactorValue.getExperimentalFactor() ) ) {
-            return;
-        }
-
-        bioMaterial.getFactorValues().add( matchingFactorValue );
-
+        addFactorValueToBioMaterial( bioMaterial, matchingFactorValue );
     }
 
     /*
@@ -2980,5 +2970,4 @@ public class GeoConverterImpl implements GeoConverter {
         }
         return characteristic;
     }
-
 }

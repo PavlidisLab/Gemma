@@ -96,7 +96,7 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
 
     @Override
     @Transactional(readOnly = true)
-    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
+    public boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
         return this.coexpressionAnalysisDao.hasCoexpCorrelationDistribution( ee );
     }
 

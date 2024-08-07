@@ -240,7 +240,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
             throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
         }
         for ( i = 0; i < fields.length; i++ )
-            fields[i] = StringUtils.trim( fields[i] );
+            fields[i] = StringUtils.strip( fields[i] );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 

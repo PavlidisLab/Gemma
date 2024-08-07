@@ -18,3 +18,5 @@ http://gemma.msl.ubc.ca/ont/TGEMO_00169	positive for product of gene
 http://gemma.msl.ubc.ca/ont/TGEMO_00170	negative for product of gene
 http://gemma.msl.ubc.ca/ont/TGEMO_00171	induced by
 http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to
+http://gemma.msl.ubc.ca/ont/TGEMO_00202	sampled after
+http://gemma.msl.ubc.ca/ont/TGEMO_00201	has child with disease

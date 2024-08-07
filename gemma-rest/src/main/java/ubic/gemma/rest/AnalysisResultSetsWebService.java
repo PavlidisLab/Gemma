@@ -173,10 +173,19 @@ public class AnalysisResultSetsWebService {
             @QueryParam("threshold") Double threshold,
             @QueryParam("offset") OffsetArg offsetArg,
             @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Include complete factor values in contrasts instead of only populating `factorValueId` and `secondFactorValueId`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeFactorValuesInContrasts") Boolean includeFactorValuesInContrasts,
+            @Parameter(description = "Include complete taxon in genes instead of only populating `taxonId`. When this is set to true, a `taxa` collection will be included in `DifferentialExpressionAnalysisResultSetValueObject`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeTaxonInGenes") Boolean includeTaxonInGenes,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults,
             @Context HttpHeaders headers ) {
         MediaType acceptedMediaType = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_Q9_TYPE );
         if ( acceptedMediaType.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
+            // TODO: those should default to false in 2.9.0, see https://github.com/PavlidisLab/Gemma/issues/1198
+            if ( includeFactorValuesInContrasts == null ) {
+                includeFactorValuesInContrasts = true;
+            }
+            if ( includeTaxonInGenes == null ) {
+                includeTaxonInGenes = true;
+            }
             if ( offsetArg != null || limitArg != null || threshold != null ) {
                 if ( excludeResults ) {
                     throw new BadRequestException( "The excludeResults parameter cannot be used with offset/limit or threshold parameters." );
@@ -192,16 +201,22 @@ public class AnalysisResultSetsWebService {
                     if ( threshold < 0.0 || threshold > 1.0 ) {
                         throw new BadRequestException( "The threshold must be between 0 and 1." );
                     }
-                    return getResultSetAsJson( analysisResultSet, threshold, offset, limit );
+                    return getResultSetAsJson( analysisResultSet, includeFactorValuesInContrasts, includeTaxonInGenes, threshold, offset, limit );
                 } else {
-                    return getResultSetAsJson( analysisResultSet, offset, limit );
+                    return getResultSetAsJson( analysisResultSet, includeFactorValuesInContrasts, includeTaxonInGenes, offset, limit );
                 }
             } else {
-                return getResultSetAsJson( analysisResultSet, excludeResults );
+                return getResultSetAsJson( analysisResultSet, includeFactorValuesInContrasts, includeTaxonInGenes, excludeResults );
             }
         } else {
             if ( offsetArg != null || limitArg != null ) {
                 throw new BadRequestException( "The offset/limit parameters cannot be used with the TSV representation." );
+            }
+            if ( includeFactorValuesInContrasts != null ) {
+                throw new BadRequestException( "The includeFactorValuesInContrasts parameter cannot be used with the TSV representation." );
+            }
+            if ( includeTaxonInGenes != null ) {
+                throw new BadRequestException( "The includeTaxonInGenes parameter cannot be used with the TSV representation." );
             }
             if ( excludeResults ) {
                 throw new BadRequestException( "The excludeResults parameter cannot be used with the TSV representation." );
@@ -213,7 +228,7 @@ public class AnalysisResultSetsWebService {
         }
     }
 
-    private ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, boolean excludeResults ) {
+    private ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, boolean includeFactorValuesInContrasts, boolean includeTaxonInGenes, boolean excludeResults ) {
         if ( excludeResults ) {
             ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
             return respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
@@ -222,26 +237,26 @@ public class AnalysisResultSetsWebService {
             if ( ears == null ) {
                 throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
             }
-            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
+            return respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, false, includeTaxonInGenes ) );
         }
     }
 
-    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, int offset, int limit ) {
+    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, boolean includeFactorValuesInContrasts, boolean includeTaxonInGenes, int offset, int limit ) {
         ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, offset, limit );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         long totalElements = expressionAnalysisResultSetService.countResults( ears );
-        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), null, offset, limit, totalElements );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, true, includeTaxonInGenes ), null, offset, limit, totalElements );
     }
 
-    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, double threshold, int offset, int limit ) {
+    private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject getResultSetAsJson( ExpressionAnalysisResultSetArg analysisResultSet, boolean includeFactorValuesInContrasts, boolean includeTaxonInGenes, double threshold, int offset, int limit ) {
         ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntityWithContrastsAndResults( analysisResultSet, threshold, offset, limit );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         long totalElements = expressionAnalysisResultSetService.countResults( ears, threshold );
-        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ), threshold, offset, limit, totalElements );
+        return paginateResults( expressionAnalysisResultSetService.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, true, includeTaxonInGenes ), threshold, offset, limit, totalElements );
     }
 
     private StreamingOutput getResultSetAsTsv( ExpressionAnalysisResultSetArg analysisResultSet ) {
