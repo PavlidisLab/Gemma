@@ -20,7 +20,6 @@ package ubic.gemma.persistence.persister;
 
 import org.junit.Test;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -35,7 +34,7 @@ public class PersisterTest extends BaseSpringContextTest {
     @Test
     @Transactional
     public void testPersistNewArrayDesign() {
-        ArrayDesign ad = super.getTestPersistentArrayDesign( 20, true, false, true );
+        ArrayDesign ad = super.getTestPersistentArrayDesign( 20, true, false );
         assertNotNull( ad.getId() );
     }
 

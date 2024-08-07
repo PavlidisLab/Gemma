@@ -41,9 +41,9 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testMerge() {
-        ArrayDesign ad1 = super.getTestPersistentArrayDesign( 10, true );
-        ArrayDesign ad2 = super.getTestPersistentArrayDesign( 10, true );
-        ArrayDesign ad3 = super.getTestPersistentArrayDesign( 10, true );
+        ArrayDesign ad1 = super.getTestPersistentArrayDesign( 10, true, true );
+        ArrayDesign ad2 = super.getTestPersistentArrayDesign( 10, true, true );
+        ArrayDesign ad3 = super.getTestPersistentArrayDesign( 10, true, true );
 
         Collection<ArrayDesign> others = new HashSet<>();
         others.add( ad2 );

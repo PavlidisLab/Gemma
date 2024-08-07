@@ -27,9 +27,9 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -68,7 +68,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Test
     public void testAuditCreateAndDeleteExpressionExperiment() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true );
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         Collection<Long> trailIds = new HashSet<>();
         Collection<Long> eventIds = new HashSet<>();

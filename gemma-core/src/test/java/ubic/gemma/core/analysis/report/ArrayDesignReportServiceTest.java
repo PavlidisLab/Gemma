@@ -49,7 +49,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
         if ( !ArrayDesignReportServiceTest.persisted ) {
             ArrayDesignReportServiceTest.ad = this
-                    .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
+                    .getTestPersistentArrayDesign( 5, true, false ); // not read only.
 
             ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, ArrayDesignSequenceUpdateEvent.class, "sequences");
 

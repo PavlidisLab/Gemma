@@ -66,10 +66,6 @@ import static java.util.Objects.requireNonNull;
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 public abstract class BaseSpringContextTest extends BaseIntegrationTest {
 
-    /* shared fixtures */
-    private static ArrayDesign readOnlyAd = null;
-    private static ExpressionExperiment readOnlyEe = null;
-
     protected final Log log = LogFactory.getLog( this.getClass() );
 
     /**
@@ -180,7 +176,7 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
      * @return array design
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
-        return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
+        return getTestPersistentArrayDesign( numCompositeSequences, randomNames, false );
     }
 
     /**
@@ -191,18 +187,10 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
      * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_at....N_at
      * @param doSequence            add sequences to the array design that is created. Faster to avoid if you can.
-     * @param readOnly              read only
      * @return array design
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
-            boolean doSequence, boolean readOnly ) {
-        if ( readOnly ) {
-            if ( BaseSpringContextTest.readOnlyAd == null ) {
-                BaseSpringContextTest.readOnlyAd = testHelper
-                        .getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
-            }
-            return BaseSpringContextTest.readOnlyAd;
-        }
+            boolean doSequence ) {
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
     }
 
@@ -321,14 +309,6 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
      * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean readOnly ) {
-        if ( readOnly ) {
-            if ( BaseSpringContextTest.readOnlyEe == null ) {
-                log.info( "Initializing test expression experiment (one-time for read-only tests)" );
-                BaseSpringContextTest.readOnlyEe = testHelper.getTestExpressionExperimentWithAllDependencies();
-            }
-            return BaseSpringContextTest.readOnlyEe;
-        }
-
         return testHelper.getTestExpressionExperimentWithAllDependencies();
     }
 
