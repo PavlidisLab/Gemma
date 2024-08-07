@@ -122,7 +122,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             outliers = this.removeFalsePositives( allSamples, outliers, numOutliers );
 
             numOutliers = outliers.size();
-            OutlierDetectionServiceImpl.log.debug( "Number of outliers after removing false positives: " + numOutliers );
+            OutlierDetectionServiceImpl.log.info( "Number of outliers after removing false positives: " + numOutliers );
             OutlierDetectionServiceImpl.log.info( "Found " + numOutliers + " outlier(s)" );
         }
 
@@ -202,8 +202,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
         List<OutlierDetails> inliers = new ArrayList<>();
 
-        for ( int j = numOutliers; j < allSamples.size(); j++ ) {
-            inliers.add( allSamples.get( j ) );
+        // filter allSamples to remove the outliers
+        for ( OutlierDetails sample : allSamples ) {
+            if ( !outliers.contains( sample ) ) {
+                inliers.add( sample );
+            }
         }
 
         Collections.sort( inliers, OutlierDetails.FirstQuartileComparator );
