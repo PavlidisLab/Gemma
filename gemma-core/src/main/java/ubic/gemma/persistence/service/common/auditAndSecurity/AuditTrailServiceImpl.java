@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
@@ -26,11 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractService;
@@ -38,7 +40,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCu
 
 import javax.annotation.Nullable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author pavlidis
@@ -48,21 +49,15 @@ import java.util.List;
 public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implements AuditTrailService {
 
     private final AuditTrailDao auditTrailDao;
-
-    private final AuditEventDao auditEventDao;
-
     private final GenericCuratableDao curatableDao;
-
     private final UserManager userManager;
-
     private final SessionFactory sessionFactory;
 
     @Autowired
-    public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, AuditEventDao auditEventDao,
-            GenericCuratableDao curatableDao, UserManager userManager, SessionFactory sessionFactory ) {
+    public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, GenericCuratableDao curatableDao, UserManager userManager,
+            SessionFactory sessionFactory ) {
         super( auditTrailDao );
         this.auditTrailDao = auditTrailDao;
-        this.auditEventDao = auditEventDao;
         this.curatableDao = curatableDao;
         this.userManager = userManager;
         this.sessionFactory = sessionFactory;
@@ -71,19 +66,19 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        return doAddUpdateEvent( auditable, null, note, null, null );
+        return doAddUpdateEvent( auditable, null, note, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note ) {
-        return doAddUpdateEvent( auditable, getAuditEventType( type ), note, null, null );
+        return doAddUpdateEvent( auditable, type, note, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail ) {
-        return doAddUpdateEvent( auditable, getAuditEventType( type ), note, detail, null );
+        return doAddUpdateEvent( auditable, type, note, detail, new Date(), true );
     }
 
     /**
@@ -93,47 +88,47 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable ) {
-        return doAddUpdateEvent( auditable, getAuditEventType( type ), note, ExceptionUtils.getStackTrace( throwable ), null );
+        // because of the REQUIRES_NEW, the auditable might originate from a different session, so it would be unsafe to
+        // modify it
+        // also, for this reason we cannot update the curation details because that can cause a deadlock if those have
+        // been altered in the suspended transaction
+        Class<?> entityClass = Hibernate.getClass( auditable );
+        Long id = auditable.getId();
+        auditable = ( Auditable ) sessionFactory.getCurrentSession().get( entityClass, id );
+        if ( auditable == null ) {
+            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.\n\tEvent Type: %s%s",
+                    entityClass.getName(), id, type.getName(), note != null ? "\n\tNote: " + note : "" ), throwable );
+            return createAuditEvent( type, note, ExceptionUtils.getStackTrace( throwable ), new Date() );
+        }
+        return doAddUpdateEvent( auditable, type, note, ExceptionUtils.getStackTrace( throwable ), new Date(), false );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail, Date performedDate ) {
-        return doAddUpdateEvent( auditable, getAuditEventType( type ), note, detail, performedDate );
+        return doAddUpdateEvent( auditable, type, note, detail, performedDate, true );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<AuditEvent> getEvents( Auditable ad ) {
-        return this.auditEventDao.getEvents( ad );
-    }
-
-    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable AuditEventType auditEventType, @Nullable String note, @Nullable String detail, @Nullable Date performedDate ) {
+    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate, boolean updateCurationDetails ) {
         if ( auditable.getId() == null ) {
             throw new IllegalArgumentException( "Cannot add an update event on a transient entity." );
         }
-        if ( performedDate == null ) {
-            performedDate = new Date();
-        } else if ( performedDate.after( new Date() ) ) {
-            throw new IllegalArgumentException( "Cannot create an audit event for something that has not yet occurred." );
-        }
-        //Create new audit event
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType );
-        //If object is curatable, update curation details
-        if ( auditable instanceof Curatable ) {
+        AuditTrail trail = ensureInSession( auditable.getAuditTrail() );
+        auditable.setAuditTrail( trail );
+        AuditEvent auditEvent = createAuditEvent( auditEventType, note, detail, performedDate );
+        // If object is curatable, update curation details
+        if ( ( auditable instanceof Curatable ) && updateCurationDetails ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
-        return this.addEvent( auditable, auditEvent );
+        trail.getEvents().add( auditEvent );
+        // event will be created in cascade
+        auditTrailDao.update( trail );
+        return auditEvent;
     }
 
-    private AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
-        AuditTrail trail = auditable.getAuditTrail();
-        trail = ensureInSession( trail );
-        // this is necessary otherwise we would have to guess the event from the audit trail
-        AuditEvent persistedAuditEvent = auditEventDao.save( auditEvent );
-        trail.getEvents().add( auditEvent );
-        auditable.setAuditTrail( auditTrailDao.save( trail ) );
-        return persistedAuditEvent;
+    private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate ) {
+        Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
+        return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
     }
 
     private AuditEventType getAuditEventType( Class<? extends AuditEventType> type ) {

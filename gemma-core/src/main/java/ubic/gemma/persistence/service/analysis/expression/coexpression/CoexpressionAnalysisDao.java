@@ -36,6 +36,6 @@ public interface CoexpressionAnalysisDao extends SingleExperimentAnalysisDao<Coe
 
     Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
-    Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+    boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
 }

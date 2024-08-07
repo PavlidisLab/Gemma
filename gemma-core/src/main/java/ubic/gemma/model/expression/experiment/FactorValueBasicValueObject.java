@@ -8,18 +8,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.Hibernate;
-import ubic.gemma.model.common.IdentifiableValueObject;
-import ubic.gemma.model.annotations.GemmaRestOnly;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.common.measurement.MeasurementValueObject;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement).
@@ -29,54 +20,16 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused") // Used in json serialization
 @Data
 @EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
-public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorValue> {
+public class FactorValueBasicValueObject extends AbstractFactorValueValueObject {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
     /**
-     * A unique ontology identifier (i.e. IRI) for this factor value.
-     */
-    @GemmaRestOnly
-    private String ontologyId;
-
-    /**
-     * The ID of the experimental factor this factor value belongs to.
-     */
-    private Long experimentalFactorId;
-
-    /**
-     * The experiment factor category.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private CharacteristicValueObject experimentalFactorCategory;
-
-    /**
-     * The measurement associated with this factor value.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MeasurementValueObject measurement;
-
-    /**
-     * The characteristics associated with this factor value.
-     */
-    private List<CharacteristicValueObject> characteristics;
-
-    /**
-     * The statements associated with this factor value.
-     */
-    private List<StatementValueObject> statements;
-
-    /**
-     * @deprecated use either {@link #characteristics} or {@link #measurement}
+     * @deprecated use either {@link #getCharacteristics()} or {@link #getMeasurement()}
      */
     @Deprecated
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     private String value;
-
-    /**
-     * Human-readable summary of the factor value.
-     */
-    private String summary;
 
     /**
      * Required when using the class as a spring bean.
@@ -90,35 +43,12 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     }
 
     public FactorValueBasicValueObject( FactorValue fv ) {
-        super( fv );
-        this.experimentalFactorId = fv.getExperimentalFactor().getId();
-
-        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
-            if ( fv.getExperimentalFactor().getCategory() != null ) {
-                this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );
-            }
-        }
-
-        if ( fv.getMeasurement() != null ) {
-            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
-        }
-
-        this.characteristics = fv.getCharacteristics().stream()
-                .sorted()
-                .map( CharacteristicValueObject::new )
-                .collect( Collectors.toList() );
-
-        this.statements = fv.getCharacteristics().stream()
-                .sorted()
-                .map( StatementValueObject::new )
-                .collect( Collectors.toList() );
-
+        super( fv, true );
         this.value = fv.getValue();
-        this.summary = FactorValueUtils.getSummaryString( fv );
     }
 
     @Override
     public String toString() {
-        return "FactorValueValueObject [factor=" + summary + ", value=" + value + "]";
+        return "FactorValueValueObject [factor=" + getSummary() + ", value=" + value + "]";
     }
 }

@@ -14,15 +14,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.common.IdentifiableValueObject;
-import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Each {@link FactorValue} can be associated with multiple characteristics (or with a measurement). However, for
@@ -37,60 +31,30 @@ import java.util.stream.Collectors;
 @Deprecated
 @Data
 @EqualsAndHashCode(of = { "charId", "value" }, callSuper = true)
-public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> {
+public class FactorValueValueObject extends AbstractFactorValueValueObject {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    /**
-     * A unique ontology identifier (i.e. IRI) for this factor value.
-     */
-    @GemmaRestOnly
-    private String ontologyId;
-
-    @GemmaRestOnly
-    private Long experimentalFactorId;
-
-    @GemmaRestOnly
-    private CharacteristicValueObject experimentalFactorCategory;
-
-    /**
-     * Measurement object if this FactorValue is a measurement.
-     */
-    @Schema(description = "This property exists only if a measurement")
-    @JsonProperty("measurement")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MeasurementValueObject measurementObject;
-
-    private List<CharacteristicValueObject> characteristics;
-
-    private List<StatementValueObject> statements;
-
-    /**
-     * Human-readable summary of the factor value.
-     */
-    private String summary;
-
     // fields of the characteristic being focused on
     // this is used by the FV editor to model each individual characteristic with its FV
+
     /**
      * ID of the experimental factor this FV belongs to.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "Use `experimentalFactorId` instead.", deprecated = true)
     private Long factorId;
-    /**
-     * It could be the id of the measurement if there is no characteristic.
-     */
-    @Schema(description = "Use `measurement.id` or `characteristics.id` instead.", deprecated = true)
-    private Long charId;
+    // category and categoryUri can be omitted if factorId is null, this is done in FactorValueValueObjectSerializer
     @Schema(description = "Use experimentalFactorCategory.category instead.", deprecated = true)
     private String category;
     @Schema(description = "Use experimentalFactorCategory.categoryUri instead.", deprecated = true)
     private String categoryUri;
-    @Deprecated
-    @Schema(description = "This property is never filled nor used; use `summary` if you need a human-readable representation of this factor value.", deprecated = true)
-    private String description;
-    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
-    private String factorValue;
+
+    /**
+     * It could be the id of the measurement if there is no characteristic.
+     */
+    @GemmaWebOnly
+    private Long charId;
     @GemmaWebOnly
     private String value;
     @GemmaWebOnly
@@ -125,48 +89,41 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         super( id );
     }
 
+    public FactorValueValueObject( FactorValue value ) {
+        this( value, true );
+    }
+
     /**
      * Create a FactorValue VO.
+     * @param includeExperimentalFactor whether to include the experimental factor in the serialization, this might be
+     *                                  unnecessary if the FV is rendered in the context of its factor
      */
-    public FactorValueValueObject( FactorValue value ) {
-        super( value );
+    public FactorValueValueObject( FactorValue value, boolean includeExperimentalFactor ) {
+        super( value, includeExperimentalFactor );
 
-        this.experimentalFactorId = value.getExperimentalFactor().getId();
-        this.factorId = value.getExperimentalFactor().getId();
+        if ( includeExperimentalFactor ) {
+            this.factorId = value.getExperimentalFactor().getId();
 
-        // make sure we fill in the category for this if no characteristic is being *focused* on
-        if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
-            Characteristic factorCategory = value.getExperimentalFactor().getCategory();
-            if ( factorCategory != null ) {
-                this.experimentalFactorCategory = new CharacteristicValueObject( factorCategory );
-                this.category = factorCategory.getCategory();
-                this.categoryUri = factorCategory.getCategoryUri();
+            // make sure we fill in the category for this if no characteristic is being *focused* on
+            if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
+                Characteristic factorCategory = value.getExperimentalFactor().getCategory();
+                if ( factorCategory != null ) {
+                    this.category = factorCategory.getCategory();
+                    this.categoryUri = factorCategory.getCategoryUri();
+                }
             }
         }
 
         if ( value.getMeasurement() != null ) {
             this.charId = value.getMeasurement().getId();
-            this.factorValue = value.getMeasurement().getValue();
-            this.measurementObject = new MeasurementValueObject( value.getMeasurement() );
+        } else if ( value.getCharacteristics().size() == 1 ) {
+            this.charId = value.getCharacteristics().iterator().next().getId();
         } else {
-            this.factorValue = FactorValueUtils.getSummaryString( value );
+            // TODO: pick an arbitrary characteristic?
         }
-
-        this.characteristics = value.getCharacteristics().stream()
-                .sorted()
-                .map( CharacteristicValueObject::new )
-                .collect( Collectors.toList() );
-
-        this.statements = value.getCharacteristics().stream()
-                .sorted()
-                .map( StatementValueObject::new )
-                .collect( Collectors.toList() );
-
-        this.summary = FactorValueUtils.getSummaryString( value );
 
         this.needsAttention = value.getNeedsAttention();
     }
-
 
     /**
      * Create a FactorValue VO focusing on a specific statement.
@@ -201,16 +158,34 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     /**
-     * Indicate if this FactorValue is a measurement.
+     * @deprecated use {@link #getMeasurement()} instead, this is only named like this for the Gemma Web frontend.
      */
-    @Schema(description = "Check if a `measurement` key exists instead.", deprecated = true)
-    @JsonProperty("isMeasurement")
-    public boolean isMeasurement() {
-        return this.measurementObject != null;
+    @Deprecated
+    @Schema(description = "This property exists only if this factor value is a measurement")
+    @JsonProperty("measurement")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public MeasurementValueObject getMeasurementObject() {
+        return getMeasurement();
+    }
+
+    @Deprecated
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
+    public String getDescription() {
+        return getSummary();
+    }
+
+    @Deprecated
+    @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
+    public String getFactorValue() {
+        if ( getMeasurement() != null ) {
+            // for backward-compatibility
+            return getMeasurement().getValue();
+        }
+        return getSummary();
     }
 
     @Override
     public String toString() {
-        return "FactorValueValueObject [factor=" + factorValue + ", value=" + value + "]";
+        return "FactorValueValueObject [factor=" + getSummary() + ", value=" + value + "]";
     }
 }

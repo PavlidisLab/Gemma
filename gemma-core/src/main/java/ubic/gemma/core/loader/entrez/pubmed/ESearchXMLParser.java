@@ -25,16 +25,16 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * @author pavlidis
@@ -62,9 +62,7 @@ public class ESearchXMLParser {
     }
 
     private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException, ESearchException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments( true );
-        DocumentBuilder builder = factory.newDocumentBuilder();
+        DocumentBuilder builder = createDocumentBuilder();
         Document doc = builder.parse( is );
         NodeList error = doc.getDocumentElement().getElementsByTagName( "ERROR" );
         if ( error.getLength() > 0 ) {

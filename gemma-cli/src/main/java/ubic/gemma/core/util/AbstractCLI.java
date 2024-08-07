@@ -31,8 +31,14 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -371,7 +377,7 @@ public abstract class AbstractCLI implements CLI {
      * purposes.
      */
     private void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) && commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
             throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", LIMITING_DATE_OPTION, AUTO_OPTION_NAME ) );
         }
 

@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.arrayDesign;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -37,7 +38,7 @@ import java.util.Set;
  * @author Paul
  */
 @Indexed
-public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.SecuredNotChild, Curatable {
+public class ArrayDesign extends AbstractAuditable implements Curatable, SecuredNotChild {
 
     public static final class Factory {
 

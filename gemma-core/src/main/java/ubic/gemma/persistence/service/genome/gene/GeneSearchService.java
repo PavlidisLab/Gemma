@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -40,12 +41,12 @@ public interface GeneSearchService {
      * hierarchy
      *
      * @param goId    GO id that must be in the format "GO_#######"
-     * @param taxonId must not be null and must correspond to a taxon
+     * @param taxonId a taxan ID to retrieve results from, or null for genes in any taxon
      * @return empty if goId was blank or taxonId didn't correspond to a taxon
      */
     Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
 
-    Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) throws SearchException;
+    Collection<Gene> getGOGroupGenes( String goQuery, @Nullable Taxon taxon ) throws SearchException;
 
     Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException;
 

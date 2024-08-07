@@ -16,6 +16,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -50,11 +51,21 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<Long> arrayDesignsUsed;
-    private Long bioAssaySetId;
-    private Long sourceExperiment;
+    private Long experimentAnalyzedId;
+
+    // for subsets
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long sourceExperimentId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private ExperimentalFactorValueObject subsetFactor;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long subsetFactorId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `subsetFactorValueId`.")
     private FactorValueValueObject subsetFactorValue;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is mutually exclusive with `subsetFactorValue`.")
+    private Long subsetFactorValueId;
 
     public DifferentialExpressionAnalysisValueObject() {
         super();
@@ -67,21 +78,46 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         super( analysis );
-        this.bioAssaySetId = analysis.getExperimentAnalyzed().getId();
+        this.experimentAnalyzedId = analysis.getExperimentAnalyzed().getId();
         // experimentAnalyzed is eagerly fetched
         if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
             // sourceExperiment is eagerly fetched too
-            this.sourceExperiment = ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment().getId();
+            this.sourceExperimentId = ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment().getId();
         }
-        if ( analysis.getSubsetFactorValue() != null && Hibernate.isInitialized( ( analysis.getSubsetFactorValue() ) ) ) {
-            this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
-            this.subsetFactorId = analysis.getSubsetFactorValue().getExperimentalFactor().getId();
-            if ( Hibernate.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
-                this.subsetFactor = new ExperimentalFactorValueObject(
-                        analysis.getSubsetFactorValue().getExperimentalFactor() );
+        // this is only populated for subsets, but it's safer to always check
+        if ( analysis.getSubsetFactorValue() != null ) {
+            if ( Hibernate.isInitialized( analysis.getSubsetFactorValue() ) ) {
+                this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue(), false );
+                if ( Hibernate.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
+                    this.subsetFactor = new ExperimentalFactorValueObject(
+                            analysis.getSubsetFactorValue().getExperimentalFactor() );
+                }
+                // TODO: make this mutually exclusive with subsetFactor
+                this.subsetFactorId = analysis.getSubsetFactorValue().getExperimentalFactor().getId();
+            } else {
+                this.subsetFactorValueId = analysis.getSubsetFactorValue().getId();
             }
-            // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
+        // fill in the factorValuesUsed separately, needs access to details of the subset.
+    }
+
+    /**
+     * @deprecated use {@link #getExperimentAnalyzedId()} instead
+     */
+    @Deprecated
+    @Schema(description = "This is deprecated, use experimentAnalyzedId instead.", deprecated = true)
+    public Long getBioAssaySetId() {
+        return experimentAnalyzedId;
+    }
+
+    /**
+     * @deprecated use {@link #getSourceExperimentId()} instead
+     */
+    @Deprecated
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This is deprecated, use sourceExperimentId instead.", deprecated = true)
+    public Long getSourceExperiment() {
+        return sourceExperimentId;
     }
 
     /**
@@ -103,17 +139,19 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
      * This can be null in certain cases if set to NULL via {@link #setFactorValuesUsed(Map)} so that it does not appear
      * in the JSON serialization, but you can assume it is non-null.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Map<Long, Collection<FactorValueValueObject>> getFactorValuesUsedByExperimentalFactorId() {
         return factorValuesUsed;
     }
 
     @JsonProperty("isSubset")
+    @Schema(description = "Indicate if this analysis is a subset of another experiment. if this is set, additional fields relevant to the subset will be populated.")
     public boolean isSubset() {
-        return this.subsetFactor != null;
+        return this.sourceExperimentId != null;
     }
 
     @Override
     public String toString() {
-        return "DiffExAnalysisVO [id=" + id + ", bioAssaySetId=" + bioAssaySetId + "]";
+        return "DiffExAnalysisVO [id=" + id + ", experimentAnalyzedId=" + experimentAnalyzedId + "]";
     }
 }

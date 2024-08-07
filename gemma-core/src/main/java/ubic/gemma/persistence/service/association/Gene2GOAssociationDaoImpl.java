@@ -28,10 +28,10 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
@@ -114,19 +114,35 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Collection<Gene> findByGoTerm( String goId, Taxon taxon ) {
+    public Collection<Gene> findByGoTerms( Collection<String> goIds ) {
+        if ( goIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
-        return super.getSessionFactory().getCurrentSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                                + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon" )
-                .setParameter( "goID", goId.replaceFirst( ":", "_" ) ).setParameter( "taxon", taxon ).list();
+                                + "where geneAss.ontologyEntry.value in ( :goIDs)" )
+                .setParameterList( "goIDs", optimizeParameterList( goIds ) ).list();
+    }
+
+    @Override
+    public Collection<Gene> findByGoTerms( Collection<String> goIds, @Nullable Taxon taxon ) {
+        if ( goIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                                + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
+                .setParameterList( "goIDs", optimizeParameterList( goIds ) )
+                .setParameter( "tax", taxon )
+                .list();
     }
 
     @Override
     public Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch ) {
-        Collection<Gene> genes = this.getGenes( termsToFetch );
+        Collection<Gene> genes = this.findByGoTerms( termsToFetch );
         Map<Taxon, Collection<Gene>> results = new HashMap<>();
-
         for ( Gene g : genes ) {
             if ( !results.containsKey( g.getTaxon() ) ) {
                 results.put( g.getTaxon(), new HashSet<Gene>() );
@@ -134,29 +150,6 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
             results.get( g.getTaxon() ).add( g );
         }
         return results;
-    }
-
-    @Override
-    public Collection<Gene> getGenes( Collection<String> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                                + "where geneAss.ontologyEntry.value in ( :goIDs)" )
-                .setParameterList( "goIDs", optimizeParameterList( ids ) ).list();
-    }
-
-    @Override
-    public Collection<Gene> getGenes( Collection<String> ids, @Nullable Taxon taxon ) {
-        if ( taxon == null )
-            return this.getGenes( ids );
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
-                                + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
-                .setParameterList( "goIDs", optimizeParameterList( ids ) )
-                .setParameter( "tax", taxon )
-                .list();
     }
 
     @Override

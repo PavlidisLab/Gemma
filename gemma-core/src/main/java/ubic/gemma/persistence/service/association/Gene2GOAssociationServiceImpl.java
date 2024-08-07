@@ -29,8 +29,8 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.cache.CacheUtils;
+import ubic.gemma.persistence.service.AbstractService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -116,20 +116,12 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> findByGOTerm( String goID, Taxon taxon ) {
-        return this.gene2GOAssociationDao.findByGoTerm( goID, taxon );
-    }
-
-    @Override
-    @Transactional
-    public int removeAll() {
-        return this.gene2GOAssociationDao.removeAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon ) {
-        return this.gene2GOAssociationDao.getGenes( termsToFetch, taxon );
+        if ( taxon == null ) {
+            return this.gene2GOAssociationDao.findByGoTerms( termsToFetch );
+        } else {
+            return this.gene2GOAssociationDao.findByGoTerms( termsToFetch, taxon );
+        }
     }
 
     @Override
@@ -138,4 +130,9 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
         return this.gene2GOAssociationDao.findByGoTermsPerTaxon( termsToFetch );
     }
 
+    @Override
+    @Transactional
+    public int removeAll() {
+        return this.gene2GOAssociationDao.removeAll();
+    }
 }

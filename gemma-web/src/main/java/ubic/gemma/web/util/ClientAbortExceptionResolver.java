@@ -1,7 +1,7 @@
 package ubic.gemma.web.util;
 
-import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,10 +12,10 @@ import javax.servlet.http.HttpServletResponse;
  * This is only applicable to Tomcat.
  * @author poirigui
  */
-public class ClientAbortExceptionResolver implements HandlerExceptionResolver {
+public class ClientAbortExceptionResolver extends AbstractHandlerExceptionResolver {
 
     @Override
-    public ModelAndView resolveException( HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex ) {
+    protected ModelAndView doResolveException( HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex ) {
         if ( "org.apache.catalina.connector.ClientAbortException".equals( ex.getClass().getName() ) ) {
             return new ModelAndView();
         }

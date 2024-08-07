@@ -44,8 +44,8 @@ public class GoldenPathQuery extends GoldenPath {
 
     public GoldenPathQuery( Taxon taxon ) {
         super( taxon );
-        estQuery = new EstQuery( this.getJdbcTemplate().getDataSource() );
-        mrnaQuery = new MrnaQuery( this.getJdbcTemplate().getDataSource() );
+        estQuery = new EstQuery( getDataSource() );
+        mrnaQuery = new MrnaQuery( getDataSource() );
     }
 
     /**

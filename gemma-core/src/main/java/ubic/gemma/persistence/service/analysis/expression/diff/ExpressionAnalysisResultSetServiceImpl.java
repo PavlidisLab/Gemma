@@ -84,14 +84,14 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears ) {
-        return voDao.loadValueObjectWithResults( ears );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes ) {
+        return voDao.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, queryByResult, includeTaxonInGenes );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
-        return voDao.loadResultToGenesMap( resultSet );
+        return voDao.loadResultToGenesMap( resultSet, false );
     }
 
     @Override
@@ -112,13 +112,13 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Set<ExpressionAnalysisResultSet> resultSets ) {
-        return voDao.getBaselines( resultSets );
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractions( resultSets, initializeFactorValues );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Baseline> getBaselinesByIds( Collection<Long> rsIds ) {
-        return voDao.getBaselinesByIds( rsIds );
+    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractionsByIds( rsIds, initializeFactorValues );
     }
 }

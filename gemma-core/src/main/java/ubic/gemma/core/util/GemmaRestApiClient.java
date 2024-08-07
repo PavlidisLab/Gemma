@@ -1,6 +1,5 @@
 package ubic.gemma.core.util;
 
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
@@ -56,13 +55,8 @@ public interface GemmaRestApiClient {
     }
 
     /**
-     * For endpoint that return a redirection.
+     * For endpoints that may return an error.
      */
-    interface Redirection extends Response {
-
-        String getLocation();
-    }
-
     interface ErrorResponse extends Response {
 
         Error getError();

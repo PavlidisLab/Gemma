@@ -194,6 +194,11 @@ public class QueryUtils {
         return updated;
     }
 
+    public static <T> Stream<T> stream( Query query, Class<T> clazz ) {
+        //noinspection unchecked
+        return query.list().stream();
+    }
+
     public static String escapeLike( String s ) {
         return s.replaceAll( "[%_\\\\]", "\\\\$0" );
     }

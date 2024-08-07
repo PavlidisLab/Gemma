@@ -15,7 +15,7 @@
 package ubic.gemma.core.tasks.maintenance;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

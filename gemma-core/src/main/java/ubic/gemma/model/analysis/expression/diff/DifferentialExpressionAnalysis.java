@@ -19,9 +19,10 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import java.util.Collection;
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,16 +32,18 @@ import java.util.Set;
 public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = -7855180617739271699L;
-    private FactorValue subsetFactorValue;
+
     private Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 
+    @Nullable
+    private FactorValue subsetFactorValue;
+
     /**
-     * Groups of results produced by this ExpressionAnalysis. For example, in a two-way ANOVA, the model has 2 or 3
-     * parameters. The statistical significance tests for each of the effects in the model are stored as separate
-     * ResultSet objects. Thus a two-way ANOVA with interactions will have three result sets: the two main effects and
-     * the interaction effect.
-     *
-     * @return the result sets
+     * Groups of results produced by this differential expression analysis.
+     * <p>
+     * For example, in a two-way ANOVA, the model has 2 or 3 parameters. The statistical significance tests for each of
+     * the effects in the model are stored as separate {@link ExpressionAnalysisResultSet} objects. Thus, a two-way ANOVA
+     * with interactions will have three result sets: the two main effects and the interaction effect.
      */
     public Set<ExpressionAnalysisResultSet> getResultSets() {
         return this.resultSets;
@@ -50,11 +53,15 @@ public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
         this.resultSets = resultSets;
     }
 
+    /**
+     * If non-null, a factor value applicable to the {@link ExpressionExperimentSubSet} being analyzed.
+     */
+    @Nullable
     public FactorValue getSubsetFactorValue() {
         return this.subsetFactorValue;
     }
 
-    public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
+    public void setSubsetFactorValue( @Nullable FactorValue subsetFactorValue ) {
         this.subsetFactorValue = subsetFactorValue;
     }
 

@@ -23,7 +23,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -37,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -52,6 +55,24 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
         super( FactorValue.class, sessionFactory );
+    }
+
+    @Override
+    public FactorValue create( FactorValue factorValue ) {
+        validate( factorValue );
+        return super.create( factorValue );
+    }
+
+    @Override
+    public FactorValue save( FactorValue entity ) {
+        validate( entity );
+        return super.save( entity );
+    }
+
+    @Override
+    public void update( FactorValue entity ) {
+        validate( entity );
+        super.update( entity );
     }
 
     @Override
@@ -138,6 +159,29 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Override
     protected FactorValueValueObject doLoadValueObject( FactorValue entity ) {
         return new FactorValueValueObject( entity );
+    }
+
+    private void validate( FactorValue factorValue ) {
+        FactorType factorType;
+        if ( Hibernate.isInitialized( factorValue.getExperimentalFactor() ) ) {
+            factorType = factorValue.getExperimentalFactor().getType();
+        } else {
+            // if the EF is not initialized, just obtain the FactorType directly instead of loading the EF (which also
+            // loads potentially many other FVs)
+            factorType = requireNonNull( ( FactorType ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select ef.type from ExperimentalFactor ef where ef = :ef" )
+                    .setParameter( "ef", factorValue.getExperimentalFactor() )
+                    .uniqueResult() );
+        }
+        // validate categorical v.s. continuous factor values
+        if ( factorType.equals( FactorType.CONTINUOUS ) ) {
+            Assert.notNull( factorValue.getMeasurement(), "Continuous factor values must have a measurement: " + factorValue );
+            Assert.isTrue( factorValue.getValue() == null || factorValue.getValue().equals( factorValue.getMeasurement().getValue() ),
+                    "If provided, the value of the factor must match the measurement value." );
+            Assert.isNull( factorValue.getIsBaseline(), "Continuous factor values cannot be (or not be) a baseline: " + factorValue );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) ) {
+            Assert.isNull( factorValue.getMeasurement(), "Categorical factor values must not have a measurement: " + factorValue );
+        }
     }
 
     private void debug( List<?> results ) {

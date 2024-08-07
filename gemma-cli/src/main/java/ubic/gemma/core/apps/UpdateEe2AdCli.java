@@ -33,7 +33,7 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
     @Override
     public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
+        return CommandGroup.EXPERIMENT;
     }
 
     @Override

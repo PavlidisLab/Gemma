@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.goldenpath;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -29,6 +29,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import java.util.Collection;
+
+import static org.junit.Assume.assumeNoException;
 
 /**
  * These tests require a populated Human database. Valid as of 11/2009 on hg19
@@ -39,19 +41,24 @@ import java.util.Collection;
 public class GoldenPathQueryTest {
 
     /* fixtures */
-    private GoldenPathQuery queryer;
+    private static GoldenPathQuery queryer;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
         t.setIsGenesUsable( true );
         try {
             queryer = new GoldenPathQuery( t );
-            queryer.getJdbcTemplate().queryForObject( "select 1", Integer.class );
         } catch ( CannotGetJdbcConnectionException e ) {
-            Assume.assumeNoException( "Skipping test because hg could not be configured", e );
+            assumeNoException( e );
         }
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        if ( queryer != null )
+            queryer.close();
     }
 
     @Test

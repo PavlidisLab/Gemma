@@ -26,11 +26,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,6 +37,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * @author paul
@@ -48,7 +49,6 @@ public class EutilFetch {
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
     private static final String APIKEY = Settings.getString( "entrez.efetch.apikey" );
-    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private static final int MAX_TRIES = 3;
 
     /**
@@ -66,9 +66,8 @@ public class EutilFetch {
 
     public static Document parseStringInputStream( String details )
             throws SAXException, IOException, ParserConfigurationException {
-        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
+        DocumentBuilder builder = createDocumentBuilder();
         int tries = 0;
-
         while ( true ) {
             try ( InputStream is = new StringInputStream( details ) ) {
                 return builder.parse( is );
@@ -102,8 +101,6 @@ public class EutilFetch {
         while ( conn == null && numTries < MAX_TRIES ) {
             try {
                 numTries++;
-                EutilFetch.factory.setIgnoringComments( true );
-                EutilFetch.factory.setValidating( false );
 
                 Document document = EutilFetch.parseSUrlInputStream( searchUrl );
 
@@ -168,7 +165,7 @@ public class EutilFetch {
 
     private static Document parseSUrlInputStream( URL url )
             throws SAXException, IOException, ParserConfigurationException {
-        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
+        DocumentBuilder builder = createDocumentBuilder();
         int tries = 0;
 
         while ( true ) {

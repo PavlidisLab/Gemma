@@ -28,7 +28,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.auditAndSecurity.curation.CuratableService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -41,7 +42,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends CuratableService<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
+        SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     /**
      * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}

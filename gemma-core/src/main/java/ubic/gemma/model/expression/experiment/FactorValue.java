@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
@@ -187,8 +187,6 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
 
     @Override
     public boolean equals( Object object ) {
-        if ( object == null )
-            return false;
         if ( this == object )
             return true;
         if ( !( object instanceof FactorValue ) )
@@ -196,56 +194,14 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
         FactorValue that = ( FactorValue ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-
-        if ( that.getId() == null && this.getId() != null )
-            return false;
-
         /*
          * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
          * the fields; pain in butt
          */
-
-        if ( this.getExperimentalFactor() != null ) {
-            if ( that.getExperimentalFactor() == null )
-                return false;
-            if ( !this.getExperimentalFactor().equals( that.getExperimentalFactor() ) ) {
-                return false;
-            }
-        }
-
-        if ( !this.getCharacteristics().isEmpty() ) {
-            if ( that.getCharacteristics().size() != this.getCharacteristics().size() )
-                return false;
-
-            for ( Characteristic c : this.getCharacteristics() ) {
-                boolean match = false;
-                for ( Characteristic c2 : that.getCharacteristics() ) {
-                    if ( c.equals( c2 ) ) {
-                        if ( match ) {
-                            return false;
-                        }
-                        match = true;
-                    }
-                }
-                if ( !match )
-                    return false;
-            }
-
-        }
-
-        if ( this.getMeasurement() != null ) {
-            if ( that.getMeasurement() == null )
-                return false;
-            if ( !this.getMeasurement().equals( that.getMeasurement() ) )
-                return false;
-        }
-
-        if ( this.getValue() != null ) {
-            return that.getValue() != null && this.getValue().equals( that.getValue() );
-        }
-
-        // everything is empty...
-        return true;
+        return Objects.equals( getExperimentalFactor(), that.getExperimentalFactor() )
+                && Objects.equals( getMeasurement(), that.getMeasurement() )
+                && Objects.equals( getCharacteristics(), that.getCharacteristics() )
+                && Objects.equals( getValue(), that.getValue() );
     }
 
     @Override

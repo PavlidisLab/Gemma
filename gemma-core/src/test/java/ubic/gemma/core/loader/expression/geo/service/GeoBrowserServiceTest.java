@@ -29,6 +29,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -40,6 +41,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     @Test
     public final void testGetDetails() throws Exception {
+        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
 
         try {
             String details = gbs.getDetails( "GSE15904", "" );
@@ -79,6 +81,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     @Test
     public final void testGetRecentRecords() throws Exception {
+        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
 
         try {
             // I changed the skip because the very newest records can cause a problem with fetching details.

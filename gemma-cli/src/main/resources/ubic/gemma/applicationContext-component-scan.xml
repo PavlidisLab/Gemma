@@ -16,7 +16,13 @@
     </context:component-scan>
 
     <!-- Non-standard CLI tools used to load data into Gemma database -->
-    <context:component-scan base-package="ubic.gemma.core.loader"
+    <context:component-scan base-package="ubic.gemma.core.loader.association.phenotype"
+                            name-generator="ubic.gemma.core.context.BeanNameGenerator"
+                            use-default-filters="false">
+        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
+    </context:component-scan>
+    <context:component-scan base-package="ubic.gemma.core.loader.entrez.pubmed"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator"
                             use-default-filters="false">
         <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>

@@ -34,7 +34,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @see ExpressionAnalysisResultSet
@@ -77,9 +76,14 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     /**
      * Load an analysis result set with its all of its associated results.
      *
+     * @param includeFactorValuesInContrasts
+     * @param queryGenesByResult             query genes by results instead of result set, this is considerably faster if the
+     *                                       results are sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
+     * @param includeTaxonInGenes
      * @see #loadValueObject(Identifiable)
+     * @see #loadResultToGenesMap(ExpressionAnalysisResultSet, boolean)
      */
-    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet, boolean includeFactorValuesInContrasts, boolean queryGenesByResult, boolean includeTaxonInGenes );
 
     /**
      * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.
@@ -89,8 +93,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * <p>
      * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
      * empty collection to handle this case.
+     * @param queryByResult query by results instead of result set, this is considerably faster if the results are
+     *                      sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
      */
-    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
+    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
@@ -120,18 +126,22 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     /**
      * Retrieve the baseline for the given result set.
+     * <p>
+     * Factor values are always initialized.
      * @return a baseline, or null if none could be determined for the given result set
      */
     @Nullable
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
     /**
-     * Retrieve baselines for all the given result sets.
+     * Retrieve baselines for all the given result sets representing factor interactions.
+     * @param initializeFactorValues whether to initialize factor values
      */
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselines( Collection<ExpressionAnalysisResultSet> resultSets );
+    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
     /**
-     * Retrieve baselines using result set IDs.
+     * Retrieve baselines using result set IDs representing factor interactions.
+     * @param initializeFactorValues whether to initialize factor values
      */
-    Map<Long, Baseline> getBaselinesByIds( Collection<Long> ids );
+    Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues );
 }

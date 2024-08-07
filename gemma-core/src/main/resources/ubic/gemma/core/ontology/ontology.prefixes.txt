@@ -1,0 +1,7 @@
+# This file contains ontology prefixes
+# This is mainly used for parsing ontology terms in search queries
+GO
+MONDO
+TGEMO
+TGFVO
+UBERON

@@ -46,6 +46,7 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
 
 /**
  * @author Paul
@@ -149,7 +150,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
         String id = "GO:0000107";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
-        String formatedId = GeneOntologyServiceImpl.asRegularGoId( termForId );
+        String formatedId = asRegularGoId( termForId );
         assertEquals( id, formatedId );
     }
 

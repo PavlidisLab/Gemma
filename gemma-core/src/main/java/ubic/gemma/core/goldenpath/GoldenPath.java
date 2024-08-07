@@ -19,14 +19,15 @@
 package ubic.gemma.core.goldenpath;
 
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.Getter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.config.Settings;
+
+import javax.sql.DataSource;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
@@ -34,11 +35,11 @@ import ubic.gemma.core.config.Settings;
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-@Getter
-public abstract class GoldenPath {
+public abstract class GoldenPath implements AutoCloseable {
 
     protected static final Log log = LogFactory.getLog( GoldenPath.class );
 
+    private final HikariDataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
     private final ExternalDatabase searchedDatabase;
     private final Taxon taxon;
@@ -47,25 +48,42 @@ public abstract class GoldenPath {
      * Create a GoldenPath database for a given taxon.
      */
     public GoldenPath( Taxon taxon ) {
-        this.jdbcTemplate = createJdbcTemplateFromConfig( taxon );
+        this.dataSource = createDataSource( taxon );
+        this.jdbcTemplate = createJdbcTemplateFromConfig( this.dataSource, taxon );
         this.searchedDatabase = createExternalDatabase( taxon );
         this.taxon = taxon;
     }
 
-    private static JdbcTemplate createJdbcTemplateFromConfig( Taxon taxon ) {
-        String host;
-        String databaseName = getDbNameForTaxon( taxon );
+    @Override
+    public void close() {
+        dataSource.close();
+    }
 
-        // SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setPoolName( "goldenpath" );
+    protected DataSource getDataSource() {
+        return dataSource;
+    }
+
+    protected JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
+
+    protected ExternalDatabase getSearchedDatabase() {
+        return searchedDatabase;
+    }
+
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
+    private static HikariDataSource createDataSource( Taxon taxon ) {
         String driverClassName = Settings.getString( "gemma.goldenpath.db.driver" );
         String url = Settings.getString( "gemma.goldenpath.db.url" );
         String user = Settings.getString( "gemma.goldenpath.db.user" );
         String password = Settings.getString( "gemma.goldenpath.db.password" );
-        GoldenPath.log.info( "Connecting to " + databaseName );
         GoldenPath.log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setPoolName( "goldenpath" );
         dataSource.setDriverClassName( driverClassName );
         dataSource.setJdbcUrl( url );
         dataSource.setUsername( user );
@@ -73,11 +91,15 @@ public abstract class GoldenPath {
         dataSource.setMaximumPoolSize( Settings.getInt( "gemma.goldenpath.db.maximumPoolSize" ) );
         dataSource.addDataSourceProperty( "relaxAutoCommit", "true" );
 
+        return dataSource;
+    }
+
+    private static JdbcTemplate createJdbcTemplateFromConfig( HikariDataSource dataSource, Taxon taxon ) {
+        String databaseName = getDbNameForTaxon( taxon );
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.setFetchSize( 50 );
-
+        GoldenPath.log.info( "Connecting to " + databaseName );
         jdbcTemplate.execute( "use " + databaseName );
-
         return jdbcTemplate;
     }
 

@@ -7,20 +7,18 @@ import gemma.gsec.acl.domain.AclDaoImpl;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
 import org.apache.lucene.util.Version;
+import org.h2.Driver;
 import org.hibernate.SessionFactory;
 import org.junit.After;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.security.access.hierarchicalroles.NullRoleHierarchy;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
@@ -28,12 +26,13 @@ import org.springframework.security.acls.domain.DefaultPermissionGrantingStrateg
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
-import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.hibernate.H2Dialect;
+import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
+import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
+import ubic.gemma.persistence.initialization.InitialDataPopulator;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -48,19 +47,17 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
     protected abstract static class BaseDatabaseTestContextConfiguration {
         @Bean
         public DataSource dataSource() {
-            DataSource ds = new SimpleDriverDataSource( new org.h2.Driver(), "jdbc:h2:mem:gemdtest;MODE=MYSQL;DB_CLOSE_DELAY=-1" );
+            DataSource ds = new SimpleDriverDataSource( new Driver(), "jdbc:h2:mem:gemdtest;MODE=MYSQL;DB_CLOSE_DELAY=-1" );
             new JdbcTemplate( ds ).execute( "drop all objects" );
             return ds;
         }
 
         @Bean
-        public FactoryBean<SessionFactory> sessionFactory( DataSource dataSource ) {
+        public LocalSessionFactoryBean sessionFactory( DataSource dataSource ) {
             LocalSessionFactoryBean factory = new LocalSessionFactoryBean();
             factory.setDataSource( dataSource );
-            factory.setConfigLocations(
-                    new ClassPathResource( "/hibernate.cfg.xml" ) );
+            factory.setConfigLocation( new ClassPathResource( "/hibernate.cfg.xml" ) );
             Properties props = new Properties();
-            props.setProperty( "hibernate.hbm2ddl.auto", "create" );
             props.setProperty( "hibernate.dialect", H2Dialect.class.getName() );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             props.setProperty( "hibernate.max_fetch_depth", "3" );
@@ -80,9 +77,16 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         }
 
         @Bean
-        @DependsOn("sessionFactory")
-        public DataSourceInitializer dataSourceInitializer( DataSource dataSource ) {
-            return new DataSourceInitializer( dataSource );
+        public DataSourceInitializer dataSourceInitializer( DataSource dataSource, LocalSessionFactoryBean sessionFactory ) {
+            DataSourceInitializer di = new DataSourceInitializer();
+            di.setDataSource( dataSource );
+            CompositeDatabasePopulator cdp = new CompositeDatabasePopulator();
+            cdp.addPopulators(
+                    new DatabaseSchemaPopulator( sessionFactory, "h2" ),
+                    new InitialDataPopulator( true ) );
+            di.setDatabasePopulator( cdp );
+            di.setEnabled( true );
+            return di;
         }
 
         @Bean
@@ -125,24 +129,4 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         sessionFactory.getCurrentSession().clear();
     }
 
-    protected static class DataSourceInitializer implements InitializingBean {
-
-
-        private final JdbcTemplate template;
-
-        @Autowired
-        private ApplicationContext applicationContext;
-
-        public DataSourceInitializer( DataSource dataSource ) {
-            this.template = new JdbcTemplate( dataSource );
-        }
-
-        @Override
-        public void afterPropertiesSet() {
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-acls.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-entities.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/h2/init-entities.sql" ), false );
-            JdbcTestUtils.executeSqlScript( template, applicationContext.getResource( "/sql/init-data-slim.sql" ), false );
-        }
-    }
 }

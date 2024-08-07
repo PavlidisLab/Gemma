@@ -48,7 +48,7 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         super();
     }
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result ) {
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValues ) {
         super( result );
         // getId() does not initialize proxies
         this.probeId = result.getProbe().getId();
@@ -60,15 +60,15 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         this.rank = result.getRank();
         if ( Hibernate.isInitialized( result.getContrasts() ) ) {
             this.contrasts = result.getContrasts().stream()
-                    .map( ContrastResultValueObject::new )
+                    .map( c -> new ContrastResultValueObject( c, includeFactorValues ) )
                     .collect( Collectors.toList() );
         } else {
             this.contrasts = null;
         }
     }
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
-        this( result );
-        this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValuesInContrasts, List<Gene> genes, boolean includeTaxonInGenes ) {
+        this( result, includeFactorValuesInContrasts );
+        this.genes = genes.stream().map( g -> new GeneValueObject( g, includeTaxonInGenes ) ).collect( Collectors.toList() );
     }
 }

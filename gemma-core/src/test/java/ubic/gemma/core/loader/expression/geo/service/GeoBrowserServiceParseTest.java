@@ -92,7 +92,6 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
     @Test
     @Category(SlowTest.class)
     public void testParse() {
-        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         String response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test.xml" ).getInputStream() ) {
             response = IOUtils.toString( r, StandardCharsets.ISO_8859_1 );
@@ -111,7 +110,6 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
 
     @Test
     public void testParse2() {
-        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         String response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test1.xml" ).getInputStream() ) {
             response = IOUtils.toString( r, StandardCharsets.UTF_8 );
@@ -130,7 +128,6 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
 
     @Test
     public void testParse3() {
-        assumeThatResourceIsAvailable( "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd" );
         String response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test2.xml" ).getInputStream() ) {
             response = IOUtils.toString( r, StandardCharsets.UTF_8 );

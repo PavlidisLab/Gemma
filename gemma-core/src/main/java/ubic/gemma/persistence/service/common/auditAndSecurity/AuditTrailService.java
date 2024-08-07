@@ -91,7 +91,4 @@ public interface AuditTrailService extends BaseImmutableService<AuditTrail> {
     @Override
     @Secured({ "GROUP_USER" })
     AuditTrail create( AuditTrail auditTrail );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    List<AuditEvent> getEvents( Auditable auditable );
 }

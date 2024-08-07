@@ -631,6 +631,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) {
         boolean doAclFiltering = eeIds == null;
+        boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -667,7 +668,16 @@ public class ExpressionExperimentDaoImpl
         } else {
             query += "where T.EXPRESSION_EXPERIMENT_FK is not null";
         }
-        query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+        String excludeUrisClause = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
+        if ( excludeUrisClause != null ) {
+            query += " and (";
+            query += "(" + excludeUrisClause + ")";
+            if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+                query += " or T.VALUE_URI in (:retainedTermUris)";
+                useRetainedTermUris = true;
+            }
+            query += ")";
+        }
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
             // troubled filtering
@@ -690,7 +700,7 @@ public class ExpressionExperimentDaoImpl
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", optimizeParameterList( excludedTermUris ) );
         }
-        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+        if ( useRetainedTermUris ) {
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         if ( doAclFiltering ) {
@@ -732,6 +742,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
         boolean doAclFiltering = eeIds == null;
+        boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -771,6 +782,7 @@ public class ExpressionExperimentDaoImpl
         if ( level != null ) {
             query += " and T.LEVEL = :level";
         }
+        String excludeUrisClause;
         if ( category != null ) {
             // a specific category is requested
             if ( category.equals( UNCATEGORIZED ) ) {
@@ -783,10 +795,19 @@ public class ExpressionExperimentDaoImpl
                 query += " and T.CATEGORY = :category";
             }
             // no need to filter out excluded categories if a specific one is requested
-            query += getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            excludeUrisClause = getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
         } else {
             // all categories are requested, we may filter out excluded ones
-            query += getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, retainedTermUris );
+            excludeUrisClause = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
+        }
+        if ( excludeUrisClause != null ) {
+            query += " and (";
+            query += "(" + excludeUrisClause + ")";
+            if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+                query += " or T.VALUE_URI in (:retainedTermUris)";
+                useRetainedTermUris = true;
+            }
+            query += ")";
         }
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
@@ -802,6 +823,7 @@ public class ExpressionExperimentDaoImpl
             query += " having EE_COUNT >= :minFrequency";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
                 query += " or VALUE_URI in (:retainedTermUris)";
+                useRetainedTermUris = true;
             }
         }
         if ( maxResults > 0 ) {
@@ -827,7 +849,8 @@ public class ExpressionExperimentDaoImpl
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
             q.setParameterList( "excludedTermUris", optimizeParameterList( excludedTermUris ) );
         }
-        if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
+        if ( useRetainedTermUris ) {
+            assert retainedTermUris != null;
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         if ( level != null ) {
@@ -879,17 +902,19 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Produce a SQL clause for excluding URIs and free-text (i.e. null) URIs.
+     * Produce a SQL clause for excluding various terms and categories.
      * <p>
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
-     *  @param excludedTermUris          list of URIs to exclude
-     *
+     * @param excludedCategoryUris      list of category URIs to exclude
+     * @param excludedTermUris          list of URIs to exclude
      * @param excludeFreeTextCategories whether to exclude free-text categories
      * @param excludeFreeTextTerms      whether to exclude free-text terms
-     * @param retainedTermUris          list of terms that should bypass the exclusion
+     * @param excludeUncategorized      whether to exclude uncategorized terms
+     * @return a SQL clause for excluding terms and categories or null if no clause is necessary
      */
-    private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized, @Nullable Collection<String> retainedTermUris ) {
+    @Nullable
+    private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized ) {
         List<String> clauses = new ArrayList<>( 5 );
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             clauses.add( "T.CATEGORY_URI is null or T.CATEGORY_URI not in (:excludedCategoryUris)" );
@@ -908,15 +933,9 @@ public class ExpressionExperimentDaoImpl
             clauses.add( "COALESCE(T.CATEGORY_URI, T.CATEGORY) is not null" );
         }
         if ( !clauses.isEmpty() ) {
-            String query = "";
-            query += " and ((" + String.join( ") and (", clauses ) + ")";
-            if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
-                query += " or T.VALUE_URI in (:retainedTermUris)";
-            }
-            query += ")";
-            return query;
+            return "(" + String.join( ") and (", clauses ) + ")";
         }
-        return "";
+        return null;
     }
 
     @Override
@@ -1852,16 +1871,31 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
-        // detach BAs from the samples, completely detached samples will be removed later
-        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        // find BMs attached to BAs
+        Set<BioMaterial> bms = new HashSet<>();
+        if ( !ee.getBioAssays().isEmpty() ) {
+            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "select distinct bm from BioMaterial bm join bm.bioAssaysUsedIn ba where ba in :bas" ),
+                    "bas", ee.getBioAssays(), MAX_PARAMETER_LIST_SIZE ) );
+        }
+
+        // find BMs attached to FVs
         Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.getSampleUsed().getFactorValues().removeAll( fvs );
-            ba.getSampleUsed().getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
-            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
-                samplesToRemove.add( ba.getSampleUsed() );
+        if ( !fvs.isEmpty() ) {
+            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv in :fvs" ),
+                    "fvs", fvs, MAX_PARAMETER_LIST_SIZE ) );
+        }
+
+        Set<BioMaterial> samplesToRemove = new HashSet<>();
+        for ( BioMaterial bm : bms ) {
+            // detach BAs and FVs from the samples, completely detached samples will be removed later
+            bm.getFactorValues().removeAll( fvs );
+            bm.getBioAssaysUsedIn().removeAll( ee.getBioAssays() );
+            if ( bm.getBioAssaysUsedIn().isEmpty() && bm.getFactorValues().isEmpty() ) {
+                samplesToRemove.add( bm );
             } else {
-                log.warn( ba.getSampleUsed() + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
+                log.warn( bm + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
             }
         }
 
