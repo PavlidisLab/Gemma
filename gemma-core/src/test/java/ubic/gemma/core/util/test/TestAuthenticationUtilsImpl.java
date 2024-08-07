@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
 
@@ -26,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Utilities for manipulating the {@link TestSecurityContextHolder} in a test envirnoment.
+ * Utilities for manipulating the {@link SecurityContextHolder} in a test envirnoment.
  * @author poirigui
  */
 @Service
@@ -110,6 +109,6 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
     private static void createAndSetSecurityContext( TestingAuthenticationToken token ) {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication( token );
-        TestSecurityContextHolder.setContext( securityContext );
+        SecurityContextHolder.setContext( securityContext );
     }
 }

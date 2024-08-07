@@ -34,7 +34,6 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.RunAs;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -121,7 +120,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @RunAs( RunAs.Role.ANONYMOUS )
     public void testSignup() {
         try {
             super.runAsAnonymous();

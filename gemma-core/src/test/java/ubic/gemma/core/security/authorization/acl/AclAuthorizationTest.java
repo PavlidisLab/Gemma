@@ -20,17 +20,17 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.test.context.TestSecurityContextHolder;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -154,10 +154,10 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
         super.runAsUser( this.aDifferentUsername );
 
-        assertEquals( 1, TestSecurityContextHolder.getContext().getAuthentication().getAuthorities().size() );
+        assertEquals( 1, SecurityContextHolder.getContext().getAuthentication().getAuthorities().size() );
 
         assertEquals( "GROUP_USER",
-                TestSecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next()
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next()
                         .getAuthority() );
 
         try {
