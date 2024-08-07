@@ -237,14 +237,9 @@ public class ExpressionExperimentServiceImpl
         if ( bad.getId() == null ) {
             log.info( "Creating " + bad + "..." );
             bad = this.bioAssayDimensionService.findOrCreate( bad );
-        }
-
-        /*
-         * This is probably a more or less redundant setting, but doesn't hurt to make sure.
-         */
-        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-        for ( BioAssay ba : bad.getBioAssays() ) {
-            ba.setArrayDesignUsed( vectorAd );
+            for ( RawExpressionDataVector vector : newVectors ) {
+                vector.setBioAssayDimension( bad );
+            }
         }
 
         return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
