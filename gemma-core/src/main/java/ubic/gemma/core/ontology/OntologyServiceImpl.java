@@ -51,6 +51,7 @@ import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -546,6 +547,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
+
     /**
      * Convert raw ontology resources into Characteristics.
      */
@@ -637,6 +639,105 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         return results;
     }
+
+
+    @Override
+    public void fixOntologyTermLabels() {
+        int prevObsoleteCnt = 0;
+        int checked = 0;
+        Characteristic lastObsolete = null;
+        long total = characteristicService.countAll();
+
+        int step = 5000;
+        int numUpdated = 0;
+        Map<String, OntologyTerm> updatedTerms = new HashMap<>(); // just for logging.
+        for ( int start = 0; ; start += step ) {
+            Collection<Characteristic> chars = characteristicService.browse( start, step );
+
+            if ( chars == null || chars.isEmpty() ) {
+                break;
+            }
+
+            boolean updated = false;
+            for ( Characteristic ch : chars ) {
+                String valueUri = ch.getValueUri();
+                if ( StringUtils.isNotBlank( valueUri ) ) {
+                    OntologyTerm term = this.getTerm( valueUri );
+
+                    if ( term == null ) {
+                        log.warn( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
+                        checked++;
+                        continue;
+                    }
+
+                    if ( !term.getLabel().equals( ch.getValue() ) ) {
+                        updatedTerms.put( ch.getValue(), term );
+                        ch.setValue( term.getLabel() );
+
+                        updated = true;
+                    }
+                }
+
+                if ( ch instanceof Statement ) {
+                    Statement statement = ( Statement ) ch;
+
+                    String objectUri = statement.getObjectUri();
+                    if ( StringUtils.isNotBlank( objectUri ) ) {
+                        OntologyTerm term = this.getTerm( objectUri );
+
+
+                        if ( term == null ) {
+                            log.warn( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
+                            checked++;
+                            continue;
+                        }
+
+                        if ( !term.getLabel().equals( statement.getObject() ) ) {
+                            updatedTerms.put( statement.getObject(), term );
+                            statement.setObject( term.getLabel() );
+
+                            updated = true;
+                        }
+                    }
+
+                    String secondObjectUri = statement.getSecondObjectUri();
+                    if ( StringUtils.isNotBlank( secondObjectUri ) ) {
+                        OntologyTerm term = this.getTerm( secondObjectUri );
+
+                        if ( term == null ) {
+                            log.warn( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
+                            checked++;
+                            continue;
+                        }
+
+                        if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
+                            updatedTerms.put( statement.getSecondObject(), term );
+                            statement.setSecondObject( term.getLabel() );
+                            updated = true;
+                        }
+                    }
+
+                }
+
+                if ( updated ) {
+                    characteristicService.update( ch );
+                    numUpdated++;
+                }
+
+                checked++;
+                if ( checked % 1000 == 0 ) {
+                    OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
+                    if ( !updatedTerms.isEmpty() ) {
+                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( "Updated: " + k + " to " + v.getLabel() + " (" + v.getUri() + ")" ) );
+                        updatedTerms.clear(); // just print out what we saw in the last batch.
+                    }
+                }
+            }
+        }
+        OntologyServiceImpl.log.info( "Finished checking all " + checked + " characteristics, updated " + numUpdated );
+
+    }
+
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
         StopWatch watch = new StopWatch();

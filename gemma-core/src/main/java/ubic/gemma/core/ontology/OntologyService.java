@@ -135,4 +135,10 @@ public interface OntologyService {
      * admin-only.
      */
     void reinitializeAndReindexAllOntologies();
+
+    /**
+     * Check all system uses of ontology terms for the correct label and fix any mismatches based on the ontology OWL files.
+     * This should be run periodically along with findObsoleteTerms.
+     */
+    void fixOntologyTermLabels();
 }
