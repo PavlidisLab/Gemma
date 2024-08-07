@@ -756,7 +756,8 @@
 		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.91</tomcat.version>
 		<mockito.version>5.12.0</mockito.version>
-		<prettytime.version>5.0.9.Final</prettytime.version>
+		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
+		<prettytime.version>5.0.6.Final</prettytime.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
