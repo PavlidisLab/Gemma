@@ -105,7 +105,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
      */
     @Test
     public void testArrayDesignAcls() {
-        ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false ); // need to modify
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false ); // need to modify
 
         aclTestUtils.checkHasAcl( ad );
         aclTestUtils.checkHasAces( ad );
@@ -137,7 +137,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
         this.makeUser( userName );
         this.runAsUser( userName );
-        ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false );
 
         aclTestUtils.checkHasAcl( ad );
         aclTestUtils.checkHasAces( ad );
