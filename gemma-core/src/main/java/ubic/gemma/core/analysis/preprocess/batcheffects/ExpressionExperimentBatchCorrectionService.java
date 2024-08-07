@@ -39,15 +39,20 @@ public interface ExpressionExperimentBatchCorrectionService {
 
     /**
      * Run ComBat using default settings (parametric)
+     * <p>
+     * The matrix is constructed from the experiment's processed vectors.
+     */
+    @Nullable
+    ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
+
+    /**
+     * Run ComBat with a specific data matrix.
      *
      * @param mat the matrix
      * @return batch corrected matrix, or null if there's no batching factor
      */
     @Nullable
-    ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
-
-    @Nullable
-    ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
+    ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat );
 
     /**
      * For convenience of some testing classes

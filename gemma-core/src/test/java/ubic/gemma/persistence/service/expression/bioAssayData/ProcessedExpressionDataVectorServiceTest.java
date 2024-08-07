@@ -183,9 +183,6 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         assertEquals( 100, genes.size() );
         v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
-
-        processedDataVectorService.clearCache();
-
     }
 
     private ExpressionExperiment getDataset() throws Exception {

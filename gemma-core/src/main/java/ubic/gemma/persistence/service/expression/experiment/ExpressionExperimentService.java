@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -41,7 +40,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.auditAndSecurity.curation.CuratableService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -57,8 +57,8 @@ import java.util.function.Function;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-public interface ExpressionExperimentService
-        extends CuratableService<ExpressionExperiment, ExpressionExperimentValueObject> {
+public interface ExpressionExperimentService extends SecurableBaseService<ExpressionExperiment>,
+        SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     ExpressionExperiment loadReference( Long id );
 
@@ -73,6 +73,13 @@ public interface ExpressionExperimentService
      * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
      */
     Collection<ExpressionExperiment> loadAllReferences();
+
+    /**
+     * Load an experiment with its audit trail initialized.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithAuditTrail( Long id );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );

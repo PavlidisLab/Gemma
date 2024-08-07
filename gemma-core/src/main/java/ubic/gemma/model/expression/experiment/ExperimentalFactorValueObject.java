@@ -29,7 +29,7 @@ import ubic.gemma.model.common.IdentifiableValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * @author luke
@@ -132,11 +132,10 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
          * NOTE this replaces code that previously made no sense. PP
          * TODO: replace with FactorValueBasicValueObject
          */
-        Collection<FactorValueValueObject> vals = new HashSet<>();
-        for ( FactorValue value : factor.getFactorValues() ) {
-            vals.add( new FactorValueValueObject( value ) );
-        }
-        this.values = vals;
+        this.values = factor.getFactorValues().stream()
+                // never include the experimental factor in the FV serialization since those would be redundant
+                .map( value -> new FactorValueValueObject( value, false ) )
+                .collect( Collectors.toSet() );
     }
 
     /**

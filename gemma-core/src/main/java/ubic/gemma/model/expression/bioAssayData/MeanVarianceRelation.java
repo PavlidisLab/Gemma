@@ -19,15 +19,17 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.persistence.Transient;
+import java.io.Serializable;
 
 /**
  * @author Patrick
  */
-public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.model.SecuredChild {
+public class MeanVarianceRelation implements SecuredChild, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

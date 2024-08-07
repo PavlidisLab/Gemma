@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
@@ -82,14 +84,14 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears ) {
-        return voDao.loadValueObjectWithResults( ears );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes ) {
+        return voDao.loadValueObjectWithResults( ears, includeFactorValuesInContrasts, queryByResult, includeTaxonInGenes );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
-        return voDao.loadResultToGenesMap( resultSet );
+        return voDao.loadResultToGenesMap( resultSet, false );
     }
 
     @Override
@@ -100,5 +102,23 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
                 offset,
                 limit,
                 sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Baseline getBaseline( ExpressionAnalysisResultSet ears ) {
+        return voDao.getBaseline( ears );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractions( resultSets, initializeFactorValues );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues ) {
+        return voDao.getBaselinesForInteractionsByIds( rsIds, initializeFactorValues );
     }
 }

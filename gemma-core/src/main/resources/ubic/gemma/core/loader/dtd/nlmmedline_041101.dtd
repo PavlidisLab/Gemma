@@ -1,0 +1,70 @@
+<!-- NLMMedline DTD              
+
+
+      Comments and suggestions are welcome.
+      November 1, 2004
+
+
+      ** This is the forthcoming DTD not currently in use.  
+      See http://www.nlm.nih.gov/databases/dtd/nlmmedline_031101.dtd 
+      for the NLMMedline DTD dated November 1, 2003 currently in use.**  
+ 
+    
+        This is the DTD which the U.S. National Library of Medicine 
+        has written for External Use.        
+        If you are a data Licensee, the data are found in 
+        MedlineCitationSet.       
+ 
+       
+
+       
+  * = 0 or more occurrences (optional element, repeatable)
+  ? = 0 or 1 occurrences (optional element, at most 1)
+  + = 1 or more occurrences (required element, repeatable)
+  | = choice, one or the other but not both 
+  no symbol = required element
+    
+
+ 
+-->
+<!-- ================================================================= -->
+<!--   NLMMedline DTD   -->
+<!-- Typical usage:   
+
+  <!DOCTYPE MedlineCitationSet PUBLIC "-//NLM//DTD NLM Medline//EN">
+
+-->
+<!-- ================================================================= -->
+<!--   Revision Notes Section 
+
+  The following changes were made in the nlmmedline_041101.dtd:
+  
+       a.  Changed entity reference from "nlmmedlinecitation_031101.dtd"
+           to: "nlmmedlinecitation_041101.dtd"
+
+       b.  Changed external entity from MedlineID.Ref to NlmDcmsID.Ref
+       
+     Historic Revision notes for previous versions of NLMMedline DTD 
+     See:
+     http://www.nlm.nih.gov/databases/dtd/history_dtd_nlmmedline.html
+-->
+<!-- ================================================================= -->
+<!--  external DTD entities                        -->
+<!ENTITY % Acronym.Ref "Acronym?">
+<!ENTITY % Agency.Ref "Agency">
+<!ENTITY % ArticleTitle.Ref "ArticleTitle">
+<!ENTITY % DateCreated.Ref "DateCreated">
+<!ENTITY % GrantID.Ref "GrantID?">
+<!ENTITY % ISSN.Ref "ISSN?">
+<!ENTITY % NlmDcmsID.Ref "NlmDcmsID?">
+<!ENTITY % PMID.Ref "PMID">
+<!ENTITY % PubDate.Ref "PubDate">
+<!-- ================================================================= -->
+<!-- Reference to Where the NLM MedlineCitation DTD is located  -->
+<!ENTITY % MedlineCitation PUBLIC "-//NLM//DTD MedlineCitation, 1st November 2004//EN"
+"nlmmedlinecitation_041101.dtd" >  
+%MedlineCitation;
+<!-- ================================================================= -->
+<!ELEMENT DeleteCitation (PMID+)>
+<!ELEMENT MedlineCitationSet (MedlineCitation*, DeleteCitation?)>
+<!-- ================================================================= -->

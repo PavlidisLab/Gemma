@@ -34,17 +34,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
-import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -140,8 +138,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private GeneSearchService geneSearchService;
-    @Autowired
     private TaxonService taxonService;
 
     @Autowired
@@ -206,10 +202,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
         if ( settings.hasResultType( BioSequence.class ) ) {
             results.addAll( searchSource.searchBioSequence( settings ) );
-        }
-        if ( settings.hasResultType( Gene.class ) && settings.isUseGo() ) {
-            results.addAll( this.dbHitsToSearchResult( settings, Gene.class, geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ),
-                    0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
         }
         if ( settings.hasResultType( BibliographicReference.class ) ) {
             results.addAll( searchSource.searchBibliographicReference( settings ) );
@@ -413,29 +405,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     /**
-     * Convert hits from database searches into SearchResults.
-     */
-    private <T extends Identifiable> SearchResultSet<T> dbHitsToSearchResult( SearchSettings settings, Class<T> entityClass, Collection<T> entities, double score, Map<String, String> highlights, String source ) {
-        StopWatch watch = StopWatch.createStarted();
-        SearchResultSet<T> results = new SearchResultSet<>( settings, entities.size() );
-        for ( T e : entities ) {
-            if ( e == null ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( "Null search result object" );
-                continue;
-            }
-            if ( e.getId() == null ) {
-                log.warn( "Search result object with null ID." );
-            }
-            results.add( SearchResult.from( entityClass, e, score, highlights, source ) );
-        }
-        if ( watch.getTime() > 1000 ) {
-            log.warn( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
-        }
-        return results;
-    }
-
-    /**
      * A key method for experiment search. This search does both an database search and a compass search, and looks at
      * several different associations. To allow maximum flexibility, we try not to limit the number of results here (it
      * can be done via the settings object)
@@ -535,9 +504,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 if ( ad != null ) {
                     Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
                             .getExpressionExperiments( ad );
-                    if ( !expressionExperiments.isEmpty() )
-                        results.addAll( this.dbHitsToSearchResult( settings, ExpressionExperiment.class, expressionExperiments,
-                                0.8, Collections.singletonMap( "arrayDesign", ad.getShortName() + " - " + ad.getName() ), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
+                    for ( ExpressionExperiment ee : expressionExperiments ) {
+                        results.add( SearchResult.from( ExpressionExperiment.class, ee, 0.8, Collections.singletonMap( "arrayDesign", ad.getShortName() + " - " + ad.getName() ), String.format( "ArrayDesignService.getExpressionExperiments(%s)", ad ) ) );
+                    }
                 }
             }
             if ( watch.getTime() > 1000 ) {

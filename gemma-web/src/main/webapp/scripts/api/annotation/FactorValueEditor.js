@@ -382,10 +382,12 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
                this.deleteFactorValueButton.enable();
                this.markAsNeedsAttentionButton.enable()
                this.clearNeedsAttentionButton.enable();
+               this.duplicateButton.enable();
             } else {
                this.deleteFactorValueButton.disable();
                this.markAsNeedsAttentionButton.disable();
                this.clearNeedsAttentionButton.disable();
+               this.duplicateButton.disable();
             }
          }, this.getTopToolbar() );
 
@@ -460,6 +462,27 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
             ExperimentalDesignController.updateFactorValueCharacteristics( edited, callback );
          }, this );
 
+         this.getTopToolbar().on( "duplicate", function() {
+            var selectedIds = this.getSelectedFactorValues();
+            if ( selectedIds && selectedIds.length > 0 ) {
+
+               if ( selectedIds.length > 1 ) {
+                  Ext.Msg.alert( "Select single", "Select a single factor value to be duplicated" );
+                  return;
+               }
+
+               var selectedId = selectedIds[0];
+
+               var ef = this.experimentalFactor;
+               this.getEl().mask();
+               var callback = function() {
+                  this.getEl().unmask();
+                  this.factorValuesChanged( selectedIds ); // these ids are not changed, but forces a refresh.
+               }.createDelegate( this );
+               ExperimentalDesignController.duplicateFactorValue( ef, selectedId, callback, this );
+            }
+         }.createDelegate( this ), this );
+
          this.getTopToolbar().on( "undo", this.revertSelected.createDelegate( this ), this );
 
          var that = this;
@@ -522,6 +545,7 @@ Gemma.FactorValueGrid = Ext.extend( Gemma.GemmaGridPanel, {
             }.createDelegate( this );
             ExperimentalDesignController.deleteFactorValueCharacteristics( selected, callback );
          }.createDelegate( this ), this );
+
       }
    },
 
@@ -634,7 +658,7 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
     */
    initComponent : function() {
       Gemma.FactorValueToolbar.superclass.initComponent.call( this );
-      this.addEvents( "create", "save", "delete", "undo", "markAsNeedsAttention", "clearNeedsAttention", "refresh", "toggleExpand", "toggleCollapse" );
+      this.addEvents( "create", "save", "delete", "duplicate", "undo", "markAsNeedsAttention", "clearNeedsAttention", "refresh", "toggleExpand", "toggleCollapse" );
 
    },
 
@@ -673,6 +697,17 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
             this.saveButton.disable();
             this.fireEvent( "save" );
          }.createDelegate( this )
+      } );
+
+      this.duplicateButton = new Ext.Toolbar.Button( {
+         text : "Dupl",
+         id : 'factor-value-duplicate-button',
+         tooltip : "Duplicate the selected factor value",
+         disabled : true,
+         handler : function() {
+            this.fireEvent( "duplicate" );
+         },
+         scope : this
       } );
 
       this.revertButton = new Ext.Toolbar.Button( {
@@ -721,6 +756,8 @@ Gemma.FactorValueToolbar = Ext.extend( Ext.Toolbar, {
          this.addButton( this.deleteFactorValueButton );
          this.addSpacer();
          this.addButton( this.saveButton );
+         this.addSpacer();
+         this.addButton( this.duplicateButton );
          this.addSpacer();
          this.addButton( this.revertButton );
          this.addSpacer();

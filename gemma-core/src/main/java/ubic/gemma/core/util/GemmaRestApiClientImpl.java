@@ -112,9 +112,6 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
                         return new EmptyResponseImpl();
                     }
                     return readJsonResponseFromStream( httpConnection.getInputStream(), connection.getContentEncoding(), DataResponseImpl.class );
-                } else if ( status >= 300 && status < 400 ) {
-                    // redirection
-                    return new RedirectionImpl( httpConnection.getHeaderField( "Location" ) );
                 } else if ( status >= 400 && status < 600 ) {
                     return readJsonResponseFromStream( httpConnection.getErrorStream(), connection.getContentEncoding(), ErrorResponseImpl.class );
                 } else {
@@ -187,12 +184,6 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             private int code;
             private String message;
         }
-    }
-
-    @Data
-    @EqualsAndHashCode(callSuper = false)
-    private static class RedirectionImpl extends ResponseImpl implements Redirection {
-        private final String location;
     }
 
     private static class EmptyResponseImpl extends ResponseImpl implements EmptyResponse {

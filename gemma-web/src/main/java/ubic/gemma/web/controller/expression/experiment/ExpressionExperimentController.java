@@ -36,6 +36,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -85,14 +86,16 @@ import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * @author keshav
@@ -257,9 +260,7 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping("/filterExpressionExperiments.html")
-    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-        String searchString = request.getParameter( "filter" );
-
+    public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
             return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "No search criteria provided" );
@@ -620,8 +621,9 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ) );
-        ee.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        ee.setBatchEffect( getBatchEffectType( details ) );
+        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
         expressionExperimentService.update( ee );
     }
 
@@ -856,20 +858,14 @@ public class ExpressionExperimentController {
 
     /**
      * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
-     *
-     * @param  request  request
-     * @param  response response
-     * @return model and view
      */
     @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" })
-    public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
-
+    public ModelAndView showAllExpressionExperiments() {
         return new ModelAndView( "expressionExperiments" );
-
     }
 
     @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" })
-    public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showAllLinkSummaries() {
         return new ModelAndView( "expressionExperimentLinkSummary" );
     }
 
@@ -910,13 +906,13 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" })
-    public ModelAndView showExpressionExperiment( @RequestParam(value = "id") Long id ) {
-        BioAssaySet bioAssaySet;
-        bioAssaySet = expressionExperimentService.loadBioAssaySet( id );
-        if ( bioAssaySet == null ) {
+    public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
+        ExpressionExperiment expressionExperiment;
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
-        return showBioAssaySet( bioAssaySet );
+        return showExpressionExperiment( expressionExperiment );
     }
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" })
@@ -925,10 +921,10 @@ public class ExpressionExperimentController {
         if ( experimentExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
         }
-        return showBioAssaySet( experimentExperiment );
+        return showExpressionExperiment( experimentExperiment );
     }
 
-    private ModelAndView showBioAssaySet( BioAssaySet ee ) {
+    private ModelAndView showExpressionExperiment( ExpressionExperiment ee ) {
         return new ModelAndView( "expressionExperiment.detail" )
                 .addObject( "expressionExperiment", ee )
                 .addObject( "eeId", ee.getId() )
@@ -936,21 +932,14 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * shows a list of BioAssays for an expression experiment subset
-     *
-     * @param  request  request
-     * @param  response response
-     * @return model and view
+     * Shows a list of BioAssays for an expression experiment subset.
      */
     @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
-    public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-
+    public ModelAndView showSubSet( @RequestParam("id") Long id ) {
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
         if ( subset == null ) {
-            throw new EntityNotFoundException( id + " not found" );
+            throw new EntityNotFoundException( "No experiment subset with ID " + id + "." );
         }
-
         // request.setAttribute( "id", id );
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
     }
@@ -1071,14 +1060,16 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping("/downloadExpressionExperimentList.html")
-    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
-
+    public ModelAndView handleRequestInternal(
+            @RequestParam(value = "e", required = false) String e,
+            @RequestParam(value = "es", required = false) String es,
+            @RequestParam(value = "esn", required = false) String esn
+    ) {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> eeIds = ControllerUtils.extractIds( request.getParameter( "e" ) ); // might not be any
-        Collection<Long> eeSetIds = ControllerUtils.extractIds( request.getParameter( "es" ) ); // might not be there
-        String eeSetName = request.getParameter( "esn" ); // might not be there
+        Collection<Long> eeIds = ControllerUtils.extractIds( e ); // might not be any
+        Collection<Long> eeSetIds = ControllerUtils.extractIds( es ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );
         if ( eeIds.isEmpty() && eeSetIds.isEmpty() ) {
@@ -1092,7 +1083,7 @@ public class ExpressionExperimentController {
             ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
         }
 
-        mav.addObject( TextView.TEXT_PARAM, this.format4File( ees, eeSetName ) );
+        mav.addObject( TextView.TEXT_PARAM, this.format4File( ees, esn ) );
         watch.stop();
         long time = watch.getTime();
 
@@ -1175,8 +1166,9 @@ public class ExpressionExperimentController {
         if ( hasUsableBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         }
-        finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
-        finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        finalResult.setBatchEffect( getBatchEffectType( details ).name() );
+        finalResult.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
     }
 
     /**
@@ -1369,7 +1361,7 @@ public class ExpressionExperimentController {
         return eeValObjectCol;
     }
 
-    private String format4File( Collection<ExpressionExperimentValueObject> ees, String eeSetName ) {
+    private String format4File( Collection<ExpressionExperimentValueObject> ees, @Nullable String eeSetName ) {
         StringBuilder strBuff = new StringBuilder();
         strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );

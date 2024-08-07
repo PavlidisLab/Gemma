@@ -1,12 +1,12 @@
 package ubic.gemma.core.util;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
@@ -24,7 +24,12 @@ public class GemmaRestApiClientTest {
     @Test
     public void test() throws IOException {
         assertThat( client.perform( "/" ) )
-                .isInstanceOf( GemmaRestApiClient.DataResponse.class );
+                .asInstanceOf( type( GemmaRestApiClient.DataResponse.class ) )
+                .extracting( GemmaRestApiClient.DataResponse::getData )
+                .hasFieldOrProperty( "welcome" )
+                .hasFieldOrProperty( "version" )
+                .hasFieldOrProperty( "externalDatabases" )
+                .hasFieldOrProperty( "buildInfo" );
     }
 
     @Test
@@ -43,7 +48,6 @@ public class GemmaRestApiClientTest {
     }
 
     @Test
-    @Ignore("Requires https://github.com/PavlidisLab/Gemma/issues/1133 to be addressed first.")
     public void testEndpointWithIncorrectCredentials() throws IOException {
         try {
             client.setAuthentication( "foo", "1234" );
@@ -58,16 +62,22 @@ public class GemmaRestApiClientTest {
     }
 
     @Test
-    @Ignore("Requires https://github.com/PavlidisLab/Gemma/issues/1134 to be addressed first.")
     public void testEndpointWithRedirection() throws IOException {
         assertThat( client.perform( "/datasets/1/analyses/differential/resultSets" ) )
-                .isInstanceOf( GemmaRestApiClient.Redirection.class );
+                .asInstanceOf( type( GemmaRestApiClient.DataResponse.class ) )
+                .extracting( GemmaRestApiClient.DataResponse::getData )
+                .asInstanceOf( list( Object.class ) )
+                .isNotEmpty()
+                .allSatisfy( o -> assertThat( o ).hasFieldOrPropertyWithValue( "analysis.bioAssaySetId", 1 ) );
     }
 
     @Test
     public void testNotFoundEndpoint() throws IOException {
         assertThat( client.perform( "/bleh" ) )
-                .isInstanceOf( GemmaRestApiClient.ErrorResponse.class );
+                .asInstanceOf( type( GemmaRestApiClient.ErrorResponse.class ) )
+                .satisfies( r -> {
+                    assertThat( r.getError().getCode() ).isEqualTo( 404 );
+                } );
     }
 
     @Test

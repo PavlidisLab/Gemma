@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -15,9 +16,9 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ContextConfiguration
 public class BioMaterialDaoTest extends BaseDatabaseTest {
@@ -73,5 +74,27 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
                     assertThat( fv2.getExperimentalFactor() )
                             .matches( Hibernate::isInitialized );
                 } );
+    }
+
+    @Test
+    public void testCreateWithMultipleFactorValueForSameExperimentalFactor() {
+        ExperimentalDesign ed = new ExperimentalDesign();
+        sessionFactory.getCurrentSession().persist( ed );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setExperimentalDesign( ed );
+        ef.setType( FactorType.CATEGORICAL );
+        FactorValue fv1 = FactorValue.Factory.newInstance( ef );
+        fv1.setValue( "foo" );
+        ef.getFactorValues().add( fv1 );
+        FactorValue fv2 = FactorValue.Factory.newInstance( ef );
+        fv2.setValue( "bar" );
+        ef.getFactorValues().add( fv2 );
+        sessionFactory.getCurrentSession().persist( ef );
+        BioMaterial bm = new BioMaterial();
+        bm.getFactorValues().add( fv1 );
+        bm.getFactorValues().add( fv2 );
+        assertThatThrownBy( () -> bioMaterialDao.create( bm ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageStartingWith( "BioMaterial has more than one factor values for ExperimentalFactor Id=" + ef.getId() + " Type=CATEGORICAL:" );
     }
 }

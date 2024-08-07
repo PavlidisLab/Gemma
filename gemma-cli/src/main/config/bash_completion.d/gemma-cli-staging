@@ -446,6 +446,16 @@ function __gemma_cli_complete() {
     if [[ " $words " =~ ' transformSingleCellData ' ]]; then
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
     fi
+    if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEe2AdCli ' ]]; then
+        if ! [[ "$current_option" =~ (--since|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' updateEe2Ad ' ]]; then
+        if ! [[ "$current_option" =~ (--since|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
+        fi
+    fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEE2CCli ' ]]; then
         if ! [[ "$current_option" =~ (--since|-s) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since --truncate -h -s -truncate" -- "$2")
@@ -694,16 +704,6 @@ function __gemma_cli_complete() {
         fi
         if [[ "$current_option" =~ (--adListFile|--file|-b|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
-        fi
-    fi
-    if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEe2AdCli ' ]]; then
-        if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
-        fi
-    fi
-    if [[ " $words " =~ ' updateEe2Ad ' ]]; then
-        if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since -h -s" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DatabaseViewGeneratorCLI ' ]]; then

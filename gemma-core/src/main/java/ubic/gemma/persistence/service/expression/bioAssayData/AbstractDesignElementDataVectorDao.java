@@ -63,6 +63,10 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
 
     @Override
     public void thaw( Collection<T> designElementDataVectors ) {
+        if ( designElementDataVectors.isEmpty() ) {
+            return;
+        }
+
         StopWatch timer = StopWatch.createStarted();
         StopWatch vTimer = StopWatch.create(),
                 eeTimer = StopWatch.create(),

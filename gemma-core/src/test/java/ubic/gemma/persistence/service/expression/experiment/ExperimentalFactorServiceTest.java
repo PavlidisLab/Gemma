@@ -17,8 +17,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialServiceImpl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
@@ -86,15 +85,20 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertNotNull( ee );
         ef = ( ExperimentalFactor ) sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() );
+        assertNotNull( ef );
         experimentalFactorService.remove( ef );
 
+        ed = ( ExperimentalDesign ) sessionFactory.getCurrentSession().get( ExperimentalDesign.class, ed.getId() );
+        assertNotNull( ed );
         assertFalse( ed.getExperimentalFactors().contains( ef ) );
 
         // reload and verify cascading behaviour
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( ee );
         ee = ( ExpressionExperiment ) sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertNotNull( ee );
         assertFalse( ee.getExperimentalDesign().getExperimentalFactors().contains( ef ) );
         assertFalse( ee.getBioAssays().iterator().next().getSampleUsed().getFactorValues().contains( fv ) );
         assertNull( sessionFactory.getCurrentSession().get( ExperimentalFactor.class, ef.getId() ) );

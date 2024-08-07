@@ -46,11 +46,23 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param includeSubsets          include results from experiment subsets
      * @param sourceExperimentIdMap   a mapping of results to source experiment ID
      * @param experimentAnalyzedIdMap a mapping of results to experiment analyzed ID
+     * @param baselineMap             a mapping of results to baselines
      * @param threshold               a maximum threshold on the corrected P-value, between 0 and 1 inclusively
      * @param keepNonSpecificProbes   whether to keep probes that map to more than one gene
+     * @param initializeFactorValues  whether to initialize factor values in contrasts and baselines, note that their
+     *                                experimental factors will not be initialized
      * @return differential expression results, grouped by analyzed experiment ID
      */
-    List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, double threshold, boolean keepNonSpecificProbes );
+    List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed(
+            Gene gene,
+            Collection<Long> experimentAnalyzedIds,
+            boolean includeSubsets,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap,
+            @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap,
+            double threshold,
+            boolean keepNonSpecificProbes,
+            boolean initializeFactorValues );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
@@ -86,7 +98,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
+    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
             int maxResultsToReturn, int minNumberOfResults );
 
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );

@@ -24,13 +24,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.IOException;
@@ -38,6 +36,8 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
+
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * Simple class to parse XML in the format defined by
@@ -56,7 +56,6 @@ public class PubMedXMLParser {
     private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
     final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
     private final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
-    DocumentBuilder builder;
 
     public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
         NodeList c = item.getChildNodes();
@@ -98,10 +97,7 @@ public class PubMedXMLParser {
             //                throw new IOException( "XML stream contains no data." );
             //            }
 
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setIgnoringComments( true );
-            factory.setValidating( false );
-            builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = createDocumentBuilder();
             Document document = builder.parse( is );
 
             PubMedXMLParser.log.debug( "done parsing" );

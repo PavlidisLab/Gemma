@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -62,4 +63,29 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
     }
 
+    @Override
+    public void remove( PrincipalComponentAnalysis entity ) {
+        // detach the entity because we're going to do some manual removal
+        getSessionFactory().getCurrentSession().evict( entity );
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+        entity.setEigenValues( new HashSet<>() );
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+        entity.setEigenVectors( new HashSet<>() );
+
+        getSessionFactory().getCurrentSession()
+                .createSQLQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .setParameter( "id", entity.getId() )
+                .executeUpdate();
+        entity.setProbeLoadings( new HashSet<>() );
+
+        super.remove( entity );
+    }
 }

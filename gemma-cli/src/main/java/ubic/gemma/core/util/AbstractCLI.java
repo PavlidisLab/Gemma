@@ -387,7 +387,7 @@ public abstract class AbstractCLI implements CLI {
      * purposes.
      */
     private void processStandardOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) ^ commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+        if ( commandLine.hasOption( LIMITING_DATE_OPTION ) && commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
             throw new IllegalArgumentException( String.format( "Please only select one of -%s or -%s", LIMITING_DATE_OPTION, AUTO_OPTION_NAME ) );
         }
 

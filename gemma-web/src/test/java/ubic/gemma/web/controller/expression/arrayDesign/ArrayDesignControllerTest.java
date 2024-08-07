@@ -18,30 +18,107 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.web.util.BaseWebIntegrationTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.util.BaseWebTest;
 
-import java.util.Collection;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author keshav
  */
-public class ArrayDesignControllerTest extends BaseWebIntegrationTest {
+@ContextConfiguration
+public class ArrayDesignControllerTest extends BaseWebTest {
+
+    @Configuration
+    @TestComponent
+    static class CC extends BaseWebTest.BaseWebTestContextConfiguration {
+
+        @Bean
+        public ArrayDesignController arrayDesignController() {
+            return new ArrayDesignControllerImpl();
+        }
+
+        @Bean
+        public ArrayDesignMapResultService arrayDesignMapResultService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignReportService arrayDesignReportService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock();
+        }
+
+        @Bean
+        public CompositeSequenceService compositeSequenceService() {
+            return mock();
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock();
+        }
+
+        @Bean
+        public TaskRunningService taskRunningService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignAnnotationService annotationFileService() {
+            return mock();
+        }
+    }
 
     @Autowired
-    private ArrayDesignController arrayDesignController;
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private ArrayDesignAnnotationService annotationFileService;
+
+    @After
+    public void resetMocks() {
+        reset( arrayDesignService );
+    }
 
     @Test
-    public void testShowAllArrayDesigns() {
-        ModelAndView mav = arrayDesignController.showAllArrayDesigns();
-        Collection<Object> c = mav.getModel().values();
-        assertNotNull( c );
-        assertEquals( "arrayDesigns", mav.getViewName() );
+    public void testShowAllArrayDesigns() throws Exception {
+        perform( get( "/arrays/showAllArrayDesigns.html" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "arrayDesigns" ) );
+    }
+
+    @Test
+    public void testDownloadAnnotationsWhenFileCannotBeCreated() throws Exception {
+        ArrayDesign ad = new ArrayDesign();
+        when( arrayDesignService.load( 1L ) ).thenReturn( ad );
+        perform( get( "/arrays/downloadAnnotationFile.html" )
+                .param( "id", "1" ) )
+                .andExpect( status().isNotFound() )
+                .andExpect( view().name( "error/404" ) )
+                .andExpect( model().attributeExists( "exception" ) );
+        verify( arrayDesignService ).load( 1L );
+        // no file will be created because it's just a mock
+        verify( annotationFileService ).create( ad, true, false );
     }
 }

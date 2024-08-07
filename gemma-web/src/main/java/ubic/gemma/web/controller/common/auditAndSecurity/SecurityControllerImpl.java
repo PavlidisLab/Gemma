@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;

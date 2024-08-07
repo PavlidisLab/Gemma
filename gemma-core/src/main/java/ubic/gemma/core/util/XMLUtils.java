@@ -25,7 +25,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ubic.gemma.core.loader.util.NcbiEntityResolver;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -135,15 +137,17 @@ public class XMLUtils {
         return value.toString();
     }
 
-    public static Document openAndParse( InputStream is )
-            throws IOException, ParserConfigurationException, SAXException {
-
+    public static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
-        // factory.setValidating( true );
-
+        factory.setValidating( false );
         DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse( is );
+        builder.setEntityResolver( new NcbiEntityResolver() );
+        return builder;
     }
 
+    public static Document openAndParse( InputStream is )
+            throws IOException, ParserConfigurationException, SAXException {
+        return createDocumentBuilder().parse( is );
+    }
 }

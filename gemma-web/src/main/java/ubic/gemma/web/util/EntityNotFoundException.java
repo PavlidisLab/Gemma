@@ -20,15 +20,20 @@ package ubic.gemma.web.util;
 
 /**
  * Signals that an entity was not found in the system.
- * 
+ * <p>
+ * This is translated into a 404 error by the exception resolver.
  * @author pavlidis
  */
 public class EntityNotFoundException extends RuntimeException {
 
     private static final long serialVersionUID = -4361183252269974819L;
 
-    public EntityNotFoundException( String string ) {
-        super( string );
+    public EntityNotFoundException( String message ) {
+        super( message );
+    }
+
+    public EntityNotFoundException( String message, Throwable cause ) {
+        super( message, cause );
     }
 
 }

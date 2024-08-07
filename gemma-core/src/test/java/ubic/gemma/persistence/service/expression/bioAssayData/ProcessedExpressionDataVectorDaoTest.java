@@ -15,6 +15,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -30,7 +31,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.*;
 
@@ -55,8 +55,8 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         }
 
         @Bean
-        public ProcessedExpressionDataVectorDao processedExpressionDataVectorDao( SessionFactory sessionFactory, ProcessedDataVectorByGeneCache cache, ExpressionExperimentDao expressionExperimentDao ) {
-            return new ProcessedExpressionDataVectorDaoImpl( sessionFactory, cache, expressionExperimentDao );
+        public ProcessedExpressionDataVectorDao processedExpressionDataVectorDao( SessionFactory sessionFactory ) {
+            return new ProcessedExpressionDataVectorDaoImpl( sessionFactory );
         }
 
         @Bean

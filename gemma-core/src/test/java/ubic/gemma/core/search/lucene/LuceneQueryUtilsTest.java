@@ -66,6 +66,13 @@ public class LuceneQueryUtilsTest {
     }
 
     @Test
+    public void testExtractDnfWithOntologyTerms() throws SearchException {
+        // reckognized ontology prefixes are listed in ontology.prefixes.txt
+        assertThat( extractTermsDnf( SearchSettings.geneSearch( "GO:0100101 OR GO:0100102 OR DGO:1090129", null ) ) )
+                .contains( set( "GO:0100101" ), set( "GO:0100102" ) );
+    }
+
+    @Test
     public void testPrepareDatabaseQuery() throws SearchException {
         assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA1", null ) ) );
         assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA1^4", null ) ) );

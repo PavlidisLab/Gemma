@@ -88,12 +88,14 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
             ExpressionExperiment ee = ( ExpressionExperiment ) bioassay;
 
             if ( !force && this.noNeedToRun( ee, GeeqEvent.class ) ) {
-                AbstractCLI.log.debug( "Can't or don't need to run " + ee );
+                AbstractCLI.log.info( "Can't or don't need to run " + ee );
+                addErrorObject( ee, "Can't or don't need to run " + ee );
                 continue;
             }
 
             try {
                 geeqService.calculateScore( ee, mode );
+                refreshExpressionExperimentFromGemmaWeb( ee, false, true );
                 addSuccessObject( ee );
             } catch ( Exception e ) {
                 addErrorObject( ee, e );

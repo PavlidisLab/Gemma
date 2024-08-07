@@ -28,7 +28,7 @@ import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 
 import java.util.Collection;
 
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
 
 /**
  * <p>
@@ -49,27 +49,27 @@ public class CoexpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase
 
     @Override
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
-        String q = "select ccd from CoexpressionAnalysis pca "
-                + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
-                .setParameter( "ee", expressionExperiment ).uniqueResult();
+        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ccd from CoexpressionAnalysis pca "
+                        + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee" )
+                .setParameter( "ee", expressionExperiment )
+                .uniqueResult();
 
     }
 
     @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
-                .setParameterList( "ids", optimizeParameterList( idsToFilter ) ).list();
+        return listByBatch( this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" ),
+                "ids", idsToFilter, 2048 );
     }
 
     @Override
-    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
-        String q = "select ccd from CoexpressionAnalysis pca "
-                + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return this.getSessionFactory().getCurrentSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
-                != null;
+    public boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ccd from CoexpressionAnalysis pca "
+                        + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult() != null;
     }
-
 }

@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -324,24 +323,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     }
 
     private void fillInFactorValueAssociations( FactorValue factorValue, Caches caches ) {
-
         this.fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor(), caches );
-
-        factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor(), caches ) );
-
-        // validate categorical v.s. continuous factor values
-        FactorType factorType = factorValue.getExperimentalFactor().getType();
-        if ( factorType.equals( FactorType.CONTINUOUS ) && factorValue.getMeasurement() == null ) {
-            throw new IllegalStateException( "Continuous factor value must have a measurement." );
-        } else if ( factorType.equals( FactorType.CATEGORICAL ) && factorValue.getCharacteristics().isEmpty() ) {
-            throw new IllegalStateException( "Categorical factor value must have at least one characteristic." );
+        if ( factorValue.getExperimentalFactor().getId() == null ) {
+            factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor(), caches ) );
         }
-
-        // sanity check
-        if ( factorValue.getCharacteristics().size() > 0 && factorValue.getMeasurement() != null ) {
-            throw new IllegalStateException( "FactorValue can only have one of ontology entry or measurement." );
-        }
-
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
             factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );

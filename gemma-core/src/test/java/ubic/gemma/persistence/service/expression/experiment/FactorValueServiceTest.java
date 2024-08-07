@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
@@ -16,8 +17,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.experiment.*;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collections;
 import java.util.Date;
@@ -179,7 +178,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         factorValueService.markAsNeedsAttention( fv, "test" );
         ee.getCurationDetails().setNeedsAttention( true );
         assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue " + fv.getId() + ": ExperimentalFactor #" + fv.getExperimentalFactor().getId() + ": ? needs attention: test" );
+        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
         when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
                 .thenReturn( null );
         when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )
@@ -200,7 +199,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         factorValueService.markAsNeedsAttention( fv, "test" );
         ee.getCurationDetails().setNeedsAttention( true );
         assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue " + fv.getId() + ": ExperimentalFactor #" + fv.getExperimentalFactor().getId() + ": ? needs attention: test" );
+        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
         when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
                 .thenReturn( new AuditEvent() );
         when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )
@@ -221,7 +220,7 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         factorValueService.markAsNeedsAttention( fv, "test" );
         ee.getCurationDetails().setNeedsAttention( true );
         assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue " + fv.getId() + ": ExperimentalFactor #" + fv.getExperimentalFactor().getId() + ": ? needs attention: test" );
+        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
         when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
                 .thenReturn( AuditEvent.Factory.newInstance( new Date( 1000 ), null, null, null, null, new NeedsAttentionEvent() ) );
         when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )

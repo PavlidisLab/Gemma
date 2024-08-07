@@ -647,10 +647,10 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         for ( DifferentialExpressionAnalysisValueObject an : summaries ) {
 
             Long bioAssaySetId;
-            if ( an.getSourceExperiment() != null ) {
-                bioAssaySetId = an.getSourceExperiment();
+            if ( an.getSourceExperimentId() != null ) {
+                bioAssaySetId = an.getSourceExperimentId();
             } else {
-                bioAssaySetId = an.getBioAssaySetId();
+                bioAssaySetId = an.getExperimentAnalyzedId();
             }
             if ( !r.containsKey( bioAssaySetId ) ) {
                 r.put( bioAssaySetId, new ArrayList<DifferentialExpressionAnalysisValueObject>() );
@@ -751,19 +751,19 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
 
             BioAssaySet bioAssaySet = analysis.getExperimentAnalyzed();
 
-            avo.setBioAssaySetId( bioAssaySet.getId() ); // might be a subset.
+            avo.setExperimentAnalyzedId( bioAssaySet.getId() ); // might be a subset.
 
             if ( analysis.getSubsetFactorValue() != null ) {
                 avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
                 avo.setSubsetFactor(
                         new ExperimentalFactorValueObject( analysis.getSubsetFactorValue().getExperimentalFactor() ) );
                 assert bioAssaySet instanceof ExpressionExperimentSubSet;
-                avo.setSourceExperiment( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
+                avo.setSourceExperimentId( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
                 if ( arrayDesignsUsed.containsKey( bioAssaySet.getId() ) ) {
                     avo.setArrayDesignsUsed( arrayDesignsUsed.get( bioAssaySet.getId() ) );
                 } else {
-                    assert arrayDesignsUsed.containsKey( avo.getSourceExperiment() );
-                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperiment() ) );
+                    assert arrayDesignsUsed.containsKey( avo.getSourceExperimentId() );
+                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperimentId() ) );
                 }
             } else {
                 Collection<Long> adids = arrayDesignsUsed.get( bioAssaySet.getId() );

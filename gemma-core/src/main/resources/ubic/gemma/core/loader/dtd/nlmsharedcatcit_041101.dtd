@@ -1,0 +1,77 @@
+<!-- NLMSharedCatCit DTD
+     
+     Comments and suggestions are welcome.
+     November 1, 2004
+
+
+    ** This is the forthcoming DTD not currently in use.  
+    See http://www.nlm.nih.gov/databases/dtd/nlmsharedcatcit_031101.dtd 
+    for the NLMSharedCatCit DTD dated November 1, 2003 currently in use.**  
+ 
+     
+       
+     This is the DTD for data elements that are shared between 
+     NLMCatalogRecord and NLMMedlineCitation DTDs at the 
+     U.S. National Library of Medicine. 
+     
+
+    
+  * = 0 or more occurrences (optional element, repeatable)
+  ? = 0 or 1 occurrences (optional element, at most 1)
+  + = 1 or more occurrences (required element, repeatable)
+   | = choice, one or the other but not both 
+  no symbol = required element
+
+ 
+
+-->
+<!-- ================================================================= -->
+<!--   Revision Notes Section 
+
+The following changes were made in the nlmsharedcatcit_041101.dtd:
+     
+     a.  Changed entity reference from "nlmcommon_031101.dtd"
+                      to "nlmcommon_041101.dtd"
+
+     b.  Added optional Prefix attribute to OtherID element.
+-->
+<!-- ====================================================================== -->
+<!-- Reference to Where the NLMCommon DTD is located  -->
+<!ENTITY % NlmCommon PUBLIC "-//NLM//DTD Common, 1st November 2004//EN" 
+ "nlmcommon_041101.dtd"> 
+%NlmCommon;
+<!-- =================================================================  -->
+<!-- ================================================================= -->
+<!--  Further Definitions of NLM Tags                                  -->
+<!ELEMENT Chemical (RegistryNumber, NameOfSubstance)>
+<!ELEMENT ChemicalList (Chemical+)>
+<!ELEMENT DateCompleted (%normal.date;)>
+<!ELEMENT DateCreated (%normal.date;)>
+<!ELEMENT DateRevised (%normal.date;)>
+<!ELEMENT GeneralNote (#PCDATA)>
+<!ELEMENT Investigator (%personal.name;, Affiliation?)>
+<!ELEMENT InvestigatorList (Investigator+)>
+<!ELEMENT Keyword (#PCDATA)>
+<!ATTLIST Keyword
+	MajorTopicYN (Y | N) "N"
+>
+<!ELEMENT KeywordList (Keyword+)>
+<!ATTLIST KeywordList
+	Owner %Owner; "NLM"
+>
+<!ELEMENT NameOfSubstance (#PCDATA)>
+<!ELEMENT OtherAbstract (%Abstract;)>
+<!ATTLIST OtherAbstract
+	Type %Type;
+>
+<!ELEMENT OtherID (#PCDATA)>
+<!ATTLIST OtherID
+	Source %Source;
+        Prefix CDATA #IMPLIED
+>
+<!ELEMENT PersonalNameSubject (%personal.name;, DatesAssociatedWithName?,
+                               NameQualifier?, OtherInformation?,
+                               TitleAssociatedWithName?)>
+<!ELEMENT PersonalNameSubjectList (PersonalNameSubject+)>
+<!ELEMENT RegistryNumber (#PCDATA)>
+<!ELEMENT SpaceFlightMission (#PCDATA)>

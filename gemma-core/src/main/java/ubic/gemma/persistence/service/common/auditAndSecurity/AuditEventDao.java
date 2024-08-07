@@ -50,8 +50,13 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditables );
 
     /**
+     * Obtain the latest event for a given auditable.
+     */
+    @Nullable
+    AuditEvent getLastEvent( Auditable auditable );
+
+    /**
      * Obtain the latest event of a given type for a given auditable.
-     * @see #getLastEvent(Auditable, Class)
      */
     @Nullable
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );

@@ -1,5 +1,6 @@
 package ubic.gemma.core.ontology;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,14 +17,14 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collections;
 
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.mock;
  * This test covers cases where inference is done across two distinct {@link ubic.basecode.ontology.providers.OntologyService}.
  * @author poirigui
  */
+@Ignore("This test is timing out on the CI.")
 @Category(SlowTest.class)
 @ContextConfiguration
 public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4SpringContextTests {

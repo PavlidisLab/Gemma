@@ -29,9 +29,9 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -72,7 +72,20 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                                 .getQuantitationType() );
             }
         }
+        this.selectVectors( vectors );
+        this.vectorsToMatrix( vectors );
+    }
 
+    public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+        this.init();
+        for ( BulkExpressionDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException(
+                        "Cannot convert non-double quantitation types into double matrix:" + dedv
+                                .getQuantitationType() );
+            }
+        }
+        this.expressionExperiment = ee;
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }

@@ -24,6 +24,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -32,8 +33,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -48,6 +53,24 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     @Autowired
     public BioMaterialDaoImpl( SessionFactory sessionFactory ) {
         super( BioMaterial.class, sessionFactory );
+    }
+
+    @Override
+    public BioMaterial create( BioMaterial entity ) {
+        validate( entity );
+        return super.create( entity );
+    }
+
+    @Override
+    public BioMaterial save( BioMaterial entity ) {
+        validate( entity );
+        return super.save( entity );
+    }
+
+    @Override
+    public void update( BioMaterial entity ) {
+        validate( entity );
+        super.update( entity );
     }
 
     @Override
@@ -126,4 +149,22 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         return new BioMaterialValueObject( entity );
     }
 
+    private void validate( BioMaterial bm ) {
+        // EF is lazily-loaded, so we use IDs to avoid initializing it
+        Set<Long> seenExperimentalFactorIds = new HashSet<>();
+        for ( FactorValue fv : bm.getFactorValues() ) {
+            // already assumed since
+            Assert.notNull( fv.getExperimentalFactor().getId() );
+            if ( !seenExperimentalFactorIds.add( fv.getExperimentalFactor().getId() ) ) {
+                String affectedFvs = bm.getFactorValues().stream().
+                        filter( fv2 -> fv2.getExperimentalFactor().getId().equals( fv.getExperimentalFactor().getId() ) )
+                        .map( FactorValue::toString )
+                        .collect( Collectors.joining( "\n\t" ) );
+                throw new IllegalArgumentException( String.format( "%s has more than one factor values for %s:\n\t%s",
+                        bm,
+                        IdentifiableUtils.toString( fv.getExperimentalFactor(), ExperimentalFactor.class ),
+                        affectedFvs ) );
+            }
+        }
+    }
 }

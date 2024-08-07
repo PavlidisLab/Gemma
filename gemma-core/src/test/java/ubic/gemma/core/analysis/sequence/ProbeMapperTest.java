@@ -20,9 +20,9 @@ package ubic.gemma.core.analysis.sequence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -41,6 +41,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNoException;
+
 /**
  * Unaware of the Gemma database but uses the hg19 and mm10 databases (tests will not work with hg38)
  *
@@ -50,23 +53,22 @@ import java.util.Map;
 public class ProbeMapperTest {
 
     private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
-    private Collection<BlatResult> blatres;
-    private List<Double> tester;
-    private GoldenPathSequenceAnalysis mousegp = null;
-    private GoldenPathSequenceAnalysis humangp = null;
 
-    @Before
-    public void setUp() throws Exception {
+    private static GoldenPathSequenceAnalysis mousegp = null;
+    private static GoldenPathSequenceAnalysis humangp = null;
+    private static Collection<BlatResult> blatres;
+    private static List<Double> tester;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
         Taxon mouseTaxon = Taxon.Factory.newInstance( "mouse" );
         Taxon humanTaxon = Taxon.Factory.newInstance( "human" );
-        mousegp = new GoldenPathSequenceAnalysis( mouseTaxon );
-        humangp = new GoldenPathSequenceAnalysis( humanTaxon );
 
         try {
-            mousegp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
-            humangp.getJdbcTemplate().queryForObject( "select 1", Integer.class );
+            mousegp = new GoldenPathSequenceAnalysis( mouseTaxon );
+            humangp = new GoldenPathSequenceAnalysis( humanTaxon );
         } catch ( CannotGetJdbcConnectionException e ) {
-            Assume.assumeNoException( e );
+            assumeNoException( e );
         }
 
         tester = new ArrayList<>();
@@ -75,12 +77,22 @@ public class ProbeMapperTest {
         tester.add( 100d );
         tester.add( 50d );
 
-        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
+        try ( InputStream is = ProbeMapperTest.class.getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
             BlatResultParser brp = new BlatResultParser();
             brp.setTaxon( mouseTaxon );
             brp.parse( is );
             blatres = brp.getResults();
-            assert blatres != null && blatres.size() > 0;
+            assertTrue( blatres != null && !blatres.isEmpty() );
+        }
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        if ( mousegp != null ) {
+            mousegp.close();
+        }
+        if ( humangp != null ) {
+            humangp.close();
         }
     }
 
@@ -146,8 +158,8 @@ public class ProbeMapperTest {
         ProbeMapper pm = new ProbeMapperImpl();
         Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres, config );
 
-        Assert.assertTrue( "No results", res.values().size() > 0 );
-        Assert.assertTrue( "No results", res.values().iterator().next().size() > 0 );
+        assertTrue( "No results", res.values().size() > 0 );
+        assertTrue( "No results", res.values().iterator().next().size() > 0 );
 
         boolean found = false;
         for ( Collection<BlatAssociation> r : res.values() ) {
@@ -158,7 +170,7 @@ public class ProbeMapperTest {
             }
         }
 
-        Assert.assertTrue( found );
+        assertTrue( found );
     }
 
     @Test
@@ -168,7 +180,7 @@ public class ProbeMapperTest {
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
                         ThreePrimeDistanceMethod.RIGHT, config );
 
-        Assert.assertTrue( results != null && !results.isEmpty() );
+        assertTrue( results != null && !results.isEmpty() );
         for ( BlatAssociation blatAssociation : results ) {
             ProbeMapperTest.log.debug( blatAssociation );
             if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {

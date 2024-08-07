@@ -14,7 +14,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>version-file</id>
@@ -34,60 +34,12 @@
                             </target>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>schema-export</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"/>
-                                <mkdir dir="${project.build.directory}/schema"/>
-                                <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-                                              output="${project.build.directory}/schema/gemma-ddl.sql"
-                                              properties="${project.basedir}/src/main/resources/hibernate.properties">
-                                    <fileset dir="${project.basedir}/src/main/resources" includes="**/*.hbm.xml"/>
-                                </schemaexport>
-                            </target>
-                        </configuration>
-                    </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-core</artifactId>
-                        <version>${hibernate.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>dom4j</groupId>
-                                <artifactId>dom4j</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.dom4j</groupId>
-                        <artifactId>dom4j</artifactId>
-                        <version>${dom4j.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                    <!-- Hibernate's JBoss logging will hook into Log4j 1.2 API -->
-                    <dependency>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>log4j-core</artifactId>
-                        <version>${log4j.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>log4j-1.2-api</artifactId>
-                        <version>${log4j.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.4.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -95,6 +47,7 @@
                         </goals>
                         <configuration>
                             <excludes>
+                                <!-- this file conflicts with dependent modules' ability to configure test logging -->
                                 <exclude>log4j-test.properties</exclude>
                             </excludes>
                         </configuration>
@@ -104,27 +57,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.7.1</version>
                 <executions>
-                    <execution>
-                        <id>unpack-gsec-sql-schemas</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>pavlab</groupId>
-                                    <artifactId>gemma-gsec</artifactId>
-                                    <version>${gsec.version}</version>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/schema</outputDirectory>
-                                    <includes>**/*.sql</includes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>unpack-spring-security-test</id>
                         <phase>generate-test-sources</phase>
@@ -150,7 +84,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>generate-test-sources</phase>
@@ -160,68 +94,6 @@
                         <configuration>
                             <!-- dependencies:unpack does not add a test source root -->
                             <sources>${project.build.directory}/generated-test-sources/spring-security-test</sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>sql-maven-plugin</artifactId>
-                <version>1.5</version>
-                <dependencies><!-- yes, this needs to be here. -->
-                    <dependency>
-                        <groupId>com.mysql</groupId>
-                        <artifactId>mysql-connector-j</artifactId>
-                        <version>${mysql.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                </dependencies>
-                <!-- common configuration shared by all executions -->
-                <configuration>
-                    <driver>com.mysql.cj.jdbc.Driver</driver>
-                    <username>${gemma.testdb.build.user}</username>
-                    <password>${gemma.testdb.build.password}</password>
-                    <autocommit>true</autocommit>
-                    <onError>abort</onError>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>drop-add-testdb</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <url>${bootstrap.db.url}</url>
-                            <sqlCommand>
-                                <![CDATA[
-                                DROP DATABASE IF EXISTS ${gemma.testdb.name};
-                                CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
-                                ]]>
-                            </sqlCommand>
-                            <!--suppress MavenModelInspection -->
-                            <skip>${skipIntegrationTests}</skip>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>load-testdb-schema</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <url>${gemma.testdb.build.url}</url>
-                            <srcFiles>
-                                <srcFile>${project.build.directory}/schema/gemma-ddl.sql</srcFile>
-                                <srcFile>${project.build.directory}/schema/gemma/gsec/sql/gsec-acl-ddl.sql</srcFile>
-                                <scrFile>${project.build.directory}/schema/gemma/gsec/sql/init-acl-indices.sql</scrFile>
-                                <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
-                                <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
-                                <srcFile>${project.basedir}/src/main/resources/sql/mysql/init-entities.sql</srcFile>
-                                <srcFile>${project.basedir}/src/main/resources/sql/init-data.sql</srcFile>
-                            </srcFiles>
-                            <!--suppress MavenModelInspection -->
-                            <skip>${skipIntegrationTests}</skip>
                         </configuration>
                     </execution>
                 </executions>

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * @author pavlidis
  * @see AuditEventService
  */
-@Service
+@Service("auditEventService")
 public class AuditEventServiceImpl implements AuditEventService {
 
     private final AuditEventDao auditEventDao;
@@ -54,6 +54,12 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Transactional(readOnly = true)
     public <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditables ) {
         return this.auditEventDao.getCreateEvents( auditables );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuditEvent getLastEvent( Auditable auditable ) {
+        return auditEventDao.getLastEvent( auditable );
     }
 
     @Override

@@ -58,6 +58,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -67,7 +68,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 
 import java.util.*;
 
@@ -81,17 +81,19 @@ import java.util.*;
 @Transactional
 public class PersistentDummyObjectHelper {
 
+    private final Log log = LogFactory.getLog( this.getClass() );
+
     private static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
     private static final int NUM_BIOMATERIALS = 8;
     private static final int NUM_EXPERIMENTAL_FACTORS = 2;
     private static final int NUM_FACTOR_VALUES = 2;
     private static final int NUM_QUANTITATION_TYPES = 2;
     private static final int RANDOM_STRING_LENGTH = 10;
-    private static ExternalDatabase genbank;
-    private static ExternalDatabase geo;
-    private static ExternalDatabase pubmed;
-    private static Taxon testTaxon;
-    private final Log log = LogFactory.getLog( this.getClass() );
+
+    private ExternalDatabase genbank;
+    private ExternalDatabase geo;
+    private ExternalDatabase pubmed;
+    private Taxon testTaxon;
     private int testElementCollectionSize = PersistentDummyObjectHelper.DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
     @Autowired
@@ -108,7 +110,7 @@ public class PersistentDummyObjectHelper {
 
     // setting seed globally does not guarantee reproducibliity always as methods could access
     // different parts of the sequence if called in different orders, so callers should reset it using resetSeed()
-    private static Random randomizer = new Random( 12345 );
+    private Random randomizer = new Random( 12345 );
 
     // Tests can call this to ensure reproducibility
     public void resetSeed() {
@@ -121,31 +123,31 @@ public class PersistentDummyObjectHelper {
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
-    public static BioSequence getTestNonPersistentBioSequence( Taxon taxon ) {
+    public BioSequence getTestNonPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH )
                 + "_testbiosequence" );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
         if ( taxon == null )
-            bs.setTaxon( PersistentDummyObjectHelper.getTestNonPersistentTaxon() );
+            bs.setTaxon( getTestNonPersistentTaxon() );
         else
             bs.setTaxon( taxon );
 
-        if ( PersistentDummyObjectHelper.genbank == null ) {
-            PersistentDummyObjectHelper.genbank = ExternalDatabase.Factory.newInstance();
-            PersistentDummyObjectHelper.genbank.setName( "Genbank" );
+        if ( genbank == null ) {
+            genbank = ExternalDatabase.Factory.newInstance();
+            genbank.setName( "Genbank" );
         }
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
 
-        de.setExternalDatabase( PersistentDummyObjectHelper.genbank );
+        de.setExternalDatabase( genbank );
         de.setAccession( RandomStringUtils.randomAlphanumeric( 10 ) );
 
         bs.setSequenceDatabaseEntry( de );
         return bs;
     }
 
-    public static GeneProduct getTestNonPersistentGeneProduct( Gene gene ) {
+    public GeneProduct getTestNonPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = GeneProduct.Factory.newInstance();
         gp.setNcbiGi( RandomStringUtils.randomAlphanumeric( 10 ) );
         gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
@@ -158,7 +160,7 @@ public class PersistentDummyObjectHelper {
      *
      * @return QT
      */
-    public static QuantitationType getTestNonPersistentQuantitationType() {
+    public QuantitationType getTestNonPersistentQuantitationType() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testqt" );
         qt.setDescription(
@@ -181,7 +183,7 @@ public class PersistentDummyObjectHelper {
      *
      * @return taxon
      */
-    private static Taxon getTestNonPersistentTaxon() {
+    private Taxon getTestNonPersistentTaxon() {
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
@@ -271,7 +273,7 @@ public class PersistentDummyObjectHelper {
                 .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
-        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
         Collection<FactorValue> allFactorValues = new HashSet<>();
 
@@ -324,7 +326,7 @@ public class PersistentDummyObjectHelper {
                 .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
-        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
         ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), true, doSequence );
@@ -461,7 +463,7 @@ public class PersistentDummyObjectHelper {
                 RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ).toUpperCase() );
 
         if ( t == null ) {
-            gene.setTaxon( PersistentDummyObjectHelper.getTestNonPersistentTaxon() );
+            gene.setTaxon( getTestNonPersistentTaxon() );
         } else {
             gene.setTaxon( t );
         }
@@ -543,7 +545,7 @@ public class PersistentDummyObjectHelper {
                 .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
-        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
         Collection<FactorValue> allFactorValues = new HashSet<>();
@@ -579,10 +581,10 @@ public class PersistentDummyObjectHelper {
 
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
-        if ( PersistentDummyObjectHelper.pubmed == null ) {
-            PersistentDummyObjectHelper.pubmed = externalDatabaseService.findByName( "PubMed" );
+        if ( pubmed == null ) {
+            pubmed = externalDatabaseService.findByName( "PubMed" );
         }
-        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, PersistentDummyObjectHelper.pubmed ) );
+        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed ) );
         return ( BibliographicReference ) persisterHelper.persist( br );
     }
 
@@ -617,13 +619,13 @@ public class PersistentDummyObjectHelper {
     }
 
     public BioSequence getTestPersistentBioSequence() {
-        BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( null );
+        BioSequence bs = getTestNonPersistentBioSequence( null );
 
         return ( BioSequence ) persisterHelper.persist( bs );
     }
 
     public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
-        BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( taxon );
+        BioSequence bs = getTestNonPersistentBioSequence( taxon );
 
         return ( BioSequence ) persisterHelper.persist( bs );
     }
@@ -735,9 +737,9 @@ public class PersistentDummyObjectHelper {
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
         switch ( databaseName ) {
             case "GEO":
-                return this.getTestPersistentDatabaseEntry( accession, PersistentDummyObjectHelper.geo );
+                return this.getTestPersistentDatabaseEntry( accession, geo );
             case "PubMed":
-                return this.getTestPersistentDatabaseEntry( accession, PersistentDummyObjectHelper.pubmed );
+                return this.getTestPersistentDatabaseEntry( accession, pubmed );
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
@@ -810,7 +812,7 @@ public class PersistentDummyObjectHelper {
     }
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
-        GeneProduct gp = PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( gene );
+        GeneProduct gp = getTestNonPersistentGeneProduct( gene );
         return ( GeneProduct ) persisterHelper.persist( gp );
     }
 
@@ -821,23 +823,23 @@ public class PersistentDummyObjectHelper {
      * @return QT
      */
     public QuantitationType getTestPersistentQuantitationType() {
-        QuantitationType qt = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
+        QuantitationType qt = getTestNonPersistentQuantitationType();
         return ( QuantitationType ) persisterHelper.persist( qt );
     }
 
     public Taxon getTestPersistentTaxon() {
-        if ( PersistentDummyObjectHelper.testTaxon == null ) {
-            PersistentDummyObjectHelper.testTaxon = Taxon.Factory.newInstance();
-            PersistentDummyObjectHelper.testTaxon.setCommonName( "elephant" );
-            PersistentDummyObjectHelper.testTaxon.setScientificName( "Loxodonta" );
-            PersistentDummyObjectHelper.testTaxon.setNcbiId( 1245 );
-            PersistentDummyObjectHelper.testTaxon.setIsGenesUsable( true );
-            PersistentDummyObjectHelper.testTaxon = ( Taxon ) persisterHelper
-                    .persist( PersistentDummyObjectHelper.testTaxon );
-            assert PersistentDummyObjectHelper.testTaxon != null
-                    && PersistentDummyObjectHelper.testTaxon.getId() != null;
+        if ( testTaxon == null ) {
+            testTaxon = Taxon.Factory.newInstance();
+            testTaxon.setCommonName( "elephant" );
+            testTaxon.setScientificName( "Loxodonta" );
+            testTaxon.setNcbiId( 1245 );
+            testTaxon.setIsGenesUsable( true );
+            testTaxon = ( Taxon ) persisterHelper
+                    .persist( testTaxon );
+            assert testTaxon != null
+                    && testTaxon.getId() != null;
         }
-        return PersistentDummyObjectHelper.testTaxon;
+        return testTaxon;
     }
 
     public void resetTestElementCollectionSize() {
@@ -896,7 +898,7 @@ public class PersistentDummyObjectHelper {
 
     private Set<QuantitationType> addQuantitationTypes( Set<QuantitationType> quantitationTypes ) {
         for ( int quantitationTypeNum = 0; quantitationTypeNum < PersistentDummyObjectHelper.NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
-            QuantitationType q = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
+            QuantitationType q = getTestNonPersistentQuantitationType();
             if ( quantitationTypes.size() == 0 ) {
                 q.setIsPreferred( true );
             }
@@ -1003,7 +1005,7 @@ public class PersistentDummyObjectHelper {
         ba.setSequencePairedReads( false );
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
 
-        de.setExternalDatabase( PersistentDummyObjectHelper.geo );
+        de.setExternalDatabase( geo );
         de.setAccession( ba.getName() );
         ba.setAccession( de );
 
@@ -1017,12 +1019,12 @@ public class PersistentDummyObjectHelper {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH )
                 + "_testbiomaterial" );
-        if ( PersistentDummyObjectHelper.geo == null ) {
-            PersistentDummyObjectHelper.geo = externalDatabaseService.findByName( "GEO" );
-            assert PersistentDummyObjectHelper.geo != null;
+        if ( geo == null ) {
+            geo = externalDatabaseService.findByName( "GEO" );
+            assert geo != null;
         }
-        bm.setSourceTaxon( PersistentDummyObjectHelper.getTestNonPersistentTaxon() );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo ) );
+        bm.setSourceTaxon( getTestNonPersistentTaxon() );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
         return bm;
     }
 
@@ -1033,12 +1035,12 @@ public class PersistentDummyObjectHelper {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH )
                 + "_testbiomaterial" );
-        if ( PersistentDummyObjectHelper.geo == null ) {
-            PersistentDummyObjectHelper.geo = externalDatabaseService.findByName( "GEO" );
-            assert PersistentDummyObjectHelper.geo != null;
+        if ( geo == null ) {
+            geo = externalDatabaseService.findByName( "GEO" );
+            assert geo != null;
         }
         bm.setSourceTaxon( tax );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo ) );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
         return bm;
     }
 }

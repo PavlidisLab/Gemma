@@ -1,5 +1,7 @@
 package ubic.gemma.core.util;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -9,6 +11,19 @@ import java.util.TimeZone;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DateConverterImplTest {
+
+    private static TimeZone tz;
+
+    @BeforeClass
+    public static void setTimeZoneToAmericaVancouver() {
+        tz = TimeZone.getDefault();
+        TimeZone.setDefault( TimeZone.getTimeZone( "America/Vancouver" ) );
+    }
+
+    @AfterClass
+    public static void resetTimeZone() {
+        TimeZone.setDefault( tz );
+    }
 
     private final Date relativeTo = new Date();
     private final DateConverterImpl c = new DateConverterImpl( relativeTo, TimeZone.getTimeZone( "America/Vancouver" ) );

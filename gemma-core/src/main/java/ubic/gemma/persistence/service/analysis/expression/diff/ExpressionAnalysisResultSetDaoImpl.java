@@ -18,13 +18,16 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -34,10 +37,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
@@ -47,7 +47,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
+import static ubic.gemma.persistence.util.QueryUtils.streamByBatch;
 
 /**
  * @author Paul
@@ -57,9 +58,20 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
+    /**
+     * FIXME: this projection only selects the ID of the result set, which is subsequently fetched. It would be more
+     *        efficient to fetch all the necessary columns instead, but I don't know how to do that.
+     */
+    private final Projection rootEntityProjection;
+
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
+        rootEntityProjection = Projections.sqlGroupProjection(
+                "{alias}.ID",
+                "{alias}.ID",
+                new String[] { "ID" },
+                new Type[] { sessionFactory.getTypeHelper().entity( ExpressionAnalysisResultSet.class ) } );
     }
 
     @Override
@@ -81,15 +93,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
-                            + "order by res.correctedPvalue" )
+                            // ascending, nulls last
+                            + "order by -res.correctedPvalue desc" )
                     .setParameter( "ears", ears )
                     .list();
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-                Hibernate.initialize( r.getContrasts() );
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 5000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -110,17 +120,15 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
-                            + "order by res.correctedPvalue" )
+                            // ascending, nulls last
+                            + "order by -res.correctedPvalue desc" )
                     .setParameter( "ears", ears )
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-                Hibernate.initialize( r.getContrasts() );
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -142,18 +150,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears and res.correctedPvalue <= :threshold "
+                            // no need for the hack, the threshold will filter out nulls
                             + "order by res.correctedPvalue" )
                     .setParameter( "ears", ears )
                     .setParameter( "threshold", threshold )
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                Hibernate.initialize( r.getProbe() );
-                Hibernate.initialize( r.getContrasts() );
-            }
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
+            thawResultsAndContrasts( ears );
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
@@ -195,12 +201,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .setProjection( Projections.countDistinct( "id" ) )
                 .uniqueResult();
 
-        // initialize subset factor values
         for ( ExpressionAnalysisResultSet d : data ) {
-            Hibernate.initialize( d.getAnalysis().getSubsetFactorValue() );
+            thaw( d );
         }
 
-        return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
+        return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
     @Override
@@ -208,25 +213,55 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         populateBaselines( differentialExpressionAnalysisResultSetValueObjects );
     }
 
-
     @Override
     public void thaw( ExpressionAnalysisResultSet ears ) {
         // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
 
-        // it is faster to query those separately because there's a large number of rows fetched via the results &
-        // contrasts and only a handful of factors
-        Hibernate.initialize( ears.getExperimentalFactors() );
-
-        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
-        // I still think it's neat to use stream API for that though in case we ever make them lazy:
-        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
-
-        // this needs to be initialized because it does not appear in the experimental factors
+        // this is important to thaw because it does not appear in the experimental factors
         if ( ears.getAnalysis().getSubsetFactorValue() != null ) {
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue() );
             Hibernate.initialize( ears.getAnalysis().getSubsetFactorValue().getExperimentalFactor() );
+        }
+
+        // it is faster to query those separately because there's a large number of rows fetched via the results &
+        // contrasts and only a handful of factors
+        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
+        // I still think it's neat to use stream API for that though in case we ever make them lazy:
+        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
+        Hibernate.initialize( ears.getExperimentalFactors() );
+
+        // this should already be covered by initializing the experimental factors, but we're being extra careful
+        if ( ears.getBaselineGroup() != null ) {
+            Hibernate.initialize( ears.getBaselineGroup() );
+            Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
+        }
+    }
+
+    private void thawResultsAndContrasts( ExpressionAnalysisResultSet ears ) {
+        thaw( ears );
+        // using separate loops ensure that hibernate can batch-initialize without interleaving queries
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            Hibernate.initialize( r.getProbe() );
+        }
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            Hibernate.initialize( r.getContrasts() );
+        }
+        // this should already be covered by initializing the experimental factors, but to be extra-safe, we should make
+        // sure it's thawed as well
+        for ( DifferentialExpressionAnalysisResult r : ears.getResults() ) {
+            for ( ContrastResult cr : r.getContrasts() ) {
+                Hibernate.initialize( cr );
+                if ( cr.getFactorValue() != null ) {
+                    Hibernate.initialize( cr.getFactorValue() );
+                    Hibernate.initialize( cr.getFactorValue().getExperimentalFactor() );
+                }
+                if ( cr.getSecondFactorValue() != null ) {
+                    Hibernate.initialize( cr.getSecondFactorValue() );
+                    Hibernate.initialize( cr.getSecondFactorValue().getExperimentalFactor() );
+                }
+            }
         }
     }
 
@@ -235,6 +270,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return ( Long ) getSessionFactory().getCurrentSession()
                 .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results where ears = :ears" )
                 .setParameter( "ears", ears )
+                .setCacheable( true )
                 .uniqueResult();
     }
 
@@ -244,13 +280,139 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select count(*) from ExpressionAnalysisResultSet ears join ears.results r where ears = :ears and r.correctedPvalue <= :threshold" )
                 .setParameter( "ears", ears )
                 .setParameter( "threshold", threshold )
+                .setCacheable( true )
                 .uniqueResult();
+    }
+
+    @Override
+    public Baseline getBaseline( ExpressionAnalysisResultSet ears ) {
+        if ( ears.getBaselineGroup() != null ) {
+            // TODO: add support for interaction baselines, see https://github.com/PavlidisLab/Gemma/issues/1122
+            if ( ears.getBaselineGroup().getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ) {
+                return Baseline.categorical( ears.getBaselineGroup() );
+            } else {
+                // we have a few experiments with continuous factors with a baseline set in the result set, this
+                // is incorrect and is being tracked in https://github.com/PavlidisLab/GemmaCuration/issues/530
+                log.warn( String.format( "Unexpected factor type for baseline %s of result set with ID %d, it should be categorical.",
+                        ears.getBaselineGroup(), ears.getId() ) );
+                return null;
+            }
+        } else {
+            return getBaselinesForInteractionsByIds( Collections.singleton( ears.getId() ), true ).get( ears.getId() );
+        }
+    }
+
+    @Override
+    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
+        Map<Long, ExpressionAnalysisResultSet> idMap = EntityUtils.getIdMap( resultSets );
+        return getBaselinesForInteractionsByIds( EntityUtils.getIds( resultSets ), initializeFactorValues ).entrySet().stream()
+                .collect( IdentifiableUtils.toIdentifiableMap( e -> idMap.get( e.getKey() ), Map.Entry::getValue ) );
+    }
+
+    @Override
+    public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // pick baseline groups from other result sets from the same analysis
+        List<Object[]> otherBaselineGroups = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select rs.id, otherBg.id, otherBg.experimentalFactor.id from ExpressionAnalysisResultSet rs "
+                                + "join rs.analysis a "
+                                + "join a.resultSets otherRs "
+                                + "join otherRs.baselineGroup otherBg "
+                                + "where rs.id in :rsIds and otherRs.id not in :rsIds" ),
+                "rsIds", ids, 2048 );
+        // maps rs ID to [fv ID, ef ID]
+        Map<Long, Set<FactorValueIdAndExperimentalFactorId>> baselineMapping = otherBaselineGroups.stream()
+                .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> new FactorValueIdAndExperimentalFactorId( ( Long ) row[1], ( Long ) row[2] ), Collectors.toSet() ) ) );
+
+        // pick one representative contrasts to order the first and second baseline group consistently
+        // NOTE: I tried to do this in a single query, but it's just too slow
+
+        // result ID -> result set ID
+        Map<Long, Long> representativeResults = streamByBatch( getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                        "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
+                        "where dear.RESULT_SET_FK in :rsIds " +
+                        "group by dear.RESULT_SET_FK" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
+                .addScalar( "RESULT_SET_ID", StandardBasicTypes.LONG ), "rsIds", ids, 2048, Object[].class )
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+
+        // result ID -> [ef1 ID, ef2 ID]
+        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, fv1.EXPERIMENTAL_FACTOR_FK as EF1_ID, fv2.EXPERIMENTAL_FACTOR_FK as EF2_ID " +
+                                "from CONTRAST_RESULT cr " +
+                                // A left join is critical for performance, because otherwise the database will scan every
+                                // single contrast results until it finds a non-null one. We know however that they are all
+                                // identical for a given result set.
+                                // This is a problem with continuous factors that do not have FVs set in the CR
+                                "left join FACTOR_VALUE fv1 on cr.FACTOR_VALUE_FK = fv1.ID " +
+                                "left join FACTOR_VALUE fv2 on cr.SECOND_FACTOR_VALUE_FK = fv2.ID " +
+                                "where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in :resultIds " +
+                                "group by cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" )
+                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
+                .addScalar( "EF1_ID", StandardBasicTypes.LONG )
+                .addScalar( "EF2_ID", StandardBasicTypes.LONG ), "resultIds", representativeResults.keySet(), 2048 );
+
+        Map<Long, Long> ef1Mapping = representativeContrasts.stream()
+                .filter( row -> row[1] != null )
+                .collect( Collectors.toMap( row -> representativeResults.get( ( Long ) row[0] ), row -> ( Long ) row[1] ) );
+        Map<Long, Long> ef2Mapping = representativeContrasts.stream()
+                .filter( row -> row[2] != null )
+                .collect( Collectors.toMap( row -> representativeResults.get( ( Long ) row[0] ), row -> ( Long ) row[2] ) );
+        Map<Long, Baseline> results = new HashMap<>();
+        for ( Long rsId : ids ) {
+            Long ef1 = ef1Mapping.get( rsId );
+            Long ef2 = ef2Mapping.get( rsId );
+            if ( ef1 == null || ef2 == null ) {
+                log.warn( "Could not populate baselines for " + rsId + " as its contrasts lack factor values. This is likely a continuous factor." );
+                // very likely a continuous factor, it does not have a baseline
+                continue;
+            }
+            // I don't think this is allowed
+            if ( ef1.equals( ef2 ) ) {
+                log.warn( "Could not populate baselines for " + rsId + ", its representative contrast uses the same experimental factor for its first and second factor value." );
+                continue;
+            }
+            Set<FactorValueIdAndExperimentalFactorId> baselines = baselineMapping.get( rsId );
+            if ( baselines == null || baselines.size() != 2 ) {
+                log.warn( "Could not find two other result sets with baseline for " + rsId + " to populate its baseline groups." );
+                continue;
+            }
+            Long firstBaselineId = null, secondBaselineId = null;
+            for ( FactorValueIdAndExperimentalFactorId fv : baselines ) {
+                if ( fv.getExperimentalFactorId().equals( ef1 ) ) {
+                    firstBaselineId = fv.getFactorValueId();
+                }
+                if ( fv.getExperimentalFactorId().equals( ef2 ) ) {
+                    secondBaselineId = fv.getFactorValueId();
+                }
+            }
+            if ( firstBaselineId != null && secondBaselineId != null ) {
+                results.put( rsId, Baseline.interaction(
+                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, firstBaselineId ),
+                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, secondBaselineId ) )
+                );
+            } else {
+                log.warn( "Could not fill the baseline groups for " + rsId + ": one or more baselines were not found in other result sets from the same analysis." );
+            }
+        }
+        if ( initializeFactorValues ) {
+            for ( Baseline b : results.values() ) {
+                // those are interaction baselines, so both are non-null
+                Hibernate.initialize( b.getFactorValue() );
+                Hibernate.initialize( b.getSecondFactorValue() );
+            }
+        }
+        return results;
     }
 
     @Override
     protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
+                .setProjection( rootEntityProjection )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
@@ -328,27 +490,36 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity ) {
-        return new DifferentialExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+    public DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity, boolean includeFactorValuesInContrasts, boolean queryGenesByResult, boolean includeTaxonInGenes ) {
+        DifferentialExpressionAnalysisResultSetValueObject r = new DifferentialExpressionAnalysisResultSetValueObject( entity, includeFactorValuesInContrasts, loadResultToGenesMap( entity, queryGenesByResult ), includeTaxonInGenes );
+        postProcessValueObjects( Collections.singletonList( r ) );
+        return r;
     }
 
     @Override
-    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult ) {
+        String q = "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
+                + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
+                + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
+                + "where " + ( queryByResult ? "result.ID in :rids" : "result.RESULT_SET_FK = :rsid" );
+
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
-                        + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
-                        + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where result.RESULT_SET_FK = :rsid" )
+                .createSQLQuery( q )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
                 .addSynchronizedEntityClass( Gene.class )
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
-                .setParameter( "rsid", resultSet.getId() )
                 // analysis results are immutable and the GENE2CS is generated, so flushing is pointless
                 .setFlushMode( FlushMode.MANUAL )
                 .setCacheable( true );
+
+        if ( queryByResult ) {
+            query.setParameterList( "rids", EntityUtils.getIds( resultSet.getResults() ) );
+        } else {
+            query.setParameter( "rsid", resultSet.getId() );
+        }
 
         //noinspection unchecked
         List<Object[]> list = query.list();
@@ -357,10 +528,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return list.stream()
                 .collect( Collectors.groupingBy(
                         l -> ( Long ) l[0],
-                        Collectors.collectingAndThen( Collectors.toList(),
-                                elem -> elem.stream()
-                                        .map( l -> ( Gene ) l[1] )
-                                        .collect( Collectors.toList() ) ) ) );
+                        Collectors.mapping( l -> ( Gene ) l[1], Collectors.toList() ) ) );
     }
 
     /**
@@ -377,65 +545,21 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             return;
         }
         // pick baseline groups from other result sets from the same analysis
-        Collection<Long> rsIds = optimizeParameterList( EntityUtils.getIds( vosWithMissingBaselines ) );
-        //noinspection unchecked
-        List<Object[]> otherBaselineGroups = getSessionFactory().getCurrentSession()
-                .createQuery( "select rs.id, otherBg from ExpressionAnalysisResultSet rs "
-                        + "join rs.analysis a "
-                        + "join a.resultSets otherRs "
-                        + "join otherRs.baselineGroup otherBg "
-                        + "where rs.id in :rsIds and otherRs.id not in :rsIds" )
-                .setParameterList( "rsIds", rsIds )
-                .list();
-        // pick one representative contrasts to order the first and second baseline group consistently
-        //noinspection unchecked
-        List<Object[]> representativeContrasts = getSessionFactory().getCurrentSession()
-                .createQuery( "select rs.id, c from ExpressionAnalysisResultSet rs "
-                        + "join rs.results r join r.contrasts c "
-                        + "where rs.id in :rsIds "
-                        + "group by rs" )
-                .setParameterList( "rsIds", rsIds )
-                .list();
-        Map<Long, Set<FactorValue>> baselineMapping = otherBaselineGroups.stream()
-                .collect( Collectors.groupingBy( row -> ( Long ) row[0], Collectors.mapping( row -> ( FactorValue ) row[1], Collectors.toSet() ) ) );
-        Map<Long, ContrastResult> contrastsMapping = representativeContrasts.stream()
-                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( ContrastResult ) row[1] ) );
-        for ( DifferentialExpressionAnalysisResultSetValueObject vo : vosWithMissingBaselines ) {
-            ContrastResult contrast = contrastsMapping.get( vo.getId() );
-            if ( contrast == null ) {
-                log.warn( "Could ont find a representative contrast for " + vo + " to populate its baseline groups." );
-                continue;
-            }
-            if ( contrast.getFactorValue() == null || contrast.getSecondFactorValue() == null ) {
-                log.warn( "Could not populate baselines for " + vo + " as its contrasts lack factor values. This is likely a continuous factor." );
-                // very likely a continuous factor, it does not have a baseline
-                continue;
-            }
-            // I don't think this is allowed
-            if ( contrast.getFactorValue().getExperimentalFactor().equals( contrast.getSecondFactorValue().getExperimentalFactor() ) ) {
-                log.warn( "Could not populate baselines for " + vo + ", its representative contrast uses the same experimental factor for its first and second factor value." );
-                continue;
-            }
-            Set<FactorValue> baselines = baselineMapping.get( vo.getId() );
-            if ( baselines == null || baselines.size() != 2 ) {
-                log.warn( "Could not find two other result sets with baseline for " + vo + " to populate its baseline groups." );
-                continue;
-            }
-            FactorValue firstBaseline = null, secondBaseline = null;
-            for ( FactorValue fv : baselines ) {
-                if ( fv.getExperimentalFactor().equals( contrast.getFactorValue().getExperimentalFactor() ) ) {
-                    firstBaseline = fv;
+        Map<Long, Baseline> baselines = getBaselinesForInteractionsByIds( EntityUtils.getIds( vosWithMissingBaselines ), true );
+        for ( DifferentialExpressionAnalysisResultSetValueObject vo : vos ) {
+            Baseline b = baselines.get( vo.getId() );
+            if ( b != null ) {
+                vo.setBaselineGroup( new FactorValueBasicValueObject( b.getFactorValue() ) );
+                if ( b.getSecondFactorValue() != null ) {
+                    vo.setSecondBaselineGroup( new FactorValueBasicValueObject( b.getSecondFactorValue() ) );
                 }
-                if ( fv.getExperimentalFactor().equals( contrast.getSecondFactorValue().getExperimentalFactor() ) ) {
-                    secondBaseline = fv;
-                }
-            }
-            if ( firstBaseline != null && secondBaseline != null ) {
-                vo.setBaselineGroup( new FactorValueBasicValueObject( firstBaseline ) );
-                vo.setSecondBaselineGroup( new FactorValueBasicValueObject( secondBaseline ) );
-            } else {
-                log.warn( "Could not fill the baseline groups for " + vo + ": one or more baselines were not found in other result sets from the same analysis." );
             }
         }
+    }
+
+    @Value
+    private static class FactorValueIdAndExperimentalFactorId {
+        Long factorValueId;
+        Long experimentalFactorId;
     }
 }

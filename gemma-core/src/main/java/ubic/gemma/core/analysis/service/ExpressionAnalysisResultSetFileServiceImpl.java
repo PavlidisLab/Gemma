@@ -4,10 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.gemma.model.analysis.expression.diff.Contrast;
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -29,18 +26,28 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
 
     @Override
     public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
-        writeTsvInternal( entity, null, writer );
+        writeTsvInternal( entity, null, null, writer );
     }
 
     @Override
-    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
-        writeTsvInternal( analysisResultSet, resultId2Genes, appendable );
+    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+        writeTsvInternal( analysisResultSet, baseline, resultId2Genes, appendable );
     }
 
-    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+        List<String> extraHeaderComments = new ArrayList<>();
+
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
                 .map( this::formatExperimentalFactor )
                 .collect( Collectors.joining( ", " ) ) + "]";
+        extraHeaderComments.add( "Experimental factors: " + experimentalFactorsMetadata );
+
+        if ( baseline != null ) {
+            extraHeaderComments.add( "Baseline: " + formatFactorValue( baseline.getFactorValue() ) );
+            if ( baseline.getSecondFactorValue() != null ) {
+                extraHeaderComments.add( "Second baseline: " + formatFactorValue( baseline.getSecondFactorValue() ) );
+            }
+        }
 
         // add the basic columns
         List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name" ) );
@@ -93,7 +100,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                     contrastResultPrefix + "pvalue" ) );
         }
 
-        try ( CSVPrinter printer = getTsvFormatBuilder( "Experimental factors: " + experimentalFactorsMetadata )
+        try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) )
                 .build()
                 .print( appendable ) ) {

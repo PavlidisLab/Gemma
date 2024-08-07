@@ -369,7 +369,11 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         // Test the update mechanism
         ee.setPrimaryPublication( null );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.setOriginalPlatform( null );
+        }
         eeService.update( ee );
+
         geoService.updateFromGEO( "GSE30521" );
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
@@ -381,6 +385,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             for ( Characteristic c : ba.getSampleUsed().getCharacteristics() ) {
                 assertNotNull( c.getCategory() );
             }
+            assertNotNull( ba.getOriginalPlatform() );
         }
 
     }

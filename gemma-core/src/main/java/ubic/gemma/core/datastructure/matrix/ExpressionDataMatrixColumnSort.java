@@ -22,10 +22,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -605,8 +605,7 @@ public class ExpressionDataMatrixColumnSort {
          */
         if ( organized.size() != bms.size() ) {
             // fail gracefully.
-            ExpressionDataMatrixColumnSort.log
-                    .error( "Could not order by factor: " + ef + " Biomaterial count (" + bms.size()
+            ExpressionDataMatrixColumnSort.log.warn( "Could not order by factor: " + ef + " Biomaterial count (" + bms.size()
                             + ") does not equal the size of the reorganized biomaterial list (" + organized.size()
                             + "). Check the experimental design for completeness/correctness" );
             return bms;

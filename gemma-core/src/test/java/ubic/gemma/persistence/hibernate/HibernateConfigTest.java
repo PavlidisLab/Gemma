@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
@@ -64,11 +63,11 @@ public class HibernateConfigTest extends BaseDatabaseTest {
 
         @Override
         @DependsOn("ehcache")
-        public FactoryBean<SessionFactory> sessionFactory( DataSource dataSource ) {
-            FactoryBean<SessionFactory> factory = super.sessionFactory( dataSource );
-            ( ( LocalSessionFactoryBean ) factory ).getHibernateProperties()
+        public LocalSessionFactoryBean sessionFactory( DataSource dataSource ) {
+            LocalSessionFactoryBean factory = super.sessionFactory( dataSource );
+            factory.getHibernateProperties()
                     .setProperty( "hibernate.cache.region.factory_class", SingletonEhCacheRegionFactory.class.getName() );
-            ( ( LocalSessionFactoryBean ) factory ).getHibernateProperties()
+            factory.getHibernateProperties()
                     .setProperty( "hibernate.cache.use_second_level_cache", "true" );
             return factory;
         }

@@ -88,4 +88,9 @@ public class PropertySourcesConfiguration extends AbstractConfiguration implemen
         }
         return false;
     }
+
+    @Override
+    protected boolean containsValueInternal( Object o ) {
+        return false;
+    }
 }

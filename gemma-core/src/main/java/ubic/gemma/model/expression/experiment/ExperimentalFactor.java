@@ -19,10 +19,10 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecuredChild;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -43,69 +43,20 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4615731059510436891L;
-    @Deprecated
-    private Set<Characteristic> annotations = new HashSet<>();
+
+    private FactorType type;
     @Nullable
     private Characteristic category;
     private ExperimentalDesign experimentalDesign;
     private Set<FactorValue> factorValues = new HashSet<>();
+    @Deprecated
+    private Set<Characteristic> annotations = new HashSet<>();
     private ExpressionExperiment securityOwner;
-    private FactorType type;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public ExperimentalFactor() {
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null ) {
-            return super.hashCode();
-        }
-
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( this.getName() == null ) ? 0 : this.getName().hashCode() );
-        result = prime * result + ( ( this.getDescription() == null ) ? 0 : this.getDescription().hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
-        if ( this == obj )
-            return true;
-
-        if ( !( obj instanceof ExperimentalFactor ) )
-            return false;
-
-        ExperimentalFactor other = ( ExperimentalFactor ) obj;
-
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) )
-            return false;
-
-        if ( this.getCategory() == null ) {
-            if ( other.getCategory() != null )
-                return false;
-        } else if ( !this.getCategory().equals( other.getCategory() ) )
-            return false;
-
-        if ( this.getName() == null ) {
-            if ( other.getName() != null )
-                return false;
-        } else if ( !this.getName().equals( other.getName() ) )
-            return false;
-
-        if ( this.getDescription() == null ) {
-            return other.getDescription() == null;
-        }
-        return this.getDescription().equals( other.getDescription() );
-
     }
 
     @Override
@@ -132,21 +83,21 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         return this.securityOwner;
     }
 
-    /**
-     * @param securityOwner Used to hint the security system about who 'owns' this,
-     */
     public void setSecurityOwner( ExpressionExperiment securityOwner ) {
         this.securityOwner = securityOwner;
     }
 
-    @Deprecated
-    public Set<Characteristic> getAnnotations() {
-        return this.annotations;
+    /**
+     * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the
+     *         factorvalues,
+     *         Categorical ones must not.
+     */
+    public FactorType getType() {
+        return this.type;
     }
 
-    @Deprecated
-    public void setAnnotations( Set<Characteristic> annotations ) {
-        this.annotations = annotations;
+    public void setType( FactorType type ) {
+        this.type = type;
     }
 
     /**
@@ -184,19 +135,15 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         this.factorValues = factorValues;
     }
 
-    /**
-     * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the
-     *         factorvalues,
-     *         Categorical ones must not.
-     */
-    public FactorType getType() {
-        return this.type;
+    @Deprecated
+    public Set<Characteristic> getAnnotations() {
+        return this.annotations;
     }
 
-    public void setType( FactorType type ) {
-        this.type = type;
+    @Deprecated
+    public void setAnnotations( Set<Characteristic> annotations ) {
+        this.annotations = annotations;
     }
-
 
     @Override
     public String toString() {
@@ -216,5 +163,4 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
             return experimentalFactor;
         }
     }
-
 }

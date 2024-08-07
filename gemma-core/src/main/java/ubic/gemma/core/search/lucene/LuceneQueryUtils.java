@@ -1,6 +1,8 @@
 package ubic.gemma.core.search.lucene;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
@@ -13,12 +15,18 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Utilities for parsing search queries using Lucene.
@@ -28,6 +36,28 @@ import java.util.regex.Pattern;
 public class LuceneQueryUtils {
 
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
+
+    /**
+     * Enumeration of a few known ontology prefixes that shouldn't be parsed as fielded terms.
+     * TODO: make this configurable
+     */
+    private static final Set<String> KNOWN_ONTOLOGY_PREFIXES = new HashSet<>();
+
+    static {
+        try ( InputStream is = LuceneQueryUtils.class.getResourceAsStream( "/ubic/gemma/core/ontology/ontology.prefixes.txt" ) ) {
+            for ( String line : IOUtils.readLines( requireNonNull( is ), StandardCharsets.UTF_8 ) ) {
+                line = StringUtils.strip( line );
+                // ignore comments
+                if ( line.startsWith( "#" ) ) {
+                    continue;
+                }
+                KNOWN_ONTOLOGY_PREFIXES.add( line );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        log.debug( "Known ontology prefixes: " + KNOWN_ONTOLOGY_PREFIXES );
+    }
 
     private static QueryParser createQueryParser() {
         return new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
@@ -265,10 +295,11 @@ public class LuceneQueryUtils {
     /**
      * Check if a given term is global (i.e. not fielded).
      * <p>
-     * This includes the corner case when a term is a URI and would be parsed as a fielded term.
+     * This includes the corner case when a term is a URI and would be parsed as a fielded term or an ontology term
+     * using ':' as a delimiter.
      */
     private static boolean isTermGlobal( Term term ) {
-        return term.field().isEmpty() || tryParseUri( term ) != null;
+        return term.field().isEmpty() || isOntologyTerm( term ) || tryParseUri( term ) != null;
     }
 
     /**
@@ -276,11 +307,20 @@ public class LuceneQueryUtils {
      */
     private static String termToString( Term term ) {
         URI uri;
-        if ( ( uri = tryParseUri( term ) ) != null ) {
+        if ( isOntologyTerm( term ) ) {
+            return term.field() + ":" + term.text();
+        } else if ( ( uri = tryParseUri( term ) ) != null ) {
             return uri.toString();
         } else {
             return term.text();
         }
+    }
+
+    /**
+     * Detect certain ontology terms that use ':' as a delimiter (i.e. GO:0001234).
+     */
+    private static boolean isOntologyTerm( Term term ) {
+        return KNOWN_ONTOLOGY_PREFIXES.contains( term.field() );
     }
 
     @Nullable

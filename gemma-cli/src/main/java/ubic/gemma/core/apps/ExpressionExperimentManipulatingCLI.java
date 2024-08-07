@@ -60,6 +60,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -411,7 +412,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                         return troubledIds.contains( ee.getId() );
                     }
                 } )
-                .collect( Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) ) ) );
+                .collect( toIdentifiableSet() );
 
         // only retain non-troubled experiments
         expressionExperiments.removeAll( troubledExpressionExperiments );

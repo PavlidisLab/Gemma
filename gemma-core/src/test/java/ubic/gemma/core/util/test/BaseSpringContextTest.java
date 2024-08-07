@@ -303,7 +303,7 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
     }
 
     protected BioSequence getTestNonPersistentBioSequence( Taxon t ) {
-        return PersistentDummyObjectHelper.getTestNonPersistentBioSequence( t );
+        return testHelper.getTestNonPersistentBioSequence( t );
     }
 
     protected BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {

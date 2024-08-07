@@ -15,6 +15,8 @@ alter table AUDIT_EVENT_TYPE
     add index AUDIT_EVENT_TYPE_CLASS (class);
 alter table ANALYSIS
     add index ANALYSIS_CLASS (class);
+alter table ANALYSIS_RESULT_SET
+    add index ANALYSIS_RESULT_CLASS (class);
 
 alter table CHARACTERISTIC
     add index CHARACTERISTIC_CLASS (class);

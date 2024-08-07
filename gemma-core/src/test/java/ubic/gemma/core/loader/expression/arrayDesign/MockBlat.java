@@ -24,7 +24,7 @@ class MockBlat implements Blat {
     @Override
     public Collection<BlatResult> blatQuery( BioSequence b ) {
         Collection<BlatResult> result = new HashSet<>();
-        BioSequence chromseq = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( taxon );
+        BioSequence chromseq = new PersistentDummyObjectHelper().getTestNonPersistentBioSequence( taxon );
         chromseq.setLength( ( long ) 1e7 );
         BlatResult br = BlatResult.Factory.newInstance();
 

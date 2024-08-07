@@ -48,8 +48,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -443,10 +442,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .list();
         int removedGeneProductsAccessions;
         if ( !gpIds.isEmpty() ) {
-            removedGeneProductsAccessions = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" )
-                    .setParameterList( "gpIds", optimizeParameterList( gpIds ) )
-                    .executeUpdate();
+            removedGeneProductsAccessions = executeUpdateByBatch( getSessionFactory().getCurrentSession()
+                            .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
+                    "gpIds", gpIds, 2048 );
         } else {
             removedGeneProductsAccessions = 0;
         }
@@ -459,10 +457,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .list();
         int removedAliases;
         if ( !gaIds.isEmpty() ) {
-            removedAliases = getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" )
-                    .setParameterList( "gaIds", optimizeParameterList( gaIds ) )
-                    .executeUpdate();
+            removedAliases = executeUpdateByBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" ),
+                    "gaIds", gaIds, 2048 );
         } else {
             removedAliases = 0;
         }

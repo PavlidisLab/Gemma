@@ -33,6 +33,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEve
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -53,6 +54,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     private ArrayDesignService arrayDesignService;
     @Autowired
     protected AuditTrailService auditTrailService;
+    @Autowired
+    protected AuditEventService auditEventService;
 
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
@@ -227,7 +230,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
-        for ( AuditEvent event : this.auditTrailService.getEvents( arrayDesign ) ) {
+        for ( AuditEvent event : this.auditEventService.getEvents( arrayDesign ) ) {
             if ( event == null )
                 continue;
             if ( eventClass == null || ( event.getEventType() != null && eventClass

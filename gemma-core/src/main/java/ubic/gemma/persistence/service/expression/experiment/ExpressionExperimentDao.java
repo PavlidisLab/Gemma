@@ -91,6 +91,9 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
+    /**
+     * Find experiments updated on or after a given date.
+     */
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
     Map<Long, Long> getAnnotationCounts( Collection<Long> ids );

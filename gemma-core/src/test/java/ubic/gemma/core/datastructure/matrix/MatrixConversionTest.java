@@ -47,7 +47,7 @@ public class MatrixConversionTest extends TestCase {
     public final void testColumnMapping() {
         Collection<QuantitationType> quantTypes = new HashSet<>();
 
-        QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
+        QuantitationType quantType = new PersistentDummyObjectHelper().getTestNonPersistentQuantitationType();
         quantType.setId( 0L );
         quantTypes.add( quantType );
 

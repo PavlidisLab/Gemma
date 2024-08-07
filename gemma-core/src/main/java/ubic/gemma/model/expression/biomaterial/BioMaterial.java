@@ -19,9 +19,10 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,7 +43,7 @@ import java.util.Set;
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
 @Indexed
-public class BioMaterial extends AbstractDescribable implements gemma.gsec.model.SecuredChild, Serializable {
+public class BioMaterial extends AbstractDescribable implements SecuredChild, Serializable {
 
     private static final long serialVersionUID = 4374359557498220256L;
     private Taxon sourceTaxon;

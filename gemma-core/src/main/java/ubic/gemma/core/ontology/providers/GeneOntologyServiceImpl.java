@@ -35,19 +35,21 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.cache.CacheUtils;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
 
 /**
  * <a href="https://geneontology.org/">Gene Ontology</a>
@@ -63,33 +65,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     }
 
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
-
-    /**
-     * @param  term the term
-     * @return Usual formatted GO id, e.g., GO:0039392
-     */
-    public static String asRegularGoId( Characteristic term ) {
-        String uri = term.getValue();
-        return GeneOntologyServiceImpl.asRegularGoId( uri );
-    }
-
-    /**
-     * @param  term ontology term
-     * @return Usual formatted GO id, e.g., GO:0039392
-     */
-    public static String asRegularGoId( OntologyTerm term ) {
-        if ( term == null )
-            return null;
-        String uri = term.getUri();
-        if ( uri == null ) {
-            return null;
-        }
-        return GeneOntologyServiceImpl.asRegularGoId( uri );
-    }
-
-    public static String asRegularGoId( String uri ) {
-        return uri.replaceAll( ".*?/", "" ).replace( "_", ":" );
-    }
 
     @Override
     protected String getOntologyName() {
@@ -157,18 +132,13 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
         goTerms = CacheUtils.getCache( cacheManager, "GeneOntologyService.goTerms" );
         term2Aspect = CacheUtils.getCache( cacheManager, "GeneOntologyService.term2Aspect" );
         if ( autoLoadOntologies ) {
-            ontologyTaskExecutor.execute( () -> {
-                initialize( false, false );
-            } );
+            ontologyTaskExecutor.execute( () -> initialize( false, false ) );
         }
     }
 
     @Override
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds ) {
-
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<>();
-        if ( queryGene == null )
-            return null;
         if ( geneIds.isEmpty() )
             return overlap;
 
@@ -186,25 +156,18 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
 
     @Override
     public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) {
-
-        if ( queryGene1 == null || queryGene2 == null )
-            return null;
-
         Collection<OntologyTerm> queryGeneTerms1 = this.getGOTerms( queryGene1 );
         Collection<OntologyTerm> queryGeneTerms2 = this.getGOTerms( queryGene2 );
-
         return this.computeOverlap( queryGeneTerms1, queryGeneTerms2 );
     }
 
     @Override
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds ) {
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<>();
-        if ( queryGene == null )
-            return null;
         if ( geneIds.isEmpty() )
             return overlap;
 
-        Collection<OntologyTerm> queryGeneTerms = this.getGOTerms( queryGene, true, null );
+        Collection<OntologyTerm> queryGeneTerms = this.getGOTerms( geneService.loadOrFail( queryGene ), true, null );
 
         overlap.put( queryGene, queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
         // with itself!
@@ -255,18 +218,29 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     }
 
     @Override
-    public Collection<Gene> getGenes( String goId, Taxon taxon ) {
-        OntologyTerm t = getTermForId( goId );
-        if ( t == null )
-            return null;
-        Collection<OntologyTerm> terms = t.getChildren( false, false );
-        Collection<Gene> results = new HashSet<>( this.gene2GOAssociationService.findByGOTerm( goId, taxon ) );
-
-        for ( OntologyTerm term : terms ) {
-            results.addAll( this.gene2GOAssociationService
-                    .findByGOTerm( GeneOntologyServiceImpl.asRegularGoId( term ), taxon ) );
+    public Collection<Gene> getGenes( OntologyTerm term, @Nullable Taxon taxon ) {
+        String goId = asRegularGoId( term );
+        if ( goId == null ) {
+            return Collections.emptyList();
         }
-        return results;
+        Set<String> goIds = new HashSet<>();
+        goIds.add( goId );
+        for ( OntologyTerm ontologyTerm1 : getChildren( Collections.singleton( term ), false, false ) ) {
+            String goId1 = asRegularGoId( ontologyTerm1 );
+            if ( goId1 != null ) {
+                goIds.add( goId1 );
+            }
+        }
+        return gene2GOAssociationService.findByGOTerms( goIds, taxon );
+    }
+
+    @Override
+    public Collection<Gene> getGenes( String goId, @Nullable Taxon taxon ) {
+        OntologyTerm t = getTermForId( goId );
+        if ( t == null ) {
+            return Collections.emptyList();
+        }
+        return getGenes( t, taxon );
     }
 
     @Override
@@ -275,7 +249,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     }
 
     @Override
-    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect ) {
+    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, @Nullable GOAspect goAspect ) {
         Cache.ValueWrapper value = goTerms.get( gene.getId() );
         //noinspection unchecked
         Collection<OntologyTerm> cachedTerms = value != null ? ( Collection<OntologyTerm> ) value.get() : null;
@@ -327,20 +301,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
         return cachedTerms;
     }
 
-    /**
-     * @param  gene          gene
-     * @param  goAspect      go aspect
-     * @param  includePartOf include part of
-     * @return collection of ontology terms
-     */
-    public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
-        return this.getGOTerms( geneService.loadOrFail( gene ), includePartOf, goAspect );
-    }
-
     @Override
     public GOAspect getTermAspect( Characteristic goId ) {
-        String string = GeneOntologyServiceImpl.asRegularGoId( goId );
-        return this.getTermAspect( string );
+        String term = asRegularGoId( goId );
+        return term != null ? this.getTermAspect( term ) : null;
     }
 
     @Override
@@ -386,7 +350,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
 
     @Override
     public GeneOntologyTermValueObject getValueObject( OntologyTerm term ) {
-        return new GeneOntologyTermValueObject( GeneOntologyServiceImpl.asRegularGoId( term ), term );
+        return new GeneOntologyTermValueObject( asRegularGoId( term ), term );
     }
 
     @Override
@@ -400,7 +364,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
 
     @Override
     public List<GeneOntologyTermValueObject> getValueObjects( Gene gene ) {
-        return gene == null ? null : this.getValueObjects( this.getGOTerms( gene ) );
+        return this.getValueObjects( this.getGOTerms( gene ) );
     }
 
     @Override
@@ -428,7 +392,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     }
 
     private GOAspect getTermAspect( OntologyTerm term ) {
-        assert term != null;
         String goId = term.getLabel();
         Cache.ValueWrapper value = term2Aspect.get( goId );
         GOAspect aspect;
@@ -466,7 +429,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
         buf.append( ": [ " );
         Iterator<OntologyTerm> i = terms.iterator();
         while ( i.hasNext() ) {
-            buf.append( GeneOntologyServiceImpl.asRegularGoId( i.next() ) );
+            buf.append( asRegularGoId( i.next() ) );
             if ( i.hasNext() )
                 buf.append( ", " );
         }
@@ -478,14 +441,14 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
             Collection<Gene> genes ) {
         for ( Gene gene : genes ) {
             if ( queryGeneTerms.isEmpty() ) {
-                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                overlap.put( gene.getId(), new HashSet<>() );
                 continue;
             }
 
             Collection<OntologyTerm> comparisonOntos = this.getGOTerms( gene );
 
             if ( comparisonOntos == null || comparisonOntos.isEmpty() ) {
-                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                overlap.put( gene.getId(), new HashSet<>() );
                 continue;
             }
 
