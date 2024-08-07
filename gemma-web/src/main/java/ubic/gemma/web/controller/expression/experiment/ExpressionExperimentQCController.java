@@ -198,7 +198,7 @@ public class ExpressionExperimentQCController extends BaseController {
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = null;
         try {
             sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                    .loadFullMatrix( ee );
+                    .loadRegressedMatrix( ee );
         } catch ( FilteringException e ) {
             log.warn( "Error when filtering the expression data matrix for " + ee + ", nothing will be displayed.", e );
         }
