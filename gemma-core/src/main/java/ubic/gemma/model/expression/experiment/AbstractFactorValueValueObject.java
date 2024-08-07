@@ -43,9 +43,13 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
 
     /**
      * The measurement associated with this factor value.
+     * <p>
+     * This is named as such to avoid conflict with {@link #isMeasurement()}.
      */
+    @JsonProperty("measurement")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MeasurementValueObject measurement;
+    @Schema(description = "This property exists only if this factor value is a measurement.")
+    private MeasurementValueObject measurementObject;
 
     /**
      * The characteristics associated with this factor value.
@@ -83,7 +87,7 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
         }
 
         if ( fv.getMeasurement() != null ) {
-            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
+            this.measurementObject = new MeasurementValueObject( fv.getMeasurement() );
         }
 
         this.characteristics = fv.getCharacteristics().stream()
@@ -105,6 +109,6 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
     @Schema(description = "Indicate if this factor value represents a measurement. When this is true, the `measurement` field will be populated.")
     @JsonProperty("isMeasurement")
     public boolean isMeasurement() {
-        return getMeasurement() != null;
+        return measurementObject != null;
     }
 }

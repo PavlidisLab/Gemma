@@ -37,8 +37,8 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         }
         serializeInternal( factorValueValueObject, jsonGenerator, serializerProvider );
         jsonGenerator.writeBooleanField( "isMeasurement", factorValueValueObject.isMeasurement() );
-        if ( factorValueValueObject.getMeasurement() != null ) {
-            jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurement() );
+        if ( factorValueValueObject.getMeasurementObject() != null ) {
+            jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurementObject() );
         }
         writeCharacteristics( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
         writeStatements( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
