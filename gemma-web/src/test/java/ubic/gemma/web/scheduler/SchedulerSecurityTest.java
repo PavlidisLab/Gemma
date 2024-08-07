@@ -27,11 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.lang.reflect.InvocationTargetException;
@@ -133,9 +133,9 @@ public class SchedulerSecurityTest extends BaseWebIntegrationTest {
         @Override
         protected void executeAs( JobExecutionContext context ) {
             assertNotNull( tableMaintenanceUtil );
-            assertNotNull( SecurityContextHolder.getContext().getAuthentication() );
-            assertTrue( SecurityContextHolder.getContext().getAuthentication().isAuthenticated() );
-            assertTrue( SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+            assertNotNull( TestSecurityContextHolder.getContext().getAuthentication() );
+            assertTrue( TestSecurityContextHolder.getContext().getAuthentication().isAuthenticated() );
+            assertTrue( TestSecurityContextHolder.getContext().getAuthentication().getAuthorities()
                     .contains( new SimpleGrantedAuthority( "GROUP_AGENT" ) ) );
             context.setResult( "Hello world!" );
         }
@@ -157,9 +157,9 @@ public class SchedulerSecurityTest extends BaseWebIntegrationTest {
         jdm.put( "securityContext", securityContext );
         when( context.getScheduler() ).thenReturn( mock() );
         when( context.getMergedJobDataMap() ).thenReturn( jdm );
-        SecurityContext previousContext = SecurityContextHolder.getContext();
+        SecurityContext previousContext = TestSecurityContextHolder.getContext();
         testSecureJob.execute( context );
-        assertThat( SecurityContextHolder.getContext() ).isSameAs( previousContext );
+        assertThat( TestSecurityContextHolder.getContext() ).isSameAs( previousContext );
         verify( context ).setResult( "Hello world!" );
     }
 }

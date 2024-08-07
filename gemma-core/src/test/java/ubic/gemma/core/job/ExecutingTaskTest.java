@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Objects;
@@ -106,11 +106,11 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
         this.runAsUser( "ExecutingTaskTestUser" );
         TaskCommand taskCommand = new TaskCommand();
-        Authentication executingUserAuth = SecurityContextHolder.getContext().getAuthentication();
-        assertSame( SecurityContextHolder.getContext(), taskCommand.getSecurityContext() );
+        Authentication executingUserAuth = TestSecurityContextHolder.getContext().getAuthentication();
+        assertSame( TestSecurityContextHolder.getContext(), taskCommand.getSecurityContext() );
 
         this.runAsAdmin();
-        Authentication launchingUserAuth = SecurityContextHolder.getContext().getAuthentication();
+        Authentication launchingUserAuth = TestSecurityContextHolder.getContext().getAuthentication();
 
         assertNotSame( executingUserAuth, launchingUserAuth );
 
@@ -127,12 +127,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
             @Override
             public void onStart() {
-                authenticationAfterInitialize[0] = SecurityContextHolder.getContext().getAuthentication();
+                authenticationAfterInitialize[0] = TestSecurityContextHolder.getContext().getAuthentication();
             }
 
             @Override
             public void onProgress( String message ) {
-                authenticationDuringProgress[0] = SecurityContextHolder.getContext().getAuthentication();
+                authenticationDuringProgress[0] = TestSecurityContextHolder.getContext().getAuthentication();
             }
 
             @Override
@@ -142,12 +142,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
             @Override
             public void onSuccess() {
-                authenticationAfterComplete[0] = SecurityContextHolder.getContext().getAuthentication();
+                authenticationAfterComplete[0] = TestSecurityContextHolder.getContext().getAuthentication();
             }
 
             @Override
             public void onComplete() {
-                authenticationAfterSuccess[0] = SecurityContextHolder.getContext().getAuthentication();
+                authenticationAfterSuccess[0] = TestSecurityContextHolder.getContext().getAuthentication();
             }
         } );
 

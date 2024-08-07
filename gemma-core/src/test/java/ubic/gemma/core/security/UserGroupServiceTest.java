@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -98,8 +97,6 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testDeleteUserGroup() {
-
-        this.runAsAdmin();
         List<GrantedAuthority> authos = new ArrayList<>();
         authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
@@ -121,7 +118,6 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
         // remove the group
         this.userManager.deleteGroup( this.groupName );
-
     }
 
     /**

@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,12 +38,12 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
         expressionExperimentService.update( ee );
         ee = expressionExperimentService.thawLite( ee );
         assertNotNull( ee.getCurationDetails().getLastUpdated() );
-        SecurityContext previousContext = SecurityContextHolder.getContext();
+        SecurityContext previousContext = TestSecurityContextHolder.getContext();
         try {
             runAsAgent();
             expressionExperimentReportService.recalculateBatchInfo();
         } finally {
-            SecurityContextHolder.setContext( previousContext );
+            TestSecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );
@@ -54,12 +54,12 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     public void testRecalculateExperimentBatchInfo() {
         ee = getTestPersistentBasicExpressionExperiment();
         assertNotNull( ee.getExperimentalDesign() );
-        SecurityContext previousContext = SecurityContextHolder.getContext();
+        SecurityContext previousContext = TestSecurityContextHolder.getContext();
         try {
             runAsAgent();
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
         } finally {
-            SecurityContextHolder.setContext( previousContext );
+            TestSecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );
@@ -70,12 +70,12 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     public void testRecalculateBatchInfoWithMissingDesign() {
         ee = getTestPersistentExpressionExperiment();
         assertNull( ee.getExperimentalDesign() );
-        SecurityContext previousContext = SecurityContextHolder.getContext();
+        SecurityContext previousContext = TestSecurityContextHolder.getContext();
         try {
             runAsAgent();
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
         } finally {
-            SecurityContextHolder.setContext( previousContext );
+            TestSecurityContextHolder.setContext( previousContext );
         }
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( BatchEffectType.NO_BATCH_INFO, ee.getBatchEffect() );

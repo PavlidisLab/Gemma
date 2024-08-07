@@ -27,6 +27,8 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -64,6 +66,8 @@ import static java.util.Objects.requireNonNull;
  */
 @Deprecated
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
+@RunAs(RunAs.Role.ADMIN)
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public abstract class BaseSpringContextTest extends BaseIntegrationTest {
 
     protected final Log log = LogFactory.getLog( this.getClass() );

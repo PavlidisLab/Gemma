@@ -22,6 +22,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
@@ -211,7 +212,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
                 Arrays.asList( new GrantedAuthority[] {
                         new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
         context.setAuthentication( token );
-        SecurityContextHolder.setContext( context );
+        TestSecurityContextHolder.setContext( context );
         assertThat( SecurityUtil.isUserAdmin() ).isFalse();
         assertThat( SecurityUtil.isUserAnonymous() ).isTrue();
 
