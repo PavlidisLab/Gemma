@@ -2077,6 +2077,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getExperimentalDesign() );
         Hibernate.initialize( ee.getCurationDetails() );
         Hibernate.initialize( ee.getGeeq() );
+        Hibernate.initialize( ee.getCharacteristics() );
     }
 
     @Override
