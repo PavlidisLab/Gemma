@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-public class FixOntologyTermLabelsCli extends AbstractCLI {
+public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
     boolean dryRun = false;
 

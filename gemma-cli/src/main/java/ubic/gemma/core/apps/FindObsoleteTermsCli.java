@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class FindObsoleteTermsCli extends AbstractCLI {
+public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private OntologyService ontologyService;

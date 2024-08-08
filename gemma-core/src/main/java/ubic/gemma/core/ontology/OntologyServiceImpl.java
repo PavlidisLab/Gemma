@@ -642,7 +642,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
     @Override
-    public void fixOntologyTermLabels(boolean dryRun) {
+    public void fixOntologyTermLabels( boolean dryRun ) {
         int prevObsoleteCnt = 0;
         int checked = 0;
         Characteristic lastObsolete = null;
@@ -719,7 +719,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 }
 
-                if ( updated ) {
+                if ( updated && !dryRun ) {
                     characteristicService.update( ch );
                     numUpdated++;
                 }
@@ -728,7 +728,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 if ( checked % 1000 == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
                     if ( !updatedTerms.isEmpty() ) {
-                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( "Updated:\t" + k + "\tto\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
+                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( (dryRun ? "Mismatch" : "Updated") + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
                         updatedTerms.clear(); // just print out what we saw in the last batch.
                     }
                 }
