@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.core.util.CLI;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +19,9 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class FixOntologyTermLabelsCli extends AbstractCLI {
+
+    boolean dryRun = false;
+
 
     @Autowired
     private OntologyService ontologyService;
@@ -34,8 +37,8 @@ public class FixOntologyTermLabelsCli extends AbstractCLI {
     private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.METADATA;
+    public CLI.CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.METADATA;
     }
 
     @Override
@@ -55,6 +58,7 @@ public class FixOntologyTermLabelsCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( "d", "dryRun", false, "Dry run, do not update the database [default: " + dryRun + "]" );
     }
 
     @Override
@@ -90,7 +94,7 @@ public class FixOntologyTermLabelsCli extends AbstractCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        ontologyService.fixOntologyTermLabels();
+        ontologyService.fixOntologyTermLabels( dryRun );
 
 
     }
