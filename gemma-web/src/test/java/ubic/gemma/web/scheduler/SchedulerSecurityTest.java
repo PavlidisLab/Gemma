@@ -68,7 +68,7 @@ public class SchedulerSecurityTest extends BaseWebIntegrationTest {
     @Test
     public void runSecuredMethodOnSchedule() throws Exception {
 
-        String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
+        String jobName = "job_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
 
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
         jobDetail.setTargetMethod( "generateWeeklyReport" );
@@ -88,7 +88,7 @@ public class SchedulerSecurityTest extends BaseWebIntegrationTest {
     @Test
     public void runSecuredMethodOnScheduleMultiGroup() throws Exception {
 
-        String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
+        String jobName = "job_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
 
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
         jobDetail.setTargetMethod( "findByUpdatedLimit" );

@@ -60,7 +60,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        this.groupName = RandomStringUtils.randomAlphabetic( 6 );
+        this.groupName = RandomStringUtils.insecure().nextAlphabetic( 6 );
 
         /*
          * Create a user with default privileges.

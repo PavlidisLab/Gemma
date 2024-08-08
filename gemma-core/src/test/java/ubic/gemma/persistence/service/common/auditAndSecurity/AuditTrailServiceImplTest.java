@@ -63,8 +63,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
 
         auditable = ArrayDesign.Factory.newInstance();
-        auditable.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
-        auditable.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
+        auditable.setName( "testing audit " + RandomStringUtils.insecure().nextAlphanumeric( 32 ) );
+        auditable.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         auditable.setPrimaryTaxon( this.getTaxon( "human" ) );
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
 

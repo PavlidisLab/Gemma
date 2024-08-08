@@ -153,8 +153,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
-            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
+            c.setValue( RandomStringUtils.insecure().nextNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.insecure().nextAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }
@@ -166,8 +166,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Statement c = Statement.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
-            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
+            c.setValue( RandomStringUtils.insecure().nextNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.insecure().nextAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }

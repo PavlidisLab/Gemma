@@ -70,7 +70,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
+        this.arrayDesignName = "AD_" + RandomStringUtils.insecure().nextAlphabetic( 5 );
 
         // admin
         this.arrayDesign = ArrayDesign.Factory.newInstance();
@@ -383,7 +383,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 }

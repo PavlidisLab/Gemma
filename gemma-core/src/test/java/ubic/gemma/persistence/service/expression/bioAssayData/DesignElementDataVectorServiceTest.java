@@ -92,7 +92,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-        newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        newee.setShortName( RandomStringUtils.insecure().nextAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
         newee = this.expressionExperimentService.thawLite( newee );

@@ -50,8 +50,8 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         others.add( ad3 );
 
         ArrayDesign ad1ad2ad3 = arrayDesignMergeService.merge( ad1, others,
-                "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ),
-                "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ), false );
+                "ad1ad2ad3_" + RandomStringUtils.insecure().nextAlphabetic( 4 ),
+                "ad1ad2ad3_" + RandomStringUtils.insecure().nextAlphabetic( 4 ), false );
 
         ad1 = arrayDesignService.load( ad1.getId() );
         assertNotNull( ad1 );
@@ -88,7 +88,7 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         others.clear();
         others.add( ad4 );
         ArrayDesign ad1ad2ad3ad4 = arrayDesignMergeService.merge( ad1ad2ad3, others,
-                "foo2" + RandomStringUtils.randomAlphabetic( 4 ), "bar2" + RandomStringUtils.randomAlphabetic( 4 ),
+                "foo2" + RandomStringUtils.insecure().nextAlphabetic( 4 ), "bar2" + RandomStringUtils.insecure().nextAlphabetic( 4 ),
                 false );
 
         assertTrue( ad1ad2ad3ad4.getMergees().contains( ad1ad2ad3 ) );

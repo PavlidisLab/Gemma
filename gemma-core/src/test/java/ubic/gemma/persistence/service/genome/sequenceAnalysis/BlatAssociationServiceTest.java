@@ -48,10 +48,10 @@ import static org.junit.Assert.assertNotNull;
  */
 public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
-    private final String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
+    private final String testGeneIdentifier = RandomStringUtils.insecure().nextAlphabetic( 4 );
 
-    private final String testSequence = RandomStringUtils.random( 35, "ATGC" );
-    private final String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
+    private final String testSequence = RandomStringUtils.insecure().next( 35, "ATGC" );
+    private final String testSequenceName = RandomStringUtils.insecure().nextAlphabetic( 6 );
 
     @Autowired
     private BlatAssociationService blatAssociationService;

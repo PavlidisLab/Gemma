@@ -33,14 +33,14 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
         taxon = new Taxon();
         taxon.setNcbiId( RandomUtils.nextInt() );
         taxon.setCommonName( "common_name_" + RandomUtils.nextInt() );
-        taxon.setScientificName( "scientific_name_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        taxon.setScientificName( "scientific_name_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         taxon.setIsGenesUsable( false );
         taxon = taxonService.create( taxon );
         gene = new Gene();
         gene.setTaxon( taxon );
         gene.setNcbiGeneId( RandomUtils.nextInt() );
-        gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene = geneService.create( gene );
     }
 

@@ -64,7 +64,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
     private static final String TEST_EXTERNAL_DATABASE = "EXTERNAL_DATABASE_TEST_NAME";
-    private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
+    private final Integer geneNCBI = new Integer( RandomStringUtils.insecure().nextNumeric( 6 ) );
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
@@ -130,7 +130,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertEquals( 1, geneValueObjects.size() );
 
         // user creates evidence
-        String userName = RandomStringUtils.randomAlphabetic( 10 );
+        String userName = RandomStringUtils.insecure().nextAlphabetic( 10 );
         this.makeUser( userName );
         this.runAsUser( userName );
         String testuri = "http://purl.obolibrary.org/obo/DOID_14566";
@@ -298,7 +298,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 

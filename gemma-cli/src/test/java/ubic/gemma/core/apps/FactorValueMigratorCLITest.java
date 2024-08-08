@@ -14,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -21,7 +22,6 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -144,8 +144,8 @@ public class FactorValueMigratorCLITest extends AbstractJUnit4SpringContextTests
 
     private Characteristic createCharacteristic( Long id ) {
         Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( RandomStringUtils.randomAlphanumeric( 10 ) );
-        c.setValue( RandomStringUtils.randomAlphanumeric( 10 ) );
+        c.setCategory( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        c.setValue( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         c.setId( id );
         return c;
     }

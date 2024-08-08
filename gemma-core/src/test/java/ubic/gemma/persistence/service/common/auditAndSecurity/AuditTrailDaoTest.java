@@ -53,7 +53,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "test_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        ad.setName( "test_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );

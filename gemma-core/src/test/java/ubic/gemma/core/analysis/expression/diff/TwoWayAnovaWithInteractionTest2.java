@@ -82,7 +82,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-            metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+            metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
             metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
             metaData.setQuantitationTypeName( "whatever" );
             // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!

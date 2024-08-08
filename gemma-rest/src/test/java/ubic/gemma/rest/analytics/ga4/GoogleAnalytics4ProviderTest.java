@@ -39,7 +39,7 @@ public class GoogleAnalytics4ProviderTest {
         provider = new GoogleAnalytics4Provider( restTemplate, "test", "test" );
         provider.afterPropertiesSet();
         provider.setDebug( true );
-        ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.randomNumeric( 10 ) + "." + RandomStringUtils.randomNumeric( 10 ) );
+        ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.insecure().nextNumeric( 10 ) + "." + RandomStringUtils.insecure().nextNumeric( 10 ) );
         provider.setClientIdRetrievalStrategy( clientId::get );
         provider.setPollingIntervalMillis( 1000 );
     }
@@ -77,15 +77,15 @@ public class GoogleAnalytics4ProviderTest {
 
     @Test
     public void testInvalidEvent() {
-        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 41 ) ) )
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.insecure().nextAlphabetic( 41 ) ) )
                 .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
                 .extracting( InvalidEventException::getErrors )
                 .satisfies( errors -> {
                     assertThat( errors ).hasFieldError( "event", "name", "size" );
                 } );
 
-        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ),
-                "test", RandomStringUtils.randomAlphabetic( 101 ) ) )
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.insecure().nextAlphabetic( 30 ),
+                "test", RandomStringUtils.insecure().nextAlphabetic( 101 ) ) )
                 .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
                 .extracting( InvalidEventException::getErrors )
                 .satisfies( errors -> {
@@ -105,7 +105,7 @@ public class GoogleAnalytics4ProviderTest {
 
     @Test
     public void testFutureEvent() {
-        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.randomAlphabetic( 30 ), new Date( System.currentTimeMillis() + 10000 ) ) )
+        assertThatThrownBy( () -> provider.sendEvent( RandomStringUtils.insecure().nextAlphabetic( 30 ), new Date( System.currentTimeMillis() + 10000 ) ) )
                 .isInstanceOf( InvalidEventException.class )
                 .asInstanceOf( InstanceOfAssertFactories.throwable( InvalidEventException.class ) )
                 .extracting( InvalidEventException::getErrors )

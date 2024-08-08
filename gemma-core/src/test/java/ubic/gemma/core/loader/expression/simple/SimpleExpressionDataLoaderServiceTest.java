@@ -69,8 +69,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
@@ -79,8 +79,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( taxon );
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setDescription( "Simple expression data loader service test - load" );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
@@ -106,9 +106,9 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<ArrayDesign> ads = new HashSet<>();
@@ -116,7 +116,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( taxon );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         metaData.setDescription( "Simple expression data loader service test - load B" );
         metaData.setQuantitationTypeName( "testing" );
@@ -146,9 +146,9 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<ArrayDesign> ads = new HashSet<>();
@@ -157,7 +157,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( taxon );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setDescription( "Simple expression data loader service test - load duplicate row" );

@@ -54,7 +54,7 @@ import static org.junit.Assert.*;
 @Category(SlowTest.class)
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
-    private final String adName = RandomStringUtils.randomAlphabetic( 10 );
+    private final String adName = RandomStringUtils.insecure().nextAlphabetic( 10 );
     private ExpressionExperiment ee;
     @Autowired
     private ExpressionExperimentService eeService;
@@ -91,7 +91,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         Taxon human = taxonService.findByCommonName( "human" );
 
-        String eeShortName = RandomStringUtils.randomAlphabetic( 10 );
+        String eeShortName = RandomStringUtils.insecure().nextAlphabetic( 10 );
         metaData.setShortName( eeShortName );
         metaData.setDescription( "bar" );
         metaData.setIsRatio( false );

@@ -64,20 +64,20 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
     public void setUp() throws Exception {
 
         arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
-        arrayDesign.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
+        arrayDesign.setName( "testing audit " + RandomStringUtils.insecure().nextAlphanumeric( 32 ) );
+        arrayDesign.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
         arrayDesign = ( ArrayDesign ) this.persisterHelper.persist( arrayDesign );
 
         assertTrue( arrayDesign.getAuditTrail() != null );
 
         Taxon taxon = Taxon.Factory
-                .newInstance( "text taxon scientific name " + RandomStringUtils.randomAlphanumeric( 8 ), "ttxn", 0,
+                .newInstance( "text taxon scientific name " + RandomStringUtils.insecure().nextAlphanumeric( 8 ), "ttxn", 0,
                         true );
         this.persisterHelper.persist( taxon );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();
-        bm.setName( RandomStringUtils.randomAlphanumeric( 8 ) );
+        bm.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         bm.setSourceTaxon( taxon );
         this.persisterHelper.persist( bm );
 
@@ -87,7 +87,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         this.persisterHelper.persist( bioAssay );
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-        ed.setName( RandomStringUtils.randomAlphanumeric( 8 ) );
+        ed.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
 
         expressionExperiment = super.getTestPersistentBasicExpressionExperiment();
 

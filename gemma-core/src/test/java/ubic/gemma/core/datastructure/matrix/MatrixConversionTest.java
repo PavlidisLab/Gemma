@@ -98,25 +98,25 @@ public class MatrixConversionTest extends TestCase {
             Iterator<BioMaterial> bmita = bioMaterials.iterator();
             for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS - 20; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-                ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
+                ba.setName( RandomStringUtils.insecure().nextNumeric( 5 ) + "_testbioassay" );
                 ba.setSampleUsed( bmita.next() );
                 ba.setArrayDesignUsed( ad );
                 ba.setId( i );
                 baDimA.getBioAssays().add( ba );
             }
-            baDimA.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
+            baDimA.setName( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
 
             BioAssayDimension baDimB = BioAssayDimension.Factory.newInstance();
             Iterator<BioMaterial> bmitb = bioMaterials.iterator();
             for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-                ba.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbioassay" );
+                ba.setName( RandomStringUtils.insecure().nextNumeric( 15 ) + "_testbioassay" );
                 ba.setSampleUsed( bmitb.next() );
                 ba.setArrayDesignUsed( adb );
                 ba.setId( i + 20 );
                 baDimB.getBioAssays().add( ba );
             }
-            baDimB.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
+            baDimB.setName( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
 
             // bio.a gets cs 0-99, bio.b gets 100-199.
             long j = 0;
@@ -152,7 +152,7 @@ public class MatrixConversionTest extends TestCase {
         List<BioMaterial> bioMaterials = new ArrayList<>();
         for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS; i++ ) {
             BioMaterial bm = BioMaterial.Factory.newInstance();
-            bm.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbiomaterial" );
+            bm.setName( RandomStringUtils.insecure().nextNumeric( 15 ) + "_testbiomaterial" );
             bm.setId( i );
             bioMaterials.add( bm );
         }
@@ -165,9 +165,9 @@ public class MatrixConversionTest extends TestCase {
 
             Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
-            reporter.setName( RandomStringUtils.randomNumeric( 15 ) + "_testreporter" );
+            reporter.setName( RandomStringUtils.insecure().nextNumeric( 15 ) + "_testreporter" );
 
-            compositeSequence.setName( RandomStringUtils.randomNumeric( 15 ) + "_testcs" );
+            compositeSequence.setName( RandomStringUtils.insecure().nextNumeric( 15 ) + "_testcs" );
             compositeSequence.setId( i );
             compositeSequence.setArrayDesign( ad );
             sequences.add( compositeSequence );

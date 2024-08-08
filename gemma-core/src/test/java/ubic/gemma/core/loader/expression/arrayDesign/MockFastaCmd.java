@@ -85,7 +85,7 @@ class MockFastaCmd implements FastaCmd {
         result.setIsApproximateLength( false );
         result.setIsCircular( false );
         result.setFractionRepeats( 0.0 );
-        result.setSequence( RandomStringUtils.random( 100, "ATGC" ) );
+        result.setSequence( RandomStringUtils.insecure().next( 100, "ATGC" ) );
         DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( object.toString() );
         result.setSequenceDatabaseEntry( genbank );
         return result;

@@ -35,14 +35,14 @@ public class AbstractFetcherTest extends TestCase {
 
     public final void testMkdirAlreadyExists() throws Exception {
         TestFetcher tf = new TestFetcher();
-        String name = RandomStringUtils.randomAlphabetic( 4 );
+        String name = RandomStringUtils.insecure().nextAlphabetic( 4 );
         String usertempdir = System.getProperty( "java.io.tmpdir" );
         assert ( usertempdir != null );
         File g = new File( usertempdir + File.separatorChar + name );
         assert ( g.mkdir() );
 
         tf.setLocalDataPath( usertempdir );
-        f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
+        f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
         TestCase.assertTrue( f.canRead() );
     }
 
@@ -51,14 +51,14 @@ public class AbstractFetcherTest extends TestCase {
         String usertempdir = System.getProperty( "java.io.tmpdir" );
         TestCase.assertTrue( usertempdir != null );
         tf.setLocalDataPath( usertempdir );
-        f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
+        f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
         TestCase.assertTrue( f.canRead() );
     }
 
     public final void testMkdirMakeTemp() throws Exception {
         TestFetcher tf = new TestFetcher();
         tf.setLocalDataPath( null );
-        f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
+        f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
         TestCase.assertTrue( f.canRead() );
     }
 
