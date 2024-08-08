@@ -643,6 +643,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public void fixOntologyTermLabels( boolean dryRun ) {
+
+        if ( dryRun ) {
+            log.info( " *** DRY RUN - no datbase changes will be made *** " );
+        }
+
         int prevObsoleteCnt = 0;
         int checked = 0;
         Characteristic lastObsolete = null;
@@ -665,7 +670,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     OntologyTerm term = this.getTerm( valueUri );
 
                     if ( term == null ) {
-                        log.warn( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
                         checked++;
                         continue;
                     }
@@ -687,7 +693,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
                         if ( term == null ) {
-                            log.warn( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
+                            if ( log.isDebugEnabled() )
+                                log.debug( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
                             checked++;
                             continue;
                         }
@@ -705,7 +712,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         OntologyTerm term = this.getTerm( secondObjectUri );
 
                         if ( term == null ) {
-                            log.warn( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
+                            if ( log.isDebugEnabled() )
+                                log.debug( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
                             checked++;
                             continue;
                         }
@@ -725,7 +733,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
 
                 checked++;
-                if ( checked % 1000 == 0 ) {
+                if ( checked % 10000 == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
                     if ( !updatedTerms.isEmpty() ) {
                         updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );

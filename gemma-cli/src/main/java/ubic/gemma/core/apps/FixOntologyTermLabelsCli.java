@@ -11,6 +11,7 @@ import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,9 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        // no extra options.
+        if ( commandLine.hasOption( 'd' ) ) {
+            dryRun = true;
+        }
     }
 
     @Override
@@ -68,12 +71,15 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
             throw new IllegalArgumentException( "Auto-loading of ontologies is enabled, disable it by setting load.ontologies=false in Gemma.properties." );
         }
 
+        List<ubic.basecode.ontology.providers.OntologyService> ontologiesLoading = new ArrayList<>( );
+
         log.info( String.format( "Warming up %d ontologies ...", ontologies.size() ) );
         CompletionService<ubic.basecode.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
         Map<ubic.basecode.ontology.providers.OntologyService, Future<ubic.basecode.ontology.providers.OntologyService>> futures = new LinkedHashMap<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
+            ontologiesLoading.add( ontology );
             futures.put( ontology, completionService.submit( () -> {
-                // we don't need all those features for detecting obsolete terms
+                // we don't need all those features
                 ontology.setSearchEnabled( false );
                 ontology.setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
                 ontology.initialize( true, false );
@@ -81,7 +87,7 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
             } ) );
         }
 
-        for ( int i = 0; i < ontologies.size(); i++ ) {
+        for ( int i = 0; i < ontologiesLoading.size(); i++ ) {
             ubic.basecode.ontology.providers.OntologyService os = completionService.take().get();
             log.info( String.format( " === Ontology (%d/%d) warmed up: %s", i + 1, ontologies.size(), os ) );
             int remainingToLoad = ontologies.size() - ( i + 1 );
