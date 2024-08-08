@@ -728,7 +728,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 if ( checked % 1000 == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
                     if ( !updatedTerms.isEmpty() ) {
-                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( (dryRun ? "Mismatch" : "Updated") + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
+                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
                         updatedTerms.clear(); // just print out what we saw in the last batch.
                     }
                 }
@@ -983,6 +983,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             log.warn( "Current thread was interrupted while finding first result for " + query + ", will return null.", e );
             return null;
         } catch ( ExecutionException e ) {
+            log.error( e );
             if ( e.getCause() instanceof RuntimeException ) {
                 throw ( RuntimeException ) e.getCause();
             } else {
@@ -1049,6 +1050,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             log.warn( "Current thread was interrupted while finding first result for " + query + ", will return nothing.", e );
             return children;
         } catch ( ExecutionException e ) {
+            log.error( e );
             if ( e.getCause() instanceof RuntimeException ) {
                 throw ( RuntimeException ) e.getCause();
             } else {
