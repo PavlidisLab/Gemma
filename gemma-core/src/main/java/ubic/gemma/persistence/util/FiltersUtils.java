@@ -12,7 +12,7 @@ public class FiltersUtils {
 
     /**
      * Check if an alias is mentioned in a set of {@link Filter}.
-     *
+     * <p>
      * This should be used to eliminate parts of an HQL query that are not mentioned in the filters.
      *
      * @return true if any provided alias is mentioned anywhere in the set of filters
