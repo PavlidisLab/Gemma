@@ -1114,18 +1114,18 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads in the pool.
      */
     private <T> void cancelRemainingFutures( List<Future<T>> futures, List<?> objects ) {
-        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
-        List<String> incompleteTasks = new ArrayList<>( futures.size() );
-        for ( Future<?> future : futures ) {
-            if ( !future.isDone() ) {
-                future.cancel( true );
-                incompleteTasks.add( objects.get( futures.indexOf( future ) ).toString() );
-            }
-        }
-        if ( !incompleteTasks.isEmpty() ) {
-            log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
-                    + String.join( "\n\t", incompleteTasks ) );
-        }
+//        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
+//        List<String> incompleteTasks = new ArrayList<>( futures.size() );
+//        for ( Future<?> future : futures ) {
+//            if ( !future.isDone() ) {
+//                future.cancel( true );
+//                incompleteTasks.add( objects.get( futures.indexOf( future ) ).toString() );
+//            }
+//        }
+//        if ( !incompleteTasks.isEmpty() ) {
+//            log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
+//                    + String.join( "\n\t", incompleteTasks ) );
+//        }
     }
 
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
