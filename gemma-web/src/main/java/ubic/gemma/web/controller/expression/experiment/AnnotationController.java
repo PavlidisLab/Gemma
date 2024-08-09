@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,8 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -97,18 +100,20 @@ public class AnnotationController {
      * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param id of the expression experiment
      */
-    public void createExperimentTag( Characteristic vc, Long id ) {
+    public void createExperimentTag( Characteristic vc, Long id ) throws TimeoutException {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "No such experiment with id=" + id );
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
-        OntologyTerm term = ontologyService.getTerm( vc.getValueUri() );
+        OntologyTerm term = ontologyService.getTerm( vc.getValueUri(), 5000, TimeUnit.MILLISECONDS );
         if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
             throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
         }
         expressionExperimentService.addCharacteristic( ee, vc );
     }
+
+    private static final long FIND_TERM_TIMEOUT_MS = 5000L;
 
     /**
      * AJAX. Find terms for tagging, etc.
@@ -118,6 +123,7 @@ public class AnnotationController {
      *                important use case.
      */
     public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
+        StopWatch timer = StopWatch.createStarted();
         if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<>();
         }
@@ -126,14 +132,14 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         try {
-            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon );
+            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon, Math.max( FIND_TERM_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             /*
              * Populate the definition for the top hits.
              */
             int numfilled = 0;
             int maxfilled = 25; // presuming we don't need to look too far down the list ... just as a start.
             for ( CharacteristicValueObject cvo : sortedResults ) {
-                cvo.setValueDefinition( cvo.getValueUri() != null ? ontologyService.getDefinition( cvo.getValueUri() ) : null );
+                cvo.setValueDefinition( cvo.getValueUri() != null ? ontologyService.getDefinition( cvo.getValueUri(), Math.max( FIND_TERM_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) : null );
                 if ( ++numfilled > maxfilled ) {
                     break;
                 }
@@ -142,7 +148,7 @@ public class AnnotationController {
             return sortedResults;
         } catch ( ParseSearchException e ) {
             throw new IllegalArgumentException( e.getMessage(), e );
-        } catch ( SearchException e ) {
+        } catch ( SearchException | TimeoutException e ) {
             throw new RuntimeException( e );
         }
     }

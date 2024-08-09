@@ -12,6 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -20,10 +21,10 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -113,14 +114,14 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void searchExpressionExperimentsByUri_whenQueryIsAUri_thenEnsureTheUriIsUsedDirectly() throws SearchException {
+    public void searchExpressionExperimentsByUri_whenQueryIsAUri_thenEnsureTheUriIsUsedDirectly() throws SearchException, TimeoutException {
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/DOID_14602" )
                 .resultType( ExpressionExperiment.class )
                 .maxResults( 10 )
                 .build();
         searchService.search( settings );
-        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/DOID_14602" );
+        verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/DOID_14602" ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );
     }

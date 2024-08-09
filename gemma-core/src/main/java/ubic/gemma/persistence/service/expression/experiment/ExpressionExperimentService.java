@@ -356,7 +356,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
          * An associated ontology term if available.
          * <p>
          * The {@link #characteristic} must have a non-null {@link Characteristic#getValueUri()} and must be retrievable
-         * via {@link ubic.gemma.core.ontology.OntologyService#getTerm(String)} for this property to be filled.
+         * via {@link ubic.gemma.core.ontology.OntologyService#getTerm(String, long, TimeUnit)} for this property to be
+         * filled.
          */
         @Nullable
         OntologyTerm term;
@@ -406,7 +407,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * the matched datasets and ordered in descending number of associated experiments
      * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults );
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * @param expressionExperiment experiment

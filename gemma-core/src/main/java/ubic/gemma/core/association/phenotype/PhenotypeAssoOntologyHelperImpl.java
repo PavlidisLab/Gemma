@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author nicolas
@@ -58,8 +59,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     }
 
     @Override
-    public Characteristic characteristicValueObject2Characteristic(
-            CharacteristicValueObject characteristicValueObject ) {
+    public Characteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject ) {
 
         Characteristic characteristic = Characteristic.Factory.newInstance();
         characteristic.setCategory( characteristicValueObject.getCategory() );
@@ -75,7 +75,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
 
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms;
             try {
-                ontologyTerms = this.ontologyService.findTerms( value, 5000 );
+                ontologyTerms = this.ontologyService.findTerms( value, 5000, 5000, TimeUnit.MILLISECONDS );
                 for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
                     if ( StringUtils.equalsIgnoreCase( ontologyTerm.getResult().getLabel(), characteristicValueObject.getValue() ) ) {
                         characteristic.setValueUri( ontologyTerm.getResult().getUri() );
@@ -132,7 +132,7 @@ public class PhenotypeAssoOntologyHelperImpl implements PhenotypeAssoOntologyHel
     @Override
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws SearchException {
 
-        Collection<OntologyTerm> results = new TreeSet<>();
+        Collection<OntologyTerm> results = new LinkedHashSet<>();
         for ( ubic.basecode.ontology.providers.OntologyService ontology : this.ontologies ) {
             if ( ontology.isOntologyLoaded() ) {
                 Collection<OntologySearchResult<OntologyTerm>> found;

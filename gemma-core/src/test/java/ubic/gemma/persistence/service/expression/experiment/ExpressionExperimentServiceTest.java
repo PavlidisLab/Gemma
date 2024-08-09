@@ -180,17 +180,17 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Test
     public void testGetFiltersWithInferredAnnotations() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
+        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
         Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
-        verify( ontologyService ).getTerms( Collections.singleton( "http://example.com/T00001" ) );
+        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
     public void testGetFiltersWithCategories() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( Collections.singleton( "http://example.com/T00001" ) ) ).thenReturn( Collections.singleton( term ) );
+        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
         expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
         verifyNoInteractions( ontologyService );
@@ -198,7 +198,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
 
     @Test
     public void testGetAnnotationsUsageFrequency() throws TimeoutException {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1 );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
@@ -206,7 +206,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1 );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
         verifyNoMoreInteractions( expressionExperimentDao );

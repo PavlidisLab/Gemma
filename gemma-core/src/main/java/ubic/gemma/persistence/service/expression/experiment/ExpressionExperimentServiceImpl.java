@@ -633,7 +633,7 @@ public class ExpressionExperimentServiceImpl
             }
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
-                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue(), Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
@@ -791,15 +791,16 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * If the term cannot be resolved via {@link OntologyService#getTerm(String)}, an attempt is done to resolve its
-     * category and assign it as its parent. This handles free-text terms that lack a value URI.
+     * If the term cannot be resolved via {@link OntologyService#getTerm(String, long, TimeUnit)}, an attempt is done to
+     * resolve its category and assign it as its parent. This handles free-text terms that lack a value URI.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         if ( excludedTermUris != null ) {
             try {
-                excludedTermUris = inferTermsUris( excludedTermUris, 30000 );
+                excludedTermUris = inferTermsUris( excludedTermUris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
             }
@@ -824,7 +825,7 @@ public class ExpressionExperimentServiceImpl
                 .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
-        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
                 .filter( t -> t.getUri() != null ) // should never occur, but better be safe than sorry
                 .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
 
@@ -882,7 +883,7 @@ public class ExpressionExperimentServiceImpl
         @Nullable
         private final OntologyTerm categoryTerm;
 
-        public OntologyTermSimpleWithCategory( String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+        public OntologyTermSimpleWithCategory( @Nullable String uri, String term, @Nullable OntologyTerm categoryTerm ) {
             super( uri, term );
             this.categoryTerm = categoryTerm;
         }

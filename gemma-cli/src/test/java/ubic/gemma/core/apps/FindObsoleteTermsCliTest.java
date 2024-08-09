@@ -8,9 +8,12 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.context.TestComponent;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -59,11 +62,11 @@ public class FindObsoleteTermsCliTest extends AbstractJUnit4SpringContextTests {
     private ubic.basecode.ontology.providers.OntologyService ontology1;
 
     @Test
-    public void test() {
+    public void test() throws TimeoutException {
         assertEquals( 0, findObsoleteTermsCli.executeCommand() );
         verify( ontology1 ).setSearchEnabled( false );
         verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );
-        verify( ontologyService ).findObsoleteTermUsage();
+        verify( ontologyService ).findObsoleteTermUsage( 4, TimeUnit.HOURS );
     }
 }

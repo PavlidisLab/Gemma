@@ -28,6 +28,8 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities. (Most of these methods are not secured, but
@@ -132,7 +134,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  givenQueryString the search query
      * @return                  the terms found
      */
-    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws SearchException;
+    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Gets all External Databases that are used with evidence
@@ -272,7 +274,7 @@ public interface PhenotypeAssociationManagerService {
      * @param maxResults maximum number of results to return or -1 to return all
      * @return the terms found in the database with taxon and gene occurrence
      */
-    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws SearchException;
+    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
@@ -297,7 +299,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  evidence The evidence
      * @return          ValidateEvidenceValueObject flags of information to show user messages
      */
-    ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence );
+    ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month

@@ -445,7 +445,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .map( OntologyResource::getUri )
                 .collect( Collectors.toSet() );
         if ( !resultsWithMissingLabels.isEmpty() ) {
-            Set<OntologyTerm> replacements = getTerms( resultsWithMissingLabels );
+            Set<OntologyTerm> replacements = getTerms( resultsWithMissingLabels, Math.max( timeoutMs - totalTimer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             results.removeAll( replacements );
             results.addAll( replacements );
         }
@@ -482,8 +482,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public String getDefinition( String uri ) {
-        OntologyTerm ot = this.getTerm( uri );
+    public String getDefinition( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        OntologyTerm ot = this.getTerm( uri, timeout, timeUnit );
         if ( ot != null ) {
             // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
             AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
@@ -495,18 +495,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public OntologyTerm getTerm( String uri ) {
-        try {
-            return findFirst( ontology -> {
-                OntologyTerm term = ontology.getTerm( uri );
-                if ( term != null && term.getLabel() == null ) {
-                    return null;
-                }
-                return term;
-            }, uri, 5000 );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( String.format( "Retrieving a term for %s timed out.", uri ), e );
-        }
+    public OntologyTerm getTerm( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        return findFirst( ontology -> {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term != null && term.getLabel() == null ) {
+                return null;
+            }
+            return term;
+        }, uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
@@ -591,7 +587,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<Characteristic, Long> findObsoleteTermUsage() {
+    public Map<Characteristic, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         Map<Characteristic, Long> results = new HashMap<>();
 
         int prevObsoleteCnt = 0;
@@ -615,7 +612,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 checked++;
 
-                OntologyTerm term = this.getTerm( valueUri );
+                OntologyTerm term = this.getTerm( valueUri, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
                 if ( term != null && term.isObsolete() ) {
                     if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
                         // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.

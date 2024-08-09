@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class FindObsoleteTermsCli extends AbstractCLI {
@@ -90,7 +91,7 @@ public class FindObsoleteTermsCli extends AbstractCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        Map<Characteristic, Long> vos = ontologyService.findObsoleteTermUsage();
+        Map<Characteristic, Long> vos = ontologyService.findObsoleteTermUsage( 4, TimeUnit.HOURS );
 
         AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
 
