@@ -1,5 +1,17 @@
 ## Updates
 
+### Update 2.8.2
+
+- add a `characteristics` collection to the `ExpressionExperimentValueObject` model
+- add support for `any`, `all` and `none` quantifiers in filters
+- add `experimentalFactorType` to `FactorValueValueObject` and `FactorValueBasicValueObject`
+
+#### Quantifiers in filters
+
+It is now possible to apply a quantifier when filtering by a collection of entities. For example, one can filter
+datasets with "disease" characteristics by using the following filter: `none(characteristics.category = disease)`. The
+default quantifier is `any`.
+
 ### Update 2.8.1
 
 - add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet`
