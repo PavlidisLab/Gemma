@@ -32,6 +32,9 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         if ( factorValueValueObject.getExperimentalFactorId() != null ) {
             jsonGenerator.writeObjectField( "experimentalFactorId", factorValueValueObject.getExperimentalFactorId() );
         }
+        if ( factorValueValueObject.getExperimentalFactorType() != null ) {
+            jsonGenerator.writeStringField( "experimentalFactorType", factorValueValueObject.getExperimentalFactorType() );
+        }
         if ( factorValueValueObject.getExperimentalFactorCategory() != null ) {
             jsonGenerator.writeObjectField( "experimentalFactorCategory", factorValueValueObject.getExperimentalFactorCategory() );
         }

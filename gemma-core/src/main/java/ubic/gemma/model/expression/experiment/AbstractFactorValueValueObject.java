@@ -33,12 +33,21 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
      * The ID of the experimental factor this factor value belongs to.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
     private Long experimentalFactorId;
+
+    /**
+     * The experimental factor type.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(allowableValues = { "categorical", "continuous" }, description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
+    private String experimentalFactorType;
 
     /**
      * The experiment factor category.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
     private CharacteristicValueObject experimentalFactorCategory;
 
     /**
@@ -81,6 +90,7 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
             this.experimentalFactorId = fv.getExperimentalFactor().getId();
             if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
                 if ( fv.getExperimentalFactor().getCategory() != null ) {
+                    this.experimentalFactorType = fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
                     this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );
                 }
             }
