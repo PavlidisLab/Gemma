@@ -37,8 +37,13 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
  * <p>
+ * Filtering is done by constructing predicates in the {@code property operator requiredValue} form. Properties,
+ * operators and required values must be delimited by spaces.
+ * <h3>Properties</h3>
  * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
+ * <p>
+ * The available filterable properties on an entity can be retrieved from {@link FilteringService#getFilterableProperties()}.
  * <p>
  * Any property of a supported type. Currently, supported types are:
  * <dl>
@@ -47,16 +52,20 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * characters, or empty strings must be quoted with double-quotes {@code "}. Double-quotes can be escaped with a
  * backslash character: {@code \"}.</dd>
  * <dt>Number</dt>
- * <dd>Any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
- * corresponding primitive types). Required value must be a string parseable to the specific Number type.</dd>
+ * <dd>Any {@link Number} subclasses (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}). Required value
+ * must be a string parseable to the specific number type.</dd>
  * <dt>Boolean</dt>
  * <dd>Required value will be parsed to true only if the string matches {@code true}, ignoring case.</dd>
  * <dt>Date</dt>
- * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</dd>
+ * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied.</dd>
  * <dt>Collection</dt>
- * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported</dd>
+ * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported. The
+ * format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
+ * compatible with the type contained in the collection.<br>
+ * Example: {@code (1,2,3,4)}
+ * </dd>
  * </dl>
- * <p>
+ * <h3>Operators</h3>
  * Accepted operator keywords are:
  * <dl>
  * <dt>=</dt>
@@ -83,10 +92,9 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dt>not in or NOT IN</dt>
  * <dd>Required value not in the given collection with the semantic of '=' equality operator (only for Collection types)</dd>
  * </dl>
- * <p>
  * See {@link ubic.gemma.persistence.util.Filter.Operator} for more details on the available operators.
- * <p>
- * If the property refers to a collection of entities, an operator can be used to indicate the desired behavior:
+ * <h3>Quantifiers</h3>
+ * If the property refers to a collection of entities, an quantifier can be used to indicate the desired behavior:
  * <dl>
  * <dt>any(predicate)</dt>
  * <dd>True if any element of the collection satisfies the predicate.</dd>
@@ -96,9 +104,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dd>True if no element of the collection satisfies the predicate. Note that this is true for an empty collection.</dd>
  * </dl>
  * By default, {@code any(predicate)} is used.
- * <p>
- * Properties, operators and required values must be delimited by spaces.
- * <p>
+ * <h3>Logical expressions</h3>
  * Multiple filters can be chained using conjunctions (i.e. {@code AND, and}) or disjunctions (i.e. {@code OR, or, ','}) keywords.
  * Example:<br>
  * {@code property1 < value1 AND property2 like value2}
@@ -113,14 +119,6 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * {@code (p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4)}
  * <p>
  * Breaking the CNF results in an error.
- * <p>
- * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
- * compatible with the type contained in the collection.
- * <p>
- * Example:<br>
- * {@code id in (1,2,3,4)}
- * <p>
- * The available filterable properties on an entity can be retrieved from {@link FilteringService#getFilterableProperties()}.
  *
  * @author tesarst
  * @author poirigui
