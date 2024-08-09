@@ -91,6 +91,18 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return getFilters( filterArg, null, null );
     }
 
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
+        try {
+            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
+        }
+    }
+
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
+    }
+
     @Override
     public Sort getSort( SortArg<ExpressionExperiment> sortArg ) throws BadRequestException {
         Sort sort = super.getSort( sortArg );
@@ -103,14 +115,6 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                     .andThen( sort );
         } else {
             return sort;
-        }
-    }
-
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
-        try {
-            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
         }
     }
 

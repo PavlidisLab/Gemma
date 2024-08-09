@@ -161,8 +161,8 @@ public class AnnotationsWebService {
             if ( term == null ) {
                 throw new NotFoundException( "No ontology term with URI " + termUri );
             }
-            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.SECONDS ) :
-                    ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.SECONDS ) ).stream()
+            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
+                    ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) ).stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {

@@ -417,7 +417,6 @@ public class DatasetsWebService {
         // ensure that implied terms are retained in the usage frequency
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
-        Filters filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms );
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query );
@@ -429,8 +428,10 @@ public class DatasetsWebService {
         }
         int timeoutMs = 30000;
         StopWatch timer = StopWatch.createStarted();
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = null;
+        Filters filters;
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults;
         try {
+            filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
                     filters,
                     extraIds,
