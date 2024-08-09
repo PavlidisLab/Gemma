@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -426,19 +427,26 @@ public class DatasetsWebService {
         if ( category != null && category.isEmpty() ) {
             category = ExpressionExperimentService.UNCATEGORIZED;
         }
-        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
-                filters,
-                extraIds,
-                category,
-                datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
-                datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
-                minFrequency != null ? minFrequency : 0,
-                mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
-                limit );
+        int timeoutMs = 30000;
+        StopWatch timer = StopWatch.createStarted();
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> initialResults = null;
+        try {
+            initialResults = expressionExperimentService.getAnnotationsUsageFrequency(
+                    filters,
+                    extraIds,
+                    category,
+                    datasetArgService.getExcludedUris( excludedCategoryUris, excludeFreeTextCategories, excludeUncategorizedTerms ),
+                    datasetArgService.getExcludedUris( excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms ),
+                    minFrequency != null ? minFrequency : 0,
+                    mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
+                    limit,
+                    Math.max( timeoutMs - timer.getTime(), 0 ),
+                    TimeUnit.MILLISECONDS );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+        }
         List<AnnotationWithUsageStatisticsValueObject> results = new ArrayList<>();
         if ( !excludeParentTerms ) {
-            int timeoutMs = 30000;
-            StopWatch timer = StopWatch.createStarted();
             // cache for visited parents (if two term share the same parent, we can save significant time generating the ancestors)
             Map<OntologyTerm, Set<OntologyTermValueObject>> visited = new HashMap<>();
             for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm e : initialResults ) {

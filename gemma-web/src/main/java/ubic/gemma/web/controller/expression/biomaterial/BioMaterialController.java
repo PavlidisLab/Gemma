@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.biomaterial;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author keshav
@@ -121,21 +124,23 @@ public class BioMaterialController {
         return mav;
     }
 
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) throws TimeoutException {
         if ( bm == null || bm.getId() == null )
             return null;
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
 
         Collection<AnnotationValueObject> annotation = new ArrayList<>();
 
+        long timeoutMs = 30000;
+        StopWatch timer = StopWatch.createStarted();
         for ( Characteristic c : bioM.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
-            String className = getLabelFromUri( c.getCategoryUri() );
+            String className = getLabelFromUri( c.getCategoryUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
             if ( className != null )
                 annotationValue.setClassName( className );
 
-            String termName = getLabelFromUri( c.getValueUri() );
+            String termName = getLabelFromUri( c.getValueUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
             if ( termName != null )
                 annotationValue.setTermName( termName );
 
@@ -229,9 +234,9 @@ public class BioMaterialController {
                 .addObject( "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
     }
 
-    private String getLabelFromUri( String uri ) {
+    private String getLabelFromUri( String uri, long timeoutMs ) throws TimeoutException {
         if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyTerm resource = ontologyService.getTerm( uri );
+        OntologyTerm resource = ontologyService.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
         if ( resource != null )
             return resource.getLabel();
         return null;
