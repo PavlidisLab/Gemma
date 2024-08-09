@@ -23,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,6 +52,11 @@ public class OpenApiTest extends BaseJerseyTest {
     @Configuration
     @TestComponent
     static class OpenApiTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer properties() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=https://gemma.msl.ubc.ca" );
+        }
 
         @Bean
         public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
@@ -126,6 +132,12 @@ public class OpenApiTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasEncoding( "gzip" );
         spec = Json.mapper().readValue( response.readEntity( InputStream.class ), OpenAPI.class );
+    }
+
+    @Test
+    public void testExternalDocumentationUrlIsReplaced() {
+        assertThat( spec.getComponents().getSchemas().get( "FilterArgExpressionExperiment" ).getExternalDocs().getUrl() )
+                .isEqualTo( "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html" );
     }
 
     @Test

@@ -129,7 +129,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  */
 @CommonsLog
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation. The filter value may be compressed with gzip and encoded with base64.",
-        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
+        externalDocs = @ExternalDocumentation(url = "${gemma.hosturl}/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
     /**

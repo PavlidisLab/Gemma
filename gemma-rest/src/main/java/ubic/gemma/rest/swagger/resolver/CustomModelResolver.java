@@ -10,6 +10,7 @@ import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
@@ -21,6 +22,7 @@ import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
+import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.StringUtils;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
@@ -55,6 +57,11 @@ public class CustomModelResolver extends ModelResolver {
 
     @Autowired
     private MessageSource messageSource;
+
+    @org.springframework.beans.factory.annotation.Value("${gemma.hosturl}")
+    private String hostUrl;
+
+    private final PropertyPlaceholderHelper propertyPlaceholderHelper = new PropertyPlaceholderHelper( "${", "}" );
 
     @Autowired
     public CustomModelResolver( SearchService searchService ) {
@@ -97,6 +104,15 @@ public class CustomModelResolver extends ModelResolver {
         } else {
             return super.resolve( type, context, chain );
         }
+    }
+
+    @Override
+    protected ExternalDocumentation resolveExternalDocumentation( io.swagger.v3.oas.annotations.ExternalDocumentation externalDocumentation ) {
+        ExternalDocumentation resolved = super.resolveExternalDocumentation( externalDocumentation );
+        if ( resolved != null && resolved.getUrl() != null ) {
+            resolved.url( propertyPlaceholderHelper.replacePlaceholders( externalDocumentation.url(), v -> v.equals( "gemma.hosturl" ) ? hostUrl : null ) );
+        }
+        return resolved;
     }
 
     /**
