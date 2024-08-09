@@ -18,7 +18,6 @@ import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Taxon;
 
@@ -39,10 +38,11 @@ public interface OntologyService {
      * Locates usages of obsolete terms in Characteristics, ignoring Gene Ontology annotations. Requires the ontologies are loaded into memory.
      * <p>
      * Will also find terms that are no longer in an ontology we use.
+     *
      * @return map of value URI to a representative characteristic using the term. The latter will contain a count
      * of how many occurrences there were.
      */
-    Map<Characteristic, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    Map<OntologyTerm, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -141,5 +141,5 @@ public interface OntologyService {
      * This should be run periodically along with findObsoleteTerms.
      * @param dryRun if true, no changes will be made in the database and just print them out instead.
      */
-    void fixOntologyTermLabels( boolean dryRun );
+    void fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 }

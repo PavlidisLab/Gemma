@@ -589,16 +589,18 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<Characteristic, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException {
+    public Map<OntologyTerm, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
-        Map<Characteristic, Long> results = new HashMap<>();
+        long timeoutMs = timeUnit.toMillis( timeout );
 
+        // sometimes the part we are looking at is the objects, not the subject/value.
+        Map<OntologyTerm, Long> obsoleteTerms = new HashMap<>();
         int prevObsoleteCnt = 0;
         int checked = 0;
-        Characteristic lastObsolete = null;
         long total = characteristicService.countAll();
 
         int step = 5000;
+
         for ( int start = 0; ; start += step ) {
             Collection<Characteristic> chars = characteristicService.browse( start, step );
 
@@ -607,45 +609,68 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
 
             for ( Characteristic ch : chars ) {
-                String valueUri = ch.getValueUri();
-                if ( StringUtils.isBlank( valueUri ) ) {
-                    continue;
-                }
+
+                ch.setId( null ); // make occurrences non-unique
 
                 checked++;
 
-                OntologyTerm term = this.getTerm( valueUri, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-                if ( term != null && term.isObsolete() ) {
-                    if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
-                        // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
-                        continue;
-                    }
-                    results.compute( ch, ( k, v ) -> v == null ? 1L : v + 1L );
-                    if ( log.isDebugEnabled() )
-                        OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
-                    lastObsolete = ch;
+                String valueUri = ch.getValueUri();
+                String value = ch.getValue();
+
+                checkForObsolete( obsoleteTerms, valueUri, value, Math.max( timeoutMs - timer.getTime(), 0 ) );
+
+                if ( ch instanceof Statement ) {
+
+                    String objectUri = ( ( Statement ) ch ).getObjectUri();
+                    String objectLabel = ( ( Statement ) ch ).getObject();
+
+                    checkForObsolete( obsoleteTerms, objectUri, objectLabel, Math.max( timeoutMs - timer.getTime(), 0 ) );
+
+                    String secondObjectUri = ( ( Statement ) ch ).getSecondObjectUri();
+                    String secondObject = ( ( Statement ) ch ).getSecondObject();
+
+                    checkForObsolete( obsoleteTerms, secondObjectUri, secondObject, Math.max( timeoutMs - timer.getTime(), 0 ) );
                 }
+
+
             }
 
-            if ( results.size() > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + results.size() + " obsolete or missing terms so far, tested " + checked + " out of " + total + " characteristics" );
-                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
+            if ( obsoleteTerms.size() > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + obsoleteTerms.size() + " obsolete or missing terms so far, tested " + checked + " out of " + total + " characteristics" );
             }
 
-            prevObsoleteCnt = results.size();
+            prevObsoleteCnt = obsoleteTerms.size();
         }
 
-        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + results.size() );
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + obsoleteTerms.size() );
 
-        return results;
+        return obsoleteTerms;
+    }
+
+    private void checkForObsolete( Map<OntologyTerm, Long> obsoleteTerms, String uri, String label, long timeoutMs ) throws TimeoutException {
+        if ( StringUtils.isNotBlank( uri ) ) {
+            OntologyTerm term = this.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
+
+            if ( uri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) ) {
+                // these are false positives, they aren't in an ontology. No-op. There may be others.
+            } else if ( term == null ) {
+                log.warn( "No term found for:\t" + uri + "\t" + label ); // we can grep these out of the logs if we want them.
+            } else if ( term.isObsolete() ) {
+                obsoleteTerms.compute( term, ( k, v ) -> v == null ? 1L : v + 1L );
+                if ( log.isDebugEnabled() )
+                    OntologyServiceImpl.log.debug( "Found obsolete term: " + label + " - " + uri );
+            }
+        }
     }
 
 
     @Override
-    public void fixOntologyTermLabels( boolean dryRun ) {
+    public void fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
+        long timeoutMs = timeUnit.toMillis( timeout );
 
         if ( dryRun ) {
-            log.info( " *** DRY RUN - no datbase changes will be made *** " );
+            log.info( " *** DRY RUN - no database changes will be made *** " );
         }
 
         int prevObsoleteCnt = 0;
@@ -667,7 +692,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             for ( Characteristic ch : chars ) {
                 String valueUri = ch.getValueUri();
                 if ( StringUtils.isNotBlank( valueUri ) ) {
-                    OntologyTerm term = this.getTerm( valueUri );
+                    OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
                     if ( term == null ) {
                         if ( log.isDebugEnabled() )
@@ -689,7 +714,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                     String objectUri = statement.getObjectUri();
                     if ( StringUtils.isNotBlank( objectUri ) ) {
-                        OntologyTerm term = this.getTerm( objectUri );
+                        OntologyTerm term = this.getTerm( objectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
 
                         if ( term == null ) {
@@ -709,7 +734,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                     String secondObjectUri = statement.getSecondObjectUri();
                     if ( StringUtils.isNotBlank( secondObjectUri ) ) {
-                        OntologyTerm term = this.getTerm( secondObjectUri );
+                        OntologyTerm term = this.getTerm( secondObjectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
                         if ( term == null ) {
                             if ( log.isDebugEnabled() )

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
@@ -92,13 +93,13 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        Map<Characteristic, Long> vos = ontologyService.findObsoleteTermUsage( 4, TimeUnit.HOURS );
+        Map<OntologyTerm, Long> vos = ontologyService.findObsoleteTermUsage();
 
         AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
 
         System.out.println( "Value\tValueUri\tCount" );
-        for ( Map.Entry<Characteristic, Long> vo : vos.entrySet() ) {
-            System.out.println( vo.getKey().getValue() + "\t" + vo.getKey().getValueUri() + "\t" + vo.getValue() );
+        for ( Map.Entry<OntologyTerm, Long> vo : vos.entrySet() ) {
+            System.out.println( vo.getKey().getLabel() + "\t" + vo.getKey().getUri() + "\t" + vo.getValue() );
         }
     }
 }

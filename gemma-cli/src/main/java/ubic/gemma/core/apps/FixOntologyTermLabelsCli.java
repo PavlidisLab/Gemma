@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 
 import java.util.ArrayList;
@@ -18,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
@@ -39,8 +39,8 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
     private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
 
     @Override
-    public CLI.CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.METADATA;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.METADATA;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        ontologyService.fixOntologyTermLabels( dryRun );
+        ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
 
 
     }
