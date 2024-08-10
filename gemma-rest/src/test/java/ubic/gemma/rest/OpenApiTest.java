@@ -1,17 +1,16 @@
 package ubic.gemma.rest;
 
 
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import lombok.Data;
+import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
@@ -31,23 +31,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
-import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.OpenApiFactory;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
-public class OpenApiTest extends BaseJerseyTest {
+public class OpenApiTest extends AbstractJUnit4SpringContextTests {
 
     @Configuration
     @TestComponent
@@ -92,7 +90,10 @@ public class OpenApiTest extends BaseJerseyTest {
 
         @Bean
         public SearchService searchService() {
-            return mock( SearchService.class );
+            SearchService searchService = mock( SearchService.class );
+            when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
+            when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
+            return searchService;
         }
 
         @Bean
@@ -119,20 +120,7 @@ public class OpenApiTest extends BaseJerseyTest {
     }
 
     @Autowired
-    private SearchService searchService;
-
     private OpenAPI spec;
-
-    @Before
-    public void setUpSpec() throws IOException {
-        when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
-        when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
-        Response response = target( "/openapi.json" ).request().get();
-        assertThat( response )
-                .hasStatus( Response.Status.OK )
-                .hasEncoding( "gzip" );
-        spec = Json.mapper().readValue( response.readEntity( InputStream.class ), OpenAPI.class );
-    }
 
     @Test
     public void testExternalDocumentationUrlIsReplaced() {
@@ -265,5 +253,15 @@ public class OpenApiTest extends BaseJerseyTest {
             assertThat( s.getExternalDocs().getUrl() )
                     .isEqualTo( "https://lucene.apache.org/core/3_6_2/queryparsersyntax.html" );
         } );
+    }
+
+    @Test
+    public void testExamplesFromClasspath() throws IOException {
+        assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
+                .get( "default" )
+                .getContent()
+                .get( "text/tab-separated-values; charset=UTF-8" )
+                .getExample() )
+                .isEqualTo( IOUtils.resourceToString(  "/restapidocs/examples/result-set.tsv" , StandardCharsets.UTF_8 ) );
     }
 }
