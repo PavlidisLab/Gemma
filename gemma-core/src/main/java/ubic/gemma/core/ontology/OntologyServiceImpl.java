@@ -636,7 +636,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
 
             if ( obsoleteTerms.size() > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + obsoleteTerms.size() + " obsolete or missing terms so far, tested " + checked + " out of " + total + " characteristics" );
+                OntologyServiceImpl.log.info( "Found " + obsoleteTerms.size() + " obsolete terms so far, tested " + checked + " out of " + total + " characteristics" );
             }
 
             prevObsoleteCnt = obsoleteTerms.size();
@@ -653,12 +653,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             if ( uri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) ) {
                 // these are false positives, they aren't in an ontology. No-op. There may be others.
+                return;
             } else if ( term == null ) {
-                log.warn( "No term found for:\t" + uri + "\t" + label ); // we can grep these out of the logs if we want them.
+                // these are often just terms in ontologies we are not fully supporting.
+                log.debug( "No term found for:\t" + uri + "\t" + label ); // we can grep these out of the logs if we want them.
             } else if ( term.isObsolete() ) {
                 obsoleteTerms.compute( term, ( k, v ) -> v == null ? 1L : v + 1L );
-                if ( log.isDebugEnabled() )
-                    OntologyServiceImpl.log.debug( "Found obsolete term: " + label + " - " + uri );
             }
         }
     }
