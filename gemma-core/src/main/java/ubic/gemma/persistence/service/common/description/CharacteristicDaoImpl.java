@@ -89,9 +89,16 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public Collection<? extends Characteristic> findByCategory( String query ) {
 
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        Collection<? extends Characteristic> result = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct char from Characteristic as char where char.category like :search" )
                 .setParameter( "search", query + "%" ).list();
+
+        if ( result.isEmpty() ) {
+            result = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select distinct char from Characteristic as char where char.categoryUri = :search" )
+                    .setParameter( "search", query ).list();
+        }
+        return result;
     }
 
     @Override

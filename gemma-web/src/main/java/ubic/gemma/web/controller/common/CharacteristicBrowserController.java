@@ -148,8 +148,10 @@ public class CharacteristicBrowserController {
         Collection<Characteristic> chars = new HashSet<>();
         if ( queryString.startsWith( "http://" ) ) {
             chars = characteristicService.findByUri( queryString );
+            if ( searchCategories ) {
+                chars.addAll( characteristicService.findByCategory( queryString ) );
+            }
         } else {
-
             chars = characteristicService.findByValueStartingWith( queryString );
 
             if ( searchCategories ) {
