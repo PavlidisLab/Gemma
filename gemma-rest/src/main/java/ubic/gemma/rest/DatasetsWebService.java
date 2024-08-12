@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -989,6 +990,8 @@ public class DatasetsWebService {
         return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
+    private static final String DATA_TSV_OUTPUT_DESCRIPTION = "The following columns are available: Probe, Sequence, GeneSymbol, GeneName, GemmaId, NCBIid followed by one column per sample. GeneSymbol, GeneName, GemmaId and NCBIid are optional.";
+
     /**
      * Retrieves the data for the given dataset.
      * <p>
@@ -1016,13 +1019,15 @@ public class DatasetsWebService {
     @Path("/{dataset}/data")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
-            description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead.",
+            description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
                     @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                            schema = @Schema(type = "string", format = "binary"))),
+                            schema = @Schema(type = "string", format = "binary"),
+                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) }, deprecated = true)
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) },
+            deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
@@ -1054,9 +1059,12 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/data/processed")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
-    @Operation(summary = "Retrieve processed expression data of a dataset", responses = {
+    @Operation(summary = "Retrieve processed expression data of a dataset",
+            description = DATA_TSV_OUTPUT_DESCRIPTION,
+            responses = {
             @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                    schema = @Schema(type = "string", format = "binary"))),
+                    schema = @Schema(type = "string", format = "binary"),
+                    examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
             @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
@@ -1080,9 +1088,12 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/data/raw")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
-    @Operation(summary = "Retrieve raw expression data of a dataset", responses = {
+    @Operation(summary = "Retrieve raw expression data of a dataset",
+            description = DATA_TSV_OUTPUT_DESCRIPTION,
+            responses = {
             @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                    schema = @Schema(type = "string", format = "binary"))),
+                    schema = @Schema(type = "string", format = "binary"),
+                    examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
             @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
