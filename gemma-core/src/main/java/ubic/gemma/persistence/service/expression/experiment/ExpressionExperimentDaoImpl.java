@@ -531,6 +531,8 @@ public class ExpressionExperimentDaoImpl
 
         /*
          * FIXME filtering here is going to have to be more elaborate for this to be useful.
+         *
+         * URIs checked for validity Aug 2024
          */
         Collection<AnnotationValueObject> results = new HashSet<>();
         for ( Statement c : raw ) {

@@ -166,7 +166,7 @@ public class GeoChannel {
 
     /**
      * Convert the molecule into a MGED Ontology-based MaterialType Characteristic. If "other" we just return a
-     * plain text value.
+     * plain text value. URIs checked 8/2024
      *
      * @return characteristic
      */
@@ -186,9 +186,9 @@ public class GeoChannel {
                 result.setValue( "polyA RNA extract" );
                 result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000869" );
                 break;
-            case genomicDNA:
-                result.setValue( "genomic DNA" );
-                result.setValueUri( "http://purl.org/obo/owl/SO#SO_0000991" );
+            case genomicDNA: // as per https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/master/Ontology_Files/so-simple.owl
+                result.setValue( "genomic_DNA" );
+                result.setValueUri( "http://purl.obolibrary.org/obo/SO_0000991" ); // corrected 8/2024.
                 break;
             case totalRNA:
                 result.setValue( "total RNA" );
