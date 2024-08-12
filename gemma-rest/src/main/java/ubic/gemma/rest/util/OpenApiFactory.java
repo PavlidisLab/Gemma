@@ -71,7 +71,7 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
         Assert.state( OpenApiContextLocator.getInstance().getOpenApiContext( contextId ) == ctx,
                 "OpenAPI context for " + contextId + " does not match the context managed by this factory, is there another factory involved?" );
         if ( ctx == null ) {
-            log.info( "Creating OpenAPI specification..." );
+            log.debug( "Creating OpenAPI specification for ID " + contextId + "..." );
             ctx = new JaxrsOpenApiContextBuilder<>()
                     .ctxId( contextId )
                     // Swagger will automatically discover our application's resources and register them
@@ -119,7 +119,7 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
         ReflectionUtils.makeAccessible( map );
         ( ( Map<?, ?> ) ReflectionUtils.getField( map, OpenApiContextLocator.getInstance() ) )
                 .remove( contextId );
-        log.info( "OpenAPI context was destroyed." );
+        log.debug( "OpenAPI context with ID " + contextId + " was destroyed." );
     }
 
     @Override

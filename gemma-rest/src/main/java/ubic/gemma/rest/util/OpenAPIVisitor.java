@@ -11,28 +11,28 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.config.BeanDefinitionVisitor;
 import org.springframework.util.StringValueResolver;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Visits an {@link OpenAPI} specification and perform string value resolution.
  * @author poirigui
  * @see org.springframework.beans.factory.config.BeanDefinitionVisitor
  */
-public class OpenAPIVisitor {
+public class OpenAPIVisitor extends BeanDefinitionVisitor {
 
-    private final StringValueResolver stringValueResolver;
     private final Map<Class<?>, PropertyDescriptor[]> cachedDescriptors = new HashMap<>();
 
     public OpenAPIVisitor( StringValueResolver stringValueResolver ) {
-        this.stringValueResolver = stringValueResolver;
+        super( stringValueResolver );
     }
 
     public void visit( OpenAPI openAPI ) {
@@ -55,7 +55,13 @@ public class OpenAPIVisitor {
     private void visitServerVariables( ServerVariables variables ) {
         if ( variables == null )
             return;
+        variables.values().forEach( this::visitServerVariable );
         visitExtensions( variables.getExtensions() );
+    }
+
+    private void visitServerVariable( ServerVariable serverVariable ) {
+        visitStringProperties( serverVariable, ServerVariable.class );
+        visitExtensions( serverVariable.getExtensions() );
     }
 
     private void visitInfo( Info info ) {
@@ -132,8 +138,8 @@ public class OpenAPIVisitor {
     private void visitMediaType( MediaType mediaType ) {
         visitSchema( mediaType.getSchema() );
         if ( mediaType.getExample() instanceof String ) {
-            String newVal = stringValueResolver.resolveStringValue( ( String ) mediaType.getExample() );
-            if ( !Objects.equals( newVal, mediaType.getExample() ) ) {
+            String newVal = resolveStringValue( ( String ) mediaType.getExample() );
+            if ( !mediaType.getExample().equals( newVal ) ) {
                 mediaType.setExample( newVal );
             }
         }
@@ -144,6 +150,21 @@ public class OpenAPIVisitor {
         if ( schema == null )
             return;
         visitStringProperties( schema, Schema.class );
+        if ( schema.getAllOf() != null ) {
+            schema.getAllOf().forEach( this::visitSchema );
+        }
+        if ( schema.getAnyOf() != null ) {
+            schema.getAnyOf().forEach( this::visitSchema );
+        }
+        if ( schema.getOneOf() != null ) {
+            schema.getOneOf().forEach( this::visitSchema );
+        }
+        if ( schema.getProperties() != null ) {
+            schema.getProperties().values().forEach( this::visitSchema );
+        }
+        if ( schema.getContentSchema() != null ) {
+            visitSchema( schema.getContentSchema() );
+        }
         visitExternalDocs( schema.getExternalDocs() );
         visitExtensions( schema.getExtensions() );
     }
@@ -156,24 +177,31 @@ public class OpenAPIVisitor {
     }
 
     private void visitExtensions( Map<String, Object> extensions ) {
+        if ( extensions == null )
+            return;
+        visitMap( extensions );
     }
 
-    private void visitStringProperties( Object obj, Class<?> clazz ) {
+    private <T> void visitStringProperties( T obj, Class<T> clazz ) {
         PropertyDescriptor[] descriptors = cachedDescriptors.computeIfAbsent( clazz, BeanUtils::getPropertyDescriptors );
         for ( PropertyDescriptor descriptor : descriptors ) {
-            if ( descriptor.getName().equals( "$ref" ) ) {
+            if ( descriptor.getName().startsWith( "$" ) ) {
+                // internal properties, i.e. $ref or $schema
                 continue;
             }
-            if ( descriptor.getPropertyType().equals( String.class ) ) {
-                try {
-                    String rawVal = ( String ) descriptor.getReadMethod().invoke( obj );
-                    String newVal = stringValueResolver.resolveStringValue( rawVal );
-                    if ( !Objects.equals( newVal, rawVal ) ) {
+            if ( !descriptor.getPropertyType().equals( String.class ) ) {
+                continue;
+            }
+            try {
+                String rawVal = ( String ) descriptor.getReadMethod().invoke( obj );
+                if ( rawVal != null ) {
+                    String newVal = resolveStringValue( rawVal );
+                    if ( !rawVal.equals( newVal ) ) {
                         descriptor.getWriteMethod().invoke( obj, newVal );
                     }
-                } catch ( IllegalAccessException | InvocationTargetException e ) {
-                    throw new RuntimeException( e );
                 }
+            } catch ( IllegalAccessException | InvocationTargetException e ) {
+                throw new RuntimeException( e );
             }
         }
     }
