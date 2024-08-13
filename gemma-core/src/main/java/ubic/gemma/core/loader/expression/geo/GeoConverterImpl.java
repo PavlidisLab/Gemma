@@ -2232,7 +2232,7 @@ public class GeoConverterImpl implements GeoConverter {
             term = "environmental stress";
         } else if ( varType.equals( VariableType.temperature ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0001702";
-            term = "Temperature";
+            term = "temperature";
         } else if ( varType.equals( VariableType.time ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000724";
             term = "timepoint";
