@@ -10,7 +10,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -93,7 +92,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        Map<OntologyTerm, Long> vos = ontologyService.findObsoleteTermUsage();
+        Map<OntologyTerm, Long> vos = ontologyService.findObsoleteTermUsage( 4, TimeUnit.HOURS );
 
         AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
 
