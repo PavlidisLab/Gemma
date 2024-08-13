@@ -1021,7 +1021,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             log.warn( "Current thread was interrupted while finding first result for " + query + ", will return null.", e );
             return null;
         } catch ( ExecutionException e ) {
-            log.error( e );
             if ( e.getCause() instanceof RuntimeException ) {
                 throw ( RuntimeException ) e.getCause();
             } else {
@@ -1088,7 +1087,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             log.warn( "Current thread was interrupted while finding first result for " + query + ", will return nothing.", e );
             return children;
         } catch ( ExecutionException e ) {
-            log.error( e );
             if ( e.getCause() instanceof RuntimeException ) {
                 throw ( RuntimeException ) e.getCause();
             } else {
