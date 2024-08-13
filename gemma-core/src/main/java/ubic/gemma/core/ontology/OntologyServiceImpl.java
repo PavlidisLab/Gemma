@@ -19,7 +19,6 @@
 package ubic.gemma.core.ontology;
 
 import io.micrometer.core.annotation.Timed;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -999,6 +998,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Nullable
     private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
@@ -1010,7 +1010,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                T result = pollCompletionService( completionService, "Finding first result for " + query, futures, objects, timeoutMs );
+                T result = pollCompletionService( completionService, "Finding first result for " + query, futures, objects, timeoutMs - timer.getTime() );
                 if ( result != null ) {
                     return result;
                 }
@@ -1027,7 +1027,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            cancelRemainingFutures( futures, objects );
+            for ( Future<?> future : futures ) {
+                if ( !future.isDone() ) {
+                    future.cancel( true );
+                }
+            }
         }
     }
 
@@ -1068,6 +1072,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
@@ -1080,7 +1085,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         List<T> children = new ArrayList<>();
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, timeoutMs ) );
+                children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, Math.max( timeoutMs - timer.getTime(), 0 ) ) );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
@@ -1093,7 +1098,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            cancelRemainingFutures( futures, objects );
+            for ( Future<?> future : futures ) {
+                if ( !future.isDone() ) {
+                    future.cancel( true );
+                }
+            }
         }
         return children;
     }
@@ -1113,9 +1122,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch timer = StopWatch.createStarted();
         Future<T> future;
         double recheckMs = Math.min( checkFrequencyMillis, timeoutMs );
-        // a fuzz factor to prevent concurrent tasks from all timing out at the same time
-        // up to 10% of the initial timeout
-        double fuzzyMs = RandomUtils.nextDouble() * checkFrequencyMillis / 10.0;
         while ( ( future = completionService.poll( ( long ) recheckMs, TimeUnit.MILLISECONDS ) ) == null ) {
             long remainingTimeMs = Math.max( timeoutMs - timer.getTime(), 0 );
             long i = futures.stream().filter( Future::isDone ).count();
@@ -1133,27 +1139,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             } else {
                 throw new TimeoutException( message );
             }
-            recheckMs = Math.min( ( recheckMs + fuzzyMs ) * exponentialBackoff, remainingTimeMs );
+            recheckMs = Math.min( recheckMs * exponentialBackoff, remainingTimeMs );
         }
         return future.get();
-    }
-
-    /**
-     * Cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads in the pool.
-     */
-    private <T> void cancelRemainingFutures( List<Future<T>> futures, List<?> objects ) {
-        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
-        List<String> incompleteTasks = new ArrayList<>( futures.size() );
-        for ( Future<?> future : futures ) {
-            if ( !future.isDone() ) {
-                future.cancel( true );
-                incompleteTasks.add( objects.get( futures.indexOf( future ) ).toString() );
-            }
-        }
-        if ( !incompleteTasks.isEmpty() ) {
-            log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
-                    + String.join( "\n\t", incompleteTasks ) );
-        }
     }
 
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
