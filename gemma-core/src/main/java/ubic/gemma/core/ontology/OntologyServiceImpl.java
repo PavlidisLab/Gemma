@@ -610,9 +610,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             for ( Characteristic ch : chars ) {
 
+                if ( ch.getCategory() == null && ch.getValueUri().startsWith( "http://purl.obolibrary.org/obo/GO" ) ) {
+                    // these will generally be for gene annotations, obsoleteness there is a separate issue
+                    continue;
+                }
+
                 ch.setId( null ); // make occurrences non-unique
 
-                checked++;
+                checked++; // could speed this up a little by not rechecking URIs we already saw, but it's kind of annoying and not a big deal.
 
                 String valueUri = ch.getValueUri();
                 String value = ch.getValue();
