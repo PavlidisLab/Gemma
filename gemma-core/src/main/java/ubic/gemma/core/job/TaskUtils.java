@@ -18,17 +18,15 @@
  */
 package ubic.gemma.core.job;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author paul
  */
 class TaskUtils {
 
-    private static final int KEY_LENGTH = 16;
     private static final int MAX_ATTEMPTS = 1000;
     private static final Set<String> usedIds = new HashSet<>();
 
@@ -41,7 +39,7 @@ class TaskUtils {
          */
         int keepTrying = 0;
         while ( ++keepTrying < TaskUtils.MAX_ATTEMPTS ) {
-            String id = RandomStringUtils.randomAlphanumeric( TaskUtils.KEY_LENGTH ).toUpperCase();
+            String id = UUID.randomUUID().toString();
             if ( TaskUtils.usedIds.isEmpty() || !TaskUtils.usedIds.contains( id ) ) {
                 TaskUtils.usedIds.add( id );
                 return id;
