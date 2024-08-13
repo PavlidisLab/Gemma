@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Switching of platforms that have no composite sequences.
@@ -61,8 +63,10 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
      * for bug 3451
      */
     @Test
-    @Category(SlowTest.class)
-    public void test() {
+    @Category({ GeoTest.class, SlowTest.class })
+    public void testGSE36025() {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+
         // GSE36025
         //
         // This dataset contains a mixture of GPL9250 and GPL13112
