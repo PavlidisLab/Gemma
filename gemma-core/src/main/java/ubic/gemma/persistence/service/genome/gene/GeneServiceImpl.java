@@ -22,6 +22,7 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -51,7 +52,6 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -199,13 +199,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
 
         for ( Gene2GOAssociation assoc : associations ) {
-
-            if ( assoc.getOntologyEntry() == null )
-                continue;
-
             AnnotationValueObject annotationValueObject = new AnnotationValueObject( assoc.getOntologyEntry() );
-            annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-
+            annotationValueObject.setTermName( assoc.getOntologyEntry().getValue() );
             ontologies.add( annotationValueObject );
         }
         return annotationAssociationService.removeRootTerms( ontologies );

@@ -18,41 +18,59 @@
  */
 package ubic.gemma.model.association;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
-public class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
+import javax.annotation.Nullable;
+import java.io.Serializable;
+
+@SuppressWarnings("unused") // fields are assigned by Hibernate
+public class Gene2GOAssociation implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -710930089869830248L;
 
-    private final GOEvidenceCode evidenceCode = null;
+    private Long id;
+    private Gene gene;
+    private Characteristic ontologyEntry;
+    @Nullable
+    private GOEvidenceCode evidenceCode;
 
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    public Gene getGene() {
+        return this.gene;
+    }
+
+    public Characteristic getOntologyEntry() {
+        return this.ontologyEntry;
+    }
+
+    @Nullable
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
     }
 
-    public static final class Factory {
-
-        public static Gene2GOAssociation newInstance( Gene gene, Characteristic ontologyEntry,
-                GOEvidenceCode evidenceCode ) {
-            final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociation();
-
-            try {
-                FieldUtils.writeField( entity, "gene", gene, true );
-                FieldUtils.writeField( entity, "ontologyEntry", ontologyEntry, true );
-                FieldUtils.writeField( entity, "evidenceCode", evidenceCode, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
-
-            return entity;
-        }
-
+    @Override
+    public String toString() {
+        if ( gene == null || ontologyEntry == null ) return "?";
+        return gene + " ---> " + ontologyEntry.getValue() + " [" + ontologyEntry.getValueUri() + "]";
     }
 
+    public static final class Factory {
+        public static Gene2GOAssociation newInstance( Gene gene, Characteristic ontologyEntry,
+                GOEvidenceCode evidenceCode ) {
+            final Gene2GOAssociation entity = new Gene2GOAssociation();
+            entity.gene = gene;
+            entity.ontologyEntry = ontologyEntry;
+            entity.evidenceCode = evidenceCode;
+            return entity;
+        }
+    }
 }

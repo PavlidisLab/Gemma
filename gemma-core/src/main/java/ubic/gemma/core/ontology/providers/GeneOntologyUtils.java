@@ -35,7 +35,7 @@ public class GeneOntologyUtils {
      */
     @Nullable
     public static String asRegularGoId( Characteristic c ) {
-        return asRegularGoId( c.getValue() );
+        return asRegularGoId( c.getValueUri() );
     }
 
     /**

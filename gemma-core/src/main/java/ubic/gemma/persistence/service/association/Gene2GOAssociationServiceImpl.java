@@ -116,18 +116,18 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon ) {
+    public Collection<Gene> findByGOTermUris( Collection<String> uris, @Nullable Taxon taxon ) {
         if ( taxon == null ) {
-            return this.gene2GOAssociationDao.findByGoTerms( termsToFetch );
+            return this.gene2GOAssociationDao.findByGoTermUris( uris );
         } else {
-            return this.gene2GOAssociationDao.findByGoTerms( termsToFetch, taxon );
+            return this.gene2GOAssociationDao.findByGoTermUris( uris, taxon );
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch ) {
-        return this.gene2GOAssociationDao.findByGoTermsPerTaxon( termsToFetch );
+    public Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris ) {
+        return this.gene2GOAssociationDao.findByGoTermUrisPerTaxon( uris );
     }
 
     @Override
