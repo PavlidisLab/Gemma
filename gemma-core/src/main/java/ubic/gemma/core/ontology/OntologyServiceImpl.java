@@ -597,6 +597,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         int prevObsoleteCnt = 0;
         int checked = 0;
         long total = characteristicService.countAll();
+        Collection<String> checkedUris = new HashSet<>();
 
         int step = 5000;
 
@@ -616,12 +617,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 ch.setId( null ); // make occurrences non-unique
 
-                checked++; // could speed this up a little by not rechecking URIs we already saw, but it's kind of annoying and not a big deal.
+                checked++;
 
                 String valueUri = ch.getValueUri();
                 String value = ch.getValue();
 
-                checkForObsolete( obsoleteTerms, valueUri, value, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                if ( !checkedUris.contains( valueUri ) ) {
+                    checkedUris.add( valueUri );
+                    checkForObsolete( obsoleteTerms, valueUri, value, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                }
 
                 if ( ch instanceof Statement ) {
 
@@ -630,15 +634,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     String objectUri = st.getObjectUri();
                     String objectLabel = st.getObject();
 
-                    checkForObsolete( obsoleteTerms, objectUri, objectLabel, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    if ( !checkedUris.contains( objectUri ) ) {
+                        checkedUris.add( objectUri );
+                        checkForObsolete( obsoleteTerms, objectUri, objectLabel, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    }
 
                     String secondObjectUri = st.getSecondObjectUri();
                     String secondObject = st.getSecondObject();
 
-                    checkForObsolete( obsoleteTerms, secondObjectUri, secondObject, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    if ( !checkedUris.contains( secondObjectUri ) ) {
+                        checkedUris.add( secondObjectUri );
+                        checkForObsolete( obsoleteTerms, secondObjectUri, secondObject, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    }
                 }
-
-
             }
 
             if ( obsoleteTerms.size() > prevObsoleteCnt ) {
