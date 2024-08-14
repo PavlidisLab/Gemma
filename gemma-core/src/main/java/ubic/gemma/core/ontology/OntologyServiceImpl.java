@@ -625,13 +625,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 if ( ch instanceof Statement ) {
 
-                    String objectUri = ( ( Statement ) ch ).getObjectUri();
-                    String objectLabel = ( ( Statement ) ch ).getObject();
+                    Statement st = ( Statement ) ch;
+
+                    String objectUri = st.getObjectUri();
+                    String objectLabel = st.getObject();
 
                     checkForObsolete( obsoleteTerms, objectUri, objectLabel, Math.max( timeoutMs - timer.getTime(), 0 ) );
 
-                    String secondObjectUri = ( ( Statement ) ch ).getSecondObjectUri();
-                    String secondObject = ( ( Statement ) ch ).getSecondObject();
+                    String secondObjectUri = st.getSecondObjectUri();
+                    String secondObject = st.getSecondObject();
 
                     checkForObsolete( obsoleteTerms, secondObjectUri, secondObject, Math.max( timeoutMs - timer.getTime(), 0 ) );
                 }
@@ -641,6 +643,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             if ( obsoleteTerms.size() > prevObsoleteCnt ) {
                 OntologyServiceImpl.log.info( "Found " + obsoleteTerms.size() + " obsolete terms so far, tested " + checked + " out of " + total + " characteristics" );
+            }
+
+            if ( start % ( step * 10 ) == 0 ) {
+                OntologyServiceImpl.log.info( "Checked " + checked + " characteristics, found " + obsoleteTerms.size() + " obsolete terms so far" );
             }
 
             prevObsoleteCnt = obsoleteTerms.size();
@@ -762,7 +768,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
 
                 checked++;
-                if ( checked % 10000 == 0 ) {
+                if ( checked % ( step * 5 ) == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
                     if ( !updatedTerms.isEmpty() ) {
                         updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
