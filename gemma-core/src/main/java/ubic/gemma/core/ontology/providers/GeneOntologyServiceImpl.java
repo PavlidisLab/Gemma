@@ -31,6 +31,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
@@ -85,14 +87,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     @Override
     protected String getCacheName() {
         return "geneOntology";
-    }
-
-    /**
-     * @return Turn an id like GO:0038128 into a URI.
-     */
-    private static String toUri( String goId ) {
-        String uriTerm = goId.replace( ":", "_" );
-        return GeneOntologyService.BASE_GO_URI + uriTerm;
     }
 
     @Autowired
@@ -218,25 +212,38 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     }
 
     @Override
+    public OntologyResource getResource( String goId ) {
+        return super.getResource( asGoUri( goId ) );
+    }
+
+    @Override
+    public OntologyTerm getTerm( String goId ) {
+        return super.getTerm( asGoUri( goId ) );
+    }
+
+    @Override
+    public Collection<OntologyIndividual> getTermIndividuals( String goId ) {
+        return super.getTermIndividuals( asGoUri( goId ) );
+    }
+
+    @Override
     public Collection<Gene> getGenes( OntologyTerm term, @Nullable Taxon taxon ) {
-        String goId = asRegularGoId( term );
-        if ( goId == null ) {
+        if ( term.getUri() == null ) {
             return Collections.emptyList();
         }
-        Set<String> goIds = new HashSet<>();
-        goIds.add( goId );
-        for ( OntologyTerm ontologyTerm1 : getChildren( Collections.singleton( term ), false, false ) ) {
-            String goId1 = asRegularGoId( ontologyTerm1 );
-            if ( goId1 != null ) {
-                goIds.add( goId1 );
+        Set<String> uris = new HashSet<>();
+        uris.add( term.getUri() );
+        for ( OntologyTerm inferredTerm : getChildren( Collections.singleton( term ), false, false ) ) {
+            if ( inferredTerm.getUri() != null ) {
+                uris.add( inferredTerm.getUri() );
             }
         }
-        return gene2GOAssociationService.findByGOTerms( goIds, taxon );
+        return gene2GOAssociationService.findByGOTermUris( uris, taxon );
     }
 
     @Override
     public Collection<Gene> getGenes( String goId, @Nullable Taxon taxon ) {
-        OntologyTerm t = getTermForId( goId );
+        OntologyTerm t = getTerm( goId );
         if ( t == null ) {
             return Collections.emptyList();
         }
@@ -309,7 +316,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
 
     @Override
     public GOAspect getTermAspect( String goId ) {
-        OntologyTerm term = getTermForId( goId );
+        OntologyTerm term = getTerm( goId );
         if ( term == null )
             return null;
         return this.getTermAspect( term );
@@ -317,7 +324,7 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
 
     @Override
     public String getTermDefinition( String goId ) {
-        OntologyTerm t = getTermForId( goId );
+        OntologyTerm t = getTerm( goId );
         if ( t == null ) {
             return null;
         }
@@ -328,24 +335,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
             }
         }
         return null;
-    }
-
-    /**
-     * @param  goId e.g. GO_0001312
-     * @return null if not found
-     */
-    @Override
-    public OntologyTerm getTermForId( String goId ) {
-        return getTerm( GeneOntologyServiceImpl.toUri( goId ) );
-    }
-
-    @Override
-    public String getTermName( String goId ) {
-        OntologyTerm t = getTermForId( goId );
-        String label = t != null ? t.getLabel() : null;
-        if ( label == null )
-            return "[Not available]"; // not ready yet?
-        return label;
     }
 
     @Override
@@ -456,4 +445,14 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
         }
     }
 
+    /**
+     * Turn a GO ID like GO:0038128 into a URI.
+     */
+    private String asGoUri( String goId ) {
+        if ( goId.startsWith( GeneOntologyService.BASE_GO_URI ) ) {
+            return goId;
+        }
+        String uriTerm = goId.replace( ":", "_" );
+        return GeneOntologyService.BASE_GO_URI + uriTerm;
+    }
 }

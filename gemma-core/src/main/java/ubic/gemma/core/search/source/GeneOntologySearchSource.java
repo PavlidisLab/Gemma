@@ -12,7 +12,6 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
@@ -21,7 +20,6 @@ import java.util.Set;
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.isGoId;
 import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
-import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
 /**
  * GO-based search source.
@@ -78,23 +76,11 @@ public class GeneOntologySearchSource implements SearchSource {
         SearchResultSet<Gene> results = new SearchResultSet<>( settings );
 
         if ( isGoId( settings.getQuery() ) ) {
-            // find via a full URI
-            URI termUri = prepareTermUriQuery( settings );
-            if ( termUri != null ) {
-                OntologyTerm term = geneOntologyService.getTerm( termUri.toString() );
-                if ( term != null ) {
-                    for ( Gene g : geneOntologyService.getGenes( term, settings.getTaxon() ) ) {
-                        results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO URI" ) );
-                    }
-                }
-            } else {
-                // find exact matches of the GO ID
-                Collection<Gene> exactMatchResults = geneOntologyService.getGenes( settings.getQuery(), settings.getTaxon() );
-                for ( Gene g : exactMatchResults ) {
-                    results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO ID" ) );
-                }
+            // find via a full URI or GO identifier
+            Collection<Gene> exactMatchResults = geneOntologyService.getGenes( settings.getQuery(), settings.getTaxon() );
+            for ( Gene g : exactMatchResults ) {
+                results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO URI" ) );
             }
-
             return results;
         }
 

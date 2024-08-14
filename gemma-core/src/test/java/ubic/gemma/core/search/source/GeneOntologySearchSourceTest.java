@@ -68,8 +68,7 @@ public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTes
                 .thenReturn( mock() );
         SearchSettings settings = SearchSettings.geneSearch( "http://purl.obolibrary.org/obo/GO:000001", null );
         geneOntologySearchSource.searchGene( settings );
-        verify( geneOntologyService ).getTerm( "http://purl.obolibrary.org/obo/GO:000001" );
-        verify( geneOntologyService ).getGenes( any( OntologyTerm.class ), isNull() );
+        verify( geneOntologyService ).getGenes( eq( "http://purl.obolibrary.org/obo/GO:000001" ), isNull() );
         verifyNoMoreInteractions( geneOntologyService );
     }
 
