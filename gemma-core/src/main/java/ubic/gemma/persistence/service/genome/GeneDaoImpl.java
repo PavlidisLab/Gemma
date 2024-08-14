@@ -48,8 +48,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -697,11 +696,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( geneValueObjects.isEmpty() ) {
             return;
         }
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( geneValueObjects ) ) )
-                .list();
+        List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" ),
+                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<String>> aliasByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],
@@ -720,11 +717,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( geneValueObjects.isEmpty() ) {
             return;
         }
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( geneValueObjects ) ) )
-                .list();
+        List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" ),
+                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],
@@ -757,11 +752,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( ids.isEmpty() ) {
             return;
         }
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( ids ) )
-                .list();
+        List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids" ),
+                "ids", ids, 2048 );
         Map<Long, Double> result = results.stream()
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Double ) row[1] ) );
         for ( GeneValueObject gvo : geneValueObjects ) {
