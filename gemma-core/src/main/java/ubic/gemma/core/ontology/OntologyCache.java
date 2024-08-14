@@ -1,6 +1,5 @@
 package ubic.gemma.core.ontology;
 
-import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.cache.Cache;
@@ -44,13 +43,21 @@ class OntologyCache {
     }
 
     public Collection<OntologySearchResult<OntologyTerm>> findTerm( OntologyService ontology, String query, int maxResults ) throws OntologySearchException {
-        SearchCacheKey key = new SearchCacheKey( ontology, query );
+        SearchCacheKey key = new SearchCacheKey( ontology, query, maxResults );
 
         try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireReadLock( searchCache, key ) ) {
             Cache.ValueWrapper value = searchCache.get( key );
             if ( value != null ) {
                 //noinspection unchecked
-                return ( Collection<OntologySearchResult<OntologyTerm>> ) value.get();
+                Collection<OntologySearchResult<OntologyTerm>> result = ( Collection<OntologySearchResult<OntologyTerm>> ) value.get();
+                if ( result.size() > maxResults ) {
+                    return result.stream()
+                            .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                            .limit( maxResults )
+                            .collect( Collectors.toList() );
+                } else {
+                    return result;
+                }
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
@@ -60,6 +67,10 @@ class OntologyCache {
 
         try ( CacheKeyLock.LockAcquisition ignored = CacheUtils.acquireWriteLock( searchCache, key ) ) {
             Collection<OntologySearchResult<OntologyTerm>> results = ontology.findTerm( query, maxResults );
+            if ( results.size() < maxResults ) {
+                // we know this is all the results that can be found, so we can cache it for all possible values of maxResults
+                key = new SearchCacheKey( ontology, query, Integer.MAX_VALUE );
+            }
             searchCache.put( key, results );
             return results;
         } catch ( InterruptedException e ) {
@@ -87,7 +98,7 @@ class OntologyCache {
      * Clear the search  cache for all entries related to a given ontology service.
      */
     public void clearSearchCacheByOntology( OntologyService serv ) {
-        CacheUtils.evictIf( searchCache, key -> ( ( SearchCacheKey ) key ).getOntologyService().equals( serv ) );
+        CacheUtils.evictIf( searchCache, key -> ( ( SearchCacheKey ) key ).ontologyService.equals( serv ) );
     }
 
     /**
@@ -236,9 +247,34 @@ class OntologyCache {
         }
     }
 
-    @Value
     private static class SearchCacheKey {
-        OntologyService ontologyService;
-        String query;
+        private final OntologyService ontologyService;
+        private final String query;
+        private final int maxResults;
+
+        private SearchCacheKey( OntologyService ontologyService, String query, int maxResults ) {
+            this.ontologyService = ontologyService;
+            this.query = query;
+            this.maxResults = maxResults;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash( ontologyService, query );
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
+                return true;
+            }
+            if ( !( obj instanceof SearchCacheKey ) ) {
+                return false;
+            }
+            SearchCacheKey other = ( SearchCacheKey ) obj;
+            return Objects.equals( ontologyService, other.ontologyService )
+                    && Objects.equals( query, other.query )
+                    && maxResults <= other.maxResults;
+        }
     }
 }
