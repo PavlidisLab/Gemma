@@ -609,7 +609,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
             for ( Characteristic ch : chars ) {
 
-                if ( ch.getCategory() == null && ch.getValueUri().startsWith( "http://purl.obolibrary.org/obo/GO" ) ) {
+                if ( ch.getCategory() == null && ch.getValueUri() != null && ch.getValueUri().startsWith( "http://purl.obolibrary.org/obo/GO" ) ) {
                     // these will generally be for gene annotations, obsoleteness there is a separate issue
                     continue;
                 }
