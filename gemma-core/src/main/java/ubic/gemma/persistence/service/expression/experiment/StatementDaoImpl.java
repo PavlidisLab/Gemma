@@ -7,7 +7,6 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
-import java.util.List;
 
 @Repository
 public class StatementDaoImpl extends AbstractDao<Statement> implements StatementDao {
@@ -27,6 +26,15 @@ public class StatementDaoImpl extends AbstractDao<Statement> implements Statemen
     }
 
     @Override
+    public Collection<Statement> findByPredicateLike( String value ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select s from Statement s where s.predicate like :value or s.secondPredicate like :value" )
+                .setParameter( "value", value )
+                .list();
+    }
+
+    @Override
     public Collection<Statement> findByPredicateUri( String uri ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
@@ -40,6 +48,15 @@ public class StatementDaoImpl extends AbstractDao<Statement> implements Statemen
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select s from Statement s where s.object = :value or s.secondObject = :value" )
+                .setParameter( "value", value )
+                .list();
+    }
+
+    @Override
+    public Collection<Statement> findByObjectLike( String value ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select s from Statement s where s.object like :value or s.secondObject like :value" )
                 .setParameter( "value", value )
                 .list();
     }
