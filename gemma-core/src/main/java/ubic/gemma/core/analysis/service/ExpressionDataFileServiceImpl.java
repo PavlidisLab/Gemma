@@ -62,9 +62,12 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -83,6 +86,12 @@ import java.util.zip.ZipOutputStream;
 public class ExpressionDataFileServiceImpl extends AbstractFileService<ExpressionExperiment> implements ExpressionDataFileService {
 
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
+
+    private static final String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
+    private static final String DATA_FILE_SUFFIX = ".data.txt";
+    private static final String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
+    private static final String JSON_FILE_SUFFIX = ".data.json.gz";
+
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
     private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
     private static final String MSG_FILE_NOT_EXISTS = "File (%s) does not exist or can not be accessed ";
@@ -113,8 +122,14 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     @Autowired
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
-    @Value("${gemma.appdata.home}")
-    private String gemmaAppDataHome;
+    @Value("${gemma.appdata.home}/metadata")
+    private Path metadataDir;
+
+    @Value("${gemma.appdata.home}/dataFiles")
+    private Path dataDir;
+
+    @Value("${gemma.tmpdata.home}/dataFiles")
+    private Path tmpDataDir;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -262,9 +277,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         String suffix;
 
         if ( compressed ) {
-            suffix = ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+            suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
         } else {
-            suffix = ExpressionDataFileService.DATA_FILE_SUFFIX;
+            suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX;
         }
 
         String filename = this.getDataFileName( ee, filteredAdd, suffix );
@@ -287,13 +302,13 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     @Override
     public File getOutputFile( String filename, boolean temporary ) {
-        String fullFilePath;
+        Path fullFilePath;
         if ( temporary ) {
-            fullFilePath = ExpressionDataFileService.TMP_DATA_DIR + filename;
+            fullFilePath = tmpDataDir.resolve( filename );
         } else {
-            fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
+            fullFilePath = dataDir.resolve( filename );
         }
-        File f = new File( fullFilePath );
+        File f = fullFilePath.toFile();
 
         if ( f.exists() ) {
             return f;
@@ -311,9 +326,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     @Override
     public File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) {
-        File file = Paths.get( gemmaAppDataHome, "metadata", this.getEEFolderName( ee ), type.getFileName( ee ) )
-                .toFile();
-
+        File file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ).toFile();
         // If this is a directory, check if we can read the most recent file.
         if ( type.isDirectory() ) {
             File fNew = this.getNewestFile( file );
@@ -321,12 +334,11 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 file = fNew;
             }
         }
-
         return file;
     }
 
     /**
-     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
+     * Forms a folder name where the given experiments metadata will be located (within the {@link #metadataDir} directory).
      *
      * @param ee the experiment to get the folder name for.
      * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
@@ -818,7 +830,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp"
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     /**
@@ -848,7 +860,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private String getDesignFileName( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign"
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     private String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
@@ -866,7 +878,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
         return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis"
                 + ( diff.getId() != null ? "_" + diff.getId() : "" )
-                + ExpressionDataFileService.DATA_ARCHIVE_FILE_SUFFIX;
+                + ExpressionDataFileServiceImpl.DATA_ARCHIVE_FILE_SUFFIX;
     }
 
     private File getDiffExpressionAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) {
@@ -961,9 +973,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private File getJSONOutputFile( QuantitationType type ) throws IOException {
         String filename = this.getJSONOutputFilename( type );
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
+        Path fullFilePath = dataDir.resolve( filename );
 
-        File f = new File( fullFilePath );
+        File f = fullFilePath.toFile();
 
         if ( f.exists() ) {
             ExpressionDataFileServiceImpl.log.warn( "Will overwrite existing file " + f );
@@ -979,7 +991,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
      * @return Name, without full path.
      */
     private String getJSONOutputFilename( QuantitationType type ) {
-        return FileTools.cleanForFileName( type.getName() ) + ExpressionDataFileService.JSON_FILE_SUFFIX;
+        return FileTools.cleanForFileName( type.getName() ) + ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX;
     }
 
     private File getOutputFile( QuantitationType type ) {
@@ -992,7 +1004,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
      */
     private String getOutputFilename( QuantitationType type ) {
         return type.getId() + "_" + FileTools.cleanForFileName( type.getName() )
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
@@ -1238,7 +1250,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         } else {
-            try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {
+            try ( Writer writer = new OutputStreamWriter( Files.newOutputStream( file.toPath() ) ) ) {
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         }

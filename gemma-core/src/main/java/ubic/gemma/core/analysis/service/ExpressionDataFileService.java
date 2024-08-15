@@ -16,14 +16,13 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,18 +41,9 @@ import java.util.Optional;
 @ParametersAreNonnullByDefault
 public interface ExpressionDataFileService extends TsvFileService<ExpressionExperiment> {
 
-    String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
-    String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
-
-    String DATA_FILE_SUFFIX = ".data.txt";
-
-    String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
     String DISCLAIMER = "# If you use this file for your research, please cite: \n"
             + "# Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse. \n"
             + "# Database, baab006 (doi:10.1093/database/baab006). \n";
-    String JSON_FILE_SUFFIX = ".data.json.gz";
-    String TMP_DATA_DIR =
-            Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
 
     void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf );
