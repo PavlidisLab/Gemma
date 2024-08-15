@@ -1,6 +1,7 @@
 package ubic.gemma.core.ontology.providers;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -12,8 +13,8 @@ public class GeneOntologyUtils {
      */
     public static boolean isGoId( String s ) {
         String goId;
-        if ( s.startsWith( GeneOntologyService.BASE_GO_URI ) ) {
-            goId = s.substring( GeneOntologyService.BASE_GO_URI.length() );
+        if ( s.startsWith( OntologyUtils.BASE_PURL_URI ) ) {
+            goId = s.substring( OntologyUtils.BASE_PURL_URI.length() );
         } else {
             goId = s;
         }
@@ -48,8 +49,8 @@ public class GeneOntologyUtils {
             return null;
         }
         String goId;
-        if ( uri.startsWith( GeneOntologyService.BASE_GO_URI ) ) {
-            goId = uri.substring( GeneOntologyService.BASE_GO_URI.length() );
+        if ( uri.startsWith( OntologyUtils.BASE_PURL_URI ) ) {
+            goId = uri.substring( OntologyUtils.BASE_PURL_URI.length() );
         } else {
             goId = uri;
         }

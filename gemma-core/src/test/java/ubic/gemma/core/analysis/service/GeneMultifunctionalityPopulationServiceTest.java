@@ -28,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -112,7 +113,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
              */
             for ( int j = 0; j <= ( double ) ( i / 20 ); j++ ) {
                 Characteristic oe = Characteristic.Factory.newInstance();
-                oe.setValueUri( GeneOntologyService.BASE_GO_URI + goTerms[j] );
+                oe.setValueUri( OntologyUtils.BASE_PURL_URI + goTerms[j] );
                 oe.setValue( goTerms[j] );
                 Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( gene, oe, GOEvidenceCode.EXP );
                 gene2GoService.create( g2Go1 );

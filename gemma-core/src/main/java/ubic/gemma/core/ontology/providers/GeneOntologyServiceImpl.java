@@ -37,6 +37,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
@@ -449,10 +450,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
      * Turn a GO ID like GO:0038128 into a URI.
      */
     private String asGoUri( String goId ) {
-        if ( goId.startsWith( GeneOntologyService.BASE_GO_URI ) ) {
+        if ( goId.startsWith( OntologyUtils.BASE_PURL_URI ) ) {
             return goId;
         }
         String uriTerm = goId.replace( ":", "_" );
-        return GeneOntologyService.BASE_GO_URI + uriTerm;
+        return OntologyUtils.BASE_PURL_URI + uriTerm;
     }
 }

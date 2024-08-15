@@ -36,8 +36,6 @@ import java.util.Set;
 @SuppressWarnings("unused") // Possible external use
 public interface GeneOntologyService extends OntologyService {
 
-    String BASE_GO_URI = "http://purl.obolibrary.org/obo/";
-
     /**
      * <p>
      * Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of queryGene and
