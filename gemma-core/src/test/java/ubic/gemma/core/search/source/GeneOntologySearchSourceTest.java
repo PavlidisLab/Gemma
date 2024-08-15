@@ -78,6 +78,7 @@ public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTes
                 .thenReturn( Collections.singleton( new OntologySearchResult<>( mock(), 1.0 ) ) );
         SearchSettings settings = SearchSettings.geneSearch( "synaptic transmission", null );
         geneOntologySearchSource.searchGene( settings );
+        verify( geneOntologyService ).findTerm( "\"synaptic transmission\"", 2000 );
         verify( geneOntologyService ).findTerm( "synaptic", 2000 );
         verify( geneOntologyService ).findTerm( "transmission", 2000 );
         verify( geneOntologyService, times( 2 ) ).getGenes( any( OntologyTerm.class ), isNull() );
