@@ -58,16 +58,18 @@ public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTes
     public void test() throws SearchException, OntologySearchException {
         SearchSettings settings = SearchSettings.geneSearch( "GO:000001", null );
         geneOntologySearchSource.searchGene( settings );
+        verify( geneOntologyService ).findTerm( "GO:000001", 2000 );
         verify( geneOntologyService ).getGenes( "GO:000001", null );
         verifyNoMoreInteractions( geneOntologyService );
     }
 
     @Test
-    public void testWithUri() throws SearchException {
+    public void testWithUri() throws SearchException, OntologySearchException {
         when( geneOntologyService.getTerm( "http://purl.obolibrary.org/obo/GO:000001" ) )
                 .thenReturn( mock() );
         SearchSettings settings = SearchSettings.geneSearch( "http://purl.obolibrary.org/obo/GO:000001", null );
         geneOntologySearchSource.searchGene( settings );
+        verify( geneOntologyService ).findTerm( "http://purl.obolibrary.org/obo/GO:000001", 2000 );
         verify( geneOntologyService ).getGenes( eq( "http://purl.obolibrary.org/obo/GO:000001" ), isNull() );
         verifyNoMoreInteractions( geneOntologyService );
     }
@@ -76,6 +78,8 @@ public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTes
     public void testWithFreeTextTerms() throws SearchException, OntologySearchException {
         when( geneOntologyService.findTerm( any(), anyInt() ) )
                 .thenReturn( Collections.singleton( new OntologySearchResult<>( mock(), 1.0 ) ) );
+        when( geneOntologyService.findTerm( eq( "\"synaptic transmission\"" ), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
         SearchSettings settings = SearchSettings.geneSearch( "synaptic transmission", null );
         geneOntologySearchSource.searchGene( settings );
         verify( geneOntologyService ).findTerm( "\"synaptic transmission\"", 2000 );
