@@ -316,8 +316,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByValue( String search ) {
-        return List.of();
+    public Collection<Characteristic> findByValue( String value ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.value = :value" )
+                .setParameter( "value", value )
+                .list();
     }
 
     @Override
