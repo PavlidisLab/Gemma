@@ -25,6 +25,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -34,13 +35,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
-import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -49,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -71,6 +73,9 @@ public class ExpressionExperimentDataFetchController {
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    @Value("${gemma.appdata.home}/dataFiles")
+    private Path dataDir;
+
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
@@ -86,7 +91,7 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        this.download( response, new File( ExpressionDataFileService.DATA_DIR, filename ), null );
+        this.download( response, dataDir.resolve( filename ).toFile(), null );
     }
 
     @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -178,8 +183,9 @@ public class ExpressionExperimentDataFetchController {
     }
 
     public File getOutputFile( String filename ) {
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
-        File f = new File( fullFilePath );
+        // exclude any paths leading to the filename
+        filename = FilenameUtils.getName( filename );
+        File f = dataDir.resolve( filename ).toFile();
         try {
             FileUtils.forceMkdirParent( f );
         } catch ( IOException e ) {
