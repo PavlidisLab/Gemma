@@ -149,13 +149,15 @@ public class CharacteristicBrowserController {
         if ( queryString.startsWith( "http://" ) ) {
             chars = characteristicService.findByUri( queryString );
             if ( searchCategories ) {
-                chars.addAll( characteristicService.findByCategory( queryString ) );
+                chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
+                chars.addAll( characteristicService.findByCategoryUri( queryString ) );
             }
         } else {
             chars = characteristicService.findByValueStartingWith( queryString );
 
             if ( searchCategories ) {
-                chars.addAll( characteristicService.findByCategory( queryString ) );
+                chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
+                chars.addAll( characteristicService.findByCategoryUri( queryString ) );
             }
         }
 

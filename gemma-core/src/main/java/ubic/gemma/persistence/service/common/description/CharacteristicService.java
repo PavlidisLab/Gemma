@@ -23,6 +23,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -123,7 +124,33 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     //     */
     //    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
-    Collection<? extends Characteristic> findByCategory( String queryPrefix );
+    Collection<Characteristic> findByCategoryStartingWith( String queryPrefix );
+
+    Collection<Characteristic> findByCategoryUri( String query );
+
+    /**
+     * Find a characteristic by any value it contains including its category, value, predicates and objects.
+     */
+    Collection<? extends Characteristic> findByAnyValue( String value );
+
+    /**
+     * Find a characteristic by any value it contains including its category, value, predicates and objects that starts
+     * with the given query.
+     */
+    Collection<? extends Characteristic> findByAnyValueStartingWith( String value );
+
+    /**
+     * Find a characteristic or statement by any URI it contains including its category, value, predicates and objects.
+     */
+    Collection<? extends Characteristic> findByAnyUri( String uri );
+
+    Collection<Statement> findByPredicate( String value );
+
+    Collection<Statement> findByPredicateUri( String uri );
+
+    Collection<Statement> findByObject( String value );
+
+    Collection<Statement> findByObjectUri( String uri );
 
     @Override
     @Secured({ "GROUP_USER" })

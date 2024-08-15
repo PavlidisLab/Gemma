@@ -86,19 +86,30 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<? extends Characteristic> findByCategory( String query ) {
-
+    public Collection<Characteristic> findByCategory( String value ) {
         //noinspection unchecked
-        Collection<? extends Characteristic> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct char from Characteristic as char where char.category like :search" )
-                .setParameter( "search", query + "%" ).list();
+        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.category = :value" )
+                .setParameter( "value", value )
+                .list();
+    }
 
-        if ( result.isEmpty() ) {
-            result = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct char from Characteristic as char where char.categoryUri = :search" )
-                    .setParameter( "search", query ).list();
-        }
-        return result;
+    @Override
+    public Collection<Characteristic> findByCategoryLike( String query ) {
+        //noinspection unchecked
+        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.category like :search" )
+                .setParameter( "search", query )
+                .list();
+    }
+
+    @Override
+    public Collection<Characteristic> findByCategoryUri( String uri ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.categoryUri = :uri" )
+                .setParameter( "uri", uri )
+                .list();
     }
 
     @Override
@@ -301,6 +312,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Collection<Characteristic> findByValue( String search ) {
+        return List.of();
+    }
+
+    @Override
+    public Collection<Characteristic> findByValueLike( String search ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )
