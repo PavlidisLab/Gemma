@@ -73,7 +73,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
-                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO:", MatchMode.START ) ) )
+                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
                 .setFirstResult( start )
                 .setMaxResults( limit )
                 .list();
@@ -83,7 +83,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
-                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO:", MatchMode.START ) ) )
+                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
                 .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
                 .setFirstResult( start )
                 .setMaxResults( limit )
