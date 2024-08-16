@@ -691,9 +691,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             log.info( " *** DRY RUN - no database changes will be made *** " );
         }
 
-        int prevObsoleteCnt = 0;
         int checked = 0;
-        Characteristic lastObsolete = null;
+        Characteristic lastChanged = null;
+        String lastFixedLabel = null;
+        String lastFixedLabelCorrected = null;
         long total = characteristicService.countAll();
 
         int step = 5000;
@@ -721,7 +722,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                     if ( !term.getLabel().equals( ch.getValue() ) ) {
                         mismatchedTerms.put( ch.getValue(), term );
+                        lastFixedLabel = ch.getValue();
                         ch.setValue( term.getLabel() );
+                        lastFixedLabelCorrected = term.getLabel();
 
                         updated = true;
                     }
@@ -743,9 +746,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         }
 
                         if ( !term.getLabel().equals( statement.getObject() ) ) {
+                            lastFixedLabel = statement.getObject();
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
-
+                            lastFixedLabelCorrected = term.getLabel();
                             updated = true;
                         }
                     }
@@ -762,8 +766,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         }
 
                         if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
+                            lastFixedLabel = statement.getSecondObject();
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );
+                            lastFixedLabelCorrected = term.getLabel();
                             updated = true;
                         }
                     }
@@ -771,6 +777,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
 
                 if ( updated && !dryRun ) {
+                    lastChanged = ch;
                     characteristicService.update( ch );
                     numUpdated++;
                 }
@@ -782,6 +789,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 //                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
 //                        updatedTerms.clear(); // just print out what we saw in the last batch.
 //                    }
+                    if ( lastChanged != null ) {
+                        OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                    }
                 }
             }
         }
