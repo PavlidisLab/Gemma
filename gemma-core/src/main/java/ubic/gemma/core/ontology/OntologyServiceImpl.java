@@ -959,7 +959,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         SearchSettings ss = SearchSettings.builder()
                 .query( queryString )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .resultType( Gene.class )
                 .build();
         SearchService.SearchResultMap geneResults = this.searchService.search( ss.withFillResults( true ).withMode( SearchSettings.SearchMode.BALANCED ) );

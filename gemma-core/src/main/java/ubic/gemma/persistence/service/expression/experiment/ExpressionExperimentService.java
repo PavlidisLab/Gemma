@@ -418,6 +418,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
+    /**
+     * Retrieve the genes used by the preferred vectors of this experiment.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint );
+
     Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     /**

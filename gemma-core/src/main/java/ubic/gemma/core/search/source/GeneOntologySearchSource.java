@@ -10,10 +10,10 @@ import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
@@ -46,6 +46,12 @@ public class GeneOntologySearchSource implements SearchSource {
     @Autowired
     private GeneSearchService geneSearchService;
 
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
     @Override
     public boolean accepts( SearchSettings settings ) {
         return settings.isUseGo();
@@ -57,7 +63,7 @@ public class GeneOntologySearchSource implements SearchSource {
             Collection<OntologySearchResult<OntologyTerm>> terms = geneOntologyService.findTerm( quote( settings.getQuery() ), 2000 );
             if ( !terms.isEmpty() ) {
                 SearchResultSet<Gene> results = new SearchResultSet<>( settings );
-                findGenesByTerms( terms, settings.getTaxon(), results );
+                findGenesByTerms( terms, settings, results );
                 return results;
             }
         } catch ( OntologySearchException e ) {
@@ -91,7 +97,7 @@ public class GeneOntologySearchSource implements SearchSource {
 
         if ( isGoId( settings.getQuery() ) ) {
             // find via a full URI or GO identifier
-            Collection<Gene> exactMatchResults = geneOntologyService.getGenes( settings.getQuery(), settings.getTaxon() );
+            Collection<Gene> exactMatchResults = filterGenesByExperimentAndPlatformConstraints( geneOntologyService.getGenes( settings.getQuery(), settings.getTaxonConstraint() ), settings );
             for ( Gene g : exactMatchResults ) {
                 results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO URI" ) );
             }
@@ -101,20 +107,20 @@ public class GeneOntologySearchSource implements SearchSource {
         // find inexact match using full-text query of GO terms
         try {
             Collection<OntologySearchResult<OntologyTerm>> terms = geneOntologyService.findTerm( settings.getQuery(), 2000 );
-            findGenesByTerms( terms, settings.getTaxon(), results );
+            findGenesByTerms( terms, settings, results );
         } catch ( OntologySearchException e ) {
             throw new BaseCodeOntologySearchException( e );
         }
 
         // find via GO-annotated GeneSet
-        for ( Gene g : geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ) ) {
+        for ( Gene g : geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxonConstraint() ) ) {
             results.add( SearchResult.from( Gene.class, g, 0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
         }
 
         return results;
     }
 
-    private void findGenesByTerms( Collection<OntologySearchResult<OntologyTerm>> terms, @Nullable Taxon taxon, SearchResultSet<Gene> results ) {
+    private void findGenesByTerms( Collection<OntologySearchResult<OntologyTerm>> terms, SearchSettings settings, SearchResultSet<Gene> results ) {
         // rescale the scores in a [0, 1] range
         DoubleSummaryStatistics summaryStatistics = terms.stream()
                 .mapToDouble( OntologySearchResult::getScore )
@@ -122,7 +128,7 @@ public class GeneOntologySearchSource implements SearchSource {
         double m = summaryStatistics.getMin();
         double d = summaryStatistics.getMax() - summaryStatistics.getMin();
         for ( OntologySearchResult<OntologyTerm> osr : terms ) {
-            for ( Gene g : geneOntologyService.getGenes( osr.getResult(), taxon ) ) {
+            for ( Gene g : filterGenesByExperimentAndPlatformConstraints( geneOntologyService.getGenes( osr.getResult(), settings.getTaxonConstraint() ), settings ) ) {
                 double score;
                 if ( d == 0 ) {
                     score = FULL_TEXT_SCORE_PENALTY;
@@ -132,5 +138,17 @@ public class GeneOntologySearchSource implements SearchSource {
                 results.add( SearchResult.from( Gene.class, g, score, Collections.emptyMap(), "GeneOntologyService.getGenes via full-text matches" ) );
             }
         }
+    }
+
+    private Collection<Gene> filterGenesByExperimentAndPlatformConstraints( Collection<Gene> genes, SearchSettings settings ) {
+        if ( settings.getPlatformConstraint() != null ) {
+            // query all genes for the given platform?
+            genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint() ) );
+        }
+        if ( settings.getExperimentConstraint() != null ) {
+            // query all the genes used by the *preferred* set of vectors, or any vector?
+            genes.retainAll( expressionExperimentService.getGenesUsedByPreferredVectors( settings.getExperimentConstraint() ) );
+        }
+        return genes;
     }
 }

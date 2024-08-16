@@ -346,9 +346,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         // filter matches by taxon
-        if ( settings.getTaxon() != null ) {
+        if ( settings.getTaxonConstraint() != null ) {
             Collection<Long> retainedIds = expressionExperimentService
-                    .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxon() );
+                    .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxonConstraint() );
             results.removeIf( sr -> !retainedIds.contains( sr.getResultId() ) );
         }
 
@@ -402,8 +402,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         // filter by taxon
-        if ( settings.getTaxon() != null ) {
-            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxon() ) );
+        if ( settings.getTaxonConstraint() != null ) {
+            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxonConstraint() ) );
         }
 
         watch.stop();
@@ -486,8 +486,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         if ( query == null ) {
             return Collections.emptySet();
         }
-        if ( settings.getTaxon() != null ) {
-            return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query, settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
+        if ( settings.getTaxonConstraint() != null ) {
+            return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query, settings.getTaxonConstraint() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
         } else {
             return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
         }

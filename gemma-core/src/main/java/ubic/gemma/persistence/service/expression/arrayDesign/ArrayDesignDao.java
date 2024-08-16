@@ -7,6 +7,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -53,6 +54,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
+
+    Collection<Gene> getGenes( ArrayDesign arrayDesign );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 

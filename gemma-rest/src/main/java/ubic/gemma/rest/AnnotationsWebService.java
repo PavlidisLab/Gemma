@@ -400,7 +400,7 @@ public class AnnotationsWebService {
         SearchSettings settings = SearchSettings.builder()
                 .resultType( ExpressionExperiment.class )
                 .fillResults( false )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .build();
         Set<Long> ids = new HashSet<>();
         for ( String value : values ) {

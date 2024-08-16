@@ -330,7 +330,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         Taxon taxonParam;
         if ( taxonId != null ) {
             taxonParam = taxonService.load( taxonId );
-            settings.setTaxon( taxonParam );
+            settings.setTaxonConstraint( taxonParam );
         }
         return searchService.search( settings );
     }

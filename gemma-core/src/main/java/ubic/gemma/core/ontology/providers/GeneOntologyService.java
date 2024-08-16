@@ -20,6 +20,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;

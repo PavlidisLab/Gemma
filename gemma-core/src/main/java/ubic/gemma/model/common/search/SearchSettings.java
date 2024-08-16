@@ -136,7 +136,7 @@ public class SearchSettings implements Serializable {
         return builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .build();
     }
 
@@ -148,7 +148,7 @@ public class SearchSettings implements Serializable {
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {
-        return builder().query( query ).resultType( Gene.class ).taxon( taxon ).build();
+        return builder().query( query ).resultType( Gene.class ).taxonConstraint( taxon ).build();
     }
 
     /**
@@ -166,7 +166,9 @@ public class SearchSettings implements Serializable {
     @Nullable
     private ArrayDesign platformConstraint;
     @Nullable
-    private Taxon taxon;
+    private ExpressionExperiment experimentConstraint;
+    @Nullable
+    private Taxon taxonConstraint;
 
     /* sources */
     @Builder.Default
@@ -253,8 +255,8 @@ public class SearchSettings implements Serializable {
         if ( platformConstraint != null ) {
             s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
         }
-        if ( taxon != null ) {
-            s.append( " " ).append( "[" ).append( taxon ).append( "]" );
+        if ( taxonConstraint != null ) {
+            s.append( " " ).append( "[" ).append( taxonConstraint ).append( "]" );
         }
         return s.toString();
     }

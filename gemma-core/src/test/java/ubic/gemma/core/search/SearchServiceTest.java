@@ -100,8 +100,8 @@ public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
                 .query( "the best rat in the universe" )
                 .build();
         searchService.search( settings );
-        verify( databaseSearchSource ).accepts( settings.withTaxon( rat ) );
-        verify( databaseSearchSource ).searchGene( settings.withTaxon( rat ) );
+        verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ) );
     }
 
     @Test
