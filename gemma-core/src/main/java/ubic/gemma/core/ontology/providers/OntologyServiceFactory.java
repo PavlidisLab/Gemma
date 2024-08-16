@@ -174,11 +174,10 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     @Override
-    protected void destroyInstance( T instance ) throws Exception {
+    protected void destroyInstance( T instance ) {
         if ( instance.isInitializationThreadAlive() ) {
             log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
             instance.cancelInitializationThread();
         }
-        instance.close();
     }
 }
