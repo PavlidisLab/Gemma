@@ -776,6 +776,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 }
 
+                if (log.isDebugEnabled() && lastChanged != null) {
+                    OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                }
+
                 if ( updated && !dryRun ) {
                     lastChanged = ch;
                     characteristicService.update( ch );
@@ -785,14 +789,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 checked++;
                 if ( checked % ( step * 5 ) == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
-//                    if ( !updatedTerms.isEmpty() ) {
-//                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
-//                        updatedTerms.clear(); // just print out what we saw in the last batch.
-//                    }
                     if ( lastChanged != null ) {
                         OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
                     }
                 }
+
+                lastChanged = null;
             }
         }
         OntologyServiceImpl.log.info( "Finished checking all " + checked + " characteristics, updated " + numUpdated );
