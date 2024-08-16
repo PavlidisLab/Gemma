@@ -683,7 +683,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
 
     @Override
-    public void fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+    public Map<String, OntologyTerm> fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         long timeoutMs = timeUnit.toMillis( timeout );
 
@@ -698,7 +698,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         int step = 5000;
         int numUpdated = 0;
-        Map<String, OntologyTerm> updatedTerms = new HashMap<>(); // just for logging.
+        Map<String, OntologyTerm> mismatchedTerms = new HashMap<>(); // just for logging.
         for ( int start = 0; ; start += step ) {
             Collection<Characteristic> chars = characteristicService.browse( start, step );
 
@@ -720,7 +720,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     }
 
                     if ( !term.getLabel().equals( ch.getValue() ) ) {
-                        updatedTerms.put( ch.getValue(), term );
+                        mismatchedTerms.put( ch.getValue(), term );
                         ch.setValue( term.getLabel() );
 
                         updated = true;
@@ -743,7 +743,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         }
 
                         if ( !term.getLabel().equals( statement.getObject() ) ) {
-                            updatedTerms.put( statement.getObject(), term );
+                            mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
 
                             updated = true;
@@ -762,7 +762,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         }
 
                         if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
-                            updatedTerms.put( statement.getSecondObject(), term );
+                            mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );
                             updated = true;
                         }
@@ -778,15 +778,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 checked++;
                 if ( checked % ( step * 5 ) == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
-                    if ( !updatedTerms.isEmpty() ) {
-                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
-                        updatedTerms.clear(); // just print out what we saw in the last batch.
-                    }
+//                    if ( !updatedTerms.isEmpty() ) {
+//                        updatedTerms.forEach( ( k, v ) -> OntologyServiceImpl.log.info( ( dryRun ? "Mismatch" : "Updated" ) + ":\t" + k + "\t->\t" + v.getLabel() + "\t" + v.getUri() + "\t" ) );
+//                        updatedTerms.clear(); // just print out what we saw in the last batch.
+//                    }
                 }
             }
         }
         OntologyServiceImpl.log.info( "Finished checking all " + checked + " characteristics, updated " + numUpdated );
 
+        return mismatchedTerms;
     }
 
 

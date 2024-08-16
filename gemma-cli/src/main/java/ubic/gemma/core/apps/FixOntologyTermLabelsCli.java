@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
@@ -101,7 +102,12 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
-        ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
+        Map<String, OntologyTerm> mismatches = ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
+
+        System.out.println("Wrong_label\tCorrect_Label\tURI");
+        for ( Map.Entry<String, OntologyTerm> entry : mismatches.entrySet() ) {
+            System.out.println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri());
+        }
 
 
     }
