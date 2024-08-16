@@ -14,6 +14,8 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
 
 import java.util.Collections;
@@ -39,6 +41,16 @@ public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTes
 
         @Bean
         public GeneSearchService geneSearchService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
             return mock();
         }
     }
