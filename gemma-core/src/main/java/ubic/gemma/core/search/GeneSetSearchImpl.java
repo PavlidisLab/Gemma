@@ -30,6 +30,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -127,7 +128,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         try {
             matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ), 500 );
         } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
+            try {
+                matches = this.geneOntologyService.findTerm( LuceneQueryUtils.escape( StringUtils.strip( goTermName ) ), 500 );
+            } catch ( OntologySearchException e1 ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
         }
 
         Collection<GeneSet> results = new HashSet<>();

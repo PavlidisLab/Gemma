@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.genome.gene.*;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -140,12 +140,12 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         }
         sbgsvo.setGeneIds( gids );
 
-        Taxon tax = this.geneSetService.getTaxon( gs );
-        if ( tax != null ) {
-            sbgsvo.setTaxon( new TaxonValueObject( tax ) );
-        }
+        gs.getMembers().stream().findAny()
+                .map( GeneSetMember::getGene )
+                .map( Gene::getTaxon )
+                .ifPresent( tax -> sbgsvo.setTaxon( new TaxonValueObject( tax ) ) );
 
-        sbgsvo.setId( new Long( -1 ) );
+        sbgsvo.setId( Long.valueOf( -1 ) );
         sbgsvo.setModified( false );
     }
 
