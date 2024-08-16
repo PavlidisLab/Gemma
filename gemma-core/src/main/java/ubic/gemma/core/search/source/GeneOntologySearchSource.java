@@ -8,6 +8,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -59,15 +60,11 @@ public class GeneOntologySearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
-        try {
-            Collection<OntologySearchResult<OntologyTerm>> terms = geneOntologyService.findTerm( quote( settings.getQuery() ), 2000 );
-            if ( !terms.isEmpty() ) {
-                SearchResultSet<Gene> results = new SearchResultSet<>( settings );
-                findGenesByTerms( terms, settings, results );
-                return results;
-            }
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
+        Collection<OntologySearchResult<OntologyTerm>> terms = findTerms( quote( settings.getQuery() ) );
+        if ( !terms.isEmpty() ) {
+            SearchResultSet<Gene> results = new SearchResultSet<>( settings );
+            findGenesByTerms( terms, settings, results );
+            return results;
         }
 
         SearchResultSet<Gene> results = new SearchResultSet<>( settings );
@@ -105,12 +102,8 @@ public class GeneOntologySearchSource implements SearchSource {
         }
 
         // find inexact match using full-text query of GO terms
-        try {
-            Collection<OntologySearchResult<OntologyTerm>> terms = geneOntologyService.findTerm( settings.getQuery(), 2000 );
-            findGenesByTerms( terms, settings, results );
-        } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
-        }
+        Collection<OntologySearchResult<OntologyTerm>> terms = findTerms( settings.getQuery() );
+        findGenesByTerms( terms, settings, results );
 
         // find via GO-annotated GeneSet
         for ( Gene g : geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxonConstraint() ) ) {
@@ -118,6 +111,18 @@ public class GeneOntologySearchSource implements SearchSource {
         }
 
         return results;
+    }
+
+    private Collection<OntologySearchResult<OntologyTerm>> findTerms( String query ) throws BaseCodeOntologySearchException {
+        try {
+            return geneOntologyService.findTerm( query, 2000 );
+        } catch ( OntologySearchException e ) {
+            try {
+                return geneOntologyService.findTerm( LuceneQueryUtils.escape( query ), 2000 );
+            } catch ( OntologySearchException ex ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
+        }
     }
 
     private void findGenesByTerms( Collection<OntologySearchResult<OntologyTerm>> terms, SearchSettings settings, SearchResultSet<Gene> results ) {
