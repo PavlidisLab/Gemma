@@ -11,6 +11,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -22,7 +23,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -171,5 +171,15 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ad.setPrimaryTaxon( taxon );
         ad = arrayDesignDao.create( ad );
         assertThat( arrayDesignDao.numExperiments( ad ) ).isEqualTo( 0 );
+    }
+
+    @Test
+    public void testGetGenes() {
+        Taxon taxon = Taxon.Factory.newInstance( "test" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad = arrayDesignDao.create( ad );
+        assertThat( arrayDesignDao.getGenes( ad ) ).isEmpty();
     }
 }

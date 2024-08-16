@@ -239,8 +239,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } catch ( SearchException e ) {
             mav.addObject( "SearchURI", null );
         }
-        if ( ( command.getTaxon() != null ) && ( command.getTaxon().getId() != null ) )
-            mav.addObject( "searchTaxon", command.getTaxon().getScientificName() );
+        if ( ( command.getTaxonConstraint() != null ) && ( command.getTaxonConstraint().getId() != null ) )
+            mav.addObject( "searchTaxon", command.getTaxonConstraint().getScientificName() );
 
         return mav;
     }
@@ -272,7 +272,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
         String taxon = request.getParameter( "taxon" );
         if ( taxon != null )
-            csc.taxon( taxonService.findByScientificName( taxon ) );
+            csc.taxonConstraint( taxonService.findByScientificName( taxon ) );
         String scope = request.getParameter( "scope" );
         csc.highlighter( new Highlighter( scope, request.getLocale() ) );
         if ( StringUtils.isNotBlank( scope ) ) {
@@ -351,7 +351,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return SearchSettings.builder()
                 .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
                 .platformConstraint( settingsValueObject.getPlatformConstraint() )
-                .taxon( settingsValueObject.getTaxon() )
+                .taxonConstraint( settingsValueObject.getTaxon() )
                 .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
                 .resultType( BlacklistedEntity.class )

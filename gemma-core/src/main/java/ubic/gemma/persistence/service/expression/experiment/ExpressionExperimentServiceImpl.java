@@ -916,6 +916,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint ) {
+        return this.expressionExperimentDao.getGenesUsedByPreferredVectors( experimentConstraint );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
         if ( filters == null || filters.isEmpty() ) {
             if ( extraIds != null ) {

@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -152,6 +153,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
         return this.arrayDesignDao.loadCompositeSequences( arrayDesign, limit, offset );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getGenes( arrayDesign );
     }
 
     @Override
