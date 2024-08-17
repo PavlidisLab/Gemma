@@ -695,7 +695,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Characteristic lastChanged = null;
         String lastFixedLabel = null;
         String lastFixedLabelCorrected = null;
-        long total = characteristicService.countAll();
 
         int step = 5000;
         int numUpdated = 0;
@@ -788,7 +787,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 checked++;
                 if ( checked % ( step * 5 ) == 0 ) {
-                    OntologyServiceImpl.log.info( "Checked " + checked + " out of " + total + " characteristics, updated " + numUpdated + " ..." );
+                    OntologyServiceImpl.log.info( "Checked " + checked + " characteristics, updated " + numUpdated + " ..." );
                     if ( lastChanged != null ) {
                         OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
                     }
@@ -797,7 +796,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 lastChanged = null;
             }
         }
-        OntologyServiceImpl.log.info( "Finished checking all " + checked + " characteristics, updated " + numUpdated );
+        OntologyServiceImpl.log.info( "Finished checking " + checked + " characteristics, updated " + numUpdated );
 
         return mismatchedTerms;
     }
