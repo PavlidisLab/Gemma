@@ -713,8 +713,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
                     if ( term == null ) {
-                        if ( log.isDebugEnabled() )
+                        if ( log.isDebugEnabled() && !ch.getValueUri().startsWith( "http://purl.org/commons/record/ncbi_gene/" ) ) {
                             log.debug( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
+                        }
                         checked++;
                         continue;
                     }
@@ -775,7 +776,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
                 }
 
-                if (log.isDebugEnabled() && lastChanged != null) {
+                if ( log.isDebugEnabled() && lastChanged != null ) {
                     OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
                 }
 
