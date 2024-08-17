@@ -322,6 +322,24 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         }
     }
 
+    @Test
+    public void testGSE185737() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE185737" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.getSingleCellDataType(
+                series
+        ) ).isEqualTo( SingleCellDataType.MEX );
+        // this is an ATAC-seq sample
+        GeoSample sample = series.getSamples().stream()
+                .filter( s -> s.getGeoAccession().equals( "GSM5623074" ) )
+                .findFirst()
+                .get();
+        assertThat( detector.hasSingleCellData( sample ) )
+                .isFalse();
+        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                .isEmpty();
+    }
+
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {

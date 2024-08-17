@@ -434,6 +434,10 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
+        if ( !isSingleCell( sample, false ) ) {
+            log.warn( sample.getGeoAccession() + " is not a single-cell sample, ignoring its supplementary materials." );
+            return Collections.emptyList();
+        }
         for ( SingleCellDetector detector : detectors ) {
             if ( detector.hasSingleCellData( sample ) ) {
                 return detector.getAdditionalSupplementaryFiles( sample );
