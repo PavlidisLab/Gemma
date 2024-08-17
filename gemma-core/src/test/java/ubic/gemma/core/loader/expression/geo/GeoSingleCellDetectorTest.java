@@ -309,6 +309,19 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
     }
 
+    /**
+     * This is a curious example of a SOFT file that has NONE indicators in its supplementary materials.
+     */
+    @Test
+    public void testGSE158184() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE217464" );
+        assertThat( series ).isNotNull();
+        for ( GeoSample sample : series.getSamples() ) {
+            assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                    .isEmpty();
+        }
+    }
+
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {
