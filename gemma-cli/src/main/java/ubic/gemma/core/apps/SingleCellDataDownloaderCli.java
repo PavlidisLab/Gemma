@@ -4,6 +4,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -29,7 +31,10 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,7 +62,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             DATA_TYPE_OPTION = "dataType",
             SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
 
-    private static final String SUMMARY_HEADER = "geo_accession\tdata_type\tnumber_of_samples\tnumber_of_cells\tnumber_of_genes\tadditional_supplementary_files\tcomment";
+    private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "comment" };
 
     private static final String
             UNKNOWN_INDICATOR = "UNKNOWN",
@@ -232,7 +237,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             // rewrite the summary output file to remove the accessions that will be retried since those will be appended
             assert summaryOutputFile != null;
             List<String> linesToKeep = new ArrayList<>();
-            linesToKeep.add( SUMMARY_HEADER );
+            linesToKeep.add( String.join( "\t", SUMMARY_HEADER ) );
             try ( Stream<String> lines = Files.lines( summaryOutputFile ) ) {
                 lines.skip( 1 )
                         .filter( line -> !accessions.contains( line.split( "\t", 2 )[0] ) )
@@ -240,17 +245,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             Files.write( summaryOutputFile, linesToKeep );
         }
+
         try ( GeoSingleCellDetector detector = new GeoSingleCellDetector();
-                PrintWriter writer = summaryOutputFile != null ? new PrintWriter( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ), true ) : null ) {
+                CSVPrinter writer = getSummaryOutputFilePrinter() ) {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath.toPath() );
             if ( fetchThreads != null ) {
                 detector.setNumberOfFetchThreads( fetchThreads.intValue() );
             }
             log.info( "Downloading single cell data to " + singleCellDataBasePath + "..." );
-            if ( writer != null && !resume ) {
-                writer.println( SUMMARY_HEADER );
-            }
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;
@@ -301,10 +304,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         detectedDataType = FAILED_INDICATOR;
                     } finally {
                         if ( writer != null ) {
-                            writer.printf( "%s\t%s\t%d\t%d\t%d\t%s\t%s%n",
-                                    geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
-                                    escapeTsv( additionalSupplementaryFiles.stream().map( FilenameUtils::getName ).collect( Collectors.joining( ";" ) ) ),
-                                    escapeTsv( comment ) );
+                            try {
+                                writer.printRecord(
+                                        geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
+                                        additionalSupplementaryFiles.stream().map( FilenameUtils::getName ).collect( Collectors.joining( ";" ) ),
+                                        comment );
+                                writer.flush(); // for convenience, so that results appear immediately with tail -f
+                            } catch ( IOException e ) {
+                                log.error( "Failed to append to the summary output file.", e );
+                            }
                         }
                     }
                 } );
@@ -313,11 +321,16 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         }
     }
 
-    private String escapeTsv( String s ) {
-        return s.replace( "\\", "\\\\" )
-                .replace( "\n", "\\n" )
-                .replace( "\t", "\\t" )
-                .replace( "\r", "\\r" );
+    @Nullable
+    private CSVPrinter getSummaryOutputFilePrinter() throws IOException {
+        if ( summaryOutputFile == null ) {
+            return null;
+        }
+        CSVFormat.Builder csvFormatBuilder = CSVFormat.TDF.builder();
+        if ( !resume ) {
+            csvFormatBuilder.setHeader( SUMMARY_HEADER );
+        }
+        return csvFormatBuilder.build().print( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ) );
     }
 
     @Nullable
