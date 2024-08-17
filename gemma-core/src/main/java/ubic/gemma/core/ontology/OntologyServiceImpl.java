@@ -792,7 +792,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 if ( checked % ( step * 5 ) == 0 ) {
                     OntologyServiceImpl.log.info( "Checked " + checked + " characteristics; " + ( dryRun ? "Needing updates: " : "Updated:" ) + numUpdated + " ..." );
                     if ( lastChanged != null ) {
-                        OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                        if ( lastChanged instanceof Statement ) {
+                            OntologyServiceImpl.log.info( "Last updated: " + ( Statement ) lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+
+                        } else {
+                            OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                        }
                     }
                 }
 
