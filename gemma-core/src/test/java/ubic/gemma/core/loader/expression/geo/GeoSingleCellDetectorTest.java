@@ -104,8 +104,12 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .isEmpty();
         GeoSample sample = series.getSamples().iterator().next();
         assertThat( detector.hasSingleCellData( sample ) ).isTrue();
+        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                .isEmpty();
     }
 
     /**
@@ -208,6 +212,8 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
 
     /**
      * This dataset does not use 'single-cell transcriptomic' as a library source, so we have to rely on keywords.
+     * <p>
+     * It als has a bunch of additional supplementary files.
      */
     @Test
     public void testGSE200218() throws IOException, NoSingleCellDataFoundException {
@@ -215,6 +221,20 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .containsExactlyInAnyOrder(
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_sc_sn_gene_names.csv.gz",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_sc_sn_counts.mtx.gz",
+                        // "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_RAW.tar",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_sc_sn_integrated_data.csv.gz",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_VIPER_matrix_tumor_cells_sn.csv.gz",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_sc_sn_metadata.csv.gz",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_SCENIC_matrix_tumor_cells_sn.csv.gz" );
+        GeoSample sample = series.getSamples().stream().filter( s -> s.getGeoAccession().equals( "GSM6022251" ) ).findFirst().get();
+        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                .containsExactlyInAnyOrder(
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM6022nnn/GSM6022251/suppl/GSM6022251_MBM01_sc_CD45pos_filtered.h5",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM6022nnn/GSM6022251/suppl/GSM6022251_MBM01_sc_counts.csv.gz" );
     }
 
     @Test

@@ -417,6 +417,32 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() + "." );
     }
 
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector.hasSingleCellData( series ) ) {
+                return detector.getAdditionalSupplementaryFiles( series );
+            }
+        }
+        // if no detector can detect single-cell data, consider it all additional
+        return series.getSupplementaryFiles()
+                .stream()
+                // this is just an aggregate of sample-level supplementary files
+                .filter( f -> !f.endsWith( "_RAW.tar" ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector.hasSingleCellData( sample ) ) {
+                return detector.getAdditionalSupplementaryFiles( sample );
+            }
+        }
+        // if no detector can detect single-cell data, consider it all additional
+        return new ArrayList<>( sample.getSupplementaryFiles() );
+    }
+
     /**
      * Obtain a single-cell data loader for a specific data type.
      */
@@ -440,12 +466,12 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      */
     private boolean isSingleCell( GeoSample sample, boolean hasSingleCellDataInSeries ) {
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
-                && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                && Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ ) ) {
             return true;
         }
         // older datasets do not use the 'single cell transcriptomic' library source, rely on some heuristics
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC )
-                && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                && Objects.requireNonNull( sample.getLibStrategy() ).equals( GeoLibraryStrategy.RNA_SEQ ) ) {
             if ( StringUtils.containsAnyIgnoreCase( sample.getTitle(), SINGLE_CELL_KEYWORDS )
                     || StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_CELL_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords indicate it is single-cell." );

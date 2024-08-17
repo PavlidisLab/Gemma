@@ -426,6 +426,30 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     }
 
     @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
+        return series.getSupplementaryFiles().stream()
+                .filter( this::isAdditionalSupplementaryFile )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
+        return sample.getSupplementaryFiles().stream()
+                .filter( this::isAdditionalSupplementaryFile )
+                .collect( Collectors.toList() );
+    }
+
+    private boolean isAdditionalSupplementaryFile( String f ) {
+        return !isMexFile( f, MexFileType.GENES )
+                && !isMexFile( f, MexFileType.FEATURES )
+                && !isMexFile( f, MexFileType.BARCODES )
+                && !isMexFile( f, MexFileType.MATRIX )
+                // FIXME: the tar might contain additional supplementary files
+                && !f.endsWith( ".tar" ) && !f.endsWith( ".tar.gz" )
+                && !f.endsWith( "_RAW.tar" );
+    }
+
+    @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
         Assert.notNull( downloadDirectory, "A download directory must be set." );
 

@@ -5,6 +5,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,7 +57,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             DATA_TYPE_OPTION = "dataType",
             SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
 
-    private static final String SUMMARY_HEADER = "geo_accession\tdata_type\tnumber_of_samples\tnumber_of_cells\tnumber_of_genes\tcomment";
+    private static final String SUMMARY_HEADER = "geo_accession\tdata_type\tnumber_of_samples\tnumber_of_cells\tnumber_of_genes\tadditional_supplementary_files\tcomment";
 
     private static final String
             UNKNOWN_INDICATOR = "UNKNOWN",
@@ -206,7 +206,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             throw new IllegalArgumentException( "The -" + RETRY_OPTION + " option requires the -" + RESUME_OPTION + " option to be provided." );
         }
         if ( commandLine.hasOption( FETCH_THREADS_OPTION ) ) {
-            fetchThreads = ( ( Number ) commandLine.getParsedOptionValue( FETCH_THREADS_OPTION ) );
+            fetchThreads = commandLine.getParsedOptionValue( FETCH_THREADS_OPTION );
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             if ( !singleAccessionMode ) {
@@ -255,6 +255,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;
                     int numberOfSamples = 0, numberOfCells = 0, numberOfGenes = 0;
+                    List<String> additionalSupplementaryFiles = new ArrayList<>();
                     String comment = "";
                     try {
                         log.info( geoAccession + ": Parsing GEO series metadata..." );
@@ -283,6 +284,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             SingleCellDimension scd = loader.getSingleCellDimension( bas );
                             numberOfCells = scd.getNumberOfCells();
                             numberOfGenes = loader.getGenes().size();
+                            additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series ) );
+                            for ( GeoSample sample : series.getSamples() ) {
+                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( sample ) );
+                            }
                             addSuccessObject( geoAccession );
                         } else {
                             detectedDataType = UNSUPPORTED_INDICATOR;
@@ -296,11 +301,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         detectedDataType = FAILED_INDICATOR;
                     } finally {
                         if ( writer != null ) {
-                            writer.printf( "%s\t%s\t%d\t%d\t%d\t%s%n", geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes, escapeTsv( comment ) );
+                            writer.printf( "%s\t%s\t%d\t%d\t%d\t%s\t%s%n",
+                                    geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
+                                    escapeTsv( additionalSupplementaryFiles.stream().map( FilenameUtils::getName ).collect( Collectors.joining( ";" ) ) ),
+                                    escapeTsv( comment ) );
                         }
                     }
                 } );
             }
+            awaitBatchExecutorService();
         }
     }
 

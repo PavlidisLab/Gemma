@@ -6,6 +6,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Interface for single-cell data detectors from GEO.
@@ -39,6 +40,16 @@ public interface SingleCellDetector {
      * @throws NoSingleCellDataFoundException if there is no single cell data for the given sample
      */
     void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException;
+
+    /**
+     * Obtain a list of all additional supplementary files.
+     */
+    List<String> getAdditionalSupplementaryFiles( GeoSeries series );
+
+    /**
+     * Obtain a list of all additional supplementary files.
+     */
+    List<String> getAdditionalSupplementaryFiles( GeoSample sample );
 
     /**
      * Obtain a single cell data loader for the given GEO series based on previously downloading data.

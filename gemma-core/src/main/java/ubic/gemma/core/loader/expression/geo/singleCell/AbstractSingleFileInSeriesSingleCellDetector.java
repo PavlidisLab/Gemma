@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -140,5 +142,18 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
     @Override
     public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException {
         throw new NoSingleCellDataFoundException( name + " does not support single-cell data at the sample-level." );
+    }
+
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSeries sample ) {
+        return sample.getSupplementaryFiles().stream()
+                .filter( f -> !this.accepts( f ) && !f.endsWith( "_RAW.tar" ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
+        // since this is for a single file in the series, all sample attachments are considered additional
+        return new ArrayList<>( sample.getSupplementaryFiles() );
     }
 }
