@@ -706,7 +706,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 break;
             }
 
-            boolean updated = false;
+            boolean needsUpdate = false;
             for ( Characteristic ch : chars ) {
                 String valueUri = ch.getValueUri();
                 if ( StringUtils.isNotBlank( valueUri ) ) {
@@ -726,7 +726,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         ch.setValue( term.getLabel() );
                         lastFixedLabelCorrected = term.getLabel();
 
-                        updated = true;
+                        needsUpdate = true;
                     }
                 }
 
@@ -750,7 +750,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
                             lastFixedLabelCorrected = term.getLabel();
-                            updated = true;
+                            needsUpdate = true;
                         }
                     }
 
@@ -770,7 +770,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );
                             lastFixedLabelCorrected = term.getLabel();
-                            updated = true;
+                            needsUpdate = true;
                         }
                     }
 
@@ -780,15 +780,17 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
                 }
 
-                if ( updated && !dryRun ) {
-                    lastChanged = ch;
-                    characteristicService.update( ch );
+                if ( needsUpdate ) {
+                    if ( !dryRun ) {
+                        lastChanged = ch;
+                        characteristicService.update( ch );
+                    }
                     numUpdated++;
                 }
 
                 checked++;
                 if ( checked % ( step * 5 ) == 0 ) {
-                    OntologyServiceImpl.log.info( "Checked " + checked + " characteristics, updated " + numUpdated + " ..." );
+                    OntologyServiceImpl.log.info( "Checked " + checked + " characteristics; " + ( dryRun ? "Needing updates: " : "Updated:" ) + numUpdated + " ..." );
                     if ( lastChanged != null ) {
                         OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
                     }
