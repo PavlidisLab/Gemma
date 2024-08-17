@@ -1383,7 +1383,11 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             results.getSampleMap().get( currentSampleAccession ).addSeriesAppearsIn( value );
 
         } else if ( this.startsWithIgnoreCase( line, "!Sample_supplementary_file" ) ) {
-            this.sampleAddTo( currentSampleAccession, GeoSample::addToSupplementaryFiles, value );
+            if ( !value.equals( "NONE" ) ) {
+                this.sampleAddTo( currentSampleAccession, GeoSample::addToSupplementaryFiles, value );
+            } else {
+                GeoFamilyParser.log.warn( "Found NONE value for supplementary file in sample " + currentSampleAccession + ": " + line );
+            }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
@@ -1614,7 +1618,11 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             v.setType( GeoVariable.convertStringToType( value ) );
             results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
         } else if ( this.startsWithIgnoreCase( line, "!Series_supplementary_file" ) ) {
-            seriesAddTo( currentSeriesAccession, GeoSeries::addToSupplementaryFiles, value );
+            if ( !value.equals( "NONE" ) ) {
+                seriesAddTo( currentSeriesAccession, GeoSeries::addToSupplementaryFiles, value );
+            } else {
+                GeoFamilyParser.log.warn( "Found NONE value for supplementary file in series " + currentSeriesAccession + ": " + line );
+            }
         } else if ( this.startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             seriesSet( currentSeriesAccession, GeoSeries::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Series_citation" ) ) {
