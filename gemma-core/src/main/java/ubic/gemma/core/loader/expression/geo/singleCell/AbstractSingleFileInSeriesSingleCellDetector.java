@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -89,7 +90,8 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         if ( matchedSupplementaryFiles.size() == 1 ) {
             file = matchedSupplementaryFiles.iterator().next();
         } else if ( matchedSupplementaryFiles.size() > 1 ) {
-            throw new IllegalArgumentException( "More than one " + name + " file is present in the supplementary files of " + series.getGeoAccession() );
+            throw new IllegalArgumentException( String.format( "More than one %s file is present in the supplementary files of %s: %s",
+                    name, series.getGeoAccession(), matchedSupplementaryFiles.stream().map( FilenameUtils::getName ).collect( Collectors.toSet() ) ) );
         } else {
             throw new NoSingleCellDataFoundException( "No " + name + " data could be found in " + series.getGeoAccession() + " supplementary files." );
         }
